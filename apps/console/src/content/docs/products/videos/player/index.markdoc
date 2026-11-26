@@ -19,7 +19,7 @@ To build playback into your own app with hls.js, Shaka Player, AVPlayer, ExoPlay
 
 # Before you start {% #before-you-start %}
 
-1. Make sure the video has at least one `ready` [rendition](/docs/products/videos/renditions). Until then, the player shows **Not ready to play**.
+1. Make sure the video has a `ready` [rendition](/docs/products/videos/renditions) for the **HLS** output. Until a rendition is ready, the player shows **Not ready to play**. Signed-in members can also play DASH and CMAF, but visitors play HLS only.
 2. To let anyone watch, turn on **Public playback** in the video's **Settings**. See [Who can watch](#who-can-watch).
 
 # Embed a video {% #embed-a-video %}
@@ -30,7 +30,7 @@ To build playback into your own app with hls.js, Shaka Player, AVPlayer, ExoPlay
 
 ```html
 <iframe
-  src="https://<CONSOLE_DOMAIN>/player/<VIDEO_ID>?project=<PROJECT_ID>"
+  src="https://appwrite.io/player/<VIDEO_ID>?project=<PROJECT_ID>"
   title="Product demo"
   allow="autoplay; fullscreen; picture-in-picture"
   allowfullscreen
@@ -38,7 +38,7 @@ To build playback into your own app with hls.js, Shaka Player, AVPlayer, ExoPlay
 ></iframe>
 ```
 
-The player is served from your Console's domain, at `/player/<VIDEO_ID>`. Keep the `allow` attribute: without it, browsers block autoplay, full screen, and picture in picture inside the frame.
+The player is served from the Console's domain, at `/player/<VIDEO_ID>`: `appwrite.io` on Appwrite Cloud, or your own Console domain when you self-host. Keep the `allow` attribute: without it, browsers block autoplay, full screen, and picture in picture inside the frame.
 
 The player fills the frame and fits the video inside it, with black bars when the shapes differ. Set `aspect-ratio` to match your video, such as `9/16` for a vertical clip.
 
@@ -47,6 +47,13 @@ To share the player as a link instead, open the URL from `src` on its own. It pl
 # Preview and customize {% #preview-and-customize %}
 
 Click **Preview** on a video to open the player live in a large panel, next to the [player options](#player-options). Changing an option updates the preview and the panel's **Query string**, and editing the query string updates the options.
+
+{% only_dark %}
+![Player preview panel with the video paused at 0:39, a pink progress bar, Loop turned on, and the query string with start, loop, and color](/images/docs/videos/dark/player-preview.avif)
+{% /only_dark %}
+{% only_light %}
+![Player preview panel with the video paused at 0:39, a pink progress bar, Loop turned on, and the query string with start, loop, and color](/images/docs/videos/player-preview.avif)
+{% /only_light %}
 
 When it looks right, click **Copy embed code** or **Copy URL**, or **Open in new tab** to try the player on its own. **Reset** sets every option back to its default.
 
@@ -69,7 +76,7 @@ Turn a flag on with `1`, `true`, `yes`, `on`, or the bare parameter, such as `?l
 For example, a silent product clip that loops from 12 seconds in, with a pink accent:
 
 ```text
-https://<CONSOLE_DOMAIN>/player/<VIDEO_ID>?project=<PROJECT_ID>&start=12&autoplay=1&muted=1&loop=1&color=fd366e
+https://appwrite.io/player/<VIDEO_ID>?project=<PROJECT_ID>&start=12&autoplay=1&muted=1&loop=1&color=fd366e
 ```
 
 ## Autoplay {% #autoplay %}
@@ -81,6 +88,8 @@ Leave autoplay off for videos people choose to watch, and let them press play.
 # Settings menu {% #settings-menu %}
 
 The gear button in the control bar opens the player's settings:
+
+![Player settings menu with Quality on Auto at 1080p, Playback speed, Keyboard shortcuts, Stream format on HLS, Inspector, and Reload stream](/images/docs/videos/player-settings.avif)
 
 | Setting | What it does |
 |---------|--------------|
@@ -101,6 +110,8 @@ Where the browser plays HLS on its own, as on some iPhones, the browser picks th
 # Keyboard shortcuts {% #keyboard-shortcuts %}
 
 Shortcuts work while the player has focus, so click an embedded player first. Press `?` to see the list in the player.
+
+![Keyboard shortcuts list open in the player's settings menu, from Play or pause to Jump to 0% to 90%](/images/docs/videos/player-shortcuts.avif)
 
 | Keys | Action |
 |------|--------|
@@ -132,7 +143,7 @@ On phones and tablets:
 
 The player follows the video's [permissions](/docs/products/videos/permissions):
 
-- **Public videos** play for anyone. Turn on **Public playback** in the video's **Settings**, or grant **Read** to `Role.any()`. Visitors who are not signed in get the stream without scrubbing thumbnails, because they cannot read the video's [timeline](/docs/products/videos/timeline).
+- **Public videos** play for anyone. Turn on **Public playback** in the video's **Settings**, or grant **Read** to `Role.any()`. Visitors who are not signed in play the HLS output, so the video needs a ready HLS rendition. They get the stream without scrubbing thumbnails, because they cannot read the video's [timeline](/docs/products/videos/timeline).
 - **Private videos** play only for viewers signed in to the Console with an account that can read the video, such as members of your project. Everyone else sees **This video is private** and a **Sign in** button.
 
 The player signs viewers in with an Appwrite Console account, not as users of your app. To show a private video to your app's users, build playback into your app as described in [Private playback](/docs/products/videos/permissions#private-playback).
@@ -143,7 +154,7 @@ The player signs viewers in with an Appwrite Console account, not as users of yo
 |---------|-------|
 | **Missing project** | The URL needs a `project` parameter, such as `?project=<PROJECT_ID>` |
 | **Not ready to play** | No rendition is ready yet. Wait for encoding to finish, or [create a rendition](/docs/products/videos/renditions) |
-| **This video is private** | Turn on **Public playback**, or sign in with an account that can read the video |
+| **This video is private** | Turn on **Public playback**, or sign in with an account that can read the video. For a public video, check that it has a ready HLS rendition: visitors cannot play DASH or CMAF |
 | **Access denied** | The signed-in account cannot read the video. Check the video's [permissions](/docs/products/videos/permissions) |
 | **Video not found** | The video ID in the URL, and whether the video was deleted |
 | Autoplay starts muted | The browser blocked sound. Viewers click **Unmute**. See [Autoplay](#autoplay) |

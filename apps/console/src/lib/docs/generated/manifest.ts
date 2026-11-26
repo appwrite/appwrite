@@ -3735,7 +3735,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Embed the video player",
     "description": "Embed the Appwrite video player on any website with an iframe. It streams adaptively, shows captions, and takes options for start time, autoplay, looping, controls, and accent color.",
     "layout": "article",
-    "readingTimeMinutes": 7
+    "readingTimeMinutes": 8
   },
   {
     "slug": "products/videos/profiles",
