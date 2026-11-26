@@ -11,10 +11,12 @@ export function trimOrEmpty(value: string): string {
   return value.trim()
 }
 
-/** Why a link field would be rejected, or null when it is empty or a URL. */
+/** Why a link field would be rejected, or null when it is empty or an http(s) URL. */
 export function urlFieldError(value: string): string | null {
   const trimmed = value.trim()
-  if (!trimmed || URL.canParse(trimmed)) return null
+  if (!trimmed) return null
+  const protocol = URL.parse(trimmed)?.protocol
+  if (protocol === 'https:' || protocol === 'http:') return null
   return translate('Enter a valid URL, for example https://example.com')
 }
 
