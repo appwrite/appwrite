@@ -875,7 +875,7 @@ class ClickHouse extends SQL
         }
 
         foreach (self::EVENT_PROJECTIONS as $projection) {
-            if ($dims !== [] && $dims !== $projection['dims']) {
+            if (array_diff($dims, $projection['dims']) !== []) {
                 continue;
             }
             if (array_diff($filtered, array_merge(['tenant', 'metric', 'time'], $projection['dims'])) === []) {
@@ -1123,6 +1123,9 @@ class ClickHouse extends SQL
      * rows on a 100M-row fixture against 1.15M + 2.55M for the two alone.
      * ip, hostname, city and resourceId are left off as too high-cardinality.
      *
+     * `resourceType` carries `teamInternalId` so a read scoped to one team
+     * still routes. A tenant's team rarely changes, so it adds few keys.
+     *
      * `path` is the outlier already here: it holds resource ids rather than
      * route templates, so its key count tracks a customer's resource count and
      * can approach the base table (48% of the rows at 30k paths per tenant),
@@ -1132,7 +1135,7 @@ class ClickHouse extends SQL
      * @var array<array{name: string, dims: array<int, string>}>
      */
     private const EVENT_PROJECTIONS = [
-        ['name' => 'p_by_resourceType', 'dims' => ['resourceType']],
+        ['name' => 'p_by_resourceType_teamInternalId', 'dims' => ['resourceType', 'teamInternalId']],
         ['name' => 'p_by_path', 'dims' => ['path']],
         ['name' => 'p_by_country', 'dims' => ['country']],
         ['name' => 'p_by_service', 'dims' => ['service']],
