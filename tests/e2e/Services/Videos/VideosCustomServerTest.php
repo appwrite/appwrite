@@ -4276,7 +4276,7 @@ final class VideosCustomServerTest extends Scope
         $captionSets = 0;
         foreach ($document->getElementsByTagName('AdaptationSet') as $set) {
             $adaptationId = $set->getAttribute('id');
-            $this->assertMatchesRegularExpression('/^\d+$/', $adaptationId, 'AdaptationSet@id is not numeric');
+            $this->assertTrue(\ctype_digit($adaptationId), 'AdaptationSet@id is not numeric');
             $adaptationIds[] = $adaptationId;
 
             if ($set->getAttribute('mimeType') !== 'text/vtt') {
@@ -4285,7 +4285,7 @@ final class VideosCustomServerTest extends Scope
             $captionSets++;
             foreach ($set->getElementsByTagName('Representation') as $representation) {
                 $this->assertNotSame('', $representation->getAttribute('id'), 'Caption Representation is missing @id');
-                $this->assertMatchesRegularExpression('/^\d+$/', $representation->getAttribute('bandwidth'), 'Caption Representation is missing @bandwidth');
+                $this->assertTrue(\ctype_digit($representation->getAttribute('bandwidth')), 'Caption Representation is missing @bandwidth');
             }
         }
         $this->assertGreaterThanOrEqual(1, $captionSets, 'MPD has no caption AdaptationSet');
