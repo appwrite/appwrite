@@ -98,6 +98,7 @@ export function mapAppToMarketplaceApp(
     deviceFlow: app.deviceFlow,
     teamId: app.teamId || undefined,
     installationScopes: app.installationScopes ?? [],
+    installationRedirectUrl: app.installationRedirectUrl || undefined,
     installs: app.installs,
   }
 }
