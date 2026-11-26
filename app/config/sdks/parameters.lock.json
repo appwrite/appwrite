@@ -915,11 +915,6 @@
             "code",
             "default"
         ],
-        "videos.createRendition": [
-            "videoId",
-            "profileId",
-            "output"
-        ],
         "videos.delete": [
             "videoId"
         ],
@@ -3347,7 +3342,6 @@
         ],
         "project.listVideoProfiles": [
             "queries",
-            "codec",
             "total"
         ],
         "project.updateAndroidPlatform": [
@@ -7899,7 +7893,6 @@
         ],
         "project.listVideoProfiles": [
             "queries",
-            "codec",
             "total"
         ],
         "project.updateAndroidPlatform": [

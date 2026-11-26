@@ -5,6 +5,12 @@ namespace Appwrite\Utopia\Database\Validator\Queries;
 class VideoProfiles extends Base
 {
     public const ALLOWED_ATTRIBUTES = [
+        'name',
+        'codec',
+        'width',
+        'height',
+        'videoBitRate',
+        'audioBitRate',
         'search',
     ];
 
