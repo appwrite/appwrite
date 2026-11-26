@@ -10,7 +10,8 @@ The **inspector** shows what the player in the Console is doing while it plays a
 
 1. Open **Videos** in your project and select a video with at least one ready rendition.
 2. Play the video on its **Overview**. The inspector shows under the player and fills in as the session runs.
-3. To give it more room, select **Inspector** under **Playback** in the video menu, or click **Inspector** in the player controls. It opens in its own window, so you can keep the video and the inspector side by side.
+
+To give it more room, [open it in a new window](#open-in-a-new-window).
 
 {% only_dark %}
 ![Inspector overview with an excellent experience score, no issues detected, and startup, bitrate, and upscaling metrics](/images/docs/videos/dark/inspector.avif)
@@ -20,6 +21,22 @@ The **inspector** shows what the player in the Console is doing while it plays a
 {% /only_light %}
 
 The inspector measures the session in your browser on your connection. To see how a stream behaves for slower viewers, throttle the network in your browser's developer tools and play again.
+
+# Open in a new window {% #open-in-a-new-window %}
+
+The inspector can open in its own window, so you can keep the video and the inspector side by side, or put them on separate screens. To open it:
+
+- Click **Open in new window** in the inspector's header.
+- Select **Inspector** in the player's settings menu.
+- Select **Inspector** under **Playback** in the video menu.
+
+While the window is open, a bar under the player says **The inspector is open in a separate window**. Click **Show window** to bring it to the front, or **Close** to close it. Closing the Console tab closes the window too.
+
+The window follows the video playing on a video's **Overview**. If you leave that page, the window waits for the player, with a **Go to overview** button to get back.
+
+If no window opens, your browser blocked the pop-up. Allow pop-ups for the Console's site and try again.
+
+The [embedded player](/docs/products/videos/player) has **Inspector** in its settings menu too, so you can inspect a stream where it plays on your own site.
 
 # Key metrics {% #key-metrics %}
 
@@ -45,6 +62,8 @@ The **experience score** rolls these into one number for the session, built from
 | **Events** | Player events, newest first, such as loads, quality switches, stalls, and errors |
 | **Manifests** | The master manifest and media playlists the player loaded, to copy, reload, or open in a new tab |
 | **Device** | Codec support and playback capabilities of this device and browser, and whether each rendition can play smoothly here |
+
+Press `1` to `6` to switch sections. To hold the numbers still while you read them, use **Pause live updates**, and **Resume live updates** to pick up again.
 
 # Read the results {% #read-the-results %}
 

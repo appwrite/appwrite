@@ -3707,7 +3707,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Inspect playback",
     "description": "Use the Appwrite Videos inspector to watch a playback session's experience score, buffer, bitrate, network requests, and manifests.",
     "layout": "article",
-    "readingTimeMinutes": 4
+    "readingTimeMinutes": 5
   },
   {
     "slug": "products/videos/outputs",
@@ -3729,6 +3729,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Play Appwrite Videos streams on the web, Apple platforms, Android, Flutter, and React Native by loading the master manifest in a standard player.",
     "layout": "article",
     "readingTimeMinutes": 4
+  },
+  {
+    "slug": "products/videos/player",
+    "title": "Embed the video player",
+    "description": "Embed the Appwrite video player on any website with an iframe. It streams adaptively, shows captions, and takes options for start time, autoplay, looping, controls, and accent color.",
+    "layout": "article",
+    "readingTimeMinutes": 7
   },
   {
     "slug": "products/videos/profiles",
