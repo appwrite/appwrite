@@ -25,6 +25,13 @@ Choose **Greater than**, **Greater than or equal**, **Less than**, or **Less tha
 
 Counters such as requests and outbound bandwidth are summed over the **Window**. An outbound bandwidth monitor with a one-hour window compares the sum over the preceding hour at each evaluation. Gauges such as storage used compare the latest recorded value. For a gauge, the Console omits the window.
 
+{% only_dark %}
+![The Create monitor dialog shows the outbound bandwidth threshold, window, and usage chart.](/images/docs/products/monitors/dark/usage-condition.avif)
+{% /only_dark %}
+{% only_light %}
+![The Create monitor dialog shows the outbound bandwidth threshold, window, and usage chart.](/images/docs/products/monitors/usage-condition.avif)
+{% /only_light %}
+
 If a check has no usage reading, the monitor keeps its existing state. Check the monitor's last reading in the Console before adjusting the threshold.
 
 # Create over REST {% #create-over-rest %}

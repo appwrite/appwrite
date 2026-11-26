@@ -12,6 +12,13 @@ An alert records one period during which a monitor's condition is met or an endp
 2. Filter the history or select an alert to see when it started and the usage reading or check result that caused it. For a resolved alert, you can also see the recovery time.
 3. For a firing alert, click **Acknowledge** to show your team that someone is handling it. The alert keeps firing until the monitor recovers. Acknowledging also stops pending escalation steps.
 
+{% only_dark %}
+![The Alerts tab shows firing and resolved alerts grouped by date.](/images/docs/products/monitors/dark/alert-history.avif)
+{% /only_dark %}
+{% only_light %}
+![The Alerts tab shows firing and resolved alerts grouped by date.](/images/docs/products/monitors/alert-history.avif)
+{% /only_light %}
+
 # Choose who gets notified {% #choose-who-gets-notified %}
 
 When you create or edit a monitor, use **Notify** to choose organization roles or an escalation. Confirmed members in selected roles receive email and Console notifications. Appwrite can also send push notifications to members with a registered device. Choose **Nobody, only its events** to keep the alert in the Console and use its project events without notifying members directly.

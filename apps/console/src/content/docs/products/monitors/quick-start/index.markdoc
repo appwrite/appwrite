@@ -14,6 +14,13 @@ Create a monitor that alerts your team if your Appwrite project sends more than 
 2. Open **Previews** in the header and turn on **Monitors and alerts**.
 3. Open your project, then select **Monitors** under **Observe** in the sidebar.
 
+{% only_dark %}
+![The Monitors and alerts toggle is on in the Previews menu.](/images/docs/products/monitors/dark/previews.avif)
+{% /only_dark %}
+{% only_light %}
+![The Monitors and alerts toggle is on in the Previews menu.](/images/docs/products/monitors/previews.avif)
+{% /only_light %}
+
 # Create a usage monitor {% #create-a-usage-monitor %}
 
 1. Click **Create monitor**. If the Console shows a monitor type picker, choose **Usage**.
