@@ -152,10 +152,14 @@ class Get extends Base
             throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, $e->getMessage(), previous: $e);
         }
 
+        // The response-cache miss hook already set no-store headers; replace them so
+        // the client sees one Cache-Control, the same one a cache hit sends.
         $response
+            ->removeHeader('Cache-Control')
+            ->removeHeader('Pragma')
+            ->removeHeader('Expires')
             ->setContentType($outputs[$output])
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 30)) . ' GMT') // 30 days
-            ->addHeader('Cache-Control', 'private, max-age=2592000')
+            ->addHeader('Cache-Control', 'private, max-age=15552000') // 180 days
             ->addHeader('Vary', 'Accept')
             ->addHeader('X-Peak', \memory_get_peak_usage())
             ->file($source);

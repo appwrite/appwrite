@@ -15,11 +15,13 @@ import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { canWriteReviewRepositories } from '@/lib/console-access-checks'
 import {
   fetchRepository,
+  REVIEW_STATUS_GROUPS,
   useOrganizationScopes,
   useProject,
   useReviewLearnings,
   useReviewRepositories,
   useReviews,
+  useReviewStatusCounts,
 } from '@/lib/react-query/hooks'
 import {
   DEFAULT_PAGE_SIZE,
@@ -33,7 +35,6 @@ import {
   reviewsFilterColumns,
   type CompactFilterKey,
 } from '@/lib/table-filters'
-import { cn } from '@/lib/utils'
 import {
   ServiceHeader,
   type ServiceHeaderRef,
@@ -53,13 +54,37 @@ import {
   RepositoriesScopeControls,
   useRepositoriesScope,
 } from './_components/Repositories'
+import { RepositorySelect } from './_components/RepositorySelect'
 import { ReviewsEmptyState } from './_components/ReviewsEmptyState'
+import {
+  ReviewStatusTabs,
+  type ReviewStatusTab,
+} from './_components/ReviewStatusTabs'
 import { ReviewsTable } from './_components/ReviewsTable'
 
 /** Repositories offered in the repository filter: the first page the project reviews. */
 const REPOSITORY_FILTER_LIMIT = 100
 
-type ReviewsSearch = { page?: number; query?: string }
+type ReviewsSearch = { page?: number; query?: string; repositoryId?: string }
+
+/**
+ * The status tab a status filter stands for: one that lists exactly a tab's
+ * statuses. Any other status filter matches none.
+ */
+function statusTab(key: CompactFilterKey | undefined): ReviewStatusTab | null {
+  if (!key) return 'all'
+  if (key.o !== 'equal') return null
+  const values = new Set(Array.isArray(key.v) ? key.v : [String(key.v)])
+  for (const [tab, statuses] of Object.entries(REVIEW_STATUS_GROUPS)) {
+    if (
+      statuses.length === values.size &&
+      statuses.every((status) => values.has(status))
+    ) {
+      return tab as ReviewStatusTab
+    }
+  }
+  return null
+}
 
 export function View() {
   const t = useT()
@@ -166,7 +191,18 @@ export function View() {
     projectId,
     debouncedRepositorySearch.trim(),
   )
-  const performanceFilters = usePerformanceFilters()
+  const performanceFilters = usePerformanceFilters(projectId)
+
+  // The learnings filter lives in the URL too, so another tab can link to it.
+  const learningsRepositoryId =
+    activeTab === 'learnings' ? (search.repositoryId ?? '') : ''
+  const setLearningsRepositoryId = (repositoryId: string) =>
+    navigate({
+      to: '/projects/$projectId/reviews/learnings',
+      params: { projectId },
+      search: { repositoryId: repositoryId || undefined },
+      replace: true,
+    })
 
   // Repositories are added from an installation's list, found with the search.
   const headerRef = useRef<ServiceHeaderRef>(null)
@@ -246,6 +282,43 @@ export function View() {
   }
   const clearFilters = () => navigateReviews({ query: undefined, page: 1 })
 
+  // Status tabs are shortcuts for the status filter; their counts keep the
+  // other filters.
+  const statusKey = Array.from(filterMap.keys()).find(
+    (key) => key.c === 'status',
+  )
+  const activeStatus = statusTab(statusKey)
+  const otherFilterQueries = useMemo(() => {
+    const queries = Array.from(filterMap.entries())
+      .filter(([key]) => key.c !== 'status')
+      .map(([, query]) => query)
+    return queries.length > 0 ? queries : undefined
+  }, [filterMap])
+  const { counts: statusCounts } = useReviewStatusCounts(
+    activeTab === 'reviews' ? projectId : null,
+    otherFilterQueries,
+  )
+  const chooseStatus = (tab: ReviewStatusTab) => {
+    const next = new Map(
+      Array.from(filterMap.entries()).filter(([key]) => key.c !== 'status'),
+    )
+    if (tab !== 'all') {
+      const statuses = REVIEW_STATUS_GROUPS[tab]
+      next.set(
+        {
+          c: 'status',
+          o: 'equal',
+          v: statuses.length === 1 ? statuses[0] : [...statuses],
+        },
+        '',
+      )
+    }
+    navigateReviews({
+      query: next.size > 0 ? mapToQueryParam(next) : undefined,
+      page: 1,
+    })
+  }
+
   // Past reviews stay listed after the last repository is removed, so the intro
   // only shows while there is nothing to list. The repositories tab is where
   // repositories are added, so it never shows the intro.
@@ -257,12 +330,8 @@ export function View() {
     !reviewsLoading &&
     total === 0
 
-  // Tabs without a toolbar keep the same gap under the tab bar as the others.
-  const hasToolbar =
-    !firstRun &&
-    (activeTab === 'reviews' ||
-      activeTab === 'repositories' ||
-      activeTab === 'performance')
+  // Every tab has a toolbar; the product intro before the first repository has none.
+  const hasToolbar = !firstRun
 
   return (
     <div className="flex flex-col">
@@ -298,57 +367,62 @@ export function View() {
               createDisabled: !canWrite || repositoriesScope.loading,
               createDisabledTooltip: writeTooltip,
             }
-          : activeTab === 'performance'
+          : activeTab === 'learnings'
             ? {
                 beforeSearchButtons: (
-                  <PerformanceRepositorySelect
+                  <RepositorySelect
                     projectId={projectId}
-                    filters={performanceFilters}
-                  />
-                ),
-                beforeCreateButtons: (
-                  <PerformanceRangeToggle
-                    projectId={projectId}
-                    filters={performanceFilters}
+                    value={learningsRepositoryId}
+                    onChange={setLearningsRepositoryId}
                   />
                 ),
               }
-            : activeTab === 'reviews'
+            : activeTab === 'performance'
               ? {
-                  filterTrigger: (
-                    <FiltersPopover
-                      open={filtersOpen}
-                      onOpenChange={setFiltersOpen}
-                      columns={filterColumns}
-                      filterMap={filterMap}
-                      onRemoveFilter={removeFilter}
-                      onClearAll={clearFilters}
-                      onApplyFilter={applyFilter}
-                      resourceLabel="reviews"
-                      filterScope="reviews"
-                      onApplyQuery={(query) =>
-                        navigateReviews({ query, page: 1 })
-                      }
-                      teamId={project?.teamId}
+                  beforeSearchButtons: (
+                    <PerformanceRepositorySelect
+                      projectId={projectId}
+                      filters={performanceFilters}
                     />
                   ),
-                  showRefresh: true,
-                  onRefresh: () => void refetchReviews(),
-                  isRefreshing: reviewsFetching && !reviewsLoading,
-                  createLabel: t('Add repository'),
-                  onCreate: showRepositories,
-                  createDisabled: !canWrite,
-                  createDisabledTooltip: writeTooltip,
+                  beforeCreateButtons: (
+                    <PerformanceRangeToggle
+                      projectId={projectId}
+                      filters={performanceFilters}
+                    />
+                  ),
                 }
-              : {})}
+              : activeTab === 'reviews'
+                ? {
+                    filterTrigger: (
+                      <FiltersPopover
+                        open={filtersOpen}
+                        onOpenChange={setFiltersOpen}
+                        columns={filterColumns}
+                        filterMap={filterMap}
+                        onRemoveFilter={removeFilter}
+                        onClearAll={clearFilters}
+                        onApplyFilter={applyFilter}
+                        resourceLabel="reviews"
+                        filterScope="reviews"
+                        onApplyQuery={(query) =>
+                          navigateReviews({ query, page: 1 })
+                        }
+                        teamId={project?.teamId}
+                      />
+                    ),
+                    showRefresh: true,
+                    onRefresh: () => void refetchReviews(),
+                    isRefreshing: reviewsFetching && !reviewsLoading,
+                    createLabel: t('Add repository'),
+                    onCreate: showRepositories,
+                    createDisabled: !canWrite,
+                    createDisabledTooltip: writeTooltip,
+                  }
+                : {})}
       />
 
-      <div
-        className={cn(
-          'mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6',
-          !hasToolbar && !firstRun && 'pt-4 sm:pt-6',
-        )}
-      >
+      <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
         {activeTab === 'reviews' && !firstRun && (
           <Credits projectId={projectId} organizationId={project?.teamId} />
         )}
@@ -361,7 +435,12 @@ export function View() {
         ) : activeTab === 'performance' ? (
           <Performance projectId={projectId} filters={performanceFilters} />
         ) : activeTab === 'learnings' ? (
-          <Learnings projectId={projectId} canWrite={canWrite} />
+          <Learnings
+            projectId={projectId}
+            canWrite={canWrite}
+            repositoryId={learningsRepositoryId}
+            onRepositoryChange={setLearningsRepositoryId}
+          />
         ) : activeTab === 'repositories' ? (
           <Repositories
             projectId={projectId}
@@ -369,40 +448,52 @@ export function View() {
             search={debouncedRepositorySearch.trim()}
             scope={repositoriesScope}
           />
-        ) : reviews.length > 0 ? (
+        ) : reviews.length > 0 || hasFilters ? (
           <>
-            <ReviewsTable projectId={projectId} reviews={reviews} />
-            <Pagination
-              currentPage={page}
-              totalItems={total}
-              pageSize={pageSize}
-              pageSizeOptions={[10, 25, 50, 100]}
-              onPageChange={(next) => navigateReviews({ page: next })}
-              onPageSizeChange={(size) => {
-                setPageSize(size)
-                navigateReviews({ page: 1 })
-              }}
-              itemLabel={t('reviews')}
+            <ReviewsTable
+              projectId={projectId}
+              reviews={reviews}
+              header={
+                <ReviewStatusTabs
+                  counts={statusCounts}
+                  active={activeStatus}
+                  onChange={chooseStatus}
+                />
+              }
+              empty={
+                <EmptyState
+                  icon={GitPullRequest}
+                  hasFilters
+                  title={t('No reviews match your filters')}
+                  description={t('Try adjusting or clearing filters.')}
+                  action={
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-9 text-[13px]"
+                      onClick={clearFilters}
+                    >
+                      {t('Clear filters')}
+                    </Button>
+                  }
+                />
+              }
             />
+            {reviews.length > 0 && (
+              <Pagination
+                currentPage={page}
+                totalItems={total}
+                pageSize={pageSize}
+                pageSizeOptions={[10, 25, 50, 100]}
+                onPageChange={(next) => navigateReviews({ page: next })}
+                onPageSizeChange={(size) => {
+                  setPageSize(size)
+                  navigateReviews({ page: 1 })
+                }}
+                itemLabel={t('reviews')}
+              />
+            )}
           </>
-        ) : hasFilters ? (
-          <EmptyState
-            icon={GitPullRequest}
-            variant="card"
-            hasFilters
-            title={t('No reviews match your filters')}
-            description={t('Try adjusting or clearing filters.')}
-            action={
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-9 text-[13px]"
-                onClick={clearFilters}
-              >
-                {t('Clear filters')}
-              </Button>
-            }
-          />
         ) : (
           <EmptyState
             icon={GitPullRequest}

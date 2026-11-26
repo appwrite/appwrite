@@ -7,6 +7,14 @@ Utopia\Auth\Hashes\Plaintext
 Utopia\Auth\Hashes\Scrypt
 Utopia\Auth\Hashes\ScryptModified
 Utopia\Auth\Hashes\Sha
+Utopia\Compression\Algorithms\Brotli
+Utopia\Compression\Algorithms\Deflate
+Utopia\Compression\Algorithms\GZIP
+Utopia\Compression\Algorithms\LZ4
+Utopia\Compression\Algorithms\Snappy
+Utopia\Compression\Algorithms\XZ
+Utopia\Compression\Algorithms\Zstd
+Utopia\Compression\Compression
 Utopia\DSN\DSN
 Utopia\Database\DateTime
 Utopia\Database\Id

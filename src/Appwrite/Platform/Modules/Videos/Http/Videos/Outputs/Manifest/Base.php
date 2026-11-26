@@ -427,10 +427,15 @@ abstract class Base extends VideosAction
             throw new Exception(Exception::VIDEO_RENDITION_NOT_FOUND);
         }
 
+        $adaptations = Dash::group($entries);
+        // AdaptationSet@id is an unsignedInt unique within the Period, so caption
+        // sets continue after the media sets.
+        $adaptationId = \count($adaptations);
         $captionEntries = [];
 
         foreach ($captions as $caption) {
             $captionEntries[] = [
+                'adaptationId' => $adaptationId++,
                 'id' => $caption->getId(),
                 'name' => $caption->getAttribute('code', ''),
                 'baseUrl' => $this->withProject($baseUri . '/captions/' . $caption->getId() . '/manifest', $project, $video),
@@ -439,7 +444,7 @@ abstract class Base extends VideosAction
 
         $manifest = $this->renderView('dash', [
             'mpd' => $mpd,
-            'renditions' => Dash::group($entries),
+            'renditions' => $adaptations,
             'captions' => $captionEntries,
         ]);
 

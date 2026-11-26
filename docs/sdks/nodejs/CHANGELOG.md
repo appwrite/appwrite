@@ -1,5 +1,17 @@
 # Change Log
 
+## 32.3.0
+
+* Added: `client.setRequest(request)` forwards the end user's user agent, and on Appwrite Functions and Sites their IP address, from the request your server is handling
+* Added: `client.setForwardedIP(ip)` to forward the end user's IP address
+
+## 32.2.0
+
+* Added: `monitors` service to create, list, get, update and delete HTTP, DNS, TCP, SMTP and usage monitors
+* Added: `alerts` service to list and get alerts, and acknowledge them with `alerts.update`
+* Added: `organization.listEscalations`, `createEscalation`, `getEscalation`, `updateEscalation` and `deleteEscalation`
+* Added: `Monitor`, `Alert`, `Escalation` and `EscalationStep` models, their list models, and the `Monitor*` and `Alert*` enums
+
 ## 32.1.0
 
 * Added: `messaging.createBirdEmailProvider`, `updateBirdEmailProvider`, `createBirdSMSProvider` and `updateBirdSMSProvider` for the Bird email and SMS providers

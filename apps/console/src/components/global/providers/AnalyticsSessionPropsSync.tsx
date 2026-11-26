@@ -8,7 +8,6 @@ import {
   getAnalyticsPlanFromBillingId,
   getAnalyticsRoutePath,
   getAnalyticsSurface,
-  getPlausibleScriptSrc,
   setAnalyticsSessionProps,
   trackPageView,
 } from '@/lib/analytics'
@@ -79,9 +78,10 @@ export function AnalyticsSessionPropsSync() {
 
   useEffect(() => {
     loadPlausibleScript()
-    if (!getPlausibleScriptSrc() || typeof window === 'undefined' || !authGate)
-      return
+    if (typeof window === 'undefined' || !authGate) return
 
+    // Records the Appwrite Analytics pageview too, so it can't wait on Plausible
+    // being configured; trackPageView skips Plausible itself when it isn't.
     trackPageView(routePath)
   }, [authGate, routePath])
 

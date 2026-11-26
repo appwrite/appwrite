@@ -59,6 +59,17 @@ class Get extends Base
         return 'getOAuth2Redirect';
     }
 
+    /**
+     * Runs once the sign-in is stored, before anything is sent to the browser. $user is the account that signed
+     * in, whether the flow ends with a session or with a token to trade for one. Nothing happens here: a flow that
+     * lands on a route of its own overrides this to act on who signed in, as it overrides getOAuth2CallbackPath()
+     * and getOAuth2Provider(). An exception stops the flow where it is: the person is not sent on, and what the
+     * sign-in stored stays.
+     */
+    protected function afterSignIn(Document $user): void
+    {
+    }
+
     public function __construct()
     {
         $this
@@ -870,6 +881,8 @@ class Get extends Base
             $bus->dispatch(new EmailVerified(user: $user->getArrayCopy(), project: $project->getArrayCopy()));
         }
 
+        $this->afterSignIn($user);
+
         if ($state['token']) {
             $token = $created;
 
@@ -879,11 +892,19 @@ class Get extends Base
                 ->setParam('tokenId', $token->getId())
             ;
 
-            // Wrap secret in a JWT that also carries the provider name
+            // The account can hold several identities with this provider, so the token names the one that signed in
+            $identity = $dbForProject->findOne('identities', [
+                Query::equal('userInternalId', [$user->getSequence()]),
+                Query::equal('provider', [$provider]),
+                Query::equal('providerUid', [$oauth2ID]),
+            ]);
+
+            // Wrap secret in a JWT that also carries the provider name and the identity
             $jwtEncoder = new JWT(EncryptionKey::current(), 'HS256', 60, 0);
             $query['secret'] = $jwtEncoder->encode([
                 'secret' => $secret,
                 'provider' => $provider,
+                'identity' => $identity->getId(),
             ]);
             $query['userId'] = $user->getId();
         } else {

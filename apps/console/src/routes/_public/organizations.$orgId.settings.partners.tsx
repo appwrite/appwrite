@@ -1,7 +1,7 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { pageTitle } from '@/lib/utils/page-title'
 import {
-  fetchOrganizations,
+  organizationsQueryOptions,
   organizationApiKeysQueryOptions,
   consoleOrganizationScopesQueryOptions,
 } from '@/lib/react-query/hooks'
@@ -27,11 +27,7 @@ export const Route = createFileRoute(
     if (typeof window === 'undefined') return
     const { orgId } = params
     const { queryClient } = context
-    await queryClient.prefetchQuery({
-      queryKey: ['organizations', 'console'],
-      queryFn: fetchOrganizations,
-      staleTime: 5 * 60 * 1000,
-    })
+    await queryClient.prefetchQuery(organizationsQueryOptions())
     if (!orgId) return
 
     const canAccess = await canAccessOrganizationApiKeys(queryClient, orgId)

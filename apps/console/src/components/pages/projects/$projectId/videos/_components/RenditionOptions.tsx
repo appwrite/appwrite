@@ -323,14 +323,14 @@ export function ProfilePicker({
                       <span>
                         {t('Video')}{' '}
                         <span className="font-mono">
-                          {formatBitrate(profile.videoBitRate, 'kbps')}
+                          {formatBitrate(profile.videoBitRate)}
                         </span>
                       </span>
                       <span aria-hidden="true">·</span>
                       <span>
                         {t('Audio')}{' '}
                         <span className="font-mono">
-                          {formatBitrate(profile.audioBitRate, 'kbps')}
+                          {formatBitrate(profile.audioBitRate)}
                         </span>
                       </span>
                     </span>
@@ -349,7 +349,7 @@ export function ProfilePicker({
                       dimmed,
                     )}
                   >
-                    {formatBitrate(profile.videoBitRate, 'kbps')}
+                    {formatBitrate(profile.videoBitRate)}
                   </span>
                   <span
                     className={cn(
@@ -357,7 +357,7 @@ export function ProfilePicker({
                       dimmed,
                     )}
                   >
-                    {formatBitrate(profile.audioBitRate, 'kbps')}
+                    {formatBitrate(profile.audioBitRate)}
                   </span>
                 </label>
               )

@@ -504,6 +504,8 @@ Checklist (in this order):
 - **Button icon spacing**: Use `mr-1.5` or `gap-1.5`, not `mr-2` or larger
 - **Date tooltips**: Always include when showing dates for timezone clarity
 - **Wizard headers are title-only**: Never pass a description, subtitle, or helper line to `WizardLayout`. The header is the title (and close/back). Put explanation in the page body, on a field, or omit it.
+- **Theme colors in code**: Tokens such as `--border` and `--muted` are complete oklch colors. Use `var(--border)` in SVG props and inline styles, and `color-mix(in oklab, var(--muted) 30%, transparent)` for transparency (`color-mix(in_oklab,var(--primary)_35%,transparent)` inside Tailwind arbitrary values). Never wrap a token in `hsl()`: `hsl(var(--border))` computes to no color, so the grid line, border or fill disappears.
+- **Chart grids**: Every chart in a card or panel draws `<CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />`, so all charts read the same. Only sparklines (stat tiles, resource cards, list rows) skip it.
 
 ### Date and time (Appwrite datetimes)
 

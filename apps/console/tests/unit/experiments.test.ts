@@ -26,20 +26,26 @@ describe('hasQualityLabel', () => {
 })
 
 describe('experiments catalog', () => {
-  test('lists Appwrite Analytics, alerts, Videos and Git installation reuse', () => {
+  test('lists Appwrite Analytics, alerts and Videos', () => {
     expect(EXPERIMENTS.map((experiment) => experiment.flag)).toEqual([
       'analytics',
       'alerts',
       'videos',
-      'gitInstallationReuse',
     ])
     expect(EXPERIMENTS[0]?.name).toBe('Appwrite Analytics')
     expect(EXPERIMENTS[1]?.name).toBe('Monitors and alerts')
     expect(EXPERIMENTS[2]?.name).toBe('Appwrite Videos')
-    expect(EXPERIMENTS[3]?.name).toBe('Git installation reuse')
     for (const experiment of EXPERIMENTS) {
       expect(experiment.description.length).toBeGreaterThan(0)
     }
+  })
+
+  test('Git installation reuse and alert CTAs are debug-menu flags, not previews', () => {
+    const flags: string[] = EXPERIMENTS.map((experiment) => experiment.flag)
+    expect(flags).not.toContain('gitInstallationReuse')
+    expect(flags).not.toContain('alertCtas')
+    expect(CONSOLE_PROFILES.cloud.features.gitInstallationReuse).toBe(false)
+    expect(CONSOLE_PROFILES.cloud.features.alertCtas).toBe(false)
   })
 
   test('Origin is generally available: no feature flag and not in the previews menu', () => {

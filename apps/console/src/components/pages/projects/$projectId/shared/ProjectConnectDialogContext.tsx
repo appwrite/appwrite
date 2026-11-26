@@ -1,5 +1,7 @@
 import {
   createContext,
+  lazy,
+  Suspense,
   useCallback,
   useContext,
   useMemo,
@@ -7,12 +9,15 @@ import {
   type ReactNode,
 } from 'react'
 import { useAuth } from '@/components/global/auth/RequireAuth'
-import { useConnectProjectTab } from '@/lib/react-query/hooks'
-import {
-  ConnectProject,
-  DEFAULT_CONNECT_PROJECT_TAB,
-  type ConnectProjectTab,
-} from './ConnectProject'
+import { useConnectProjectTab } from '@/lib/react-query/hooks/auth'
+import { DEFAULT_CONNECT_PROJECT_TAB_PREF } from '@/lib/user-prefs-keys'
+import type { ConnectProjectTab } from './ConnectProject'
+
+// The dialog carries every SDK snippet and the code highlighter, so it loads
+// when it first opens and then stays mounted, so closing still animates.
+const ConnectProject = lazy(() =>
+  import('./ConnectProject').then((m) => ({ default: m.ConnectProject })),
+)
 
 type ProjectConnectDialogContextValue = {
   openConnect: (tab?: ConnectProjectTab) => void
@@ -37,8 +42,9 @@ export function ProjectConnectDialogProvider({
   const { tab: savedConnectTab, setTab: persistConnectTab } =
     useConnectProjectTab(account)
   const [open, setOpen] = useState(false)
+  const [opened, setOpened] = useState(false)
   const [initialConnectTab, setInitialConnectTab] = useState<ConnectProjectTab>(
-    DEFAULT_CONNECT_PROJECT_TAB,
+    DEFAULT_CONNECT_PROJECT_TAB_PREF,
   )
 
   const openConnect = useCallback(
@@ -46,9 +52,10 @@ export function ProjectConnectDialogProvider({
       const nextTab =
         tab ??
         (savedConnectTab as ConnectProjectTab) ??
-        DEFAULT_CONNECT_PROJECT_TAB
+        DEFAULT_CONNECT_PROJECT_TAB_PREF
       setInitialConnectTab(nextTab)
       persistConnectTab(nextTab)
+      setOpened(true)
       setOpen(true)
     },
     [persistConnectTab, savedConnectTab],
@@ -65,12 +72,16 @@ export function ProjectConnectDialogProvider({
   return (
     <ProjectConnectDialogContext.Provider value={value}>
       {children}
-      <ConnectProject
-        open={open}
-        onOpenChange={setOpen}
-        projectId={projectId}
-        initialConnectTab={initialConnectTab}
-      />
+      {opened ? (
+        <Suspense fallback={null}>
+          <ConnectProject
+            open={open}
+            onOpenChange={setOpen}
+            projectId={projectId}
+            initialConnectTab={initialConnectTab}
+          />
+        </Suspense>
+      ) : null}
     </ProjectConnectDialogContext.Provider>
   )
 }

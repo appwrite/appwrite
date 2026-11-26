@@ -38,8 +38,11 @@ class XList extends Action
 
     private const int PAGE = 1000;
 
-    /** Reviews whose findings are read in one query: at most 100 findings each. */
-    private const int FINDINGS_CHUNK = 50;
+    /**
+     * Reviews whose findings are read in one query: as many as one query may name, with at most
+     * APP_LIMIT_ARRAY_PARAMS_SIZE findings each.
+     */
+    private const int FINDINGS_CHUNK = APP_DATABASE_QUERY_MAX_VALUES;
 
     public static function getName()
     {
@@ -71,7 +74,7 @@ class XList extends Action
                 // Hidden until code review is generally available; preview SDK builds show it.
                 hide: System::getEnv('_APP_SDK_PREVIEW', 'disabled') !== 'enabled',
             ))
-            ->param('range', '30d', new WhiteList(\array_keys(self::RANGES), true), 'Date range of the reviews.', true)
+            ->param('range', '30d', new WhiteList(\array_keys(self::RANGES), true), 'Date range of the reviews: whole days, today included.', true)
             ->param('repositoryId', '', new UID(), 'Count only the reviews of this repository.', true)
             ->inject('response')
             ->inject('dbForProject')
@@ -84,7 +87,10 @@ class XList extends Action
         Response $response,
         Database $dbForProject,
     ): void {
-        $since = DateTime::addSeconds(new \DateTime(), -self::RANGES[$range] * 86400);
+        // Whole UTC days, today included, as the summary counts them.
+        $since = DateTime::format((new \DateTime('now', new \DateTimeZone('UTC')))
+            ->setTime(0, 0)
+            ->modify('-' . (self::RANGES[$range] - 1) . ' days'));
 
         $filters = [
             Query::equal('status', ['completed']),

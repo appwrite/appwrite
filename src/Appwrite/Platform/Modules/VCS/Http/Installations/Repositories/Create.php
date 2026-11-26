@@ -92,19 +92,41 @@ class Create extends Action
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'VCS provider does not support repository creation: ' . $provider);
             }
 
-            $identity = null;
             if ($provider === 'github' && (empty($installation->getAttribute('personalAccessToken')) || empty($installation->getAttribute('personalRefreshToken')) || empty($installation->getAttribute('personalAccessTokenExpiry')))) {
-                $identity = $dbForPlatform->findOne('identities', [
+                // Without its own tokens the installation acts through the caller's GitHub account, which only
+                // matches the installation when the caller owns it (a personal installation reused from another project).
+                // A user can link several GitHub accounts, so use the one that owns the installation.
+                $identities = $dbForPlatform->find('identities', [
                     Query::equal('provider', ['github']),
                     Query::equal('userInternalId', [$user->getSequence()]),
+                    Query::limit(APP_LIMIT_SUBQUERY),
                 ]);
-                if ($identity->isEmpty()) {
+                if (empty($identities)) {
                     throw new Exception(Exception::USER_IDENTITY_NOT_FOUND);
                 }
-            }
 
-            $installation = $installationTokens->refresh($installation, $dbForPlatform, $oauth2, $identity);
-            $accessToken = $installation->getAttribute('personalAccessToken');
+                $accessToken = null;
+                foreach ($identities as $identity) {
+                    // The client caches the first user it looks up, so each identity gets its own
+                    $client = $vcsFactory->oauth2FromProvider($provider);
+                    try {
+                        $token = $installationTokens->refreshIdentity($identity, $dbForPlatform, $client);
+                    } catch (Exception) {
+                        continue;
+                    }
+                    if (!\method_exists($client, 'getUserSlug') || \strcasecmp($client->getUserSlug($token), $installation->getAttribute('organization', '')) === 0) {
+                        $accessToken = $token;
+                        break;
+                    }
+                }
+
+                if ($accessToken === null) {
+                    throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This installation belongs to the GitHub account ' . $installation->getAttribute('organization', '') . '. Sign in to Appwrite with that GitHub account to create repositories through it, or connect your own account.');
+                }
+            } else {
+                $installation = $installationTokens->refresh($installation, $dbForPlatform, $oauth2);
+                $accessToken = $installation->getAttribute('personalAccessToken');
+            }
 
             try {
                 if (!empty($providerNamespace)) {

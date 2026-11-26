@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Require `utopia-php/client` ^0.6.
+- Trace and span ids come from a userspace generator (`Random\Engine\Xoshiro256StarStar`) seeded once per process from `random_bytes()`, instead of a `random_bytes()` syscall per id. It re-seeds when the process id changes, so a forked worker never repeats its parent's ids.
 - `Pretty` escapes C0 controls and DEL in attribute keys, values, the action, and error text before writing, so a span cannot forge log lines or inject terminal sequences.
 - Sentry exporter: deliver envelopes exclusively through PSR-18. It defaults to `utopia-php/client` with its cURL adapter and accepts injected clients such as a coroutine-safe `Utopia\Client\Pool`.
 

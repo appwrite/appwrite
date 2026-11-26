@@ -22,6 +22,7 @@ import {
   RuntimeLogResourcePicker,
   type RuntimeLogResource,
 } from '@/components/global/shared/RuntimeLogResourcePicker'
+import { RuntimeLogLevelFilter } from '@/components/global/shared/RuntimeLogLevelFilter'
 import { RuntimeLogRow } from '@/components/global/shared/RuntimeLogRow'
 import { RuntimeLogsVolumeChart } from '@/components/global/shared/RuntimeLogsVolumeChart'
 import { Button } from '@/components/ui/button'
@@ -48,7 +49,6 @@ import {
 } from '@/lib/react-query/hooks'
 import { useLocalizedDateFormat } from '@/lib/i18n/use-localized-date-format'
 import {
-  isAtLeast,
   parseRuntimeLogLine,
   stripAnsi,
   type RuntimeLogLevel,
@@ -126,7 +126,7 @@ export function RuntimeLogsView({
   const [range, setRange] = useState<RuntimeLogRange>('1h')
   const [zoom, setZoom] = useState<RuntimeLogWindow | undefined>()
   const [search, setSearch] = useState('')
-  const [minLevel, setMinLevel] = useState<RuntimeLogLevel | 'all'>('all')
+  const [levels, setLevels] = useState<ReadonlySet<RuntimeLogLevel>>(new Set())
   const [showMetadata, setShowMetadata] = useState(false)
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set())
   const [live, setLive] = useState(false)
@@ -310,12 +310,12 @@ export function RuntimeLogsView({
     () =>
       parsed.filter(
         (row) =>
-          (minLevel === 'all' || isAtLeast(row.level, minLevel)) &&
+          (levels.size === 0 || levels.has(row.level)) &&
           (!needle || row.plain.toLowerCase().includes(needle)),
       ),
-    [parsed, needle, minLevel],
+    [parsed, needle, levels],
   )
-  const filtering = needle !== '' || minLevel !== 'all'
+  const filtering = needle !== '' || levels.size > 0
 
   const formatTime = useCallback(
     (timestamp: string) =>
@@ -500,25 +500,7 @@ export function RuntimeLogsView({
             <SelectItem value="stderr">stderr</SelectItem>
           </SelectContent>
         </Select>
-        <Select
-          value={minLevel}
-          onValueChange={(value) =>
-            setMinLevel(value as RuntimeLogLevel | 'all')
-          }
-        >
-          <SelectTrigger
-            className="h-9 w-[170px] text-[13px]"
-            aria-label={t('Level')}
-          >
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t('All levels')}</SelectItem>
-            <SelectItem value="error">{t('Errors')}</SelectItem>
-            <SelectItem value="warn">{t('Warnings and up')}</SelectItem>
-            <SelectItem value="info">{t('Info and up')}</SelectItem>
-          </SelectContent>
-        </Select>
+        <RuntimeLogLevelFilter value={levels} onValueChange={setLevels} />
         <Select
           value={zoom ? 'custom' : range}
           onValueChange={(value) => {
