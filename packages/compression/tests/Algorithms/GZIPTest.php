@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace Utopia\Compression\Tests\Algorithms;
 
-use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
 use Utopia\Compression\Algorithms\GZIP;
 
-#[RequiresPhpExtension('zlib')]
 final class GZIPTest extends TestCase
 {
     /**

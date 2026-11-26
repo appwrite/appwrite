@@ -112,7 +112,7 @@ echo "$warnings" | grep -q 'utopia.libraries: unknown library "bogus" ignored' |
 echo "$warnings" | grep -q '^ok$'
 
 # Classes with no PHP implementation left: their packages' own tests, on the extension.
-for package in user-agent domains emails validators auth detector; do
+for package in user-agent domains emails validators auth detector compression; do
     echo "== $package (no PHP)" >&2
     vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php "packages/$package/tests"
 done

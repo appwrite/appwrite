@@ -5,11 +5,9 @@ declare(strict_types=1);
 namespace Utopia\Compression\Tests\Algorithms;
 
 use InvalidArgumentException;
-use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
 use Utopia\Compression\Algorithms\Brotli;
 
-#[RequiresPhpExtension('brotli')]
 final class BrotliTest extends TestCase
 {
     /**

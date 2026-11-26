@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace Utopia\Compression\Tests\Algorithms;
 
-use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
 use Utopia\Compression\Algorithms\LZ4;
 
-#[RequiresPhpExtension('lz4')]
 final class LZ4Test extends TestCase
 {
     protected LZ4 $object;
