@@ -560,7 +560,7 @@ impl Adapter for GitLab {
                     }
                 }
                 if empty(&latest) && !empty(&commits) {
-                    let list = php::expect_array(&commits, "array_key_last", "#1 ($array)")?;
+                    let list = php::expect_array(&commits, "array_last", "#1 ($array)")?;
                     latest = list.values().last().cloned().unwrap_or(Value::Null);
                 }
 
