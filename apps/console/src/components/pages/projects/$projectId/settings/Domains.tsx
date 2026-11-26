@@ -126,7 +126,7 @@ export function Domains({
 
   const handleRecords = (rule: Models.ProxyRule) => {
     // While DNS is pending, the records dialog is where the domain is verified
-    if (canRetryRule(rule)) return handleRetry(rule)
+    if (isWaitingForDns(rule)) return handleRetry(rule)
     openDialogAfterOverlayCloses(() => {
       setSelectedRule(rule)
       setRecordsOpen(true)
