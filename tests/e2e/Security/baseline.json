@@ -257,6 +257,7 @@
         "GET /v1/reviews/repositories/:repositoryId/learnings",
         "GET /v1/reviews/repositories/:repositoryId/pulls/:pullNumber/findings",
         "GET /v1/reviews/repositories/:repositoryId/pulls/:pullNumber/reviews",
+        "GET /v1/reviews/summary",
         "GET /v1/s3",
         "GET /v1/sites",
         "GET /v1/sites/:siteId",
