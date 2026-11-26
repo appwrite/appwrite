@@ -209,7 +209,7 @@ class Create extends Action
             'secret' => $proofForCode->hash($secret),
             'expire' => $expire,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
-            'ip' => $request->getIP(),
+            'ip' => $request->getClientIP(),
         ]);
 
         $token->setAttribute('$permissions', [

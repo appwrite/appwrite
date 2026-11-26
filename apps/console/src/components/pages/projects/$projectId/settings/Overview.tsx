@@ -40,6 +40,8 @@ import {
 import { ConfirmNameDialog } from '@/components/global/shared/ConfirmNameDialog'
 import { closeDialogBeforeOverlayUnmount } from '@/lib/utils/overlay-lock'
 import { MCPSection } from '@/components/pages/projects/$projectId/shared/MCPSection'
+import { isCloudProfile } from '@/lib/console-profiles'
+import { AppsWithAccessCard } from './AppsWithAccessCard'
 import { RESOURCE_CARD_GRID_CLASSNAME } from '@/components/pages/projects/$projectId/shared/ResourceCard'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { Button } from '@/components/ui/button'
@@ -70,6 +72,7 @@ import {
 } from '@/lib/project-settings'
 import { GitConfigurationCard } from './GitConfigurationCard'
 import { PremiumGeoDBCard } from './_components/PremiumGeoDBCard'
+import { SSOAddonCard } from '@/components/global/shared/sso-addon/SSOAddonCard'
 import { TransferProjectCard } from './_components/TransferProjectCard'
 import { buildVcsAuthUrl, type VcsProviderId } from '@/lib/vcs/providers'
 import { getApiEndpoint } from '@/lib/appwrite/sdk'
@@ -1092,6 +1095,15 @@ export function ProjectSettingsOverview({
 
           {/* An add-on is the project's, and its environments have it with it */}
           {!environmentId && <PremiumGeoDBCard projectId={projectId} />}
+          {/* Inside one it only says whether the project has it */}
+          <SSOAddonCard
+            target={{
+              scope: 'project',
+              projectId,
+              inEnvironment: !!environmentId,
+            }}
+            showSetupLink
+          />
 
           {/* MCP Server Section. Its prompts name a project: inside an
               environment that is the project it belongs to, as no project
@@ -1100,6 +1112,13 @@ export function ProjectSettingsOverview({
             projectId={projectId}
             projectName={productionProject?.name ?? project.name}
           />
+
+          {isCloudProfile() && project.teamId && (
+            <AppsWithAccessCard
+              projectId={productionProject?.$id ?? projectId}
+              teamId={project.teamId}
+            />
+          )}
 
           {/* Change Organization Section (cloud multi-tenancy only). An
               environment moves with its project, never on its own. */}

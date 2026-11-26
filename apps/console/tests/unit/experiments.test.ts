@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'bun:test'
 import { isRedirect } from '@tanstack/react-router'
 import {
   CONSOLE_PROFILES,
+  getCanonicalProfileFeatures,
   getDebugProfileFeatureOverrides,
 } from '@/lib/console-profiles'
 import {
@@ -25,17 +26,19 @@ describe('hasQualityLabel', () => {
 })
 
 describe('experiments catalog', () => {
-  test('lists Appwrite Analytics, project environments, alerts and Videos', () => {
+  test('lists Appwrite Analytics, project environments, alerts, Videos and Git installation reuse', () => {
     expect(EXPERIMENTS.map((experiment) => experiment.flag)).toEqual([
       'analytics',
       'projectEnvironments',
       'alerts',
       'videos',
+      'gitInstallationReuse',
     ])
     expect(EXPERIMENTS[0]?.name).toBe('Appwrite Analytics')
     expect(EXPERIMENTS[1]?.name).toBe('Project environments')
     expect(EXPERIMENTS[2]?.name).toBe('Monitors and alerts')
     expect(EXPERIMENTS[3]?.name).toBe('Appwrite Videos')
+    expect(EXPERIMENTS[4]?.name).toBe('Git installation reuse')
     for (const experiment of EXPERIMENTS) {
       expect(experiment.description.length).toBeGreaterThan(0)
     }
@@ -49,6 +52,16 @@ describe('experiments catalog', () => {
       EXPERIMENTS.some(
         (experiment) => (experiment.flag as string) === 'vcsOrigin',
       ),
+    ).toBe(false)
+  })
+
+  test('Single sign-on is generally available on Cloud: on without a preview, and never on self-hosted', () => {
+    expect(CONSOLE_PROFILES.cloud.features.sso).toBe(true)
+    expect(getCanonicalProfileFeatures('cloud').sso).toBe(true)
+    // Self-hosted has no API for it, whatever its profile says
+    expect(getCanonicalProfileFeatures('self-hosted').sso).toBe(false)
+    expect(
+      EXPERIMENTS.some((experiment) => (experiment.flag as string) === 'sso'),
     ).toBe(false)
   })
 

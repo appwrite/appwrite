@@ -174,8 +174,26 @@ async function mockAppwriteApi(page: Page, { empty = false } = {}) {
       apiPath === `/projects/${PROJECT.$id}/console-access`
     )
       return json(200, PROJECT)
+    // The installation tells the review links which provider to point at.
     if (apiPath === '/vcs/installations')
-      return json(200, { total: 0, installations: [] })
+      return json(
+        200,
+        empty
+          ? { total: 0, installations: [] }
+          : {
+              total: 1,
+              installations: [
+                {
+                  $id: 'installation0001',
+                  $createdAt: NOW,
+                  $updatedAt: NOW,
+                  provider: 'github',
+                  organization: 'acme',
+                  providerInstallationId: '1',
+                },
+              ],
+            },
+      )
 
     if (apiPath === '/reviews') {
       const list = queries(url)
@@ -308,6 +326,97 @@ test.describe('reviews', () => {
     ).toBeVisible()
     await page.keyboard.press('Escape')
     await expect(page).toHaveURL(/\/reviews\/?$/)
+  })
+
+  test('Performance opens without waiting on categories or repository names', async ({
+    page,
+  }) => {
+    await mockAppwriteApi(page)
+    // Registered later, so these answer before the shared mock.
+    let releaseCategories = () => {}
+    const categoriesGate = new Promise<void>((resolve) => {
+      releaseCategories = resolve
+    })
+    const nameLookups: string[] = []
+    const fulfill = (route: Route, body: unknown) =>
+      route.fulfill({
+        status: 200,
+        headers: {
+          ...corsHeaders(route),
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      })
+    await page.route('**/v1/reviews/authors**', (route) =>
+      route.request().method() === 'OPTIONS'
+        ? route.fulfill({ status: 204, headers: corsHeaders(route) })
+        : fulfill(route, {
+            total: 1,
+            authors: [
+              {
+                author: 'octocat',
+                pulls: 3,
+                reviews: 4,
+                approved: 2,
+                approvedFirst: 1,
+                findings: 5,
+                critical: 0,
+                major: 1,
+                resolved: 2,
+                dismissed: 1,
+                tier: 'A',
+                lastReviewAt: NOW,
+              },
+            ],
+          }),
+    )
+    await page.route('**/v1/reviews/categories**', async (route) => {
+      if (route.request().method() === 'OPTIONS') {
+        return route.fulfill({ status: 204, headers: corsHeaders(route) })
+      }
+      await categoriesGate
+      return fulfill(route, {
+        total: 1,
+        categories: [
+          { category: 'bug', findings: 5, resolved: 2, dismissed: 1 },
+        ],
+      })
+    })
+    await page.route('**/providerRepositories/**', (route) => {
+      if (route.request().method() === 'OPTIONS') {
+        return route.fulfill({ status: 204, headers: corsHeaders(route) })
+      }
+      nameLookups.push(route.request().url())
+      return fulfill(route, {
+        id: '1000',
+        name: 'api',
+        organization: 'acme',
+        provider: 'github',
+        private: false,
+      })
+    })
+
+    await page.goto(`/projects/${PROJECT.$id}/reviews`, {
+      waitUntil: 'domcontentloaded',
+    })
+    await expect(row(page, 500)).toBeVisible({ timeout: 30_000 })
+    await page.getByRole('tab', { name: 'Performance' }).click()
+
+    // The authors show while categories are still on their way.
+    await expect(
+      page.getByRole('row').filter({ hasText: 'octocat' }),
+    ).toBeVisible()
+    await expect(page.getByText('Findings by category')).toHaveCount(0)
+    expect(nameLookups).toEqual([])
+
+    // Opening the repository list names the repositories.
+    await page.getByRole('combobox', { name: 'Repository' }).click()
+    await expect(page.getByRole('option', { name: 'acme/api' })).toBeVisible()
+    expect(nameLookups.length).toBeGreaterThan(0)
+    await page.keyboard.press('Escape')
+
+    releaseCategories()
+    await expect(page.getByText('Findings by category')).toBeVisible()
   })
 
   test('shows the product empty state before the first repository', async ({

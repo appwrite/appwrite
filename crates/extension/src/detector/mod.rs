@@ -419,8 +419,8 @@ fn function_name(ex: &ExecuteData) -> String {
 /// and its methods are these.
 #[inline(always)]
 fn native(ce: &ClassEntry) -> bool {
-    /// `ZEND_INTERNAL_CLASS`.
-    const INTERNAL_CLASS: i8 = 1;
+    /// `ZEND_INTERNAL_CLASS`. `zend_class_entry.type` is a C `char`: signed on x86-64, unsigned on aarch64.
+    const INTERNAL_CLASS: std::ffi::c_char = 1;
     ce.type_ == INTERNAL_CLASS
 }
 

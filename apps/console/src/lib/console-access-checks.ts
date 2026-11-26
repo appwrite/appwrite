@@ -450,12 +450,32 @@ export function canShowOrgOAuthAppsSettings(
   return isCloudProfile() && canAccessOrgSettingsOAuthOrApiKeys(access)
 }
 
+/** Organization settings → Installed apps (any member can read; owners manage). */
+export function canShowOrgInstalledAppsSettings(
+  _access: ConsoleAccess,
+  _features: AccessCheckFeatures,
+): boolean {
+  return isCloudProfile()
+}
+
 /** Organization settings → Org API keys (console profile + owners/developers). */
 export function canShowOrgApiKeysSettings(
   access: ConsoleAccess,
   features: AccessCheckFeatures,
 ): boolean {
   return !!features.orgApiKeys && canAccessOrgSettingsOAuthOrApiKeys(access)
+}
+
+/**
+ * Organization settings → Single sign-on (Cloud + owners). Its identity
+ * providers add the people who sign in through them as members, with the
+ * provider's roles, so only owners see it, as only owners can invite.
+ */
+export function canShowOrgSsoSettings(
+  access: ConsoleAccess,
+  features: AccessCheckFeatures,
+): boolean {
+  return !!features.sso && whenOrgRoles(access, features, access.isOwner)
 }
 
 /** Organization key metadata stays visible to developers; only owners manage keys. */
@@ -534,7 +554,10 @@ export function getFirstAllowedOrgSettingsPath(
     return `${basePath}/compliance`
   if (canShowOrgOAuthAppsSettings(access, features))
     return `${basePath}/oauth-apps`
+  if (canShowOrgInstalledAppsSettings(access, features))
+    return `${basePath}/installations`
   if (canShowOrgApiKeysSettings(access, features)) return `${basePath}/partners`
+  if (canShowOrgSsoSettings(access, features)) return `${basePath}/sso`
   return basePath
 }
 

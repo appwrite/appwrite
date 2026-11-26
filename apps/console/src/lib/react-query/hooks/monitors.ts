@@ -30,6 +30,7 @@ import {
   type ProbeMonitorChanges,
   type ProbeMonitorInput,
 } from '@/lib/appwrite/monitors'
+import { PROBE_TYPES } from '@/lib/alerts/probes'
 import { fetchAlertSeries, hasSeries } from '@/lib/alerts/series'
 import { DEFAULT_STALE_TIME } from './constants'
 import { nextCursorAfter } from './cursor'
@@ -50,6 +51,24 @@ export async function fetchMonitors(projectId: string) {
   }
 }
 
+/** How many usage monitors the project holds, which its plan's `monitors` cap counts. */
+export function usageMonitorCountQueryOptions(
+  projectId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['monitors', 'project', projectId, 'usage-count'],
+    queryFn: async () => {
+      const response = await sdk.forProject(projectId!).monitors.list({
+        queries: [Query.equal('type', ['usage']), Query.limit(1)],
+      })
+      return response.total ?? 0
+    },
+    enabled: !!projectId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+  })
+}
+
 export async function fetchMonitor(
   projectId: string,
   monitorId: string,
@@ -57,6 +76,16 @@ export async function fetchMonitor(
   return parseMonitor(
     await sdk.forProject(projectId).monitors.get({ monitorId }),
   )
+}
+
+/** One monitor, under the list's key so updates that refetch the list refresh it too. */
+export function monitorQueryOptions(projectId: string, monitorId: string) {
+  return queryOptions({
+    queryKey: ['monitors', 'project', projectId, 'monitor', monitorId],
+    queryFn: () => fetchMonitor(projectId, monitorId),
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+  })
 }
 
 export function monitorsQueryOptions(projectId: string | null | undefined) {
@@ -236,9 +265,14 @@ export function useCreateMonitor(projectId: string | null | undefined) {
       }
     },
     onSuccess: async () => {
-      await queryClient.refetchQueries({
-        queryKey: ['monitors', 'project', projectId],
-      })
+      await Promise.all([
+        queryClient.refetchQueries({
+          queryKey: ['monitors', 'project', projectId],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ['monitors', 'organization'],
+        }),
+      ])
     },
   })
 }
@@ -326,6 +360,9 @@ export function useDeleteMonitor(projectId: string | null | undefined) {
         queryClient.invalidateQueries({
           queryKey: ['alerts', 'project', projectId],
         }),
+        queryClient.invalidateQueries({
+          queryKey: ['monitors', 'organization'],
+        }),
       ])
     },
   })
@@ -346,6 +383,31 @@ export function organizationBudgetMonitorsQueryOptions(
         .map(parseMonitor)
         .filter((monitor) => monitor.type === 'budget')
         .sort((a, b) => b.threshold - a.threshold)
+    },
+    enabled: !!organizationId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+  })
+}
+
+/** How many synthetic checks the organization holds across its projects, which its plan counts. */
+export function organizationProbeCountQueryOptions(
+  organizationId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['monitors', 'organization', organizationId, 'probes'],
+    queryFn: async () => {
+      const response = await listOrganizationMonitors(sdk.forConsole.client, {
+        organizationId: organizationId!,
+        queries: [
+          Query.equal(
+            'type',
+            PROBE_TYPES.map((type) => type.value),
+          ),
+          Query.limit(1),
+        ],
+      })
+      return response.total ?? 0
     },
     enabled: !!organizationId,
     staleTime: DEFAULT_STALE_TIME,
@@ -486,6 +548,7 @@ export function useEscalationMembers(
           userId: member.userId,
           name: member.userName || member.userEmail,
           email: member.userEmail,
+          roles: member.roles,
         })),
     [data],
   )

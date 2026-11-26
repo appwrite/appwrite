@@ -12,6 +12,7 @@
 
 import { describe, expect, test } from 'bun:test'
 import {
+  getAlertingViolations,
   getComplianceErrors,
   getNonCompliantProjectIds,
   getOrganizationLimits,
@@ -215,6 +216,21 @@ describe('getOrganizationViolations', () => {
     expect(violations).toHaveLength(1)
     expect(violations[0].type).toBe('members')
     expect(violations[0].excess).toBe(3)
+  })
+
+  test('blocks on synthetic checks and escalations over the target plan', () => {
+    const alerting = {
+      ...limits,
+      probes: overLimit('probes', 3, 1),
+      escalations: withinLimit('escalations', 1, 1),
+    } as PlanChangeLimits
+
+    expect(getOrganizationViolations(alerting).map(({ type }) => type)).toEqual(
+      ['members', 'probes'],
+    )
+    expect(getAlertingViolations(alerting)).toEqual([
+      { label: 'Synthetic checks', resource: overLimit('probes', 3, 1) },
+    ])
   })
 })
 

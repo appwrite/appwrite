@@ -29,6 +29,7 @@ import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import { AlertDelivery } from '../_components/AlertDelivery'
 import { AlertDrawer, acknowledgedBy } from './AlertDrawer'
+import { AlertContextMenu } from './AlertContextMenu'
 
 type Filter = 'all' | Alert['status']
 
@@ -211,6 +212,7 @@ export function AlertHistory({
                 {day.alerts.map((alert) => (
                   <AlertEntry
                     key={alert.$id}
+                    projectId={projectId}
                     alert={alert}
                     now={now}
                     width={widths.get(alert) ?? 0}
@@ -260,6 +262,7 @@ export function AlertHistory({
 }
 
 interface AlertEntryProps {
+  projectId: string
   alert: Alert
   now: number
   /** Bar width in percent of the track, on the feed's shared scale. */
@@ -269,118 +272,130 @@ interface AlertEntryProps {
 }
 
 /** One alert in the feed: when it started, how long it fired, and how far it went. */
-function AlertEntry({ alert, now, width, time, onOpen }: AlertEntryProps) {
+function AlertEntry({
+  projectId,
+  alert,
+  now,
+  width,
+  time,
+  onOpen,
+}: AlertEntryProps) {
   const t = useT()
   const firing = alert.status === 'firing'
   const ratio = alertRatio(alert)
   const length = formatLength(alertLength(alert, now))
   return (
-    <li>
-      <button
-        type="button"
-        onClick={onOpen}
-        className="grid w-full grid-cols-[60px_10px_minmax(0,1fr)] items-start gap-x-3 rounded-md px-2 py-2.5 text-start transition-colors hover:bg-accent/40 focus-visible:bg-accent/40 focus-visible:outline-none sm:grid-cols-[68px_10px_minmax(0,1fr)_minmax(120px,200px)]"
-      >
-        <span className="whitespace-nowrap pt-px text-[12px] tabular-nums text-muted-foreground">
-          {time}
-        </span>
-        <span
-          aria-hidden
-          className={cn(
-            'mt-[5px] h-2.5 w-2.5 rounded-full',
-            firing
-              ? 'bg-red-500'
-              : 'border-[1.5px] border-emerald-500 dark:border-emerald-400',
-          )}
-        />
-        <span className="min-w-0">
-          <span className="flex items-baseline gap-2">
-            <span className="truncate text-[13px] font-medium text-foreground">
-              {alert.name}
-            </span>
-            <span
-              className={cn(
-                'shrink-0 text-[11px] font-medium',
-                firing
-                  ? 'text-red-600 dark:text-red-400'
-                  : 'text-emerald-700 dark:text-emerald-400',
-              )}
-            >
-              {firing ? t('Firing') : t('Resolved')}
-            </span>
-            {firing && alert.acknowledgedAt && (
-              <span className="shrink-0 truncate text-[11px] text-muted-foreground">
-                {acknowledgedBy(alert, t)}
-              </span>
-            )}
-            {escalationState(alert) === 'waiting' && (
-              <span className="shrink-0 truncate text-[11px] text-muted-foreground">
-                {t('Escalating')}
-              </span>
-            )}
-          </span>
-          <span className="mt-0.5 flex flex-wrap text-[12px] text-muted-foreground sm:block sm:truncate">
-            {/* Each part stays whole with the dot after it, so a narrow screen wraps between parts. */}
-            {[
-              alertCondition(alert, t),
-              <>
-                {alert.metric ? t('peak') : t('peak latency')}{' '}
-                <span
-                  className={cn(firing && 'text-red-600 dark:text-red-400')}
-                >
-                  {formatAlertValue(alert, alert.peak)}
-                  {ratio ? ` (${ratio})` : ''}
-                </span>
-              </>,
-              t('{count} sent').replace('{count}', String(alert.notifications)),
-              firing ? t('ongoing') : length,
-            ].map((part, index, parts) => (
-              <span
-                key={index}
-                className={cn(
-                  'whitespace-nowrap',
-                  index === parts.length - 1 && 'sm:hidden',
-                )}
-              >
-                {part}
-                {index < parts.length - 1 && (
-                  <span
-                    className={cn(
-                      'mx-1.5',
-                      index === parts.length - 2 && 'sm:hidden',
-                    )}
-                  >
-                    ·
-                  </span>
-                )}
-              </span>
-            ))}
-          </span>
-        </span>
-        <span className="hidden items-center gap-2 pt-1 sm:flex">
-          <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted rtl:-scale-x-100">
-            <span
-              className={cn(
-                'block h-full rounded-full',
-                firing
-                  ? 'bg-gradient-to-r from-red-500 from-50% to-red-500/15'
-                  : 'bg-foreground/35',
-              )}
-              style={{ width: `${width}%` }}
-            />
+    <AlertContextMenu projectId={projectId} alert={alert} onOpen={onOpen}>
+      <li>
+        <button
+          type="button"
+          onClick={onOpen}
+          className="grid w-full grid-cols-[60px_10px_minmax(0,1fr)] items-start gap-x-3 rounded-md px-2 py-2.5 text-start transition-colors hover:bg-accent/40 focus-visible:bg-accent/40 focus-visible:outline-none sm:grid-cols-[68px_10px_minmax(0,1fr)_minmax(120px,200px)]"
+        >
+          <span className="whitespace-nowrap pt-px text-[12px] tabular-nums text-muted-foreground">
+            {time}
           </span>
           <span
+            aria-hidden
             className={cn(
-              'w-14 shrink-0 text-end text-[12px] tabular-nums',
+              'mt-[5px] h-2.5 w-2.5 rounded-full',
               firing
-                ? 'text-red-600 dark:text-red-400'
-                : 'text-muted-foreground',
+                ? 'bg-red-500'
+                : 'border-[1.5px] border-emerald-500 dark:border-emerald-400',
             )}
-          >
-            {firing ? t('ongoing') : length}
+          />
+          <span className="min-w-0">
+            <span className="flex items-baseline gap-2">
+              <span className="truncate text-[13px] font-medium text-foreground">
+                {alert.name}
+              </span>
+              <span
+                className={cn(
+                  'shrink-0 text-[11px] font-medium',
+                  firing
+                    ? 'text-red-600 dark:text-red-400'
+                    : 'text-emerald-700 dark:text-emerald-400',
+                )}
+              >
+                {firing ? t('Firing') : t('Resolved')}
+              </span>
+              {firing && alert.acknowledgedAt && (
+                <span className="shrink-0 truncate text-[11px] text-muted-foreground">
+                  {acknowledgedBy(alert, t)}
+                </span>
+              )}
+              {escalationState(alert) === 'waiting' && (
+                <span className="shrink-0 truncate text-[11px] text-muted-foreground">
+                  {t('Escalating')}
+                </span>
+              )}
+            </span>
+            <span className="mt-0.5 flex flex-wrap text-[12px] text-muted-foreground sm:block sm:truncate">
+              {/* Each part stays whole with the dot after it, so a narrow screen wraps between parts. */}
+              {[
+                alertCondition(alert, t),
+                <>
+                  {alert.metric ? t('peak') : t('peak latency')}{' '}
+                  <span
+                    className={cn(firing && 'text-red-600 dark:text-red-400')}
+                  >
+                    {formatAlertValue(alert, alert.peak)}
+                    {ratio ? ` (${ratio})` : ''}
+                  </span>
+                </>,
+                t('{count} sent').replace(
+                  '{count}',
+                  String(alert.notifications),
+                ),
+                firing ? t('ongoing') : length,
+              ].map((part, index, parts) => (
+                <span
+                  key={index}
+                  className={cn(
+                    'whitespace-nowrap',
+                    index === parts.length - 1 && 'sm:hidden',
+                  )}
+                >
+                  {part}
+                  {index < parts.length - 1 && (
+                    <span
+                      className={cn(
+                        'mx-1.5',
+                        index === parts.length - 2 && 'sm:hidden',
+                      )}
+                    >
+                      ·
+                    </span>
+                  )}
+                </span>
+              ))}
+            </span>
           </span>
-        </span>
-      </button>
-    </li>
+          <span className="hidden items-center gap-2 pt-1 sm:flex">
+            <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted rtl:-scale-x-100">
+              <span
+                className={cn(
+                  'block h-full rounded-full',
+                  firing
+                    ? 'bg-gradient-to-r from-red-500 from-50% to-red-500/15'
+                    : 'bg-foreground/35',
+                )}
+                style={{ width: `${width}%` }}
+              />
+            </span>
+            <span
+              className={cn(
+                'w-20 shrink-0 whitespace-nowrap text-end text-[12px] tabular-nums',
+                firing
+                  ? 'text-red-600 dark:text-red-400'
+                  : 'text-muted-foreground',
+              )}
+            >
+              {firing ? t('ongoing') : length}
+            </span>
+          </span>
+        </button>
+      </li>
+    </AlertContextMenu>
   )
 }

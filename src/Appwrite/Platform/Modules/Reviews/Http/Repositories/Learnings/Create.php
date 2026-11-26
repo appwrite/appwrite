@@ -43,7 +43,7 @@ class Create extends Base
             ->param('repositoryId', '', new UID(), 'Repository ID.')
             ->param('projectId', '', new UID(), 'Project ID.')
             ->param('body', '', new Text(65535), 'What to remember, in one imperative sentence.')
-            ->param('author', '', new Text(255), 'GitHub login of who asked for it.')
+            ->param('author', '', new Text(255), 'Provider login of who asked for it.')
             ->param('sourceUrl', '', fn (PublicURL $publicURL) => $publicURL, 'The comment it was asked in. A link longer than 2048 characters is not stored.', true, ['publicURL'])
             ->inject('request')
             ->inject('response')

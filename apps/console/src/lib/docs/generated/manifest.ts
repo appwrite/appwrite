@@ -882,7 +882,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Proxy API",
     "description": "Point custom domains at a customer's Appwrite project API, functions, and sites with the Proxy API, then verify them over DNS.",
     "layout": "article",
-    "readingTimeMinutes": 4
+    "readingTimeMinutes": 5
   },
   {
     "slug": "partners/quick-start",
@@ -1174,9 +1174,9 @@ export const DOCS_PAGES: DocsPageMeta[] = [
   {
     "slug": "products/analytics/dashboard",
     "title": "Dashboard",
-    "description": "A tour of the Appwrite Analytics dashboard, from the metrics and chart to date ranges, live visitors, and the cards that break traffic down by source, page, location, technology, bots, and custom events.",
+    "description": "A tour of the Appwrite Analytics dashboard, from the metrics, chart, and notes to date ranges, live visitors, and the cards that break traffic down by source, page, location, technology, bots, and custom events.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 5
   },
   {
     "slug": "products/analytics/events",
@@ -1400,7 +1400,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Message templates",
     "description": "Communicate using your brand and voice by customizing email and SMS message templates, localized to your user's language.",
     "layout": "article",
-    "readingTimeMinutes": 5
+    "readingTimeMinutes": 6
   },
   {
     "slug": "products/auth/mfa",
@@ -3035,7 +3035,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Develop Appwrite Functions",
     "description": "Master serverless function development with Appwrite. Learn how to write and test functions locally, debug code, and optimize for efficient execution.",
     "layout": "article",
-    "readingTimeMinutes": 11
+    "readingTimeMinutes": 16
   },
   {
     "slug": "products/functions/develop-locally",
@@ -3049,7 +3049,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Domains",
     "description": "Execute Appwrite Functions through domains using standard HTTP GET, POST, or other request methods to serve static, JSON, HTML, or other content.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "products/functions/email",
@@ -3134,6 +3134,20 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Deliver push notifications from Appwrite to apps built with the Web, Flutter, React Native, Android, and Apple SDKs, without Firebase or device tokens.",
     "layout": "article",
     "readingTimeMinutes": 18
+  },
+  {
+    "slug": "products/messaging/bird-email",
+    "title": "Bird email",
+    "description": "Send emails to your Appwrite users through Bird's email API and Appwrite Messaging.",
+    "layout": "article",
+    "readingTimeMinutes": 5
+  },
+  {
+    "slug": "products/messaging/bird-sms",
+    "title": "Bird SMS",
+    "description": "Send SMS messages to your Appwrite users using Bird and Appwrite Messaging.",
+    "layout": "article",
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/messaging/fcm",
@@ -3392,7 +3406,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Domains",
     "description": "Discover how domains can be managed for an Appwrite Site",
     "layout": "article",
-    "readingTimeMinutes": 6
+    "readingTimeMinutes": 7
   },
   {
     "slug": "products/sites/environment-variables",
@@ -3595,7 +3609,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Image transformations",
     "description": "Optimize image storage and processing with Appwrite. Explore image resizing, transformations, and manipulation to deliver rich media experiences in your apps.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 5
   },
   {
     "slug": "products/storage/permissions",

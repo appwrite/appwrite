@@ -80,6 +80,10 @@ export function EventSchedulePanel({
     return null
   }
 
+  const amaCount = event.schedule.filter(
+    (item) => item.platform === 'reddit',
+  ).length
+
   const selectedTitle =
     selectedDayInfo && !isLaunchEventDayLocked(selectedDayInfo)
       ? selectedDayInfo.title
@@ -113,7 +117,9 @@ export function EventSchedulePanel({
                 ? 'Session replays and community hangouts'
                 : isCalendarToday
                   ? "Today's sessions"
-                  : 'YouTube streams and Reddit AMAs'}
+                  : amaCount === 1
+                    ? 'YouTube streams and a Reddit AMA'
+                    : 'YouTube streams and Reddit AMAs'}
             </p>
           </div>
           {scheduleDays.length > 1 ? (

@@ -1,5 +1,6 @@
 import type { LucideIcon } from 'lucide-react'
 import type { InitEventTicketConfig } from '@/lib/init/ticket-types'
+import type { ProductIcon } from '@/lib/products/types'
 
 export type LaunchEventStatus = 'upcoming' | 'active' | 'past'
 
@@ -27,11 +28,25 @@ export type InitDayMockVisualId =
   | 'databases'
   | 's3-storage'
   | 'firewall'
+  | 'analytics'
+  | 'videos'
+  | 'zero'
+  | 'monitors-beep'
+  | 'reviews'
 
 export interface LaunchEventDayVisual {
   mockVisualId: InitDayMockVisualId
   /** Accessible label for the mock UI frame. */
   imageAlt: string
+}
+
+/** A launch film played with the Appwrite player when a day's cover is clicked. */
+export interface LaunchEventDayFilm {
+  /** The Appwrite project the video lives in (public read). */
+  projectId: string
+  videoId: string
+  /** Switcher label when a day has several films (Monitors, Beep). */
+  label: string
 }
 
 export interface LaunchEventDay {
@@ -41,8 +56,16 @@ export interface LaunchEventDay {
   title: string
   description: string
   longDescription: string
-  icon: LucideIcon
+  /** The product's own icon where it has one (Zero's slashed zero), else Lucide. */
+  icon: ProductIcon
   visual?: LaunchEventDayVisual
+  /** Launch films for the day, in order; the cover plays the first. */
+  films?: LaunchEventDayFilm[]
+  /**
+   * This day launches the player the films play in: once it is revealed, the
+   * films say they are powered by Appwrite Videos.
+   */
+  launchesFilmPlayer?: boolean
   isLive?: boolean
   sessionCount: number
   resources: LaunchEventDayResource[]
@@ -60,6 +83,13 @@ export interface LaunchEventDayLocked {
 }
 
 export type LaunchEventDayView = LaunchEventDay | LaunchEventDayLocked
+
+/** True once the day that launches the films' player has been revealed. */
+export function isFilmPlayerRevealed(event: InitDisplayEvent): boolean {
+  return event.days.some(
+    (day) => !isLaunchEventDayLocked(day) && day.launchesFilmPlayer === true,
+  )
+}
 
 export function isLaunchEventDayLocked(
   day: LaunchEventDayView,
@@ -282,6 +312,14 @@ export interface LaunchEventRecap {
   ticket?: LaunchEventRecapTicketCopy
 }
 
+/** Site-wide promo banner copy for each phase of the event. */
+export interface LaunchEventPromoBanner {
+  before: string
+  /** Shown while live when today's launch has no title to lead with. */
+  during: string
+  after: string
+}
+
 export interface LaunchEvent {
   id: string
   slug: string
@@ -317,6 +355,8 @@ export interface LaunchEvent {
   prizes?: LaunchEventPrizes
   /** Copy and labels shown after the launch week ends. */
   recap?: LaunchEventRecap
+  /** Site-wide promo banner copy; falls back to the generic Init copy. */
+  promoBanner?: LaunchEventPromoBanner
   /** Availability cards shown after the final Init day. */
   releaseAvailability?: LaunchEventReleaseAvailability
   getInvolved: LaunchEventInvolvement[]

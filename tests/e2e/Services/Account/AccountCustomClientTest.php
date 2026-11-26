@@ -6789,6 +6789,56 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals('CH', $response['body']['clientCode']);
         $this->assertEquals('Chrome', $response['body']['clientName']);
 
+        // Forwarded IP with API Key
+        $response = $this->client->call(Client::METHOD_POST, '/users/' . $data['id'] . '/tokens', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'expire' => 60
+        ]);
+
+        $userId = $response['body']['userId'];
+        $secret = $response['body']['secret'];
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/token', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+            'x-forwarded-ip' => '191.0.113.195'
+        ], [
+            'userId' => $userId,
+            'secret' => $secret
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals('191.0.113.195', $response['body']['ip']);
+
+        // Forwarded IP without API Key
+        $response = $this->client->call(Client::METHOD_POST, '/users/' . $data['id'] . '/tokens', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'expire' => 60
+        ]);
+
+        $userId = $response['body']['userId'];
+        $secret = $response['body']['secret'];
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/token', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-forwarded-ip' => '191.0.113.195'
+        ], [
+            'userId' => $userId,
+            'secret' => $secret
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotFalse(\filter_var($response['body']['ip'], FILTER_VALIDATE_IP));
+        $this->assertNotEquals('191.0.113.195', $response['body']['ip']);
+
         /**
          * Test for FAILURE
          */
@@ -7952,6 +8002,20 @@ final class AccountCustomClientTest extends Scope
         $this->assertSame(1, $counts[200] ?? 0, 'Exactly one concurrent confirmation may consume the recovery code: ' . json_encode($statuses));
         $this->assertSame(3, $counts[401] ?? 0, 'Every other concurrent confirmation must be rejected: ' . json_encode($statuses));
 
+        // The factor whitelist is case-insensitive, so other spellings must confirm too
+        foreach (['recoverycode', 'RECOVERYCODE'] as $index => $factor) {
+            $challenge = $this->client->call(Client::METHOD_POST, '/account/mfa/challenge', $headers, [
+                'factor' => $factor,
+            ]);
+            $this->assertEquals(201, $challenge['headers']['status-code']);
+
+            $verification = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenge', $headers, [
+                'challengeId' => $challenge['body']['$id'],
+                'otp' => $recoveryCodes[$index + 2],
+            ]);
+            $this->assertEquals(200, $verification['headers']['status-code']);
+        }
+
         // Test FAILURE: Invalid recovery code
         $challenge3 = $this->client->call(Client::METHOD_POST, '/account/mfa/challenge', array_merge([
             'content-type' => 'application/json',
@@ -8207,6 +8271,67 @@ final class AccountCustomClientTest extends Scope
         $delete = $this->client->call(Client::METHOD_DELETE, '/account/mfa/authenticators/totp', $headers);
 
         $this->assertEquals(204, $delete['headers']['status-code']);
+    }
+
+    public function testCreateMFARecoveryCodesRequiresRecentChallengeOnceMFAIsOn(): void
+    {
+        $data = $this->createFreshAccountWithSession();
+        $projectId = $this->getProject()['$id'];
+
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $data['session'],
+        ];
+
+        $authenticator = $this->client->call(Client::METHOD_POST, '/account/mfa/authenticators/totp', $headers);
+
+        $this->assertEquals(200, $authenticator['headers']['status-code']);
+
+        $totp = \OTPHP\TOTP::create($authenticator['body']['secret']);
+        // The server accepts only the current time step, so skip a code about to expire
+        if ($totp->expiresIn() <= 5) {
+            $this->getNextTOTP($totp, $totp->now());
+        }
+        $enrollmentOtp = $totp->now();
+
+        $verification = $this->client->call(Client::METHOD_PUT, '/account/mfa/authenticators/totp', $headers, [
+            'otp' => $enrollmentOtp,
+        ]);
+
+        $this->assertEquals(200, $verification['headers']['status-code']);
+
+        $enable = $this->client->call(Client::METHOD_PATCH, '/account/mfa', $headers, [
+            'mfa' => true,
+        ]);
+
+        $this->assertEquals(200, $enable['headers']['status-code']);
+
+        // Test FAILURE: the session meets the factor count but never completed a challenge
+        $withoutChallenge = $this->client->call(Client::METHOD_POST, '/account/mfa/recovery-codes', $headers);
+
+        $this->assertEquals(401, $withoutChallenge['headers']['status-code']);
+        $this->assertEquals('user_challenge_required', $withoutChallenge['body']['type']);
+
+        // Test SUCCESS: after a challenge
+        $challenge = $this->client->call(Client::METHOD_POST, '/account/mfa/challenges', $headers, [
+            'factor' => 'totp',
+        ]);
+
+        $this->assertEquals(201, $challenge['headers']['status-code']);
+
+        $challengeVerification = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenges', $headers, [
+            'challengeId' => $challenge['body']['$id'],
+            'otp' => $this->getNextTOTP($totp, $enrollmentOtp),
+        ]);
+
+        $this->assertEquals(200, $challengeVerification['headers']['status-code']);
+
+        $recoveryCodes = $this->client->call(Client::METHOD_POST, '/account/mfa/recovery-codes', $headers);
+
+        $this->assertEquals(201, $recoveryCodes['headers']['status-code']);
+        $this->assertNotEmpty($recoveryCodes['body']['recoveryCodes']);
     }
 
     public function testUpdateMFADisableRequiresRecentChallenge(): void

@@ -1,7 +1,6 @@
-import { useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { AnalyticsDimension, type Models } from '@appwrite.io/console'
-import { Area, AreaChart, ResponsiveContainer, Tooltip, YAxis } from 'recharts'
 import { Bot, Download, Globe, Plus, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -33,6 +32,11 @@ import {
   buildAnalyticsChartPoints,
 } from '../../analytics/_components/chart-series'
 import { ChangeBadge } from '../../analytics/_components/ChangeBadge'
+import { MiniStat } from '../../analytics/_components/MiniStat'
+import {
+  TrendChart,
+  type TrendPoint,
+} from '../../analytics/_components/TrendChart'
 import {
   formatDuration,
   formatNumber,
@@ -41,9 +45,6 @@ import {
 import { InstallTrackingDialog } from '../../analytics/_components/InstallTrackingDialog'
 import { LiveVisitors } from '../../analytics/_components/LiveVisitors'
 import { SourceFavicon } from '../../analytics/_components/BreakdownRow'
-
-/** Same series colour as the analytics overview chart. */
-const CHART_COLOR = 'var(--chart-brand)'
 
 // ─── Fixed geometry ─────────────────────────────────────────────────────────
 //
@@ -180,117 +181,6 @@ function sourceFilterQuery(source: string): string {
   return mapToQueryParam(new Map([[entry.key, entry.query]]))
 }
 
-type TrendPoint = { label: string; value: number }
-
-/**
- * Smooth area chart in the style of the analytics and usage charts
- * (monotone curve, brand gradient, hover tooltip), without axes. The latest
- * point carries a dot.
- */
-function TrendChart({
-  data,
-  valueLabel,
-  interactive = true,
-}: {
-  data: TrendPoint[]
-  valueLabel: string
-  interactive?: boolean
-}) {
-  const gradientId = useId().replace(/:/g, '')
-  const lastIndex = data.length - 1
-  return (
-    <ResponsiveContainer width="100%" height="100%">
-      <AreaChart data={data} margin={{ top: 8, right: 6, bottom: 2, left: 6 }}>
-        <defs>
-          <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={CHART_COLOR} stopOpacity={0.28} />
-            <stop offset="100%" stopColor={CHART_COLOR} stopOpacity={0} />
-          </linearGradient>
-        </defs>
-        <YAxis hide domain={[0, (max: number) => Math.ceil(max * 1.15) || 1]} />
-        {interactive ? (
-          <Tooltip
-            isAnimationActive={false}
-            cursor={{ stroke: 'var(--border)' }}
-            content={({ active, payload }) => {
-              const point = payload?.[0]?.payload as TrendPoint | undefined
-              if (!active || !point) return null
-              return (
-                <div className="rounded-md border border-border bg-popover px-2.5 py-1.5 text-[11px]">
-                  <p className="text-muted-foreground">{point.label}</p>
-                  <p className="mt-0.5 font-medium tabular-nums text-foreground">
-                    {formatNumber(point.value)} {valueLabel}
-                  </p>
-                </div>
-              )
-            }}
-          />
-        ) : null}
-        <Area
-          type="monotone"
-          dataKey="value"
-          stroke={CHART_COLOR}
-          strokeWidth={2}
-          fill={`url(#${gradientId})`}
-          isAnimationActive={false}
-          activeDot={
-            interactive
-              ? { r: 4, fill: CHART_COLOR, stroke: 'var(--background)', strokeWidth: 2 }
-              : false
-          }
-          dot={(props: { cx?: number; cy?: number; index?: number }) =>
-            props.index === lastIndex && props.cx != null && props.cy != null ? (
-              <circle
-                key="last"
-                cx={props.cx}
-                cy={props.cy}
-                r={3.5}
-                fill={CHART_COLOR}
-                stroke="var(--background)"
-                strokeWidth={2}
-              />
-            ) : (
-              <g key={props.index} />
-            )
-          }
-        />
-      </AreaChart>
-    </ResponsiveContainer>
-  )
-}
-
-function MiniStat({
-  label,
-  value,
-  change,
-  invert,
-}: {
-  label: string
-  value: string | null
-  change?: number
-  invert?: boolean
-}) {
-  return (
-    <div className="flex h-[52px] min-w-0 items-center rounded-lg border border-border/60 bg-background/40 px-3">
-      <div className="min-w-0">
-        <p className="truncate text-[11px] text-muted-foreground">{label}</p>
-        <p className="flex h-5 items-baseline gap-1.5">
-          {value === null ? (
-            <span className="mt-1 h-3 w-10 animate-pulse rounded bg-muted" />
-          ) : (
-            <>
-              <span className="text-[13px] font-semibold tabular-nums text-foreground">
-                {value}
-              </span>
-              <ChangeBadge change={change} invert={invert} />
-            </>
-          )}
-        </p>
-      </div>
-    </div>
-  )
-}
-
 /** Faint dot grid behind the chart, like the product empty states. */
 const DOT_GRID_STYLE = {
   backgroundImage: 'radial-gradient(var(--border) 1px, transparent 1px)',
@@ -307,7 +197,8 @@ const PREVIEW_SERIES: TrendPoint[] = [
 /**
  * Analytics on the site's deployments page, for the last 24 hours.
  *
- * - Linked (a property tracks one of the site's domains): headline visitors
+ * - Linked (the property the site's analytics switch created, or else one
+ *   that tracks one of the site's domains): headline visitors
  *   with its trend, an hourly chart, live visitors, top sources, and "View
  *   analytics" or "Install" before the first event.
  * - Not linked: a preview of the same layout and "Add analytics", which opens
@@ -321,9 +212,19 @@ export function SiteAnalyticsCard({
   siteName,
   siteDomains,
   domainsLoading = false,
+  linkedPropertyId,
+  tracked = false,
 }: {
   projectId: string
   siteName: string
+  /**
+   * The property the site's analytics switch links (`site.analyticsPropertyId`).
+   * Its domain can be empty (analytics turned on before the site had a
+   * domain), so it wins over matching by domain.
+   */
+  linkedPropertyId?: string
+  /** The site's analytics switch is on: Appwrite injects the tracker itself. */
+  tracked?: boolean
   /** Every domain serving the site; the shortest is used to prefill. */
   siteDomains: readonly string[]
   /** While the site's domains load, matching would flash "not linked". */
@@ -343,8 +244,11 @@ export function SiteAnalyticsCard({
     error,
   } = useAnalyticsProperties(enabled ? projectId : null, 0, 100, '')
   const property = useMemo(
-    () => findPropertyForSite(properties, siteDomains),
-    [properties, siteDomains],
+    () =>
+      (linkedPropertyId
+        ? properties.find((entry) => entry.$id === linkedPropertyId)
+        : undefined) ?? findPropertyForSite(properties, siteDomains),
+    [properties, siteDomains, linkedPropertyId],
   )
 
   // 24 whole hours ending with the current one, fixed per mount so the query
@@ -548,7 +452,9 @@ export function SiteAnalyticsCard({
                     {t('Waiting for the first visitor')}
                   </p>
                   <p className="text-[11px] text-muted-foreground">
-                    {t('Install tracking and load a page on the site.')}
+                    {tracked
+                      ? t('Load a page on the site’s production domain.')
+                      : t('Install tracking and load a page on the site.')}
                   </p>
                 </div>
               ) : null
@@ -587,7 +493,8 @@ export function SiteAnalyticsCard({
         ) : property ? (
           <>
             {/* Only once stats say there's no traffic: never flashes in. */}
-            {statsLoaded && !hasTraffic ? (
+            {/* The switch injects the tracker, so there is nothing to install. */}
+            {statsLoaded && !hasTraffic && !tracked ? (
               <Button
                 variant="secondary"
                 size="sm"

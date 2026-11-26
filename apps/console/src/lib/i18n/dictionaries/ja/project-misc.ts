@@ -1535,6 +1535,13 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'SMS messages': 'SMS メッセージ',
   'Events sent': '送信イベント',
   'Events failed': '失敗イベント',
+  'Streaming bandwidth': 'ストリーミング帯域幅',
+  'Renditions encoded': 'エンコード済みレンディション',
+  'Failed renditions': '失敗したレンディション',
+  'Encoding GB-hours': 'エンコード GB 時間',
+  'Video storage': '動画ストレージ',
+  Endpoints: 'エンドポイント',
+  'Video ID': '動画ID',
   Webhooks: 'Webhook',
   'Function executions': '関数の実行',
   'Site executions': 'サイトの実行',
@@ -1660,6 +1667,11 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     '選択期間中の関数コンピュート時間 (ギガバイト時間 GBH で計測)。Functions に割り当てられたメモリに実行時間とビルド時間を掛けた値。',
   'Site compute time during the selected period, measured in gigabyte-hours (GBH). Memory allocated to sites multiplied by request handling and build duration.':
     '選択期間中のサイトコンピュート時間 (ギガバイト時間 GBH で計測)。サイトに割り当てられたメモリにリクエスト処理時間とビルド時間を掛けた値。',
+  'Video encoding GB-hours': '動画エンコード GB 時間',
+  'Video encoding compute during the selected period, measured in gigabyte-hours (GBH). Encoder memory multiplied by encode duration. Included in GB-hours.':
+    '選択期間中の動画エンコードのコンピュート時間 (ギガバイト時間 GBH で計測)。エンコーダーのメモリにエンコード時間を掛けた値。GB 時間に含まれます。',
+  'Storage used by video renditions, captions, and thumbnail timelines. Counts toward your plan storage limit.':
+    '動画のレンディション、字幕、サムネイルタイムラインが使用するストレージ。プランのストレージ上限に含まれます。',
   'Top storage buckets': 'ストレージバケット上位',
   'Top buckets by origin images': 'オリジン画像別バケット上位',
   'Top executed functions': '実行数上位の関数',
@@ -3409,6 +3421,93 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'Premium Geo DB アドオンは現在の請求サイクル終了時に削除されます',
   'Unable to verify Premium Geo DB addon status. Please retry.':
     'Premium Geo DB アドオンの状態を確認できませんでした。再試行してください。',
+  "With this add-on, your app's users sign in through their company's identity provider. Each team in this project can verify domains, connect identity providers and turn on Require SSO.":
+    'このアドオンを使うと、アプリのユーザーは会社の ID プロバイダー経由でサインインできます。このプロジェクトの各チームは、ドメインの検証、ID プロバイダーの接続、SSO の必須化を行えます。',
+  'Starts next cycle': '次のサイクルから開始',
+  'The add-on starts with your next billing cycle. Single sign-on can be set up from then.':
+    'アドオンは次の請求サイクルから開始されます。それ以降、シングルサインオンを設定できます。',
+  '{price}/month, prorated for the current billing cycle.':
+    '{price}/月、現在の請求サイクルに按分されます。',
+  'Billed monthly, prorated for the current billing cycle.':
+    '月額で請求され、現在の請求サイクルに按分されます。',
+  'This add-on is not available on your current plan. Upgrade your plan to enable it.':
+    'このアドオンは現在のプランでは利用できません。有効にするにはプランをアップグレードしてください。',
+  'This add-on is not available on your current plan.':
+    'このアドオンは現在のプランでは利用できません。',
+  'The add-on will be removed at the end of your current billing cycle.':
+    'このアドオンは現在の請求サイクルの終了時に削除されます。',
+  "This environment has the add-on of its project. Change it in the project's settings.":
+    'この環境ではプロジェクトのアドオンが使われます。変更はプロジェクトの設定で行ってください。',
+  "You don't have permission to manage this project's add-ons.":
+    'このプロジェクトのアドオンを管理する権限がありません。',
+  "Couldn't load the add-on's status.": 'アドオンの状態を読み込めませんでした。',
+  'Keep add-on': 'アドオンを維持',
+  'Disable add-on': 'アドオンを無効にする',
+  'Enable the Single sign-on add-on': 'シングルサインオンアドオンを有効にする',
+  'Disable the Single sign-on add-on': 'シングルサインオンアドオンを無効にする',
+  'Single sign-on add-on has been enabled': 'シングルサインオンアドオンが有効になりました',
+  'Single sign-on add-on has been re-enabled': 'シングルサインオンアドオンが再度有効になりました',
+  'Single sign-on add-on is already active for this project':
+    'シングルサインオンアドオンはこのプロジェクトですでに有効です',
+  'Single sign-on add-on will be removed at the end of your current billing cycle':
+    'シングルサインオンアドオンは現在の請求サイクルの終了時に削除されます',
+  "Are you sure you want to disable the Single sign-on add-on? It stays active until the end of your current billing cycle and is not renewed. Then nobody signs in to your app through the identity providers of this project's teams, and the teams can no longer verify domains, connect identity providers or turn on Require SSO.":
+    'シングルサインオンアドオンを無効にしますか? 現在の請求サイクル終了まで有効のままで、更新されません。その後、このプロジェクトのチームの ID プロバイダー経由でアプリにサインインできなくなり、チームはドメインの検証、ID プロバイダーの接続、SSO の必須化を行えなくなります。',
+  'Sign in to Appwrite with your company login':
+    '会社のログインで Appwrite にサインイン',
+  'People on your verified domains sign in to the Console through your identity provider, and join this organization with the roles you choose.':
+    '検証済みドメインのユーザーは ID プロバイダー経由でコンソールにサインインし、選択したロールでこの組織に参加します。',
+  'Teammates join on their first sign-in':
+    'チームメイトは初回サインインで参加',
+  'No invites to send. Anyone on your domains gets in with the roles you set.':
+    '招待を送る必要はありません。ドメインのユーザーは、設定したロールで参加できます。',
+  'Make it the only way in':
+    '唯一のサインイン方法にする',
+  'Require SSO, so people on your domains reach the organization only through your identity provider. Owners always keep access.':
+    'SSO を必須にすると、ドメインのユーザーは ID プロバイダー経由でのみ組織にアクセスできます。オーナーは常にアクセスできます。',
+  'Bring your identity provider':
+    'お使いの ID プロバイダーをそのまま利用',
+  'Okta, Microsoft Entra ID, Google Workspace, Keycloak, or anything that speaks OpenID Connect.':
+    'Okta、Microsoft Entra ID、Google Workspace、Keycloak など、OpenID Connect 対応のプロバイダーを利用できます。',
+  'Let your customers sign in with their company login':
+    '顧客が会社のログインでサインインできるようにする',
+  "Users on a team's verified domains sign in to your app through that team's identity provider, and join the team with its roles.":
+    'チームの検証済みドメインのユーザーは、そのチームの ID プロバイダー経由でアプリにサインインし、チームのロールで参加します。',
+  'An identity provider for each customer':
+    '顧客ごとに ID プロバイダー',
+  'Give every customer a team with its own domains and its own identity provider.':
+    '顧客ごとに、独自のドメインと ID プロバイダーを持つチームを用意できます。',
+  'Users join on their first sign-in':
+    'ユーザーは初回サインインで参加',
+  'No invites to send. They land in the team with the roles you chose.':
+    '招待を送る必要はありません。選択したロールでチームに参加します。',
+  'Require SSO, team by team':
+    'チームごとに SSO を必須化',
+  "Members on a team's domains get its roles only after signing in through its identity provider.":
+    'チームのドメインのメンバーは、そのチームの ID プロバイダー経由でサインインした後にのみロールを取得します。',
+  'One add-on covers every team in this project, in each of its environments.':
+    '1 つのアドオンで、このプロジェクトのすべてのチームと各環境をカバーします。',
+  'Prorated for the current billing cycle.':
+    '現在の請求サイクルに合わせて日割り計算されます。',
+  'Your company': 'あなたの会社',
+  'Your customer': 'あなたの顧客',
+  "With this add-on, people on your organization's verified domains sign in to the Console through its identity providers.":
+    'このアドオンを使うと、組織の検証済みドメインのユーザーは組織の ID プロバイダー経由でコンソールにサインインします。',
+  'This add-on is available on {plans}. Upgrade your plan to enable it.':
+    'このアドオンは {plans} で利用できます。有効にするにはプランをアップグレードしてください。',
+  "You don't have permission to manage this organization's add-ons.":
+    'この組織のアドオンを管理する権限がありません。',
+  'Single sign-on add-on is already active for this organization':
+    'シングルサインオンアドオンはこの組織ですでに有効です',
+  'Set it up for each team on its Single sign-on tab, under Auth.':
+    '認証の各チームにある「シングルサインオン」タブで、チームごとに設定します。',
+  'Go to teams': 'チームへ移動',
+  "Until the add-on is active, nobody signs in through the identity providers of this project's teams and Require SSO has no effect. You can still delete domains and identity providers, and turn Require SSO off.":
+    'アドオンが有効になるまで、このプロジェクトのチームの ID プロバイダー経由でサインインするユーザーはおらず、SSO の必須化も適用されません。ドメインと ID プロバイダーの削除、および SSO の必須化をオフにすることは引き続き可能です。',
+  "Single sign-on in a project needs the Single sign-on add-on. Enable it in the project's settings.":
+    'プロジェクトのシングルサインオンにはシングルサインオンアドオンが必要です。プロジェクトの設定で有効にしてください。',
+  'Are you sure you want to disable the Single sign-on add-on? It stays active until the end of your current billing cycle and is not renewed. Then single sign-on for the organization stops, and people who can only sign in through your identity providers can no longer sign in.':
+    'シングルサインオンアドオンを無効にしますか? 現在の請求サイクル終了まで有効のままで、更新されません。その後、組織のシングルサインオンは停止し、ID プロバイダー経由でしかサインインできないユーザーはサインインできなくなります。',
   'Payment could not be authorized. Please try enabling the addon again.':
     '支払いを承認できませんでした。アドオンの有効化を再試行してください。',
   'Add a payment method to your organization before enabling this addon.':
@@ -4001,6 +4100,15 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     '誰かが対応中であることをチームに知らせます。モニターが回復するまでアラートは発生し続けます。',
   'Nobody has acknowledged this alert':
     'このアラートはまだ誰も確認していません',
+  Acknowledged: '確認済み',
+  'Alert acknowledged': 'アラートを確認済みにしました',
+  "Your team sees that you're on it. It keeps firing until its monitor recovers.":
+    'あなたが対応中であることがチームに表示されます。モニターが回復するまでアラートは発生し続けます。',
+  'This alert has already resolved': 'このアラートはすでに解決しています',
+  'Only a firing alert can be acknowledged.':
+    '確認済みにできるのは発生中のアラートだけです。',
+  "Your role can't change alerts. Ask an owner or a developer.":
+    'あなたのロールではアラートを変更できません。オーナーまたは開発者に依頼してください。',
   "You don't have permission to manage monitors.":
     'モニターを管理する権限がありません。',
   'between two alerts from this monitor.':
@@ -4326,9 +4434,19 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'The note is removed from the chart for everyone.':
     'このメモは全員のグラフから削除されます。',
   'Former member': '元メンバー',
+  Notes: 'メモ',
   Escalations: 'エスカレーション',
   Escalation: 'エスカレーション',
   Escalating: 'エスカレーション中',
+  'Alert when the value is': '値が次の条件のときにアラート',
+  'Counted over': '集計期間',
+  'Undo acknowledgement': '確認を取り消す',
+  'Someone needs to act now, even at night.':
+    '夜間でも、今すぐ誰かが対応する必要があります。',
+  'The push plays a siren through silent mode and Do Not Disturb.':
+    'プッシュ通知はサイレントモードやおやすみモードでもサイレンを鳴らします。',
+  'Every level is emailed, shown in the console and pushed to phones, with the level in the title. Webhooks and functions receive it with the alert events. A critical push rings only on phones that allowed critical alerts.':
+    'すべてのレベルはメールで送信され、コンソールに表示され、タイトルにレベルを含めてスマートフォンにプッシュ通知されます。Webhook と関数はアラートイベントとともにレベルを受け取ります。重大なプッシュ通知は、重大な通知を許可したスマートフォンでのみ鳴ります。',
   'Notify roles once': 'ロールに 1 回通知',
   'Select an escalation.': 'エスカレーションを選択してください。',
   'Each step of the escalation is notified in turn until someone acknowledges the alert.':
@@ -4386,5 +4504,94 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'analytics property': 'アナリティクスプロパティ',
   'per project.': '(プロジェクトごと)。',
   'to create another.': 'して、さらに作成してください。',
-  'to enable analytics on this site.': 'して、このサイトでアナリティクスを有効にしてください。',
+  'to enable analytics on this site.':
+    'して、このサイトでアナリティクスを有効にしてください。',
+  'Your plan checks at most every {interval}.':
+    'ご利用のプランでは、チェック間隔は最短で{interval}です。',
+  'Synthetic checks: {used} of {limit} allowed on your plan.':
+    'Synthetic チェック: プランの上限 {limit} 件中 {used} 件を使用中です。',
+  'Synthetic checks: {used} of {included} included.':
+    'Synthetic チェック: プランに含まれる {included} 件中 {used} 件を使用中です。',
+  'Each extra check costs {price} per month.':
+    '追加のチェックは 1 件あたり月額 {price} です。',
+  'Upgrade your plan to add more synthetic checks.':
+    'Synthetic チェックを追加するには、プランをアップグレードしてください。',
+  'HTTP, DNS, TCP and SMTP monitors are available on paid plans.':
+    'HTTP、DNS、TCP、SMTP のモニターは有料プランで利用できます。',
+  'Escalations: {used} of {limit} allowed on your plan.':
+    'エスカレーション: プランの上限 {limit} 件中 {used} 件を使用中です。',
+  'On-call responders: {used} of {included} included.':
+    'オンコール対応者: プランに含まれる {included} 人中 {used} 人です。',
+  'Each extra responder costs {price} per month.':
+    '追加の対応者は 1 人あたり月額 {price} です。',
+  'Upgrade your plan to create more escalations.':
+    'エスカレーションをさらに作成するには、プランをアップグレードしてください。',
+  'Your plan allows up to {count} steps per escalation.':
+    'ご利用のプランでは、1 つのエスカレーションに設定できるステップは {count} 個までです。',
+  'Upgrade your plan to repeat escalations.':
+    'エスカレーションを繰り返すには、プランをアップグレードしてください。',
+  'Usage monitors: {used} of {limit} allowed on your plan.':
+    '使用量モニター: プランの上限 {limit} 件中 {used} 件を使用中です。',
+  'Upgrade your plan to add more usage monitors.':
+    '使用量モニターを追加するには、プランをアップグレードしてください。',
+  // Analytics for signed-in users
+  'Signed-in users, ranked by visits': 'サインイン済みユーザー (訪問数順)',
+  'View user': 'ユーザーを表示',
+  'Could not load analytics': 'アナリティクスを読み込めませんでした',
+  'No analytics yet': 'アナリティクスはまだありません',
+  "Add an analytics property and turn on User identification to see each signed-in user's pages and events here.":
+    'アナリティクスプロパティを追加してユーザー識別を有効にすると、サインイン済みユーザーごとのページとイベントがここに表示されます。',
+  'Add analytics': 'アナリティクスを追加',
+  'Link {name} to their analytics': '{name} をアナリティクスにリンク',
+  "Turn on User identification in a property's settings to record the signed-in user on every event, so their pages, events and sessions show here.":
+    'プロパティの設定でユーザー識別を有効にすると、すべてのイベントにサインイン中のユーザーが記録され、そのページ、イベント、セッションがここに表示されます。',
+  'Open property settings': 'プロパティ設定を開く',
+  'Last active': '最終アクティブ',
+  Calls: '呼び出し',
+  'Active days': 'アクティブ日数',
+  'No events from this user in the last 30 days':
+    '過去 30 日間、このユーザーのイベントはありません',
+  '30 days ago': '30 日前',
+  'No custom events': 'カスタムイベントはありません',
+  'No model calls': 'モデル呼び出しはありません',
+  'No screens viewed': '表示された画面はありません',
+  'No pages viewed': '表示されたページはありません',
+  'View in analytics': 'アナリティクスで表示',
+  'New installs and updates of your app':
+    'アプリの新規インストールとアップデート',
+  'Add the latest tracking SDK to your app to count installs and updates.':
+    '最新のトラッキング SDK をアプリに追加すると、インストールとアップデートを計測できます。',
+  'Pushes received on devices, and how many were opened':
+    'デバイスで受信したプッシュ通知と開封数',
+  'No push notifications tracked yet': 'プッシュ通知はまだ計測されていません',
+  'Pushes sent with Messaging show their reach and opens here once the tracking SDK is in your app.':
+    'トラッキング SDK をアプリに追加すると、Messaging で送信したプッシュ通知の到達数と開封数がここに表示されます。',
+  'Open Messaging': 'Messaging を開く',
+  Received: '受信',
+  Opened: '開封',
+  'Open rate': '開封率',
+  Rate: '率',
+  'No pushes with a message ID in this range':
+    'この期間にメッセージ ID 付きのプッシュはありません',
+  '{count} delivered': '{count} 件配信',
+  'View message': 'メッセージを表示',
+  Views: '表示',
+  'Last seen': '最終確認',
+  'Not in this period': 'この期間はなし',
+  'of {count}': '/ {count}',
+  'Events per day, last 30 days': '1 日あたりのイベント (過去 30 日間)',
+  Properties: 'プロパティ',
+  'Where this user was active, last 30 days':
+    'このユーザーがアクティブだった場所 (過去 30 日間)',
+  'No activity': 'アクティビティなし',
+  'No locations': '場所はありません',
+  'No sources': 'ソースはありません',
+  'No browsers': 'ブラウザはありません',
+  'No operating systems': 'OS はありません',
+  'No devices': 'デバイスはありません',
+  'No OS versions': 'OS バージョンはありません',
+  views: '表示',
+  'signed in': '人がサインイン中',
+  'Signed in now': '現在サインイン中',
+  'and {count} more': 'ほか {count} 人',
 }

@@ -74,7 +74,9 @@ const fullConfig = () => ({
 })
 
 describe('appwrite analytics', () => {
-  const hadWindow = 'window' in globalThis
+  // Later test files branch on `window`, so put back what was there: a file
+  // that ran before may have left the property set to `undefined`.
+  const originalWindow = Object.getOwnPropertyDescriptor(globalThis, 'window')
 
   beforeEach(() => {
     resetAppwriteAnalyticsForTests()
@@ -87,7 +89,11 @@ describe('appwrite analytics', () => {
   afterAll(() => {
     resetAppwriteAnalyticsForTests()
     resetCookieConsentStateForTests()
-    if (!hadWindow) Reflect.deleteProperty(globalThis, 'window')
+    if (originalWindow) {
+      Object.defineProperty(globalThis, 'window', originalWindow)
+    } else {
+      Reflect.deleteProperty(globalThis, 'window')
+    }
     mock.module('@/lib/runtime-config', () => realRuntimeConfig)
     mock.module('@appwrite.io/console', () => realSdk)
   })

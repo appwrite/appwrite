@@ -27,6 +27,8 @@ import {
   buildStorageUsageCategoryMetrics,
   REQUESTS_USAGE_CATEGORY,
   buildRequestsUsageCategoryMetrics,
+  VIDEOS_USAGE_CATEGORY,
+  buildVideosUsageCategoryMetrics,
 } from './usage-live-categories'
 
 export const DEFAULT_USAGE_CATEGORY_ID = 'requests'
@@ -62,6 +64,7 @@ export const USAGE_NAV_GROUPS: readonly UsageNavGroupConfig[] = [
       'functions',
       'messaging',
       'sites',
+      'videos',
       'avatars',
     ],
   },
@@ -71,10 +74,18 @@ export type UsageNavGroup = UsageNavGroupConfig & {
   categories: UsageCategory[]
 }
 
+export type UsageNavOptions = {
+  /** Videos is a flagged product; its category shows only while enabled. */
+  videos?: boolean
+}
+
 export function getUsageNavGroups(
   plan: 'free' | 'pro' | 'custom' = 'pro',
+  options: UsageNavOptions = {},
 ): UsageNavGroup[] {
-  const categories = getUsageCategories(plan)
+  const categories = getUsageCategories(plan).filter(
+    (category) => category.id !== 'videos' || options.videos === true,
+  )
   const categoryById = new Map(categories.map((category) => [category.id, category]))
 
   return USAGE_NAV_GROUPS.map((group) => ({
@@ -278,21 +289,37 @@ export function insertStorageCategory(
   )
 }
 
+export function insertVideosCategory(
+  categories: UsageCategory[],
+): UsageCategory[] {
+  const videosCategory: UsageCategory = {
+    ...VIDEOS_USAGE_CATEGORY,
+    metrics: buildVideosUsageCategoryMetrics(),
+  }
+
+  return [
+    ...categories.filter((category) => category.id !== 'videos'),
+    videosCategory,
+  ]
+}
+
 export function getUsageCategories(
   plan: 'free' | 'pro' | 'custom' = 'pro',
 ): UsageCategory[] {
   const usageData = generateMockUsageData(plan)
-  return insertStorageCategory(
-    insertWebhooksCategory(
-      insertMessagingCategory(
-        insertAvatarsCategory(
-          insertAuthCategory(
-            insertSitesCategory(
-              insertFunctionsCategory(
-                insertComputeCategory(
-                  insertRealtimeCategory(
-                    insertDatabasesCategory(
-                      insertBandwidthCategory(insertRequestsCategory(usageData.categories)),
+  return insertVideosCategory(
+    insertStorageCategory(
+      insertWebhooksCategory(
+        insertMessagingCategory(
+          insertAvatarsCategory(
+            insertAuthCategory(
+              insertSitesCategory(
+                insertFunctionsCategory(
+                  insertComputeCategory(
+                    insertRealtimeCategory(
+                      insertDatabasesCategory(
+                        insertBandwidthCategory(insertRequestsCategory(usageData.categories)),
+                      ),
                     ),
                   ),
                 ),

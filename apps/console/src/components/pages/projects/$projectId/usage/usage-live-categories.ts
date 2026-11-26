@@ -422,3 +422,50 @@ export function buildStorageUsageCategoryMetrics(): UsageCategory['metrics'] {
     timeSeries: [],
   }))
 }
+
+export type VideosUsageCategory = {
+  id: 'videos'
+  label: 'Videos'
+  icon: 'Video'
+  description: string
+  metrics: { id: string; name: string }[]
+}
+
+export const VIDEOS_USAGE_CATEGORY: VideosUsageCategory = {
+  id: 'videos',
+  label: 'Videos',
+  icon: 'Video',
+  description:
+    'Video streaming bandwidth and requests, rendition encodes, encoding compute, and video storage.',
+  metrics: [
+    { id: 'bandwidth', name: 'Streaming bandwidth' },
+    { id: 'requests', name: 'Requests' },
+    { id: 'renditions', name: 'Renditions encoded' },
+    { id: 'renditions-failed', name: 'Failed renditions' },
+    { id: 'gb-hours', name: 'Encoding GB-hours' },
+    { id: 'storage', name: 'Video storage' },
+    { id: 'videos', name: 'Videos' },
+  ],
+}
+
+export function buildVideosUsageCategoryMetrics(): UsageCategory['metrics'] {
+  const units: Record<string, string> = {
+    bandwidth: 'bytes',
+    requests: 'requests',
+    renditions: 'renditions',
+    'renditions-failed': 'renditions',
+    'gb-hours': 'GB-hours',
+    storage: 'bytes',
+    videos: 'videos',
+  }
+
+  return VIDEOS_USAGE_CATEGORY.metrics.map((metric) => ({
+    id: metric.id,
+    name: metric.name,
+    description: '',
+    unit: units[metric.id] ?? 'count',
+    currentValue: 0,
+    quota: null,
+    timeSeries: [],
+  }))
+}

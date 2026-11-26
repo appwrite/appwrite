@@ -4,17 +4,22 @@
  * Handles code reviews of pull requests and the repositories they run for.
  */
 
+import { useCallback } from 'react'
 import {
+  infiniteQueryOptions,
   keepPreviousData,
   queryOptions,
+  useInfiniteQuery,
   useMutation,
   useQuery,
   useQueryClient,
+  type QueryClient,
 } from '@tanstack/react-query'
 import {
   AppwriteException,
   Query,
   VCSDetectionType,
+  type Models,
 } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import type {
@@ -29,8 +34,14 @@ import type {
   ReviewRepositoryList,
   ReviewStrength,
 } from '@/lib/appwrite/reviews'
+import { isReviewVcsProvider } from '@/lib/vcs/providers'
 import { DEFAULT_PAGE_SIZE, DEFAULT_STALE_TIME } from './constants'
-import { fetchRepositories } from './vcs'
+import {
+  fetchRepositories,
+  installationQueryOptions,
+  repositoryQueryOptions,
+  useVcsInstallations,
+} from './vcs'
 
 /** Reviews are fanned out by the review service, so poll while one is running. */
 const REVIEW_POLL_INTERVAL = 5 * 1000
@@ -46,6 +57,12 @@ const INSTALLATION_REPOSITORIES_PAGE_SIZE = 25
 
 /** Repositories turned on at the same time when adding all of them. */
 const ADD_ALL_CONCURRENCY = 5
+
+/**
+ * Reviews loaded per page on a function's or site's Reviews tab. Large, since
+ * the tab may keep only the reviews that touch the resource's directory.
+ */
+export const REPOSITORY_REVIEWS_PAGE_SIZE = 50
 
 export function isReviewRunning(review: Pick<Review, 'status'>): boolean {
   return review.status === 'queued' || review.status === 'processing'
@@ -76,6 +93,26 @@ export async function fetchReviews(
       Query.limit(limit),
       Query.offset(page * limit),
     ],
+  })
+}
+
+/**
+ * Query function to fetch a page of one reviewed repository's reviews, newest
+ * first, after the review with ID `cursor` when given.
+ */
+export async function fetchRepositoryReviews(
+  projectId: string,
+  repositoryId: string,
+  cursor?: string,
+): Promise<ReviewList> {
+  return await sdk.forProject(projectId).reviews.list({
+    queries: [
+      Query.equal('repositoryId', [repositoryId]),
+      Query.orderDesc('$createdAt'),
+      Query.limit(REPOSITORY_REVIEWS_PAGE_SIZE),
+      ...(cursor ? [Query.cursorAfter(cursor)] : []),
+    ],
+    total: false,
   })
 }
 
@@ -254,6 +291,34 @@ export function reviewsQueryOptions(
   })
 }
 
+/**
+ * One reviewed repository's reviews, a page at a time. Polls while one of the
+ * loaded reviews runs.
+ */
+export function repositoryReviewsQueryOptions(
+  projectId: string | null | undefined,
+  repositoryId: string | null | undefined,
+) {
+  return infiniteQueryOptions({
+    queryKey: ['reviews', 'project', projectId, 'repository', repositoryId],
+    queryFn: ({ pageParam }) =>
+      fetchRepositoryReviews(projectId!, repositoryId!, pageParam),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) =>
+      lastPage.reviews.length < REPOSITORY_REVIEWS_PAGE_SIZE
+        ? undefined
+        : lastPage.reviews.at(-1)?.$id,
+    enabled: !!projectId && !!repositoryId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnWindowFocus: false,
+    refetchInterval: (query) =>
+      query.state.data?.pages.some((page) => page.reviews.some(isReviewRunning))
+        ? REVIEW_POLL_INTERVAL
+        : false,
+  })
+}
+
 export function reviewQueryOptions(
   projectId: string | null | undefined,
   reviewId: string | null | undefined,
@@ -380,6 +445,44 @@ export function reviewedRepositoriesQueryOptions(
   })
 }
 
+/**
+ * Loads what a function's or site's Reviews tab shows, so it opens without a
+ * loader: the repository's installation and name, whether the project reviews
+ * it, and the first page of its reviews. A failure is left for the tab to show.
+ */
+export async function prefetchRepositoryReviews(
+  queryClient: QueryClient,
+  projectId: string,
+  installationId: string | null | undefined,
+  providerRepositoryId: string | null | undefined,
+): Promise<void> {
+  if (!installationId || !providerRepositoryId) return
+  try {
+    const installation = await queryClient.ensureQueryData(
+      installationQueryOptions(projectId, installationId),
+    )
+    // Code review runs on some Git providers only.
+    if (!isReviewVcsProvider(installation.provider)) return
+
+    const [reviewed] = await Promise.all([
+      queryClient.ensureQueryData(
+        reviewedRepositoriesQueryOptions(projectId, [providerRepositoryId]),
+      ),
+      queryClient.ensureQueryData(
+        repositoryQueryOptions(projectId, installationId, providerRepositoryId),
+      ),
+    ])
+    const repository = reviewed.get(providerRepositoryId)
+    if (repository) {
+      await queryClient.ensureInfiniteQueryData(
+        repositoryReviewsQueryOptions(projectId, repository.$id),
+      )
+    }
+  } catch {
+    // The tab shows the failed request.
+  }
+}
+
 // ============================================================================
 // HOOKS
 // ============================================================================
@@ -400,6 +503,40 @@ export function useReviews(
     isLoading,
     isFetching,
     error,
+    refetch,
+  }
+}
+
+/**
+ * One reviewed repository's reviews, newest first, with `loadMore` for the
+ * next page.
+ */
+export function useRepositoryReviews(
+  projectId: string | null | undefined,
+  repositoryId: string | null | undefined,
+) {
+  const {
+    data,
+    isLoading,
+    isFetching,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+    refetch,
+  } = useInfiniteQuery(repositoryReviewsQueryOptions(projectId, repositoryId))
+
+  const loadMore = useCallback(() => {
+    void fetchNextPage({ cancelRefetch: false })
+  }, [fetchNextPage])
+
+  return {
+    reviews: data?.pages.flatMap((page) => page.reviews) ?? [],
+    pages: data?.pages.length ?? 0,
+    isLoading,
+    isFetching,
+    isFetchingNextPage,
+    hasMore: hasNextPage,
+    loadMore,
     refetch,
   }
 }
@@ -504,7 +641,39 @@ export function useReviewCategories(
 }
 
 /**
- * Which of the given GitHub repositories the project reviews, keyed by GitHub
+ * The installation the repository a review ran on is connected through, which
+ * names its provider and, for a self-hosted one, its host. Null until both are
+ * loaded, or when the installation is gone.
+ */
+export function useReviewInstallation(
+  projectId: string | null | undefined,
+  repositoryId: string | null | undefined,
+): Models.Installation | null {
+  const { data: repository } = useQuery({
+    queryKey: ['reviews', 'repository', projectId, repositoryId],
+    queryFn: async () => {
+      const { repositories } = await sdk
+        .forProject(projectId!)
+        .reviews.listRepositories({
+          queries: [Query.equal('$id', [repositoryId!]), Query.limit(1)],
+          total: false,
+        })
+      return repositories[0] ?? null
+    },
+    enabled: !!projectId && !!repositoryId,
+    staleTime: DEFAULT_STALE_TIME,
+  })
+  const { data: installations } = useVcsInstallations(projectId, 0, 100)
+
+  return (
+    installations?.installations.find(
+      (installation) => installation.$id === repository?.installationId,
+    ) ?? null
+  )
+}
+
+/**
+ * Which of the given repositories the project reviews, keyed by the provider's
  * repository ID. Works for any number of reviewed repositories, since only the
  * listed ones are looked up.
  */
@@ -517,6 +686,26 @@ export function useReviewedRepositories(
   )
 
   return { reviewed: data ?? new Map<string, ReviewRepository>(), isLoading }
+}
+
+/**
+ * The project's row for one repository, when it reviews it.
+ */
+export function useReviewedRepository(
+  projectId: string | null | undefined,
+  providerRepositoryId: string | null | undefined,
+) {
+  const { reviewed, isLoading } = useReviewedRepositories(
+    projectId,
+    providerRepositoryId ? [providerRepositoryId] : [],
+  )
+
+  return {
+    repository: providerRepositoryId
+      ? reviewed.get(providerRepositoryId)
+      : undefined,
+    isLoading,
+  }
 }
 
 /**
