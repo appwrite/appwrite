@@ -2457,7 +2457,7 @@ return [
         'score' => 6,
         'tagline' => 'Post every firing and resolved alert to Slack, Discord, Microsoft Teams or Google Chat.',
         'permissions' => [],
-        'events' => ['monitors.*.alerts.*.firing', 'monitors.*.alerts.*.resolved'],
+        'events' => ['monitors.*.alerts.*.create', 'monitors.*.alerts.*.update.status'],
         'cron' => '',
         'timeout' => 15,
         'useCases' => [FunctionUseCases::MONITORING],
@@ -2468,7 +2468,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.6.0',
+        'providerVersion' => '1.6.1',
         'variables' => [
             [
                 'name' => 'CHAT_WEBHOOK_URL',
@@ -2497,7 +2497,7 @@ return [
         'score' => 6,
         'tagline' => 'Disable a function or site when a usage monitor scoped to it fires, before a runaway loop runs up the bill.',
         'permissions' => [],
-        'events' => ['monitors.*.alerts.*.firing'],
+        'events' => ['monitors.*.alerts.*.create'],
         'cron' => '',
         'timeout' => 15,
         'useCases' => [FunctionUseCases::MONITORING],
@@ -2508,7 +2508,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.6.0',
+        'providerVersion' => '1.6.1',
         'variables' => [
             [
                 'name' => 'MIN_SEVERITY',
