@@ -5247,7 +5247,9 @@ version = "0.1.0"
 dependencies = [
  "ext-php-rs",
  "foldhash",
+ "libc",
  "mimalloc",
+ "psm",
  "stacker",
  "utopia-auth",
  "utopia-balancer",

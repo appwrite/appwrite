@@ -271,6 +271,9 @@ sha2 = "0.10"
 sha3 = "0.10"
 # A stack sized for the work (the extension's Utopia\\Query AST: a tree as deep as PHP takes).
 stacker = "0.1"
+# A kept stack for the same work (crates/extension/src/classes/stack.rs): psm switches to it,
+# libc maps it with a guard page. Both are what stacker itself uses.
+psm = "0.1"
 # Rust source parsing for `compat report` (crates/tools/compat): doc comments
 # and line numbers of each crate's public items.
 syn = { version = "2", default-features = false, features = ["full", "parsing", "printing"] }

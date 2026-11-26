@@ -9,23 +9,27 @@
 // Parameters carry the PHP names, which callers pass as named arguments.
 #![allow(non_snake_case)]
 
-use std::cell::Cell;
+use std::cell::{Cell, OnceCell};
+use std::sync::OnceLock;
 
 use ext_php_rs::boxed::ZBox;
 use ext_php_rs::class::RegisteredClass;
 use ext_php_rs::convert::{FromZval, IntoZval, StubLiteral};
 use ext_php_rs::exception::PhpException;
-use ext_php_rs::ffi::{zend_hash_str_find, zend_hash_str_update};
+use ext_php_rs::ffi::{zend_hash_str_find, zend_hash_str_update, zend_wrong_parameters_count_error};
 use ext_php_rs::flags::DataType;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::{ZendClassObject, ZendHashTable, ZendObject, ZendStr, Zval};
-use ext_php_rs::zend::{ClassEntry, ExecutorGlobals, ce};
+use ext_php_rs::zend::{ClassEntry, ExecuteData, ExecutorGlobals, ce};
 use php_std::json;
 use utopia_query::Method;
 
+use crate::classes::leaf::FunctionHandler;
+use crate::classes::{engine, retarget};
 use crate::emails::{construct, string, thrown};
 use crate::string::Bytes;
 use crate::string::PhpString;
+use crate::string::Shared;
 
 /// A class of the PHP package, loaded through the autoloader.
 pub(super) fn class(name: &str) -> PhpResult<&'static ClassEntry> {
@@ -176,7 +180,7 @@ impl<'a> Arr<'a> {
     }
 
     fn values(&self) -> impl Iterator<Item = &'a Zval> {
-        self.table().into_iter().flat_map(ZendHashTable::values)
+        self.table().into_iter().flat_map(engine::values)
     }
 }
 
@@ -604,7 +608,8 @@ fn make(scope: &'static ClassEntry, method: Method, attribute: &[u8], values: Zv
 /// The engine's check before a call goes a level deeper, and its `Error` once the native
 /// stack is nearly used. A query that holds itself would otherwise run off the end of it.
 fn overflowed() -> Option<PhpException> {
-    let globals = ExecutorGlobals::get();
+    // SAFETY: the engine's globals, read on the thread that runs the request.
+    let globals = unsafe { &*engine::executor_globals() };
     let here = 0_u8;
     if globals.stack_limit.is_null() || std::ptr::from_ref(&here) as usize > globals.stack_limit as usize {
         return None;
@@ -674,16 +679,22 @@ pub(super) fn parts(zval: &Zval) -> Option<Parts<'_>> {
 #[php(name = "Utopia\\Query\\NativeQuery")]
 pub struct Query {
     method: Method,
-    attribute: Vec<u8>,
+    /// The strings are held by refcount, as PHP's properties hold them: a getter or a clone
+    /// copies nothing, and the constructor keeps the strings it is given.
+    attribute: Shared,
+    /// The `Method` case object of `method`, once asked for or given: what PHP's `$this->method`
+    /// holds, so `getMethod()` returns it as PHP does, without looking it up.
+    case: OnceCell<Zval>,
     attribute_type: Vec<u8>,
     on_array: bool,
     values: Zval,
-    alias: Vec<u8>,
+    alias: Shared,
     alias_defaulted: bool,
 }
 
 impl Clone for Query {
     /// `__clone()`: the nested queries are cloned too, so a copy shares none with its source.
+    /// Values without a query are shared, as PHP's copy of `$values` is until it is written.
     fn clone(&self) -> Self {
         // Too deep to go on: the error is thrown, and what is left is shared, not cloned.
         let deeper = match overflowed() {
@@ -693,23 +704,34 @@ impl Clone for Query {
             }
             None => true,
         };
-        let mut values = ZendHashTable::new();
-        if let Some(source) = self.values.array() {
-            for (key, value) in source {
-                let nested = deeper && query_of(value).is_some();
-                let copied = if nested { clone_object(value) } else { value.shallow_clone() };
-                let _ = values.insert(key, copied);
+        // Nothing to clone (or too deep to clone it): the copy shares the array, as PHP's
+        // copy-on-write `$values` does.
+        // Otherwise the array is separated and each query in it replaced by its clone, which is
+        // what `$this->values[$index] = clone $value` does to it.
+        let mut held = self.values.shallow_clone();
+        if deeper
+            && self.values().any(|value| query_of(value).is_some())
+            && let Some(table) = engine::separate(&mut held)
+        {
+            for value in engine::values_mut(table) {
+                if query_of(value).is_some() {
+                    let copied = clone_object(value);
+                    *value = copied;
+                }
             }
         }
-        let mut held = Zval::new();
-        held.set_hashtable(values);
+        let case = OnceCell::new();
+        if let Some(found) = self.case.get() {
+            let _ = case.set(found.shallow_clone());
+        }
         Self {
             method: self.method,
-            attribute: self.attribute.clone(),
+            case,
+            attribute: self.attribute.share(),
             attribute_type: self.attribute_type.clone(),
             on_array: self.on_array,
             values: held,
-            alias: self.alias.clone(),
+            alias: self.alias.share(),
             alias_defaulted: self.alias_defaulted,
         }
     }
@@ -717,19 +739,41 @@ impl Clone for Query {
 
 impl Query {
     fn new(method: Method, attribute: &[u8], values: Zval, alias: &[u8]) -> Self {
+        Self::held(method, Shared::of(attribute), values, Shared::of(alias))
+    }
+
+    /// [`Self::new`] with the strings already made, as the constructor is given them.
+    fn held(method: Method, attribute: Shared, values: Zval, alias: Shared) -> Self {
         Self {
             method,
-            attribute: attribute.to_vec(),
+            alias_defaulted: method.is_join() && !alias.is_empty() && *alias == *attribute,
+            case: OnceCell::new(),
+            attribute,
             attribute_type: Vec::new(),
             on_array: false,
             values,
-            alias_defaulted: method.is_join() && !alias.is_empty() && alias == attribute,
-            alias: alias.to_vec(),
+            alias,
         }
     }
 
+    /// The `Method` case object of the query's method.
+    fn case(&self) -> PhpResult<Zval> {
+        if let Some(found) = self.case.get() {
+            return Ok(found.shallow_clone());
+        }
+        let found = method_case(self.method)?;
+        let _ = self.case.set(found.shallow_clone());
+        Ok(found)
+    }
+
+    /// Sets the method, and forgets the case object of the one before.
+    fn set_method_to(&mut self, method: Method) {
+        self.method = method;
+        self.case = OnceCell::new();
+    }
+
     fn values(&self) -> impl Iterator<Item = &Zval> {
-        self.values.array().into_iter().flat_map(ZendHashTable::values)
+        self.values.array().into_iter().flat_map(engine::values)
     }
 
     fn nested_join(&self) -> bool {
@@ -768,7 +812,7 @@ impl Query {
         out.extend_from_slice(b"{\"method\":\"");
         out.extend_from_slice(self.method.as_str().as_bytes());
         out.push(b'"');
-        if !self.attribute.is_empty() && self.attribute != b"0" {
+        if !self.attribute.is_empty() && *self.attribute != *b"0" {
             out.extend_from_slice(b",\"attribute\":");
             if !json::push_string(out, &self.attribute) {
                 return false;
@@ -814,7 +858,7 @@ impl Query {
         overflowed().map_or(Ok(()), Err)?;
         let mut array = ZendHashTable::new();
         array.insert("method", self.method.as_str()).map_err(PhpException::from)?;
-        if !self.attribute.is_empty() && self.attribute != b"0" {
+        if !self.attribute.is_empty() && *self.attribute != *b"0" {
             array.insert("attribute", string(&self.attribute)).map_err(PhpException::from)?;
         }
         if !self.alias.is_empty() {
@@ -1098,7 +1142,7 @@ fn validate(
             }
             continue;
         }
-        if query.attribute.is_empty() || query.attribute == b"*" {
+        if query.attribute.is_empty() || *query.attribute == *b"*" {
             continue;
         }
         if !permitted(&string(&query.attribute)) {
@@ -1115,12 +1159,12 @@ impl Query {
     /// The protected properties of `Query.php`, in its declaration order.
     #[php(getter, name = "method", vis = "protected")]
     pub fn method_property(&self) -> PhpResult<Zval> {
-        method_case(self.method)
+        self.case()
     }
 
     #[php(getter, name = "attribute", vis = "protected")]
-    pub fn attribute_property(&self) -> Bytes<'_> {
-        Bytes(&self.attribute)
+    pub fn attribute_property(&self) -> Shared {
+        self.attribute.share()
     }
 
     #[php(getter, name = "attributeType", vis = "protected")]
@@ -1139,8 +1183,8 @@ impl Query {
     }
 
     #[php(getter, name = "alias", vis = "protected")]
-    pub fn alias_property(&self) -> Bytes<'_> {
-        Bytes(&self.alias)
+    pub fn alias_property(&self) -> Shared {
+        self.alias.share()
     }
 
     #[php(getter, name = "aliasDefaulted", vis = "protected")]
@@ -1166,12 +1210,12 @@ impl Query {
     pub fn __serialize(self_: &ZendClassObject<Query>) -> PhpResult<ZBox<ZendHashTable>> {
         let mut out = ZendHashTable::new();
         let fields = [
-            (&b"\0*\0method"[..], method_case(self_.method)?),
-            (b"\0*\0attribute", string(&self_.attribute)),
+            (&b"\0*\0method"[..], self_.case()?),
+            (b"\0*\0attribute", self_.attribute.share().0),
             (b"\0*\0attributeType", string(&self_.attribute_type)),
             (b"\0*\0onArray", self_.on_array.into_zval(false).map_err(PhpException::from)?),
             (b"\0*\0values", self_.values.shallow_clone()),
-            (b"\0*\0alias", string(&self_.alias)),
+            (b"\0*\0alias", self_.alias.share().0),
             (b"\0*\0aliasDefaulted", self_.alias_defaulted.into_zval(false).map_err(PhpException::from)?),
         ];
         for (name, value) in fields {
@@ -1198,17 +1242,18 @@ impl Query {
             let text = || value.zend_str().map(|text| text.as_bytes().to_vec()).unwrap_or_default();
             match short {
                 b"method" => {
-                    self_.method = value.object().and_then(case_method).ok_or_else(|| {
+                    let method = value.object().and_then(case_method).ok_or_else(|| {
                         type_error(
                             "Cannot assign a value that is not a Method to property Utopia\\Query\\Query::$method",
                         )
                     })?;
+                    self_.set_method_to(method);
                 }
-                b"attribute" => self_.attribute = text(),
+                b"attribute" => self_.attribute = Shared::held(value).unwrap_or_else(Shared::empty),
                 b"attributeType" => self_.attribute_type = text(),
                 b"onArray" => self_.on_array = value.bool().unwrap_or(false),
                 b"values" if value.is_array() => self_.values = value.shallow_clone(),
-                b"alias" => self_.alias = text(),
+                b"alias" => self_.alias = Shared::held(value).unwrap_or_else(Shared::empty),
                 b"aliasDefaulted" => self_.alias_defaulted = value.bool().unwrap_or(false),
                 // A property a subclass declares is written to its slot, whatever its visibility.
                 _ => {
@@ -1230,12 +1275,12 @@ impl Query {
 
     #[php(name = "getMethod")]
     pub fn get_method(&self) -> PhpResult<Zval> {
-        method_case(self.method)
+        self.case()
     }
 
     #[php(name = "getAttribute")]
-    pub fn get_attribute(&self) -> Bytes<'_> {
-        Bytes(&self.attribute)
+    pub fn get_attribute(&self) -> Shared {
+        self.attribute.share()
     }
 
     #[php(name = "getValues")]
@@ -1255,8 +1300,8 @@ impl Query {
     }
 
     #[php(name = "getAlias")]
-    pub fn get_alias(&self) -> Bytes<'_> {
-        Bytes(&self.alias)
+    pub fn get_alias(&self) -> Shared {
+        self.alias.share()
     }
 
     #[php(name = "isAliasDefaulted")]
@@ -1277,7 +1322,8 @@ impl Query {
         self_: &'a mut ZendClassObject<Query>,
         method: &Zval,
     ) -> PhpResult<&'a mut ZendClassObject<Query>> {
-        self_.method = method_of(method)?;
+        let method = method_of(method)?;
+        self_.set_method_to(method);
         Ok(self_)
     }
 
@@ -1286,7 +1332,7 @@ impl Query {
         self_: &'a mut ZendClassObject<Query>,
         attribute: PhpString<'_>,
     ) -> &'a mut ZendClassObject<Query> {
-        self_.attribute = attribute.bytes().to_vec();
+        self_.attribute = Shared::of(attribute.bytes());
         self_
     }
 
@@ -2231,5 +2277,140 @@ impl Query {
     #[php(defaults(bindings = "Arr::Empty"))]
     pub fn raw(sql: PhpString<'_>, bindings: Arr<'_>) -> PhpResult<Zval> {
         make(called_scope(), Method::Raw, sql.bytes(), bindings.held(), b"")
+    }
+}
+
+/// Points the getters PHP code calls most at the handlers below, which return what the query
+/// holds without ext-php-rs's per-call `setjmp`. Runs once after the classes are registered;
+/// `Query.php` and its subclasses, declared later, copy these handlers.
+pub fn retarget() {
+    let ce = Query::get_metadata().ce();
+    for (name, handler) in [
+        ("getmethod", get_method as FunctionHandler),
+        ("getattribute", get_attribute),
+        ("getvalues", get_values),
+        ("getalias", get_alias),
+    ] {
+        retarget::method(ce, name, handler);
+    }
+    let original = *CONSTRUCT.get_or_init(|| retarget::handler(ce, "__construct"));
+    if original.is_some() {
+        retarget::method(ce, "__construct", new_query);
+    }
+}
+
+/// ext-php-rs's `__construct()` handler, for the calls [`new_query`] does not take.
+static CONSTRUCT: OnceLock<Option<retarget::Original>> = OnceLock::new();
+
+/// `new Query($method, $attribute, $values, $alias)` as PHP code calls it: a `Method` case or
+/// its value, strings and an array. The strings and the array are kept by refcount, as PHP's
+/// constructor assigns them, and a case object as `$this->method`. Any other call (another
+/// type, which PHP converts or refuses, or the wrong number of arguments) goes to ext-php-rs's
+/// handler, which converts and throws as before.
+extern "C" fn new_query(ex: &mut ExecuteData, retval: &mut Zval) {
+    if !constructed(ex)
+        && let Some(original) = CONSTRUCT.get().copied().flatten()
+    {
+        original.call(ex, retval);
+    }
+}
+
+/// [`new_query`]'s work: `false`, having changed nothing, for a call it leaves to ext-php-rs.
+fn constructed(ex: &mut ExecuteData) -> bool {
+    let count = engine::args_count(ex);
+    if !(1..=4).contains(&count) {
+        return false;
+    }
+    let given = |ex: &mut ExecuteData, i: usize| engine::arg(ex, i).map(|zval| &*zval);
+    let Some(method) = given(ex, 0) else { return false };
+    let Ok(kind) = method_of(method) else { return false };
+    let case = method.is_object().then(|| method.shallow_clone());
+    let attribute = match given(ex, 1) {
+        None => Shared::empty(),
+        Some(zval) => match Shared::held(zval) {
+            Some(attribute) => attribute,
+            None => return false,
+        },
+    };
+    let values = match given(ex, 2) {
+        None => match list([]) {
+            Ok(empty) => empty,
+            Err(_) => return false,
+        },
+        Some(zval) if zval.is_array() => zval.shallow_clone(),
+        Some(_) => return false,
+    };
+    let alias = match given(ex, 3) {
+        None => Shared::empty(),
+        Some(zval) => match Shared::held(zval) {
+            Some(alias) => alias,
+            None => return false,
+        },
+    };
+    let Some(this) = uninitialized(ex) else { return false };
+    let query = Query::held(kind, attribute, values, alias);
+    if let Some(case) = case {
+        let _ = query.case.set(case);
+    }
+    this.initialize(query);
+    true
+}
+
+/// The object `new` made for the constructor, before it holds a query: what ext-php-rs's own
+/// constructor finds (its `get_object_uninit()`, which it does not export).
+fn uninitialized(ex: &mut ExecuteData) -> Option<&mut ZendClassObject<Query>> {
+    object(ex)
+}
+
+/// `$this` as the query object it is, held or not. ext-php-rs checks the object's handlers and
+/// then that it is an instance of the class; only this class's `create_object` sets these
+/// handlers, for it and the PHP classes that extend it, so the first check is the one needed.
+fn object(ex: &mut ExecuteData) -> Option<&mut ZendClassObject<Query>> {
+    let this = ex.get_self()?;
+    if !std::ptr::eq(this.handlers, Query::get_metadata().handlers()) {
+        return None;
+    }
+    let offset = std::mem::offset_of!(ZendClassObject<Query>, std);
+    // SAFETY: the handlers are this class's, so `create_object` made the object, and it is the
+    // `std` field of a `ZendClassObject<Query>` that many bytes in.
+    unsafe { std::ptr::from_mut(this).cast::<u8>().sub(offset).cast::<ZendClassObject<Query>>().as_mut() }
+}
+
+/// `$this` of a getter called with no arguments, as ext-php-rs's handler resolves it:
+/// otherwise the same error is thrown and `None` returned.
+fn receiver(ex: &mut ExecuteData) -> Option<&Query> {
+    if engine::args_count(ex) != 0 {
+        // SAFETY: called from a method's handler, as `zend_parse_parameters_none()` is.
+        unsafe { zend_wrong_parameters_count_error(0, 0) };
+        return None;
+    }
+    let query = object(ex).and_then(|this| this.obj.as_ref());
+    if query.is_none() {
+        PhpException::from_message("Failed to retrieve reference to `$this`".into()).throw();
+    }
+    query
+}
+
+extern "C" fn get_method(ex: &mut ExecuteData, retval: &mut Zval) {
+    if let Some(query) = receiver(ex) {
+        match query.case() {
+            Ok(case) => *retval = case,
+            Err(error) => error.throw(),
+        }
+    }
+}
+extern "C" fn get_attribute(ex: &mut ExecuteData, retval: &mut Zval) {
+    if let Some(query) = receiver(ex) {
+        *retval = query.attribute.share().0;
+    }
+}
+extern "C" fn get_values(ex: &mut ExecuteData, retval: &mut Zval) {
+    if let Some(query) = receiver(ex) {
+        *retval = query.values.shallow_clone();
+    }
+}
+extern "C" fn get_alias(ex: &mut ExecuteData, retval: &mut Zval) {
+    if let Some(query) = receiver(ex) {
+        *retval = query.alias.share().0;
     }
 }
