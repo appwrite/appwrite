@@ -723,5 +723,3 @@ Then open the property's dashboard and select the event in the **Custom events**
 - [How to add Appwrite Analytics to your mobile app](/blog/post/add-appwrite-analytics-to-your-mobile-app)
 - [Block traffic with Firewall](/docs/products/analytics/firewall)
 - [Track events from your server](/docs/products/analytics/server-side)
-
-We'd love to hear what you discover about your traffic. Share your dashboard or ask a question in the [Appwrite Discord](https://appwrite.io/discord).
