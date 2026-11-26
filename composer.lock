@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ff2e125bb8c32d320e6a2eec09e7d8a9",
+    "content-hash": "26acd8ef01e59f229fb6a05a04bdee83",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -5145,16 +5145,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "dev-fix-web-upload-first-file-overload",
+            "version": "5.21.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "97650593cb5d8e9f43afcce1299b1de36e2994ce"
+                "reference": "a6df190184abd2ca199ad43074022aae88532734"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/97650593cb5d8e9f43afcce1299b1de36e2994ce",
-                "reference": "97650593cb5d8e9f43afcce1299b1de36e2994ce",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/a6df190184abd2ca199ad43074022aae88532734",
+                "reference": "a6df190184abd2ca199ad43074022aae88532734",
                 "shasum": ""
             },
             "require": {
@@ -5192,9 +5192,9 @@
             "description": "SDK generator for Appwrite APIs across multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/fix-web-upload-first-file-overload"
+                "source": "https://github.com/appwrite/sdk-generator/tree/5.21.6"
             },
-            "time": "2026-11-26T11:51:50+00:00"
+            "time": "2026-11-26T12:02:53+00:00"
         },
         {
             "name": "brianium/paratest",
@@ -7990,18 +7990,9 @@
             "time": "2026-11-24T12:48:40+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "appwrite/sdk-generator",
-            "version": "dev-fix-web-upload-first-file-overload",
-            "alias": "5.20.6",
-            "alias_normalized": "5.20.6.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {
-        "appwrite/sdk-generator": 20
-    },
+    "stability-flags": {},
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
