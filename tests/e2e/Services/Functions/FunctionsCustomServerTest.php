@@ -3936,6 +3936,11 @@ final class FunctionsCustomServerTest extends Scope
             $this->assertSame(12 * 1024 * 1024, \strlen($large['body']));
             $this->assertSame('chunked', $large['headers']['transfer-encoding'] ?? '');
             $this->assertArrayNotHasKey('content-length', $large['headers']);
+
+            // A HEAD response has no body, so it keeps the declared length
+            $head = $proxyClient->call(Client::METHOD_HEAD, '/large', [], [], false);
+            $this->assertSame(200, $head['headers']['status-code']);
+            $this->assertSame((string) (12 * 1024 * 1024), (string) $head['headers']['content-length']);
         } finally {
             $this->cleanupFunction($functionId);
         }
