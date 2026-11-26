@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react'
 import type {
   LaunchEventDay,
   LaunchEventDayFilm,
+  LaunchEventDayAnnouncement,
   LaunchEventDayResource,
   LaunchEventDayVisual,
   LaunchEventScheduleItem,
@@ -105,10 +106,16 @@ function DayVisual({
   )
 }
 
-const TITLE_CLASS =
-  'font-aeonik-pro text-[clamp(32px,4.5vw,42px)] font-normal leading-none tracking-tight'
+const TITLE_CLASS = 'font-aeonik-pro font-normal leading-none tracking-tight'
 
-function DayTitle({ title }: { title: string }) {
+function DayTitle({
+  title,
+  compact = false,
+}: {
+  title: string
+  /** Half-width columns, when a day shows its announcements side by side. */
+  compact?: boolean
+}) {
   // "Introducing" gets its own line, with the product name below it.
   const introducing = title.startsWith('Introducing ')
   const name = introducing ? title.slice('Introducing '.length) : title
@@ -117,7 +124,15 @@ function DayTitle({ title }: { title: string }) {
   const lastWord = lastSpace === -1 ? name : name.slice(lastSpace + 1)
 
   return (
-    <h3 className={cn(TITLE_CLASS, 'text-balance text-foreground')}>
+    <h3
+      className={cn(
+        TITLE_CLASS,
+        compact
+          ? 'text-[clamp(28px,3.2vw,34px)]'
+          : 'text-[clamp(32px,4.5vw,42px)]',
+        'text-balance text-foreground',
+      )}
+    >
       {introducing ? <span className="block">Introducing</span> : null}
       {leading ? <span>{leading}</span> : null}
       <span className="whitespace-nowrap">
@@ -294,6 +309,76 @@ function DayLaunchSection({
   )
 }
 
+/**
+ * One of several launches on a day, as a column beside the others: its copy
+ * (linking to its blog post), its cover playing its launch film, and its
+ * links along the bottom, level with its neighbours'.
+ */
+function DayAnnouncementColumn({
+  announcement,
+  icon,
+  poweredBy,
+}: {
+  announcement: LaunchEventDayAnnouncement
+  icon: ProductIcon
+  poweredBy: boolean
+}) {
+  const articleHref = announcement.resources.find(isBlogResource)?.href
+  const copyBlock = (
+    <div>
+      <DayTitle title={announcement.title} compact />
+      <p className="mt-4 text-[13px] leading-relaxed text-muted-foreground transition-colors group-hover:text-foreground/80">
+        {announcement.longDescription}
+      </p>
+    </div>
+  )
+  const visualBlock = <DayVisual visual={announcement.visual} icon={icon} />
+
+  return (
+    <section aria-label={announcement.title} className="flex flex-col">
+      <div className="flex flex-1 flex-col gap-6 px-6 py-6">
+        {articleHref ? (
+          <DayPrimaryLink
+            href={articleHref}
+            className="group block transition-opacity hover:opacity-90"
+          >
+            {copyBlock}
+          </DayPrimaryLink>
+        ) : (
+          copyBlock
+        )}
+        <div className="mt-auto">
+          {announcement.films?.length ? (
+            <DayFilmCover
+              title={announcement.title}
+              films={announcement.films}
+              poweredBy={poweredBy}
+            >
+              {visualBlock}
+            </DayFilmCover>
+          ) : articleHref ? (
+            <DayPrimaryLink
+              href={articleHref}
+              className="block w-full transition-opacity hover:opacity-90"
+            >
+              {visualBlock}
+            </DayPrimaryLink>
+          ) : (
+            visualBlock
+          )}
+        </div>
+      </div>
+      {announcement.resources.length > 0 ? (
+        <ul className="divide-y divide-border border-t border-border">
+          {announcement.resources.map((resource) => (
+            <DayResourceRow key={resource.id} resource={resource} />
+          ))}
+        </ul>
+      ) : null}
+    </section>
+  )
+}
+
 function isBlogResource(resource: LaunchEventDayResource) {
   return resource.typeLabel.toLowerCase() === 'blog'
 }
@@ -418,31 +503,17 @@ export function DayDetailCard({
       </header>
 
       {announcements.length > 0 ? (
-        // A day with several launches: one section each, with its own links.
-        announcements.map((announcement, index) => (
-          <section
-            key={announcement.id}
-            aria-label={announcement.title}
-            className={cn(index > 0 && 'border-t border-border')}
-          >
-            <DayLaunchSection
-              title={announcement.title}
-              longDescription={announcement.longDescription}
-              visual={announcement.visual}
+        // A day with several launches shows them side by side.
+        <div className="grid divide-y divide-border lg:grid-cols-2 lg:divide-x lg:divide-y-0">
+          {announcements.map((announcement) => (
+            <DayAnnouncementColumn
+              key={announcement.id}
+              announcement={announcement}
               icon={day.icon}
-              films={announcement.films}
-              articleHref={announcement.resources.find(isBlogResource)?.href}
               poweredBy={poweredBy}
             />
-            {announcement.resources.length > 0 ? (
-              <ul className="divide-y divide-border border-t border-border">
-                {announcement.resources.map((resource) => (
-                  <DayResourceRow key={resource.id} resource={resource} />
-                ))}
-              </ul>
-            ) : null}
-          </section>
-        ))
+          ))}
+        </div>
       ) : (
         <DayLaunchSection
           title={day.title}
