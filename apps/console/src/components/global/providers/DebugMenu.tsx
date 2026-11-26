@@ -1842,7 +1842,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
               ),
               createProfileFeatureFlagItem(
                 'Git installation reuse',
-                "Projects without a Git installation reuse the GitHub organizations connected in the organization's other projects.",
+                'Connect GitHub offers accounts already connected in other projects of the organization.',
                 'gitInstallationReuse',
                 profileId,
                 features.gitInstallationReuse,
