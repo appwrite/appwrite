@@ -4,15 +4,15 @@ title: Track a website
 description: Add Appwrite Analytics to a website or web app with one script tag or the Web SDK. Track pageviews, outbound links, scroll depth, engagement time, and file downloads from the browser.
 ---
 
-The Appwrite Web SDK includes a `Tracking` helper that records visits from the browser. A call to `start()` tracks pageviews, outbound link clicks, scroll depth, and engagement time. File downloads and your own events each take one more line.
+The Appwrite Web SDK includes a `Tracking` class that records visits from the browser. A call to `start()` tracks pageviews, outbound link clicks, scroll depth, and engagement time. File downloads and your own events each take one more line.
 
 On a site without a build step, such as a static site or a CMS theme, the tracker script sets up `Tracking` from one script tag. In an app with a build step, install the SDK from npm instead. A site hosted on Appwrite Sites needs neither: turn on **Web analytics** in the site's settings. See [Properties](/docs/products/analytics/properties#sites).
 
 # Before you start {% #before-you-start %}
 
-You need an [analytics property](/docs/products/analytics/properties) and its property ID, which the Console shows next to the property name.
+[Create a **Web** property](/docs/products/analytics/properties#create) and copy its property ID, which the Console shows next to the property name.
 
-Your site also needs a Web app in the same project. Browsers send an `Origin` header with every event, and Appwrite accepts events from a browser only when that hostname belongs to one of the project's apps. Without one, every event fails with a `403` `general_unknown_origin` error.
+Register the site as a Web app in the same project. Appwrite accepts a browser event only when the hostname in its `Origin` header belongs to one of the project's apps, and rejects other events with a `403` `general_unknown_origin` error.
 
 1. In your project, open **Apps** and click **Add app**.
 2. Choose **Web**.
@@ -41,11 +41,13 @@ The script reads its settings from the `data-` attributes of its own tag.
 | `data-track-downloads` | Optional. `true` turns on [download tracking](#downloads). |
 | `data-respect-dnt` | Optional. `false` also tracks visitors who have [Do Not Track](#do-not-track) turned on. |
 
-The script sends the same [automatic events](#automatic-events) as `start()`. Open your site, then open the property in the Console. The visit appears on the dashboard within a few seconds.
+If your site sets a Content Security Policy, allow `https://sdk.appwrite.io` in `script-src` and your Appwrite endpoint in `connect-src`.
+
+Open your site, then open the property in the Console. The visit appears on the dashboard within a few seconds.
 
 ## Use the tracker from your code {% #script-tag-code %}
 
-The script stores its `Tracking` instance on `window.__appwriteTracker`, so you can send [custom events](/docs/products/analytics/custom-events) and turn helpers on and off. A deferred script runs after the inline scripts of the page, so wait for `DOMContentLoaded` before you use the tracker while the page loads.
+The script stores its `Tracking` instance on `window.__appwriteTracker`, for sending [custom events](/docs/products/analytics/custom-events) and turning helpers on and off. The script is deferred, so it runs after the page's inline scripts. In an inline script, wait for `DOMContentLoaded` before using `window.__appwriteTracker`.
 
 ```html
 <script>
@@ -59,9 +61,7 @@ The script stores its `Tracking` instance on `window.__appwriteTracker`, so you 
 
 Code that runs later, such as a click handler, can use `window.__appwriteTracker` directly.
 
-If your site sets a Content Security Policy, allow `https://sdk.appwrite.io` in `script-src` and your Appwrite endpoint in `connect-src`.
-
-The script tag tracks one property. To also send events to a second property, call `Appwrite.startTracking()`. It takes `endpoint`, `project`, and `property`, and the optional `respectDoNotTrack` and `trackDownloads`, and returns the started `Tracking` instance.
+The script tag tracks one property. To also send events to a second property, call `Appwrite.startTracking()`. It takes `endpoint`, `project`, `property`, and optionally `respectDoNotTrack` and `trackDownloads`. It returns the started `Tracking` instance.
 
 ```html
 <script>
@@ -118,7 +118,7 @@ Open your site, then open the property in the Console. The visit appears on the 
 
 # Automatic events {% #automatic-events %}
 
-`start()` turns on four helpers. Each one sends events with a fixed name.
+`start()` turns on four helpers, the automatic trackers for each kind of event. Each one sends events with a fixed name.
 
 | Event | When it's sent | Extra data |
 | --- | --- | --- |
@@ -133,7 +133,7 @@ A link counts as outbound when its hostname is on a different domain from the cu
 
 # Track file downloads {% #downloads %}
 
-Download tracking is off by default, because the file types worth counting depend on your site. Turn it on after `start()`. With the script tag, add `data-track-downloads="true"` instead.
+Download tracking is off by default, because the file types worth counting depend on the site. Turn it on after `start()`. With the script tag, add `data-track-downloads="true"` instead.
 
 ```client-web
 tracking.enableAutoDownloadTracking();
@@ -151,7 +151,7 @@ tracking.enableAutoDownloadTracking({
 
 # Choose what to track {% #choose-helpers %}
 
-Instead of `start()`, you can turn on each helper on its own. This is also how you pass options to the outbound link helper. With `includeSubdomains: true`, a link to any other hostname counts as outbound, including subdomains of your own domain.
+To turn on only some helpers, call their methods instead of `start()`. The same methods take options: with `includeSubdomains: true`, the outbound link helper counts a link to any other hostname as outbound, including subdomains of your own domain.
 
 ```client-web
 const tracking = new Tracking(new Analytics(client), '<PROPERTY_ID>');
@@ -192,13 +192,13 @@ For what Appwrite stores about each visitor, see [Privacy](/docs/products/analyt
 `Tracking` never throws and never interrupts your page. When an event fails, it logs the warning `Tracking: failed to send event` to the browser console, with the error.
 
 - **`403` with `general_unknown_origin`**: The page's hostname isn't an app in your project. Add it under **Apps**.
-- **`401` with `general_access_forbidden`**: The property limits which origins may send events, and this page's origin isn't on the list. See [Properties](/docs/products/analytics/properties).
-- **`404` with `analytics_property_not_found`**: The property ID is wrong, or the property is turned off.
+- **`401` with `general_access_forbidden`**: The property limits which origins may send events, and this page's origin isn't on the list. Add it under [Allowed origins](/docs/products/analytics/properties#allowed-origins).
+- **`404` with `analytics_property_not_found`**: The property ID is wrong, or **Tracking** is off in the property's settings.
 - **Nothing in the network panel**: Do Not Track is on in your browser, or the browser is automated, such as one driven by Playwright.
-- **Requests marked as blocked in the network panel**: an extension, such as an ad blocker, blocks them. See [Serve tracking from your domain](/docs/products/analytics/own-domain).
+- **Requests marked as blocked in the network panel**: An extension, such as an ad blocker, blocks them. See [Serve tracking from your domain](/docs/products/analytics/own-domain).
 
 The tracker script logs its own warnings when it can't start:
 
-- **`Tracker: script tag is missing data-property`**: the tag is missing a required attribute. The warning names each missing one.
-- **`Tracker: failed to start`** with `Invalid endpoint URL`: `data-endpoint` isn't a full URL, such as `https://<REGION>.cloud.appwrite.io/v1`.
-- **`Tracker: already started, ignoring this script tag`**: the page has more than one tracker tag, and only the first one runs. To track a second property, use [`Appwrite.startTracking()`](#script-tag-code).
+- **`Tracker: script tag is missing data-property`**: The tag is missing a required attribute. The warning names each missing one.
+- **`Tracker: failed to start`** with `Invalid endpoint URL`: The `data-endpoint` attribute isn't a full URL, such as `https://<REGION>.cloud.appwrite.io/v1`.
+- **`Tracker: already started, ignoring this script tag`**: The page has more than one tracker tag, and only the first one runs. To track a second property, use [`Appwrite.startTracking()`](#script-tag-code).

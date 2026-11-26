@@ -11,15 +11,15 @@ featured: false
 draft: true
 faqs:
   - question: "How do I add Appwrite Analytics to a website?"
-    answer: "Register the site's hostname as a web app in your Appwrite project and create an analytics property. Then add the tracker script tag to the head of every page. In an app with a build step, install the appwrite package, create a Tracking instance with your property ID, and call start() once when the site loads."
+    answer: "Register the site's hostname as a Web app in your Appwrite project and create an analytics property. Then add the tracker script tag to the head of every page. In an app with a build step, install the appwrite package, create a Tracking instance with your property ID, and call start() once when the site loads."
   - question: "Does Appwrite Analytics use cookies?"
     answer: "No. Appwrite Analytics stores nothing on the visitor's device. Each visitor ID is a one-way hash of the IP address, the user agent, the hostname of the page, and a salt that changes every day, so a returning visitor counts once per day."
   - question: "Does Appwrite Analytics track single-page apps?"
-    answer: "Yes. The tracker sends a pageview when the page loads and on every route change made through the History API or the URL hash. React Router, Next.js, Vue Router, SvelteKit, and similar routers need no extra code."
+    answer: "Yes. The tracker records a pageview each time a visitor moves to another page in a single-page app, so React Router, Next.js, Vue Router, SvelteKit, and similar routers need no extra code."
   - question: "Which events does the Web SDK send automatically?"
     answer: "start() sends pageview, outbound_link, scroll_depth, and engagement_time events. File downloads are opt-in with enableAutoDownloadTracking(), because the file types worth counting depend on the site."
   - question: "How do I track a signup or a purchase?"
-    answer: "Call tracking.track() with an event name, such as signup_completed, and optional props, such as the plan. The event appears in the Custom events card. Selecting it filters the dashboard to that event, so Unique visitors and Visits add up, for each point on the chart, the people and visits that triggered it."
+    answer: "Call track() on the tracker with an event name, such as signup_completed, and optional props, such as the plan. With the script tag, the tracker is window.__appwriteTracker. Find signup_completed in the Custom events card, and select it to see the visitors who signed up."
   - question: "Does a site on Appwrite Sites need the script tag?"
     answer: "No. Turn on Web analytics in the site's settings, or Enable analytics when creating the site. Appwrite then adds the tracker to every page on the site's production domains and sends its events through the site's own domain."
 ---
@@ -28,17 +28,21 @@ Appwrite Analytics shows how people find and use your website: where visitors co
 
 This tutorial adds Appwrite Analytics to a website with one script tag, or with the Appwrite Web SDK in an app that has a build step. At the end, the site sends pageviews and custom events, and the property's dashboard shows each visit with its source, pages, location, and device.
 
+# Hosting on Appwrite Sites
+
+![The Analytics settings of a site on Appwrite Sites with the Web analytics switch turned on](/images/blog/add-appwrite-analytics-to-your-website/site-analytics.avif)
+
+A site hosted on Appwrite Sites needs no code. Open the site, go to **Settings**, turn on **Web analytics**, and select **Update**. Appwrite adds the tracker to every page on the site's production domains, so skip ahead to [Read the dashboard](#read-the-dashboard).
+
 # Register your website in your project
 
-Appwrite accepts events from a browser only when the page's hostname belongs to a web app in your project.
+Appwrite accepts events from a browser only when the page's hostname belongs to a Web app in your project.
 
 1. In the Appwrite Console, open your project and go to **Apps**.
 2. Select **Add app**.
 3. Select **Web** and your framework. Then select **Continue**.
 4. Enter a name and your site's hostname, such as `example.com`.
 5. Select **Register and continue**.
-
-To track the site during development, add `localhost` as a second web app.
 
 # Create an analytics property
 
@@ -47,16 +51,16 @@ To track the site during development, add `localhost` as a second web app.
 A property collects the events of one website or app, and each property has its own dashboard.
 
 1. Go to **Analytics** and select **Create property**.
-2. Enter a **Name**, such as `Acme Store`.
+2. Enter a **Name**, such as `Storefront`.
 3. Under **Type**, keep **Web** selected.
 4. Enter your site's **Domain**, such as `example.com`.
 5. Under **SDK**, keep **Web** selected, and select **Create property**.
 
-The Console then shows the install steps for the property, with your endpoint, project ID, and property ID filled in. Keep the page open. It confirms the first event that your site sends.
+The Console opens the install page with your endpoint, project ID, and property ID filled in. Keep it open: it confirms the first event that your site sends.
 
 # Add the tracker script
 
-Add the tracker script to the `<head>` of every page. It loads the Web SDK, creates a `Tracking` instance, and calls `start()`, so the site needs no other code:
+Add the tracker script to the `<head>` of every page. It loads the Web SDK and starts tracking, so the site needs no other code:
 
 ```html
 <script defer src="https://sdk.appwrite.io/web/29.4.0/tracker.js"
@@ -65,32 +69,17 @@ Add the tracker script to the `<head>` of every page. It loads the Web SDK, crea
         data-property="<PROPERTY_ID>"></script>
 ```
 
-The script calls `start()`, which turns on four automatic events:
+The script records pageviews, including route changes in single-page apps, along with outbound link clicks, scroll depth, and engagement time.
 
-| Event | When the tracker sends it |
-| --- | --- |
-| `pageview` | When the page loads, and on every route change through the History API or the URL hash |
-| `outbound_link` | When a visitor selects a link to another domain |
-| `scroll_depth` | When the visitor changes route or leaves the page, with the deepest point they scrolled |
-| `engagement_time` | When the tab is hidden, the route changes, or the page unloads, with the seconds the page was visible |
+# Or install the Web SDK
 
-## Track a site on Appwrite Sites
-
-![The Analytics settings of a site on Appwrite Sites with the Web analytics switch turned on](/images/blog/add-appwrite-analytics-to-your-website/site-analytics.avif)
-
-A site hosted on Appwrite Sites needs no script tag. Open the site, go to **Settings**, turn on **Web analytics**, and select **Update**. A new site can turn on **Enable analytics** while it's being created.
-
-Appwrite then adds the tracker to every page on the site's production domains and reports the visits on a property named after the site. The tracker sends its events through the site's own domain, so ad blockers that block the Appwrite endpoint let them through.
-
-## Apps with a build step
-
-In an app with a bundler, such as a Vite or Next.js app, install the Web SDK instead of the script tag:
+In an app with a bundler, such as a Vite or Next.js app, install the Web SDK instead of adding the script tag:
 
 ```sh
 npm install appwrite
 ```
 
-Create a file named `src/analytics.ts` with one `Tracking` instance for the site, and call `tracking.start()` once in the entry file of the app, such as `src/main.tsx`:
+Create `src/analytics.ts` with one `Tracking` instance for the site:
 
 ```client-web
 import { Client, Analytics, Tracking } from 'appwrite';
@@ -102,26 +91,7 @@ const client = new Client()
 export const tracking = new Tracking(new Analytics(client), '<PROPERTY_ID>');
 ```
 
-## Next.js and other server-rendered frameworks
-
-`Tracking` runs in the browser only. In the Next.js App Router, put the same `analytics.ts` file in `lib/`, and call `start()` from a client component:
-
-```client-web
-'use client';
-
-import { useEffect } from 'react';
-import { tracking } from '@/lib/analytics';
-
-export function AnalyticsTracker() {
-    useEffect(() => {
-        tracking.start();
-    }, []);
-
-    return null;
-}
-```
-
-Save the component as `app/analytics-tracker.tsx`, and render `<AnalyticsTracker />` inside `<body>` in `app/layout.tsx`. Navigation with `next/link` goes through the History API, so every page change sends a pageview.
+Then import `tracking` in the app's entry file, such as `src/main.tsx`, and call `tracking.start()` once. In Next.js and other server-rendered frameworks, call `start()` from a client component that mounts once in the root layout. See [Track a website](/docs/products/analytics/web#start-tracking).
 
 # Confirm the first visit
 
@@ -133,52 +103,36 @@ Open your site in a browser. Within a few seconds, the install page in the Conso
 
 ![The Custom events card on the dashboard lists each event name with how many times it was sent](/images/blog/add-appwrite-analytics-to-your-website/custom-events.avif)
 
-Pageviews show where people go. Custom events record what they do, such as a signup, a purchase, or an invite. Call `track()` on the `Tracking` instance where the action completes, for example after the signup request succeeds. With the script tag, the instance is `window.__appwriteTracker`:
+Custom events record what people do, such as a signup, a purchase, or an invite. Call `track()` where the action completes, for example after the signup request succeeds. With the script tag, the tracker is `window.__appwriteTracker`, and with the SDK, it's your `tracking` instance:
 
 ```client-web
-tracking.track('signup_completed', {
+window.__appwriteTracker.track('signup_completed', {
     props: { plan: 'pro', source: 'pricing_page' },
 });
 ```
 
-Give each event a lowercase `snake_case` name for a finished action, such as `invite_sent`, and keep personal data, such as email addresses, out of its props. The **Custom events** card lists every event name, and the **Event properties** card breaks down their props. Select an event to filter the whole dashboard to the people and visits that triggered it.
+Select `signup_completed` in the **Custom events** card to see the visitors who signed up. For naming and props, see [Track custom events](/docs/products/analytics/custom-events).
 
 # Track file downloads
 
-Download tracking is off by default, because the file types that matter are different for each site. With the script tag, add `data-track-downloads="true"` to track the default file types. With the npm package, turn it on after `start()`:
+Download tracking is off by default, because the file types that matter are different for each site. With the script tag, add `data-track-downloads="true"`. With the SDK, call `tracking.enableAutoDownloadTracking()` after `start()`.
 
-```client-web
-tracking.enableAutoDownloadTracking();
-```
-
-When a visitor selects a link to a file such as a PDF, a ZIP archive, or an installer, the tracker sends a `file_download` event with the file name and extension. To count only some file types, pass a list such as `{ extensions: ['pdf', 'zip'] }`.
-
-# Send events through your own domain
-
-The tracker sends events to your project's Appwrite endpoint. Some ad blockers block requests to hosts that their filter lists name as trackers, and events sent to a domain of your own avoid those rules.
-
-The simplest way is a custom domain for your project, such as `appwrite.example.com`. [Add the domain](/docs/products/network/custom-domains#domain) to your project, and use it as `data-endpoint` or in `setEndpoint()`. To forward events through a route on your own site instead, the [proxy guide](/docs/products/analytics/own-domain#proxy) has ready-made routes for Next.js, Express, and Cloudflare Workers.
+When a visitor selects a link to a file such as a PDF, a ZIP archive, or an installer, the tracker sends a `file_download` event with the file name and extension.
 
 # Read the dashboard
 
 ![The Analytics dashboard for a store with unique visitors, visits, pageviews, events, and a chart for the last 30 days](/images/blog/add-appwrite-analytics-to-your-website/dashboard.avif)
 
-Each property has its own dashboard. The top row shows unique visitors, visits, pageviews, events, views per visit, bounce rate, visit duration, and engagement time for the selected date range. Select a metric to show it on the chart, and compare the range with the previous period.
+Select a metric in the top row, such as **Pageviews**, to plot it on the chart against the previous period. The cards below break the traffic down by source, page, location, and device.
 
-The cards below the chart break the traffic down by source, page, location, and device. **Humans vs bots** and **AI agents and crawlers** show the automated traffic, such as GPTBot, and selecting **Humans** or **Bots** filters the whole dashboard. Select any row to filter by it, and use **Export** to download the current view as a PDF report or as CSV files.
-
-# How Appwrite Analytics counts visitors without cookies
-
-The tracker stores nothing in the browser, neither cookies nor local storage. Appwrite gives each event a visitor ID, a one-way hash of the IP address, the user agent, the hostname of the page, and a salt that changes every day. A returning visitor therefore counts once per day, and a visit ends after 30 minutes without events.
-
-The tracker sends nothing from browsers with Do Not Track turned on, or from automated browsers such as Playwright and Selenium. To also count visitors with Do Not Track on, add `data-respect-dnt="false"` to the script tag, or pass `respectDoNotTrack: false` to `Tracking`.
+**Humans vs bots** and **AI agents and crawlers** show the automated traffic, such as GPTBot. Select any row to filter the whole dashboard by it, and use **Export** to download the current view as a PDF report or as CSV files.
 
 # Resources
-
-Appwrite Analytics is ready for your website. Join the [Appwrite Discord](https://appwrite.io/discord) to share your dashboards and to ask questions along the way.
 
 - [Appwrite Analytics documentation](/docs/products/analytics)
 - [Track a website](/docs/products/analytics/web)
 - [Track custom events](/docs/products/analytics/custom-events)
 - [Serve tracking from your domain](/docs/products/analytics/own-domain)
-- [Visitors and sessions](/docs/products/analytics/visitors)
+- [Privacy](/docs/products/analytics/privacy)
+
+That's your first tracked visit and signup. We'd love to see what turns up on your dashboard, so share it or ask a question in the [Appwrite Discord](https://appwrite.io/discord).

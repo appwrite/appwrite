@@ -4,7 +4,7 @@ title: Filter and compare traffic
 description: Narrow the Appwrite Analytics dashboard to the traffic you care about with filters, save filters for later, and compare a date range with an earlier period.
 ---
 
-Filters narrow the whole dashboard to traffic that matches, such as visitors from search engines or visits to one page. Comparisons show how a date range differs from an earlier one. You can use both together, for example to see whether search traffic grew compared with last month.
+Filters narrow the whole dashboard to traffic that matches, such as visitors from search engines or visits to one page. Comparisons show how a date range differs from an earlier one. Use both together, for example to see whether `search` traffic grew compared with last month.
 
 # Filter from a card {% #from-a-card %}
 
@@ -15,7 +15,7 @@ Filters narrow the whole dashboard to traffic that matches, such as visitors fro
 ![Dashboard filtered to the search channel, with Channel equal search under Filtered by below the toolbar](/images/docs/analytics/filtered.avif)
 {% /only_light %}
 
-The quickest way to filter is from a card. Click a row, such as `search` on the **Channels** tab of **Traffic sources**, and every metric, the chart, and the other cards update to that traffic. The filter appears under **Filtered by**, below the toolbar.
+Click a row in any card, such as `search` on the **Channels** tab of **Traffic sources**, and every metric, the chart, and the other cards update to that traffic. The filter appears under **Filtered by**, below the toolbar.
 
 Click the same row again to remove the filter. Clicking another value of the same kind, such as a second country, switches the filter to it. Rows on the **Entry pages** and **Exit pages** tabs can't be used as filters.
 
@@ -30,7 +30,7 @@ To exclude a value instead, right-click the row and select **Exclude this value*
 ![Filters popover with Channel, equal, and search selected](/images/docs/analytics/filters.avif)
 {% /only_light %}
 
-For values that aren't in a card, or for partial matches, add a filter yourself.
+For values that aren't in a card, or for partial matches, add a filter from the toolbar.
 
 1. Click **Filters** in the toolbar.
 2. Choose a **Column**, such as **Country**, **Page**, **Channel**, or **Campaign**.
@@ -41,24 +41,24 @@ Add more filters the same way. Traffic must match every filter to be counted. Fo
 
 Columns cover locations, technology and versions, sources and campaigns, pages and hostnames, traffic type and bots, event names, and users. Values are case-sensitive, and they're the values listed in [Breakdowns](/docs/products/analytics/metrics#breakdowns), which aren't always the labels on the cards. For example, a **Country** filter takes the two-letter code `DE`, not the country name the **Countries** tab shows. **Traffic** takes `human` or `bot`.
 
-To filter by an event property, such as `plan` equal `pro`, click its value on the **Event properties** card.
+To filter by a prop value, such as `plan` equal `pro`, click it on the **Event properties** card.
 
 Under **Filtered by**, click a filter's operator or value to change it, or click **x** to remove it. **Clear all** removes every filter.
 
-## Page and event filters {% #page-and-event-filters %}
+## Filters that match single events {% #page-and-event-filters %}
 
-A **Page**, **Event**, **User**, or event property filter matches single events rather than whole visits. With one of them active, **Views per visit**, **Bounce rate**, **Visit duration**, and **Engagement time** show `-`, because they describe whole visits. **Unique visitors** and **Visits** add up the chart's points, so a visitor who returns on several days counts once for each day. The **Entry pages** and **Exit pages** tabs aren't available either. See [Metrics](/docs/products/analytics/metrics#dashboard-metrics).
+**Page**, **Event**, **User**, and prop filters (values from **Event properties**) match single events rather than whole visits. With one active, **Views per visit**, **Bounce rate**, **Visit duration**, and **Engagement time** show `-`, because they describe whole visits, and the **Entry pages** and **Exit pages** tabs aren't available. **Unique visitors** and **Visits** add up the chart's points instead of counting the whole range. See [Metrics](/docs/products/analytics/metrics#dashboard-metrics).
 
 # Save a filter {% #save %}
 
-Save filters you use often, so you can apply them again with one click.
+Save filters you use often to apply them again later.
 
 1. Add the filters you want to save.
 2. Click **Filters** and go to **Save for later** at the bottom of the popover.
 3. Choose **For me** to keep the filter to yourself, or **For team** to share it with your organization.
 4. Enter a name and click **+**.
 
-To apply a saved filter, open **Filters**, select the **Saved** tab, and click **Apply** next to it. You can also rename, delete, and drag saved filters into a new order there.
+To apply a saved filter, open **Filters**, select the **Saved** tab, and click **Apply** next to it. On the same tab, rename or delete a saved filter, or drag it into a new order.
 
 # Share a filtered view {% #share %}
 
@@ -82,4 +82,4 @@ To compare with a different period, open the compare menu next to the date picke
 - **Custom range**: any dates you pick.
 - **No comparison**: hides the change and the dashed line.
 
-Comparisons use the same filters as the date range, so a filtered dashboard compares like with like.
+Comparisons apply the same filters to both periods.

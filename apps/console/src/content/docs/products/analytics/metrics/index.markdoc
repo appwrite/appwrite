@@ -4,7 +4,7 @@ title: Metrics
 description: How Appwrite Analytics calculates visitors, visits, pageviews, bounce rate, visit duration, and engagement time, which breakdowns it offers, and how to read metrics from your own code.
 ---
 
-Every figure on an analytics dashboard comes from the events your property receives. This page defines each metric and breakdown, and shows how to read the same numbers from your own code.
+Every figure on an analytics dashboard comes from the events a property receives. This page defines each metric and breakdown, and shows how to read the same numbers from code.
 
 # Dashboard metrics {% #dashboard-metrics %}
 
@@ -20,19 +20,19 @@ The row of metrics at the top of the dashboard covers the selected date range.
 - **Visit duration**: the average time from a visit's first event to its last. A visit with a single event counts as 0 seconds.
 - **Engagement time**: the average active time per visit, counting only visits that reported any. On the web, a page is active while it's visible. In a mobile app, the app is active while it's in the foreground.
 
-The metrics depend on the property's type. **Mobile** properties use app terms: **Active users**, **Sessions**, **Screen views**, **Signed-in users**, **Screens/session**, and **Session length**, and they have no bounce rate. **Agent** properties show **Events**, **Visits**, **Users**, and **Visit duration**.
+The metrics depend on the property's type. **Mobile** properties use app terms: **Active users** for **Unique visitors**, **Sessions** for **Visits**, **Screen views** for **Pageviews**, **Signed-in users** for **Users**, **Screens/session** for **Views per visit**, and **Session length** for **Visit duration**. They have no bounce rate. **Agent** properties show **Events**, **Visits**, **Users**, and **Visit duration**.
 
 **Bounce rate** and **Visit duration** cover the same visits as **Visits**: the ones that started in the range. The **Visits** chart is different: each point counts the visits with an event in that hour or day, so a visit that crosses midnight appears on both days, and the points can add up to more than the total.
 
-With a **Page**, **Event**, **User**, or event property filter, the dashboard can't calculate totals for the whole range, so **Unique visitors** and **Visits** add up the chart's points. A visitor who returns on several days then counts once for each day, or once for each hour with **1h**.
+With a **Page**, **Event**, **User**, or prop filter (a value from **Event properties**), the dashboard can't calculate totals for the whole range, so **Unique visitors** and **Visits** add up the chart's points. With **1h**, a visitor active in several hours then counts once for each hour, and a visit that spans two points counts in both.
 
-Exports and the API also include **Scroll depth**, the average of the deepest scroll positions that pages reported, from `0` to `100` percent. The Web helper reports a page's scroll depth only if the visitor scrolled it.
+Exports and the API also include **Scroll depth**, the average of the deepest scroll positions that pages reported, from `0` to `100` percent. The Web SDK reports a page's scroll depth only if the visitor scrolled it.
 
-Unless you filter them out, these metrics include bot traffic. The **Humans vs bots** card shows how much of it comes from bots, and **Mobile** properties open with a **Humans only** filter. For how Appwrite identifies visitors and splits their events into visits, see [Visitors and sessions](/docs/products/analytics/visitors).
+Without a filter, these metrics include bot traffic. The **Humans vs bots** card shows how much of it comes from bots, and **Mobile** properties open with a **Humans only** filter. For how Appwrite identifies visitors and splits their events into visits, see [Visitors and sessions](/docs/products/analytics/visitors).
 
 # Breakdowns {% #breakdowns %}
 
-The cards below the chart break traffic down by one dimension at a time and rank the values by visitors. **Custom events** and **Event properties** rank by how many times each event or value was sent, and **Users** ranks users by visits. The API uses the same dimensions, by the names in this table, and ranks by visitors, except for `eventName`, which it ranks by event count. Unlike the card, `eventName` also includes the automatic events.
+The cards below the chart break traffic down by one dimension at a time and rank the values by visitors. **Custom events** and **Event properties** rank by how many times each event or value was sent, and **Users** ranks users by visits. The API uses the same dimensions, by the names in this table, and ranks rows by visitors, except `eventName`, which it ranks by event count. Unlike the card, `eventName` also includes the automatic events.
 
 | Dimension | Dashboard card | Values |
 | --- | --- | --- |
@@ -55,7 +55,7 @@ The cards below the chart break traffic down by one dimension at a time and rank
 | `userId` | Users | The user ID of signed-in traffic. Anonymous events are left out. |
 | `props` | Event properties | The prop keys, or with `propKey`, the values of one key |
 
-Each row has the number of visitors, visits, events, and signed-in users with that value. In the API, visits are the `sessions` field. On **Entry pages** and **Exit pages**, they're the visits that started in the range. On every other breakdown, they're the visits with an event in the range. For how sources and channels are worked out, see [Traffic sources](/docs/products/analytics/sources). For bot categories, see [Bots and AI traffic](/docs/products/analytics/bots).
+Each row has the number of visitors, visits, events, and signed-in users with that value. In the API, a breakdown's visits are the `sessions` field: the visits that started in the range on **Entry pages** and **Exit pages**, and the visits with an event in the range on every other breakdown. For how sources and channels are worked out, see [Traffic sources](/docs/products/analytics/sources). For bot categories, see [Bots and AI traffic](/docs/products/analytics/bots).
 
 Screen sizes come from the viewport width: `mobile` below 576 pixels, `tablet` from 576 to 991, `laptop` from 992 to 1439, and `desktop` from 1440 up.
 
@@ -124,12 +124,12 @@ appwrite analytics list-metrics \
 
 ## Response shapes {% #shapes %}
 
-`listMetrics` returns one of three shapes, depending on whether you pass `dimensions` or `interval`. You can't pass both.
+`listMetrics` returns one of three shapes, depending on whether the request has `dimensions` or `interval`. The two can't be combined.
 
-| You pass | You get | Fields |
+| Request | Rows returned | Fields |
 | --- | --- | --- |
 | Neither | One row with totals for the whole range | Every metric on this page |
-| `dimensions` | One row per value, ranked by visitors (`eventName` and `props` by events), with `value` set | `visitors`, `sessions`, `events`, and `users` |
+| `dimensions` | One row per value, ranked by visitors (`eventName` by events), with `value` set | `visitors`, `sessions`, `events`, and `users` |
 | `interval` | One row per time bucket, oldest first, with `date` set | `visitors`, `sessions`, `pageviews`, `events`, and `users` |
 
 Without `dimensions` or `interval`, the single row looks like this:
@@ -159,7 +159,7 @@ Without `dimensions` or `interval`, the single row looks like this:
 
 `visitDuration` and `engagementTime` are in seconds. `bounceRate` and `scrollDepth` are percentages.
 
-`sessions` and `visits` count visits in two ways. `sessions` counts every visit with an event in the range. `visits` counts only the visits that started in it, like **Visits** on the dashboard. They differ when a visit started before the range.
+The response has two visit counts. `visits` counts the visits that started in the range, like **Visits** on the dashboard. `sessions` counts every visit with an event in the range, including visits that started earlier.
 
 ## Parameters {% #parameters %}
 
@@ -240,4 +240,6 @@ appwrite analytics list-metrics \
 ```
 {% /multicode %}
 
-You can filter on every dimension except `entryPage` and `exitPage`, and on a prop's value with `props.<key>`, such as `props.plan`. `trafficType` takes `human` or `bot` with `equal` or `notEqual`. Filters on `page`, `eventName`, `userId`, and `props.<key>` work with `interval`, or with a breakdown on any dimension other than `entryPage` and `exitPage`. Totals don't accept them, because totals also cover whole visits.
+Every dimension except `entryPage` and `exitPage` works as a filter, and `props.<key>`, such as `props.plan`, filters on a prop's value. `trafficType` takes `human` or `bot` with `equal` or `notEqual`.
+
+Filters on `page`, `eventName`, `userId`, and `props.<key>` match single events, so they work only with `interval` or with a breakdown other than `entryPage` and `exitPage`. Totals don't accept them, because totals cover whole visits.

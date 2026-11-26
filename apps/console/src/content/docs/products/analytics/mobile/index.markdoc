@@ -4,19 +4,19 @@ title: Track a mobile app
 description: Add Appwrite Analytics to an Android, Apple, Flutter, or React Native app. Track installs, updates, screen views, push notifications, time in the app, and your own events.
 ---
 
-The Android, Apple, Flutter, and React Native SDKs each include a `Tracking` helper. One call to `start()` records installs, updates, and when the app goes to the background and comes back. Hook it into your navigation to record screen views, and call it from your push handler to see which notifications people open.
+The Android, Apple, Flutter, and React Native SDKs each include a `Tracking` class. One call to `start()` records installs, updates, and when the app goes to the background and comes back. Connect `Tracking` to your navigation to record screen views, and call it from your push handler to see which notifications people open.
 
 # Before you start {% #before-you-start %}
 
-You need a **Mobile** [analytics property](/docs/products/analytics/properties) and its property ID, which the Console shows next to the property name.
+[Create a **Mobile** property](/docs/products/analytics/properties#create) and copy its property ID, which the Console shows next to the property name.
 
-Your app also needs to be registered in the same project. The SDK sends your app's package name or bundle ID with every request, and Appwrite rejects events from an app the project doesn't know, with a `403` `general_unknown_origin` error.
+Register the app in the same project. The SDK sends your app's package name or bundle ID with every request, and Appwrite rejects events from an app the project doesn't know with a `403` `general_unknown_origin` error.
 
 1. In your project, open **Apps** and click **Add app**.
 2. Choose your platform, such as **Android**, **Apple**, **Flutter**, or **React Native**.
 3. Enter the package name or bundle ID, and finish the wizard.
 
-Repeat for each platform you ship. To accept events only from your own app, also add its origin to the property's [allowed origins](/docs/products/analytics/properties#allowed-origins).
+Register each target separately, such as Android and iOS. To accept events only from your own app, also add its origin to the property's [allowed origins](/docs/products/analytics/properties#allowed-origins).
 
 # Install the SDK {% #install %}
 
@@ -64,7 +64,7 @@ Import `react-native-url-polyfill/auto` once, before any other SDK code runs.
 
 # Start tracking {% #start-tracking %}
 
-Create one `Tracking` instance for the whole app with your endpoint, project ID, and property ID, and call `start()` when the app launches.
+Create one `Tracking` instance for the whole app with your endpoint, project ID, and property ID, and call `start()` when the app launches. On Android, create it in your `Application` class and register that class in `AndroidManifest.xml` with `android:name=".MyApp"` on the `<application>` element. In React Native, pass the package name or bundle ID registered under **Apps** to `setPlatform()`.
 
 {% multicode %}
 ```client-flutter
@@ -142,13 +142,11 @@ tracking.start();
 ```
 {% /multicode %}
 
-On Android, register the `Application` class in `AndroidManifest.xml` with `android:name=".MyApp"` on the `<application>` element. In React Native, `setPlatform()` takes the package name or bundle ID registered under **Apps**.
-
-`start()` sends `first_open` the first time the app runs after an install, and `app_updated` the first time it runs after an update. It also turns on `app_backgrounded` and `app_foregrounded`, which measure time in the app. Run the app, then open the property in the Console to see the first events arrive.
+`start()` sends `first_open` after an install and `app_updated` after an update, and turns on the lifecycle events that measure time in the app. See [Install, lifecycle, and screen events](#automatic-events). Run the app, then open the property in the Console to see the first events arrive.
 
 # Track screen views {% #screen-views %}
 
-Send a `screen_view` each time a screen opens. Hook it into your navigation so new screens are tracked with no extra code.
+Send a `screen_view` each time a screen opens. Connect `Tracking` to your navigation, as shown below, so new screens are tracked with no extra code.
 
 {% multicode %}
 ```client-flutter
@@ -193,13 +191,15 @@ export default function App() {
 ```
 {% /multicode %}
 
-Each screen view records the screen name as the page path, so `product` appears as `/product` on the **Screens** card. A `screen_view` counts as a view, the same as a `pageview` on the web: it fills **Screen views** and **Screens/session**, and the first and last screens of each session appear as entry and exit screens.
+Each screen view records the screen name as the page path, so the **Screens** card shows `product` as `/product`. A `screen_view` counts as a view, the same as a `pageview` on the web. Screen views add to **Screen views** and **Screens/session**, and the first and last views of a session set its entry and exit screens.
 
-To track a screen that isn't part of your navigation, such as a tab or a sheet, call `screenView()` yourself. In a React Native app that uses Expo Router, call `tracking.screenView(pathname)` when the value of `usePathname()` changes.
+To track a screen that isn't part of your navigation, such as a tab or a sheet, call `screenView()` directly.
+
+In a React Native app that uses Expo Router, call `tracking.screenView(pathname)` when the value of `usePathname()` changes.
 
 ## Flutter route names {% #flutter-routes %}
 
-`TrackingObserver` reads each route's `RouteSettings.name` and skips routes without a name, such as most dialogs and bottom sheets. If you push routes with `MaterialPageRoute`, give them a name.
+`TrackingObserver` reads each route's `RouteSettings.name` and skips routes without a name, such as most dialogs and bottom sheets. Give each `MaterialPageRoute` a name.
 
 ```client-flutter
 Navigator.push(
@@ -211,7 +211,7 @@ Navigator.push(
 );
 ```
 
-To name screens another way, pass a `nameExtractor` to `TrackingObserver`, and return `null` for any route you don't want to track.
+To name screens another way, pass a `nameExtractor` to `TrackingObserver`. Return `null` from it to skip a route.
 
 # Track push notifications {% #push %}
 
@@ -236,7 +236,9 @@ tracking.pushOpened({ messageId: '<MESSAGE_ID>' });
 ```
 {% /multicode %}
 
-For a push sent from another service, pass `campaign` instead of `messageId`. `push_opened` starts a session, but `push_received` doesn't, because a push can arrive while the app is closed. On iOS, and on Android while the app isn't running, your code may not run when a notification arrives, so **Received** can be lower than the number of pushes delivered.
+For a push sent from another service, pass `campaign` instead of `messageId`.
+
+`push_opened` starts a session, but `push_received` doesn't, because a push can arrive while the app is closed. On iOS, and on Android while the app isn't running, notification code may not run when a push arrives, so **Received** can be lower than the number of pushes delivered.
 
 # Track custom events {% #custom-events %}
 
@@ -270,7 +272,7 @@ tracking.track('add_to_cart', {
 
 Prop values can be any type and are stored as text. For naming and limits, see [Track custom events](/docs/products/analytics/custom-events).
 
-# Automatic events {% #automatic-events %}
+# Install, lifecycle, and screen events {% #automatic-events %}
 
 | Event | When it's sent | Extra data |
 | --- | --- | --- |
@@ -278,7 +280,7 @@ Prop values can be any type and are stored as text. For naming and limits, see [
 | `app_updated` | The first time the app runs after an update | `previousVersion` and `version` props |
 | `app_backgrounded` | The app moves to the background | The seconds the app was in the foreground |
 | `app_foregrounded` | The app returns to the foreground | None |
-| `screen_view` | A screen opens, from your navigation or `screenView()` | `screen` prop, and `screenClass` when you pass one |
+| `screen_view` | A screen opens, from your navigation or `screenView()` | `screen` prop, and an optional `screenClass` prop |
 
 To spot installs and updates, each SDK keeps a small marker with the app's version on the device. It holds no identifier. Reinstalling the app, or clearing its data, counts as a new install.
 
@@ -286,10 +288,10 @@ To spot installs and updates, each SDK keeps a small marker with the app's versi
 
 Analytics records every event against a URL. In an app, `Tracking` uses `app://` and the platform name, such as `app://android` or `app://ios`, so a screen view of `product` on Android is recorded as `app://android/product`. The platform becomes the hostname, which the **Platforms** tab of the **Technology** card uses to split your traffic. Events without a screen, such as `first_open` and the lifecycle events, are recorded under `/`.
 
-To record events under your own base URL, pass `url` when you create `Tracking`. On Flutter web and React Native web, `Tracking` uses the page's origin.
+To record events under your own base URL, pass `url` to the `Tracking` constructor. On Flutter web and React Native web, `Tracking` uses the page's origin.
 
 # Errors {% #errors %}
 
 `Tracking` never throws and never interrupts your app. When an event fails, it's dropped, except `first_open` and `app_updated`, which are sent again on the next launch. To check your setup, call `createEvent` on the `Analytics` service once and print the error.
 
-A `403` `general_unknown_origin` error names the package or bundle ID that needs an app under **Apps**. A `404` `analytics_property_not_found` error means the property ID is wrong or the property is turned off.
+A `403` `general_unknown_origin` error names the package or bundle ID that needs an app under **Apps**. A `404` `analytics_property_not_found` error means the property ID is wrong or **Tracking** is off in the property's settings.

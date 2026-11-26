@@ -6,7 +6,7 @@ description: How Appwrite Analytics works out where visitors come from, with cha
 
 The **Traffic sources** card on the dashboard shows where visitors came from in three ways: the type of source as a **channel**, the referring site as a **source**, and the UTM tags on the link they followed as a **campaign**.
 
-Appwrite works these out from two fields of each event: the referrer, which is the page a visitor came from, and the event URL. The Web helper sends the browser's referrer with every pageview. In a single-page app, the browser keeps the original referrer while the visitor moves between routes, so every pageview in the visit keeps its source. On a site where each page is a full page load, later pages have your own site as their referrer and count as `direct`. See [Channels within a visit](#within-a-visit).
+Appwrite works these out from two fields of each event: the referrer, which is the page a visitor came from, and the event URL. In a single-page app, the browser keeps the original referrer while the visitor moves between routes, so every pageview in the visit keeps its source. See [Channels within a visit](#within-a-visit).
 
 # Channels {% #channels %}
 
@@ -38,7 +38,7 @@ The `fbclid` parameter that Facebook adds to shared links doesn't mark a visit a
 Appwrite works out the channel of each event on its own, so one visit can have events in more than one channel. Two kinds of event count as `direct` even when the visit came from somewhere else:
 
 - On a site where each page is a full page load, every page after the first has your own site as its referrer.
-- The Web helper sends a referrer with pageviews only, so its other events, such as `engagement_time`, `scroll_depth`, and custom events, have none, unless their URL has UTM tags.
+- The Web SDK's `Tracking` class sends the browser's referrer with pageviews only. Its other events, such as `engagement_time`, `scroll_depth`, and custom events, have no referrer, so they take a channel only from UTM tags in their URL.
 
 A visitor who arrived from a search engine can then appear under both `search` and `direct` on the **Channels** tab. Each visit keeps the channel of its first event, so to count visits by where they started, add a **Channel** filter and read **Visits**. See [Filter and compare traffic](/docs/products/analytics/filters).
 
@@ -48,7 +48,7 @@ The source is the referrer's hostname, without a leading `www.`, such as `google
 
 A referrer on the same hostname as the event, with or without `www.`, is a visitor moving around your own site. It has no source and counts as `direct`.
 
-A referrer on a known spam domain marks the visit as [referrer spam](/docs/products/analytics/bots#categories), a kind of bot traffic, so it shows in the bot cards rather than among your human visitors.
+Appwrite labels an event from a known spam referrer as [referrer spam](/docs/products/analytics/bots#categories), a kind of bot traffic, so it shows in the bot cards rather than among your human visitors.
 
 # Campaigns {% #campaigns %}
 
@@ -66,8 +66,8 @@ For example, a visitor who opens this link counts toward the `email` channel and
 https://example.com/pricing?utm_source=newsletter&utm_medium=email&utm_campaign=october_launch
 ```
 
-In the **Traffic sources** card, the **Campaigns** tab has a menu to switch between **UTM campaigns**, **UTM sources**, **UTM mediums**, **UTM contents**, and **UTM terms**. Appwrite stores the page as `/pricing`, without the query string.
+Appwrite stores the page as `/pricing`, without the query string. In the **Traffic sources** card, the **Campaigns** tab has a menu to switch between **UTM campaigns**, **UTM sources**, **UTM mediums**, **UTM contents**, and **UTM terms**.
 
 # AI assistants and AI bots {% #ai %}
 
-The `ai` channel counts people who followed a link from an AI assistant to your site. When an assistant fetches your pages itself, to answer someone's question, the request comes from a bot instead. Those requests appear in the **Humans vs bots** and **AI agents and crawlers** cards. See [Bots and AI traffic](/docs/products/analytics/bots).
+The `ai` channel counts people who followed a link from an AI assistant to your site. When an assistant fetches your pages itself, to answer someone's question, the request comes from a bot instead. Events from those fetches appear in the **Humans vs bots** and **AI agents and crawlers** cards. See [Bots and AI traffic](/docs/products/analytics/bots).

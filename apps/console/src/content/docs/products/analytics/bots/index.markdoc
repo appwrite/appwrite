@@ -4,7 +4,7 @@ title: Bots and AI traffic
 description: How Appwrite Analytics recognizes bots, AI crawlers, and AI assistants from their user agent and network, where they appear on the dashboard, and how they count toward your plan.
 ---
 
-Not every visit comes from a person. Search engines index your pages, AI companies crawl them for training and answers, social sites fetch link previews, and monitors check that your site is up. Appwrite recognizes these clients from their user agent and the network they connect from, and labels their events, so you can see how much of your traffic is automated and who sends it.
+Not every visit comes from a person. Search engines index your pages, AI companies crawl them for training and answers, social sites fetch link previews, and monitors check that your site is up. Appwrite recognizes these clients from their user agent and the network they connect from, and labels their events, so the dashboard shows how much of your traffic is automated and who sends it.
 
 # How bots are recognized {% #detection %}
 
@@ -14,7 +14,7 @@ Appwrite checks three things for every event, in this order:
 2. **The referrer**: a referrer on a known referrer spam domain labels the event as referrer spam.
 3. **The network**: an IP address on a hosting or cloud provider's network labels the event as datacenter traffic, named after the provider. This catches headless crawlers that send a real browser's user agent. Devices in Firebase Test Lab, where Google Play runs pre-launch tests of Android apps, are labeled as test devices.
 
-Bots reach your analytics when they run your tracking code, such as crawlers that render JavaScript and automated browsers. They also appear when your server or proxy sends events for their requests with their user agent and IP address.
+Bots reach your analytics when they run your tracking code, such as crawlers that render JavaScript. The Web SDK's `Tracking` class sends nothing from browsers that report automation, such as Playwright or Selenium test runs. Bots also appear when your server or proxy sends events for their requests with their user agent and IP address.
 
 Generic HTTP clients, such as `curl` or a language's default HTTP library, aren't labeled as bots by their user agent.
 
@@ -39,7 +39,7 @@ Each event from a recognized bot gets one of these categories.
 
 Lighthouse is a site monitor, so audits with tools such as PageSpeed Insights appear as bot traffic.
 
-A datacenter visitor who sends two or more different interactive events, such as custom events or clicks on outbound links, reads as human on the dashboard, since people on VPNs and corporate proxies use these networks too.
+The dashboard counts a datacenter visitor as human after two or more different interactive events, such as a custom event and a click on an outbound link, since people on VPNs and corporate proxies use these networks too.
 
 The API uses lowercase category names, such as `ai crawler`, `search crawler`, and `datacenter`.
 
@@ -57,14 +57,14 @@ Two cards show automated traffic.
 - **Humans vs bots** splits traffic into people and bots, by visitors or by events. Below the split, **By type** ranks bot categories and **Top agents** ranks individual bots.
 - **AI agents and crawlers** lists every named bot in the date range on the **Agents** tab, and their categories on the **Categories** tab.
 
-Click **Humans** or **Bots** on the split to filter the whole dashboard to that traffic. Click a category or a bot to filter to it, so you can see which pages it reads and how often. You can also filter by **Traffic**, **Bot**, or **Bot category** from **Filters**.
+Click **Humans** or **Bots** on the split to filter the whole dashboard to that traffic. Click a category or a bot to filter to it and see which pages it reads and how often. **Filters** also has **Traffic**, **Bot**, and **Bot category** columns.
 
-Unless a filter is set, the metrics at the top of the dashboard, such as **Unique visitors** and **Pageviews**, include bot traffic. Mobile app properties open with a **Humans only** filter.
+Without a filter, the metrics at the top of the dashboard, such as **Unique visitors** and **Pageviews**, include bot traffic. **Mobile** properties open with a **Humans only** filter.
 
 # Billing {% #billing %}
 
-Events labeled as datacenter traffic or test devices don't count toward your plan's analytics events. Every other event counts, including bots recognized by their user agent or referrer, such as GPTBot. An event your server sends with an `ip` counts either way. See [Limits and retention](/docs/products/analytics/limits).
+Events labeled as datacenter traffic or test devices don't count toward your plan's analytics events. Every other event counts, including bots recognized by their user agent or referrer, such as GPTBot. An event your server sends with an `ip` always counts, even when that address is on a datacenter network or a test device. See [Limits and retention](/docs/products/analytics/limits).
 
 # Block bots {% #block %}
 
-Analytics shows bot traffic. To stop it from reaching a site, use [Firewall](/docs/products/firewall), for example with a rule that [challenges automated traffic](/docs/products/firewall/challenge-bots). From the dashboard, you can start a Firewall rule from any bot name. See [Block traffic with Firewall](/docs/products/analytics/firewall).
+Analytics shows bot traffic. To stop it from reaching a site, use [Firewall](/docs/products/firewall), for example with a rule that [challenges automated traffic](/docs/products/firewall/challenge-bots). For a property linked to an Appwrite Site, right-click a bot name on the dashboard and select **Create firewall rule**. See [Block traffic with Firewall](/docs/products/analytics/firewall).

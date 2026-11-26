@@ -16,36 +16,36 @@ faqs:
   - question: "Does Appwrite Analytics use cookies?"
     answer: "No. Appwrite Analytics sets no cookies and keeps no identifiers on the visitor's device. Each visitor ID is a one-way hash of the IP address, the user agent, the hostname, and a salt that changes every day, so a returning visitor counts once per day. Appwrite does not store the IP address."
   - question: "How does Appwrite Analytics detect AI agents and bots?"
-    answer: "Appwrite checks the user agent of every event against known bots and records the bot's name and category, such as AI crawler, AI assistant, search crawler, or social preview. It also labels traffic from datacenter networks, referrer spam, and Firebase Test Lab devices. People who follow a link from an AI assistant to your site are not bots: they count as visitors in the ai channel."
+    answer: "Appwrite labels bots by their user agent, their referrer, and the network they come from, and records each bot's name and category, such as AI crawler or AI assistant. People who follow a link from an AI assistant to your site are not bots: they count as visitors in the ai channel."
   - question: "Which platforms does Appwrite Analytics support?"
-    answer: "On a website, one script tag that loads tracker.js starts tracking with no other code, and a site on Appwrite Sites only needs the Web analytics switch. The Web, Flutter, Android, Apple, and React Native SDKs include a Tracking class that sends pageviews or screen views, installs, and engagement events automatically. Servers send events over the REST API, the Go SDK, or the Appwrite CLI with an API key."
+    answer: "Use the tracker script on websites, the Web analytics switch on Appwrite Sites, or the Tracking class in the Web, Flutter, Android, Apple, and React Native SDKs. Servers send events with an API key over the REST API, the Go SDK, or the Appwrite CLI."
   - question: "Can I block a bot that I see in Appwrite Analytics?"
-    answer: "Yes, for sites hosted on Appwrite Sites. Right-click the bot on the dashboard and select Create firewall rule. The Firewall rule opens for the site with a user agent condition and the Deny action filled in, and it shows the estimated impact before it's created."
+    answer: "Yes, for sites hosted on Appwrite Sites. Right-click the bot on the dashboard and select Create firewall rule. The rule opens with Deny selected and shows its estimated impact before it's created."
   - question: "How much does Appwrite Analytics cost?"
     answer: "The Free plan includes 50K events per month with 30 days of retention. The Pro plan includes 100K events per month, then $3 per 100K events, with 90 days of retention. Traffic from datacenter networks and Firebase Test Lab devices does not count toward the limit."
 ---
 
-Your websites and apps have two kinds of visitors now: people, and the bots and AI agents that read your pages. Appwrite Analytics shows you both. It counts the people who visit, where they come from, and what they do, and it names the crawlers and assistants that fetch your pages, from GPTBot to ChatGPT User.
+Your websites and apps get two kinds of visitors: people, and the bots and AI agents that read your pages. Appwrite Analytics shows you both. It counts the people who visit, where they come from, and what they do, and it names the crawlers and assistants that fetch your pages, from GPTBot to ChatGPT User.
 
-Appwrite Analytics is now available on Appwrite Cloud. It works without cookies, records custom events next to pageviews and screen views, and connects to the rest of your project: a site on Appwrite Sites starts tracking with one switch, signed-in users link to their accounts in Auth, and Firewall blocks unwanted traffic straight from the dashboard.
+Appwrite Analytics works without cookies, records custom events next to pageviews and screen views, and connects to the rest of your project: a site on Appwrite Sites starts tracking with one switch, signed-in users link to their accounts in Auth, and Firewall rules start from the dashboard.
 
 # Create a property
 
 ![The Create property page with a name, the Web type, a domain, and the Web SDK selected](/images/blog/introducing-appwrite-analytics/create-property.avif)
 
-A property is one website, app, or agent, with its own dashboard. Appwrite accepts events only from the websites and apps that are registered under **Apps** in your project, so register yours first. Then create the property:
+A property is one website, app, or AI agent of your own, with its own dashboard. Appwrite accepts events only from the websites and apps that are registered under **Apps** in your project, so register yours first. Then create the property:
 
 1. In the Appwrite Console, open your project and go to **Analytics**.
 2. Select **Create property**, and enter a **Name**.
 3. Under **Type**, select **Web**, **Mobile**, or **Agent**. The type decides which cards the dashboard shows.
 4. For a website, enter its **Domain**.
-5. Under **SDK**, select the SDK for the install snippet that the Console shows next, and select **Create property**.
+5. Under **SDK**, pick the platform whose install code the Console shows next, and select **Create property**.
 
 The Console then shows the install steps, with your endpoint, project ID, and property ID filled in. The **Set up with AI** card has a ready-made prompt for your AI coding tool, and the page confirms the first event when it arrives.
 
 # Add tracking to your site or app
 
-On a website, one script tag is enough. Add it to the `<head>` of every page:
+On a website, one script tag tracks pageviews, outbound links, scroll depth, and engagement time. Add it to the `<head>` of every page:
 
 ```html
 <script defer src="https://sdk.appwrite.io/web/29.4.0/tracker.js"
@@ -54,7 +54,7 @@ On a website, one script tag is enough. Add it to the `<head>` of every page:
         data-property="<PROPERTY_ID>"></script>
 ```
 
-In an app with a build step, and in mobile apps, install the Appwrite SDK for your platform and start tracking:
+In an app with a build step, and in mobile apps, install the Appwrite SDK for your platform and call `start()` on its `Tracking` class. In a mobile app, `start()` records installs and time in the app, and `screenView()` records each screen:
 
 {% multicode %}
 ```client-web
@@ -133,23 +133,29 @@ tracking.start();
 ```
 {% /multicode %}
 
-Each of these SDKs includes a `Tracking` class, and the script tag sets it up with no code. On a website, `start()` tracks pageviews, outbound links, scroll depth, and engagement time. In an app, it records installs and time in the app, and `screenView()` records each screen. For step-by-step setups, read [how to add Appwrite Analytics to your website](/blog/post/add-appwrite-analytics-to-your-website) and [how to add Appwrite Analytics to your mobile app](/blog/post/add-appwrite-analytics-to-your-mobile-app).
+# Analytics for your Appwrite Sites
+
+![The Analytics card on a site's Overview tab with the last 24 hours of visitors, pageviews, bounce rate, visit duration, and top sources](/images/blog/introducing-appwrite-analytics/site-card.avif)
+
+A site on Appwrite Sites needs no tracking code. Turn on **Enable analytics** when creating the site, or **Web analytics** in its settings, and Appwrite adds the tracker to every page on the site's production domains. The tracker sends its events through the site's own domain, so ad blockers that block the Appwrite endpoint let them through.
+
+The site's **Overview** tab then shows an **Analytics** card with the last 24 hours of visitors, pageviews, bounce rate, visit duration, and top sources, with a link to the full dashboard.
 
 # See every visit on one dashboard
 
 ![The Analytics dashboard for a store with unique visitors, visits, pageviews, events, and a chart for the last 30 days](/images/blog/introducing-appwrite-analytics/dashboard.avif)
 
-Each property has its own dashboard. The top row shows unique visitors, visits, pageviews, events, views per visit, bounce rate, visit duration, and engagement time for any date range, compared with the previous period. Mobile properties use app terms, such as active users, sessions, and screen views, and **Add note** marks a release or a campaign on the chart.
+Each property has its own dashboard. The top row shows unique visitors, visits, pageviews, events, views per visit, bounce rate, visit duration, and engagement time for any date range, compared with the previous period. Mobile properties use app terms, such as active users, sessions, and screen views. **Add note** marks a release or a campaign on the chart.
 
 Below the chart, cards break your traffic down by page, location, browser, operating system, device, and version. Select any value to filter the dashboard to it, and combine filters to narrow it further. **Export** downloads the current view as a PDF report or as CSV files, to share the numbers with people who do not use Appwrite.
 
 # See the people and the agents that visit
 
-![The Traffic sources card with the ai channel next to the Humans vs bots card, which splits bots into social previews, AI crawlers, and AI assistants](/images/blog/introducing-appwrite-analytics/traffic-sources.avif)
+![The Traffic sources card with the ai channel next to the Humans vs bots card, which splits bots by type, such as datacenter, social preview, and AI crawler](/images/blog/introducing-appwrite-analytics/traffic-sources.avif)
 
 **Traffic sources** shows how people found you: by channel, by referring site, and by UTM campaign. The `ai` channel counts the people who followed a link from an AI assistant, such as ChatGPT, to your site.
 
-**Humans vs bots** shows how much of your traffic is automated, and selecting **Humans** or **Bots** filters the whole dashboard. Appwrite recognizes bots from their user agent and from the network they come from, and sorts them into categories: AI crawlers, AI assistants, search crawlers, social previews, datacenter traffic, referrer spam, and more. The **AI agents and crawlers** card names each one, such as GPTBot, ClaudeBot, PerplexityBot, and ChatGPT User.
+**Humans vs bots** shows how much of your traffic is automated, split into categories such as AI crawlers, AI assistants, search crawlers, social previews, and datacenter traffic. The **AI agents and crawlers** card names each bot, such as GPTBot, ClaudeBot, and ChatGPT User. Select **Humans** or **Bots** to filter the whole dashboard.
 
 # Block unwanted traffic with Firewall
 
@@ -167,7 +173,7 @@ The rule opens for the site, with the condition and the **Deny** action filled i
 
 ![The dashboard filtered to the purchase_completed event, with the unique visitors who completed a purchase in the last 30 days](/images/blog/introducing-appwrite-analytics/event-filter.avif)
 
-Pageviews show where people go. Custom events record what they do, such as a signup, a purchase, or an invite. Send them from the browser, from your app, or from your server:
+Custom events record what people do, such as a signup, a purchase, or an invite. Send them from the browser, from your app, or from your server. A server uses an API key with the `analytics.write` scope, and passes the visitor's `ip` and `userAgent` so the event counts toward the same visitor as their browser events:
 
 {% multicode %}
 ```client-web
@@ -235,15 +241,13 @@ appwrite analytics create-event \
 ```
 {% /multicode %}
 
-The **Custom events** card ranks your events, and the **Event properties** card breaks down their props, such as the plan of a signup. Select an event to filter the dashboard to it: **Unique visitors** and **Visits** then count the people and the visits that triggered it, and the cards below the chart show where those events happened.
-
-A server sends events with an API key that has the `analytics.write` scope. Passing the visitor's `ip` and `userAgent` from their request counts the event toward the same visitor as the events from their browser, instead of a visitor of its own.
+Select an event in the **Custom events** card to see who triggered it: **Unique visitors** and **Visits** then count the people and visits behind the event, and the cards show where it happened. The **Event properties** card breaks down the details attached to each event, such as the plan of a signup.
 
 # Know your signed-in users
 
 ![The Analytics tab of a user in Auth with their events per day and the properties they used in the last 30 days](/images/blog/introducing-appwrite-analytics/user-analytics.avif)
 
-Turn on **Identify signed-in users** in a property's settings, and every event from a signed-in session carries the user's ID from Auth. The **Users** card then lists your most active users, and one person on several devices counts as one visitor.
+Turn on **Identify signed-in users** in a property's settings, and every event from a signed-in session carries the user's ID from Auth. The **Users** card then lists your most active users, and a signed-in user on several devices counts as one visitor that day.
 
 Each user in **Auth** also gets an **Analytics** tab, with their events per day, their active days, and the properties they used. Appwrite records only the user ID, never an email or a name.
 
@@ -308,17 +312,9 @@ appwrite analytics list-metrics \
 ```
 {% /multicode %}
 
-# Analytics for your Appwrite Sites
-
-![The Analytics card on a site's Overview tab with the last 24 hours of visitors, pageviews, bounce rate, visit duration, and top sources](/images/blog/introducing-appwrite-analytics/site-card.avif)
-
-A site on Appwrite Sites needs no tracking code. Turn on **Enable analytics** when creating the site, or **Web analytics** in its settings, and Appwrite adds the tracker to every page on the site's production domains. The tracker sends its events through the site's own domain, so ad blockers that block the Appwrite endpoint let them through.
-
-The site's **Overview** tab then shows an **Analytics** card with the last 24 hours of visitors, pageviews, bounce rate, visit duration, and top sources, with a link to the full dashboard.
-
 # Privacy without cookies
 
-Appwrite Analytics sets no cookies, and the tracking helpers keep no identifiers on the device. Appwrite identifies each visitor with a one-way hash of the IP address, the user agent, the hostname, and a salt that changes every day, so a returning visitor counts once per day. Appwrite uses the IP address to find the location and to compute the hash, and then discards it.
+Appwrite Analytics sets no cookies, and the `Tracking` class keeps no identifiers on the device. Appwrite identifies each visitor with a one-way hash of the IP address, the user agent, the hostname, and a salt that changes every day, so a returning visitor counts once per day. Appwrite uses the IP address to find the location and to compute the hash, and then discards it.
 
 By default, the Web SDK sends no events for visitors who turn on Do Not Track in their browser, or from automated browsers. Keep personal data, such as names and email addresses, out of event names, props, and URLs. The [privacy documentation](/docs/products/analytics/privacy) lists everything that Appwrite stores for each event.
 
@@ -331,11 +327,11 @@ By default, the Web SDK sends no events for visitors who turn on Do Not Track in
 | Properties | 1 per project | 5 per project | Unlimited |
 | Data retention | 30 days | 90 days | Custom |
 
-The events limit covers every property in the organization, including the automatic events that the tracking helpers send. Traffic from datacenter networks and Firebase Test Lab devices doesn't count toward it. For the full details, see [Limits and retention](/docs/products/analytics/limits).
+The events limit covers every property in the organization, including the automatic events that `Tracking` sends. Traffic from datacenter networks and Firebase Test Lab devices doesn't count toward it. For the full details, see [Limits and retention](/docs/products/analytics/limits).
 
 # Get started
 
-Open your project in the Appwrite Console, go to **Analytics**, and create your first property. We can't wait to hear what your dashboards show, and the [Appwrite Discord](https://appwrite.io/discord) is the place to share it and to ask questions.
+Open your project in the Appwrite Console, go to **Analytics**, and create your first property.
 
 - [Appwrite Analytics documentation](/docs/products/analytics)
 - [Quick start](/docs/products/analytics/quick-start)
@@ -343,3 +339,5 @@ Open your project in the Appwrite Console, go to **Analytics**, and create your 
 - [How to add Appwrite Analytics to your mobile app](/blog/post/add-appwrite-analytics-to-your-mobile-app)
 - [Block traffic with Firewall](/docs/products/analytics/firewall)
 - [Track events from your server](/docs/products/analytics/server-side)
+
+We'd love to hear what you discover about your traffic. Share your dashboard or ask a question in the [Appwrite Discord](https://appwrite.io/discord).

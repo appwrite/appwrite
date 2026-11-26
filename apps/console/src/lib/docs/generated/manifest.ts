@@ -1181,7 +1181,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
   {
     "slug": "products/analytics/events",
     "title": "Events",
-    "description": "Events are the records every Appwrite Analytics metric is built from. Learn which events the tracking helpers send, how custom events differ, and what Appwrite adds to each event.",
+    "description": "Events are the records every Appwrite Analytics metric is built from. Learn which events the `Tracking` class sends, how custom events differ, and what Appwrite adds to each event.",
     "layout": "article",
     "readingTimeMinutes": 4
   },
@@ -1251,14 +1251,14 @@ export const DOCS_PAGES: DocsPageMeta[] = [
   {
     "slug": "products/analytics/quick-start",
     "title": "Start with Analytics",
-    "description": "Track your first website visit with Appwrite Analytics. Create a property, add the Web SDK's tracking helper to your site, and see the visit on the dashboard.",
+    "description": "Track your first website visit with Appwrite Analytics. Create a property, add one script tag to your site, and see the visit on the dashboard.",
     "layout": "article",
     "readingTimeMinutes": 2
   },
   {
     "slug": "products/analytics/rest",
     "title": "Send events over REST",
-    "description": "Send Appwrite Analytics events with a plain HTTP request from any platform, including native iOS and Android apps, games, and command-line tools.",
+    "description": "Send Appwrite Analytics events with a plain HTTP request from any platform, such as games, desktop apps, and command-line tools.",
     "layout": "article",
     "readingTimeMinutes": 4
   },

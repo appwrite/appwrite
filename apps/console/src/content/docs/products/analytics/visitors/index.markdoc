@@ -10,8 +10,8 @@ Appwrite Analytics counts people and their visits without cookies or anything el
 
 Appwrite gives every event a visitor ID: a one-way hash of these values.
 
-- A salt that changes every day, at midnight UTC.
-- The visitor: the [user ID](#signed-in-users) when Appwrite knows who sent the event, or else the IP address and the `User-Agent` header of the browser or app.
+- A salt: a random value that changes every day at midnight UTC.
+- Who sent it: the [user ID](#signed-in-users) when Appwrite knows who sent the event, or else the IP address and the `User-Agent` header of the browser or app.
 - The hostname of the event's URL and the property ID.
 
 Events with the same values on the same day get the same visitor ID. **Unique visitors** on the dashboard counts the distinct IDs in the selected range, so a person who comes back on three days counts as three visitors. A visit that runs past midnight keeps the ID it started with.
@@ -27,13 +27,22 @@ Appwrite doesn't store the IP address, and visitor IDs don't appear on the dashb
 
 # Signed-in users {% #signed-in-users %}
 
-An event can carry a user ID: from a signed-in session when the property's **Identify signed-in users** setting is on, or from your server with an API key. The user ID then takes the place of the IP address and user agent in the visitor ID, so one user on a phone and a laptop counts as one visitor that day. Signed-in users also appear on the **Users** card. See [Properties](/docs/products/analytics/properties#user-identification).
+{% only_dark %}
+![Analytics tab of a user in Auth with their events, visits, and views, events per day, and the properties they used](/images/docs/analytics/dark/user-analytics.avif)
+{% /only_dark %}
+{% only_light %}
+![Analytics tab of a user in Auth with their events, visits, and views, events per day, and the properties they used](/images/docs/analytics/user-analytics.avif)
+{% /only_light %}
+
+An event can carry an Appwrite Auth user ID: from a signed-in Auth session when the property's **Identify signed-in users** setting is on, or from your server with an API key. The user ID then takes the place of the IP address and user agent in the visitor ID, so one user on a phone and a laptop counts as one visitor that day. Signed-in users also appear on the **Users** card.
+
+Each user in **Auth** has an **Analytics** tab with their events per day over the last 30 days, their active days, and the properties they used, with their top screens or pages, events, and locations in each. See [User identification](/docs/products/analytics/properties#user-identification).
 
 # Visits {% #visits %}
 
-A visit, also called a session, groups a visitor's events. It starts with the visitor's first event and continues as long as more events arrive. After 30 minutes without an event from that visitor, the visit ends, and their next event starts a new one.
+A visit groups a visitor's events. **Mobile** properties call it a session. It starts with the visitor's first event and continues as long as more events arrive. After 30 minutes without an event from that visitor, the visit ends, and their next event starts a new one.
 
-**Visits** on the dashboard counts the visits that started in the selected range. A visit that started before the range doesn't count, even if it continued into it.
+**Visits** on the dashboard counts the visits that started in the selected range. A visit that started before the range doesn't count, even if it continued into it. The API reports both counts: `visits` for the visits that started in the range, and `sessions` for every visit with an event in it. See [Metrics](/docs/products/analytics/metrics#shapes).
 
 Clients that report their own `sessionHash` keep visits apart when they share a visitor ID. See [Send events over REST](/docs/products/analytics/rest#parameters).
 
@@ -41,13 +50,13 @@ Clients that report their own `sessionHash` keep visits apart when they share a 
 
 Appwrite keeps a running summary of each visit as its events arrive.
 
-- **Entry page**: the page of the visit's first pageview.
-- **Exit page**: the page of the visit's last pageview.
+- **Entry page**: the page or screen of the visit's first view, a `pageview` or `screen_view` event.
+- **Exit page**: the page or screen of the visit's last view.
 - **Bounce**: a visit with fewer than two views, no interaction, and less than 10 seconds between its first and last event.
 - **Duration**: the time from the visit's first event to its last.
 - **Pageviews** and **events**: how many of each the visit had.
 
-Only views, `pageview` and `screen_view` events, set entry and exit pages. A visit that starts with a custom event takes its entry page from its first view. Custom events count as interactions, so one ends a bounce, unless it's sent with `interactive: false`. The automatic `scroll_depth`, `engagement_time`, and app lifecycle events never end a bounce. For how the dashboard averages these, see [Metrics](/docs/products/analytics/metrics).
+A visit that starts with a custom event takes its entry page from its first view. A custom event counts as an interaction, so the visit is no longer a bounce, unless the event is sent with `interactive: false`. The automatic `scroll_depth`, `engagement_time`, and app lifecycle events never end a bounce. For how the dashboard averages these, see [Metrics](/docs/products/analytics/metrics).
 
 # Events from your server {% #server-events %}
 

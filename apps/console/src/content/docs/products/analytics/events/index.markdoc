@@ -1,16 +1,16 @@
 ---
 layout: article
 title: Events
-description: Events are the records every Appwrite Analytics metric is built from. Learn which events the tracking helpers send, how custom events differ, and what Appwrite adds to each event.
+description: Events are the records every Appwrite Analytics metric is built from. Learn which events the `Tracking` class sends, how custom events differ, and what Appwrite adds to each event.
 ---
 
 An event is one thing that happened in your app: a page was viewed, a link was clicked, a purchase completed. Every figure on an analytics dashboard, from visitors to bounce rate, is calculated from the events a property receives.
 
 Each event has a name and the URL it happened on. It can also carry a referrer, the viewport width, scroll depth, engagement time, and custom props.
 
-# Automatic events {% #automatic %}
+# Events the `Tracking` class sends {% #automatic %}
 
-The tracking helpers in the Appwrite SDKs send these events for you. "Mobile" means the Android, Apple, Flutter, and React Native SDKs.
+The `Tracking` class in each Appwrite SDK uses these event names. The **When** column shows which ones need a call from your app. "Mobile" means the Android, Apple, Flutter, and React Native SDKs.
 
 | Event | Sent by | When |
 | --- | --- | --- |
@@ -29,22 +29,22 @@ The tracking helpers in the Appwrite SDKs send these events for you. "Mobile" me
 
 `push_received` is billed like any event, but it never counts toward visitors or visits, because a push can arrive while the app is closed.
 
-For each helper's options, see [Track a website](/docs/products/analytics/web) and [Track a mobile app](/docs/products/analytics/mobile).
+For the options, see [Track a website](/docs/products/analytics/web) and [Track a mobile app](/docs/products/analytics/mobile).
 
 # Custom events {% #custom %}
 
 Any event with a name of your own is a custom event, such as `signup_completed` or `invite_sent`. The **Custom events** card on the dashboard lists them, separate from the automatic events. See [Track custom events](/docs/products/analytics/custom-events).
 
-`pageview` and `screen_view` are the two names Appwrite treats differently. Both count as views: they count toward **Pageviews** and **Views per visit**, and set each visit's entry and exit pages. Every other event counts toward visitors, visits, and events, but not pageviews. A custom event also counts as an interaction that ends a bounce, unless it's sent with `interactive: false`. See [What a visit records](/docs/products/analytics/visitors#visit-metrics).
+Appwrite treats two names as views: `pageview` and `screen_view`. They count toward **Pageviews** and **Views per visit**, and set each visit's entry and exit pages. Other events count toward **Events** without adding views, and toward visitors and visits, except `push_received`. A custom event also counts as an interaction that ends a bounce, unless it's sent with `interactive: false`. See [What a visit records](/docs/products/analytics/visitors#visit-metrics).
 
 # Where events come from {% #sources %}
 
-- **A website**: the Web SDK's `Tracking` helper sends events from the browser. On Appwrite Sites, turning on analytics adds it with no code. See [Track a website](/docs/products/analytics/web).
-- **A mobile app**: the `Tracking` helper in the Android, Apple, Flutter, and React Native SDKs sends events from the app. See [Track a mobile app](/docs/products/analytics/mobile).
+- **A website**: the Web SDK's `Tracking` class sends events from the browser. On Appwrite Sites, turning on analytics adds it with no code. See [Track a website](/docs/products/analytics/web).
+- **A mobile app**: the `Tracking` class in the Android, Apple, Flutter, and React Native SDKs sends events from the app. See [Track a mobile app](/docs/products/analytics/mobile).
 - **Any other client**: sends one HTTP request per event. See [Send events over REST](/docs/products/analytics/rest).
 - **Your server**: sends events with an API key, on behalf of a visitor. See [Track events from your server](/docs/products/analytics/server-side).
 
-Events from browsers and apps need no API key. Appwrite accepts one only when its origin passes two checks: it matches a Web app's hostname or a mobile app's package name or bundle ID under **Apps** in your project, and the property's [allowed origins](/docs/products/analytics/properties#allowed-origins) include it.
+Events from browsers and apps need no API key. Appwrite accepts such an event only when its origin passes two checks: it matches a Web app's hostname or a mobile app's package name or bundle ID under **Apps** in your project, and the property's [allowed origins](/docs/products/analytics/properties#allowed-origins) include it.
 
 # What Appwrite adds {% #enrichment %}
 

@@ -25,7 +25,7 @@ The file downloads with a name made of the property name and the date range, suc
 
 The PDF report is a short summary to share or attach to a status update.
 
-- The first page lists the property, its domain, the date range, the comparison period, and any filters. Below are the dashboard metrics with their change, plus **Scroll depth**, a chart of visitors over time against the comparison period, and the split between humans and bots.
+- The first page lists the property, its domain, the date range, the comparison period, and any filters. Below them are the dashboard metrics with their change, plus **Scroll depth**. A chart compares visitors over time with the comparison period, and a bar shows the split between humans and bots.
 - The following pages list up to 10 top values for each breakdown: sources, channels, top pages, entry pages, countries, cities, browsers, devices, operating systems, custom events, campaigns, and bots. Each value has its share of visitors and its visitor count. Breakdowns with no data in the range are left out.
 
 # CSV data {% #csv %}
@@ -39,14 +39,14 @@ tar -xzf appwrite-analytics_acme-store_2026-09-13_2026-10-13.tar.gz
 The archive holds one folder with these files:
 
 - `README.txt`: the property, date range, interval, comparison period, and filters of the export.
-- `summary.csv`: each metric for the date range and the comparison period, with the change in percent. For how its **Visits** and **Sessions** rows differ, see [Response shapes](/docs/products/analytics/metrics#shapes).
+- `summary.csv`: each metric for the date range and the comparison period, with the change in percent. **Visits** counts the visits that started in the range, and **Sessions** counts every visit with an event in the range.
 - `timeseries.csv`: visitors, sessions, pageviews, and events for each hour or day, next to the matching point of the comparison period.
 - `breakdowns/`: one file per breakdown, such as `countries.csv`, `entry-pages.csv`, and `utm-campaigns.csv`, with the top 100 values ranked by visitors. Unlike the **Custom events** card, `events.csv` also lists the automatic events, such as `pageview` and `scroll_depth`.
 
-Each breakdown row has the value, its visitors, its share of visitors, its sessions, and its events. Visitors and sessions are unique within a row, so the rows of a breakdown don't add up to the property's totals. Exports don't include the **Versions**, **Users**, or **Event properties** breakdowns.
+Each breakdown row has the value, its visitors, its share of visitors, its sessions, and its events. Each row counts its visitors and visits once, but a visitor or visit can appear in more than one row, so the rows don't add up to the property's totals. Exports don't include the **Versions**, **Users**, or **Event properties** breakdowns.
 
 Times in the files are in UTC, in ISO 8601 format. The interval of `timeseries.csv` follows the **1h** or **1d** setting on the dashboard.
 
-# Page and event filters {% #page-and-event-filters %}
+# Exports with single-event filters {% #page-and-event-filters %}
 
-With a **Page**, **Event**, **User**, or event property filter, the export leaves out what can't use those filters: `summary.csv`, the metrics on the first page of the PDF, and the **Entry pages** and **Exit pages** breakdowns. `README.txt` lists the breakdowns it left out under **Not included**.
+A **Page**, **Event**, **User**, or prop filter leaves `summary.csv`, the metrics on the first page of the PDF, and the **Entry pages** and **Exit pages** breakdowns out of the export. `README.txt` lists the omitted breakdowns under **Not included**.

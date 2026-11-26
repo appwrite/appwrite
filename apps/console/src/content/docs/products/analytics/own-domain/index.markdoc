@@ -4,16 +4,16 @@ title: Serve tracking from your domain
 description: Send Appwrite Analytics events through a domain you own, with a custom API domain or a small proxy on your site, so tracking requests stay first-party.
 ---
 
-The tracking helpers send events to your project's Appwrite endpoint, such as `<REGION>.cloud.appwrite.io`. Ad blockers and privacy extensions decide what to block from filter lists, which name tracking hosts and URL patterns. When your events go to a domain you own, list entries written for third-party hosts don't apply to them.
+The `Tracking` class sends events to your project's Appwrite endpoint, such as `<REGION>.cloud.appwrite.io`. Ad blockers and privacy extensions block requests that match their filter lists, which name known tracking hosts and URL patterns. Sending events to a domain you own keeps them clear of entries written for third-party hosts.
 
-A site on Appwrite Sites with analytics turned on needs neither: Appwrite already sends its events through the site's own domain. See [Properties](/docs/products/analytics/properties#sites).
+A site on Appwrite Sites with analytics turned on needs no setup here: Appwrite already sends its events through the site's own domain. See [Properties](/docs/products/analytics/properties#sites).
 
-For any other site, the **Ad blockers** card in a property's **Settings** tab offers two ways to do this.
+For any other site, the **Ad blockers** card in a property's **Settings** tab offers two ways to send events through your own domain.
 
 | | Custom domain | Proxy |
 | --- | --- | --- |
 | Events go to | A subdomain you point at Appwrite, such as `appwrite.example.com` | A path on your own site, such as `example.com/relay` |
-| What you set up | A DNS record | A server route and an API key |
+| Setup | A DNS record | A server route and an API key |
 | Visitor location | Appwrite sees each visitor's IP address directly | Your proxy passes each visitor's IP address on |
 
 # Use a custom domain {% #custom-domain %}
@@ -37,7 +37,7 @@ tracking.start();
 
 With the [script tag](/docs/products/analytics/web#script-tag), set `data-endpoint` to the same URL, such as `https://appwrite.example.com/v1`.
 
-Nothing else changes. Your site still needs a Web app under **Apps**, as described in [Track a website](/docs/products/analytics/web#before-you-start).
+Your site still needs a Web app under **Apps**, as described in [Track a website](/docs/products/analytics/web#before-you-start).
 
 # Use a proxy {% #proxy %}
 
@@ -121,7 +121,7 @@ export async function POST(
 }
 ```
 
-The route reads the last address in `X-Forwarded-For`. That's the visitor's address only when a proxy you trust sits in front of your app and adds the address it received the request from, or replaces the header. Vercel replaces it with the visitor's address. Without such a proxy, a client can set the header to any value, so read the visitor's address from your platform instead. Behind more than one proxy, read the address added by the proxy that faces the internet.
+The route reads the last address in `X-Forwarded-For`. That address is the visitor's only when a trusted proxy in front of your app appends the address it received the request from, or replaces the header with it, as Vercel does. Without such a proxy, a client can set the header to any value, so read the visitor's address from your platform instead. Behind more than one proxy, read the address set by the proxy that faces the internet.
 {% /tabsitem %}
 
 {% tabsitem #cloudflare title="Cloudflare Workers" %}

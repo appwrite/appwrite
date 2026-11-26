@@ -4,11 +4,11 @@ title: Privacy
 description: What Appwrite Analytics collects and stores for each event, how visitor IDs work without cookies, and the controls you have over tracking and data.
 ---
 
-Appwrite Analytics works without cookies and doesn't store IP addresses. This page lists what it collects, what it keeps, and the controls you have, so you can describe your analytics accurately to your users.
+Appwrite Analytics works without cookies and doesn't store IP addresses. This page lists what it collects, what it keeps, and the controls available, to help describe your analytics accurately to your users.
 
-# No cookies or device storage {% #no-cookies %}
+# No cookies or stored visitor identifiers {% #no-cookies %}
 
-Appwrite doesn't set cookies for analytics, and the tracking helpers in the Appwrite SDKs don't keep identifiers on the device. In the browser, the Web helper doesn't write to `localStorage`, `sessionStorage`, or any other storage. Each event is a single request that carries the event's details.
+Appwrite doesn't set cookies for analytics, and the `Tracking` class in the Appwrite SDKs doesn't keep visitor identifiers on the device. In the browser, it doesn't write to `localStorage`, `sessionStorage`, or any other storage. In an app, it keeps only a marker with the app's version, to spot installs and updates. See [Track a mobile app](/docs/products/analytics/mobile#automatic-events). Each event is a single request that carries the event's details.
 
 Appwrite identifies visitors from the request instead. See [Visitor IDs](#visitor-ids).
 
@@ -29,26 +29,26 @@ Appwrite uses the IP address to look up the location and to compute the visitor 
 
 # Visitor IDs {% #visitor-ids %}
 
-A visitor ID is a one-way hash of a daily salt, the IP address and user agent, the hostname of the event, and the property ID. When the event has a user ID, the user ID takes the place of the IP address and user agent. The salt changes every day at midnight UTC, so the same visitor gets a new ID each day, and Appwrite can't follow a visitor from one day to the next. Each day's salt is deleted two days later.
+A visitor ID is a one-way hash of the property ID, the event's hostname, the visitor's details, and a salt: a random value that changes every day at midnight UTC. The visitor's details are the user ID when the event has one, or else the IP address and user agent. A new salt each day gives the same visitor a new ID, so Appwrite can't follow a visitor from one day to the next. Each day's salt is deleted two days later.
 
-Appwrite doesn't store the IP address, and visitor IDs don't appear on the dashboard, in exports, or in API responses. For how IDs shape your numbers, see [Visitors and sessions](/docs/products/analytics/visitors).
+Visitor IDs don't appear on the dashboard, in exports, or in API responses. For how IDs shape your numbers, see [Visitors and sessions](/docs/products/analytics/visitors).
 
 # Data you send {% #data-you-send %}
 
-You decide what goes into event names, props, URLs, and user IDs. Keep personal data such as names, email addresses, and phone numbers out of them. In URLs, that includes query parameters: Appwrite drops the query string from the stored path, but it keeps the full URL of a referrer.
+Event names, props, URLs, and user IDs hold whatever your code sends. Keep personal data such as names, email addresses, and phone numbers out of them. In URLs, that includes query parameters: Appwrite drops the query string from the stored path, but it keeps the full URL of a referrer.
 
 Events carry user IDs in two cases only: your server sends one with an API key, or the property's **Identify signed-in users** setting is on and the event comes from a signed-in session. The setting is off by default. Turn it on only if your privacy policy covers linking analytics to user accounts. See [Properties](/docs/products/analytics/properties#user-identification).
 
 # Do Not Track {% #do-not-track %}
 
-The Web helper sends no events for visitors who have Do Not Track turned on in their browser. It checks the Do Not Track setting only, not Global Privacy Control. To count these visitors too, set the `respectDoNotTrack` option to `false`, or the `data-respect-dnt` attribute of the script tag to `"false"`.
+The Web SDK's `Tracking` class sends no events for visitors who have Do Not Track turned on in their browser. It checks the Do Not Track setting only, not Global Privacy Control. To count these visitors too, set the `respectDoNotTrack` option to `false`, or the `data-respect-dnt` attribute of the script tag to `"false"`.
 
-The Web helper also sends nothing from automated browsers, such as test runs with Playwright, Puppeteer, Selenium, or Cypress. This check can't be turned off. See [Track a website](/docs/products/analytics/web#do-not-track).
+It also sends nothing from automated browsers, such as test runs with Playwright, Puppeteer, Selenium, or Cypress. This check can't be turned off. See [Track a website](/docs/products/analytics/web#do-not-track).
 
-When you send events over REST or from your server, it's up to your code to honor the visitor's choices.
+Over REST or from your server, honoring the visitor's choices is up to your code.
 
 # Retention and deletion {% #retention %}
 
-Appwrite stores analytics events for 180 days on every plan, then deletes them. Your plan's retention period sets how much of that history you can see. See [Limits and retention](/docs/products/analytics/limits#retention).
+Appwrite stores analytics events for 180 days on every plan, then deletes them. Your plan's retention period sets how much of that history the dashboard shows. See [Limits and retention](/docs/products/analytics/limits#retention).
 
-Deleting a property permanently deletes every event and visit stored for it. To stop collecting without deleting, turn the property off in its **Settings** tab. Appwrite then rejects new events and keeps the existing data. See [Properties](/docs/products/analytics/properties).
+Deleting a property permanently deletes every event and visit stored for it. To stop collecting without deleting, turn off **Tracking** in the property's **Settings** tab. Appwrite then rejects new events and keeps the existing data. See [Properties](/docs/products/analytics/properties).

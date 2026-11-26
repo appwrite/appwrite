@@ -1,16 +1,16 @@
 ---
 layout: article
 title: Start with Analytics
-description: Track your first website visit with Appwrite Analytics. Create a property, add the Web SDK's tracking helper to your site, and see the visit on the dashboard.
+description: Track your first website visit with Appwrite Analytics. Create a property, add one script tag to your site, and see the visit on the dashboard.
 difficulty: beginner
 readtime: 5
 ---
 
-In this quick start you create an analytics property, add tracking to a website with one script tag, and see your first visit on the dashboard. For a site hosted on Appwrite Sites, turn on analytics in the site's settings instead, with no code. See [Properties](/docs/products/analytics/properties#sites).
+Create an analytics property, add tracking to a website with one script tag, and see your first visit on the dashboard. A site hosted on Appwrite Sites needs no code: turn on **Web analytics** in the site's **Settings** instead. See [Properties](/docs/products/analytics/properties#sites).
 
 # Add your site to the project {% #add-web-app %}
 
-Appwrite accepts events from a browser only when the site's hostname belongs to one of the project's apps. If your site isn't one yet, add it.
+Appwrite accepts events from a browser only when the site's hostname belongs to one of the project's apps. If the hostname isn't registered, add it as a Web app.
 
 1. Sign in to [Appwrite Cloud](https://cloud.appwrite.io) and open a project.
 2. Open **Apps** in the sidebar and click **Add app**.
@@ -30,12 +30,12 @@ Add `localhost` the same way to track your site while you develop.
 A property collects the events of one site or app.
 
 1. Open **Analytics** in the sidebar and click **Create property**.
-2. Enter a **Name**, such as `Acme Store`.
+2. Enter a **Name**, such as `Storefront`.
 3. Keep **Web** selected under **Type**.
 4. Enter your site's **Domain**, such as `example.com`.
 5. Keep **Web** selected under **SDK**, and click **Create property**.
 
-The Console opens the install screen and waits for your site's first event.
+The Console opens the install page and waits for your site's first event.
 
 # Add tracking to your site {% #add-tracking %}
 
@@ -50,7 +50,7 @@ Add this tag to the `<head>` of every page, with your endpoint, project ID, and 
 
 The script records pageviews, outbound link clicks, scroll depth, and engagement time.
 
-If your site has a build step, you can install the Web SDK instead, and run this code once in the browser when your site loads. The install screen shows this setup with your IDs filled in.
+For a site with a build step, install the Web SDK instead and run this code once in the browser when the site loads. The install page shows this setup with your IDs filled in.
 
 ```client-web
 import { Client, Analytics, Tracking } from 'appwrite';
@@ -73,7 +73,7 @@ tracking.start();
 ![Install tracking screen confirming that a pageview event was received](/images/docs/analytics/install-tracking.avif)
 {% /only_light %}
 
-Open your site in a browser. Within a few seconds, the install screen shows **Event received** with the first `pageview`.
+Open your site in a browser. Within a few seconds, the install page shows **Event received** with the first `pageview`.
 
 Click **Open dashboard** to see the visit, with its page, source, location, browser, and device.
 
