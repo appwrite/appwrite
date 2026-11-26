@@ -2177,6 +2177,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     features.sso,
     features.agent,
     features.notifications,
+    features.alertCtas,
+    features.gitInstallationReuse,
     features.init,
     endpointPreset,
     endpointCustomUrl,
