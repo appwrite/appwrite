@@ -50,7 +50,13 @@ jobs:
       - name: Install build dependencies and Rust
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends clang libclang-dev libheif-dev pkg-config
+          sudo apt-get install -y --no-install-recommends clang libclang-dev libheif-dev pkg-config bc
+          # The gcrunner has no Rust; GitHub's ubuntu-24.04 has rustup.
+          if ! command -v rustup > /dev/null; then
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain none
+            export PATH="$HOME/.cargo/bin:$PATH"
+            echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+          fi
           rustup toolchain install
           rustup component add clippy
           cargo fetch --locked
