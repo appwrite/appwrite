@@ -225,7 +225,8 @@ abstract class Base extends VideosAction
                     'track' => $trackId,
                     'uri' => $this->withProject(
                         $baseUri . '/renditions/' . $rendition->getId() . '/streams/' . ($stream['id'] ?? 0) . '/playlist.m3u8',
-                        $project
+                        $project,
+                        $video
                     ),
                 ];
             }
@@ -264,7 +265,8 @@ abstract class Base extends VideosAction
                     'audio' => $hasAudioGroup ? 'group_audio' : null,
                     'uri' => $this->withProject(
                         $baseUri . '/renditions/' . $rendition->getId() . '/streams/' . ($stream['id'] ?? 0) . '/playlist.m3u8',
-                        $project
+                        $project,
+                        $video
                     ),
                 ];
             }
@@ -283,7 +285,8 @@ abstract class Base extends VideosAction
                 'default' => $caption->getAttribute('default', false) ? 'YES' : 'NO',
                 'uri' => $this->withProject(
                     $this->baseUri($video, $captionOutput) . '/captions/' . $caption->getId() . '/manifest',
-                    $project
+                    $project,
+                    $video
                 ),
             ];
         }
@@ -345,7 +348,7 @@ abstract class Base extends VideosAction
 
                 foreach ($segments as $segment) {
                     // Relative to <BaseURL>, which is what the MPD resolves against.
-                    $uri = $this->withProject($segment->getId(), $project);
+                    $uri = $this->withProject($segment->getId(), $project, $video);
 
                     if ((int) $segment->getAttribute('isInit', 0) === 1) {
                         $init = $uri;
@@ -430,7 +433,7 @@ abstract class Base extends VideosAction
             $captionEntries[] = [
                 'id' => $caption->getId(),
                 'name' => $caption->getAttribute('code', ''),
-                'baseUrl' => $this->withProject($baseUri . '/captions/' . $caption->getId() . '/manifest', $project),
+                'baseUrl' => $this->withProject($baseUri . '/captions/' . $caption->getId() . '/manifest', $project, $video),
             ];
         }
 
@@ -495,13 +498,13 @@ abstract class Base extends VideosAction
 
         foreach ($segments as $segment) {
             if ((int) $segment->getAttribute('isInit', 0) === 1) {
-                $map = $this->withProject($baseUri . $segment->getId(), $project);
+                $map = $this->withProject($baseUri . $segment->getId(), $project, $video);
                 continue;
             }
 
             $entries[] = [
                 'duration' => $segment->getAttribute('duration', 0),
-                'url' => $this->withProject($baseUri . $segment->getId(), $project),
+                'url' => $this->withProject($baseUri . $segment->getId(), $project, $video),
             ];
         }
 

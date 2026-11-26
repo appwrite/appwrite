@@ -19,8 +19,7 @@ enum Change: string
     {
         return match ($this) {
             self::Firing => 'create',
-            self::Resolved => 'update.status',
-            self::Acknowledged, self::Unacknowledged => 'update.acknowledgement',
+            self::Resolved, self::Acknowledged, self::Unacknowledged => 'update',
         };
     }
 }

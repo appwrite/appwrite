@@ -8,6 +8,10 @@ Utopia\Auth\Hashes\Scrypt
 Utopia\Auth\Hashes\ScryptModified
 Utopia\Auth\Hashes\Sha
 Utopia\DSN\DSN
+Utopia\Database\DateTime
+Utopia\Database\Id
+Utopia\Database\Permission
+Utopia\Database\Role
 Utopia\Detector\Detection
 Utopia\Detector\Detection\Framework
 Utopia\Detector\Detection\Framework\Analog

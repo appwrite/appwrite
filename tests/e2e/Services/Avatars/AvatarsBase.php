@@ -1947,6 +1947,18 @@ trait AvatarsBase
     }
 
     /**
+     * @param array<string, string> $headers
+     */
+    private function getPhotoUserId(array $headers): string
+    {
+        $account = $this->client->call(Client::METHOD_GET, '/account', $headers);
+
+        $this->assertEquals(200, $account['headers']['status-code']);
+
+        return $account['body']['$id'];
+    }
+
+    /**
      * Random pixels don't compress, so the PNG size follows the dimensions.
      */
     private function createNoiseImage(int $width, int $height): string
@@ -1989,14 +2001,16 @@ trait AvatarsBase
     /**
      * @param array<string, string> $headers
      * @param array<string, string> $extra
+     * @param array<string, string> $params
      * @return array<string, mixed>
      */
-    private function uploadPhoto(array $headers, string $contents, string $filename, array $extra = []): array
+    private function uploadPhoto(array $headers, string $contents, string $filename, array $extra = [], array $params = []): array
     {
         return $this->client->call(Client::METHOD_PUT, '/avatars/photo', \array_merge($headers, [
             'content-type' => 'multipart/form-data',
         ], $extra), [
             'file' => new \CURLFile('data://application/octet-stream;base64,' . \base64_encode($contents), 'application/octet-stream', $filename),
+            ...$params,
         ]);
     }
 
