@@ -10,6 +10,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -63,6 +64,7 @@ class Get extends Base
             ->param('output', '', new WhiteList(self::OUTPUTS, true), 'Streaming output format.', enum: new Enum(name: 'VideoOutput'))
             ->param('captionId', '', new UID(), 'Caption unique ID.')
             ->param('segmentId', '', new UID(), 'Segment unique ID.')
+            ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
             ->inject('project')
@@ -77,6 +79,7 @@ class Get extends Base
         string $output,
         string $captionId,
         string $segmentId,
+        Request $request,
         Response $response,
         Database $dbForProject,
         Document $project,
@@ -104,11 +107,18 @@ class Get extends Base
             throw new Exception(Exception::VIDEO_CAPTION_SEGMENT_NOT_FOUND);
         }
 
-        // The playlist puts updatedAt on this URL, so it can use the same
-        // public cache and Surrogate-Key as a rendition segment. The stable
-        // WebVTT path (DASH) stays on the short private policy.
+        // A public video may sit at Fastly under the video Surrogate-Key.
+        // A private one stays on the short revalidation window: the browser
+        // cache is not cleared by a Fastly purge, so a year-long immutable
+        // copy would keep playing after read access is revoked. The stable
+        // DASH WebVTT path uses that same short policy.
         $response->setContentType('text/vtt');
-        $this->cachePlaybackSegment($response, $project, $video);
+        if ($this->isPublicRead($video)) {
+            $this->cachePlaybackSegment($response, $project, $video);
+        } elseif ($this->captionBytesNotModified($request, $response, $caption)) {
+            return;
+        }
+
         $response->send((string) $deviceForVideos->read($path));
     }
 }

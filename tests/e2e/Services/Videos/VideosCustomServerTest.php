@@ -2711,10 +2711,9 @@ final class VideosCustomServerTest extends Scope
 
     /**
      * A ready caption is an HLS subtitle rung: the master lists it, and the
-     * playlist's first segment is the WebVTT cue. The segment URL carries
-     * updatedAt, so a private video keeps it in the private cache for a year
-     * and a public one may sit at the CDN under the video Surrogate-Key.
-     * An unknown segment id is not a missing caption.
+     * playlist's first segment is the WebVTT cue. A private cache may hold
+     * those bytes and revalidate them; a year-long copy would keep playing
+     * after read access is revoked. An unknown segment id is not a missing caption.
      */
     public function testGetCaptionSegment(): void
     {
@@ -2743,11 +2742,17 @@ final class VideosCustomServerTest extends Scope
         $this->assertStringContainsString('text/vtt', (string) ($segment['headers']['content-type'] ?? ''));
         $this->assertStringContainsString('WEBVTT', (string) $segment['body']);
         $this->assertStringContainsString('Good evening, have a good week.', (string) $segment['body']);
-        $this->assertSame(
-            'private, max-age=31536000, immutable',
-            $segment['headers']['cache-control'] ?? null
-        );
+        $this->assertSame('private, max-age=300', $segment['headers']['cache-control'] ?? null);
         $this->assertArrayNotHasKey('surrogate-key', $segment['headers']);
+        $etag = $segment['headers']['etag'] ?? '';
+        $this->assertNotSame('', $etag);
+
+        $revalidated = $this->client->call(
+            Client::METHOD_GET,
+            $this->manifestRequestPath($segmentUri),
+            $this->headers() + ['if-none-match' => $etag]
+        );
+        $this->assertEquals(304, $revalidated['headers']['status-code']);
 
         $unknown = $this->client->call(
             Client::METHOD_GET,
