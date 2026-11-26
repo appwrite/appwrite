@@ -365,7 +365,7 @@ Media metadata is empty right after you create a video. The first rendition or t
 | `$permissions` | Who can watch and manage the video. See [Permissions](/docs/products/videos/permissions) |
 
 {% info title="Bitrate units" %}
-Bitrates on a video are in **bits per second**. Bitrates on [profiles](/docs/products/videos/profiles) and [renditions](/docs/products/videos/renditions) are in **kilobits per second**.
+Bitrates on videos, [profiles](/docs/products/videos/profiles), and [renditions](/docs/products/videos/renditions) are all in **bits per second**.
 {% /info %}
 
 Metadata is useful before anything plays. Show the duration in a list, pick a layout from `aspectRatio` for portrait or landscape clips, or skip [profiles](/docs/products/videos/profiles#upscaling) taller than `height` so you never upscale.

@@ -4,9 +4,26 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
+use Utopia\Database\Document;
 
 class VideoProfile extends Model
 {
+    /**
+     * Stored in kilobits per second, the unit encoders take; returned in bits
+     * per second like the probed bitrates on a video.
+     */
+    public function filter(Document $document): Document
+    {
+        foreach (['videoBitRate', 'audioBitRate'] as $attribute) {
+            $value = $document->getAttribute($attribute);
+            if (\is_int($value)) {
+                $document->setAttribute($attribute, $value * 1000);
+            }
+        }
+
+        return $document;
+    }
+
     public function __construct()
     {
         $this
@@ -44,15 +61,15 @@ class VideoProfile extends Model
             ])
             ->addRule('videoBitRate', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Target video bitrate in kilobits per second.',
+                'description' => 'Target video bitrate in bits per second.',
                 'default' => 0,
-                'example' => 890,
+                'example' => 890000,
             ])
             ->addRule('audioBitRate', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Target audio bitrate in kilobits per second.',
+                'description' => 'Target audio bitrate in bits per second.',
                 'default' => 0,
-                'example' => 64,
+                'example' => 64000,
             ])
             ->addRule('width', [
                 'type' => self::TYPE_INTEGER,

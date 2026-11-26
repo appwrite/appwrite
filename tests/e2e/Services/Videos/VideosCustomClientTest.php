@@ -300,8 +300,8 @@ final class VideosCustomClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/project/videos/profiles', $this->anonymousHeaders(), [
             'profileId' => Id::unique(),
             'name' => 'guest',
-            'videoBitRate' => 1000,
-            'audioBitRate' => 64,
+            'videoBitRate' => 1000000,
+            'audioBitRate' => 64000,
             'width' => 640,
             'height' => 360,
         ]);
@@ -462,8 +462,8 @@ final class VideosCustomClientTest extends Scope
         $payload = [
             'profileId' => Id::unique(),
             'name' => 'from-session',
-            'videoBitRate' => 1000,
-            'audioBitRate' => 64,
+            'videoBitRate' => 1000000,
+            'audioBitRate' => 64000,
             'width' => 640,
             'height' => 360,
         ];

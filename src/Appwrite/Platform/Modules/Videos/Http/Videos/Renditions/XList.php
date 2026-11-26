@@ -85,6 +85,37 @@ class XList extends Base
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
+        // Renditions store kilobits per second; filters arrive in bits per second, like the response.
+        foreach ($queries as $query) {
+            if (!\in_array($query->getAttribute(), ['videoBitRate', 'audioBitRate'], true)) {
+                continue;
+            }
+
+            $method = $query->getMethod();
+            $values = $query->getValues();
+            foreach ($values as $index => $value) {
+                if (!\is_int($value)) {
+                    continue;
+                }
+
+                $lower = $method === QueryMethod::GreaterThanEqual
+                    || $method === QueryMethod::LessThan
+                    || (\in_array($method, [QueryMethod::Between, QueryMethod::NotBetween], true) && $index === 0);
+                $upper = $method === QueryMethod::GreaterThan
+                    || $method === QueryMethod::LessThanEqual
+                    || \in_array($method, [QueryMethod::Between, QueryMethod::NotBetween], true);
+
+                $values[$index] = match (true) {
+                    $value % 1000 === 0 => \intdiv($value, 1000),
+                    $lower => (int) \ceil($value / 1000),
+                    $upper => (int) \floor($value / 1000),
+                    // No stored rate is that large, so equal never matches and notEqual always does.
+                    default => PHP_INT_MAX,
+                };
+            }
+            $query->setValues($values);
+        }
+
         $queries[] = Query::equal('videoInternalId', [$video->getSequence()]);
 
         if (\count(Query::getByType($queries, [QueryMethod::Limit])) === 0) {

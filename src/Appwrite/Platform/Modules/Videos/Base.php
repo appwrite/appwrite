@@ -237,6 +237,19 @@ abstract class Base extends Action
     public const MIN_DIMENSION = 16;
     public const MAX_DIMENSION = 4320;
 
+    /**
+     * Profiles store kilobits per second, the unit encoders take; the API takes
+     * bits per second, the unit a video's probed bitrates are reported in.
+     */
+    protected static function toKilobits(string $param, int $bitsPerSecond): int
+    {
+        if ($bitsPerSecond % 1000 !== 0) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid `' . $param . '` param: Value must be in bits per second and a multiple of 1000');
+        }
+
+        return \intdiv($bitsPerSecond, 1000);
+    }
+
     /** Videos one project may create within ENCODE_PERIOD. */
     public const VIDEO_LIMIT = 10;
 

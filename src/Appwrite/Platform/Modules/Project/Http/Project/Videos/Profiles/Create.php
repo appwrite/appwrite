@@ -61,8 +61,8 @@ class Create extends Base
             ))
             ->param('profileId', '', new CustomId(), 'Video profile ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
             ->param('name', '', new Text(128), 'Video profile name.')
-            ->param('videoBitRate', null, new Range(self::MIN_VIDEO_BITRATE, self::MAX_VIDEO_BITRATE), 'Target video bitrate in kilobits per second.')
-            ->param('audioBitRate', null, new Range(self::MIN_AUDIO_BITRATE, self::MAX_AUDIO_BITRATE), 'Target audio bitrate in kilobits per second.')
+            ->param('videoBitRate', null, new Range(self::MIN_VIDEO_BITRATE * 1000, self::MAX_VIDEO_BITRATE * 1000), 'Target video bitrate in bits per second. Must be a multiple of 1000.')
+            ->param('audioBitRate', null, new Range(self::MIN_AUDIO_BITRATE * 1000, self::MAX_AUDIO_BITRATE * 1000), 'Target audio bitrate in bits per second. Must be a multiple of 1000.')
             ->param('width', null, new Range(self::MIN_DIMENSION, self::MAX_DIMENSION), 'Target video width in pixels.')
             ->param('height', null, new Range(self::MIN_DIMENSION, self::MAX_DIMENSION), 'Target video height in pixels.')
             ->param('codec', self::CODEC_H264, new WhiteList(self::codecIds(), true), 'Video encode codec. Codecs not enabled on this instance are rejected. Defaults to `h264`.', true, enum: new Enum(name: 'VideoCodec'))
@@ -97,8 +97,8 @@ class Create extends Base
                 '$id' => $profileId,
                 'name' => $name,
                 'codec' => $codec,
-                'videoBitRate' => $videoBitRate,
-                'audioBitRate' => $audioBitRate,
+                'videoBitRate' => self::toKilobits('videoBitRate', $videoBitRate),
+                'audioBitRate' => self::toKilobits('audioBitRate', $audioBitRate),
                 'width' => $width,
                 'height' => $height,
                 'search' => $name,

@@ -111,8 +111,8 @@ final class VideosCustomServerTest extends Scope
             'profileId' => Id::unique(),
             'name' => 'e2e-480p',
             // Distinct from the 480p rung so the unique geometry+codec index passes.
-            'videoBitRate' => 2101,
-            'audioBitRate' => 64,
+            'videoBitRate' => 2101000,
+            'audioBitRate' => 64000,
             'width' => 854,
             'height' => 480,
         ]);
@@ -121,7 +121,7 @@ final class VideosCustomServerTest extends Scope
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals('e2e-480p', $response['body']['name']);
         $this->assertEquals('h264', $response['body']['codec']);
-        $this->assertEquals(2101, $response['body']['videoBitRate']);
+        $this->assertEquals(2101000, $response['body']['videoBitRate']);
         $this->assertEquals(854, $response['body']['width']);
 
         $this->client->call(Client::METHOD_DELETE, '/project/videos/profiles/' . $response['body']['$id'], $this->headers());
@@ -130,8 +130,8 @@ final class VideosCustomServerTest extends Scope
         $custom = $this->client->call(Client::METHOD_POST, '/project/videos/profiles', $this->headers(), [
             'profileId' => $profileId,
             'name' => 'e2e-custom-id',
-            'videoBitRate' => 2105,
-            'audioBitRate' => 64,
+            'videoBitRate' => 2105000,
+            'audioBitRate' => 64000,
             'width' => 854,
             'height' => 480,
         ]);
@@ -142,8 +142,8 @@ final class VideosCustomServerTest extends Scope
         $duplicate = $this->client->call(Client::METHOD_POST, '/project/videos/profiles', $this->headers(), [
             'profileId' => $profileId,
             'name' => 'e2e-custom-id-duplicate',
-            'videoBitRate' => 2106,
-            'audioBitRate' => 64,
+            'videoBitRate' => 2106000,
+            'audioBitRate' => 64000,
             'width' => 854,
             'height' => 480,
         ]);
@@ -153,14 +153,14 @@ final class VideosCustomServerTest extends Scope
         $stored = $this->client->call(Client::METHOD_GET, '/project/videos/profiles/' . $profileId, $this->headers());
         $this->assertEquals(200, $stored['headers']['status-code']);
         $this->assertSame('e2e-custom-id', $stored['body']['name']);
-        $this->assertSame(2105, $stored['body']['videoBitRate']);
+        $this->assertSame(2105000, $stored['body']['videoBitRate']);
 
         $this->client->call(Client::METHOD_DELETE, '/project/videos/profiles/' . $profileId, $this->headers());
     }
 
     public function testGetProfile(): void
     {
-        $profileId = $this->createProfile('e2e-get', 2102);
+        $profileId = $this->createProfile('e2e-get', 2102000);
 
         $response = $this->client->call(Client::METHOD_GET, '/project/videos/profiles/' . $profileId, $this->headers());
 
@@ -174,20 +174,20 @@ final class VideosCustomServerTest extends Scope
 
     public function testUpdateProfile(): void
     {
-        $profileId = $this->createProfile('e2e-update', 2103);
+        $profileId = $this->createProfile('e2e-update', 2103000);
 
         $response = $this->client->call(Client::METHOD_PATCH, '/project/videos/profiles/' . $profileId, $this->headers(), [
             'name' => 'e2e-update-renamed',
-            'videoBitRate' => 2203,
-            'audioBitRate' => 96,
+            'videoBitRate' => 2203000,
+            'audioBitRate' => 96000,
             'width' => 854,
             'height' => 480,
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('e2e-update-renamed', $response['body']['name']);
-        $this->assertEquals(2203, $response['body']['videoBitRate']);
-        $this->assertEquals(96, $response['body']['audioBitRate']);
+        $this->assertEquals(2203000, $response['body']['videoBitRate']);
+        $this->assertEquals(96000, $response['body']['audioBitRate']);
         $this->assertEquals('h264', $response['body']['codec']);
 
         $renamedName = 'renamedprofile' . \uniqid();
@@ -199,8 +199,8 @@ final class VideosCustomServerTest extends Scope
         $stored = $this->client->call(Client::METHOD_GET, '/project/videos/profiles/' . $profileId, $this->headers());
         $this->assertEquals(200, $stored['headers']['status-code']);
         $this->assertSame($renamedName, $stored['body']['name']);
-        $this->assertSame(2203, $stored['body']['videoBitRate']);
-        $this->assertSame(96, $stored['body']['audioBitRate']);
+        $this->assertSame(2203000, $stored['body']['videoBitRate']);
+        $this->assertSame(96000, $stored['body']['audioBitRate']);
         $this->assertSame(854, $stored['body']['width']);
         $this->assertSame(480, $stored['body']['height']);
         $this->assertSame('h264', $stored['body']['codec']);
@@ -221,21 +221,37 @@ final class VideosCustomServerTest extends Scope
     public function testProfileValidation(): void
     {
         $invalid = [
-            ['videoBitRate' => 999999, 'audioBitRate' => 64, 'width' => 854, 'height' => 480],
-            ['videoBitRate' => 2100, 'audioBitRate' => 99999, 'width' => 854, 'height' => 480],
-            ['videoBitRate' => 2100, 'audioBitRate' => 64, 'width' => 1, 'height' => 480],
-            ['videoBitRate' => 2100, 'audioBitRate' => 64, 'width' => 854, 'height' => 99999],
+            ['videoBitRate' => 99999000, 'audioBitRate' => 64000, 'width' => 854, 'height' => 480],
+            ['videoBitRate' => 2100000, 'audioBitRate' => 99999000, 'width' => 854, 'height' => 480],
+            ['videoBitRate' => 2100000, 'audioBitRate' => 64000, 'width' => 1, 'height' => 480],
+            ['videoBitRate' => 2100000, 'audioBitRate' => 64000, 'width' => 854, 'height' => 99999],
         ];
 
         foreach ($invalid as $params) {
             $response = $this->client->call(Client::METHOD_POST, '/project/videos/profiles', $this->headers(), \array_merge(['profileId' => Id::unique(), 'name' => 'bad'], $params));
             $this->assertEquals(400, $response['headers']['status-code']);
         }
+
+        // Bitrates are bits per second in whole kilobits, the unit encoders take.
+        $profileId = 'fractional-' . \uniqid();
+        $fractional = $this->client->call(Client::METHOD_POST, '/project/videos/profiles', $this->headers(), [
+            'profileId' => $profileId,
+            'name' => 'fractional',
+            'videoBitRate' => 890500,
+            'audioBitRate' => 64000,
+            'width' => 854,
+            'height' => 480,
+        ]);
+        $this->assertEquals(400, $fractional['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $fractional['body']['type']);
+
+        $missing = $this->client->call(Client::METHOD_GET, '/project/videos/profiles/' . $profileId, $this->headers());
+        $this->assertEquals(404, $missing['headers']['status-code']);
     }
 
     public function testDeleteProfile(): void
     {
-        $profileId = $this->createProfile('e2e-delete', 2104);
+        $profileId = $this->createProfile('e2e-delete', 2104000);
 
         $response = $this->client->call(Client::METHOD_DELETE, '/project/videos/profiles/' . $profileId, $this->headers());
         $this->assertEquals(204, $response['headers']['status-code']);
@@ -303,8 +319,8 @@ final class VideosCustomServerTest extends Scope
         $match = $this->client->call(Client::METHOD_POST, '/project/videos/profiles', $this->headers(), [
             'profileId' => Id::unique(),
             'name' => $matchName,
-            'videoBitRate' => 731,
-            'audioBitRate' => 48,
+            'videoBitRate' => 731000,
+            'audioBitRate' => 48000,
             'width' => 426,
             'height' => 240,
         ]);
@@ -313,8 +329,8 @@ final class VideosCustomServerTest extends Scope
         $other = $this->client->call(Client::METHOD_POST, '/project/videos/profiles', $this->headers(), [
             'profileId' => Id::unique(),
             'name' => $otherName,
-            'videoBitRate' => 732,
-            'audioBitRate' => 48,
+            'videoBitRate' => 732000,
+            'audioBitRate' => 48000,
             'width' => 426,
             'height' => 240,
         ]);
@@ -356,8 +372,8 @@ final class VideosCustomServerTest extends Scope
         $omit = $this->client->call(Client::METHOD_POST, '/project/videos/profiles', $this->headers(), [
             'profileId' => Id::unique(),
             'name' => 'codec-omit-' . \uniqid(),
-            'videoBitRate' => 900,
-            'audioBitRate' => 64,
+            'videoBitRate' => 900000,
+            'audioBitRate' => 64000,
             'width' => 642,
             'height' => 362,
         ]);
@@ -369,8 +385,8 @@ final class VideosCustomServerTest extends Scope
             $response = $this->client->call(Client::METHOD_POST, '/project/videos/profiles', $this->headers(), [
                 'profileId' => Id::unique(),
                 'name' => 'codec-' . $codec . '-' . \uniqid(),
-                'videoBitRate' => 890,
-                'audioBitRate' => 64,
+                'videoBitRate' => 890000,
+                'audioBitRate' => 64000,
                 'width' => 640,
                 'height' => 360,
                 'codec' => $codec,
@@ -389,8 +405,8 @@ final class VideosCustomServerTest extends Scope
     public function testProfileUniqueGeometry(): void
     {
         $payload = [
-            'videoBitRate' => 701,
-            'audioBitRate' => 48,
+            'videoBitRate' => 701000,
+            'audioBitRate' => 48000,
             'width' => 426,
             'height' => 240,
         ];
@@ -411,8 +427,8 @@ final class VideosCustomServerTest extends Scope
         $other = $this->client->call(Client::METHOD_POST, '/project/videos/profiles', $this->headers(), [
             'profileId' => Id::unique(),
             'name' => 'unique-c-' . \uniqid(),
-            'videoBitRate' => 702,
-            'audioBitRate' => 48,
+            'videoBitRate' => 702000,
+            'audioBitRate' => 48000,
             'width' => 426,
             'height' => 240,
         ]);
@@ -426,13 +442,13 @@ final class VideosCustomServerTest extends Scope
 
         // A partial update is checked against the merged profile, not just the passed fields.
         $partial = $this->client->call(Client::METHOD_PATCH, '/project/videos/profiles/' . $other['body']['$id'], $this->headers(), [
-            'videoBitRate' => 701,
+            'videoBitRate' => 701000,
         ]);
         $this->assertEquals(409, $partial['headers']['status-code']);
         $this->assertEquals('video_profile_already_exists', $partial['body']['type']);
 
         $unchanged = $this->client->call(Client::METHOD_GET, '/project/videos/profiles/' . $other['body']['$id'], $this->headers());
-        $this->assertSame(702, $unchanged['body']['videoBitRate']);
+        $this->assertSame(702000, $unchanged['body']['videoBitRate']);
 
         $this->client->call(Client::METHOD_DELETE, '/project/videos/profiles/' . $first['body']['$id'], $this->headers());
         $this->client->call(Client::METHOD_DELETE, '/project/videos/profiles/' . $other['body']['$id'], $this->headers());
@@ -1040,9 +1056,27 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals('h264', $response['body']['codec']);
         $this->assertEquals($profile['$id'], $response['body']['profileId']);
         $this->assertEquals(
-            $profile['width'] . 'X' . $profile['height'] . '@' . ($profile['videoBitRate'] + $profile['audioBitRate']),
+            $profile['width'] . 'X' . $profile['height'] . '@' . \intdiv($profile['videoBitRate'] + $profile['audioBitRate'], 1000),
             $response['body']['name']
         );
+        // Profiles and renditions report bitrates in bits per second.
+        $this->assertSame(890000, $profile['videoBitRate']);
+        $this->assertSame(64000, $profile['audioBitRate']);
+        $this->assertSame(890000, $response['body']['videoBitRate']);
+        $this->assertSame(64000, $response['body']['audioBitRate']);
+        $this->assertSame('640X360@954', $response['body']['name']);
+
+        $byRate = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions', $this->headers(), [
+            'queries' => [Query::equal('videoBitRate', [890000])->toString()],
+        ]);
+        $this->assertEquals(200, $byRate['headers']['status-code']);
+        $this->assertContains($response['body']['$id'], \array_column($byRate['body']['renditions'], '$id'));
+
+        $belowRate = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions', $this->headers(), [
+            'queries' => [Query::lessThan('videoBitRate', 890000)->toString()],
+        ]);
+        $this->assertEquals(200, $belowRate['headers']['status-code']);
+        $this->assertNotContains($response['body']['$id'], \array_column($belowRate['body']['renditions'], '$id'));
     }
 
     /**
@@ -4648,7 +4682,7 @@ final class VideosCustomServerTest extends Scope
             'profileId' => Id::unique(),
             'name' => $name,
             'videoBitRate' => $videoBitRate,
-            'audioBitRate' => 64,
+            'audioBitRate' => 64000,
             'width' => 854,
             'height' => 480,
         ]);

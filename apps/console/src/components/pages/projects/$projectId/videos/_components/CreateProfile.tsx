@@ -57,8 +57,8 @@ const EMPTY_FORM: FormState = {
   name: '',
   width: String(DEFAULT_PROFILE_PRESET.width),
   height: String(DEFAULT_PROFILE_PRESET.height),
-  videoBitRate: String(DEFAULT_PROFILE_PRESET.videoBitRate),
-  audioBitRate: String(DEFAULT_PROFILE_PRESET.audioBitRate),
+  videoBitRate: String(DEFAULT_PROFILE_PRESET.videoBitRate / 1000),
+  audioBitRate: String(DEFAULT_PROFILE_PRESET.audioBitRate / 1000),
 }
 
 function toForm(
@@ -69,8 +69,9 @@ function toForm(
     name: profile.name,
     width: String(profile.width),
     height: String(profile.height),
-    videoBitRate: String(profile.videoBitRate),
-    audioBitRate: String(profile.audioBitRate),
+    // The form takes kbps; the API speaks bits per second.
+    videoBitRate: String(profile.videoBitRate / 1000),
+    audioBitRate: String(profile.audioBitRate / 1000),
   }
 }
 
@@ -210,8 +211,8 @@ export function CreateProfile({
         name: form.name.trim(),
         width: Number(form.width),
         height: Number(form.height),
-        videoBitRate: Number(form.videoBitRate),
-        audioBitRate: Number(form.audioBitRate),
+        videoBitRate: Number(form.videoBitRate) * 1000,
+        audioBitRate: Number(form.audioBitRate) * 1000,
         codec: codec as VideoCodec,
       },
       {
@@ -395,10 +396,10 @@ export function CreateProfile({
                         {formatResolution(item.width, item.height)}
                       </span>
                       <span className="w-[72px] shrink-0 text-end font-mono text-[11px] text-muted-foreground">
-                        {formatBitrate(item.videoBitRate, 'kbps')}
+                        {formatBitrate(item.videoBitRate)}
                       </span>
                       <span className="w-[60px] shrink-0 text-end font-mono text-[11px] text-muted-foreground">
-                        {formatBitrate(item.audioBitRate, 'kbps')}
+                        {formatBitrate(item.audioBitRate)}
                       </span>
                     </Label>
                   )

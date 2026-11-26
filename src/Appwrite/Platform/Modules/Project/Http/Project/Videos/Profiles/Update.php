@@ -59,8 +59,8 @@ class Update extends Base
             ))
             ->param('profileId', '', new UID(), 'Video profile unique ID.')
             ->param('name', null, new Nullable(new Text(128)), 'Video profile name.', true)
-            ->param('videoBitRate', null, new Nullable(new Range(self::MIN_VIDEO_BITRATE, self::MAX_VIDEO_BITRATE)), 'Target video bitrate in kilobits per second.', true)
-            ->param('audioBitRate', null, new Nullable(new Range(self::MIN_AUDIO_BITRATE, self::MAX_AUDIO_BITRATE)), 'Target audio bitrate in kilobits per second.', true)
+            ->param('videoBitRate', null, new Nullable(new Range(self::MIN_VIDEO_BITRATE * 1000, self::MAX_VIDEO_BITRATE * 1000)), 'Target video bitrate in bits per second. Must be a multiple of 1000.', true)
+            ->param('audioBitRate', null, new Nullable(new Range(self::MIN_AUDIO_BITRATE * 1000, self::MAX_AUDIO_BITRATE * 1000)), 'Target audio bitrate in bits per second. Must be a multiple of 1000.', true)
             ->param('width', null, new Nullable(new Range(self::MIN_DIMENSION, self::MAX_DIMENSION)), 'Target video width in pixels.', true)
             ->param('height', null, new Nullable(new Range(self::MIN_DIMENSION, self::MAX_DIMENSION)), 'Target video height in pixels.', true)
             ->inject('response')
@@ -92,8 +92,8 @@ class Update extends Base
 
         $updates = \array_filter([
             'name' => $name,
-            'videoBitRate' => $videoBitRate,
-            'audioBitRate' => $audioBitRate,
+            'videoBitRate' => $videoBitRate === null ? null : self::toKilobits('videoBitRate', $videoBitRate),
+            'audioBitRate' => $audioBitRate === null ? null : self::toKilobits('audioBitRate', $audioBitRate),
             'width' => $width,
             'height' => $height,
         ], fn ($value) => $value !== null);

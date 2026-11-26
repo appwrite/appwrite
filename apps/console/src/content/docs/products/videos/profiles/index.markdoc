@@ -27,11 +27,11 @@ New projects have no profiles. Create the ones you need before you encode your f
 |-------|-------------|
 | `name` | Label shown in the Console, up to 128 characters, for example `720p` |
 | `width`, `height` | Target picture size in pixels |
-| `videoBitRate` | Target video bitrate in **kilobits per second** |
-| `audioBitRate` | Target audio bitrate in **kilobits per second** |
+| `videoBitRate` | Target video bitrate in **bits per second**, a multiple of 1,000 |
+| `audioBitRate` | Target audio bitrate in **bits per second**, a multiple of 1,000 |
 | `codec` | Video codec. Defaults to `h264` (H.264), the only codec available today. `videos.listCodecs()` lists the codecs you can use |
 
-Width and height can be from 16 to 4,320 pixels. Video bitrate can be from 32 to 20,000 kbps, and audio bitrate from 32 to 512 kbps. Two profiles cannot share the same width, height, bitrates, and codec. A duplicate returns the `video_profile_already_exists` error.
+Width and height can be from 16 to 4,320 pixels. Video bitrate can be from 32,000 to 20,000,000 bits per second (32 to 20,000 kbps), and audio bitrate from 32,000 to 512,000 (32 to 512 kbps). A bitrate that is not a multiple of 1,000 returns the `general_argument_invalid` error. Two profiles cannot share the same width, height, bitrates, and codec. A duplicate returns the `video_profile_already_exists` error.
 
 # Presets {% #presets %}
 
@@ -82,8 +82,8 @@ const project = new sdk.Project(client);
 const profile = await project.createVideoProfile({
     profileId: '<PROFILE_ID>',
     name: '720p',
-    videoBitRate: 2800,
-    audioBitRate: 128,
+    videoBitRate: 2800000,
+    audioBitRate: 128000,
     width: 1280,
     height: 720,
     codec: sdk.VideoCodec.H264 // optional
@@ -105,8 +105,8 @@ project = Project(client)
 profile = project.create_video_profile(
     profile_id = '<PROFILE_ID>',
     name = '720p',
-    video_bit_rate = 2800,
-    audio_bit_rate = 128,
+    video_bit_rate = 2800000,
+    audio_bit_rate = 128000,
     width = 1280,
     height = 720,
     codec = VideoCodec.H264 # optional
@@ -127,8 +127,8 @@ Project project = Project(client);
 final profile = await project.createVideoProfile(
     profileId: '<PROFILE_ID>',
     name: '720p',
-    videoBitRate: 2800,
-    audioBitRate: 128,
+    videoBitRate: 2800000,
+    audioBitRate: 128000,
     width: 1280,
     height: 720,
     codec: enums.VideoCodec.h264, // (optional)
@@ -152,8 +152,8 @@ $project = new Project($client);
 $profile = $project->createVideoProfile(
     profileId: '<PROFILE_ID>',
     name: '720p',
-    videoBitRate: 2800,
-    audioBitRate: 128,
+    videoBitRate: 2800000,
+    audioBitRate: 128000,
     width: 1280,
     height: 720,
     codec: VideoCodec::H264() // optional
@@ -176,8 +176,8 @@ project = Project.new(client)
 profile = project.create_video_profile(
     profile_id: '<PROFILE_ID>',
     name: '720p',
-    video_bit_rate: 2800,
-    audio_bit_rate: 128,
+    video_bit_rate: 2800000,
+    audio_bit_rate: 128000,
     width: 1280,
     height: 720,
     codec: VideoCodec::H264 # optional
@@ -200,8 +200,8 @@ Project project = new Project(client);
 VideoProfile profile = await project.CreateVideoProfile(
     profileId: "<PROFILE_ID>",
     name: "720p",
-    videoBitRate: 2800,
-    audioBitRate: 128,
+    videoBitRate: 2800000,
+    audioBitRate: 128000,
     width: 1280,
     height: 720,
     codec: VideoCodec.H264 // optional
@@ -221,8 +221,8 @@ const project = new Project(client);
 const profile = await project.createVideoProfile({
     profileId: '<PROFILE_ID>',
     name: '720p',
-    videoBitRate: 2800,
-    audioBitRate: 128,
+    videoBitRate: 2800000,
+    audioBitRate: 128000,
     width: 1280,
     height: 720,
     codec: VideoCodec.H264 // optional
@@ -251,8 +251,8 @@ func main() {
 	profile, err := service.CreateVideoProfile(
 		"<PROFILE_ID>",
 		"720p",
-		2800,
-		128,
+		2800000,
+		128000,
 		1280,
 		720,
 		service.WithCreateVideoProfileCodec("h264"),
@@ -279,8 +279,8 @@ let project = Project(client)
 let profile = try await project.createVideoProfile(
     profileId: "<PROFILE_ID>",
     name: "720p",
-    videoBitRate: 2800,
-    audioBitRate: 128,
+    videoBitRate: 2800000,
+    audioBitRate: 128000,
     width: 1280,
     height: 720,
     codec: .h264 // optional
@@ -302,8 +302,8 @@ val project = Project(client)
 val profile = project.createVideoProfile(
     profileId = "<PROFILE_ID>",
     name = "720p",
-    videoBitRate = 2800,
-    audioBitRate = 128,
+    videoBitRate = 2800000,
+    audioBitRate = 128000,
     width = 1280,
     height = 720,
     codec = VideoCodec.H264 // optional
@@ -328,8 +328,8 @@ try {
     project.createVideoProfile(
         "<PROFILE_ID>", // profileId
         "720p", // name
-        2800L, // videoBitRate
-        128L, // audioBitRate
+        2800000L, // videoBitRate
+        128000L, // audioBitRate
         1280L, // width
         720L, // height
         VideoCodec.H264, // codec (optional)
@@ -364,8 +364,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let profile = project.create_video_profile(
         "<PROFILE_ID>",
         "720p",
-        2800,
-        128,
+        2800000,
+        128000,
         1280,
         720,
         Some(VideoCodec::H264) // codec
@@ -386,8 +386,8 @@ X-Appwrite-Key: <API_KEY>
 {
   "profileId": "<PROFILE_ID>",
   "name": "720p",
-  "videoBitRate": 2800,
-  "audioBitRate": 128,
+  "videoBitRate": 2800000,
+  "audioBitRate": 128000,
   "width": 1280,
   "height": 720
 }
