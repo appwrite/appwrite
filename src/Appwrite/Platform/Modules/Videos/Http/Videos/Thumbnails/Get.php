@@ -70,7 +70,7 @@ class Get extends Base
                 ],
                 contentType: ContentType::IMAGE,
                 type: MethodType::LOCATION,
-                locationAuth: ['Project', 'ImpersonateUserId'],
+                locationAuth: ['Project', 'Environment', 'ImpersonateUserId'],
             ))
             ->param('videoId', '', new UID(), 'Video unique ID.')
             ->param('thumbnailId', '', new UID(), 'Thumbnail unique ID.')
