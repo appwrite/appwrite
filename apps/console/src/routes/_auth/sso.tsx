@@ -8,6 +8,7 @@ import {
   useSearch,
 } from '@tanstack/react-router'
 import { ArrowLeft, KeyRound } from 'lucide-react'
+import { toast } from 'sonner'
 import { z } from 'zod'
 import {
   AuthFlowDescription,
@@ -97,6 +98,9 @@ function saveEmail(value: string): void {
   }
 }
 
+/** One notice about the trip to the identity provider, however often it starts. */
+const REDIRECT_TOAST_ID = 'sso-redirect'
+
 // `--destructive` is a background shade in the dark theme; its text red is
 // `--destructive-foreground` (other themes keep `text-destructive`).
 const errorTextClassName =
@@ -146,13 +150,28 @@ function SingleSignOnPage() {
     else window.location.href = url
   }
 
+  // The identity provider takes a moment to answer. Until then this page stays,
+  // with its form ready again: say that the sign-in is on its way.
+  const startWith = (provider: SSOSignInProvider) => {
+    toast.success(
+      t('Taking you to {provider}...').replace('{provider}', provider.name),
+      {
+        id: REDIRECT_TOAST_ID,
+        description: t('Finish signing in with your identity provider.'),
+        // Stays for as long as a slow identity provider takes to load
+        duration: 10_000,
+      },
+    )
+    start(provider.$id)
+  }
+
   const lookup = useMutation({
     mutationFn: (value: string) =>
       sdk.forConsole.teamSSO.listSignInProviders(value.trim().toLowerCase()),
     onSuccess: (result) => {
       // One way in: go straight to it. Several: let the person choose.
       if (result.providers.length === 1) {
-        start(result.providers[0].$id)
+        startWith(result.providers[0])
         return
       }
       setProviders(result.providers)
@@ -169,6 +188,16 @@ function SingleSignOnPage() {
     if (direct && search.provider) start(search.provider, { replace: true })
     // eslint-disable-next-line react-hooks/exhaustive-deps -- start once per provider
   }, [direct, search.provider])
+
+  // Back from the identity provider can restore this page as it was left, with
+  // the notice still up: nobody is being taken anywhere now.
+  useEffect(() => {
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) toast.dismiss(REDIRECT_TOAST_ID)
+    }
+    window.addEventListener('pageshow', onPageShow)
+    return () => window.removeEventListener('pageshow', onPageShow)
+  }, [])
 
   // The chooser replaces the form: move focus to the first way in, and back to
   // the email field when the person leaves it.
@@ -318,7 +347,7 @@ function SingleSignOnPage() {
                   type="button"
                   variant="outline"
                   className="h-9 w-full"
-                  onClick={() => start(provider.$id)}
+                  onClick={() => startWith(provider)}
                 >
                   <KeyRound className="size-4" />
                   {provider.name}

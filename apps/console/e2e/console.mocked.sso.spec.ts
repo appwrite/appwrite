@@ -1212,6 +1212,49 @@ test.describe('organization single sign-on', () => {
     expect(mock.sent.signIns).toEqual(['provider-for-billing'])
   })
 
+  test('says where the sign-in is going while the identity provider loads', async ({
+    page,
+  }) => {
+    await mockAppwriteApi(page, {
+      signedIn: false,
+      providers: [provider('Okta', ['developer'])],
+    })
+    // No answer from the identity provider yet: the browser stays on this page
+    let starts = 0
+    await page.route(
+      (url) => url.pathname === '/v1/account/sessions/sso',
+      (route) => {
+        starts += 1
+        return route.fulfill({ status: 204 })
+      },
+    )
+    await page.goto('/sso', { waitUntil: 'domcontentloaded' })
+
+    await page.getByLabel('Work email').fill('erin@acme.com')
+    const submit = page.getByRole('button', { name: 'Continue', exact: true })
+    await submit.click()
+    const notices = page.locator('[data-sonner-toast]')
+    await expect(notices).toContainText('Taking you to Okta...', {
+      timeout: 45_000,
+    })
+    await expect(notices).toContainText(
+      'Finish signing in with your identity provider.',
+    )
+    // The form is ready again, and a second try does not pile up notices
+    await expect(submit).toBeEnabled()
+    await submit.click()
+    await expect.poll(() => starts).toBe(2)
+    await expect(notices).toHaveCount(1)
+
+    // Back from the identity provider restores the page as it was left
+    await page.evaluate(() =>
+      window.dispatchEvent(
+        new PageTransitionEvent('pageshow', { persisted: true }),
+      ),
+    )
+    await expect(notices).toHaveCount(0)
+  })
+
   test('shows why a single sign-on failed', async ({ page }) => {
     await mockAppwriteApi(page, { signedIn: false })
     const error = JSON.stringify({
