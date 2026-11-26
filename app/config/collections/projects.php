@@ -124,7 +124,7 @@ return [
             Attribute::string(key: 'version', size: 8, default: 'v5'),
             Attribute::string(key: 'entrypoint', size: 16384),
             Attribute::string(key: 'commands', size: 16384),
-            // At the moment, always empty (no runtime supports it yet)
+            Attribute::string(key: 'framework', size: 2048, default: ''),
             Attribute::string(key: 'startCommand', size: 20000),
             Attribute::string(key: 'specification', size: 128, default: APP_COMPUTE_SPECIFICATION_DEFAULT),
             Attribute::string(key: 'buildSpecification', size: 128, default: APP_COMPUTE_SPECIFICATION_DEFAULT),

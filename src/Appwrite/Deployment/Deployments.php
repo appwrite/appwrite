@@ -493,6 +493,29 @@ readonly class Deployments
     }
 
     /**
+     * The start command a deployment of $resource runs by default: its site
+     * framework adapter's, its function framework's, or else the runtime's.
+     * Deployments::startCommand() then lets a custom deployment command replace it.
+     *
+     * @param array<string, mixed> $runtime
+     */
+    public static function defaultStartCommand(Document $resource, Document $deployment, array $runtime): string
+    {
+        $default = $runtime['startCommand'] ?? '';
+
+        if ($resource->getCollection() === 'sites') {
+            $framework = Config::getParam('frameworks', [])[$resource->getAttribute('framework', '')] ?? [];
+            $adapter = ($framework['adapters'] ?? [])[$deployment->getAttribute('adapter', '')] ?? [];
+
+            return $adapter['startCommand'] ?? $default;
+        }
+
+        $framework = Config::getParam('functionFrameworks', [])[$resource->getAttribute('framework', '')] ?? [];
+
+        return $framework['startCommand'] ?? $default;
+    }
+
+    /**
      * Resolve the command passed to helpers/start.sh.
      *
      * Framework and runtime defaults use relative paths such as

@@ -15,6 +15,7 @@ use Appwrite\Platform\Modules\Functions\Http\Executions\Create as CreateExecutio
 use Appwrite\Platform\Modules\Functions\Http\Executions\Delete as DeleteExecution;
 use Appwrite\Platform\Modules\Functions\Http\Executions\Get as GetExecution;
 use Appwrite\Platform\Modules\Functions\Http\Executions\XList as ListExecutions;
+use Appwrite\Platform\Modules\Functions\Http\Frameworks\XList as ListFrameworks;
 use Appwrite\Platform\Modules\Functions\Http\Functions\Create as CreateFunction;
 use Appwrite\Platform\Modules\Functions\Http\Functions\Delete as DeleteFunction;
 use Appwrite\Platform\Modules\Functions\Http\Functions\Deployment\Update as UpdateFunctionDeployment;
@@ -48,6 +49,7 @@ class Http extends Service
 
         // Runtimes
         $this->addAction('listRuntimes', ListRuntimes::class);
+        $this->addAction('listFunctionFrameworks', ListFrameworks::class);
 
         // Specifications
         $this->addAction('listSpecifications', ListSpecifications::class);

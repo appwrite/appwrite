@@ -159,6 +159,12 @@ class Func extends Model
                 'default' => '',
                 'example' => 'npm install',
             ])
+            ->addRule('framework', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Web framework the function runs, such as `express`. Empty for a function written for the Appwrite runtime.',
+                'default' => '',
+                'example' => 'express',
+            ])
             ->addRule('version', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Version of Open Runtimes used for the function.',
