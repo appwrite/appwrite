@@ -36,7 +36,7 @@ class Create extends Base
             ->setHttpPath('/v1/organization/escalations')
             ->desc('Create escalation')
             ->groups(['api', 'organization', 'escalations'])
-            ->label('scope', 'monitors.write')
+            ->label('scope', ['escalations.write', 'monitors.write'])
             ->label('audits.event', 'escalation.create')
             ->label('audits.resource', 'escalation/{response.$id}')
             ->label('sdk', new Method(
@@ -46,7 +46,7 @@ class Create extends Base
                 description: <<<EOT
                 Create an escalation for your organization. A monitor using it notifies the escalation's steps one after another while its alert fires, each by email, push and in the console, until a member acknowledges the alert or it resolves. Each step waits its `delay` in seconds, after the alert fires for the first step and after the previous step for the others, then notifies the members holding its `roles` and those named in `userIds`. With `repeat`, the steps run again from the first, a monitor's cooldown after the last step.
                 EOT,
-                auth: [AuthType::ADMIN, AuthType::ORGANIZATION],
+                auth: [AuthType::ADMIN, AuthType::KEY, AuthType::ORGANIZATION],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_CREATED,
@@ -56,8 +56,8 @@ class Create extends Base
             ))
             ->param('escalationId', '', fn (Database $dbForPlatform) => new CustomId(false, $dbForPlatform->getMaxUidLength()), 'Escalation ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForPlatform'])
             ->param('name', '', new Text(128), 'Escalation name. Max length: 128 chars.')
-            ->param('steps', [], new ArrayList(new JSON(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Steps notified in order while nobody acknowledges the alert, each an object with `delay` (seconds to wait first, 0 to ' . Escalation::MAX_DELAY . '), and `roles` (organization roles such as `owner` or `developer`), `userIds` (organization members) or both. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' steps.')
-            ->param('repeat', 0, new Range(0, Escalation::MAX_REPEAT), 'How many more times the steps run from the first while nobody acknowledges the alert, between 0 and ' . Escalation::MAX_REPEAT . '. Each round starts a monitor\'s cooldown after the last step.', true)
+            ->param('steps', [], new ArrayList(new JSON(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Steps notified in order while nobody acknowledges the alert. Each step is an object with `delay` (seconds to wait before the step, 0 to ' . Escalation::MAX_DELAY . ', default 0), `roles` (organization roles such as `owner` or `developer`) and `userIds` (organization members who accepted their invitation). A step names each role and member at most once and needs at least one of `roles` or `userIds`. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' steps.', example: '[{"delay":0,"roles":["owner"]},{"delay":900,"roles":["developer"],"userIds":["<USER_ID>"]}]')
+            ->param('repeat', 0, new Range(0, Escalation::MAX_REPEAT), 'How many more times the steps run from the first while nobody acknowledges the alert, between 0 and ' . Escalation::MAX_REPEAT . '. Each round starts a monitor\'s cooldown after the last step.', true, example: 1)
             ->inject('response')
             ->inject('team')
             ->inject('dbForPlatform')

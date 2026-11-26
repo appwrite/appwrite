@@ -41,31 +41,49 @@ export const analyticsProductContent: ProductPageContent = {
       question: 'Can I see which of my users visited?',
       answer:
         'Yes, if they sign in with Appwrite Auth and you turn on user identification for the property. Events sent from a signed-in session then carry the user’s ID, and the Console shows those users by name and photo, ranks them by visits, lists who is online now, and adds an Analytics tab to each user in Auth. Anonymous visitors aren’t affected, and only your project’s user IDs are stored, never emails or names.',
-      links: [{ label: 'Privacy and data', href: '/docs/products/analytics/privacy' }],
+      links: [
+        { label: 'Privacy and data', href: '/docs/products/analytics/privacy' },
+      ],
     },
     {
       question: 'Does Appwrite Analytics use cookies?',
       answer:
         'No. Nothing is written to the visitor’s browser: no cookies, no local storage, no session storage. Unique visitors are counted with an identifier derived on the server from the request, the site’s hostname, and a salt that rotates every 24 hours, so the same person can’t be followed from one day to the next.',
-      links: [{ label: 'Privacy and data', href: '/docs/products/analytics/privacy' }],
+      links: [
+        { label: 'Privacy and data', href: '/docs/products/analytics/privacy' },
+      ],
     },
     {
       question: 'Do I need a cookie banner or consent for Appwrite Analytics?',
       answer:
         'Appwrite Analytics is designed so you can measure traffic without one: it sets no cookies, stores no IP addresses or user agents, keeps no persistent identifiers for anonymous visitors, and honors Do Not Track and Global Privacy Control. Whether a banner is required for your site depends on your jurisdiction and everything else you run, so confirm your setup with your own counsel.',
-      links: [{ label: 'Privacy and data', href: '/docs/products/analytics/privacy' }],
+      links: [
+        { label: 'Privacy and data', href: '/docs/products/analytics/privacy' },
+      ],
     },
     {
       question: 'What data is stored for each event?',
       answer:
         'The page path, hostname, referrer domain and campaign parameters, country, region and city, browser, operating system, device type, screen size bucket, and any custom properties you send. The raw IP address and user agent are used to derive location and device, then discarded. Query strings are stripped from stored URLs except for campaign parameters, so tokens and emails in links never reach your reports.',
-      links: [{ label: 'Privacy and data', href: '/docs/products/analytics/privacy' }],
+      links: [
+        { label: 'Privacy and data', href: '/docs/products/analytics/privacy' },
+      ],
     },
     {
       question: 'How does Appwrite Analytics handle bots and AI agents?',
       answer:
         'Automated traffic is identified from its user agent and kept separate from people instead of silently dropped. You see the human versus bot split, named agents such as GPTBot, ClaudeBot, or Bingbot, and categories like AI crawler, AI assistant, and search crawler. Visits referred by AI assistants such as ChatGPT, Claude, Gemini, and Perplexity get their own AI channel, and any agent can be turned into a Firewall rule.',
-      links: [{ label: 'Bots and AI traffic', href: '/docs/products/analytics/bots' }],
+      links: [
+        { label: 'Bots and AI traffic', href: '/docs/products/analytics/bots' },
+      ],
+    },
+    {
+      question: 'Can I mark releases and campaigns on the chart?',
+      answer:
+        'Yes. Add a note from the dashboard: hover the chart and click the day, or use Add note above it. Notes show as badges on the chart, with their text in the tooltip, for everyone in the project. To mark every deploy automatically, add notes from your pipeline over the REST API with an API key that has the analytics.write scope.',
+      links: [
+        { label: 'Notes', href: '/docs/products/analytics/dashboard#notes' },
+      ],
     },
     {
       question: 'Which platforms can I track?',
@@ -73,7 +91,10 @@ export const analyticsProductContent: ProductPageContent = {
         'Websites and web apps, mobile and desktop apps, AI agents, and backends, using Appwrite’s client and server SDKs or the REST API, including server-side tracking from an Appwrite Function. Each property has a type, web, mobile, or agent, that fits its dashboard to what you track. Client code only ever uses a public property ID, so it never needs an API key.',
       links: [
         { label: 'Quick start', href: '/docs/products/analytics/quick-start' },
-        { label: 'Server-side tracking', href: '/docs/products/analytics/server-side' },
+        {
+          label: 'Server-side tracking',
+          href: '/docs/products/analytics/server-side',
+        },
       ],
     },
     {

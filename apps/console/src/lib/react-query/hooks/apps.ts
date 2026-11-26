@@ -25,6 +25,10 @@ import {
   type MarketplaceApp,
   type MarketplaceAppCategory,
 } from '@/lib/marketplace/types'
+import {
+  PROJECT_RAR_TYPE,
+  WILDCARD_IDENTIFIER,
+} from '@/lib/oauth2/authorization-details'
 import { DEFAULT_STALE_TIME } from './constants'
 import { nextCursorAfter } from './cursor'
 
@@ -697,7 +701,9 @@ export function useUpdateOrganizationApp(
   })
 }
 
-export function useCreateOrganizationAppSecret(appId: string | null | undefined) {
+export function useCreateOrganizationAppSecret(
+  appId: string | null | undefined,
+) {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -787,6 +793,26 @@ export async function fetchOrganizationAppInstallations(
   return { installations: response.installations ?? [] }
 }
 
+/** One cursor page of the apps installed on an organization, newest first. */
+export async function fetchOrganizationInstalledApps(
+  organizationId: string,
+  cursor?: string,
+) {
+  if (!organizationId) throw new Error('Organization ID is required')
+  const queries = [
+    Query.orderDesc('$createdAt'),
+    Query.limit(ORGANIZATION_APP_INSTALLATIONS_PAGE_SIZE),
+  ]
+  if (cursor) queries.push(Query.cursorAfter(cursor))
+
+  const response = await sdk.forConsole.teams.listInstallations({
+    teamId: organizationId,
+    queries,
+    total: false,
+  })
+  return { installations: response.installations ?? [] }
+}
+
 /** One cursor page of an app's keys, newest first. */
 export async function fetchOrganizationAppKeys(appId: string, cursor?: string) {
   if (!appId) throw new Error('App ID is required')
@@ -836,6 +862,29 @@ export function organizationAppInstallationsInfiniteQueryOptions(
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     gcTime: appId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function organizationInstalledAppsInfiniteQueryOptions(
+  organizationId: string | null | undefined,
+) {
+  return infiniteQueryOptions({
+    queryKey: ['organization', organizationId, 'installations'],
+    queryFn: ({ pageParam }) =>
+      fetchOrganizationInstalledApps(organizationId!, pageParam),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) =>
+      nextCursorAfter(
+        lastPage.installations,
+        ORGANIZATION_APP_INSTALLATIONS_PAGE_SIZE,
+      ),
+    enabled: !!organizationId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: organizationId ? 5 * 60 * 1000 : 0,
   })
 }
 
@@ -944,6 +993,81 @@ export function useDeleteOrganizationAppInstallation(
   })
 }
 
+export function useOrganizationInstalledApps(
+  organizationId: string | null | undefined,
+) {
+  const {
+    data,
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+    isFetchNextPageError,
+  } = useInfiniteQuery(
+    organizationInstalledAppsInfiniteQueryOptions(organizationId),
+  )
+
+  return {
+    installations: data?.pages.flatMap((page) => page.installations) ?? [],
+    hasMore: hasNextPage,
+    loadMore: () => void fetchNextPage(),
+    isLoadingMore: isFetchingNextPage,
+    loadMoreFailed: isFetchNextPageError,
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  }
+}
+
+export function useUpdateOrganizationInstalledApp(
+  organizationId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (params: {
+      installationId: string
+      authorizationDetails: string
+    }) => {
+      if (!organizationId) throw new Error('Organization ID is required')
+      return await sdk.forConsole.teams.updateInstallation({
+        teamId: organizationId,
+        ...params,
+      })
+    },
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['organization', organizationId, 'installations'],
+      })
+    },
+  })
+}
+
+export function useDeleteOrganizationInstalledApp(
+  organizationId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (installationId: string) => {
+      if (!organizationId) throw new Error('Organization ID is required')
+      await sdk.forConsole.teams.deleteInstallation({
+        teamId: organizationId,
+        installationId,
+      })
+    },
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['organization', organizationId, 'installations'],
+      })
+    },
+  })
+}
+
 export function useCreateOrganizationAppKey(appId: string | null | undefined) {
   const queryClient = useQueryClient()
 
@@ -974,4 +1098,82 @@ export function useDeleteOrganizationAppKey(appId: string | null | undefined) {
       })
     },
   })
+}
+
+/** The organization's installation of one app, or null when it isn't installed. */
+export function useOrganizationAppInstallation(
+  organizationId: string | null | undefined,
+  appId: string | null | undefined,
+) {
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['organization', organizationId, 'installations', 'app', appId],
+    queryFn: async () => {
+      const response = await sdk.forConsole.teams.listInstallations({
+        teamId: organizationId!,
+        queries: [Query.equal('appId', appId!), Query.limit(1)],
+        total: false,
+      })
+      return response.installations?.[0] ?? null
+    },
+    enabled: !!organizationId && !!appId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+  })
+
+  // `installation` is null both when the app isn't installed and when the
+  // lookup failed; `isResolved` tells them apart.
+  return {
+    installation: data ?? null,
+    isResolved: data !== undefined && !isError,
+    isLoading,
+  }
+}
+
+/**
+ * Installations on the organization that can reach a project, either by id or
+ * through the `*` wildcard. Grants live in JSON authorization details the API
+ * can't filter on, so every page is read and filtered here.
+ */
+export function useProjectInstalledApps(
+  organizationId: string | null | undefined,
+  projectId: string | null | undefined,
+) {
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: [
+      'organization',
+      organizationId,
+      'installations',
+      'project',
+      projectId,
+    ],
+    queryFn: async () => {
+      const installations: Models.AppInstallation[] = []
+      let cursor: string | undefined
+      do {
+        const page = await fetchOrganizationInstalledApps(
+          organizationId!,
+          cursor,
+        )
+        installations.push(...page.installations)
+        cursor = nextCursorAfter(
+          page.installations,
+          ORGANIZATION_APP_INSTALLATIONS_PAGE_SIZE,
+        )
+      } while (cursor)
+      return installations.filter((installation) =>
+        installation.authorizationDetails.some(
+          (detail) =>
+            detail.type === PROJECT_RAR_TYPE &&
+            Array.isArray(detail.identifiers) &&
+            (detail.identifiers.includes(projectId) ||
+              detail.identifiers.includes(WILDCARD_IDENTIFIER)),
+        ),
+      )
+    },
+    enabled: !!organizationId && !!projectId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+  })
+
+  return { installations: data ?? [], isLoading, isError, refetch }
 }

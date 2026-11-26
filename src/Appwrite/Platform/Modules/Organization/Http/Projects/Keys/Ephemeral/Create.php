@@ -114,6 +114,8 @@ class Create extends Action
             Key::PURPOSE_CLAIM => Key::PURPOSE,
             'projectId' => $project->getId(),
             'projectSequence' => $project->getSequence(),
+            // Bound to the organization that owns the project now, so a transfer revokes it
+            'teamInternalId' => (string) $project->getAttribute('teamInternalId', ''),
             'scopes' => $scopes
         ]);
 

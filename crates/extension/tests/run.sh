@@ -11,18 +11,28 @@ trap 'rm -r "$output"' EXIT
 
 php --ri utopia > /dev/null
 php "$tests/canvas.php" > /dev/null
+# DSN has no PHP left to compare with: its getters (hand-written handlers) against the output
+# they gave through ext-php-rs.
+php "$tests/dsn-getters.php" > "$output/dsn-getters.jsonl"
+diff "$tests/dsn-getters.expected" "$output/dsn-getters.jsonl"
+php -d opcache.enable_cli=1 "$tests/dsn-getters.php" > "$output/dsn-getters.opcache.jsonl"
+diff "$tests/dsn-getters.expected" "$output/dsn-getters.opcache.jsonl"
+# Query likewise: its hand-written getters, constructor and classify(), shared strings and arrays,
+# clones and deep trees, against the output they gave through ext-php-rs.
+php "$tests/query-handlers.php" > "$output/query-handlers.txt"
+diff "$tests/query-handlers.expected" "$output/query-handlers.txt"
+php -d opcache.enable_cli=1 "$tests/query-handlers.php" > "$output/query-handlers.opcache.txt"
+diff "$tests/query-handlers.expected" "$output/query-handlers.opcache.txt"
 vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php packages/image/tests
 
 for library in $libraries; do
     echo "== $library" >&2
     [ -f "$tests/$library.php" ] || { echo "missing parity corpus $tests/$library.php" >&2; exit 1; }
-    # packages/query/tests/E2E needs MySQL, PostgreSQL, ClickHouse and MongoDB servers.
-    unit=; [ "$library" = query ] && unit='--exclude-filter \\E2E\\'
     # database is utopia-php/database in vendor/: the unit tests of the classes the extension serves.
     suite="packages/$library/tests"
     [ "$library" = database ] && suite=$(printf 'vendor/utopia-php/database/tests/unit/%sTest.php ' Id Role Permission DateTime)
     # shellcheck disable=SC2086
-    _APP_EXTENSION_LIBRARIES=$library vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php $unit $suite
+    _APP_EXTENSION_LIBRARIES=$library vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php $suite
     _APP_EXTENSION_LIBRARIES= php "$tests/$library.php" > "$output/$library.php.jsonl"
     _APP_EXTENSION_LIBRARIES=$library php "$tests/$library.php" > "$output/$library.rust.jsonl"
     diff "$output/$library.php.jsonl" "$output/$library.rust.jsonl"
@@ -35,15 +45,11 @@ for library in $libraries; do
     diff "$output/$library.php.jsonl" "$output/$library.all.jsonl"
 done
 
-# query has two more corpora: its builders, and the builders when a build yields and another
-# runs on the same thread.
-for corpus in query-builders query-coroutines; do
-    echo "== $corpus" >&2
-    _APP_EXTENSION_LIBRARIES= php "$tests/$corpus.php" > "$output/$corpus.php.jsonl"
-    _APP_EXTENSION_LIBRARIES=query php "$tests/$corpus.php" > "$output/$corpus.rust.jsonl"
-    diff "$output/$corpus.php.jsonl" "$output/$corpus.rust.jsonl"
-    [ -s "$output/$corpus.rust.jsonl" ] || { echo "$corpus corpus printed nothing" >&2; exit 1; }
-done
+# The query builders when a build yields and another runs on the same thread: no build may see
+# another's overrides.
+echo "== query-coroutines" >&2
+php "$tests/query-coroutines.php" | tail -n 1 | grep -q '"crossed":0}$' ||
+    { echo "query builds crossed between coroutines" >&2; exit 1; }
 
 # A PHP subclass of every class, cached by opcache: what the extension's defaults and constants
 # must survive (opcache frees what it copies into shared memory as PHP's allocator's).
@@ -110,10 +116,13 @@ echo "$warnings" | grep -q 'utopia.libraries: unknown library "bogus" ignored' |
 echo "$warnings" | grep -q '^ok$'
 
 # Classes with no PHP implementation left: their packages' own tests, on the extension.
-for package in user-agent domains emails validators auth; do
+for package in user-agent domains emails validators auth detector; do
     echo "== $package (no PHP)" >&2
     vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php "packages/$package/tests"
 done
+# packages/query/tests/E2E needs MySQL, PostgreSQL, ClickHouse and MongoDB servers.
+echo "== query (no PHP)" >&2
+vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php --exclude-filter '\\E2E\\' packages/query/tests
 
 # Locale has no package to test, so its corpus is checked against the output pinned from the PHP
 # class it replaced (utopia-php/locale).

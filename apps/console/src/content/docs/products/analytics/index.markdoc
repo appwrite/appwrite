@@ -46,7 +46,7 @@ Create properties, choose the origins that can send events, and link a property 
 The events the tracking helpers send, custom events, and what Appwrite adds to each one.
 {% /cards_item %}
 {% cards_item href="/docs/products/analytics/dashboard" title="Dashboard" %}
-The metrics, chart, date ranges, live visitors, and the cards that break down traffic.
+The metrics, chart, notes, date ranges, live visitors, and the cards that break down traffic.
 {% /cards_item %}
 {% cards_item href="/docs/products/analytics/metrics" title="Metrics" %}
 How each metric is calculated, the breakdowns, and how to read metrics from your code.

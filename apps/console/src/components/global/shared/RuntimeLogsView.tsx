@@ -18,6 +18,10 @@ import {
   Search,
 } from 'lucide-react'
 import { EmptyState } from '@/components/global/shared/EmptyState'
+import {
+  RuntimeLogResourcePicker,
+  type RuntimeLogResource,
+} from '@/components/global/shared/RuntimeLogResourcePicker'
 import { RuntimeLogRow } from '@/components/global/shared/RuntimeLogRow'
 import { RuntimeLogsVolumeChart } from '@/components/global/shared/RuntimeLogsVolumeChart'
 import { Button } from '@/components/ui/button'
@@ -37,7 +41,6 @@ import {
   runtimeLogsInfiniteQueryOptions,
   runtimeLogsUsageQueryOptions,
   type RuntimeLogRange,
-  type RuntimeLogResourceType,
   type RuntimeLogScope,
   type RuntimeLogStream,
   type RuntimeLogsFilter,
@@ -118,7 +121,7 @@ export function RuntimeLogsView({
   const t = useT()
   const { formatDateTime } = useLocalizedDateFormat()
   const isProject = resourceType === null
-  const [kind, setKind] = useState<RuntimeLogResourceType | 'all'>('all')
+  const [picked, setPicked] = useState<RuntimeLogResource>({ type: null })
   const [stream, setStream] = useState<RuntimeLogStream>('all')
   const [range, setRange] = useState<RuntimeLogRange>('1h')
   const [zoom, setZoom] = useState<RuntimeLogWindow | undefined>()
@@ -133,12 +136,13 @@ export function RuntimeLogsView({
   const filter: RuntimeLogsFilter = useMemo(
     () => ({
       deploymentId,
-      resourceType: isProject && kind !== 'all' ? kind : undefined,
+      resourceType: isProject ? (picked.type ?? undefined) : undefined,
+      resourceId: isProject ? picked.id : undefined,
       stream,
       range,
       window: zoom,
     }),
-    [deploymentId, isProject, kind, stream, range, zoom],
+    [deploymentId, isProject, picked, stream, range, zoom],
   )
   const ready = canListRuntimeLogs(projectId, resourceType, resourceId, filter)
 
@@ -474,25 +478,11 @@ export function RuntimeLogsView({
       >
         {toolbarStart}
         {isProject && (
-          <Select
-            value={kind}
-            onValueChange={(value) =>
-              setKind(value as RuntimeLogResourceType | 'all')
-            }
-          >
-            <SelectTrigger
-              className="h-9 w-[150px] text-[13px]"
-              aria-label={t('Resource')}
-            >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t('All resources')}</SelectItem>
-              <SelectItem value="functions">{t('Functions')}</SelectItem>
-              <SelectItem value="sites">{t('Sites')}</SelectItem>
-              <SelectItem value="databases">{t('Databases')}</SelectItem>
-            </SelectContent>
-          </Select>
+          <RuntimeLogResourcePicker
+            projectId={projectId}
+            value={picked}
+            onValueChange={setPicked}
+          />
         )}
         <Select
           value={stream}
