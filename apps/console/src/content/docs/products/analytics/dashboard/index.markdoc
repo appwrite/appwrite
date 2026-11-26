@@ -1,7 +1,7 @@
 ---
 layout: article
 title: Dashboard
-description: A tour of the Appwrite Analytics dashboard, from the metrics and chart to date ranges, live visitors, and the cards that break traffic down by source, page, location, technology, bots, and custom events.
+description: A tour of the Appwrite Analytics dashboard, from the metrics, chart, and notes to date ranges, live visitors, and the cards that break traffic down by source, page, location, technology, bots, and custom events.
 ---
 
 Each property has a dashboard on its **Analytics** tab. It shows the property's traffic for the date range you pick: the headline metrics, a chart over time, and cards that break visits down by where they came from, what they viewed, and who sent them.
@@ -17,9 +17,41 @@ Each property has a dashboard on its **Analytics** tab. It shows the property's 
 
 The top of the dashboard has a tab for each metric: **Unique visitors**, **Visits**, **Pageviews**, **Views per visit**, **Bounce rate**, **Visit duration**, and **Engagement time**. Each tab shows the total for the date range and the change from the comparison period. Select a tab to plot that metric on the chart.
 
-Hover over the chart to read the value at each point. Drag across the chart to zoom the dashboard into that stretch of time.
+Hover over the chart to read the value at each point, and click to [add a note](#notes). Drag across the chart to zoom the dashboard into that stretch of time.
 
 The tab totals and the chart can count visits differently: the **Visits** total counts visits that started in the range, while each point on the chart counts the visits with an event in that hour or day. With a **Page** or **Event** filter, **Unique visitors** and **Visits** add up the chart's points. For how each metric is calculated, see [Metrics](/docs/products/analytics/metrics#dashboard-metrics).
+
+# Notes {% #notes %}
+
+Notes mark what happened on a date, such as a release, a campaign, or an incident, so a change in traffic has its reason next to it on the chart. Everyone in the project sees the same notes.
+
+## Add a note {% #add-note %}
+
+Hover over the chart and an **Add note** chip follows the pointer along the top. Click to add a note to that hour or day, or click **Add note** above the chart to pick any date and time. A note holds up to 512 characters.
+
+## Read and edit notes {% #read-notes %}
+
+Each note shows as a badge at the top of the chart, with a dashed line down to its point. A badge with a number holds several notes from the same hour or day, and **Notes** appears next to the chart's legend while any are in the range. Hover over the point to read its notes in the tooltip. Click the badge to see who added each note and when, and to edit or delete it.
+
+Members who can create properties can add, edit, and delete notes. Everyone else in the project can read them.
+
+## Add notes from your code {% #notes-api %}
+
+To mark every deploy, add notes from your pipeline with an API key that has the `analytics.write` scope. To create one, follow the steps in [Track events from your server](/docs/products/analytics/server-side#create-an-api-key). Notes added with an API key show no author.
+
+```curl
+curl -X POST 'https://<REGION>.cloud.appwrite.io/v1/analytics/properties/<PROPERTY_ID>/annotations' \
+    -H 'Content-Type: application/json' \
+    -H 'X-Appwrite-Project: <PROJECT_ID>' \
+    -H 'X-Appwrite-Key: <API_KEY>' \
+    -d '{
+        "annotationId": "unique()",
+        "date": "2026-11-21T09:30:00.000Z",
+        "content": "Deployed v2.4"
+    }'
+```
+
+The same endpoint lists notes with `GET`, and each note at `/annotations/<ANNOTATION_ID>` can be read with `GET`, changed with `PATCH`, and removed with `DELETE`. Reading notes needs the `analytics.read` scope.
 
 # Date range {% #date-range %}
 

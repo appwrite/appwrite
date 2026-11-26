@@ -22,6 +22,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { IdInput } from '@/components/ui/id-input'
 import { CopyableId } from '@/components/global/shared/CopyableId'
+import { UpgradePlanLink } from '@/components/global/shared/UpgradePlanLink'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
 import { getProjectApiEndpoint } from '@/lib/appwrite/sdk'
@@ -48,6 +49,7 @@ import {
 } from '@/lib/analytics-wizard/snippets'
 import { ANALYTICS_PROPERTY_TYPE_META } from '@/lib/analytics-wizard/property-types'
 import { IntegrationSnippets } from '../_components/IntegrationSnippets'
+import { useAnalyticsPropertiesPlanLimit } from '../_components/useAnalyticsPropertiesPlanLimit'
 import { PlatformCards, TypeCards } from './_components/PlatformCards'
 import { EventAside } from './_components/EventAside'
 
@@ -86,6 +88,10 @@ export function View({ projectId, search }: ViewProps) {
   const { features } = useConsoleProfile()
   const { access } = useOrganizationScopes(project?.teamId)
   const mayCreate = canCreateAnalyticsProperty(access, features)
+  const planLimit = useAnalyticsPropertiesPlanLimit(projectId)
+  // The setup step follows a create, which itself fills the last slot.
+  const blockedByPlan =
+    step === 'configure' && (planLimit.isAtLimit || planLimit.isChecking)
 
   const [name, setName] = useState(search.name ?? '')
   const [domain, setDomain] = useState(search.domain ?? '')
@@ -155,6 +161,7 @@ export function View({ projectId, search }: ViewProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    if (blockedByPlan) return
     setCreateError(null)
 
     if (!name.trim()) {
@@ -251,7 +258,7 @@ export function View({ projectId, search }: ViewProps) {
             key="wizard-create"
             type="submit"
             form="add-property-configure"
-            disabled={createMutation.isPending}
+            disabled={createMutation.isPending || blockedByPlan}
           >
             {createMutation.isPending ? t('Creating...') : t('Create property')}
           </Button>
@@ -279,6 +286,19 @@ export function View({ projectId, search }: ViewProps) {
           onSubmit={handleSubmit}
           className="w-full space-y-8"
         >
+          {blockedByPlan && planLimit.isAtLimit && (
+            <p
+              className="text-[13px] text-amber-600 dark:text-amber-400"
+              data-testid="analytics-property-plan-limit"
+            >
+              {t('Your current plan includes up to')} {planLimit.limit}{' '}
+              {planLimit.limit === 1
+                ? t('analytics property')
+                : t('analytics properties')}{' '}
+              {t('per project.')} <UpgradePlanLink orgId={planLimit.orgId} />{' '}
+              {t('to create another.')}
+            </p>
+          )}
           <section className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="add-property-name">

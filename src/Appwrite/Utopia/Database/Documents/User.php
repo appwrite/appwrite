@@ -13,6 +13,7 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\Roles;
@@ -380,6 +381,134 @@ class User extends Document
     }
 
     /**
+     * Take the user row lock for a sign-in about to link an identity or issue a session, and tell whether the
+     * account is still the one the request authenticated against. Call it first in the transaction that persists
+     * the sign-in, so the writes that follow are ordered against claim(), which takes the same lock.
+     *
+     * A claim proves an address that was unverified, so it always turns a verification flag on, and it deletes
+     * every session and identity the request may have resolved the account through. `$snapshot` is the account
+     * as the request read it and `$grounds` the documents it got in through, as collection => id. What the request
+     * read before a claim committed is stale, so nothing it decided on that copy may be written after the claim.
+     * The grounds are read for update too, so a database whose snapshot predates the lock still sees them gone.
+     *
+     * @param array<string, string> $grounds
+     */
+    public static function lockUnchanged(Database $dbForProject, Document $snapshot, array $grounds): bool
+    {
+        $locked = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('users', $snapshot->getId(), forUpdate: true));
+
+        if ($locked->isEmpty() || $locked->getAttribute('status') === false) {
+            return false;
+        }
+
+        foreach (['email', 'phone'] as $address) {
+            if (($locked->getAttribute($address) ?? '') !== ($snapshot->getAttribute($address) ?? '')) {
+                return false;
+            }
+        }
+
+        foreach (['emailVerification', 'phoneVerification'] as $verification) {
+            if ((bool) $locked->getAttribute($verification, false) !== (bool) $snapshot->getAttribute($verification, false)) {
+                return false;
+            }
+        }
+
+        foreach ($grounds as $collection => $id) {
+            if ($dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument($collection, $id, forUpdate: true))->isEmpty()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Reserve the email target for an address a sign-in fills in on an account that had none. Call it inside the
+     * transaction that persists the sign-in, after lockUnchanged(), so a sign-in that is refused writes no target
+     * and the address stays free. Returns the target it created, or null when the account already holds one.
+     *
+     * @throws Duplicate when another user holds a target for the address
+     */
+    public static function reserveEmailTarget(Database $dbForProject, Document $user, string $email): ?Document
+    {
+        // The identifier unique index spans all users. Persisting the email while another
+        // user owns the target would leave this user unreachable by email messaging.
+        $existing = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->findOne('targets', [
+            Query::equal('identifier', [$email]),
+        ]));
+
+        if (!$existing->isEmpty()) {
+            if ($existing->getAttribute('userInternalId') !== $user->getSequence()) {
+                throw new Duplicate('The address is already a target of another user');
+            }
+
+            return null;
+        }
+
+        return $dbForProject->createDocument('targets', new Document([
+            '$permissions' => [
+                Permission::read(Role::user($user->getId())),
+                Permission::update(Role::user($user->getId())),
+                Permission::delete(Role::user($user->getId())),
+            ],
+            'userId' => $user->getId(),
+            'userInternalId' => $user->getSequence(),
+            'providerType' => MESSAGE_TYPE_EMAIL,
+            'identifier' => $email,
+        ]));
+    }
+
+    /**
+     * Undo what a committed sign-in wrote to the account when its identity link is refused afterwards by
+     * confirmIdentity(): each attribute it changed goes back to the value in `$snapshot`, the account as the
+     * request read it, unless something else has changed it since, and the email target it reserved is released.
+     * The address it filled in and its verification and metadata are reverted as one, with the target, and only when
+     * none of them has changed since.
+     * Takes the user row lock; call it inside a transaction.
+     *
+     * @param array<string, mixed> $changes The attributes the sign-in wrote to the account
+     */
+    public static function revertSignIn(Database $dbForProject, Document $snapshot, array $changes, ?Document $target): void
+    {
+        $authorization = $dbForProject->getAuthorization();
+        $locked = $authorization->skip(fn () => $dbForProject->getDocument('users', $snapshot->getId(), forUpdate: true));
+
+        if ($locked->isEmpty()) {
+            return;
+        }
+
+        $unchanged = fn (string $key): bool => $locked->getAttribute($key) === $changes[$key];
+
+        // The address and what was recorded about it go back together, or not at all: a claim of the address since
+        // the commit verified it, and the account keeps it, the verification and its target
+        $address = \array_intersect_key($changes, \array_flip(['email', 'emailVerification', 'emailCanonical', 'emailIsCanonical', 'emailIsCorporate', 'emailIsDisposable', 'emailIsFree']));
+        $releaseAddress = $address !== [] && \array_all(\array_keys($address), $unchanged);
+
+        $revert = [];
+        foreach (\array_keys($changes) as $key) {
+            $before = $snapshot->getAttribute($key);
+            if ($before === $changes[$key]) {
+                continue;
+            }
+            if (\array_key_exists($key, $address) ? $releaseAddress : $unchanged($key)) {
+                $revert[$key] = $before;
+            }
+        }
+
+        if ($revert !== []) {
+            $authorization->skip(fn () => $dbForProject->updateDocument('users', $locked->getId(), new Document($revert)));
+        }
+
+        if ($target !== null && ($address === [] || $releaseAddress)) {
+            $authorization->skip(function () use ($dbForProject, $target) {
+                if (!$dbForProject->getDocument('targets', $target->getId())->isEmpty()) {
+                    $dbForProject->deleteDocument('targets', $target->getId());
+                }
+            });
+        }
+    }
+
+    /**
      * Revoke every way into the account other than the address just proven: password,
      * sessions, tokens, MFA factors, passkeys, identities, account keys, the other
      * address and every target not on the proven channel.
@@ -471,6 +600,10 @@ class User extends Document
      * foreign identity drops the row it just wrote. A dead heat refuses both links
      * rather than leaving the email with two owners.
      *
+     * Inside a transaction the second read cannot see a link another request has not
+     * committed yet, so a caller that links there runs confirmIdentity() once its own
+     * transaction has committed.
+     *
      * @return bool false when another user's identity holds the provider email, in
      *              which case nothing of this link was persisted
      * @throws Duplicate when (provider, providerUid) is already linked to a user
@@ -487,16 +620,26 @@ class User extends Document
 
         $created = $dbForProject->createDocument('identities', $identity);
 
-        if (self::identityEmailTaken($dbForProject, $providerEmail, $userInternalId)) {
-            // Authorization is skipped so a lost race always cleans up after itself
-            $dbForProject->getAuthorization()->skip(
-                fn () => $dbForProject->deleteDocument('identities', $created->getId())
-            );
+        return self::confirmIdentity($dbForProject, $created);
+    }
 
-            return false;
+    /**
+     * The read linkIdentity() makes after its write: false, with the identity deleted, when
+     * another user's identity holds its provider email. Called on its own for an identity
+     * linked inside a transaction, after that transaction has committed.
+     */
+    public static function confirmIdentity(Database $dbForProject, Document $identity): bool
+    {
+        if (!self::identityEmailTaken($dbForProject, (string) $identity->getAttribute('providerEmail', ''), $identity->getAttribute('userInternalId'))) {
+            return true;
         }
 
-        return true;
+        // Authorization is skipped so a lost race always cleans up after itself
+        $dbForProject->getAuthorization()->skip(
+            fn () => $dbForProject->deleteDocument('identities', $identity->getId())
+        );
+
+        return false;
     }
 
     /**

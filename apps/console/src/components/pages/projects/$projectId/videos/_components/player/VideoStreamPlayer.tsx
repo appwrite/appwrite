@@ -38,6 +38,7 @@ import {
 } from '@/lib/utils/video-format'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
+import { useLongWait } from '@/hooks/use-long-wait'
 import { useVideoPlayerPrefs } from '@/hooks/use-video-player-prefs'
 import { StreamDebugPanel, type StreamManifest } from './StreamDebugPanel'
 import {
@@ -72,6 +73,8 @@ export interface VideoStreamPlayerProps {
   layout?: 'console' | 'embed'
   /** Seek once when the stream is ready (`?start=` on the embed URL). */
   initialStartSeconds?: number
+  /** Start playing once the stream can play, for a viewer who asked to watch. */
+  autoPlay?: boolean
 }
 
 /** Height of the docked player strip. */
@@ -100,6 +103,7 @@ export function VideoStreamPlayer({
   variant = 'default',
   layout = 'console',
   initialStartSeconds,
+  autoPlay = false,
 }: VideoStreamPlayerProps) {
   const t = useT()
   const videoRef = useRef<HTMLVideoElement | null>(null)
@@ -176,15 +180,18 @@ export function VideoStreamPlayer({
     [projectId, video.$id, readyIds],
   )
 
+  // A visitor's playback from the public playlist has no source file.
   const sourceFileUrl = useMemo(
     () =>
-      applyVideoStreamAccess(
-        sdk.forProject(projectId).storage.getFileView({
-          bucketId: video.bucketId,
-          fileId: video.fileId,
-        }),
-        streamAccess,
-      ),
+      video.bucketId && video.fileId
+        ? applyVideoStreamAccess(
+            sdk.forProject(projectId).storage.getFileView({
+              bucketId: video.bucketId,
+              fileId: video.fileId,
+            }),
+            streamAccess,
+          )
+        : '',
     [projectId, video.bucketId, video.fileId, streamAccess],
   )
 
@@ -738,6 +745,8 @@ export function VideoStreamPlayer({
     !state.fatalError &&
     state.firstFrameAt == null &&
     state.loadStartedAt != null
+  // The play button turns into a spinner only on a slow start.
+  const streamLoadingLong = useLongWait(streamLoading)
 
   /** Overlay-style controls, same chrome as the embed player page. */
   const menuOnlyAdvanced = true
@@ -795,7 +804,7 @@ export function VideoStreamPlayer({
         onSelectSubtitleSize={selectSubtitleSize}
         onReload={() => reload()}
         hasNewRenditions={hasNewRenditions}
-        isLoading={streamLoading}
+        isLoading={streamLoadingLong}
         scrubCues={timelineCues}
         fullscreen={fullscreen}
         onToggleFullscreen={toggleFullscreen}
@@ -935,6 +944,7 @@ export function VideoStreamPlayer({
                 )}
                 style={videoSubtitleStyle}
                 playsInline
+                autoPlay={autoPlay}
                 aria-label={video.name}
                 onClick={() => {
                   const el = videoRef.current
@@ -1044,6 +1054,7 @@ export function VideoStreamPlayer({
                   )}
                   style={videoSubtitleStyle}
                   playsInline
+                  autoPlay={autoPlay}
                   aria-label={video.name}
                   onClick={() => {
                     const el = videoRef.current

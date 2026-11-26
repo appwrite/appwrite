@@ -183,6 +183,21 @@ final class FactoryTest extends TestCase
         $this->assertSame('https://gitlab.com/owner/repo', $adapter->getRepositoryUrl('owner', 'repo'));
     }
 
+    public function testGetEndpoint(): void
+    {
+        $factory = new Factory($this->cache(), new Client(new CurlAdapter()), [
+            'gitlab' => ['adapter' => GitLab::class, 'endpoint' => 'https://gitlab.com/', 'variables' => []],
+            'gitea' => ['adapter' => Gitea::class, 'variables' => ['endpoint' => ['required' => true, 'envVariable' => '_APP_VCS_TEST_ENDPOINT']]],
+            'github' => ['adapter' => GitHub::class, 'variables' => []],
+        ]);
+
+        \putenv('_APP_VCS_TEST_ENDPOINT=http://gitea:3000/');
+
+        $this->assertSame('https://gitlab.com', $factory->getEndpoint('gitlab'));
+        $this->assertSame('http://gitea:3000', $factory->getEndpoint('gitea'));
+        $this->assertSame('', $factory->getEndpoint('github'));
+    }
+
     public function testFromProviderForBrowserPrefersBrowserEndpoint(): void
     {
         $entry = [

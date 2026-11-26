@@ -5,6 +5,7 @@ export type BillingStorageBreakdownSegmentId =
   | 'databases'
   | 'functions'
   | 'sites'
+  | 'videos'
 
 export type BillingStorageBreakdownSegment = {
   id: BillingStorageBreakdownSegmentId
@@ -43,6 +44,14 @@ const BILLING_STORAGE_BREAKDOWN_SPECS: ReadonlyArray<{
     label: 'Sites',
     resourceIds: ['sitesStorage'],
     color: 'var(--chart-4)',
+  },
+  {
+    // Renditions, captions and timelines. Billed with plan storage; zero (and
+    // so hidden) for organizations that do not use Videos.
+    id: 'videos',
+    label: 'Videos',
+    resourceIds: ['videosStorage'],
+    color: 'var(--chart-5)',
   },
 ]
 

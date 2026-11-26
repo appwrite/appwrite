@@ -74,6 +74,7 @@ import {
   USER_OS_LABELS,
   type UserOsOverride,
 } from '@/lib/user-os'
+import { formatMockInitActiveEventLabel } from '@/lib/init/active-event-debug'
 import { formatInitMockCurrentDay } from '@/lib/init/mock-current-day'
 import { formatInitMockTicketType } from '@/lib/init/ticket-types'
 import type { FaviconStatus } from '@/hooks/use-favicon'
@@ -113,6 +114,7 @@ import type {
 } from '@/lib/console-profiles'
 import { DebugMenuPrefsPanel } from '@/components/global/providers/DebugMenuPrefsPanel'
 import { DebugMenuConsoleBannersPanel } from '@/components/global/providers/DebugMenuConsoleBannersPanel'
+import { DebugMenuInitEventPanel } from '@/components/global/providers/DebugMenuInitEventPanel'
 import { DebugMenuInitDayPanel } from '@/components/global/providers/DebugMenuInitDayPanel'
 import { DebugMenuInitTicketPanel } from '@/components/global/providers/DebugMenuInitTicketPanel'
 import { DebugMenuSeedResourcesPanel } from '@/components/global/providers/DebugMenuSeedResourcesPanel'
@@ -218,6 +220,7 @@ interface MenuItem {
     | 'communityShareExamples'
     | 'prefsDebug'
     | 'consoleBanners'
+    | 'initEventMock'
     | 'initDayMock'
     | 'initTicketMock'
     | 'seedResources'
@@ -686,6 +689,7 @@ function isDebugPanelSubmenuVariant(
     variant === 'profileComparison' ||
     variant === 'communityShareExamples' ||
     variant === 'prefsDebug' ||
+    variant === 'initEventMock' ||
     variant === 'initDayMock' ||
     variant === 'initTicketMock' ||
     variant === 'seedResources' ||
@@ -810,6 +814,7 @@ function menuItemHasSubmenu(item: MenuItem): boolean {
     item.submenuVariant === 'communityShareExamples' ||
     item.submenuVariant === 'prefsDebug' ||
     item.submenuVariant === 'consoleBanners' ||
+    item.submenuVariant === 'initEventMock' ||
     item.submenuVariant === 'initDayMock' ||
     item.submenuVariant === 'initTicketMock' ||
     item.submenuVariant === 'seedResources' ||
@@ -892,6 +897,7 @@ function resolveActiveSubmenu(
 
 function getInitSubmenuDescription(overrides: DebugOverrides): string {
   const parts: string[] = [
+    formatMockInitActiveEventLabel(overrides.mockInitActiveEventId),
     formatInitMockCurrentDay(overrides.mockInitCurrentDay),
   ]
   if (overrides.mockInitTicketType !== null) {
@@ -1498,6 +1504,14 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
 
     const initSubmenuItems: MenuItem[] = [
       {
+        label: 'Event',
+        description: formatMockInitActiveEventLabel(
+          overrides.mockInitActiveEventId,
+        ),
+        icon: <CalendarDays className="h-3 w-3" />,
+        submenuVariant: 'initEventMock',
+      },
+      {
         label: 'Day',
         description: formatInitMockCurrentDay(overrides.mockInitCurrentDay),
         icon: <CalendarDays className="h-3 w-3" />,
@@ -1534,7 +1548,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
       {
         label: 'Reset settings',
         description:
-          'Restore day, ticket mock, confetti preview, and low power to defaults.',
+          'Restore event, day, ticket mock, confetti preview, and low power to defaults.',
         onClick: () => {
           resetInitMenuDebugOverrides()
           setOverrides(loadDebugOverrides())
@@ -1755,6 +1769,14 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 { category: 'Products' },
               ),
               createProfileFeatureFlagItem(
+                'Zero',
+                'Show the Appwrite Zero page (/zero, /zero.md) and its Products menu and footer links. Off until launch.',
+                'zero',
+                profileId,
+                features.zero,
+                { category: 'Products' },
+              ),
+              createProfileFeatureFlagItem(
                 'Usage alerts',
                 'Show usage monitors and alerts (Usage sidebar pages, quick actions, budget monitors in billing, alert webhook events).',
                 'alerts',
@@ -1779,6 +1801,14 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 { category: 'Products' },
               ),
               createProfileFeatureFlagItem(
+                'Logs',
+                'Show what functions, sites and databases write to stdout and stderr (Logs tabs, the project Logs page and the deployment page Build / Runtime switch).',
+                'runtimeLogs',
+                profileId,
+                features.runtimeLogs,
+                { category: 'Products' },
+              ),
+              createProfileFeatureFlagItem(
                 'Native DBs: MongoDB',
                 'Enable dedicated MongoDB databases in the databases list.',
                 'nativeDbsMongo',
@@ -1792,6 +1822,14 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 'agent',
                 profileId,
                 features.agent,
+                { category: 'Products' },
+              ),
+              createProfileFeatureFlagItem(
+                'Single sign-on',
+                'Org settings Single sign-on tab (/settings/sso): owners verify domains and connect identity providers so people sign in with single sign-on.',
+                'sso',
+                profileId,
+                features.sso,
                 { category: 'Products' },
               ),
               createCombinedProfileFeatureFlagItem(
@@ -2106,9 +2144,11 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     profileId,
     features.videos,
     features.analytics,
+    features.zero,
     features.alerts,
     features.reviews,
     features.appwritePush,
+    features.runtimeLogs,
     features.nativeDbsMongo,
     features.databasePitrRestore,
     features.databaseSpecifications,
@@ -2118,6 +2158,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     features.blogDrafts,
     features.orgApiKeys,
     features.partnersDocs,
+    features.sso,
     features.agent,
     features.notifications,
     features.init,
@@ -2498,6 +2539,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
               currentSubmenu?.submenuVariant === 'prefsDebug' ||
               currentSubmenu?.submenuVariant === 'consoleBanners' ||
               currentSubmenu?.submenuVariant === 'seedResources' ||
+              currentSubmenu?.submenuVariant === 'initEventMock' ||
               currentSubmenu?.submenuVariant === 'initDayMock' ||
               currentSubmenu?.submenuVariant === 'initTicketMock' ||
               currentSubmenu?.submenuVariant === 'terminalSettings' ||
@@ -2633,6 +2675,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 <DebugMenuConsoleBannersPanel />
               ) : currentSubmenu.submenuVariant === 'seedResources' ? (
                 <DebugMenuSeedResourcesPanel />
+              ) : currentSubmenu.submenuVariant === 'initEventMock' ? (
+                <DebugMenuInitEventPanel />
               ) : currentSubmenu.submenuVariant === 'initDayMock' ? (
                 <DebugMenuInitDayPanel />
               ) : currentSubmenu.submenuVariant === 'initTicketMock' ? (

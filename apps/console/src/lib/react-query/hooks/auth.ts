@@ -155,6 +155,7 @@ import {
   USER_PREFS_KEY_FEATURE_NOTIFICATIONS,
   type UserPrefs,
 } from '@/lib/user-prefs-keys'
+import { queueAccountPrefsWrite } from '@/lib/account-prefs-queue'
 import {
   API_EXPLORER_COLUMNS_DEFAULT_LAYOUT,
   API_EXPLORER_RESPONSE_SPLIT_DEFAULT_LAYOUT,
@@ -1589,7 +1590,7 @@ export function useDeleteAccountPasskey() {
  */
 function diffAccountPrefs(
   previous: Record<string, unknown> | undefined,
-  next: Record<string, string | number | boolean>,
+  next: Record<string, unknown>,
 ): {
   added: Record<string, unknown>
   changed: Record<string, { from: unknown; to: unknown }>
@@ -1627,6 +1628,7 @@ function getAccountPrefsCallerStack(): string[] {
       .filter((line) => {
         if (!line) return false
         if (line.includes('updateAccountPrefs')) return false
+        if (line.includes('changeAccountPrefs')) return false
         if (line.includes('getAccountPrefsCallerStack')) return false
         if (line.includes('diffAccountPrefs')) return false
         if (line.includes('node_modules')) return false
@@ -1651,9 +1653,48 @@ function getAccountPrefsCallerStack(): string[] {
  *   in-memory singleton. Needed after optimistic cache patches (the singleton
  *   already looks like the write, so the unchanged check would skip the API).
  */
-export async function updateAccountPrefs(
+export function updateAccountPrefs(
   prefs: Record<string, unknown>,
   reason = 'unknown',
+  options?: { force?: boolean },
+): Promise<Models.User | undefined> {
+  // Captured before the queue, which would hide the caller.
+  const caller = getAccountPrefsCallerStack()
+  return queueAccountPrefsWrite(() =>
+    writeAccountPrefs(prefs, reason, caller, options),
+  )
+}
+
+/**
+ * Change account preferences against the server's latest copy. The read and
+ * the write take one turn in this tab's write queue, so no other write from
+ * this tab lands between them. Writes from other tabs and devices still can:
+ * `updatePrefs` replaces every key at once.
+ *
+ * @param change - Builds the full prefs to save from the latest prefs.
+ * @param reason - Short label for debug logs.
+ */
+export function changeAccountPrefs(
+  change: (latest: Record<string, unknown>) => Record<string, unknown>,
+  reason = 'unknown',
+  options?: { force?: boolean },
+): Promise<Models.User | undefined> {
+  const caller = getAccountPrefsCallerStack()
+  return queueAccountPrefsWrite(async (isCurrent) => {
+    const latest = (await sdk.forConsole.account.getPrefs()) as Record<
+      string,
+      unknown
+    >
+    // The sign-in may have changed while the read was pending.
+    if (!isCurrent()) return undefined
+    return writeAccountPrefs(change(latest), reason, caller, options)
+  })
+}
+
+async function writeAccountPrefs(
+  prefs: Record<string, unknown>,
+  reason: string,
+  caller: string[],
   options?: { force?: boolean },
 ): Promise<Models.User | undefined> {
   if (hasConsoleImpersonationSessionTarget()) {
@@ -1668,7 +1709,6 @@ export async function updateAccountPrefs(
     Object.keys(diff.added).length > 0 ||
     Object.keys(diff.changed).length > 0 ||
     diff.removed.length > 0
-  const caller = getAccountPrefsCallerStack()
   const force = options?.force === true
 
   if (!hasDiff && !force) {

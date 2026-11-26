@@ -689,7 +689,11 @@ readonly class Deployments
             'artifacts' => [...$sourceArtifacts, ...$manifestArtifacts, ...$output['artifacts']],
             'volumes' => $output['volumes'],
             'callback' => new Callback(
-                url: "{$endpoint}/v1/jobs/event?" . \http_build_query(['project' => $projectId]),
+                // No project in the URL: the route acts on the project named in the signed
+                // job meta. A query parameter would name the project the request acts in,
+                // and a platform whose projects are not all reached by their own ID refuses
+                // some of them.
+                url: "{$endpoint}/v1/jobs/event",
                 events: $events,
                 key: System::getEnv('_APP_JOBS_SECRET', ''),
             ),

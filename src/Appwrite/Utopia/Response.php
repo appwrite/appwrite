@@ -281,6 +281,9 @@ class Response extends SwooleResponse
     public const MODEL_MONITOR_LIST = 'monitorList';
     public const MODEL_ALERT = 'alert';
     public const MODEL_ALERT_LIST = 'alertList';
+    public const MODEL_ESCALATION = 'escalation';
+    public const MODEL_ESCALATION_LIST = 'escalationList';
+    public const MODEL_ESCALATION_STEP = 'escalationStep';
     public const MODEL_KEY = 'key';
     public const MODEL_KEY_LIST = 'keyList';
     public const MODEL_EPHEMERAL_KEY = 'ephemeralKey';
@@ -338,6 +341,8 @@ class Response extends SwooleResponse
     public const MODEL_OAUTH2_STRAVA = 'oAuth2Strava';
     public const MODEL_OAUTH2_VK = 'oAuth2VK';
     public const MODEL_OAUTH2_NETLIFY = 'oAuth2Netlify';
+    public const MODEL_OAUTH2_CLERK = 'oAuth2Clerk';
+    public const MODEL_OAUTH2_SUPABASE = 'oAuth2Supabase';
     public const MODEL_OAUTH2_RAILWAY = 'oAuth2Railway';
     public const MODEL_OAUTH2_REDDIT = 'oAuth2Reddit';
     public const MODEL_OAUTH2_VERCEL = 'oAuth2Vercel';

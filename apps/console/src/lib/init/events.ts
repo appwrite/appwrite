@@ -1,17 +1,17 @@
+import { Gift, Rocket, Ticket } from 'lucide-react'
+import { loadDebugOverrides } from '@/lib/debug-overrides'
+import { INIT_JULY_2026_DAYS, INIT_JULY_2026_SCHEDULE } from './day-details'
 import {
-  Gift,
-  Rocket,
-  Ticket,
-} from 'lucide-react'
-import {
-  INIT_JULY_2026_DAYS,
-  INIT_JULY_2026_SCHEDULE,
-} from './day-details'
+  INIT_NOV_2026_DAYS,
+  INIT_NOV_2026_PRIZES,
+  INIT_NOV_2026_SCHEDULE,
+} from './init-nov-2026-content'
 import {
   INIT_JULY_2026_TICKET_CONFIG,
-  INIT_SEP_2026_TICKET_CONFIG,
+  INIT_NOV_2026_TICKET_CONFIG,
 } from './ticket-config'
 import { INIT_JULY_2026_PRIZES } from './prizes'
+import { isKnownLaunchEventId } from './init-event-catalog'
 import { INIT_YOUTUBE_CHANNEL_HREF } from './links'
 import { parseDateOnly } from './dates'
 import { resolveInitCurrentDay } from './event-visibility'
@@ -24,7 +24,11 @@ import {
   INIT_PRIZES_SECTION_ID,
   INIT_TICKET_SECTION_ID,
 } from './init-section-ids'
-import type { LaunchEvent, LaunchEventStatus, LaunchEventHeaderNavCta } from './types'
+import type {
+  LaunchEvent,
+  LaunchEventStatus,
+  LaunchEventHeaderNavCta,
+} from './types'
 
 /** Add new launch-week events here; the page resolves the active one automatically. */
 export const LAUNCH_EVENTS: LaunchEvent[] = [
@@ -117,8 +121,7 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
         title: 'Appwrite Cloud',
         availabilityLabel: 'Live each Init day',
         unlockDay: 1,
-        description:
-          "Each day's feature goes live on Cloud the day it drops.",
+        description: "Each day's feature goes live on Cloud the day it drops.",
         ctaLabel: 'Get started',
         href: '/',
       },
@@ -149,7 +152,8 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
       {
         id: 'swag',
         title: 'Earn launch rewards',
-        description: 'Join daily sessions and enter the day 5 grand prize draw.',
+        description:
+          'Join daily sessions and enter the day 5 grand prize draw.',
         icon: Gift,
         href: `#${INIT_PRIZES_SECTION_ID}`,
       },
@@ -175,7 +179,8 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
         {
           id: 'community',
           title: 'Join the conversation',
-          description: 'Share feedback and stay connected with the Appwrite community.',
+          description:
+            'Share feedback and stay connected with the Appwrite community.',
           iconSrc: '/icons/discord-simple.svg',
           href: '/discord',
         },
@@ -187,47 +192,174 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
           'Your personalized pass from Init week. Customize it, export a share video, or post it on socials.',
         descriptionGuest:
           'Sign in to view your personalized Init pass and share your experience from launch week.',
-        descriptionCollapsedAuthenticated: 'Customize and share your Init pass.',
+        descriptionCollapsedAuthenticated:
+          'Customize and share your Init pass.',
         descriptionCollapsedGuest: 'Sign in to view your Init pass.',
         shareButtonLabel: 'Share ticket',
       },
     },
   },
   {
-    id: 'init-sep-2026',
-    slug: 'init-sep-2026',
+    id: 'init-nov-2026',
+    slug: 'init-nov-2026',
     name: 'init',
-    dateRangeLabel: 'SEP 15 - 19',
-    headline: 'Init returns Sep 15 - 19',
+    dateRangeLabel: 'NOVEMBER 30 - DECEMBER 4',
+    headline: 'Init returns November 30 - December 4',
     description:
-      'Init returns Sep 15 - 19. Another week of launches, workshops, and community celebrations.',
-    startDate: '2026-09-15',
-    endDate: '2026-09-19',
-    status: 'upcoming',
-    tickets: INIT_SEP_2026_TICKET_CONFIG,
-    primaryCta: { label: 'Save the date', href: '/init', external: false },
+      'Init is back, and this one is electric: five days, a new reveal every day, live streams, and giveaways. November 30 - December 4.',
+    startDate: '2026-11-30',
+    endDate: '2026-12-04',
+    // 'active' lets the status follow the dates: upcoming, then live, then past.
+    status: 'active',
+    presenceEnabled: true,
+    tickets: INIT_NOV_2026_TICKET_CONFIG,
+    primaryCta: {
+      label: 'Claim your ticket',
+      to: '/sign-up',
+      redirect: '/init',
+    },
+    headerNavCta: {
+      beforeEvent: {
+        label: 'Back to Appwrite',
+        href: '/home',
+        external: false,
+      },
+      duringAfterEvent: {
+        label: 'Explore Appwrite',
+        href: '/home',
+        external: false,
+      },
+    },
+    liveBanner: {
+      title: 'Init 5 launch stream',
+      href: INIT_YOUTUBE_CHANNEL_HREF,
+    },
     onlineCount: 0,
     hiddenOnlineCount: 0,
     onlineCountCapped: false,
     othersOnlineCount: 0,
-    days: [],
-    schedule: [],
+    days: INIT_NOV_2026_DAYS,
+    schedule: INIT_NOV_2026_SCHEDULE,
     onlineUsers: [],
     recentlyOnlineUsers: [],
     liveActivities: [],
+    giveaway: {
+      title: 'Init giveaways',
+      description:
+        'Daily swag on days 1-4, and the full Init 5 swag collection as the day 5 grand prize.',
+      ctaLabel: 'View all prizes',
+      ctaHref: `#${INIT_PRIZES_SECTION_ID}`,
+      secondaryCtaLabel: 'Join on Discord',
+      secondaryCtaHref: '/discord',
+      // Init has no light theme: both themes show the image on its own dark ground.
+      imageSrcLight: '/images/init/giveaway-swag-promo-init-5.jpg',
+      imageSrcDark: '/images/init/giveaway-swag-promo-init-5.jpg',
+      imageAlt:
+        'Init 5 swag including a hoodie, tee, cap, beanie and mug, in front of the Init 5 mark',
+    },
+    prizes: INIT_NOV_2026_PRIZES,
+    releaseAvailability: {
+      unlockDay: 5,
+      sectionTitle: 'Cloud and Self-host are live.',
+      sectionDescription:
+        'Every Init 5 feature is live on Appwrite Cloud, and Community Edition ships them all for self-hosting.',
+      lockedTitle: 'Cloud ships daily. Self-host lands when Init wraps.',
+      lockedDescription:
+        'Each Init 5 feature goes live on Appwrite Cloud on its launch day. Community Edition ships every feature for self-hosting at the end of Init week.',
+      cloud: {
+        title: 'Appwrite Cloud',
+        availabilityLabel: 'Live each Init day',
+        unlockDay: 1,
+        description: "Each day's feature goes live on Cloud the day it drops.",
+        ctaLabel: 'Get started',
+        href: '/',
+      },
+      selfHosted: {
+        title: 'Community Edition',
+        availabilityLabel: 'End of Init week',
+        description:
+          'Self-host every Init 5 feature on your own infrastructure.',
+        ctaLabel: 'Installation docs',
+        href: '/docs/advanced/self-hosting',
+      },
+    },
     getInvolved: [
       {
-        id: 'notify',
-        title: 'Get notified',
-        description: 'Be the first to know when registration opens.',
+        id: 'ticket',
+        title: 'Claim your ticket',
+        description: 'Get access and unlock exclusive swag.',
         icon: Ticket,
-        href: '/init',
+        href: `#${INIT_TICKET_SECTION_ID}`,
+      },
+      {
+        id: 'community',
+        title: 'Join the conversation',
+        description: 'Share feedback and connect with the community.',
+        iconSrc: '/icons/discord-simple.svg',
+        href: '/discord',
+      },
+      {
+        id: 'swag',
+        title: 'Earn launch rewards',
+        description:
+          'Join daily sessions and enter the day 5 grand prize draw.',
+        icon: Gift,
+        href: `#${INIT_PRIZES_SECTION_ID}`,
       },
     ],
+    promoBanner: {
+      before:
+        'Join us on our biggest Init ever. 5 days, 5 new product launches. It will be electric.',
+      during: "Init 5 is live. Catch today's reveal and the launch stream.",
+      after: 'Init 5 is a wrap. Explore every launch and rewatch the streams.',
+    },
+    recap: {
+      headline: 'Init recap',
+      description:
+        'Five days of Init 5 launches are in the books. Rewatch sessions and explore every announcement from November 30 - December 4.',
+      bannerMessage:
+        'Init November 30 - December 4 has ended. Browse the full recap below.',
+      introTitle: 'Everything we shipped',
+      introDescription:
+        'From Appwrite Analytics and Videos to Appwrite Zero, Monitors, Beep, and Reviews. Explore the full launch timeline.',
+      getInvolvedSectionTitle: 'Keep exploring',
+      getInvolved: [
+        {
+          id: 'explore',
+          title: 'Explore Appwrite',
+          description: 'Try the Init 5 launches in your project today.',
+          icon: Rocket,
+          href: '/home',
+        },
+        {
+          id: 'community',
+          title: 'Join the conversation',
+          description:
+            'Share feedback and stay connected with the Appwrite community.',
+          iconSrc: '/icons/discord-simple.svg',
+          href: '/discord',
+        },
+      ],
+      ticket: {
+        titleAuthenticated: 'Your Init ticket',
+        titleGuest: 'View your Init ticket',
+        descriptionAuthenticated:
+          'Your personalized pass from Init week. Customize it, export a share video, or post it on socials.',
+        descriptionGuest:
+          'Sign in to view your personalized Init pass and share your experience from launch week.',
+        descriptionCollapsedAuthenticated:
+          'Customize and share your Init pass.',
+        descriptionCollapsedGuest: 'Sign in to view your Init pass.',
+        shareButtonLabel: 'Share ticket',
+      },
+    },
   },
 ]
 
-function deriveStatus(event: LaunchEvent, now = new Date()): LaunchEventStatus {
+export function getLaunchEventDerivedStatus(
+  event: LaunchEvent,
+  now = new Date(),
+): LaunchEventStatus {
   if (event.status !== 'upcoming' && event.status !== 'past') {
     const start = parseDateOnly(event.startDate)
     const end = parseDateOnly(event.endDate)
@@ -240,16 +372,76 @@ function deriveStatus(event: LaunchEvent, now = new Date()): LaunchEventStatus {
   return event.status
 }
 
-/** Prefer a featured event, then in-range dates, then next upcoming. */
-export function getActiveLaunchEvent(now = new Date()): LaunchEvent | undefined {
+function stripTrailingSlashes(path: string): string {
+  let normalized = path
+  while (normalized.length > 1 && normalized.endsWith('/')) {
+    normalized = normalized.slice(0, -1)
+  }
+  return normalized || '/'
+}
+
+/** `/init?event=` while the Init page is open. Other routes keep production resolution. */
+function readInitPageBrowseEventSlug(): string | undefined {
+  if (typeof window === 'undefined') return undefined
+  if (stripTrailingSlashes(window.location.pathname) !== '/init')
+    return undefined
+  const value = new URLSearchParams(window.location.search).get('event')?.trim()
+  return value ? value : undefined
+}
+
+function resolveDebugActiveLaunchEvent(
+  now: Date,
+  activeEventId: string | null | undefined,
+): LaunchEvent | undefined {
+  const id =
+    activeEventId !== undefined
+      ? activeEventId
+      : typeof window === 'undefined'
+        ? null
+        : loadDebugOverrides().mockInitActiveEventId
+  if (!id || !isKnownLaunchEventId(id)) return undefined
+  const event = LAUNCH_EVENTS.find((entry) => entry.id === id)
+  if (!event) return undefined
+  return { ...event, status: getLaunchEventDerivedStatus(event, now) }
+}
+
+export type GetActiveLaunchEventOptions = {
+  /** `/init?event=` slug or id when browsing past or future Init weeks. */
+  browseEventSlug?: string | null
+  /**
+   * Debug override for the active event. Pass `null` for the production
+   * default. Omit to read the override from this browser's debug storage.
+   */
+  activeEventId?: string | null
+}
+
+/** Prefer a debug override, then a browse param, then the featured event. */
+export function getActiveLaunchEvent(
+  now = new Date(),
+  options?: GetActiveLaunchEventOptions,
+): LaunchEvent | undefined {
+  const debugEvent = resolveDebugActiveLaunchEvent(now, options?.activeEventId)
+  if (debugEvent) return debugEvent
+
+  const browseParam = (
+    options?.browseEventSlug ?? readInitPageBrowseEventSlug()
+  )?.trim()
+  const browsed = browseParam
+    ? (LAUNCH_EVENTS.find((event) => event.slug === browseParam) ??
+      LAUNCH_EVENTS.find((event) => event.id === browseParam))
+    : undefined
+  if (browsed) {
+    return { ...browsed, status: getLaunchEventDerivedStatus(browsed, now) }
+  }
+
   const featured = LAUNCH_EVENTS.find((event) => event.featured)
   if (featured) {
-    return { ...featured, status: deriveStatus(featured, now) }
+    return { ...featured, status: getLaunchEventDerivedStatus(featured, now) }
   }
 
   const withDerivedStatus = LAUNCH_EVENTS.map((event) => ({
     ...event,
-    status: deriveStatus(event, now),
+    status: getLaunchEventDerivedStatus(event, now),
   }))
 
   const active = withDerivedStatus.find((event) => event.status === 'active')
@@ -259,7 +451,8 @@ export function getActiveLaunchEvent(now = new Date()): LaunchEvent | undefined 
     .filter((event) => event.status === 'upcoming')
     .sort(
       (a, b) =>
-        parseDateOnly(a.startDate).getTime() - parseDateOnly(b.startDate).getTime(),
+        parseDateOnly(a.startDate).getTime() -
+        parseDateOnly(b.startDate).getTime(),
     )
   if (upcoming[0]) return upcoming[0]
 
@@ -337,5 +530,8 @@ export function resolveInitHeaderNavCta(options?: {
     }
   }
 
-  return { ...DEFAULT_INIT_HEADER_NAV_DURING_AFTER, ...overrides?.duringAfterEvent }
+  return {
+    ...DEFAULT_INIT_HEADER_NAV_DURING_AFTER,
+    ...overrides?.duringAfterEvent,
+  }
 }

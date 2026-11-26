@@ -108,3 +108,5 @@ console.log(result.href);
 
 ## Enabling compression {% #enabling-compression-2 %}
 You can enable image compression through the **Image Preview API** by specifying the desired output format in API calls. For example, requesting a WebP or AVIF conversion automatically triggers Appwrite's compression algorithms to optimize the image size.
+
+To serve AVIF or WebP to browsers that accept them, and the original format to every other client, from one URL, set the output format to `auto`. Appwrite picks the format from the request's `Accept` header, as described in [automatic output format](/docs/products/storage/images#automatic-output-format).

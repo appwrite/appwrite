@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import {
   useLocation,
   useNavigate,
@@ -34,11 +34,25 @@ import {
   type CompactFilterKey,
 } from '@/lib/table-filters'
 import { cn } from '@/lib/utils'
-import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
+import {
+  ServiceHeader,
+  type ServiceHeaderRef,
+  type Tab,
+} from '../shared/ServiceHeader'
 import { Credits } from './_components/Credits'
 import { Learnings } from './_components/Learnings'
-import { Performance } from './_components/Performance'
-import { Repositories } from './_components/Repositories'
+import {
+  Performance,
+  PerformanceRangeToggle,
+  PerformanceRepositorySelect,
+  usePerformanceFilters,
+} from './_components/Performance'
+import {
+  Repositories,
+  RepositoriesActions,
+  RepositoriesScopeControls,
+  useRepositoriesScope,
+} from './_components/Repositories'
 import { ReviewsEmptyState } from './_components/ReviewsEmptyState'
 import { ReviewsTable } from './_components/ReviewsTable'
 
@@ -148,6 +162,18 @@ export function View() {
 
   const [repositorySearch, setRepositorySearch] = useState('')
   const debouncedRepositorySearch = useDebouncedValue(repositorySearch, 300)
+  const repositoriesScope = useRepositoriesScope(
+    projectId,
+    debouncedRepositorySearch.trim(),
+  )
+  const performanceFilters = usePerformanceFilters()
+
+  // Repositories are added from an installation's list, found with the search.
+  const headerRef = useRef<ServiceHeaderRef>(null)
+  const addRepository = () => {
+    repositoriesScope.setFilter('all')
+    headerRef.current?.focusSearch()
+  }
 
   const tabs: Tab[] = useMemo(
     () => [
@@ -233,11 +259,15 @@ export function View() {
 
   // Tabs without a toolbar keep the same gap under the tab bar as the others.
   const hasToolbar =
-    !firstRun && (activeTab === 'reviews' || activeTab === 'repositories')
+    !firstRun &&
+    (activeTab === 'reviews' ||
+      activeTab === 'repositories' ||
+      activeTab === 'performance')
 
   return (
     <div className="flex flex-col">
       <ServiceHeader
+        ref={headerRef}
         title={t('Review')}
         tabs={tabs}
         activeTab={activeTab}
@@ -245,38 +275,72 @@ export function View() {
         hideToolbar={!hasToolbar}
         {...(activeTab === 'repositories'
           ? {
-              searchPlaceholder: t('Search GitHub repositories...'),
+              beforeSearchButtons: (
+                <RepositoriesScopeControls
+                  scope={repositoriesScope}
+                  search={debouncedRepositorySearch.trim()}
+                />
+              ),
+              searchPlaceholder: t('Search repositories...'),
               searchValue: repositorySearch,
               onSearchChange: setRepositorySearch,
+              beforeCreateButtons: (
+                <RepositoriesActions
+                  scope={repositoriesScope}
+                  canWrite={canWrite}
+                />
+              ),
+              // Before a Git provider is connected, the page offers one per provider.
+              createLabel: repositoriesScope.connected
+                ? t('Add repository')
+                : undefined,
+              onCreate: addRepository,
+              createDisabled: !canWrite || repositoriesScope.loading,
+              createDisabledTooltip: writeTooltip,
             }
-          : activeTab === 'reviews'
+          : activeTab === 'performance'
             ? {
-                filterTrigger: (
-                  <FiltersPopover
-                    open={filtersOpen}
-                    onOpenChange={setFiltersOpen}
-                    columns={filterColumns}
-                    filterMap={filterMap}
-                    onRemoveFilter={removeFilter}
-                    onClearAll={clearFilters}
-                    onApplyFilter={applyFilter}
-                    resourceLabel="reviews"
-                    filterScope="reviews"
-                    onApplyQuery={(query) =>
-                      navigateReviews({ query, page: 1 })
-                    }
-                    teamId={project?.teamId}
+                beforeSearchButtons: (
+                  <PerformanceRepositorySelect
+                    projectId={projectId}
+                    filters={performanceFilters}
                   />
                 ),
-                showRefresh: true,
-                onRefresh: () => void refetchReviews(),
-                isRefreshing: reviewsFetching && !reviewsLoading,
-                createLabel: t('Add repository'),
-                onCreate: showRepositories,
-                createDisabled: !canWrite,
-                createDisabledTooltip: writeTooltip,
+                beforeCreateButtons: (
+                  <PerformanceRangeToggle
+                    projectId={projectId}
+                    filters={performanceFilters}
+                  />
+                ),
               }
-            : {})}
+            : activeTab === 'reviews'
+              ? {
+                  filterTrigger: (
+                    <FiltersPopover
+                      open={filtersOpen}
+                      onOpenChange={setFiltersOpen}
+                      columns={filterColumns}
+                      filterMap={filterMap}
+                      onRemoveFilter={removeFilter}
+                      onClearAll={clearFilters}
+                      onApplyFilter={applyFilter}
+                      resourceLabel="reviews"
+                      filterScope="reviews"
+                      onApplyQuery={(query) =>
+                        navigateReviews({ query, page: 1 })
+                      }
+                      teamId={project?.teamId}
+                    />
+                  ),
+                  showRefresh: true,
+                  onRefresh: () => void refetchReviews(),
+                  isRefreshing: reviewsFetching && !reviewsLoading,
+                  createLabel: t('Add repository'),
+                  onCreate: showRepositories,
+                  createDisabled: !canWrite,
+                  createDisabledTooltip: writeTooltip,
+                }
+              : {})}
       />
 
       <div
@@ -295,7 +359,7 @@ export function View() {
             chooseDisabledTooltip={writeTooltip}
           />
         ) : activeTab === 'performance' ? (
-          <Performance projectId={projectId} />
+          <Performance projectId={projectId} filters={performanceFilters} />
         ) : activeTab === 'learnings' ? (
           <Learnings projectId={projectId} canWrite={canWrite} />
         ) : activeTab === 'repositories' ? (
@@ -303,6 +367,7 @@ export function View() {
             projectId={projectId}
             canWrite={canWrite}
             search={debouncedRepositorySearch.trim()}
+            scope={repositoriesScope}
           />
         ) : reviews.length > 0 ? (
           <>

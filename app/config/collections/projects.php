@@ -523,6 +523,8 @@ return [
             Attribute::string(key: 'duration'),
             Attribute::integer(key: 'streamId', signed: false, default: 0),
             Attribute::integer(key: 'isInit', signed: false, default: 0),
+            // Bytes of this segment on the videos device.
+            Attribute::integer(key: 'size', width: IntegerWidth::Bits64, signed: false, default: 0),
         ],
         'indexes' => [
             Index::key(key: '_key_renditionId', attributes: ['renditionId']),

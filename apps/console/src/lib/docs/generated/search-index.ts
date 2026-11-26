@@ -1836,7 +1836,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "products/analytics/dashboard",
     "title": "Dashboard",
-    "description": "A tour of the Appwrite Analytics dashboard, from the metrics and chart to date ranges, live visitors, and the cards that break traffic down by source, page, location, technology, bots, and custom events.",
+    "description": "A tour of the Appwrite Analytics dashboard, from the metrics, chart, and notes to date ranges, live visitors, and the cards that break traffic down by source, page, location, technology, bots, and custom events.",
     "excerpt": "Each property has a dashboard on its **Analytics** tab. It shows the property's traffic for the date range you pick: the headline metrics, a chart over time, and cards that break visits down by where they came from, what they viewed, and who sent them. Metrics and chart The top of the dashboard has a tab for each metric: **Unique visitors**, **Visits**, **Pageviews**, **Views per visit**, **Bounce rate**, **Visit duration**, and **Engagement time**. Each tab shows the total for the…",
     "breadcrumbs": [
       "products",
@@ -4889,6 +4889,28 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "products/messaging/bird-email",
+    "title": "Bird email",
+    "description": "Send emails to your Appwrite users through Bird's email API and Appwrite Messaging.",
+    "excerpt": "Bird lets you send customized email messages to your users. These emails can be sent immediately or scheduled. You can send emails for purposes like reminders, promotions, announcements, and even custom authentication flows. The Bird email provider sends through Bird's HTTP email API with a Bird API key, so it doesn't need SMTP settings. To send SMS through Bird too, add a Bird SMS provider next to it. To add Bird as an email provider, navigate to **Messaging** > **Providers**…",
+    "breadcrumbs": [
+      "Messaging",
+      "Providers",
+      "Email with Bird"
+    ]
+  },
+  {
+    "slug": "products/messaging/bird-sms",
+    "title": "Bird SMS",
+    "description": "Send SMS messages to your Appwrite users using Bird and Appwrite Messaging.",
+    "excerpt": "Bird lets you send customized SMS messages to your users. These SMS messages can be sent immediately or scheduled. You can send SMS messages for purposes like reminders, promotions, announcements, and even custom authentication flows. The Bird SMS provider sends through Bird's SMS API with a Bird API key. To send email through Bird too, add a Bird email provider next to it. To add Bird as an SMS provider, navigate to **Messaging** > **Providers** > **Add provider**. Bird is…",
+    "breadcrumbs": [
+      "Messaging",
+      "Providers",
+      "SMS with Bird"
+    ]
+  },
+  {
     "slug": "products/messaging/fcm",
     "title": "Firebase Cloud Messaging",
     "description": "Send push notifications to Android, Apple, or Web app with Firebase Cloud Messaging (FCM).",
@@ -4958,7 +4980,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/messaging/send-email-messages",
     "title": "Send email messages",
     "description": "Send email messages to your users using Appwrite Messaging.",
-    "excerpt": "You can send custom email messages to your app's users using Appwrite Messaging and a connected SMTP service. This guide takes you through the implementation path of adding email messaging to your app. Add a provider Appwrite supports Mailgun, Resend, Sendgrid, Amazon SES, and SMTP as email providers. You must configure one of them as a provider. To add a new provider navigate to **Messaging** > **Providers** > **Add provider** > **Email** and follow the wizard. You can find more…",
+    "excerpt": "You can send custom email messages to your app's users using Appwrite Messaging and a connected SMTP service. This guide takes you through the implementation path of adding email messaging to your app. Add a provider Appwrite supports Bird, Mailgun, Resend, Sendgrid, Amazon SES, and SMTP as email providers. You must configure one of them as a provider. To add a new provider navigate to **Messaging** > **Providers** > **Add provider** > **Email** and follow the wizard. You can find…",
     "breadcrumbs": [
       "Messaging",
       "Guides",
@@ -4980,7 +5002,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/messaging/send-sms-messages",
     "title": "Send SMS messages",
     "description": "Send SMS messages to your users using Appwrite Messaging.",
-    "excerpt": "You can send custom SMS messages to your app's users using Appwrite Messaging and a connected SMTP service. This guide takes you through the implementation path of adding SMS messaging to your app. Add a provider Appwrite supports Twilio, MSG91, Telesign, Textmagic, and Vonage as SMS providers. You must configure one of them as a provider. To add a new provider navigate to **Messaging** > **Providers** > **Add provider** > **SMS** and follow the wizard. You can find more details…",
+    "excerpt": "You can send custom SMS messages to your app's users using Appwrite Messaging and a connected SMTP service. This guide takes you through the implementation path of adding SMS messaging to your app. Add a provider Appwrite supports Bird, Twilio, MSG91, Telesign, Textmagic, and Vonage as SMS providers. You must configure one of them as a provider. To add a new provider navigate to **Messaging** > **Providers** > **Add provider** > **SMS** and follow the wizard. You can find more…",
     "breadcrumbs": [
       "Messaging",
       "Guides",
@@ -7917,7 +7939,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "tutorials/sveltekit-csr-auth/step-2",
     "title": "Create project",
     "description": "Add Authentication to a SvelteKit project using Appwrite.",
-    "excerpt": "You can create a Svelte project using SvelteKit. The command will give you a prompt with several project types. We'll be starting with a skeleton project. The prompt will be something similar to this. After the prompt is finished, you can head over to the newly created project. Adding Appwrite to your Svelte app Appwrite provides a Web SDK that can be used in your Svelte apps. You can use Appwrite by installing the Web SDK as an NPM package.",
+    "excerpt": "Create a minimal SvelteKit project with JavaScript and JSDoc type checking. Adding Appwrite to your Svelte app Appwrite provides a Web SDK that can be used in your Svelte apps. You can use Appwrite by installing the Web SDK as an NPM package.",
     "breadcrumbs": [
       "SvelteKit",
       "Steps",
@@ -7928,7 +7950,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "tutorials/sveltekit-csr-auth/step-3",
     "title": "Initialize SDK",
     "description": "Add Authentication to a SvelteKit project using Appwrite.",
-    "excerpt": "Before you can use Appwrite, you need to instanciate the Appwrite class with the project ID and endpoint. This tells the SDK where your Appwrite project is hosted and which one to connect to. The client is then used to initialize services like and , so they all point to the same Appwrite project. You can do this by instantiating the services you need in a file like and **exporting the instances**. and are environment variables that are exported in…",
+    "excerpt": "Before you can use Appwrite, you need to instantiate the Appwrite class with the project ID and endpoint. This tells the SDK where your Appwrite project is hosted and which one to connect to. The client is then used to initialize services like and , so they all point to the same Appwrite project. You can do this by instantiating the services you need in a file like and **exporting the instances**. and are environment variables that are exported in…",
     "breadcrumbs": [
       "SvelteKit",
       "Steps",
@@ -7994,7 +8016,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "tutorials/sveltekit-ssr-auth/step-2",
     "title": "Create project",
     "description": "Add authentication to a SvelteKit project using Appwrite.",
-    "excerpt": "Create a Svelte project using SvelteKit. The command will give you a prompt with several project types. We'll be starting with a skeleton project. The prompt will be something similar to this. After the prompt is finished, you can head over to the newly created project. Install Appwrite Appwrite provides a Node SDK that can be used in your Svelte apps. You can use Appwrite by installing the Node SDK as an NPM package. The Node SDK is intended for…",
+    "excerpt": "Create a minimal SvelteKit project with JavaScript and JSDoc type checking. Install Appwrite Appwrite provides a Node SDK that can be used in your Svelte apps. You can use Appwrite by installing the Node SDK as an NPM package. The Node SDK is intended for server-side use. If you want to use Appwrite in a client-side application, you should use the Web SDK instead.",
     "breadcrumbs": [
       "SvelteKit SSR",
       "Steps",
@@ -8082,7 +8104,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "tutorials/sveltekit/step-2",
     "title": "Create app",
     "description": "Create a SvelteKit app project using Appwrite.",
-    "excerpt": "Create SvelteKit project Create a SvelteKit app with the command and select Add dependencies Install the JavaScript Appwrite SDK. You can start the development server to watch your app update in the browser as you make changes. Your app should be available at http://localhost:5173.",
+    "excerpt": "Create SvelteKit project Create a SvelteKit app using the minimal template. Add dependencies Install the JavaScript Appwrite SDK. You can start the development server to watch your app update in the browser as you make changes. Your app should be available at http://localhost:5173.",
     "breadcrumbs": [
       "SvelteKit",
       "Steps",

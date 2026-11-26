@@ -599,8 +599,8 @@ export const jaSitesDictionary: Record<string, string> = {
     'Git プロバイダーを接続すると、プッシュのたびにデプロイされます。',
   'Deploy a working site in a few clicks, then make it yours.':
     '数クリックで動作するサイトをデプロイし、自由にカスタマイズできます。',
-  "This site's Git installation can no longer reach its repository, so pushes can't deploy. Disconnect the repository, then connect it again through the installation that has it now.":
-    'このサイトの Git インストールからリポジトリにアクセスできなくなったため、プッシュはデプロイされません。リポジトリの接続を解除してから、現在そのリポジトリがあるインストールで接続し直してください。',
+  "This site's Git installation can no longer reach its repository, so pushes can't deploy. If the repository was removed from the installation's repository access, add it back with Update repository access. If it was deleted or moved to another installation, disconnect it and connect it again.":
+    'このサイトの Git インストールからリポジトリにアクセスできなくなったため、プッシュはデプロイされません。インストールのリポジトリアクセスから外された場合は、「リポジトリアクセスを更新」で追加し直してください。削除または別のインストールに移動された場合は、接続を解除してから接続し直してください。',
   'Action needed': '対応が必要',
   'Found:': '検出値:',
   'Wrong value': '値が正しくありません',
@@ -646,4 +646,12 @@ export const jaSitesDictionary: Record<string, string> = {
   'Production domains only. Preview deployments are not tracked.':
     '本番ドメインのみが対象です。プレビューデプロイは計測されません。',
   'Failed to enable analytics': 'アナリティクスを有効化できませんでした',
+
+  // Preview domain settings card (sites and functions)
+  'Preview domain': 'プレビュードメイン',
+  'Deployment and branch previews get a generated URL on a shared Appwrite domain.':
+    'デプロイとブランチのプレビューには、共有の Appwrite ドメイン上で自動生成された URL が割り当てられます。',
+  'Current preview domain:': '現在のプレビュードメイン:',
+  'Serve previews from a domain you own so every preview link matches your brand. Custom preview domains are available on Enterprise plans.':
+    '所有するドメインからプレビューを配信すると、すべてのプレビューリンクをブランドに合わせられます。カスタムプレビュードメインは Enterprise プランで利用できます。',
 }

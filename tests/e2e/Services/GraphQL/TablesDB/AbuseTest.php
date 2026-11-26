@@ -37,29 +37,39 @@ final class AbuseTest extends Scope
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::CREATE_ROW);
         $max = 120;
+        // Operations go in batches, so the route's per-operation limit is reached well inside the
+        // GraphQL endpoint's own cap of 60 requests a minute
+        $batchSize = 10;
 
-        for ($i = 0; $i <= $max + 1; $i++) {
-            $gqlPayload = [
-                'query' => $query,
-                'variables' => [
-                    'databaseId' => $databaseId,
-                    'tableId' => $tableId,
-                    'rowId' => Id::unique(),
-                    'data' => [
-                        'name' => 'John Doe',
+        for ($sent = 0; $sent <= $max + 1; $sent += $batchSize) {
+            $batch = [];
+            for ($i = $sent; $i < \min($sent + $batchSize, $max + 2); $i++) {
+                $batch[] = [
+                    'query' => $query,
+                    'variables' => [
+                        'databaseId' => $databaseId,
+                        'tableId' => $tableId,
+                        'rowId' => Id::unique(),
+                        'data' => [
+                            'name' => 'John Doe',
+                        ],
                     ],
-                ],
-            ];
+                ];
+            }
 
             $response = $this->client->call(Client::METHOD_POST, '/graphql', [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $projectId,
-            ], $gqlPayload);
+            ], $batch);
 
-            if ($i < $max) {
-                $this->assertArrayNotHasKey('errors', $response['body']);
-            } else {
-                $this->assertArrayHasKey('errors', $response['body']);
+            $this->assertSame(200, $response['headers']['status-code'], 'Body: ' . \json_encode($response['body']));
+
+            foreach ($batch as $offset => $_) {
+                if ($sent + $offset < $max) {
+                    $this->assertArrayNotHasKey('errors', $response['body'][$offset]);
+                } else {
+                    $this->assertArrayHasKey('errors', $response['body'][$offset]);
+                }
             }
         }
     }

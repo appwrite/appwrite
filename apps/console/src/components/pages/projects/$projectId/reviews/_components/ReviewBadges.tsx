@@ -1,6 +1,11 @@
-import { Loader2 } from 'lucide-react'
+import { Bot, UserRound } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { useT } from '@/lib/i18n/translate'
 import { formatMs } from '@/lib/review-trace'
 import type {
@@ -30,17 +35,12 @@ const STATUS_VARIANTS = {
 export function ReviewStatusBadge({ status }: { status: ReviewStatus }) {
   const t = useT()
   return (
-    <div className="flex items-center gap-2">
-      {status === 'processing' && (
-        <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
-      )}
-      <Badge
-        variant={STATUS_VARIANTS[status] ?? 'info'}
-        className="text-[10px] shrink-0"
-      >
-        {t(STATUS_LABELS[status] ?? status)}
-      </Badge>
-    </div>
+    <Badge
+      variant={STATUS_VARIANTS[status] ?? 'info'}
+      className="text-[10px] shrink-0"
+    >
+      {t(STATUS_LABELS[status] ?? status)}
+    </Badge>
   )
 }
 
@@ -88,7 +88,10 @@ export function ReviewTierBadge({ tier }: { tier: string }) {
         ? 'warning'
         : 'error'
   return (
-    <Badge variant={variant} className="text-[10px] shrink-0 font-mono">
+    <Badge
+      variant={variant}
+      className="h-5 w-5 shrink-0 justify-center rounded-md p-0 font-mono text-[11px] font-semibold"
+    >
       {tier}
     </Badge>
   )
@@ -145,35 +148,74 @@ export function FindingSeverityBadge({
   )
 }
 
-/** Who opened the pull request, with their GitHub avatar, linking to their profile. */
+/** GitHub suffixes an app's login, such as `renovate[bot]`. */
+const BOT_SUFFIX = '[bot]'
+
+/** Where an author's GitHub profile lives: an app's page for a bot. */
+export function authorUrl(author: string): string {
+  return author.endsWith(BOT_SUFFIX)
+    ? `https://github.com/apps/${encodeURIComponent(author.slice(0, -BOT_SUFFIX.length))}`
+    : `https://github.com/${encodeURIComponent(author)}`
+}
+
+/**
+ * Who opened the pull request, with their GitHub avatar, linking to their
+ * profile. A bot shows its app name and a bot mark; a review queued before
+ * authors were kept has none, and says so.
+ */
 export function ReviewAuthorLink({ author }: { author: string }) {
   const t = useT()
   if (!author) {
     return (
-      <span className="text-[13px] text-muted-foreground">
-        {t('Unknown author')}
-      </span>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="flex min-w-0 items-center gap-2">
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-dashed border-border bg-muted/40">
+              <UserRound className="h-3.5 w-3.5 text-muted-foreground" />
+            </span>
+            <span className="truncate text-[13px] text-muted-foreground">
+              {t('Unknown author')}
+            </span>
+          </span>
+        </TooltipTrigger>
+        <TooltipContent>
+          {t('Reviews queued before authors were recorded')}
+        </TooltipContent>
+      </Tooltip>
     )
   }
+  const bot = author.endsWith(BOT_SUFFIX)
+  const name = bot ? author.slice(0, -BOT_SUFFIX.length) : author
   return (
     <a
-      href={`https://github.com/${encodeURIComponent(author)}`}
+      href={authorUrl(author)}
       target="_blank"
       rel="noreferrer"
-      className="flex min-w-0 items-center gap-2 hover:underline"
+      className="group flex min-w-0 items-center gap-2"
     >
       <Avatar className="h-6 w-6 shrink-0">
-        <AvatarImage
-          src={`https://github.com/${encodeURIComponent(author)}.png?size=48`}
-          alt=""
-        />
+        {!bot && (
+          <AvatarImage
+            src={`https://github.com/${encodeURIComponent(author)}.png?size=48`}
+            alt=""
+          />
+        )}
         <AvatarFallback className="text-[10px]">
-          {author.slice(0, 2).toUpperCase()}
+          {bot ? (
+            <Bot className="h-3.5 w-3.5 text-muted-foreground" />
+          ) : (
+            name.slice(0, 2).toUpperCase()
+          )}
         </AvatarFallback>
       </Avatar>
-      <span className="truncate text-[13px] font-medium text-foreground">
-        @{author}
+      <span className="truncate text-[13px] font-medium text-foreground group-hover:underline">
+        {bot ? name : `@${name}`}
       </span>
+      {bot && (
+        <Badge variant="inactive" className="shrink-0 text-[10px]">
+          {t('Bot')}
+        </Badge>
+      )}
     </a>
   )
 }

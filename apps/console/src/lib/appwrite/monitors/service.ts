@@ -113,6 +113,7 @@ export class Monitors {
    * @param {boolean} params.enabled - Set to false to create the monitor without evaluating it.
    * @param {string[]} params.notify - Organization roles whose confirmed members get an email and a console notification when the monitor fires and resolves. Each must be an organization role, such as `owner` or `developer`. Defaults to owners; pass an empty list to rely on the alert events alone.
    * @param {MonitorSeverity} params.severity - How urgent the monitor's alerts are: `info`, `warning`, `error` or `critical`. Critical alerts may be delivered with higher urgency by the notification channels that support it, such as a push that rings through silent mode.
+   * @param {string} params.escalationId - ID of an organization escalation that notifies its steps in turn until someone acknowledges the alert. `notify` is ignored while one is set.
    * @throws {AppwriteException}
    * @returns {Promise<Monitor>}
    */
@@ -125,6 +126,7 @@ export class Monitors {
     enabled?: boolean
     notify?: string[]
     severity?: MonitorSeverity
+    escalationId?: string
   }): Promise<Monitor>
   /**
    * Create a usage monitor. It reads a usage metric of the project, or of one of its databases or buckets, on a schedule, and opens an alert when all its rules hold. Each alert fires the `monitors.[monitorId].alerts.[alertId].firing` event when it opens and `.resolved` when usage recovers, for project webhooks, functions and realtime, and notifies the organization's owners by email and in the console.
@@ -162,6 +164,7 @@ export class Monitors {
           enabled?: boolean
           notify?: string[]
           severity?: MonitorSeverity
+          escalationId?: string
         }
       | string,
     ...rest: [
@@ -183,6 +186,7 @@ export class Monitors {
       enabled?: boolean
       notify?: string[]
       severity?: MonitorSeverity
+      escalationId?: string
     }
 
     if (
@@ -199,6 +203,7 @@ export class Monitors {
         enabled?: boolean
         notify?: string[]
         severity?: MonitorSeverity
+        escalationId?: string
       }
     } else {
       params = {
@@ -221,6 +226,7 @@ export class Monitors {
     const enabled = params.enabled
     const notify = params.notify
     const severity = params.severity
+    const escalationId = params.escalationId
 
     if (typeof monitorId === 'undefined') {
       throw new AppwriteException('Missing required parameter: "monitorId"')
@@ -257,6 +263,9 @@ export class Monitors {
     if (typeof severity !== 'undefined') {
       apiPayload['severity'] = severity
     }
+    if (typeof escalationId !== 'undefined') {
+      apiPayload['escalationId'] = escalationId
+    }
     const uri = new URL(this.client.config.endpoint + apiPath)
 
     const apiHeaders: { [header: string]: string } = {
@@ -281,6 +290,7 @@ export class Monitors {
    * @param {boolean | null} params.enabled - Whether the monitor is evaluated.
    * @param {string[] | null} params.notify - Organization roles whose confirmed members get an email and a console notification when the monitor fires and resolves. Each must be an organization role, such as `owner` or `developer`. Defaults to owners; pass an empty list to rely on the alert events alone.
    * @param {MonitorSeverity | null} params.severity - How urgent the monitor's alerts are: `info`, `warning`, `error` or `critical`. Omit to keep the current one.
+   * @param {string | null} params.escalationId - ID of an organization escalation, or an empty string to notify the `notify` roles instead.
    * @throws {AppwriteException}
    * @returns {Promise<Monitor>}
    */
@@ -293,6 +303,7 @@ export class Monitors {
     enabled?: boolean | null
     notify?: string[] | null
     severity?: MonitorSeverity | null
+    escalationId?: string | null
   }): Promise<Monitor>
   /**
    * Update a usage monitor by its unique ID. Only the parameters passed change; the monitor's state and its open alert are kept. Passing `rules` replaces all of them.
@@ -330,6 +341,7 @@ export class Monitors {
           enabled?: boolean | null
           notify?: string[] | null
           severity?: MonitorSeverity | null
+          escalationId?: string | null
         }
       | string,
     ...rest: [
@@ -351,6 +363,7 @@ export class Monitors {
       enabled?: boolean | null
       notify?: string[] | null
       severity?: MonitorSeverity | null
+      escalationId?: string | null
     }
 
     if (
@@ -367,6 +380,7 @@ export class Monitors {
         enabled?: boolean | null
         notify?: string[] | null
         severity?: MonitorSeverity | null
+        escalationId?: string | null
       }
     } else {
       params = {
@@ -389,6 +403,7 @@ export class Monitors {
     const enabled = params.enabled
     const notify = params.notify
     const severity = params.severity
+    const escalationId = params.escalationId
 
     if (typeof monitorId === 'undefined' || monitorId === '') {
       throw new AppwriteException('Missing required parameter: "monitorId"')
@@ -419,6 +434,9 @@ export class Monitors {
     if (typeof severity !== 'undefined') {
       apiPayload['severity'] = severity
     }
+    if (typeof escalationId !== 'undefined') {
+      apiPayload['escalationId'] = escalationId
+    }
     const uri = new URL(this.client.config.endpoint + apiPath)
 
     const apiHeaders: { [header: string]: string } = {
@@ -427,7 +445,7 @@ export class Monitors {
       accept: 'application/json',
     }
 
-    const request = this.client.call('put', uri, apiHeaders, apiPayload)
+    const request = this.client.call('patch', uri, apiHeaders, apiPayload)
 
     return request
   }

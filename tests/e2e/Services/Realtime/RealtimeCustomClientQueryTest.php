@@ -64,14 +64,14 @@ final class RealtimeCustomClientQueryTest extends Scope
         ], null, [
             Query::or([
                 Query::equal('status', ['active']),
-                Query::between('score', 0, 100) // between is not allowed
+                Query::endsWith('name', 'test') // endsWith is not allowed
             ])->toString(),
         ]);
 
         $response = json_decode($client->receive(), true);
         $this->assertEquals('error', $response['type']);
         $this->assertStringContainsString('not supported in Realtime queries', (string) $response['data']['message']);
-        $this->assertStringContainsString('between', (string) $response['data']['message']);
+        $this->assertStringContainsString('endsWith', (string) $response['data']['message']);
 
         // Test 4: Deeply nested invalid query (AND -> OR -> invalid)
         $client = $this->getWebsocket(['documents'], [
