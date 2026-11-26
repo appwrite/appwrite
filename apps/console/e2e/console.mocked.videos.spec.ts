@@ -822,6 +822,75 @@ test.describe('videos (mocked API)', () => {
     })
   }
 
+  test('plays the player page with the options in its query string', async ({
+    page,
+  }) => {
+    await enableVideos(page)
+    await mockAppwriteApi(page, VIDEO, RENDITIONS, PROFILES, true)
+    await page.goto(
+      `/player/${VIDEO_ID}?project=${PROJECT_ID}&muted=1&loop=1&controls=0`,
+      { waitUntil: 'domcontentloaded' },
+    )
+
+    const video = page.locator('video')
+    await expect
+      .poll(
+        () => video.evaluate((element: HTMLVideoElement) => element.readyState),
+        { timeout: 60_000 },
+      )
+      .toBeGreaterThanOrEqual(2)
+    expect(
+      await video.evaluate((element: HTMLVideoElement) => ({
+        muted: element.muted,
+        loop: element.loop,
+      })),
+    ).toEqual({ muted: true, loop: true })
+    // `controls=0` leaves no control bar.
+    await expect(page.getByRole('slider', { name: 'Seek' })).toHaveCount(0)
+    await expect(page.getByRole('button', { name: 'Settings' })).toHaveCount(0)
+  })
+
+  test('edits the player through its query string from Preview', async ({
+    page,
+  }) => {
+    await enableVideos(page)
+    await mockAppwriteApi(page)
+    // The page header's Preview, after the one under the sidebar thumbnail.
+    const preview = page
+      .getByRole('button', { name: 'Preview', exact: true })
+      .last()
+    await open(page, `/${VIDEO_ID}`, () => preview)
+
+    await preview.click()
+    const panel = page.getByRole('dialog').filter({ hasText: 'Player preview' })
+    await expect(panel).toBeVisible()
+    const frame = panel.locator('iframe')
+    const query = panel.getByLabel('Query string')
+    await expect(query).toHaveValue(`?project=${PROJECT_ID}`)
+
+    // An option writes its parameter...
+    await panel.getByRole('switch', { name: 'Loop' }).click()
+    await expect(query).toHaveValue(`?project=${PROJECT_ID}&loop=1`)
+    await expect
+      .poll(() => frame.getAttribute('src'))
+      .toContain(`/player/${VIDEO_ID}?project=${PROJECT_ID}&loop=1`)
+
+    // ...and a typed parameter sets the option.
+    await query.fill(`?project=${PROJECT_ID}&loop=1&start=5&controls=0`)
+    await query.press('Enter')
+    await expect(
+      panel.getByRole('switch', { name: 'Player controls' }),
+    ).not.toBeChecked()
+    await expect(panel.getByText('0:05', { exact: true })).toBeVisible()
+    await expect(query).toHaveValue(
+      `?project=${PROJECT_ID}&start=5&loop=1&controls=0`,
+    )
+    await expect
+      .poll(() => frame.getAttribute('src'))
+      .toContain('start=5&loop=1&controls=0')
+    await screenshot(page, 'videos-player-preview.png')
+  })
+
   test('warns that a video is private', async ({ page }) => {
     await enableVideos(page)
     await mockAppwriteApi(page)
