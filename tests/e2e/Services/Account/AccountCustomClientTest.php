@@ -3527,6 +3527,97 @@ final class AccountCustomClientTest extends Scope
     }
 
     /**
+     * An account can hold several identities with one provider. A token is issued
+     * for the one that signed in, and the session it is traded for is that one's.
+     */
+    public function testCreateSessionFromOAuth2TokenKeepsIdentity(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $sessionCookieKey = 'a_session_' . $projectId;
+        $first = 'first' . \bin2hex(\random_bytes(8));
+        $second = 'second' . \bin2hex(\random_bytes(8));
+
+        // The mock provider signs in the provider account named after the canonical- prefix
+        $signInAs = function (string $account) use ($projectId): void {
+            $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/oauth2', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => 'console',
+                'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            ], [
+                'provider' => 'mock',
+                'appId' => 'canonical-' . $account,
+                'secret' => '123456',
+                'enabled' => true,
+            ]);
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+        };
+
+        try {
+            // Someone signs in with one account at the provider...
+            $signInAs($first);
+            $response = $this->followMockOAuth2Flow('/account/sessions/oauth2/mock');
+            $this->assertArrayHasKey($sessionCookieKey, $response['cookies']);
+            $cookie = $sessionCookieKey . '=' . $response['cookies'][$sessionCookieKey];
+
+            // ...and, signed in, links a second account at the same provider
+            $signInAs($second);
+            $response = $this->followMockOAuth2Flow('/account/sessions/oauth2/mock', ['cookie' => $cookie]);
+            $this->assertArrayHasKey($sessionCookieKey, $response['cookies']);
+            $cookie = $sessionCookieKey . '=' . $response['cookies'][$sessionCookieKey];
+
+            $response = $this->client->call(Client::METHOD_GET, '/account/identities', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'cookie' => $cookie,
+            ]);
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEqualsCanonicalizing([$first, $second], \array_column($response['body']['identities'], 'providerUid'));
+            $userId = $response['body']['identities'][0]['userId'];
+
+            /**
+             * Test for SUCCESS - whichever identity signs in, the session is that identity's
+             */
+            foreach ([$second, $first] as $account) {
+                $signInAs($account);
+                $response = $this->followMockOAuth2Flow('/account/tokens/oauth2/mock');
+                $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2/success?', $response['headers']['location']);
+
+                $token = [];
+                \parse_str((string) \parse_url($response['headers']['location'], PHP_URL_QUERY), $token);
+                $this->assertEquals($userId, $token['userId']);
+
+                $response = $this->client->call(Client::METHOD_POST, '/account/sessions/token', [
+                    'origin' => 'http://localhost',
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $projectId,
+                ], [
+                    'userId' => $token['userId'],
+                    'secret' => $token['secret'],
+                ]);
+
+                $this->assertEquals(201, $response['headers']['status-code']);
+                $this->assertEquals('mock', $response['body']['provider']);
+                $this->assertEquals($account, $response['body']['providerUid']);
+
+                $response = $this->client->call(Client::METHOD_GET, '/account/sessions/current', [
+                    'x-appwrite-project' => $projectId,
+                    'cookie' => $sessionCookieKey . '=' . $response['cookies'][$sessionCookieKey],
+                ]);
+
+                $this->assertEquals(200, $response['headers']['status-code']);
+                $this->assertEquals($account, $response['body']['providerUid']);
+                $this->assertEquals('canonical-' . $account, $response['body']['providerAccessToken']);
+            }
+        } finally {
+            $this->updateMockProvider(true);
+        }
+    }
+
+    /**
      * Drive the mock provider from an Appwrite OAuth2 entry route back to the
      * app's success URL. The headers (a session cookie) ride along on every
      * hop, like a browser would send them. Returns the final redirect response.

@@ -879,11 +879,19 @@ class Get extends Base
                 ->setParam('tokenId', $token->getId())
             ;
 
-            // Wrap secret in a JWT that also carries the provider name
+            // The account can hold several identities with this provider, so the token names the one that signed in
+            $identity = $dbForProject->findOne('identities', [
+                Query::equal('userInternalId', [$user->getSequence()]),
+                Query::equal('provider', [$provider]),
+                Query::equal('providerUid', [$oauth2ID]),
+            ]);
+
+            // Wrap secret in a JWT that also carries the provider name and the identity
             $jwtEncoder = new JWT(EncryptionKey::current(), 'HS256', 60, 0);
             $query['secret'] = $jwtEncoder->encode([
                 'secret' => $secret,
                 'provider' => $provider,
+                'identity' => $identity->getId(),
             ]);
             $query['userId'] = $user->getId();
         } else {
