@@ -27,6 +27,8 @@ export interface FunctionDomainCardProps {
   setDomain: (v: string) => void
   domainValid: boolean
   setDomainValid: (v: boolean) => void
+  /** Called when the user types in the domain field */
+  onEdit?: () => void
 }
 
 function extractSubdomain(fullDomain: string): string {
@@ -39,6 +41,7 @@ export function FunctionDomainCard({
   setDomain,
   domainValid: _domainValid,
   setDomainValid,
+  onEdit,
 }: FunctionDomainCardProps) {
   const t = useT()
   const { features } = useConsoleProfile()
@@ -153,6 +156,7 @@ export function FunctionDomainCard({
             value={domain}
             onChange={setDomain}
             onValidChange={setDomainValid}
+            onEdit={onEdit}
             baseDomain={baseDomain}
             placeholder="my-function"
           />

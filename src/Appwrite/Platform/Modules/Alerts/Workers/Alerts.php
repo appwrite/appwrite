@@ -42,8 +42,8 @@ use Utopia\Usage\Tenant;
 /**
  * Measures one monitor, compares it with its threshold and records the result
  * on the monitor and on the alert it opens while firing. Every change of state
- * fires a project event (`monitors.[monitorId].alerts.[alertId].firing` or
- * `.resolved`) for webhooks, functions and realtime. The organization's members
+ * fires a project event (`monitors.[monitorId].alerts.[alertId].create` or
+ * `.update`) for webhooks, functions and realtime. The organization's members
  * holding a role its `notify` names are notified by email, by push and in the console:
  * on entering `firing` (at most once per cooldown) and on returning to `ok`. A monitor
  * with an escalation notifies the escalation's steps instead, one after another
@@ -363,8 +363,8 @@ class Alerts extends Action
     }
 
     /**
-     * Fires the alert's project event, `monitors.[monitorId].alerts.[alertId].firing`
-     * or `.resolved`, with the alert as its payload: to the project's webhooks,
+     * Fires the alert's project event, `monitors.[monitorId].alerts.[alertId].create`
+     * when it opens or `.update` when it resolves, with the alert as its payload: to the project's webhooks,
      * the functions that listen to it, and realtime. A monitor outside a project,
      * which has no webhooks or functions, fires none.
      */

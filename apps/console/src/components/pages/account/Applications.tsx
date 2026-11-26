@@ -124,7 +124,12 @@ function ConsentTokenFamilies({
     )
   }
 
-  if (!tokens || tokens.length === 0) {
+  // Expired tokens can no longer be used or revoked, so only live ones list.
+  const activeTokens = (tokens ?? []).filter(
+    (token) => !token.expire || new Date(token.expire).getTime() >= Date.now(),
+  )
+
+  if (activeTokens.length === 0) {
     return (
       <p className="py-1 text-[12px] text-muted-foreground">
         {t('No active tokens for this authorization.')}
@@ -134,9 +139,8 @@ function ConsentTokenFamilies({
 
   return (
     <ul className="divide-y divide-border/60">
-      {tokens.map((token) => {
+      {activeTokens.map((token) => {
         const expiresAt = token.expire ? new Date(token.expire) : null
-        const isExpired = expiresAt !== null && expiresAt.getTime() < Date.now()
         return (
           <li
             key={token.$id}
@@ -153,7 +157,7 @@ function ConsentTokenFamilies({
               </span>
               {expiresAt ? (
                 <span>
-                  {isExpired ? t('Expired') : t('Expires')}{' '}
+                  {t('Expires')}{' '}
                   <DateTooltip
                     date={expiresAt}
                     className="text-[12px] text-muted-foreground"

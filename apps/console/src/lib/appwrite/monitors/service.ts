@@ -103,7 +103,7 @@ export class Monitors {
   }
 
   /**
-   * Create a usage monitor. It reads a usage metric of the project, or of one of its databases or buckets, on a schedule, and opens an alert when all its rules hold. Each alert fires the `monitors.[monitorId].alerts.[alertId].firing` event when it opens and `.resolved` when usage recovers, for project webhooks, functions and realtime, and notifies the organization's owners by email and in the console.
+   * Create a usage monitor. It reads a usage metric of the project, or of one of its databases or buckets, on a schedule, and opens an alert when all its rules hold. Each alert fires the `monitors.[monitorId].alerts.[alertId].create` event when it opens and `.update` when usage recovers, for project webhooks, functions and realtime, and notifies the organization's owners by email and in the console.
    *
    * @param {string} params.monitorId - Monitor ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars.
    * @param {string} params.name - Monitor name. Max length: 128 chars.
@@ -129,7 +129,7 @@ export class Monitors {
     escalationId?: string
   }): Promise<Monitor>
   /**
-   * Create a usage monitor. It reads a usage metric of the project, or of one of its databases or buckets, on a schedule, and opens an alert when all its rules hold. Each alert fires the `monitors.[monitorId].alerts.[alertId].firing` event when it opens and `.resolved` when usage recovers, for project webhooks, functions and realtime, and notifies the organization's owners by email and in the console.
+   * Create a usage monitor. It reads a usage metric of the project, or of one of its databases or buckets, on a schedule, and opens an alert when all its rules hold. Each alert fires the `monitors.[monitorId].alerts.[alertId].create` event when it opens and `.update` when usage recovers, for project webhooks, functions and realtime, and notifies the organization's owners by email and in the console.
    *
    * @param {string} monitorId - Monitor ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars.
    * @param {string} name - Monitor name. Max length: 128 chars.

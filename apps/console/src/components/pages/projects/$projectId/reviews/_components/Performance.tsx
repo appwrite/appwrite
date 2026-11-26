@@ -174,8 +174,9 @@ export function PerformanceRepositorySelect({
 }) {
   const t = useT()
   const [open, setOpen] = useState(false)
-  // A repository row stores GitHub's ID only; its name comes from GitHub, as
-  // on the repositories tab, whose cache this shares.
+  // A repository row stores the provider's ID only; its name comes from the
+  // provider, one slow call per repository, so only the chosen one is named
+  // until the list is opened. The repositories tab shares this cache.
   const { repositories } = useReviewRepositories(
     projectId,
     0,
@@ -207,6 +208,7 @@ export function PerformanceRepositorySelect({
           repository.installationId,
           repository.providerRepositoryId,
         ),
+      enabled: open || repository.$id === filters.repositoryId,
       staleTime: DEFAULT_STALE_TIME,
       retry: false,
     })),
@@ -390,7 +392,12 @@ export function Performance({
     range,
     repositoryId,
   )
-  const { categories } = useReviewCategories(projectId, range, repositoryId)
+  // Loads after the tab opens, below the authors, so it never holds navigation.
+  const { categories, isLoading: categoriesLoading } = useReviewCategories(
+    projectId,
+    range,
+    repositoryId,
+  )
 
   const totals = useMemo(
     () =>
@@ -622,7 +629,13 @@ export function Performance({
               </TableBody>
             </Table>
           </div>
-          {categories.length > 0 && <Categories categories={categories} />}
+          {categoriesLoading ? (
+            <div className="flex justify-center rounded-lg border border-border bg-card py-8">
+              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            categories.length > 0 && <Categories categories={categories} />
+          )}
           <p className="text-[12px] text-muted-foreground">
             {t(
               'Counts completed reviews in the range. Approval and confidence go by each pull request’s latest review; fixed counts findings resolved by a later commit.',

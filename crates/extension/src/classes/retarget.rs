@@ -12,7 +12,8 @@
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use ext_php_rs::ffi::{IS_UNDEF, ZEND_INTERNAL_FUNCTION, zend_class_entry, zend_function, zend_hash_str_find_ptr_lc};
-use ext_php_rs::zend::{ClassEntry, ExecutorGlobals};
+use ext_php_rs::types::Zval;
+use ext_php_rs::zend::{ClassEntry, ExecuteData, ExecutorGlobals};
 
 use super::leaf::FunctionHandler;
 
@@ -29,6 +30,34 @@ pub fn reset() {
 pub fn once(retarget: impl FnOnce()) {
     if !DONE.swap(true, Ordering::AcqRel) {
         retarget();
+    }
+}
+
+/// The handler of `class`'s internal method `name` (lowercase): ext-php-rs's, before
+/// [`method`] points it elsewhere, for a hand-written handler to hand the calls it does not
+/// take itself back to.
+pub fn handler(class: &ClassEntry, name: &str) -> Option<Original> {
+    // SAFETY: as in [`method`]: the function table lives for the process.
+    unsafe {
+        let function = zend_hash_str_find_ptr_lc(&raw const class.function_table, name.as_ptr().cast(), name.len())
+            .cast::<zend_function>()
+            .as_ref()?;
+        if u32::from(function.type_) != ZEND_INTERNAL_FUNCTION {
+            return None;
+        }
+        function.internal_function.handler.map(Original)
+    }
+}
+
+/// A handler [`handler`] found.
+#[derive(Clone, Copy)]
+pub struct Original(unsafe extern "C" fn(*mut ext_php_rs::ffi::zend_execute_data, *mut ext_php_rs::ffi::zval));
+
+impl Original {
+    /// Runs the call as the method would have without the hand-written handler.
+    pub fn call(self, ex: &mut ExecuteData, retval: &mut Zval) {
+        // SAFETY: the handler is the method's own, called with its call frame and return value.
+        unsafe { (self.0)(std::ptr::from_mut(ex).cast(), std::ptr::from_mut(retval).cast()) }
     }
 }
 

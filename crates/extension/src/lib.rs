@@ -5,14 +5,14 @@
 //! `Utopia\Image\Canvas`, `Utopia\Image\Font`, `Utopia\DSN\DSN`,
 //! `Utopia\Locale\Locale`, `Utopia\UserAgent\UserAgent`, `Utopia\Domains\Domain`,
 //! `Utopia\Emails\Email`, the validators of `utopia-php/validators` (`Utopia\Validator\Validator`
-//! and its leaves) and the password hashes of `utopia-php/auth` (`Utopia\Auth\Hash` and
-//! `Hashes\*`) are registered by default (`if stable("<package>")`): they have no PHP
-//! implementation.
+//! and its leaves), the password hashes of `utopia-php/auth` (`Utopia\Auth\Hash` and
+//! `Hashes\*`), the classes of `utopia-php/query` it serves and every class of
+//! `utopia-php/detector` (`Utopia\Detector\*`) are registered by default
+//! (`if stable("<package>")`): they have no PHP implementation.
 //!
 //! A library that still has one registers its classes only when `_APP_EXTENSION_LIBRARIES` names
 //! its package (`if enabled("<package>")` in [`startup`] or [`get_module`]), so it can be canaried
-//! and switched back to PHP with a restart, not a deploy: `detector` (`Utopia\Detector\*`),
-//! `compression` (`Utopia\Compression\*`), `query` (`Utopia\Query\*`),
+//! and switched back to PHP with a restart, not a deploy: `compression` (`Utopia\Compression\*`),
 //! `balancer` (`Utopia\Balancer\*`) and `database` (`Utopia\Database\Id`, `Role`, `Permission`
 //! and `DateTime`).
 //!
@@ -147,7 +147,7 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
 }
 
 /// Registers the classes built by hand rather than with `#[php_class]`: `Locale`, `UserAgent`, the
-/// validators, the password hashes and, when switched on, the detector, compression, balancer and
+/// validators, the password hashes, the detector and, when switched on, compression, balancer and
 /// database.
 /// Runs in MINIT, before the `#[php_class]` classes are registered. Also registers
 /// `utopia.libraries`.
@@ -175,7 +175,7 @@ fn startup(_kind: i32, module: i32) -> i32 {
         if stable("query") {
             query::features::register()?;
         }
-        if enabled("detector") {
+        if stable("detector") {
             detector::register()?;
         }
         if enabled("compression") {
@@ -198,6 +198,10 @@ extern "C" fn request_startup(_kind: i32, _module: i32) -> i32 {
         if stable("dsn") {
             dsn::retarget();
         }
+        if stable("query") {
+            query::value::retarget();
+            query::classifier::retarget();
+        }
     });
     0
 }
@@ -206,6 +210,7 @@ extern "C" fn request_startup(_kind: i32, _module: i32) -> i32 {
 extern "C" fn request_shutdown(kind: i32, module: i32) -> i32 {
     user_agent::request_shutdown();
     query::value::request_shutdown();
+    query::classifier::request_shutdown();
     query::ast::request_shutdown();
     query::schema::request_shutdown();
     query::builder::request_shutdown();

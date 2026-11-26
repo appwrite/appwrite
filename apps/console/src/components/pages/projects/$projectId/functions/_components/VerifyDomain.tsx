@@ -14,6 +14,7 @@ import {
   type DomainVerificationError,
 } from '@/components/pages/projects/$projectId/settings/domains/VerifyDomainContent'
 import { toast } from 'sonner'
+import { getErrorMessage } from '@/lib/utils/error-formatting'
 import type { Models } from '@appwrite.io/console'
 import { useT } from '@/lib/i18n/translate'
 import { canRetryRule } from '@/lib/utils/proxy-domains'
@@ -66,13 +67,21 @@ export function VerifyDomain({
         updated.status === 'unverified'
       ) {
         setVerificationError(dnsPendingVerificationError(t))
+        toast.info(t('Not verified yet. Appwrite keeps checking.'))
       } else {
         toast.success(t('Verifying...'))
         onOpenChange(false)
         onVerifySuccess()
       }
     } catch (err) {
-      setVerificationError(domainVerificationError(t, err))
+      const error = domainVerificationError(t, err)
+      setVerificationError(error)
+      // The DNS banners hide a pending error, so say what the check found
+      if (error.pending) {
+        toast.info(t('Not verified yet. Appwrite keeps checking.'), {
+          description: getErrorMessage(err),
+        })
+      }
     }
   }
 

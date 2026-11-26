@@ -1467,6 +1467,9 @@ export const heAccountGlobalDictionary: Record<string, string> = {
     'הארגון הזה מחייב התחברות יחידה (SSO). כדי להמשיך, התחברו עם SSO.',
   'Taking you to your identity provider...':
     'מעבירים אתכם לספק הזהויות שלכם...',
+  'Taking you to {provider}...': 'מעבירים אתכם אל {provider}...',
+  'Finish signing in with your identity provider.':
+    'השלימו את ההתחברות אצל ספק הזהויות שלכם.',
   'Choose how to sign in': 'בחרו איך להתחבר',
   'Use a different email': 'שימוש באימייל אחר',
   'Work email': 'אימייל בעבודה',

@@ -2271,7 +2271,9 @@ final class AccountCustomClientTest extends Scope
             'secret' => $verification,
         ]);
 
-        $this->assertEquals(404, $response['headers']['status-code']);
+        // An unknown user answers like a wrong secret, so the route doesn't reveal which accounts exist
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertSame('user_invalid_token', $response['body']['type']);
 
         $response = $this->client->call(Client::METHOD_PUT, '/account/verification', array_merge([
             'origin' => 'http://localhost',
@@ -2803,7 +2805,9 @@ final class AccountCustomClientTest extends Scope
             'password' => $newPassword,
         ]);
 
-        $this->assertEquals(404, $response['headers']['status-code']);
+        // An unknown user answers like a wrong secret, so the route doesn't reveal which accounts exist
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertSame('user_invalid_token', $response['body']['type']);
 
         $response = $this->client->call(Client::METHOD_PUT, '/account/recovery', array_merge([
             'origin' => 'http://localhost',
@@ -6981,7 +6985,9 @@ final class AccountCustomClientTest extends Scope
             'secret' => $secret,
         ]);
 
-        $this->assertEquals(404, $response['headers']['status-code']);
+        // An unknown user answers like a wrong secret, so the route doesn't reveal which accounts exist
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertSame('user_invalid_token', $response['body']['type']);
 
         $response = $this->client->call(Client::METHOD_PUT, '/account/verification/phone', array_merge([
             'origin' => 'http://localhost',
@@ -8001,6 +8007,20 @@ final class AccountCustomClientTest extends Scope
 
         $this->assertSame(1, $counts[200] ?? 0, 'Exactly one concurrent confirmation may consume the recovery code: ' . json_encode($statuses));
         $this->assertSame(3, $counts[401] ?? 0, 'Every other concurrent confirmation must be rejected: ' . json_encode($statuses));
+
+        // The factor whitelist is case-insensitive, so other spellings must confirm too
+        foreach (['recoverycode', 'RECOVERYCODE'] as $index => $factor) {
+            $challenge = $this->client->call(Client::METHOD_POST, '/account/mfa/challenge', $headers, [
+                'factor' => $factor,
+            ]);
+            $this->assertEquals(201, $challenge['headers']['status-code']);
+
+            $verification = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenge', $headers, [
+                'challengeId' => $challenge['body']['$id'],
+                'otp' => $recoveryCodes[$index + 2],
+            ]);
+            $this->assertEquals(200, $verification['headers']['status-code']);
+        }
 
         // Test FAILURE: Invalid recovery code
         $challenge3 = $this->client->call(Client::METHOD_POST, '/account/mfa/challenge', array_merge([
@@ -10816,7 +10836,9 @@ final class AccountCustomClientTest extends Scope
             'secret' => $otp,
         ]);
 
-        $this->assertEquals(404, $response['headers']['status-code']);
+        // An unknown user answers like a wrong secret, so the route doesn't reveal which accounts exist
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertSame('user_invalid_token', $response['body']['type']);
 
         /**
          * Test for FAILURE - OTP is single use
@@ -11076,7 +11098,9 @@ final class AccountCustomClientTest extends Scope
             'password' => 'new-password-otp',
         ]);
 
-        $this->assertEquals(404, $response['headers']['status-code']);
+        // An unknown user answers like a wrong secret, so the route doesn't reveal which accounts exist
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertSame('user_invalid_token', $response['body']['type']);
     }
 
     public function testCreateIdTokenSessionGoogleShapedClaims(): void
