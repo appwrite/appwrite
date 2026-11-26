@@ -750,7 +750,7 @@ final class VideosCustomClientTest extends Scope
         // browser-private so a shared cache cannot keep serving after revoke.
         $projectId = $this->getProject()['$id'];
         $this->assertSame(
-            'public, max-age=31536000, immutable',
+            'public, max-age=2592000, immutable',
             $segment['headers']['cache-control'] ?? null
         );
         $this->assertSame('Origin', $segment['headers']['vary'] ?? null);
@@ -1702,7 +1702,7 @@ final class VideosCustomClientTest extends Scope
                 if (\str_contains($path, '/captions/') && \str_contains($path, '/segments/')) {
                     $projectId = $this->getProject()['$id'];
                     $this->assertSame(
-                        'public, max-age=31536000, immutable',
+                        'public, max-age=2592000, immutable',
                         $response['headers']['cache-control'] ?? null,
                         $path
                     );
@@ -1721,7 +1721,7 @@ final class VideosCustomClientTest extends Scope
      * Replacing a public caption publishes a new segment URL with the new cue,
      * and the URL the player had stops being served. Deleting the caption does
      * the same for the replacement. Those are the URLs a shared cache would
-     * otherwise keep for a year.
+     * otherwise keep for a month.
      */
     public function testPublicCaptionReplacementAndDeleteDropTheOldSegment(): void
     {
@@ -1733,7 +1733,7 @@ final class VideosCustomClientTest extends Scope
         $segment = $this->client->call(Client::METHOD_GET, $previous, $this->anonymousHeaders());
         $this->assertEquals(200, $segment['headers']['status-code']);
         $this->assertStringContainsString('Good evening, have a good week.', (string) $segment['body']);
-        $this->assertSame('public, max-age=31536000, immutable', $segment['headers']['cache-control'] ?? null);
+        $this->assertSame('public, max-age=2592000, immutable', $segment['headers']['cache-control'] ?? null);
         $this->assertSame(
             'video-' . \strtolower($projectId) . '-' . \strtolower($videoId),
             $segment['headers']['surrogate-key'] ?? null
@@ -1764,7 +1764,7 @@ final class VideosCustomClientTest extends Scope
         $fresh = $this->client->call(Client::METHOD_GET, $current, $this->anonymousHeaders());
         $this->assertEquals(200, $fresh['headers']['status-code']);
         $this->assertStringContainsString('OVERRIDE CUE', (string) $fresh['body']);
-        $this->assertSame('public, max-age=31536000, immutable', $fresh['headers']['cache-control'] ?? null);
+        $this->assertSame('public, max-age=2592000, immutable', $fresh['headers']['cache-control'] ?? null);
         $this->assertSame(
             'video-' . \strtolower($projectId) . '-' . \strtolower($videoId),
             $fresh['headers']['surrogate-key'] ?? null
