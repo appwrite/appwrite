@@ -1,5 +1,6 @@
 import type { LucideIcon } from 'lucide-react'
 import {
+  BellRing,
   BotMessageSquare,
   Code2,
   Command,
@@ -95,6 +96,7 @@ const MARKDOC_LUCIDE_ICONS: Record<string, LucideIcon> = {
   text: Type,
   sparkles: Sparkles,
   trophy: Trophy,
+  bell: BellRing,
 }
 
 function stripMarkdocIconPrefix(icon: string): string {

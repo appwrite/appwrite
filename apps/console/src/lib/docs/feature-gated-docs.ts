@@ -1,5 +1,10 @@
 import { isAgentDocsEnabled, isAgentDocsSlug } from './agent-docs-feature'
 import {
+  isBeepDocsEnabled,
+  isBeepDocsSlug,
+  shouldBlockBeepDocs,
+} from './beep-docs-feature'
+import {
   isAnalyticsDocsEnabled,
   isAnalyticsDocsSlug,
   shouldBlockAnalyticsDocs,
@@ -24,6 +29,7 @@ export function isFeatureGatedDocsSlugHidden(
     deferPartnersOnServer?: boolean
     deferAnalyticsOnServer?: boolean
     deferVideosOnServer?: boolean
+    deferBeepOnServer?: boolean
   },
 ): boolean {
   if (isPartnersDocsSlug(slug)) {
@@ -38,6 +44,10 @@ export function isFeatureGatedDocsSlugHidden(
   if (isVideosDocsSlug(slug)) {
     if (options?.deferVideosOnServer) return shouldBlockVideosDocs()
     return !isVideosDocsEnabled()
+  }
+  if (isBeepDocsSlug(slug)) {
+    if (options?.deferBeepOnServer) return shouldBlockBeepDocs()
+    return !isBeepDocsEnabled()
   }
   return false
 }

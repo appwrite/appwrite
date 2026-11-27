@@ -47,6 +47,7 @@ export const Route = createFileRoute('/docs/$')({
             deferPartnersOnServer: true,
             deferAnalyticsOnServer: true,
             deferVideosOnServer: true,
+            deferBeepOnServer: true,
           })
         ) {
           return new Response('Not found', { status: 404 })
@@ -77,6 +78,7 @@ export const Route = createFileRoute('/docs/$')({
         deferPartnersOnServer: true,
         deferAnalyticsOnServer: true,
         deferVideosOnServer: true,
+        deferBeepOnServer: true,
       })
     ) {
       throw redirect({ to: '/docs', replace: true })
@@ -98,6 +100,7 @@ export const Route = createFileRoute('/docs/$')({
           deferPartnersOnServer: true,
           deferAnalyticsOnServer: true,
           deferVideosOnServer: true,
+          deferBeepOnServer: true,
         })
       ) {
         throw redirect({ to: '/docs', replace: true })

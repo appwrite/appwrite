@@ -1,0 +1,136 @@
+---
+layout: post
+title: "Introducing Appwrite Beep"
+description: Appwrite Beep is the Appwrite Cloud app for iOS and Android. Get a push the moment a monitor fires, acknowledge or snooze it from the notification, and keep an eye on your projects and the changelog from your phone.
+date: 2026-12-03
+cover: /images/blog/introducing-appwrite-beep/cover.avif
+timeToRead: 4
+author: chirag-aggarwal
+category: announcements
+featured: false
+draft: true
+faqs:
+  - question: "What is Appwrite Beep?"
+    answer: "Appwrite Beep is the Appwrite Cloud app for iOS and Android. It sends a push when one of your monitors fires, lists firing and resolved alerts across your organizations, charts project usage, and shows the Appwrite changelog and ongoing Cloud incidents."
+  - question: "How do I get Appwrite Beep?"
+    answer: "Download Beep from the App Store for iPhone and iPad, or from Google Play for Android phones, tablets, and foldables. Sign in with your Appwrite Cloud account using GitHub, Google, or email and password."
+  - question: "Can I acknowledge an alert without opening the app?"
+    answer: "Yes. Alert pushes carry an Acknowledge button that works from the notification. Firing alerts also offer Snooze 1 hour and Mute, and every button can be undone from the notification it leaves behind."
+  - question: "Do Beep's settings sync across devices?"
+    answer: "Yes. What you watch, which pushes reach you, and snoozes are saved on your Appwrite account, so they apply on every phone you sign in on and match the Mobile pushes settings in the Appwrite Console."
+  - question: "Does Beep replace the Appwrite Console?"
+    answer: "No. Beep is built for reading and triage: acknowledging alerts, snoozing pushes, adjusting thresholds, and checking usage. Creating monitors and managing projects still happen in the Appwrite Console, and Beep opens the Console for anything else."
+---
+
+Today we are launching Appwrite Beep, the Appwrite Cloud app for iOS and Android. Beep sends a push the moment one of your monitors fires, so an egress spike or a failing health check reaches you wherever you are.
+
+Beep is built for the minutes after an alert. It shows what is firing across your organizations, lets your team know someone is on it, and keeps project usage and the Appwrite changelog in the same place.
+
+# Know the moment a monitor fires
+
+{% only_dark %}
+![A critical push for an egress spike on storefront-prod with Acknowledge and Open alert buttons](/images/docs/beep/dark/push.avif)
+{% /only_dark %}
+{% only_light %}
+![A critical push for an egress spike on storefront-prod with Acknowledge and Open alert buttons](/images/docs/beep/push.avif)
+{% /only_light %}
+
+Every push names the severity, the monitor, and the project it fired on, with the reading that crossed the threshold. **Acknowledge** works straight from the notification and tells your team someone is on it.
+
+Firing alerts also carry **Snooze 1 hour** and **Mute**, and each button can be undone from the notification it leaves behind.
+
+# Choose what reaches you
+
+{% only_dark %}
+![The Choose what you watch and What reaches you setup screens in Beep](/images/docs/beep/dark/setup.avif)
+{% /only_dark %}
+{% only_light %}
+![The Choose what you watch and What reaches you setup screens in Beep](/images/docs/beep/setup.avif)
+{% /only_light %}
+
+A short setup picks the organizations and projects Beep watches and which pushes reach your phone. Firing alerts always come through, while resolved alerts and product updates are up to you. Setup ends with a test alert to confirm the phone gets it.
+
+These choices are saved on your Appwrite account, so every phone you sign in on follows them, and the Console shows the same settings under **Mobile pushes**.
+
+# Critical alerts ring through silent
+
+{% only_dark %}
+![The Ring for what matters setup screen and the Critical alerts settings screen in Beep](/images/docs/beep/dark/critical.avif)
+{% /only_dark %}
+{% only_light %}
+![The Ring for what matters setup screen and the Critical alerts settings screen in Beep](/images/docs/beep/critical.avif)
+{% /only_light %}
+
+Monitors your team sets to **Critical** ring at alarm volume, even when the phone is on silent. On Android, they can also override Do Not Disturb. Everything else stays a normal notification, so the loud ones keep meaning something.
+
+A critical push leaves out snoozing and muting, so a half-awake tap can't quiet an incident.
+
+# Acknowledge and escalate
+
+{% only_dark %}
+![The On-call escalation in Beep, with its two steps enlarged](/images/docs/beep/dark/escalation.avif)
+{% /only_dark %}
+{% only_light %}
+![The On-call escalation in Beep, with its two steps enlarged](/images/docs/beep/escalation.avif)
+{% /only_light %}
+
+Each alert shows where its escalation stands: who has been notified, and who gets notified next if nobody acknowledges it. Escalations can be created, edited, and assigned to monitors from Beep.
+
+When a threshold turns out to be too tight, **Adjust** on the alert raises it on the spot, with a chart of recent usage against the new value.
+
+# Snooze while you fix it
+
+{% only_dark %}
+![Beep Home suggesting to snooze notifications after 7 notifications in 30 minutes](/images/docs/beep/dark/snooze.avif)
+{% /only_dark %}
+{% only_light %}
+![Beep Home suggesting to snooze notifications after 7 notifications in 30 minutes](/images/docs/beep/snooze.avif)
+{% /only_light %}
+
+Once the cause is clear, more pushes don't help. Snooze one organization or all of them for 30 minutes up to 24 hours, from a push, from Settings, or by long pressing the app icon. Home offers it on its own when pushes start piling up.
+
+Alerts keep firing while snoozed and still show in Beep, the Console, and email.
+
+# Your projects at a glance
+
+{% only_dark %}
+![The storefront-prod project in Beep, with its requests chart over 24 hours enlarged](/images/docs/beep/dark/project.avif)
+{% /only_dark %}
+{% only_light %}
+![The storefront-prod project in Beep, with its requests chart over 24 hours enlarged](/images/docs/beep/project.avif)
+{% /only_light %}
+
+The **Projects** tab puts projects with firing alerts first. Each project charts bandwidth, requests, storage, executions, and compute over 24 hours, 7 days, or 30 days, against the period before it.
+
+# What's new in Appwrite
+
+{% only_dark %}
+![The Updates tab in Beep with Cloud status and the latest changelog entry enlarged](/images/docs/beep/dark/updates.avif)
+{% /only_dark %}
+{% only_light %}
+![The Updates tab in Beep with Cloud status and the latest changelog entry enlarged](/images/docs/beep/updates.avif)
+{% /only_light %}
+
+The **Updates** tab shows ongoing Appwrite Cloud incidents and the Appwrite changelog. With product updates on, a new changelog entry arrives as a push the moment it goes live.
+
+# Made for tablets and foldables
+
+{% only_dark %}
+![Beep's dashboard layout on a tablet, with alerts, activity, projects, and firing alerts side by side](/images/docs/beep/dark/tablet.avif)
+{% /only_dark %}
+{% only_light %}
+![Beep's dashboard layout on a tablet, with alerts, activity, projects, and firing alerts side by side](/images/docs/beep/tablet.avif)
+{% /only_light %}
+
+On iPad, Android tablets, and open foldables, Beep switches to a dashboard layout that follows the window width, with activity, projects, firing alerts, and the latest from Appwrite side by side.
+
+# Get Appwrite Beep
+
+Beep is available today on the App Store and Google Play. Sign in with your Appwrite Cloud account, pick what to watch, and the next alert finds you on your phone.
+
+We'd love to hear how Beep fits into your on-call routine. Share your feedback with us on [Discord](https://appwrite.io/discord).
+
+- [Download on the App Store](https://apps.apple.com/app/id6831213827)
+- [Get it on Google Play](https://play.google.com/store/apps/details?id=io.appwrite.beep)
+- [Appwrite Beep docs](/docs/tooling/beep)
+- [Monitors docs](/docs/products/monitors)

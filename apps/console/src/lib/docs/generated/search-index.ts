@@ -6836,6 +6836,16 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "tooling/beep",
+    "title": "Appwrite Beep",
+    "description": "Get pushes on your phone when a monitor fires, triage alerts, check project usage, and read the Appwrite changelog with the Appwrite Beep app for iOS and Android.",
+    "excerpt": "Appwrite Beep is the Appwrite Cloud app for your phone. It sends a push when one of your monitors fires, shows what is firing across your organizations, and keeps project usage and the Appwrite changelog one tap away. Beep is built for reading and triage. Acknowledging an alert, snoozing pushes, and adjusting a threshold happen in the app, and anything else opens the Appwrite Console. - Download on the App Store for iPhone and iPad - Get it on Google…",
+    "breadcrumbs": [
+      "Tooling",
+      "Appwrite Beep"
+    ]
+  },
+  {
     "slug": "tooling/command-center",
     "title": "Command Center",
     "description": "Appwrite Command Center enhances developer experience with AI, keyboard shortcuts, and context-aware search for efficient navigation and task execution.",

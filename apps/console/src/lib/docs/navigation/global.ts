@@ -163,6 +163,7 @@ export const DOCS_GLOBAL_NAV: DocsNavTree = [
         href: '/docs/tooling/command-center',
         icon: 'command',
       },
+      { label: 'Appwrite Beep', href: '/docs/tooling/beep', icon: 'bell' },
       { label: 'The Appwriter', href: '/docs/tooling/appwriter', icon: 'text' },
     ],
     footerLink: { label: 'All tools', href: '/docs/tooling' },

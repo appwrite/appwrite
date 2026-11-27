@@ -3,6 +3,21 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "introducing-appwrite-beep",
+    "href": "/blog/post/introducing-appwrite-beep",
+    "title": "Introducing Appwrite Beep",
+    "description": "Appwrite Beep is the Appwrite Cloud app for iOS and Android. Get a push the moment a monitor fires, acknowledge or snooze it from the notification, and keep an eye on your projects and the changelog from your phone.",
+    "date": "2026-12-03",
+    "lastUpdated": "2026-12-03",
+    "timeToRead": 4,
+    "author": "chirag-aggarwal",
+    "category": "announcements",
+    "featured": false,
+    "draft": true,
+    "cover": "/images/blog/introducing-appwrite-beep/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-automatic-image-format",
     "href": "/blog/post/announcing-automatic-image-format",
     "title": "Announcing automatic image formats based on browser support",

@@ -51,6 +51,10 @@ const DOCS_TOOLING_SECTION_NAV: DocsNavTree = [
             href: '/docs/products/agent',
           },
           {
+            label: 'Appwrite Beep',
+            href: '/docs/tooling/beep',
+          },
+          {
             label: 'The Appwriter',
             href: '/docs/tooling/appwriter',
           },

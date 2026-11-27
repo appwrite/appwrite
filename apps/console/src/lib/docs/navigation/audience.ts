@@ -5,6 +5,7 @@ import {
   isAnalyticsDocsHref,
 } from '../analytics-docs-feature'
 import { isVideosDocsEnabled, isVideosDocsHref } from '../videos-docs-feature'
+import { isBeepDocsEnabled, isBeepDocsHref } from '../beep-docs-feature'
 import { DOCS_GLOBAL_NAV } from './global'
 import { DOCS_PARTNERS_GLOBAL_NAV } from './partners'
 
@@ -62,6 +63,9 @@ export function getDocsGlobalNav(audience: DocsAudience): DocsNavTree {
   }
   if (!isVideosDocsEnabled()) {
     navigation = withoutHref(navigation, isVideosDocsHref)
+  }
+  if (!isBeepDocsEnabled()) {
+    navigation = withoutHref(navigation, isBeepDocsHref)
   }
   return navigation
 }
