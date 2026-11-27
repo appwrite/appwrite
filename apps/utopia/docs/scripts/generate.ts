@@ -466,7 +466,7 @@ function component(file: string): Pick<AppwriteComponent, 'kind' | 'name'> | nul
   if (file.startsWith(modules)) {
     const parts = file.slice(modules.length).split('/')
     if (parts[1] === 'Workers') return parts.length === 3 && !stem.endsWith('Exception') ? { kind: 'worker', name: stem } : null
-    return parts.length >= 3 ? { kind: 'http', name: parts[0] } : null
+    return parts[1] === 'Http' ? { kind: 'http', name: parts[0] } : null
   }
   if (dirname(file) === 'src/Appwrite/Platform/Workers') return { kind: 'worker', name: stem }
   if (dirname(file) === 'src/Appwrite/Platform/Tasks' && stem.startsWith('Schedule')) return { kind: 'schedule', name: 'Schedulers' }

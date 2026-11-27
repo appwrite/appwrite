@@ -22,6 +22,10 @@ export function getAppwriteClient() {
 export function initAnalyticsTracking() {
   if (typeof window === 'undefined' || tracking) return tracking
   tracking = new Tracking(new Analytics(getAppwriteClient()), TRACKING_ID)
+  // Every event the SDK sends (pageviews, scroll, engagement, outbound, downloads) reports
+  // `currentPageUrl()`, which is `location.href`. Report the page without its query and fragment,
+  // so what a visitor types in a search (`?q=`) never leaves the browser.
+  ;(tracking as unknown as { currentPageUrl: () => string }).currentPageUrl = () => location.origin + location.pathname
   tracking.start()
   tracking.enableAutoDownloadTracking()
   return tracking
