@@ -294,6 +294,10 @@ readonly class Submissions
             ]));
         }
 
+        if (Provider::tryFrom((string) $submission->getAttribute('provider', '')) === Provider::Apple) {
+            (new Webhooks($this->dbForProject, $this->stores))->register($this->project, $connection, $target, $app->id);
+        }
+
         return $this->advance($submission, Step::Located);
     }
 

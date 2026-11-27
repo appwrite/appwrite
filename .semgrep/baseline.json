@@ -56,6 +56,27 @@
             "text": "$authorization->skip(fn () => $dbForProject->getDocument('distributionSigningIdentities', (string) ($job['signingIdentityId'] ?? '')));"
         },
         {
+            "rule": "skip-ungated-load",
+            "severity": "ERROR",
+            "path": "src/Appwrite/Platform/Modules/Distribution/Http/Distribution/Webhooks/Apple/Create.php",
+            "line": 84,
+            "text": "$authorization->skip(fn () => $dbForProject->getDocument('distributionConnections', $connectionId));"
+        },
+        {
+            "rule": "skip-ungated-load",
+            "severity": "ERROR",
+            "path": "src/Appwrite/Platform/Modules/Distribution/Http/Distribution/Webhooks/Apple/Create.php",
+            "line": 100,
+            "text": "$authorization->skip(fn () => $dbForProject->getDocument('distributionTargets', $targetId));"
+        },
+        {
+            "rule": "skip-ungated-load",
+            "severity": "ERROR",
+            "path": "src/Appwrite/Platform/Modules/Distribution/Http/Distribution/Webhooks/Apple/Create.php",
+            "line": 110,
+            "text": "$authorization->skip(fn () => $dbForProject->find('distributionSubmissions', ["
+        },
+        {
             "rule": "guest-write-without-abuse-limit",
             "severity": "WARNING",
             "path": "src/Appwrite/Platform/Modules/Functions/Http/Jobs/Event/Create.php",

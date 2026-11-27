@@ -12,6 +12,7 @@ use Appwrite\Event\Publisher\DistributionSubmission as DistributionSubmissionPub
 use Appwrite\Extend\Exception;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Tests\Unit\Distribution\Fakes\RecordingApple;
 use Tests\Unit\Distribution\Fakes\RecordingSchedules;
 use Tests\Unit\Distribution\Fakes\ScriptedStore;
 use Tests\Unit\Distribution\Fakes\ScriptedStores;
@@ -1541,6 +1542,75 @@ final class SubmissionsTest extends TestCase
 
         $this->assertSame(Exception::DISTRIBUTION_STORE_UNAVAILABLE, $later->getAttribute('errorCode'), 'The abandoned control stays reported.');
         $this->assertSame(['halt', 'state'], $this->store->calls);
+    }
+
+    public function testAppleLocateRegistersTheTargetWebhookOnce(): void
+    {
+        [$store, $connection, $target] = $this->apple();
+        $submissions = $this->submissions(new ScriptedStores($store));
+        $submission = $this->submission(['step' => 'validated', 'status' => 'validating', 'platform' => 'ios', 'provider' => 'apple', 'targetId' => 'ios-target', 'targetInternalId' => $target->getSequence()]);
+
+        $located = $submissions->locate($submission, $target, $connection);
+        $submissions->locate($located, $target, $this->stored('distributionConnections', 'apple'));
+
+        $entry = $this->stored('distributionConnections', 'apple')->getAttribute('credentials')['webhooks']['ios-target'];
+        $this->assertStep('located', 'validating', $located);
+        $this->assertSame(['app', 'listWebhooks', 'createWebhook', 'app'], $store->calls);
+        $this->assertSame('webhook-1', $entry['id']);
+        $this->assertSame('store-app', $entry['appId']);
+        $this->assertSame($store->created[0]['secret'], $entry['secret']);
+    }
+
+    public function testGoogleLocateRegistersNoWebhook(): void
+    {
+        $submission = $this->submission(['step' => 'validated', 'status' => 'validating']);
+
+        $located = $this->submissions()->locate($submission, $this->target, $this->connection);
+
+        $this->assertStep('located', 'validating', $located);
+        $this->assertArrayNotHasKey('webhooks', $this->stored('distributionConnections', 'connection')->getAttribute('credentials'));
+        $this->assertSame([], $this->database->writes('distributionConnections'));
+    }
+
+    public function testAppleLocateAdvancesWhenTheWebhookIsRefused(): void
+    {
+        [$store, $connection, $target] = $this->apple();
+        $store->failure = new Unauthorized('A Developer key cannot manage webhooks');
+        $submission = $this->submission(['step' => 'validated', 'status' => 'validating', 'platform' => 'ios', 'provider' => 'apple', 'targetId' => 'ios-target', 'targetInternalId' => $target->getSequence()]);
+
+        $located = $this->submissions(new ScriptedStores($store))->locate($submission, $target, $connection);
+
+        $this->assertStep('located', 'validating', $located);
+        $this->assertSame('store-app', $this->stored('distributionTargets', 'ios-target')->getAttribute('storeAppId'));
+        $this->assertArrayNotHasKey('id', $this->stored('distributionConnections', 'apple')->getAttribute('credentials')['webhooks']['ios-target']);
+    }
+
+    /**
+     * @return array{RecordingApple, Document, Document}
+     */
+    private function apple(): array
+    {
+        $key = \openssl_pkey_new(['private_key_type' => OPENSSL_KEYTYPE_EC, 'curve_name' => 'prime256v1']);
+        $this->assertNotFalse($key);
+        $this->assertTrue(\openssl_pkey_export($key, $privateKey));
+
+        $connection = $this->database->seed('distributionConnections', [
+            '$id' => 'apple',
+            'provider' => 'apple',
+            'status' => 'active',
+            'credentials' => ['keyId' => 'KEY1234567', 'issuerId' => 'issuer-1', 'privateKey' => $privateKey],
+        ]);
+        $target = $this->database->seed('distributionTargets', [
+            '$id' => 'ios-target',
+            'appId' => 'app',
+            'appInternalId' => $this->app->getSequence(),
+            'platform' => 'ios',
+            'identifier' => 'io.example.ios',
+            'connectionId' => 'apple',
+            'connectionInternalId' => $connection->getSequence(),
+        ]);
+
+        return [new RecordingApple($privateKey), $connection, $target];
     }
 
     private function submissions(?Stores $stores = null): Submissions

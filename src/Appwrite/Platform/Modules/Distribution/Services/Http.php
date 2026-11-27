@@ -55,6 +55,7 @@ use Appwrite\Platform\Modules\Distribution\Http\Distribution\SigningIdentities\G
 use Appwrite\Platform\Modules\Distribution\Http\Distribution\SigningIdentities\Ios\Create as CreateIosSigningIdentity;
 use Appwrite\Platform\Modules\Distribution\Http\Distribution\SigningIdentities\Update as UpdateSigningIdentity;
 use Appwrite\Platform\Modules\Distribution\Http\Distribution\SigningIdentities\XList as ListSigningIdentities;
+use Appwrite\Platform\Modules\Distribution\Http\Distribution\Webhooks\Apple\Create as CreateAppleWebhook;
 use Appwrite\Platform\Modules\Distribution\Http\Init;
 use Utopia\Platform\Service;
 
@@ -114,6 +115,7 @@ class Http extends Service
         $this->addAction(DeleteBuild::getName(), DeleteBuild::class);
         $this->addAction(UpdateBuildStatus::getName(), UpdateBuildStatus::class);
         $this->addAction(ListBuildLogs::getName(), ListBuildLogs::class);
+        $this->addAction(CreateAppleWebhook::getName(), CreateAppleWebhook::class);
 
         $this->addAction(CreateRelease::getName(), CreateRelease::class);
         $this->addAction(ListReleases::getName(), ListReleases::class);
