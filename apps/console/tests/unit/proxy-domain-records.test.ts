@@ -2,9 +2,11 @@ import { describe, expect, test } from 'bun:test'
 import { AppwriteException } from '@appwrite.io/console'
 import {
   getClaimRecord,
+  getOrganizationDomainClaimRecord,
   getRecordName,
   getVerificationMethods,
   isDomainClaimError,
+  isOrganizationDomainClaimError,
 } from '@/lib/utils/proxy-domains'
 
 describe('getRecordName', () => {
@@ -94,6 +96,44 @@ describe('getClaimRecord', () => {
     expect(getClaimRecord('in.mail.example.co.uk', 'project1').name).toBe(
       '_appwrite.in.mail',
     )
+  })
+})
+
+describe('getOrganizationDomainClaimRecord', () => {
+  test('puts domain:<organizationId> at _appwrite, not the team:<id> of a sign-on domain', () => {
+    expect(getOrganizationDomainClaimRecord('example.com', 'org1')).toEqual({
+      type: 'TXT',
+      name: '_appwrite',
+      value: 'domain:org1',
+      ttl: 3600,
+    })
+    expect(
+      getOrganizationDomainClaimRecord('shop.example.co.uk', 'org1').name,
+    ).toBe('_appwrite.shop')
+  })
+})
+
+describe('isOrganizationDomainClaimError', () => {
+  test('asks for a claim only when another organization holds the domain', () => {
+    expect(
+      isOrganizationDomainClaimError(
+        new AppwriteException(
+          'This domain belongs to another organization.',
+          409,
+          'domain_claim_required',
+        ),
+      ),
+    ).toBe(true)
+    expect(
+      isOrganizationDomainClaimError(
+        new AppwriteException(
+          'Domain with provided name already exists.',
+          409,
+          'domain_already_exists',
+        ),
+      ),
+    ).toBe(false)
+    expect(isOrganizationDomainClaimError(new Error('network'))).toBe(false)
   })
 })
 

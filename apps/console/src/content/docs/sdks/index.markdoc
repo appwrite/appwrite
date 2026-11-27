@@ -26,7 +26,7 @@ Client libraries for integrating with Appwrite to build client-based application
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/flutter.svg" alt="Flutter logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/flutter.svg" alt="Flutter logo" size="m" /%}{% /only_light %}
-* Flutter SDK `28.6.0`
+* Flutter SDK `28.6.1`
 * [appwrite/sdk-for-flutter](https://github.com/appwrite/sdk-for-flutter)
 * 
 ---
@@ -38,7 +38,7 @@ Client libraries for integrating with Appwrite to build client-based application
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/react.svg" alt="React logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/react.svg" alt="React logo" size="m" /%}{% /only_light %}
-* React Native SDK `3.5.0`
+* React Native SDK `3.5.1`
 * [appwrite/sdk-for-react-native](https://github.com/appwrite/sdk-for-react-native)
 * 
 ---
@@ -55,7 +55,7 @@ Client libraries for integrating with Appwrite to build client-based application
 * 
 ---
 * {% icon_image src="/icons/unity.svg" alt="Unity logo" size="m" /%}
-* Unity SDK `0.14.0`
+* Unity SDK `0.14.1`
 * [appwrite/sdk-for-unity](https://github.com/appwrite/sdk-for-unity)
 * `beta`
 {% /table %}
@@ -90,7 +90,7 @@ Server libraries for integrating with Appwrite to build server side integrations
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/php.svg" alt="PHP logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/php.svg" alt="PHP logo" size="m" /%}{% /only_light %}
-* PHP SDK `32.7.0`
+* PHP SDK `32.7.1`
 * [appwrite/sdk-for-php](https://github.com/appwrite/sdk-for-php)
 * 
 ---
@@ -108,7 +108,7 @@ Server libraries for integrating with Appwrite to build server side integrations
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/go.svg" alt="Go logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/go.svg" alt="Go logo" size="m" /%}{% /only_light %}
-* Go SDK `7.25.0`
+* Go SDK `7.25.1`
 * [appwrite/sdk-for-go](https://github.com/appwrite/sdk-for-go)
 * 
 ---
@@ -458,13 +458,13 @@ You can discover the available enums in each SDK at the source.
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/flutter.svg" alt="Flutter logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/flutter.svg" alt="Flutter logo" size="m" /%}{% /only_light %}
-* Flutter SDK `28.6.0`
+* Flutter SDK `28.6.1`
 * [appwrite/sdk-for-flutter](https://github.com/appwrite/sdk-for-flutter/tree/dev/lib/src/enums)
 *
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/react.svg" alt="React logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/react.svg" alt="React logo" size="m" /%}{% /only_light %}
-* React Native SDK `3.5.0`
+* React Native SDK `3.5.1`
 * [appwrite/sdk-for-react-native](https://github.com/appwrite/sdk-for-react-native)
 *
 ---
@@ -511,7 +511,7 @@ You can discover the available enums in each SDK at the source.
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/php.svg" alt="PHP logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/php.svg" alt="PHP logo" size="m" /%}{% /only_light %}
-* PHP SDK `32.7.0`
+* PHP SDK `32.7.1`
 * [appwrite/sdk-for-php](https://github.com/appwrite/sdk-for-php/tree/dev/src/Appwrite/Enums)
 *
 ---
@@ -529,7 +529,7 @@ You can discover the available enums in each SDK at the source.
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/go.svg" alt="Go logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/go.svg" alt="Go logo" size="m" /%}{% /only_light %}
-* Go SDK `7.25.0`
+* Go SDK `7.25.1`
 * [appwrite/sdk-for-go](https://github.com/appwrite/sdk-for-go)
 *
 ---

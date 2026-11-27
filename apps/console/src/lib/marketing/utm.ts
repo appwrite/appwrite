@@ -378,13 +378,7 @@ export function linkPendingSources(): Promise<void> {
       if (!isCloudProfile()) return
 
       const { sdk } = await import('@/lib/appwrite/sdk')
-      const client = sdk.forConsole.client
-      await client.call(
-        'patch',
-        new URL(`${client.config.endpoint.replace(/\/$/, '')}/console/sources`),
-        { 'content-type': 'application/json' },
-        { claims },
-      )
+      await sdk.forConsole.console.updateSources({ claims })
       // Drop only the sent claims; a POST may have added more while this ran.
       const storage = getLocalStorage()
       const remaining = readPendingSourceClaims(storage).filter(
@@ -449,7 +443,10 @@ export function saveReferrerAndUtmSource(
     : window.location.origin,
 ): void {
   if (typeof window === 'undefined') return
-  if (isConsoleRedirectHopPath(url.pathname) && !isRootRedirectPath(url.pathname)) {
+  if (
+    isConsoleRedirectHopPath(url.pathname) &&
+    !isRootRedirectPath(url.pathname)
+  ) {
     return
   }
 

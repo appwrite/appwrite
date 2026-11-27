@@ -297,6 +297,30 @@ export function isDomainClaimError(error: unknown): boolean {
 }
 
 /**
+ * Type of Cloud's answer to an organization domain create for a domain another
+ * organization holds. The same create moves the domain once the claim record
+ * is in place.
+ */
+export const ORGANIZATION_DOMAIN_CLAIM_REQUIRED = 'domain_claim_required'
+
+/**
+ * The TXT record that lets an organization claim a domain another organization
+ * holds. Its value is its own, not the `team:<id>` a single sign-on domain keeps
+ * published, so consenting to another organization's sign-on never hands it the zone.
+ */
+export function getOrganizationDomainClaimRecord(
+  domain: string,
+  organizationId: string,
+) {
+  return getClaimRecord(domain, `domain:${organizationId}`)
+}
+
+/** Whether an organization domain create waits for the claim record. */
+export function isOrganizationDomainClaimError(error: unknown): boolean {
+  return getAppwriteErrorInfo(error).type === ORGANIZATION_DOMAIN_CLAIM_REQUIRED
+}
+
+/**
  * Check if domain is Appwrite Cloud (isCloud)
  */
 export function isCloud(): boolean {

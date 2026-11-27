@@ -1,5 +1,9 @@
 # Change log
 
+## 3.5.1
+
+* Fixed: examples `await` methods that return a `Promise`
+
 ## 3.5.0
 
 * Added: `videos` service to create, list, get, update and delete videos from files in Storage
