@@ -494,6 +494,58 @@ final class StoreTest extends TestCase
         $this->assertStringContainsString('"done"', (string) $client->requests[3]->getBody());
     }
 
+    public function testFirstSnapshotWaitsForReplicaQuorum(): void
+    {
+        $client = new CapturingClient();
+        $store = new Store(
+            dsn: 'http://appwrite:secret@clickhouse:8123/appwrite',
+            client: $client,
+            insertBuffer: 500,
+        );
+
+        $store->upsert('project', new Document(['$id' => 'queued', 'resourceType' => 'functions', 'status' => 'waiting']));
+        $store->upsert('project', new Document(['$id' => 'queued', 'resourceType' => 'functions', 'status' => 'completed']));
+
+        \parse_str($client->requests[0]->getUri()->getQuery(), $first);
+        $this->assertSame('auto', $first['insert_quorum'] ?? null);
+        $this->assertSame('1', $first['insert_quorum_parallel'] ?? null);
+        $this->assertSame('2000', $first['insert_quorum_timeout'] ?? null);
+
+        \parse_str($client->requests[1]->getUri()->getQuery(), $later);
+        $this->assertArrayNotHasKey('insert_quorum', $later);
+    }
+
+    public function testFirstSnapshotQuorumTimeoutIsNotAFailure(): void
+    {
+        $client = new CapturingClient([
+            new Response(500, body: new Stream('Code: 159. DB::Exception: Timeout while waiting for quorum. (TIMEOUT_EXCEEDED)')),
+        ]);
+        $store = new Store(
+            dsn: 'http://appwrite:secret@clickhouse:8123/appwrite',
+            client: $client,
+            insertBuffer: 500,
+        );
+
+        $store->upsert('project', new Document(['$id' => 'queued', 'resourceType' => 'functions', 'status' => 'waiting']));
+
+        $this->assertCount(1, $client->requests);
+    }
+
+    public function testLaterSnapshotQuorumTimeoutStillFails(): void
+    {
+        $client = new CapturingClient([
+            new Response(500, body: new Stream('Code: 159. DB::Exception: Timeout while waiting for quorum. (TIMEOUT_EXCEEDED)')),
+        ]);
+        $store = new Store(
+            dsn: 'http://appwrite:secret@clickhouse:8123/appwrite',
+            client: $client,
+            insertBuffer: 500,
+        );
+
+        $this->expectException(\RuntimeException::class);
+        $store->upsert('project', new Document(['$id' => 'queued', 'resourceType' => 'functions', 'status' => 'completed']));
+    }
+
     public function testWriteFailuresPropagate(): void
     {
         $store = $this->store(new FailingClient());
