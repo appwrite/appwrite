@@ -454,6 +454,7 @@
       "processes": null,
       "paths": [
         "src/Appwrite/Platform/Modules/VCS/",
+        "src/Appwrite/Platform/Modules/Distribution/",
         "packages/vcs/",
         "packages/detector/"
       ]
@@ -485,6 +486,7 @@
       "processes": null,
       "paths": [
         "src/Appwrite/Platform/Modules/VCS/",
+        "src/Appwrite/Platform/Modules/Distribution/",
         "src/Appwrite/Platform/Modules/Functions/Workers/Builds.php",
         "packages/vcs/",
         "packages/detector/"

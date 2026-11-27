@@ -7,7 +7,13 @@ use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Artifacts\Dele
 use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Artifacts\Download\Get as GetArtifactDownload;
 use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Artifacts\Get as GetArtifact;
 use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Artifacts\XList as ListArtifacts;
+use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Builds\Create as CreateBuild;
+use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Builds\Delete as DeleteBuild;
+use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Builds\Get as GetBuild;
+use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Builds\Logs\XList as ListBuildLogs;
 use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Builds\Signing\Get as GetBuildSigning;
+use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Builds\Status\Update as UpdateBuildStatus;
+use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Builds\XList as ListBuilds;
 use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Checks\Create as CreateCheck;
 use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Create as CreateApp;
 use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Delete as DeleteApp;
@@ -102,6 +108,12 @@ class Http extends Service
 
         $this->addAction(CreateEvent::getName(), CreateEvent::class);
         $this->addAction(GetBuildSigning::getName(), GetBuildSigning::class);
+        $this->addAction(CreateBuild::getName(), CreateBuild::class);
+        $this->addAction(ListBuilds::getName(), ListBuilds::class);
+        $this->addAction(GetBuild::getName(), GetBuild::class);
+        $this->addAction(DeleteBuild::getName(), DeleteBuild::class);
+        $this->addAction(UpdateBuildStatus::getName(), UpdateBuildStatus::class);
+        $this->addAction(ListBuildLogs::getName(), ListBuildLogs::class);
 
         $this->addAction(CreateRelease::getName(), CreateRelease::class);
         $this->addAction(ListReleases::getName(), ListReleases::class);

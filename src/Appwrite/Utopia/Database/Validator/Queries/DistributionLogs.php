@@ -6,6 +6,8 @@ class DistributionLogs extends Base
 {
     public const ALLOWED_ATTRIBUTES = [
         'stage',
+        'sequence',
+        'chunk',
     ];
 
     public function __construct()

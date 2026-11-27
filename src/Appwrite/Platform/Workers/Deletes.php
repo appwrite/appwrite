@@ -11,6 +11,7 @@ use Appwrite\Deployment\Retention;
 use Appwrite\Deployment\Retention\Reason;
 use Appwrite\Distribution\Artifact\Status as ArtifactStatus;
 use Appwrite\Distribution\Builds;
+use Appwrite\Distribution\Platform;
 use Appwrite\Distribution\Schedules;
 use Appwrite\Distribution\Submission\Status as SubmissionStatus;
 use Appwrite\Distribution\Submissions;
@@ -2702,6 +2703,13 @@ class Deletes extends Action
             Query::equal('appInternalId', [$appInternalId]),
             Query::orderAsc(),
         ], $dbForProject);
+
+        $image = Config::getParam('distribution')['images'][Platform::Android->value];
+        $this->listByGroup('distributionTargets', [
+            Query::equal('appInternalId', [$appInternalId]),
+        ], $dbForProject, function (Document $target) use ($deviceForDistribution, $project, $image) {
+            $this->deleteDistributionPath($deviceForDistribution, \dirname(Builds::cache($project, $target->getId(), $image)));
+        });
 
         $this->listByGroup('distributionListings', [
             Query::equal('appInternalId', [$appInternalId]),

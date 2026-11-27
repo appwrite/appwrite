@@ -576,21 +576,6 @@ trait ArtifactsBase
     /**
      * @return array<string, mixed>
      */
-    protected function createKeystoreIdentity(Keystore $keystore): array
-    {
-        return $this->client->call(Client::METHOD_POST, '/distribution/signing-identities/android', $this->headers(), [
-            'signingIdentityId' => ID::unique(),
-            'name' => 'Keystore ' . \uniqid(),
-            'keystore' => \base64_encode($keystore->archive),
-            'storePassword' => $keystore->password,
-            'keyAlias' => $keystore->alias,
-            'keyPassword' => $keystore->password,
-        ]);
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
     protected function deleteArtifact(string $appId, string $artifactId): array
     {
         return $this->client->call(Client::METHOD_DELETE, '/distribution/apps/' . $appId . '/artifacts/' . $artifactId, $this->headers());

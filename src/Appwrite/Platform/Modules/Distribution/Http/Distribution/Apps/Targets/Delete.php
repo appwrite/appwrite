@@ -2,7 +2,8 @@
 
 namespace Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Targets;
 
-use Appwrite\Distribution\Build\Status as BuildStatus;
+use Appwrite\Distribution\Builds;
+use Appwrite\Distribution\Platform;
 use Appwrite\Distribution\Submission\Status as SubmissionStatus;
 use Appwrite\Distribution\Submissions;
 use Appwrite\Event\Event;
@@ -13,11 +14,13 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Storage\Device;
 use Utopia\System\System;
 
 class Delete extends Action
@@ -46,7 +49,7 @@ class Delete extends Action
                 group: 'targets',
                 name: 'deleteTarget',
                 description: <<<EOT
-                Delete a target of an app by its unique ID. A target cannot be deleted while one of its builds or submissions is still in progress: cancel it or wait for it to finish first. Finished builds and submissions are kept.
+                Delete a target of an app by its unique ID. A target cannot be deleted while one of its builds or submissions is still in progress: cancel it or wait for it to finish first. Finished builds and submissions are kept; the build cache of the target is deleted.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
@@ -63,7 +66,9 @@ class Delete extends Action
             ->param('targetId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Target ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('project')
             ->inject('queueForEvents')
+            ->inject('deviceForDistribution')
             ->callback($this->action(...));
     }
 
@@ -72,7 +77,9 @@ class Delete extends Action
         string $targetId,
         Response $response,
         Database $dbForProject,
-        Event $queueForEvents
+        Document $project,
+        Event $queueForEvents,
+        Device $deviceForDistribution,
     ): void {
         $app = $dbForProject->getDocument('distributionApps', $appId);
 
@@ -94,6 +101,8 @@ class Delete extends Action
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove target from DB');
         }
 
+        $this->deleteCache($deviceForDistribution, $project, $target);
+
         $queueForEvents
             ->setParam('appId', $app->getId())
             ->setParam('targetId', $target->getId())
@@ -102,17 +111,25 @@ class Delete extends Action
         $response->noContent();
     }
 
+    /**
+     * Best effort: the target is already gone, and an orphaned cache object is only storage.
+     */
+    private function deleteCache(Device $deviceForDistribution, Document $project, Document $target): void
+    {
+        $cache = Builds::cache($project, $target->getId(), Config::getParam('distribution')['images'][Platform::Android->value]);
+
+        try {
+            $deviceForDistribution->deletePath(\dirname($cache));
+        } catch (\Throwable) {
+            return;
+        }
+    }
+
     private function isInUse(Database $dbForProject, Document $target): bool
     {
         $references = [Query::equal('targetInternalId', [$target->getSequence()])];
 
-        $building = \array_values(\array_diff(BuildStatus::values(), [
-            BuildStatus::Ready->value,
-            BuildStatus::Failed->value,
-            BuildStatus::Canceled->value,
-        ]));
-
-        if ($dbForProject->count('distributionBuilds', [...$references, Query::equal('status', $building)], 1) > 0) {
+        if ($dbForProject->count('distributionBuilds', [...$references, Query::equal('status', Builds::ACTIVE)], 1) > 0) {
             return true;
         }
 

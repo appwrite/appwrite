@@ -27,6 +27,10 @@ final class EventsCustomServerTest extends Scope
 
     private const int STALE = 901;
 
+    private const string PLANE_BUILD = 'build';
+
+    private const string PLANE_SIGNING = 'signing';
+
     public function testCreateEventRefusesBadSignature(): void
     {
         $projectId = $this->getProject()['$id'];
@@ -53,6 +57,33 @@ final class EventsCustomServerTest extends Scope
         $swapped = $this->postEvent($projectId, $tampered, $this->sign($event));
         $this->assertSame(401, $swapped['headers']['status-code']);
         $this->assertSame('user_unauthorized', $swapped['body']['type']);
+    }
+
+    public function testCreateEventRefusesBuildKeyOnSigningPlane(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $build = $this->secret(self::PLANE_BUILD);
+        if ($build === $this->secret(self::PLANE_SIGNING)) {
+            $this->markTestSkipped('The build and signing callback secrets are configured to the same value.');
+        }
+
+        /**
+         * Test for SUCCESS
+         */
+        $stale = $this->exitEvent($projectId, ID::unique(), ID::unique(), \time() - self::STALE, 'build');
+        $accepted = $this->postEvent($projectId, $stale, 'sha256=' . \hash_hmac('sha256', (string) \json_encode($stale), $build));
+        $this->assertSame(204, $accepted['headers']['status-code']);
+        $this->assertEmpty($accepted['body']);
+
+        /**
+         * Test for FAILURE
+         */
+        foreach (['inspect', 'sign'] as $stage) {
+            $event = $this->exitEvent($projectId, ID::unique(), ID::unique(), stage: $stage);
+            $forged = $this->postEvent($projectId, $event, 'sha256=' . \hash_hmac('sha256', (string) \json_encode($event), $build));
+            $this->assertSame(401, $forged['headers']['status-code'], $stage);
+            $this->assertSame('user_unauthorized', $forged['body']['type'], $stage);
+        }
     }
 
     public function testCreateEventAcknowledgesInapplicableEvent(): void
@@ -199,11 +230,14 @@ final class EventsCustomServerTest extends Scope
         return 'sha256=' . \hash_hmac('sha256', (string) \json_encode($event), $this->secret());
     }
 
-    private function secret(): string
+    private function secret(string $plane = self::PLANE_SIGNING): string
     {
-        $secret = System::getEnv('_APP_DISTRIBUTION_SIGNING_CALLBACK_SECRET', '')
-            ?: System::getEnv('_APP_JOBS_SECRET', '');
-        $this->assertNotSame('', $secret, 'The callback secret must be set in the test container.');
+        $secret = System::getEnv($plane === self::PLANE_BUILD ? '_APP_DISTRIBUTION_CALLBACK_SECRET' : '_APP_DISTRIBUTION_SIGNING_CALLBACK_SECRET', '');
+        if ($secret === '') {
+            $jobsSecret = System::getEnv('_APP_JOBS_SECRET', '');
+            $this->assertNotSame('', $jobsSecret, 'The jobs secret must be set in the test container.');
+            $secret = \hash_hmac('sha256', 'distribution:' . $plane, $jobsSecret);
+        }
 
         return $secret;
     }

@@ -2,10 +2,17 @@
 
 namespace Appwrite\Distribution;
 
+use Appwrite\Auth\JobsSecret;
 use Appwrite\Distribution\Artifact\Status as ArtifactStatus;
 use Appwrite\Distribution\Build\Runner;
+use Appwrite\Distribution\Build\Stage;
+use Appwrite\Distribution\Build\Status as BuildStatus;
 use Appwrite\Distribution\Lease\Status as LeaseStatus;
+use Appwrite\Event\Message\DistributionBuild as DistributionBuildMessage;
+use Appwrite\Event\Message\DistributionBuildAction;
 use Appwrite\Event\Publisher\DistributionBuild as DistributionBuildPublisher;
+use Appwrite\Extend\Exception;
+use Appwrite\Platform\Modules\Compute\Validator\VariableKey;
 use OpenRuntimes\Orchestrator\Enum\CallbackEvent;
 use OpenRuntimes\Orchestrator\Enum\ReadFormat;
 use OpenRuntimes\Orchestrator\Exception\ApiException;
@@ -13,6 +20,7 @@ use OpenRuntimes\Orchestrator\Exception\TimeoutException;
 use OpenRuntimes\Orchestrator\Jobs;
 use OpenRuntimes\Orchestrator\Model\Artifact\DownloadArtifact;
 use OpenRuntimes\Orchestrator\Model\Artifact\ReadArtifact;
+use OpenRuntimes\Orchestrator\Model\Artifact\UnarchiveArtifact;
 use OpenRuntimes\Orchestrator\Model\Artifact\UploadArtifact;
 use OpenRuntimes\Orchestrator\Model\Callback;
 use OpenRuntimes\Orchestrator\Model\Volume;
@@ -21,6 +29,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Limit;
 use Utopia\Database\Query;
 use Utopia\DSN\DSN;
 use Utopia\Psr7\Stream;
@@ -28,15 +37,19 @@ use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\DeviceType;
 use Utopia\System\System;
+use Utopia\VCS\Adapter\Git;
 
 /**
  * Signing material never enters a job specification, which stays readable until the job object is removed.
  */
 readonly class Builds
 {
+    /**
+     * A job stage of an uploaded artifact only. Builds and their logs record the `Stage` values.
+     */
     public const string STAGE_INSPECT = 'inspect';
-    public const string STAGE_SIGN = 'sign';
-    public const string STAGE_BUILD = 'build';
+    public const string STAGE_SIGN = Stage::Sign->value;
+    public const string STAGE_BUILD = Stage::Build->value;
 
     public const string ERROR_ARTIFACT_MALFORMED = 'artifact_malformed';
     public const string ERROR_ARTIFACT_INVALID = 'artifact_invalid';
@@ -51,6 +64,37 @@ readonly class Builds
     public const string ERROR_JOB_TIMEOUT = 'job_timeout';
     public const string ERROR_JOB_FAILED = 'job_failed';
     public const string ERROR_JOB_LOST = 'job_lost';
+    public const string ERROR_BUILD_FAILED = 'build_failed';
+    public const string ERROR_BUILD_TIMEOUT = 'build_timeout';
+    public const string ERROR_BUILD_OUT_OF_MEMORY = 'build_out_of_memory';
+    public const string ERROR_BUILD_LOST = 'build_lost';
+    public const string ERROR_BUILD_INVALID = 'build_invalid';
+    public const string ERROR_BUILD_ALREADY_SIGNED = 'build_already_signed';
+    public const string ERROR_BUILD_KEYSTORE_REQUIRED = 'build_keystore_required';
+    public const string ERROR_BUILD_CANCELED = 'build_canceled';
+    public const string ERROR_BUILD_OUTPUT_INVALID = 'build_output_invalid';
+    public const string ERROR_BUILD_SOURCE_FAILED = 'build_source_failed';
+    public const string ERROR_RUNNER_UNAVAILABLE = 'distribution_runner_unavailable';
+    public const string ERROR_VARIABLE_INVALID = 'variable_invalid';
+
+    public const int MAX_ATTEMPTS = 3;
+
+    public const int MAX_VERSION_CODE = 2100000000;
+
+    public const string ARTIFACT_RETENTION = '7776000';
+
+    public const array ACTIVE = [
+        BuildStatus::Waiting->value,
+        BuildStatus::Processing->value,
+        BuildStatus::Building->value,
+        BuildStatus::Signing->value,
+    ];
+
+    public const array TERMINAL = [
+        BuildStatus::Ready->value,
+        BuildStatus::Failed->value,
+        BuildStatus::Canceled->value,
+    ];
 
     /**
      * Three Java runs at the tools image's default DISTRIBUTION_MAX_JAVA_SECONDS of 600.
@@ -69,11 +113,22 @@ readonly class Builds
      */
     public const int POST_BUDGET = (self::TRANSFER_TIMEOUT + self::SIGNING_TIMEOUT) * self::TRANSFER_ATTEMPTS;
 
+    public const int BUILD_POST_BUDGET = (self::TRANSFER_TIMEOUT + self::TRANSFER_TIMEOUT + self::SIGNING_TIMEOUT + self::SIGNING_TIMEOUT) * self::TRANSFER_ATTEMPTS;
+
+    /**
+     * Added to a build job's deadline, which on Kubernetes also covers scheduling, the image pull and the source download.
+     */
+    public const int SETUP = 600;
+
     /**
      * Wider than the orchestrator SDK's 300 s, because a healthy orchestrator can
      * deliver an event about 300 s late while its circuit breaker is open.
      */
     private const int TOLERANCE = 900;
+
+    private const string PLANE_BUILD = 'build';
+
+    private const string PLANE_SIGNING = 'signing';
 
     public const string WORKSPACE = '/mnt/code';
 
@@ -82,6 +137,15 @@ readonly class Builds
     private const string INSPECT_COMMAND = '/usr/local/distribution/inspect.sh';
 
     private const string SIGN_COMMAND = '/usr/local/distribution/sign-android.sh';
+
+    private const string BUILD_COMMAND = '/usr/local/distribution/build.sh';
+
+    /**
+     * Build outputs are mounted outside the workspace, because the sidecar reads `result.json` only from `/mnt/code/output`.
+     */
+    private const string OUTPUT = '/mnt/output';
+
+    private const string CACHE = '/mnt/cache';
 
     private const string SIGNING_ARTIFACT = 'signing';
 
@@ -97,6 +161,25 @@ readonly class Builds
 
     private const int BUILD_TIMEOUT = 3600;
 
+    private const string SPECIFICATION = 'd-4vcpu-8gb';
+
+    private const string INTERNAL = 'An internal error occurred while starting the build. Please try again, and contact support if the problem persists.';
+
+    private const array MESSAGES = [
+        self::ERROR_BUILD_FAILED => 'The build failed. Check the build logs, then start a new build.',
+        self::ERROR_BUILD_TIMEOUT => 'The build ran longer than the timeout of its target.',
+        self::ERROR_BUILD_OUT_OF_MEMORY => 'The build ran out of memory. Choose a larger specification for the target, then start a new build.',
+        self::ERROR_BUILD_LOST => 'The build stopped reporting progress. Start a new build.',
+        self::ERROR_BUILD_INVALID => 'The build settings are invalid, or the build did not produce exactly one readable bundle with the package name and version code of the target. Check the build logs.',
+        self::ERROR_BUILD_ALREADY_SIGNED => 'The build produced a signed bundle. Remove the release signing config so Distribution can sign the bundle, then start a new build.',
+        self::ERROR_BUILD_KEYSTORE_REQUIRED => 'Your build script requires a keystore file; guard it or remove the signing config.',
+        self::ERROR_BUILD_CANCELED => 'The build was canceled.',
+        self::ERROR_BUILD_OUTPUT_INVALID => 'The build output does not match the target: its type, package name or version code differs.',
+        self::ERROR_BUILD_SOURCE_FAILED => 'The source could not be downloaded from the repository. Check that the Git installation still has access, then start a new build.',
+        self::ERROR_RUNNER_UNAVAILABLE => 'No macOS runner is available to build for iOS. Register a runner, then start a new build.',
+        self::ERROR_VARIABLE_INVALID => 'A variable key is not a valid environment variable name. Update or delete the variable, then start a new build.',
+    ];
+
     public function __construct(
         private Jobs $jobs,
         private Jobs $signingJobs,
@@ -107,6 +190,273 @@ readonly class Builds
         protected DistributionBuildPublisher $publisher,
         protected Cache $cache,
     ) {
+    }
+
+    /**
+     * Version codes come only from the counter's atomic increments, so concurrent builds never share one.
+     */
+    public function create(Document $app, Document $target, Document $build, Git $vcs, string $owner, string $repository, ?int $latest = null, ?Checks $checks = null): Document
+    {
+        if ($app->getAttribute('enabled', true) === false) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'The app is disabled. Enable it, then start a build.');
+        }
+
+        if ($app->getAttribute('installationId', '') === '' || $app->getAttribute('providerRepositoryId', '') === '' || !$vcs->supportsRepositoryArchives()) {
+            throw new Exception(Exception::DISTRIBUTION_REPOSITORY_MISSING);
+        }
+
+        if (!($this->project->getAttribute('apis', [])['rest'] ?? true)) {
+            throw new Exception(Exception::GENERAL_API_DISABLED);
+        }
+
+        $specifications = Config::getParam('distribution')['specifications'];
+        $specification = (string) $target->getAttribute('specification', '') ?: System::getEnv('_APP_DISTRIBUTION_BUILD_SPECIFICATION', self::SPECIFICATION);
+        $resources = $specifications[$specification] ?? null;
+        if ($resources === null) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, "Specification '{$specification}' is not a build specification. Use one of: " . \implode(', ', \array_keys($specifications)) . '.');
+        }
+
+        $manual = $target->getAttribute('versionStrategy', VersionStrategy::Automatic->value) === VersionStrategy::Manual->value;
+        if ($manual && (int) $build->getAttribute('versionCode', 0) <= 0) {
+            throw new Exception(Exception::DISTRIBUTION_VERSION_INVALID, 'The target uses the manual version strategy, so every build needs a version code.');
+        }
+
+        $this->admit($app, $build);
+
+        $code = $manual ? (int) $build->getAttribute('versionCode') : $this->allocate($target, $latest);
+        $platform = (string) $target->getAttribute('platform', '');
+
+        $build = $this->dbForProject->createDocument('distributionBuilds', new Document([
+            ...$build->getArrayCopy(),
+            'appId' => $app->getId(),
+            'appInternalId' => (string) $app->getSequence(),
+            'targetId' => $target->getId(),
+            'targetInternalId' => (string) $target->getSequence(),
+            'platform' => $platform,
+            'status' => BuildStatus::Waiting->value,
+            'stage' => '',
+            'attempt' => 1,
+            'runner' => ($platform === Platform::Ios->value ? Runner::Pool : Runner::Orchestrator)->value,
+            'jobId' => '',
+            'providerRepositoryOwner' => $owner,
+            'providerRepositoryName' => $repository,
+            'providerRepositoryUrl' => (string) $build->getAttribute('providerRepositoryUrl', '') ?: $vcs->getRepositoryUrl($owner, $repository),
+            'providerRootDirectory' => (string) $app->getAttribute('providerRootDirectory', ''),
+            ...($platform === Platform::Ios->value ? ['versionCode' => null, 'buildNumber' => (string) $code] : ['versionCode' => $code]),
+            'specification' => $specification,
+            'cpus' => (int) $resources['cpus'],
+            'memory' => (int) $resources['memory'],
+            'timeout' => $this->timeout($target),
+            'logsSize' => 0,
+        ]));
+
+        (new Schedules($this->dbForPlatform))->write($this->project, SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_BUILD, $build, 1);
+
+        $this->preflight($app, $target, $build, $checks);
+
+        $this->dbForProject->updateDocument('distributionApps', $app->getId(), new Document([
+            'latestBuildId' => $build->getId(),
+            'latestBuildInternalId' => (string) $build->getSequence(),
+            'latestBuildStatus' => $build->getAttribute('status'),
+            'latestBuildCreatedAt' => $build->getCreatedAt() ?: DateTime::now(),
+        ]));
+
+        if ($this->publisher->enqueue(new DistributionBuildMessage($this->project, DistributionBuildAction::Dispatch, $build->getId())) === false) {
+            $this->fail($build, self::ERROR_BUILD_FAILED);
+
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'The build could not be queued. Try again.');
+        }
+
+        $this->report($app, $build, $vcs);
+
+        return $this->dbForProject->getDocument('distributionBuilds', $build->getId());
+    }
+
+    /**
+     * A `processing` build that never started is the same attempt submitted again, which the
+     * deterministic job id makes a 409 while the job exists. The source URL is created here,
+     * because a provider's archive URL lasts minutes.
+     */
+    public function dispatch(Document $build, Git $vcs): Document
+    {
+        $build = $this->dbForProject->getDocument('distributionBuilds', $build->getId());
+        $status = $build->getAttribute('status');
+        $resubmit = $status === BuildStatus::Processing->value && empty($build->getAttribute('startedAt'));
+        if ($build->isEmpty() || ($status !== BuildStatus::Waiting->value && !$resubmit)) {
+            return $build;
+        }
+
+        if ($build->getAttribute('platform') === Platform::Ios->value) {
+            return $this->lease($build);
+        }
+
+        $app = $this->dbForProject->getDocument('distributionApps', (string) $build->getAttribute('appId', ''));
+        $target = $this->dbForProject->getDocument('distributionTargets', (string) $build->getAttribute('targetId', ''));
+        if ($app->isEmpty() || $target->isEmpty()) {
+            return $this->fail($build, self::ERROR_BUILD_FAILED);
+        }
+
+        $variables = $this->variables($app);
+        foreach (\array_keys($variables) as $key) {
+            if (!VariableKey::isEnvVarName((string) $key)) {
+                return $this->fail($build, self::ERROR_VARIABLE_INVALID, 'Variable key ' . \json_encode((string) $key) . ' is not a valid environment variable name. Update or delete this variable, then start a new build.');
+            }
+        }
+
+        try {
+            $owner = (string) $build->getAttribute('providerRepositoryOwner', '');
+            $repository = (string) $build->getAttribute('providerRepositoryName', '');
+            $source = [
+                'url' => $vcs->getRepositoryPresignedUrl($owner, $repository, (string) $build->getAttribute('providerCommitHash', '')),
+                'headers' => $vcs->getRepositoryPresignedUrlHeaders(),
+            ];
+        } catch (\Throwable) {
+            return $this->fail($build, self::ERROR_BUILD_SOURCE_FAILED);
+        }
+
+        $timeout = (int) $build->getAttribute('timeout', 0) ?: $this->timeout($target);
+        $payload = static::payload($this->project, $app, $target, $build, $this->platform, $timeout, $source, $variables, $this->storage($build, self::STAGE_BUILD));
+
+        $resubmitted = $build->getAttribute('jobId', '') === $payload['id'] && !empty($build->getAttribute('dispatchedAt'));
+        $build = $this->dbForProject->updateDocument('distributionBuilds', $build->getId(), new Document([
+            'stage' => self::STAGE_BUILD,
+            'jobId' => $payload['id'],
+            'runner' => Runner::Orchestrator->value,
+            ...($resubmitted ? [] : ['dispatchedAt' => DateTime::now()]),
+            'toolchain' => [
+                ...($build->getAttribute('toolchain') ?? []),
+                'image' => self::image(),
+                'cache' => $this->cached($build),
+            ],
+        ]));
+        (new Schedules($this->dbForPlatform))->write($this->project, SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_BUILD, $build, 1);
+
+        try {
+            $this->jobs->create(...$payload);
+        } catch (ApiException $error) {
+            if ($error->statusCode !== 409) {
+                $this->fail($build, self::ERROR_BUILD_FAILED, self::INTERNAL);
+
+                throw $error;
+            }
+        } catch (TimeoutException) {
+            return $build;
+        } catch (\Throwable $error) {
+            $this->fail($build, self::ERROR_BUILD_FAILED, self::INTERNAL);
+
+            throw $error;
+        }
+
+        $this->dbForProject->updateDocuments('distributionBuilds', new Document([
+            'status' => BuildStatus::Processing->value,
+        ]), [
+            Query::equal('$id', [$build->getId()]),
+            Query::equal('status', [BuildStatus::Waiting->value]),
+        ]);
+
+        return $this->dbForProject->getDocument('distributionBuilds', $build->getId());
+    }
+
+    /**
+     * Returns the build unchanged once its attempts are spent, for the caller to conclude.
+     */
+    public function redispatch(Document $build, Git $vcs): Document
+    {
+        $build = $this->dbForProject->getDocument('distributionBuilds', $build->getId());
+        if ($build->isEmpty() || (int) $build->getAttribute('attempt', 1) >= self::MAX_ATTEMPTS) {
+            return $build;
+        }
+
+        $updated = $this->dbForProject->updateDocuments('distributionBuilds', new Document([
+            'attempt' => (int) $build->getAttribute('attempt', 1) + 1,
+            'status' => BuildStatus::Waiting->value,
+            'stage' => '',
+            'jobId' => '',
+            'startedAt' => null,
+            'endedAt' => null,
+            'duration' => null,
+            'redispatchAt' => null,
+        ]), [
+            Query::equal('$id', [$build->getId()]),
+            Query::equal('status', self::ACTIVE),
+        ]);
+
+        if ($updated === 0) {
+            return $this->dbForProject->getDocument('distributionBuilds', $build->getId());
+        }
+
+        return $this->dispatch($build, $vcs);
+    }
+
+    /**
+     * The schedule stays active, so reconcile settles the build and removes its outputs once the job is gone.
+     */
+    public function abort(Document $build): Document
+    {
+        $build = $this->dbForProject->getDocument('distributionBuilds', $build->getId());
+        if ($build->isEmpty()) {
+            return $build;
+        }
+
+        $canceled = $this->dbForProject->updateDocuments('distributionBuilds', new Document([
+            'status' => BuildStatus::Canceled->value,
+            'errorCode' => self::ERROR_BUILD_CANCELED,
+            'errorMessage' => self::message(self::ERROR_BUILD_CANCELED),
+            'endedAt' => DateTime::now(),
+            'duration' => $build->getAttribute('duration') ?? self::runtime($build),
+        ]), [
+            Query::equal('$id', [$build->getId()]),
+            Query::equal('status', self::ACTIVE),
+        ]);
+
+        if ($canceled === 0) {
+            return $this->dbForProject->getDocument('distributionBuilds', $build->getId());
+        }
+
+        try {
+            $this->halt($build);
+        } catch (\Throwable) {
+            // The build is canceled either way: a job that could not be deleted runs to its deadline, and reconcile waits it out.
+        }
+
+        (new Schedules($this->dbForPlatform))->write($this->project, SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_BUILD, $build, 1);
+        $this->publisher->enqueue(new DistributionBuildMessage($this->project, DistributionBuildAction::Reconcile, $build->getId()));
+
+        return $this->dbForProject->getDocument('distributionBuilds', $build->getId());
+    }
+
+    /**
+     * The commit check of a build. False only when the provider refused the report.
+     */
+    public function report(Document $app, Document $build, Git $vcs): bool
+    {
+        $commit = (string) $build->getAttribute('providerCommitHash', '');
+        if ($commit === '' || $app->getAttribute('providerSilentMode', false) === true || $app->getAttribute('providerStatuses', true) === false) {
+            return true;
+        }
+
+        $projectId = $this->project->getId();
+        $status = (string) $build->getAttribute('status', '');
+
+        try {
+            $vcs->updateCheck(
+                (string) $build->getAttribute('providerRepositoryOwner', ''),
+                (string) $build->getAttribute('providerRepositoryName', ''),
+                $commit,
+                self::state($status),
+                (string) $app->getAttribute('name', ''),
+                self::title($status),
+                self::summary($build),
+                ($this->platform['consoleUrl'] ?? '') . "/projects/{$projectId}/distribution/{$app->getId()}/builds/{$build->getId()}",
+                suite: (string) $this->project->getAttribute('name', ''),
+                key: "{$projectId}/distributionApps/{$app->getId()}/{$build->getAttribute('platform', '')}",
+                suiteKey: $projectId,
+            );
+        } catch (\Throwable) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -229,6 +579,39 @@ readonly class Builds
         return "{$artifactId}.{$type}";
     }
 
+    public static function output(string $buildId): string
+    {
+        return "builds/{$buildId}";
+    }
+
+    public static function cache(Document $project, string $targetId, string $image): string
+    {
+        return 'cache/' . \substr(\hash('sha256', "{$project->getId()}:{$targetId}:{$image}"), 0, 48) . '/cache.sqfs';
+    }
+
+    public static function message(string $code): string
+    {
+        return self::MESSAGES[$code] ?? '';
+    }
+
+    public static function runtime(Document $build): int
+    {
+        $startedAt = (string) ($build->getAttribute('startedAt') ?? '');
+        if ($startedAt === '') {
+            return 0;
+        }
+
+        try {
+            $elapsed = \max(0, \time() - (new \DateTimeImmutable($startedAt))->getTimestamp());
+        } catch (\Exception) {
+            return 0;
+        }
+
+        $timeout = (int) $build->getAttribute('timeout', 0);
+
+        return $timeout > 0 ? \min($elapsed, $timeout) : $elapsed;
+    }
+
     public static function error(string $stage, int $exitCode): ?string
     {
         if ($exitCode === 0) {
@@ -251,27 +634,55 @@ readonly class Builds
                 8 => self::ERROR_JOB_TIMEOUT,
                 default => self::ERROR_JOB_FAILED,
             },
+            self::STAGE_BUILD => match ($exitCode) {
+                2 => self::ERROR_BUILD_INVALID,
+                3 => self::ERROR_BUILD_ALREADY_SIGNED,
+                4 => self::ERROR_BUILD_KEYSTORE_REQUIRED,
+                default => self::ERROR_BUILD_FAILED,
+            },
             default => self::ERROR_JOB_FAILED,
         };
     }
 
     /**
-     * The signing plane's key never falls back to the build plane's, which would
-     * let the untrusted build plane forge inspect and sign results.
+     * The signing plane's key never equals the build plane's, which would let the
+     * untrusted build plane forge inspect and sign results. An insecure jobs
+     * secret is returned as is, so verification still fails closed on it.
      */
     public static function secret(string $stage): string
     {
-        $secret = match ($stage) {
-            self::STAGE_INSPECT, self::STAGE_SIGN => System::getEnv('_APP_DISTRIBUTION_SIGNING_CALLBACK_SECRET', ''),
-            default => System::getEnv('_APP_DISTRIBUTION_CALLBACK_SECRET', ''),
+        [$secret, $plane] = match ($stage) {
+            self::STAGE_INSPECT, self::STAGE_SIGN => [System::getEnv('_APP_DISTRIBUTION_SIGNING_CALLBACK_SECRET', ''), self::PLANE_SIGNING],
+            default => [System::getEnv('_APP_DISTRIBUTION_CALLBACK_SECRET', ''), self::PLANE_BUILD],
         };
 
-        return $secret ?: System::getEnv('_APP_JOBS_SECRET', '');
+        if ($secret !== '') {
+            return $secret;
+        }
+
+        $jobsSecret = System::getEnv('_APP_JOBS_SECRET', '');
+        if (JobsSecret::isInsecure($jobsSecret)) {
+            return $jobsSecret;
+        }
+
+        return \hash_hmac('sha256', 'distribution:' . $plane, $jobsSecret);
     }
 
     public static function stale(int $time, int $now): bool
     {
         return \abs($now - $time) > self::TOLERANCE;
+    }
+
+    protected function admit(Document $app, Document $build): void
+    {
+    }
+
+    /**
+     * iOS builds run on macOS runners, which do not exist yet.
+     */
+    protected function lease(Document $build): Document
+    {
+        return $this->fail($build, self::ERROR_RUNNER_UNAVAILABLE);
     }
 
     /**
@@ -289,6 +700,10 @@ readonly class Builds
      */
     protected function storage(Document $subject, string $stage): array
     {
+        if ($stage === self::STAGE_BUILD) {
+            return $this->outputs($subject);
+        }
+
         $projectId = $this->project->getId();
         $artifactId = $subject->getId();
         $file = static::path($artifactId, $subject->getAttribute('type', ''));
@@ -363,6 +778,77 @@ readonly class Builds
             'DISTRIBUTION_VERSION_CODE' => (string) $artifact->getAttribute('versionCode', ''),
             ...$storage['environment'],
         ], $storage, [$bundle]);
+    }
+
+    /**
+     * The build plane is untrusted: no Appwrite API key, signing material or store credential enters the job.
+     *
+     * @param array{url: string, headers: array<string, string>} $source
+     * @param array<string, string> $variables
+     * @param array{volumes: list<Volume>, artifacts: list<DownloadArtifact|UploadArtifact>, environment: array<string, string>} $storage
+     * @return array<string, mixed> Named arguments for OpenRuntimes\Orchestrator\Jobs::create().
+     */
+    protected static function payload(Document $project, Document $app, Document $target, Document $build, array $platform, int $timeout, array $source, array $variables, array $storage): array
+    {
+        $attempt = (int) $build->getAttribute('attempt', 1);
+        $framework = (string) $app->getAttribute('framework', '');
+        $defaults = Config::getParam('distribution')['frameworks'][$framework][(string) $target->getAttribute('platform', '')] ?? [];
+
+        return [
+            'id' => static::id($project, $build, self::STAGE_BUILD, $attempt),
+            'image' => self::image(),
+            'command' => self::BUILD_COMMAND,
+            'cpu' => (float) $build->getAttribute('cpus', 0),
+            'memory' => (int) $build->getAttribute('memory', 0),
+            'timeoutSeconds' => $timeout + self::SETUP,
+            'workspace' => self::WORKSPACE,
+            'meta' => [
+                'projectId' => $project->getId(),
+                'appId' => $app->getId(),
+                'buildId' => $build->getId(),
+                'stage' => self::STAGE_BUILD,
+                'attempt' => (string) $attempt,
+            ],
+            'environment' => \array_map('strval', \array_replace($variables, [
+                'DISTRIBUTION_PLATFORM' => (string) $target->getAttribute('platform', ''),
+                'DISTRIBUTION_FRAMEWORK' => $framework,
+                'DISTRIBUTION_ROOT_DIRECTORY' => (string) $build->getAttribute('providerRootDirectory', '') ?: '.',
+                'DISTRIBUTION_INSTALL_COMMAND' => (string) $target->getAttribute('installCommand', '') ?: ($defaults['install'] ?? ''),
+                'DISTRIBUTION_BUILD_COMMAND' => (string) $target->getAttribute('buildCommand', '') ?: ($defaults['build'] ?? ''),
+                'DISTRIBUTION_OUTPUT_PATH' => (string) $target->getAttribute('outputPath', '') ?: ($defaults['output'] ?? ''),
+                'DISTRIBUTION_CONFIGURATION' => \json_encode($target->getAttribute('configuration') ?: new \stdClass(), JSON_THROW_ON_ERROR),
+                'DISTRIBUTION_IDENTIFIER' => (string) $target->getAttribute('identifier', ''),
+                'DISTRIBUTION_VERSION_NAME' => (string) $build->getAttribute('versionName', ''),
+                'DISTRIBUTION_VERSION_CODE' => (string) ($build->getAttribute('versionCode') ?? ''),
+                'DISTRIBUTION_BUILD_ID' => $build->getId(),
+                ...$storage['environment'],
+                'APPWRITE_VCS_REPOSITORY_ID' => (string) $app->getAttribute('providerRepositoryId', ''),
+                'APPWRITE_VCS_REPOSITORY_NAME' => (string) $build->getAttribute('providerRepositoryName', ''),
+                'APPWRITE_VCS_REPOSITORY_OWNER' => (string) $build->getAttribute('providerRepositoryOwner', ''),
+                'APPWRITE_VCS_REPOSITORY_URL' => (string) $build->getAttribute('providerRepositoryUrl', ''),
+                'APPWRITE_VCS_REPOSITORY_BRANCH' => (string) $build->getAttribute('providerBranch', ''),
+                'APPWRITE_VCS_REPOSITORY_BRANCH_URL' => (string) $build->getAttribute('providerBranchUrl', ''),
+                'APPWRITE_VCS_COMMIT_HASH' => (string) $build->getAttribute('providerCommitHash', ''),
+                'APPWRITE_VCS_COMMIT_MESSAGE' => (string) $build->getAttribute('providerCommitMessage', ''),
+                'APPWRITE_VCS_COMMIT_URL' => (string) $build->getAttribute('providerCommitUrl', ''),
+                'APPWRITE_VCS_COMMIT_AUTHOR_NAME' => (string) $build->getAttribute('providerCommitAuthor', ''),
+                'APPWRITE_VCS_COMMIT_AUTHOR_URL' => (string) $build->getAttribute('providerCommitAuthorUrl', ''),
+                'APPWRITE_VCS_ROOT_DIRECTORY' => (string) $build->getAttribute('providerRootDirectory', ''),
+                'CI' => 'true',
+            ])),
+            'artifacts' => [
+                new DownloadArtifact(id: 'source', in: $source['url'], out: 'source.tar.gz', timeoutSeconds: self::TRANSFER_TIMEOUT, headers: $source['headers']),
+                new UnarchiveArtifact(id: 'extract', in: 'source.tar.gz', out: 'source', strip: true, depends: 'source'),
+                ...$storage['artifacts'],
+                new ReadArtifact(id: 'result', in: 'output/result.json', format: ReadFormat::Json, depends: 'job'),
+            ],
+            'volumes' => $storage['volumes'],
+            'callback' => new Callback(
+                url: self::endpoint($platform) . '/v1/distribution/events?' . \http_build_query(static::query($project)),
+                events: [CallbackEvent::Start, CallbackEvent::Log, CallbackEvent::Exit, CallbackEvent::Complete, CallbackEvent::Artifact],
+                key: self::secret(self::STAGE_BUILD),
+            ),
+        ];
     }
 
     /**
@@ -567,5 +1053,252 @@ readonly class Builds
         $attempt = (int) ($job['attempt'] ?? 1);
 
         return [$stage, (string) ($job['id'] ?? '') ?: ($stage === '' ? '' : static::id($this->project, $subject, $stage, $attempt)), $attempt];
+    }
+
+    /**
+     * @return array{volumes: list<Volume>, artifacts: list<DownloadArtifact|UploadArtifact>, environment: array<string, string>}
+     */
+    private function outputs(Document $build): array
+    {
+        $projectId = $this->project->getId();
+        $output = static::output($build->getId());
+        $cache = $this->caches($build) ? static::cache($this->project, (string) $build->getAttribute('targetId', ''), self::image()) : '';
+        $device = static::device($projectId);
+
+        if ($device instanceof Local) {
+            $device->createDirectory($device->getPath($output));
+            if ($cache !== '') {
+                $device->createDirectory($device->getPath(\dirname($cache)));
+            }
+        }
+
+        if ($device->getType() === DeviceType::Local) {
+            $source = System::getEnv('_APP_DISTRIBUTION_VOLUME', 'appwrite-distribution');
+
+            return [
+                'volumes' => [
+                    new Volume(source: $source, path: self::OUTPUT, subPath: "app-{$projectId}/{$output}"),
+                    ...($cache === '' ? [] : [new Volume(source: $source, path: self::CACHE, subPath: "app-{$projectId}/" . \dirname($cache))]),
+                ],
+                'artifacts' => [],
+                'environment' => [
+                    'DISTRIBUTION_OUTPUT_DIR' => self::OUTPUT,
+                    ...($cache === '' ? [] : ['DISTRIBUTION_CACHE_ARTIFACT' => self::CACHE . '/' . \basename($cache)]),
+                ],
+            ];
+        }
+
+        $url = static fn (string $path): string => static::objectUrl($device, $device->getPath($path));
+
+        return [
+            'volumes' => [],
+            'artifacts' => [
+                ...($this->cached($build) ? [new DownloadArtifact(id: 'cachePull', in: $url($cache), out: $cache, timeoutSeconds: self::TRANSFER_TIMEOUT)] : []),
+                new UploadArtifact(id: 'output', in: 'output/app-unsigned.aab', out: $url("{$output}/app-unsigned.aab"), depends: 'job', timeoutSeconds: self::TRANSFER_TIMEOUT),
+                new UploadArtifact(id: 'resultCopy', in: 'output/result.json', out: $url("{$output}/result.json"), depends: 'job', timeoutSeconds: self::SIGNING_TIMEOUT),
+                new UploadArtifact(id: 'mapping', in: 'output/mapping.txt', out: $url("{$output}/mapping.txt"), depends: 'job', timeoutSeconds: self::SIGNING_TIMEOUT),
+                ...($cache === '' ? [] : [new UploadArtifact(id: 'cache', in: $cache, out: $url($cache), depends: 'job', timeoutSeconds: self::TRANSFER_TIMEOUT)]),
+            ],
+            'environment' => $cache === '' ? [] : ['DISTRIBUTION_CACHE_ARTIFACT' => $cache],
+        ];
+    }
+
+    /**
+     * A build whose cache pull failed is dispatched again without the cache.
+     */
+    private function caches(Document $build): bool
+    {
+        return (($build->getAttribute('toolchain') ?? [])['cacheFailed'] ?? false) !== true;
+    }
+
+    private function cached(Document $build): bool
+    {
+        if (!$this->caches($build)) {
+            return false;
+        }
+
+        $device = static::device($this->project->getId());
+
+        return $device->exists($device->getPath(static::cache($this->project, (string) $build->getAttribute('targetId', ''), self::image())));
+    }
+
+    private static function image(): string
+    {
+        return Config::getParam('distribution')['images'][Platform::Android->value];
+    }
+
+    private function allocate(Document $target, ?int $latest): int
+    {
+        try {
+            $target = $this->dbForProject->increaseDocumentAttribute('distributionTargets', $target->getId(), 'versionCode', 1, self::MAX_VERSION_CODE);
+            $code = (int) $target->getAttribute('versionCode');
+
+            if ($latest !== null && $latest >= $code) {
+                $target = $this->dbForProject->increaseDocumentAttribute('distributionTargets', $target->getId(), 'versionCode', $latest + 1 - $code, self::MAX_VERSION_CODE);
+                $code = (int) $target->getAttribute('versionCode');
+            }
+        } catch (Limit) {
+            throw new Exception(Exception::DISTRIBUTION_VERSION_INVALID, 'The next version code of the target would exceed ' . self::MAX_VERSION_CODE . ', the highest Google Play accepts.');
+        }
+
+        return $code;
+    }
+
+    private function preflight(Document $app, Document $target, Document $build, ?Checks $checks): void
+    {
+        if ($checks === null) {
+            return;
+        }
+
+        try {
+            $platform = Platform::tryFrom((string) $target->getAttribute('platform', ''));
+            $track = (string) $target->getAttribute('track', '') ?: ($platform === null ? '' : (Config::getParam('distribution')['tracks'][Stores::provider($platform)->value][0] ?? ''));
+            $issues = $checks->run($app, $target, $track, null, store: false)['issues'];
+
+            $size = 0;
+            foreach ($issues as $chunk => $issue) {
+                $content = \mb_strcut("{$issue['severity']} {$issue['code']}: {$issue['message']} {$issue['remediation']}\n", 0, Logs::CHUNK);
+                $this->dbForProject->createDocument('distributionLogs', new Document([
+                    'buildId' => $build->getId(),
+                    'buildInternalId' => (string) $build->getSequence(),
+                    'sequence' => 0,
+                    'chunk' => $chunk,
+                    'stage' => Stage::Source->value,
+                    'content' => $content,
+                ]));
+                $size += \strlen($content);
+            }
+
+            if ($size > 0) {
+                $this->dbForProject->increaseDocumentAttribute('distributionBuilds', $build->getId(), 'logsSize', $size);
+            }
+        } catch (\Throwable) {
+            return;
+        }
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function variables(Document $app): array
+    {
+        $rows = [
+            ...$this->dbForProject->find('variables', [
+                Query::equal('resourceType', ['project']),
+                Query::limit(APP_LIMIT_SUBQUERY),
+            ]),
+            ...$this->dbForProject->find('variables', [
+                Query::equal('resourceType', [RESOURCE_TYPE_DISTRIBUTION_APPS]),
+                Query::equal('resourceInternalId', [(string) $app->getSequence()]),
+                Query::limit(APP_LIMIT_SUBQUERY),
+            ]),
+        ];
+
+        $variables = [];
+        foreach ($rows as $variable) {
+            $variables[(string) $variable->getAttribute('key', '')] = (string) $variable->getAttribute('value', '');
+        }
+
+        return $variables;
+    }
+
+    /**
+     * Every terminal write of this class besides a cancel. The schedule row stays active,
+     * because reconcile settles a terminal build, removes its outputs and then stops it.
+     */
+    private function fail(Document $build, string $code, string $message = ''): Document
+    {
+        $this->dbForProject->updateDocuments('distributionBuilds', new Document([
+            'status' => BuildStatus::Failed->value,
+            'errorCode' => $code,
+            'errorMessage' => $message ?: self::message($code),
+            'endedAt' => DateTime::now(),
+            'duration' => $build->getAttribute('duration') ?? self::runtime($build),
+        ]), [
+            Query::equal('$id', [$build->getId()]),
+            Query::equal('status', self::ACTIVE),
+        ]);
+
+        (new Schedules($this->dbForPlatform))->write($this->project, SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_BUILD, $build, 1);
+
+        return $this->dbForProject->getDocument('distributionBuilds', $build->getId());
+    }
+
+    private function halt(Document $build): void
+    {
+        $artifactId = (string) $build->getAttribute('artifactId', '');
+        if ($build->getAttribute('stage') !== self::STAGE_SIGN || $artifactId === '') {
+            $this->cancel($build);
+
+            return;
+        }
+
+        $this->dbForProject->updateDocuments('distributionArtifacts', new Document([
+            'status' => ArtifactStatus::Invalid->value,
+            'errorCode' => self::ERROR_BUILD_CANCELED,
+            'errorMessage' => self::message(self::ERROR_BUILD_CANCELED),
+        ]), [
+            Query::equal('$id', [$artifactId]),
+            Query::equal('status', [ArtifactStatus::Processing->value]),
+        ]);
+        (new Schedules($this->dbForPlatform))->stop($this->project, SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_BUILD, $artifactId);
+
+        $artifact = $this->dbForProject->getDocument('distributionArtifacts', $artifactId);
+        if (!$artifact->isEmpty()) {
+            $this->cancel($artifact);
+        }
+    }
+
+    private static function state(string $status): string
+    {
+        return match ($status) {
+            BuildStatus::Waiting->value => 'queued',
+            BuildStatus::Processing->value, BuildStatus::Building->value, BuildStatus::Signing->value => 'pending',
+            BuildStatus::Ready->value => 'success',
+            BuildStatus::Failed->value => 'failure',
+            BuildStatus::Canceled->value => 'cancelled',
+            default => $status,
+        };
+    }
+
+    private static function title(string $status): string
+    {
+        return match ($status) {
+            BuildStatus::Waiting->value => 'Queued...',
+            BuildStatus::Processing->value, BuildStatus::Building->value => 'Building...',
+            BuildStatus::Signing->value => 'Signing...',
+            BuildStatus::Ready->value => 'Build succeeded.',
+            BuildStatus::Failed->value => 'Build failed.',
+            BuildStatus::Canceled->value => 'Build canceled.',
+            default => $status,
+        };
+    }
+
+    private static function summary(Document $build): string
+    {
+        $reference = (string) $build->getAttribute('providerBranch', '') ?: (string) $build->getAttribute('providerTag', '');
+        $message = \trim(\explode("\n", (string) $build->getAttribute('providerCommitMessage', ''))[0]);
+        $lines = [
+            'Commit ' . \substr((string) $build->getAttribute('providerCommitHash', ''), 0, 7) . ($reference !== '' ? " on {$reference}" : '') . ($message !== '' ? ": {$message}" : ''),
+            'Platform ' . $build->getAttribute('platform', ''),
+        ];
+
+        $code = (string) ($build->getAttribute('versionCode') ?? $build->getAttribute('buildNumber', ''));
+        $version = \trim($build->getAttribute('versionName', '') . ($code !== '' ? " ({$code})" : ''));
+        if ($version !== '') {
+            $lines[] = "Version {$version}";
+        }
+
+        $duration = (int) $build->getAttribute('duration', 0);
+        if ($duration > 0) {
+            $lines[] = match ($build->getAttribute('status')) {
+                BuildStatus::Ready->value => "Built in {$duration}s",
+                BuildStatus::Failed->value => "Failed after {$duration}s",
+                BuildStatus::Canceled->value => "Canceled after {$duration}s",
+                default => "Running for {$duration}s",
+            };
+        }
+
+        return '- ' . \implode("\n- ", $lines);
     }
 }
