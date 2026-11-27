@@ -1861,4 +1861,10 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'This email is already added': 'このメールアドレスは既に追加されています',
   'This value is already added': 'この値は既に追加されています',
   Organization: '組織',
+  'Claim domain ownership': 'ドメインの所有権を申請',
+  'This domain is linked to another organization. Add this TXT record at your DNS provider, then verify to move it to this organization. You can remove the record after.':
+    'このドメインは別の組織にリンクされています。DNSプロバイダーでこのTXTレコードを追加してから検証すると、この組織に移動します。移動後はレコードを削除できます。',
+  'DNS changes can take time to propagate.':
+    'DNSの変更が反映されるまで時間がかかる場合があります。',
+  'Verify & claim': '検証して申請',
 }

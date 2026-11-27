@@ -200,7 +200,7 @@ function getMisplacedName(name: string): string {
 }
 
 /** The zone a DNS provider appends to the host: the domain after its record name. */
-function getZone(name: string): string {
+export function getZone(name: string): string {
   const host = getRecordName(name)
   return host === '@' ? name : name.slice(host.length + 1)
 }
