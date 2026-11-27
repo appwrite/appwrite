@@ -18,7 +18,7 @@ A team can also [require SSO](#require-sso). This matters most when someone leav
 SSO is available on Appwrite Cloud with the [Single sign-on add-on](#add-on) for your project.
 
 {% info title="Single sign-on for the Appwrite Console" %}
-This page covers SSO for your app's users. To let the members of your Appwrite organization sign in to the Console through your company's identity provider, open your organization's **Settings** and go to **Single sign-on**. Console SSO uses a separate organization add-on.
+This page covers SSO for your app's users. To let the members of your Appwrite organization sign in to the Console through your company's identity provider, see [Single sign-on for the Console](/docs/advanced/security/sso). It uses a separate organization add-on.
 {% /info %}
 
 # How it works {% #how-it-works %}
