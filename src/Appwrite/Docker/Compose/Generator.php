@@ -225,7 +225,11 @@ class Generator
                         continue;
                     }
 
+                    $environment = $this->mergeEnvironment($services[$base]['environment'] ?? [], $service['environment'] ?? []);
                     $service = \array_replace_recursive($services[$base], $service);
+                    if ($environment !== []) {
+                        $service['environment'] = $environment;
+                    }
                     unset($service['extends'], $service['profiles']);
                 }
                 unset($service);
@@ -254,6 +258,28 @@ class Generator
         }
 
         return $services;
+    }
+
+    /**
+     * Merges an extending service's environment over its base the way Compose does: by variable name,
+     * keeping the base order and appending new names. List entries are `NAME` or `NAME=value`.
+     *
+     * @param array<int|string, mixed> $base
+     * @param array<int|string, mixed> $overrides
+     * @return array<int|string, mixed>
+     */
+    private function mergeEnvironment(array $base, array $overrides): array
+    {
+        if (!\array_is_list($base) || !\array_is_list($overrides)) {
+            return \array_replace($base, $overrides);
+        }
+
+        $merged = [];
+        foreach ([...$base, ...$overrides] as $entry) {
+            $merged[\explode('=', (string) $entry, 2)[0]] = $entry;
+        }
+
+        return \array_values($merged);
     }
 
     /**

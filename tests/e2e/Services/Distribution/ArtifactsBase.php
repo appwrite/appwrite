@@ -6,16 +6,23 @@ use Appwrite\ID;
 use Tests\E2E\Client;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
+use Utopia\Distribution\Signing\Keystore;
 
 trait ArtifactsBase
 {
     private const string FIXTURE = __DIR__ . '/../../../resources/distribution/app-unsigned.aab';
+
+    private const string IDENTIFIER = 'io.appwrite.distribution.fixture';
+
+    private const string ALIAS = 'upload';
 
     private const int CHUNK = 5 * 1024 * 1024;
 
     private const int OUTPUT_CHUNK = 10 * 1024 * 1024;
 
     private const int RETENTION = 89 * 86400;
+
+    private const int INSPECTION = 180_000;
 
     public function testCreateArtifact(): void
     {
@@ -355,6 +362,124 @@ trait ArtifactsBase
         $this->assertSame(200, $this->getArtifact($appId, $kept['body']['$id'])['headers']['status-code']);
     }
 
+    public function testInspectUploadedBundle(): void
+    {
+        $app = $this->createApp();
+        $this->assertSame(201, $app['headers']['status-code']);
+        $appId = $app['body']['$id'];
+        $target = $this->createTarget($appId, ['platform' => 'android', 'identifier' => self::IDENTIFIER]);
+        $this->assertSame(201, $target['headers']['status-code']);
+        $bundle = $this->fixture();
+        $created = $this->uploadArtifact($appId, $bundle, 'app-unsigned.aab')[0];
+        $this->assertSame(202, $created['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $artifact = $this->awaitArtifact($appId, $created['body']['$id']);
+        $this->assertSame('ready', $artifact['status']);
+        $this->assertSame('', $artifact['errorCode']);
+        $this->assertSame($target['body']['$id'], $artifact['targetId']);
+        $this->assertSame('android', $artifact['platform']);
+        $this->assertSame(self::IDENTIFIER, $artifact['identifier']);
+        $this->assertSame('1.0.0', $artifact['versionName']);
+        $this->assertSame(1, $artifact['versionCode']);
+        $this->assertFalse($artifact['signed']);
+        $this->assertSame('', $artifact['fingerprint']);
+        $this->assertSame(\hash('sha256', $bundle), $artifact['digest']);
+        $this->assertSame(\strlen($bundle), $artifact['size']);
+
+        $download = $this->downloadArtifact($appId, $artifact['$id']);
+        $this->assertSame(200, $download['headers']['status-code']);
+        $this->assertSame($bundle, $download['body']);
+    }
+
+    public function testSignUploadedBundle(): void
+    {
+        $keystore = Keystore::generate(self::ALIAS, ['CN' => 'Appwrite Artifacts']);
+        $identity = $this->createKeystoreIdentity($keystore);
+        $this->assertSame(201, $identity['headers']['status-code']);
+
+        $app = $this->createApp();
+        $this->assertSame(201, $app['headers']['status-code']);
+        $appId = $app['body']['$id'];
+        $target = $this->createTarget($appId, [
+            'platform' => 'android',
+            'identifier' => self::IDENTIFIER,
+            'signingIdentityId' => $identity['body']['$id'],
+        ]);
+        $this->assertSame(201, $target['headers']['status-code']);
+        $bundle = $this->fixture();
+        $created = $this->uploadArtifact($appId, $bundle, 'app-unsigned.aab')[0];
+        $this->assertSame(202, $created['headers']['status-code']);
+        $this->assertFalse($created['body']['signed']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $signed = $this->awaitArtifact($appId, $created['body']['$id']);
+        $this->assertSame('ready', $signed['status']);
+        $this->assertSame('', $signed['errorCode']);
+        $this->assertTrue($signed['signed']);
+        $this->assertSame($keystore->certificate->fingerprint(), $signed['fingerprint']);
+        $this->assertSame($target['body']['$id'], $signed['targetId']);
+        $this->assertSame(self::IDENTIFIER, $signed['identifier']);
+        $this->assertSame(1, $signed['versionCode']);
+        $this->assertSame(24, $signed['manifest']['minSdk']);
+        $this->assertSame(36, $signed['manifest']['targetSdk']);
+        $this->assertSame(64, \strlen($signed['digest']));
+        $this->assertNotSame(\hash('sha256', $bundle), $signed['digest']);
+
+        $download = $this->downloadArtifact($appId, $signed['$id']);
+        $this->assertSame(200, $download['headers']['status-code']);
+        $signedBundle = $download['body'];
+        $this->assertSame($signed['digest'], \hash('sha256', $signedBundle));
+        $this->assertSame($signed['size'], \strlen($signedBundle));
+
+        $reuploaded = $this->uploadArtifact($appId, $signedBundle, 'app-signed.aab')[0];
+        $this->assertSame(202, $reuploaded['headers']['status-code']);
+        $this->assertSame('processing', $reuploaded['body']['status']);
+
+        $inspected = $this->awaitArtifact($appId, $reuploaded['body']['$id']);
+        $this->assertSame('ready', $inspected['status']);
+        $this->assertSame('', $inspected['errorCode']);
+        $this->assertTrue($inspected['signed']);
+        $this->assertSame($keystore->certificate->fingerprint(), $inspected['fingerprint']);
+        $this->assertSame(\hash('sha256', $signedBundle), $inspected['digest']);
+        $this->assertSame(\strlen($signedBundle), $inspected['size']);
+        $this->assertSame($target['body']['$id'], $inspected['targetId']);
+
+        $unchanged = $this->downloadArtifact($appId, $inspected['$id']);
+        $this->assertSame(200, $unchanged['headers']['status-code']);
+        $this->assertSame($signedBundle, $unchanged['body']);
+    }
+
+    public function testInspectRefusesArtifacts(): void
+    {
+        $app = $this->createApp();
+        $this->assertSame(201, $app['headers']['status-code']);
+        $appId = $app['body']['$id'];
+
+        $unknown = $this->uploadArtifact($appId, $this->fixture(), 'app-unsigned.aab')[0];
+        $malformed = $this->uploadArtifact($appId, \random_bytes(4096), 'random.aab')[0];
+        $this->assertSame(202, $unknown['headers']['status-code']);
+        $this->assertSame(202, $malformed['headers']['status-code']);
+
+        /**
+         * Test for FAILURE
+         */
+        $unmatched = $this->awaitArtifact($appId, $unknown['body']['$id']);
+        $this->assertSame('invalid', $unmatched['status']);
+        $this->assertSame('artifact_identifier_unknown', $unmatched['errorCode']);
+        $this->assertSame('', $unmatched['targetId']);
+        $this->assertFalse($unmatched['signed']);
+
+        $unreadable = $this->awaitArtifact($appId, $malformed['body']['$id']);
+        $this->assertSame('invalid', $unreadable['status']);
+        $this->assertSame('artifact_malformed', $unreadable['errorCode']);
+        $this->assertFalse($unreadable['signed']);
+    }
+
     protected function fixture(): string
     {
         $bundle = \file_get_contents(self::FIXTURE);
@@ -430,6 +555,37 @@ trait ArtifactsBase
         }
 
         return $this->client->call(Client::METHOD_GET, '/distribution/apps/' . $appId . '/artifacts/' . $artifactId . '/download', $headers);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function awaitArtifact(string $appId, string $artifactId): array
+    {
+        $artifact = [];
+        $this->assertEventually(function () use ($appId, $artifactId, &$artifact): void {
+            $response = $this->getArtifact($appId, $artifactId);
+            $this->assertSame(200, $response['headers']['status-code']);
+            $this->assertContains($response['body']['status'], ['ready', 'invalid']);
+            $artifact = $response['body'];
+        }, self::INSPECTION, 1_000);
+
+        return $artifact;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function createKeystoreIdentity(Keystore $keystore): array
+    {
+        return $this->client->call(Client::METHOD_POST, '/distribution/signing-identities/android', $this->headers(), [
+            'signingIdentityId' => ID::unique(),
+            'name' => 'Keystore ' . \uniqid(),
+            'keystore' => \base64_encode($keystore->archive),
+            'storePassword' => $keystore->password,
+            'keyAlias' => $keystore->alias,
+            'keyPassword' => $keystore->password,
+        ]);
     }
 
     /**

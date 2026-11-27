@@ -175,6 +175,32 @@ $container->set('jobs', function () {
     return new Jobs($client);
 }, []);
 
+$container->set('jobsForDistribution', function () {
+    $client = (new Client(new CurlAdapter()))
+        ->withBearerAuth(System::getEnv('_APP_DISTRIBUTION_JOBS_SECRET', '') ?: System::getEnv('_APP_JOBS_SECRET', ''))
+        ->withTimeout(30);
+
+    $host = System::getEnv('_APP_DISTRIBUTION_JOBS_HOST', '') ?: System::getEnv('_APP_JOBS_HOST', '');
+    if ($host !== '') {
+        $client = $client->withBaseUri($host);
+    }
+
+    return new Jobs($client);
+}, []);
+
+$container->set('jobsForDistributionSigning', function () {
+    $client = (new Client(new CurlAdapter()))
+        ->withBearerAuth(System::getEnv('_APP_DISTRIBUTION_SIGNING_JOBS_SECRET', '') ?: System::getEnv('_APP_DISTRIBUTION_JOBS_SECRET', '') ?: System::getEnv('_APP_JOBS_SECRET', ''))
+        ->withTimeout(30);
+
+    $host = System::getEnv('_APP_DISTRIBUTION_SIGNING_JOBS_HOST', '') ?: System::getEnv('_APP_DISTRIBUTION_JOBS_HOST', '') ?: System::getEnv('_APP_JOBS_HOST', '');
+    if ($host !== '') {
+        $client = $client->withBaseUri($host);
+    }
+
+    return new Jobs($client);
+}, []);
+
 $container->set('screenshots', function () {
     $client = (new Client(new CurlAdapter()))
         ->withBaseUri(System::getEnv('_APP_BROWSER_HOST', 'http://appwrite-browser:3000/v1'))

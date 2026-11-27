@@ -114,4 +114,9 @@ return [
         'queueEnv' => '_APP_VIDEOS_QUEUE_NAME',
         'coroutines' => 1,
     ],
+    'distribution-builds' => [
+        'queue' => Event::DISTRIBUTION_BUILDS_QUEUE_NAME,
+        'queueEnv' => '_APP_DISTRIBUTION_BUILDS_QUEUE_NAME',
+        'coroutines' => 8,
+    ],
 ];

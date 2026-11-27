@@ -149,8 +149,10 @@ function extendsOf(service: ServiceDefinition): string | null {
  * service from a separate-topology compose. The text of the base block is kept
  * and each top-level key the child sets replaces the same key in the base.
  *
- * Only scalar overrides are supported. A child that overrides a mapping would
- * need a deep merge, and the generator aborts rather than guess.
+ * Only scalar overrides and list-form `environment:` are supported. The
+ * environment is merged by variable name, as Compose and Generator.php do. A
+ * child that overrides any other mapping would need a deep merge, and the
+ * generator aborts rather than guess.
  */
 function resolveExtends(
   child: Block,
@@ -172,6 +174,13 @@ function resolveExtends(
     const childValue = childDef[key.name]
     const baseValue = baseDef[key.name]
     if (
+      key.name === 'environment' &&
+      Array.isArray(childValue) &&
+      Array.isArray(baseValue)
+    ) {
+      continue
+    }
+    if (
       (childValue !== null && typeof childValue === 'object') ||
       (baseValue !== null && typeof baseValue === 'object')
     ) {
@@ -180,13 +189,45 @@ function resolveExtends(
       )
     }
   }
-  const merged = baseKeys.map(
-    (k) => childKeys.find((c) => c.name === k.name) ?? k,
-  )
+  const merged = baseKeys.map((k) => {
+    const override = childKeys.find((c) => c.name === k.name)
+    if (override === undefined) return k
+    return k.name === 'environment' ? mergeEnvironment(k, override) : override
+  })
   for (const key of childKeys) {
     if (!baseKeys.some((k) => k.name === key.name)) merged.push(key)
   }
   return [`  ${child.name}:`, ...merged.map((k) => k.block)].join('\n')
+}
+
+/**
+ * Merges a child's list-form `environment:` block over its base by variable
+ * name: a redeclared variable replaces the base line in place, and a new one
+ * is appended.
+ */
+function mergeEnvironment(base: Block, child: Block): Block {
+  const entry = /^      - ([A-Za-z0-9_]+)(?:=.*)?$/
+  const overrides = new Map<string, string>()
+  for (const line of child.block.split('\n').slice(1)) {
+    const match = line.match(entry)
+    if (match === null) {
+      throw new Error(
+        `Unsupported line "${line}" in the environment of an extending service`,
+      )
+    }
+    overrides.set(match[1], line)
+  }
+  const lines = base.block.split('\n').map((line) => {
+    const name = line.match(entry)?.[1]
+    const override = name === undefined ? undefined : overrides.get(name)
+    if (name === undefined || override === undefined) return line
+    overrides.delete(name)
+    return override
+  })
+  return {
+    name: base.name,
+    block: [...lines, ...overrides.values()].join('\n'),
+  }
 }
 
 /**
