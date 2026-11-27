@@ -237,6 +237,13 @@ async function rustdoc(name: string, version: string): Promise<Rustdoc | null> {
   return doc
 }
 
+/** The day crates.io published this version of a crate. */
+async function released(name: string, version: string): Promise<string | null> {
+  // The date is optional: a crates.io outage leaves it off rather than failing the build.
+  const response = await fetch(`https://crates.io/api/v1/crates/${name}/${version}`, { headers: { 'User-Agent': 'utopia-docs (https://github.com/appwrite/appwrite)' } }).catch(() => null)
+  return response?.ok ? ((await response.json()) as Json).version.created_at.slice(0, 10) : null
+}
+
 const path = (p: Json) => `${p.path.split('::').pop()}${args(p.args)}`
 
 function args(a: Json): string {
@@ -699,7 +706,7 @@ for (const c of crates) {
       appwrite: usage.get(c.slug) ?? 0,
     },
     size: { rust: count(files(`${c.dir}/src`, '.rs')), php: php?.dir ? count(sources(php.dir)) : null },
-    updated: (await git('log', '-1', '--format=%cs', '--', c.dir)) || null,
+    released: await released(c.name, doc.crate_version),
   }
   summaries.push(summary)
   const library: Library = {
@@ -737,7 +744,7 @@ for (const [slug, { composer, dir, version }] of packages) {
     classes: { rust: 0, php: dir ? declared(sources(dir)).length : null },
     counts: { items: 0, documented: 0, examples: 0, guide: false, dependencies: { rust: 0, dev: 0, build: 0, used_by: 0 }, appwrite: usage.get(slug) ?? 0 },
     size: { rust: null, php: dir ? count(sources(dir)) : null },
-    updated: dir ? (await git('log', '-1', '--format=%cs', '--', dir)) || null : null,
+    released: null,
   })
 }
 summaries.sort((a, b) => a.slug.localeCompare(b.slug))

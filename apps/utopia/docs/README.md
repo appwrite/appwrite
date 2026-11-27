@@ -23,7 +23,7 @@ The app serves on <http://localhost:3200>. `bun run generate` (`scripts/generate
 
 ## Deploy
 
-<https://utopia-docs.appwrite.network> is Appwrite Sites: project `utopia`, site `docs`, connected to this repository's `main`. Sites builds from the repository root, because the generator reads the whole repository: install `cd apps/utopia/docs && bun install --frozen-lockfile`, build `cd apps/utopia/docs && bun run build`, output `./apps/utopia/docs/dist/client`. A push to `main` that touches a source of the site deploys it.
+<https://utopia-docs.appwrite.network> is Appwrite Sites: project `utopia`, site `docs`, connected to this repository's `main`. Sites builds from the repository root, because the generator reads the whole repository: install `bun install --frozen-lockfile --cwd apps/utopia/docs`, build `bun run --cwd apps/utopia/docs build` (one shell runs both, so neither can `cd`), output `./apps/utopia/docs/dist/client`. A push to `main` that touches a source of the site deploys it.
 
 ## Where the content comes from
 
