@@ -1972,6 +1972,103 @@
             "documents",
             "transactionId"
         ],
+        "distribution.createApp": [
+            "appId",
+            "name",
+            "framework",
+            "enabled"
+        ],
+        "distribution.createTarget": [
+            "appId",
+            "targetId",
+            "platform",
+            "identifier",
+            "connectionId",
+            "signingIdentityId",
+            "track",
+            "automatic",
+            "versionStrategy",
+            "installCommand",
+            "buildCommand",
+            "outputPath",
+            "configuration",
+            "specification",
+            "timeout"
+        ],
+        "distribution.createVariable": [
+            "appId",
+            "variableId",
+            "key",
+            "value",
+            "secret",
+            "description"
+        ],
+        "distribution.deleteApp": [
+            "appId"
+        ],
+        "distribution.deleteTarget": [
+            "appId",
+            "targetId"
+        ],
+        "distribution.deleteVariable": [
+            "appId",
+            "variableId"
+        ],
+        "distribution.getApp": [
+            "appId"
+        ],
+        "distribution.getTarget": [
+            "appId",
+            "targetId"
+        ],
+        "distribution.getVariable": [
+            "appId",
+            "variableId"
+        ],
+        "distribution.listApps": [
+            "queries",
+            "total"
+        ],
+        "distribution.listTargets": [
+            "appId",
+            "queries",
+            "total"
+        ],
+        "distribution.listVariables": [
+            "appId",
+            "queries",
+            "total"
+        ],
+        "distribution.updateApp": [
+            "appId",
+            "name",
+            "framework",
+            "enabled"
+        ],
+        "distribution.updateTarget": [
+            "appId",
+            "targetId",
+            "identifier",
+            "connectionId",
+            "signingIdentityId",
+            "track",
+            "automatic",
+            "versionStrategy",
+            "installCommand",
+            "buildCommand",
+            "outputPath",
+            "configuration",
+            "specification",
+            "timeout"
+        ],
+        "distribution.updateVariable": [
+            "appId",
+            "variableId",
+            "key",
+            "value",
+            "secret",
+            "description"
+        ],
         "documentsDB.create": [
             "databaseId",
             "name",
@@ -6572,6 +6669,103 @@
             "collectionId",
             "documents",
             "transactionId"
+        ],
+        "distribution.createApp": [
+            "appId",
+            "name",
+            "framework",
+            "enabled"
+        ],
+        "distribution.createTarget": [
+            "appId",
+            "targetId",
+            "platform",
+            "identifier",
+            "connectionId",
+            "signingIdentityId",
+            "track",
+            "automatic",
+            "versionStrategy",
+            "installCommand",
+            "buildCommand",
+            "outputPath",
+            "configuration",
+            "specification",
+            "timeout"
+        ],
+        "distribution.createVariable": [
+            "appId",
+            "variableId",
+            "key",
+            "value",
+            "secret",
+            "description"
+        ],
+        "distribution.deleteApp": [
+            "appId"
+        ],
+        "distribution.deleteTarget": [
+            "appId",
+            "targetId"
+        ],
+        "distribution.deleteVariable": [
+            "appId",
+            "variableId"
+        ],
+        "distribution.getApp": [
+            "appId"
+        ],
+        "distribution.getTarget": [
+            "appId",
+            "targetId"
+        ],
+        "distribution.getVariable": [
+            "appId",
+            "variableId"
+        ],
+        "distribution.listApps": [
+            "queries",
+            "total"
+        ],
+        "distribution.listTargets": [
+            "appId",
+            "queries",
+            "total"
+        ],
+        "distribution.listVariables": [
+            "appId",
+            "queries",
+            "total"
+        ],
+        "distribution.updateApp": [
+            "appId",
+            "name",
+            "framework",
+            "enabled"
+        ],
+        "distribution.updateTarget": [
+            "appId",
+            "targetId",
+            "identifier",
+            "connectionId",
+            "signingIdentityId",
+            "track",
+            "automatic",
+            "versionStrategy",
+            "installCommand",
+            "buildCommand",
+            "outputPath",
+            "configuration",
+            "specification",
+            "timeout"
+        ],
+        "distribution.updateVariable": [
+            "appId",
+            "variableId",
+            "key",
+            "value",
+            "secret",
+            "description"
         ],
         "documentsDB.create": [
             "databaseId",

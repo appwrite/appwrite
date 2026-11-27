@@ -401,6 +401,23 @@
       ]
     },
     {
+      "name": "Distribution",
+      "runner": "e2e",
+      "functional": true,
+      "processes": null,
+      "paths": [
+        "src/Appwrite/Platform/Modules/Distribution/",
+        "src/Appwrite/Platform/Modules/Compute/Validator/VariableKey.php",
+        "src/Appwrite/Distribution/",
+        "packages/distribution/",
+        "src/Appwrite/Usage/Distribution.php",
+        "src/Appwrite/Platform/Modules/Mock/Http/Mock/Distribution/",
+        "src/Appwrite/Utopia/Response/Model/Distribution",
+        "src/Appwrite/Utopia/Database/Validator/Queries/Distribution",
+        "app/config/distribution.php"
+      ]
+    },
+    {
       "name": "ProjectWebhooks",
       "runner": "e2e",
       "functional": false,
