@@ -84,6 +84,9 @@ Set a request quota on authentication paths to slow brute-force attempts.
 {% cards_item href="/docs/products/firewall/challenge-bots" title="Challenge automated traffic" %}
 Verify suspected bots with a challenge before their requests continue.
 {% /cards_item %}
+{% cards_item href="/docs/products/firewall/password-protect" title="Password protect a site or function" %}
+Ask visitors for a password, and let scripts send it in a header, before a site or function responds.
+{% /cards_item %}
 {% cards_item href="/docs/products/firewall/site-maintenance" title="Redirect a site for maintenance" %}
 Send visitors of a site to a maintenance page and back without a new deployment.
 {% /cards_item %}
