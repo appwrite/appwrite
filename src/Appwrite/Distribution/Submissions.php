@@ -217,6 +217,8 @@ readonly class Submissions
     {
         $platform = Platform::from((string) $target->getAttribute('platform', ''));
 
+        (new Listings($this->dbForProject, $this->deviceForDistribution))->snapshot($release, $platform, $track);
+
         try {
             $submission = $this->dbForProject->createDocument('distributionSubmissions', new Document([
                 '$id' => Id::unique(),
@@ -379,6 +381,15 @@ readonly class Submissions
 
         if ($provider === Provider::Google && $this->isRetried($submission) && $this->isShown($store->state($external, (string) $submission->getAttribute('track', '')))) {
             return $this->committed($submission);
+        }
+
+        $external = (new Listings($this->dbForProject, $this->deviceForDistribution))->sync($store, $submission, $release, $target, $artifact, $external);
+
+        if (Listings::isPending($external)) {
+            return $this->update($submission, [
+                'external' => $external,
+                'retryAt' => DateTime::addSeconds(new \DateTime(), (int) self::backoff(Listings::polls($external))),
+            ]);
         }
 
         $external = $store->release($this->stores->release($submission, $release, $target, $artifact), $external);

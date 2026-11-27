@@ -110,6 +110,24 @@
             "versionName": "1.0.0",
             "versionCode": 1,
             "command": "docker run --rm --network none -v \"$PWD/out:/mnt/code\" -e DISTRIBUTION_IDENTIFIER=io.appwrite.distribution.e2e15 -e DISTRIBUTION_VERSION_CODE=1 appwrite/distribution-fixture:dev"
+        },
+        {
+            "file": "io.appwrite.distribution.e2e21.aab",
+            "sha256": "89d09ce8baf6fbaaac93369edcaf9370e282da903ad83d676c3c9ddecd6ca3d8",
+            "size": 831,
+            "identifier": "io.appwrite.distribution.e2e21",
+            "versionName": "1.0.0",
+            "versionCode": 1,
+            "command": "docker run --rm --network none -v \"$PWD/out:/mnt/code\" -e DISTRIBUTION_IDENTIFIER=io.appwrite.distribution.e2e21 -e DISTRIBUTION_VERSION_CODE=1 appwrite/distribution-fixture:dev"
+        },
+        {
+            "file": "io.appwrite.distribution.e2e22.aab",
+            "sha256": "cd359176f9434730dffed8d8fe7880116788cd07efa25d5946a4d14c9dc02cf0",
+            "size": 832,
+            "identifier": "io.appwrite.distribution.e2e22",
+            "versionName": "1.0.0",
+            "versionCode": 1,
+            "command": "docker run --rm --network none -v \"$PWD/out:/mnt/code\" -e DISTRIBUTION_IDENTIFIER=io.appwrite.distribution.e2e22 -e DISTRIBUTION_VERSION_CODE=1 appwrite/distribution-fixture:dev"
         }
     ],
     "ipas": [

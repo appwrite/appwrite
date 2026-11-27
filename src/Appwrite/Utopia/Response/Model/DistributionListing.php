@@ -58,9 +58,9 @@ class DistributionListing extends Model
             ])
             ->addRule('screenshots', [
                 'type' => self::TYPE_JSON,
-                'description' => 'Ordered screenshots, each with its set, size, width, height and digest.',
+                'description' => 'Ordered screenshots, each with its ID, set, size, width, height, SHA-256 digest and, on Android, its AI-generated attestation.',
                 'default' => [],
-                'example' => [['set' => 'phone', 'size' => 204800, 'width' => 1080, 'height' => 1920, 'digest' => '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08']],
+                'example' => [['$id' => '5e5ea5c16897e', 'set' => 'phoneScreenshots', 'size' => 204800, 'width' => 1080, 'height' => 1920, 'digest' => '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08', 'aiGeneratedState' => 'aiGeneratedStateNotAiGenerated']],
                 'array' => true,
             ])
             ->addRule('revision', [
@@ -90,6 +90,10 @@ class DistributionListing extends Model
 
         $document->setAttribute('screenshots', \array_map(
             static function (mixed $screenshot): mixed {
+                if ($screenshot instanceof Document) {
+                    $screenshot = $screenshot->getArrayCopy();
+                }
+
                 if (\is_array($screenshot)) {
                     unset($screenshot['path']);
                 }

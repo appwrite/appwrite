@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Distribution\Workers;
 
+use Appwrite\Distribution\Listings;
 use Appwrite\Distribution\Schedules;
 use Appwrite\Distribution\Stores;
 use Appwrite\Distribution\Submission\Status;
@@ -107,6 +108,14 @@ class Submissions extends Action
         }
 
         $emit = function (Document $before, Document $after) use ($project, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $dbForProject, $usage, $publisherForUsage): void {
+            if (Listings::isSynced($after) && !Listings::isSynced($before)) {
+                $app = $dbForProject->getDocument('distributionApps', (string) $after->getAttribute('appId', ''));
+
+                if (!$app->isEmpty()) {
+                    DistributionUsage::publishListingSync($usage, $app, $project, $publisherForUsage);
+                }
+            }
+
             if (
                 $before->getAttribute('status') === $after->getAttribute('status')
                 && (float) $before->getAttribute('rollout', 1) === (float) $after->getAttribute('rollout', 1)

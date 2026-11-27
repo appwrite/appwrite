@@ -240,6 +240,19 @@ trait MockStores
         ];
     }
 
+    /**
+     * @return array<string, array{title?: string, shortDescription?: string, fullDescription?: string, images: array<string, list<string>>}>
+     */
+    protected function googleListings(string $packageName): array
+    {
+        $listings = $this->client->call(Client::METHOD_GET, '/mock/distribution/google/seeds/listings', $this->mockHeaders(), [
+            'packageName' => $packageName,
+        ]);
+        $this->assertSame(200, $listings['headers']['status-code'], 'Reading Google Play listings requires _APP_ENV=development.');
+
+        return $listings['body']['listings'];
+    }
+
     protected function stallGoogleUpload(string $packageName, int $seconds): void
     {
         $stalled = $this->client->call(Client::METHOD_POST, '/mock/distribution/google/seeds/stalls', $this->mockHeaders(), [

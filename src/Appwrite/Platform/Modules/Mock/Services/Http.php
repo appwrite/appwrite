@@ -83,6 +83,7 @@ use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Applications\Ed
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Applications\Tracks\Releases\XList as ListDistributionGoogleReleases;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Seeds\Applications\Create as CreateDistributionGoogleSeedApplication;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Seeds\Bundles\Create as CreateDistributionGoogleSeedBundle;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Seeds\Listings\XList as ListDistributionGoogleSeedListings;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Seeds\Reviews\Create as CreateDistributionGoogleSeedReview;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Seeds\Rollouts\Create as CreateDistributionGoogleSeedRollout;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Seeds\ServiceAccounts\Create as CreateDistributionGoogleSeedServiceAccount;
@@ -221,6 +222,7 @@ class Http extends Service
         $this->addAction('listDistributionGoogleImages', ListDistributionGoogleImages::class);
         $this->addAction('deleteDistributionGoogleImages', DeleteDistributionGoogleImages::class);
         $this->addAction('createDistributionGoogleImage', CreateDistributionGoogleImage::class);
+        $this->addAction('listDistributionGoogleSeedListings', ListDistributionGoogleSeedListings::class);
         $this->addAction('shutdown', Shutdown::class);
     }
 }
