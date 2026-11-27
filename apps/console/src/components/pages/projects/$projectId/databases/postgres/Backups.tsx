@@ -82,6 +82,7 @@ import {
 import { PlanLimitWarning } from '../../shared/PlanLimitWarning'
 import { BackupsEmptyState } from '../_components/BackupsEmptyState'
 import { RestorePitrButton } from '../_components/RestorePitr'
+import { dedicatedDatabaseSourceFromEngine } from '@/lib/databases/dedicated-database-source'
 import { useDatabaseAdminOperationsAccess } from '../_components/DatabaseOperationsLockContext'
 import { resolveOrganizationPlanDisplayLabel } from '@/lib/utils/plan-filter'
 import {
@@ -626,7 +627,7 @@ export function View({ projectId, databaseId }: ViewProps) {
                   projectId={projectId}
                   databaseId={databaseId}
                   database={database}
-                  engine="postgresql"
+                  source={dedicatedDatabaseSourceFromEngine('postgresql')}
                   canWrite={canWrite}
                 />
               ) : null}

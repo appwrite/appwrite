@@ -2254,4 +2254,8 @@ export const jaDatabasesDictionary: Record<string, string> = {
     '専用データベースの追加ストレージ',
   'Storage provisioned beyond the tier allowance, such as storage kept after a downgrade.':
     'ティアの割り当てを超えてプロビジョニングされたストレージ (ダウングレード後に維持されたストレージなど)。',
+  'Restore into another ready dedicated database of the same type.':
+    '同じ種類の、準備ができている別の専用データベースに復元します。',
+  'No other ready dedicated database of the same type is available.':
+    '同じ種類で準備ができている専用データベースがほかにありません。',
 }

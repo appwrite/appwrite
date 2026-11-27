@@ -3,17 +3,20 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { History } from 'lucide-react'
-import { sdk } from '@/lib/appwrite/sdk'
-import { dedicatedEngineService } from '@/lib/databases/dedicated-engine'
+import { DatabaseType } from '@/lib/databases/database-type'
+import type { DedicatedDatabaseSource } from '@/lib/databases/dedicated-database-source'
 import {
   isEligiblePitrRestoreTarget,
+  isEligibleProductPitrRestoreTarget,
   isTimeInPitrWindow,
   pitrWindowFromResponse,
 } from '@/lib/databases/dedicated-pitr'
 import {
+  createDedicatedDatabasePitrRestoration,
   useDedicatedDatabasePitrWindows,
   useDedicatedDatabaseRestorations,
   useProjectDedicatedDatabases,
+  useProjectProductDatabases,
 } from '@/lib/react-query/hooks'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -90,11 +93,7 @@ function restorationTypeLabel(type: string): string {
   return type.toLowerCase() === 'pitr' ? 'PITR' : 'Backup'
 }
 
-function PitrRecoveryWindowTimestampSkeleton({
-  label,
-}: {
-  label: string
-}) {
+function PitrRecoveryWindowTimestampSkeleton({ label }: { label: string }) {
   return (
     <div className="flex flex-col gap-0.5">
       <span className="text-muted-foreground">{label}</span>
@@ -125,8 +124,54 @@ type RestorePitrSharedProps = {
   projectId: string
   databaseId: string
   database: Models.DedicatedDatabase
-  engine?: string | null
+  source: DedicatedDatabaseSource
   canWrite: boolean
+}
+
+const PRODUCT_RESTORE_TARGETS_LIMIT = 100
+
+function productDatabaseType(source: DedicatedDatabaseSource): DatabaseType {
+  if (source.type === 'product' && source.api === 'documentsdb') {
+    return DatabaseType.Documentsdb
+  }
+  if (source.type === 'product' && source.api === 'vectorsdb') {
+    return DatabaseType.Vectorsdb
+  }
+  return DatabaseType.Tablesdb
+}
+
+/**
+ * Databases a restore can write into: for an engine source, other ready
+ * databases on the same engine and version; for a product source, other
+ * ready dedicated databases of the same product.
+ */
+function usePitrRestoreTargets(
+  projectId: string,
+  database: Models.DedicatedDatabase,
+  source: DedicatedDatabaseSource,
+  enabled: boolean,
+): { $id: string; name: string }[] {
+  const isProduct = source.type === 'product'
+  const { databases: dedicatedDatabases } = useProjectDedicatedDatabases(
+    enabled && !isProduct ? projectId : undefined,
+  )
+  const { databases: productDatabases } = useProjectProductDatabases(
+    enabled && isProduct ? projectId : undefined,
+    productDatabaseType(source),
+    0,
+    PRODUCT_RESTORE_TARGETS_LIMIT,
+  )
+  return useMemo(
+    () =>
+      isProduct
+        ? productDatabases.filter((candidate) =>
+            isEligibleProductPitrRestoreTarget(database.$id, candidate),
+          )
+        : dedicatedDatabases.filter((candidate) =>
+            isEligiblePitrRestoreTarget(database, candidate),
+          ),
+    [isProduct, database, dedicatedDatabases, productDatabases],
+  )
 }
 
 export function RestorePitrDialog({
@@ -135,7 +180,7 @@ export function RestorePitrDialog({
   projectId,
   databaseId,
   database,
-  engine,
+  source,
   canWrite,
   initialTimeZone,
 }: RestorePitrSharedProps & {
@@ -149,23 +194,14 @@ export function RestorePitrDialog({
   const { data: windowsData } = useDedicatedDatabasePitrWindows(
     projectId,
     databaseId,
-    engine ?? database.engine,
+    source,
     open && pitrEnabled,
-  )
-  const { databases: dedicatedDatabases } = useProjectDedicatedDatabases(
-    open ? projectId : undefined,
   )
   const recoveryWindow = useMemo(
     () => pitrWindowFromResponse(windowsData),
     [windowsData],
   )
-  const targets = useMemo(
-    () =>
-      dedicatedDatabases.filter((candidate) =>
-        isEligiblePitrRestoreTarget(database, candidate),
-      ),
-    [database, dedicatedDatabases],
-  )
+  const targets = usePitrRestoreTargets(projectId, database, source, open)
 
   const [targetTime, setTargetTime] = useState<string | null>(null)
   const [timeZone, setTimeZone] = useState(getUserTimeZone)
@@ -180,9 +216,7 @@ export function RestorePitrDialog({
     setTargetDatabaseId('')
     setConfirmRestore(false)
     setTimeZone(initialTimeZone || getUserTimeZone())
-    setTargetTime(
-      latestMs != null ? new Date(latestMs).toISOString() : null,
-    )
+    setTargetTime(latestMs != null ? new Date(latestMs).toISOString() : null)
   }, [open, latestMs, initialTimeZone])
 
   const selectedDate = useMemo(() => {
@@ -201,18 +235,17 @@ export function RestorePitrDialog({
       if (!selectedDate) {
         throw new Error(t('Choose a restore time inside the recovery window.'))
       }
-      const projectSdk = sdk.forProject(projectId)
-      return dedicatedEngineService(
-        projectSdk,
-        engine ?? database.engine,
-      ).createRestoration({
+      return createDedicatedDatabasePitrRestoration(
+        projectId,
         databaseId,
-        type: 'pitr',
-        targetTime: selectedDate.toISOString(),
-        ...(restoreTarget === 'other' && targetDatabaseId
-          ? { targetDatabaseId }
-          : {}),
-      })
+        source,
+        {
+          targetTime: selectedDate.toISOString(),
+          ...(restoreTarget === 'other' && targetDatabaseId
+            ? { targetDatabaseId }
+            : {}),
+        },
+      )
     },
     onSuccess: async () => {
       toast.success(t('Database restore initiated'))
@@ -224,7 +257,15 @@ export function RestorePitrDialog({
           queryKey: ['mysql-database', 'project', projectId, databaseId],
         }),
         queryClient.refetchQueries({
-          queryKey: ['dedicated-restorations', 'project', projectId, databaseId],
+          queryKey: ['database', 'project', projectId, databaseId],
+        }),
+        queryClient.refetchQueries({
+          queryKey: [
+            'dedicated-restorations',
+            'project',
+            projectId,
+            databaseId,
+          ],
         }),
         queryClient.refetchQueries({
           queryKey: ['dedicated-databases', 'project', projectId],
@@ -233,7 +274,9 @@ export function RestorePitrDialog({
       onOpenChange(false)
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error, t('Failed to restore to this point in time')))
+      toast.error(
+        getErrorMessage(error, t('Failed to restore to this point in time')),
+      )
     },
   })
 
@@ -242,10 +285,7 @@ export function RestorePitrDialog({
     restoreTarget === 'other' &&
     (!targetDatabaseId || targetDatabaseId === databaseId)
   const canSubmit =
-    !writeDisabled &&
-    confirmRestore &&
-    timeInWindow &&
-    !otherTargetInvalid
+    !writeDisabled && confirmRestore && timeInWindow && !otherTargetInvalid
 
   const handleOpenChange = (nextOpen: boolean) => {
     if (restoreMutation.isPending) return
@@ -345,9 +385,13 @@ export function RestorePitrDialog({
                         {t('Another database')}
                       </span>
                       <p className="text-[12px] text-muted-foreground leading-snug">
-                        {t(
-                          'Restore into a ready database with the same engine and version.',
-                        )}
+                        {source.type === 'product'
+                          ? t(
+                              'Restore into another ready dedicated database of the same type.',
+                            )
+                          : t(
+                              'Restore into a ready database with the same engine and version.',
+                            )}
                       </p>
                     </div>
                   </Label>
@@ -361,9 +405,13 @@ export function RestorePitrDialog({
                   </Label>
                   {targets.length === 0 ? (
                     <p className="text-[13px] text-muted-foreground">
-                      {t(
-                        'No other ready database with the same engine and version is available.',
-                      )}
+                      {source.type === 'product'
+                        ? t(
+                            'No other ready dedicated database of the same type is available.',
+                          )
+                        : t(
+                            'No other ready database with the same engine and version is available.',
+                          )}
                     </p>
                   ) : (
                     <Select
@@ -442,7 +490,7 @@ export function RestorePitrButton({
   projectId,
   databaseId,
   database,
-  engine,
+  source,
   canWrite,
 }: RestorePitrSharedProps) {
   const t = useT()
@@ -453,7 +501,7 @@ export function RestorePitrButton({
   const { data: windowsData } = useDedicatedDatabasePitrWindows(
     projectId,
     databaseId,
-    engine ?? database.engine,
+    source,
     showPitrRestore && pitrEnabled,
   )
   const recoveryWindow = pitrWindowFromResponse(windowsData)
@@ -504,7 +552,7 @@ export function RestorePitrButton({
         projectId={projectId}
         databaseId={databaseId}
         database={database}
-        engine={engine}
+        source={source}
         canWrite={canWrite}
       />
     </>
@@ -515,7 +563,7 @@ export function DedicatedDatabasePitrRestoreCard({
   projectId,
   databaseId,
   database,
-  engine,
+  source,
   canWrite,
 }: RestorePitrSharedProps) {
   const t = useT()
@@ -532,13 +580,13 @@ export function DedicatedDatabasePitrRestoreCard({
   } = useDedicatedDatabasePitrWindows(
     projectId,
     databaseId,
-    engine ?? database.engine,
+    source,
     showPitrRestore && pitrEnabled,
   )
   const { data: restorationsData } = useDedicatedDatabaseRestorations(
     projectId,
     databaseId,
-    engine ?? database.engine,
+    source,
     showPitrRestore && pitrEnabled,
   )
   const recoveryWindow = pitrWindowFromResponse(windowsData)
@@ -693,11 +741,7 @@ export function DedicatedDatabasePitrRestoreCard({
           <Tooltip>
             <TooltipTrigger asChild>
               <span>
-                <Button
-                  size="sm"
-                  className="h-9 text-[13px]"
-                  disabled
-                >
+                <Button size="sm" className="h-9 text-[13px]" disabled>
                   {t('Start restore')}
                 </Button>
               </span>
@@ -722,7 +766,7 @@ export function DedicatedDatabasePitrRestoreCard({
         projectId={projectId}
         databaseId={databaseId}
         database={database}
-        engine={engine}
+        source={source}
         canWrite={canWrite}
         initialTimeZone={timeZone}
       />

@@ -4,6 +4,7 @@ import { hasDedicatedSpecification } from '@/lib/databases/database-compute'
 import {
   databaseQueryOptions,
   databaseSpecificationsQueryOptions,
+  dedicatedDatabaseByIdQueryOptions,
   dedicatedDatabaseSourceFromRouteKind,
   projectQueryOptions,
 } from '@/lib/react-query/hooks'
@@ -51,12 +52,20 @@ export const Route = createFileRoute(
       })
     }
 
-    await queryClient.ensureQueryData(
-      databaseSpecificationsQueryOptions(
-        projectId,
-        dedicatedDatabaseSourceFromRouteKind(dbKind),
+    await Promise.all([
+      queryClient.ensureQueryData(
+        databaseSpecificationsQueryOptions(
+          projectId,
+          dedicatedDatabaseSourceFromRouteKind(dbKind),
+        ),
       ),
-    )
+      queryClient.ensureQueryData(
+        dedicatedDatabaseByIdQueryOptions(projectId, databaseId, {
+          type: 'product',
+          dbKind,
+        }),
+      ),
+    ])
   },
   component: View,
 })

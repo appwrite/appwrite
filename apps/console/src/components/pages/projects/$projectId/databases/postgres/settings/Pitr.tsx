@@ -4,6 +4,7 @@ import {
 } from '@/components/global/shared/settings-search/SettingsCardsList'
 import { PostgresDatabasePitrCard } from '../_components/PostgresDatabaseConfigSettings'
 import { DedicatedDatabasePitrRestoreCard } from '../../_components/RestorePitr'
+import { dedicatedDatabaseSourceFromEngine } from '@/lib/databases/dedicated-database-source'
 import { usePostgresDatabaseSettingsPage } from './usePostgresDatabaseSettingsPage'
 import { PostgresSettingsLoading } from './PostgresSettingsLoading'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
@@ -44,7 +45,7 @@ export function View() {
             node: (
               <DedicatedDatabasePitrRestoreCard
                 {...cardProps}
-                engine="postgresql"
+                source={dedicatedDatabaseSourceFromEngine('postgresql')}
               />
             ),
           } satisfies SettingsCardItem,
