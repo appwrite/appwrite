@@ -182,7 +182,7 @@ export function ComparisonEyebrow({
       )}
     >
       {children}
-      <span className="text-[var(--brand-cta)]">_</span>
+      <span aria-hidden="true" className="heading-cursor" />
     </p>
   )
 }
@@ -214,7 +214,7 @@ export function ComparisonHeading({
         )}
       >
         {t(title)}
-        <span className="text-[var(--brand-cta)]">_</span>
+        <span aria-hidden="true" className="heading-cursor" />
       </h2>
       {description ? (
         <p
@@ -254,13 +254,13 @@ export function ComparisonHeroTitle({
           {' '}
           <span className="text-gradient-brand">
             {t(accent)}
-            <span className="text-[var(--brand-cta)]">_</span>
+            <span aria-hidden="true" className="heading-cursor" />
           </span>
         </>
       ) : (
         <>
           {'\u00A0'}
-          <span className="text-[var(--brand-cta)]">_</span>
+          <span aria-hidden="true" className="heading-cursor" />
         </>
       )}
     </h1>
@@ -720,7 +720,7 @@ export function ComparisonCta({
           </div>
           <h2 className="mx-auto mt-6 max-w-2xl text-balance font-aeonik-pro text-[28px] font-normal leading-[1.08] tracking-tight text-foreground sm:mt-7 sm:text-[36px] sm:leading-none lg:text-[44px]">
             {t(title)}
-            <span className="text-[var(--brand-cta)]">_</span>
+            <span aria-hidden="true" className="heading-cursor" />
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-[15px] leading-7 text-muted-foreground">{t(description)}</p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-2">

@@ -198,7 +198,7 @@ export function View({ page }: { page: SolutionPageContent }) {
             </div>
             <h2 className="mx-auto mt-7 max-w-2xl text-balance font-aeonik-pro text-[32px] font-normal leading-none tracking-tight text-foreground sm:text-[44px]">
               {t(page.closing.title)}
-              <span className="text-[var(--brand-cta)]">_</span>
+              <span aria-hidden="true" className="heading-cursor" />
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-[15px] leading-7 text-muted-foreground">
               {t(page.closing.description)}

@@ -44,6 +44,7 @@
     "generate:content-covers": "bun run scripts/generate-content-covers.ts",
     "generate:content-images": "bun run scripts/generate-content-images.ts",
     "encode:firewall-promo-video": "bash scripts/encode-firewall-promo-video.sh",
+    "generate:content-dates": "bun run scripts/generate-content-dates.ts",
     "generate:cover-manifest": "bun run scripts/generate-cover-manifest.ts",
     "generate:docs": "bun run scripts/generate-docs.ts",
     "generate:docs-exports": "bun run scripts/generate-docs-exports.ts",

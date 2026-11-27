@@ -19,7 +19,7 @@ export function NetworkSection() {
         <div className="mx-auto flex w-full max-w-4xl flex-col items-center text-center">
           <h2 className="font-aeonik-pro text-balance text-[36px] font-normal leading-none tracking-tight text-foreground sm:text-[44px]">
             {t('The Appwrite Network') /* pragma: allowlist secret */}
-            <span className="text-[var(--brand-cta)]">_</span>
+            <span aria-hidden="true" className="heading-cursor" />
           </h2>
           <p className="mt-5 max-w-2xl text-[14px] leading-6 text-muted-foreground sm:text-[15px]">
             {t(

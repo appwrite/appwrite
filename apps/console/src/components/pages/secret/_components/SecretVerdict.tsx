@@ -137,7 +137,7 @@ export function SecretVerdict({ content }: { content: SecretVariantContent }) {
           <div className="mt-12">
             <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
               {t('In fairness, they might still be the right call if')}
-              <span className="text-[var(--brand-cta)]">_</span>
+              <span aria-hidden="true" className="heading-cursor" />
             </p>
             <ul className={cn('mt-6 grid gap-8', content.suspects.length > 1 && 'md:grid-cols-2')}>
               {content.suspects.map((suspect) => (

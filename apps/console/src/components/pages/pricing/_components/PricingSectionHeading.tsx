@@ -39,7 +39,7 @@ export function PricingSectionHeading({
       >
         {title}
         {showUnderscore ? (
-          <span className="text-[var(--brand-cta)]">_</span>
+          <span aria-hidden="true" className="heading-cursor" />
         ) : null}
       </HeadingTag>
       {description ? (

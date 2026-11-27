@@ -30,7 +30,7 @@ export function InitDayCover({
       />
       <p className="absolute start-[5cqw] top-1/2 w-[40cqw] -translate-y-1/2 font-aeonik-pro text-[6.6cqw] leading-[1.06] tracking-tight text-white">
         {headline}
-        <span className="text-[var(--brand-cta)]">_</span>
+        <span aria-hidden="true" className="heading-cursor" />
       </p>
       <div
         className={cn(

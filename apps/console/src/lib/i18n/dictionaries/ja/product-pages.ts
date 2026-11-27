@@ -492,12 +492,12 @@ export const jaProductPagesDictionary: Record<string, string> = {
   'Managed PostgreSQL and databases for every model':
     'マネージド PostgreSQL とあらゆるモデル向けのデータベース',
   'Managed PostgreSQL and MySQL': 'マネージド PostgreSQL と MySQL',
-  'Managed PostgreSQL hosting and app databases':
-    'マネージド PostgreSQL ホスティングとアプリ向けデータベース',
+  'App databases: PostgreSQL, MySQL, tables, and vectors':
+    'アプリ向けデータベース: PostgreSQL、MySQL、テーブル、ベクトル',
   'Managed PostgreSQL hosting with full SQL, pgvector, and portable schemas for Prisma, Drizzle, and existing tooling.':
     'フル SQL、pgvector、Prisma や Drizzle などの既存ツール向けの移植可能なスキーマを備えたマネージド PostgreSQL ホスティング。',
-  'Managed PostgreSQL hosting with pgvector, plus TablesDB, DocumentsDB, and VectorsDB. Dedicated compute, backups, replicas, and PITR.':
-    'pgvector 対応のマネージド PostgreSQL ホスティングに加え、TablesDB、DocumentsDB、VectorsDB。専用コンピュート、バックアップ、レプリカ、PITR。',
+  'Five database models in one project: TablesDB, DocumentsDB, and VectorsDB, plus managed PostgreSQL and MySQL. Serverless or dedicated compute, backups, replicas, and PITR.':
+    '1 つのプロジェクトで 5 つのデータベースモデル。TablesDB、DocumentsDB、VectorsDB に加え、マネージド PostgreSQL と MySQL。サーバーレスまたは専用コンピュート、バックアップ、レプリカ、PITR。',
   'PostgreSQL docs': 'PostgreSQL のドキュメント',
   'PostgreSQL quick start': 'PostgreSQL のクイックスタート',
   'Dedicated managed PostgreSQL and MySQL engines you connect to with standard SQL clients.':
@@ -820,9 +820,10 @@ export const jaProductPagesDictionary: Record<string, string> = {
     'Appwrite CLI と appwrite.config.json を使って、CI やターミナルからデプロイできます。',
 
   // Managed PostgreSQL product page
-  'Managed PostgreSQL hosting': 'マネージド PostgreSQL ホスティング',
-  'Managed PostgreSQL hosting on Appwrite. Every database is provisioned for your project with a TLS hostname, connection pooling, extensions like pgvector, backups, PITR, replicas, and branches.':
-    'Appwrite のマネージド PostgreSQL ホスティング。すべてのデータベースは、TLS 対応のホスト名、コネクションプーリング、pgvector などの拡張機能、バックアップ、PITR、レプリカ、Branch とともにプロジェクト専用にプロビジョニングされます。',
+  'Managed PostgreSQL hosting, Postgres as a service':
+    'マネージド PostgreSQL ホスティング、Postgres as a Service',
+  'Postgres as a service on Appwrite. Every database is provisioned for your project with a TLS hostname, connection pooling, extensions like pgvector, backups, PITR, replicas, and branches.':
+    'Appwrite の Postgres as a Service。すべてのデータベースは、TLS 対応のホスト名、コネクションプーリング、pgvector などの拡張機能、バックアップ、PITR、レプリカ、Branch とともにプロジェクト専用にプロビジョニングされます。',
   'Raw Postgres, fully managed': 'そのままの Postgres、フルマネージドで',
   'Appwrite runs the engine and you keep the SQL: connect with psql or any driver, bring your own ORM and migrations, and use the full PostgreSQL feature set with no Appwrite layer in between. Each database is provisioned in your project region with its own hostname, credentials, and TLS.':
     'エンジンの運用は Appwrite が担い、SQL はそのまま使えます。psql や任意のドライバーで接続し、好きな ORM とマイグレーションを持ち込み、Appwrite の層を挟まずに PostgreSQL のすべての機能を使えます。各データベースはプロジェクトのリージョンに、独自のホスト名、認証情報、TLS 付きでプロビジョニングされます。',

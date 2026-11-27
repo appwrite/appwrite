@@ -288,7 +288,7 @@ export function AiSection() {
         <div className="mx-auto max-w-3xl space-y-3 text-center">
           <h2 className="font-aeonik-pro text-balance text-[36px] font-normal leading-none tracking-tight text-foreground sm:text-[44px]">
             {t('Designed for the AI agents in your workflow')}
-            <span className="text-[var(--brand-cta)]">_</span>
+            <span aria-hidden="true" className="heading-cursor" />
           </h2>
           <p className="mx-auto max-w-2xl text-[15px] leading-6 text-muted-foreground">
             {t(

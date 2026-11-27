@@ -58,7 +58,7 @@ export function InitAmaCard({
         <div className="min-w-0">
           <h3 className="font-aeonik-pro text-[clamp(28px,4vw,36px)] font-normal leading-none tracking-tight text-foreground">
             {t('Ask us anything')}
-            <span className="text-[var(--brand-cta)]">_</span>
+            <span aria-hidden="true" className="heading-cursor" />
           </h3>
           <p className="mt-3 text-[13px] leading-relaxed text-muted-foreground">
             {isRecapMode

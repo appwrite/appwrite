@@ -27,6 +27,15 @@ code {
     source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
 }
 
+/*
+ * The trailing "_" on brand headings. It is drawn by CSS, so crawlers, screen
+ * readers and copied text read the heading without it.
+ */
+.heading-cursor::after {
+  content: '_';
+  color: var(--brand-cta);
+}
+
 /* LTR-only UI enclaves (code, loader logo) when the page is RTL. */
 .force-ltr {
   direction: ltr;

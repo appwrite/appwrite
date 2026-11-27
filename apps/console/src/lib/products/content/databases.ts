@@ -2,9 +2,9 @@ import type { ProductPageContent } from '@/lib/products/types'
 
 export const databasesProductContent: ProductPageContent = {
   id: 'databases',
-  metaTitle: 'Managed PostgreSQL hosting and app databases',
+  metaTitle: 'App databases: PostgreSQL, MySQL, tables, and vectors',
   metaDescription:
-    'Managed PostgreSQL hosting with pgvector, plus TablesDB, DocumentsDB, and VectorsDB. Dedicated compute, backups, replicas, and PITR.',
+    'Five database models in one project: TablesDB, DocumentsDB, and VectorsDB, plus managed PostgreSQL and MySQL. Serverless or dedicated compute, backups, replicas, and PITR.',
   hero: {
     title: 'Managed PostgreSQL and databases for every model',
     description:

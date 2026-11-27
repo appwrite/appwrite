@@ -41,7 +41,7 @@ export function DocsArticleHeader({
         pinned={pinned}
         bounds={bounds}
         title={title}
-        titleSuffix={<span className="text-[var(--brand-cta)]">_</span>}
+        titleSuffix={<span aria-hidden="true" className="heading-cursor" />}
         actions={actions}
       />
 
@@ -61,7 +61,7 @@ export function DocsArticleHeader({
 
             <h1 className={cn(DOCS_PAGE_TITLE_CLASS, parent ? 'mt-3' : undefined)}>
               {title}
-              <span className="text-[var(--brand-cta)]">_</span>
+              <span aria-hidden="true" className="heading-cursor" />
             </h1>
             <div ref={sentinelRef} className="h-px w-full" aria-hidden />
 

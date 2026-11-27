@@ -49,7 +49,7 @@ export function FactoryHero() {
             {t('Your software factory')}
             <br />
             {t('starts here')}
-            <span className="text-[var(--brand-cta)]">_</span>
+            <span aria-hidden="true" className="heading-cursor" />
           </h1>
 
           <p

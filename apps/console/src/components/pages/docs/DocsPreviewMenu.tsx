@@ -51,7 +51,7 @@ function PreviewMenuHeader({
     <header className="mb-6">
       <h1 className={docsPreviewPrimaryTitleClass}>
         {title}
-        <span className="text-[var(--brand-cta)]">_</span>
+        <span aria-hidden="true" className="heading-cursor" />
       </h1>
       {description ? (
         <p className={PREVIEW_MENU_DESCRIPTION_CLASS}>{description}</p>

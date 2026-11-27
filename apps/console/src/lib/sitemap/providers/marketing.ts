@@ -3,6 +3,7 @@ import {
   MARKETING_PAGE_PATHS,
   UNLAUNCHED_MARKETING_PATHS,
 } from '@/lib/marketing/marketing-page-paths'
+import { getLastChanged } from '../content-dates'
 import type { SitemapChangeFreq, SitemapEntry } from '../types'
 
 const NON_HTML_MARKETING_PATHS = new Set(['/llms/txt', '/llms-full/txt'])
@@ -19,6 +20,21 @@ const LEGAL_PATHS = new Set(['/privacy', '/terms', '/cookies', '/baa'])
 /** `/home` renders the homepage too, but its canonical URL is `/`. */
 function toSitemapPath(path: string): string {
   return path === '/home' ? '/' : path
+}
+
+/** Index pages that list other content: their own entries carry the dates. */
+const LISTING_PATHS = new Set(['/blog', '/changelog', '/integrations'])
+
+/** The files a marketing page's content comes from, for `<lastmod>`. */
+function marketingSources(path: string): string[] {
+  if (path === '/') return ['src/components/pages/home']
+  if (path === '/pricing') return ['src/components/pages/pricing', 'src/lib/pricing']
+  if (LEGAL_PATHS.has(path) || LISTING_PATHS.has(path)) return []
+
+  const [section, id] = path.slice(1).split('/')
+  if (section === 'products') return [`src/lib/products/content/${id}.ts`]
+  if (section === 'alternative-to') return [`src/lib/alternatives/content/${id}.ts`]
+  return [`src/components/pages/${section}`]
 }
 
 function marketingPriority(path: string): number {
@@ -43,6 +59,7 @@ export function getMarketingSitemapEntries(): SitemapEntry[] {
     .map(toSitemapPath)
     .map((path) => ({
       path,
+      lastmod: getLastChanged(marketingSources(path)),
       priority: marketingPriority(path),
       changefreq: marketingChangeFreq(path),
     }))

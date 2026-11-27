@@ -78,7 +78,7 @@ export function InitFilmDialog({
         <div className="pe-10">
           <DialogTitle className="font-aeonik-pro text-[clamp(20px,2.2vw,28px)] font-normal leading-tight tracking-tight text-white">
             {title}
-            <span className="text-[var(--brand-cta)]">_</span>
+            <span aria-hidden="true" className="heading-cursor" />
           </DialogTitle>
           <DialogDescription className="sr-only">
             The launch film, played with the Appwrite player.

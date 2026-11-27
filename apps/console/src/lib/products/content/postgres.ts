@@ -2,9 +2,9 @@ import type { ProductPageContent } from '@/lib/products/types'
 
 export const postgresProductContent: ProductPageContent = {
   id: 'postgres',
-  metaTitle: 'Managed PostgreSQL hosting',
+  metaTitle: 'Managed PostgreSQL hosting, Postgres as a service',
   metaDescription:
-    'Managed PostgreSQL hosting on Appwrite. Every database is provisioned for your project with a TLS hostname, connection pooling, extensions like pgvector, backups, PITR, replicas, and branches.',
+    'Postgres as a service on Appwrite. Every database is provisioned for your project with a TLS hostname, connection pooling, extensions like pgvector, backups, PITR, replicas, and branches.',
   hero: {
     title: 'Raw Postgres, fully managed',
     description:

@@ -433,12 +433,12 @@ export const heProductPagesDictionary: Record<string, string> = {
   'Managed PostgreSQL and databases for every model':
     'PostgreSQL מנוהל ומסדי נתונים לכל מודל',
   'Managed PostgreSQL and MySQL': 'PostgreSQL ו-MySQL מנוהלים',
-  'Managed PostgreSQL hosting and app databases':
-    'אירוח PostgreSQL מנוהל ומסדי נתוני אפליקציה',
+  'App databases: PostgreSQL, MySQL, tables, and vectors':
+    'מסדי נתונים לאפליקציות: PostgreSQL, MySQL, טבלאות ווקטורים',
   'Managed PostgreSQL hosting with full SQL, pgvector, and portable schemas for Prisma, Drizzle, and existing tooling.':
     'אירוח PostgreSQL מנוהל עם SQL מלא, pgvector וסכמות ניידות ל-Prisma, Drizzle ולכלים קיימים.',
-  'Managed PostgreSQL hosting with pgvector, plus TablesDB, DocumentsDB, and VectorsDB. Dedicated compute, backups, replicas, and PITR.':
-    'אירוח PostgreSQL מנוהל עם pgvector, לצד TablesDB, DocumentsDB ו-VectorsDB. Compute ייעודי, גיבויים, replicas ו-PITR.',
+  'Five database models in one project: TablesDB, DocumentsDB, and VectorsDB, plus managed PostgreSQL and MySQL. Serverless or dedicated compute, backups, replicas, and PITR.':
+    'חמישה מודלים של מסדי נתונים בפרויקט אחד: TablesDB, DocumentsDB ו-VectorsDB, לצד PostgreSQL ו-MySQL מנוהלים. Compute מסוג serverless או ייעודי, גיבויים, replicas ו-PITR.',
   'PostgreSQL docs': 'תיעוד PostgreSQL',
   'PostgreSQL quick start': 'Quick start ל-PostgreSQL',
   'Dedicated managed PostgreSQL and MySQL engines you connect to with standard SQL clients.':
@@ -736,9 +736,10 @@ export const heProductPagesDictionary: Record<string, string> = {
     'פרסו מ-CI או מהטרמינל עם Appwrite CLI ו-appwrite.config.json.',
 
   // Managed PostgreSQL product page
-  'Managed PostgreSQL hosting': 'אחסון PostgreSQL מנוהל',
-  'Managed PostgreSQL hosting on Appwrite. Every database is provisioned for your project with a TLS hostname, connection pooling, extensions like pgvector, backups, PITR, replicas, and branches.':
-    'אחסון PostgreSQL מנוהל ב-Appwrite. כל מסד נתונים מוקם עבור הפרויקט שלכם עם hostname מאובטח ב-TLS, connection pooling, הרחבות כמו pgvector, גיבויים, PITR, רפליקות ו-Branches.',
+  'Managed PostgreSQL hosting, Postgres as a service':
+    'אחסון PostgreSQL מנוהל, Postgres as a Service',
+  'Postgres as a service on Appwrite. Every database is provisioned for your project with a TLS hostname, connection pooling, extensions like pgvector, backups, PITR, replicas, and branches.':
+    'Postgres as a Service ב-Appwrite. כל מסד נתונים מוקם עבור הפרויקט שלכם עם hostname מאובטח ב-TLS, connection pooling, הרחבות כמו pgvector, גיבויים, PITR, רפליקות ו-Branches.',
   'Raw Postgres, fully managed': 'Postgres גולמי, מנוהל לחלוטין',
   'Appwrite runs the engine and you keep the SQL: connect with psql or any driver, bring your own ORM and migrations, and use the full PostgreSQL feature set with no Appwrite layer in between. Each database is provisioned in your project region with its own hostname, credentials, and TLS.':
     'Appwrite מריצה את המנוע ואתם שומרים על ה-SQL: התחברו עם psql או עם כל driver, הביאו ORM ומיגרציות משלכם והשתמשו בכל יכולות PostgreSQL בלי שכבה של Appwrite באמצע. כל מסד נתונים מוקם באזור הפרויקט שלכם עם hostname, פרטי גישה ו-TLS משלו.',

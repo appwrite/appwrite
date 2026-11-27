@@ -42,7 +42,7 @@ export function ProductHero({
       )}
     >
       {t(title)}
-      <span className="text-[var(--brand-cta)]">_</span>
+      <span aria-hidden="true" className="heading-cursor" />
     </h1>
   )
 

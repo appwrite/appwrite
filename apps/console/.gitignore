@@ -105,3 +105,6 @@ scripts/oauth2-shots.mjs
 
 # TypeScript incremental build cache
 tsconfig.tsbuildinfo
+
+# Last-change dates for sitemap <lastmod>, written in CI by generate:content-dates
+src/lib/sitemap/generated/

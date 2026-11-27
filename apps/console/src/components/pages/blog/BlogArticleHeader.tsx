@@ -24,7 +24,7 @@ type BlogArticleHeaderProps = {
   lastUpdated: string
 }
 
-const BLOG_TITLE_SUFFIX = <span className="text-[var(--brand-cta)]">_</span>
+const BLOG_TITLE_SUFFIX = <span aria-hidden="true" className="heading-cursor" />
 
 export function BlogArticleHeader({
   slug,
