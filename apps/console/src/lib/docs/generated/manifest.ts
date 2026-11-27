@@ -1719,7 +1719,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Single sign-on (SSO)",
     "description": "Let your customers' employees sign in to your app through their company's identity provider, such as Okta or Microsoft Entra ID, with OpenID Connect.",
     "layout": "article",
-    "readingTimeMinutes": 20
+    "readingTimeMinutes": 19
   },
   {
     "slug": "products/auth/team-invites",
