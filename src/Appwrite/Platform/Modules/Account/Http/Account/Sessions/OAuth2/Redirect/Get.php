@@ -451,7 +451,7 @@ class Get extends Base
                         $failureRedirect(Exception::GENERAL_BAD_REQUEST);
                     }
                     $user->setAttributes($userWithEmail->getArrayCopy());
-                    if (!$this->canAdoptByEmail($user)) {
+                    if (!$this->canAdoptByEmail($user, $provider)) {
                         $failureRedirect(Exception::USER_MORE_FACTORS_REQUIRED);
                     }
                     // The provider verified this address, or its canonical form on the same domain
@@ -500,7 +500,7 @@ class Get extends Base
                         $failureRedirect(Exception::GENERAL_BAD_REQUEST);
                     }
                     $user->setAttributes($dbForProject->getDocument('users', $identityWithMatchingEmail->getAttribute('userId'))->getArrayCopy());
-                    if (!$this->canAdoptByEmail($user)) {
+                    if (!$this->canAdoptByEmail($user, $provider)) {
                         $failureRedirect(Exception::USER_MORE_FACTORS_REQUIRED);
                     }
                     $grounds = ['identities' => $identityWithMatchingEmail->getId()];

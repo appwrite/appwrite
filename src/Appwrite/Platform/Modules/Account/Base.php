@@ -358,11 +358,12 @@ abstract class Base extends Action
      * already linked to it, proves control of that mailbox and nothing more. The session it creates carries the oauth2
      * factor, which stands in for a second factor, and the identity it links keeps signing in the same way, so an
      * account that requires a second factor is not adopted like this. Its owner signs in with that factor and connects
-     * the provider from the signed-in session.
+     * the provider from the signed-in session. LDAP sessions carry only the password factor and go through the MFA
+     * challenge as usual, so a directory sign-in may still adopt the account.
      */
-    protected function canAdoptByEmail(User $user): bool
+    protected function canAdoptByEmail(User $user, string $provider): bool
     {
-        return $user->getMinimumFactors() < 2;
+        return $provider === SESSION_PROVIDER_LDAP || $user->getMinimumFactors() < 2;
     }
 
 
@@ -412,7 +413,7 @@ abstract class Base extends Action
                     throw new Exception(Exception::GENERAL_BAD_REQUEST);
                 }
                 $user->setAttributes($userWithEmail->getArrayCopy());
-                if (!$this->canAdoptByEmail($user)) {
+                if (!$this->canAdoptByEmail($user, $provider)) {
                     throw new Exception(Exception::USER_MORE_FACTORS_REQUIRED);
                 }
                 // The provider verified this address, or its canonical form on the same domain
@@ -461,7 +462,7 @@ abstract class Base extends Action
                     throw new Exception(Exception::GENERAL_BAD_REQUEST);
                 }
                 $user->setAttributes($dbForProject->getDocument('users', $identityWithMatchingEmail->getAttribute('userId'))->getArrayCopy());
-                if (!$this->canAdoptByEmail($user)) {
+                if (!$this->canAdoptByEmail($user, $provider)) {
                     throw new Exception(Exception::USER_MORE_FACTORS_REQUIRED);
                 }
                 $ground = $identityWithMatchingEmail;
