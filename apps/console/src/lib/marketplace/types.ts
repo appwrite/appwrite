@@ -57,6 +57,9 @@ export type MarketplaceApp = {
   teamId?: string
   /** Empty when the app does not allow installation. */
   installationScopes: string[]
+  installationRedirectUrl?: string
+  /** Teams that currently have the app installed. */
+  installs: number
 }
 
 export const MARKETPLACE_CATEGORY_LABELS: Record<

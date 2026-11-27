@@ -134,7 +134,7 @@ class Create extends Action
             'secret' => $proofForCode->hash($secret),
             'expire' => $expire,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
-            'ip' => $request->getIP(),
+            'ip' => $request->getClientIP(),
         ]);
 
         $recovery->setAttribute('$permissions', [

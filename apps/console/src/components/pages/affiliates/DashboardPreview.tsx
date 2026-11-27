@@ -86,7 +86,7 @@ function FunnelChart({ className }: { className?: string }) {
           x2={width}
           y1={height * line}
           y2={height * line}
-          stroke="hsl(var(--border))"
+          stroke="var(--border)"
           strokeDasharray="3 3"
         />
       ))}

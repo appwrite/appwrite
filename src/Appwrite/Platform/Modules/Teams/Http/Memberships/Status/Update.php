@@ -160,8 +160,8 @@ class Update extends Action
                 'providerUid' => $targetUser->getAttribute('email'),
                 'secret' => $proofForToken->hash($sessionSecret), // One way hash encryption to protect DB leak
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
-                'ip' => $request->getIP(),
-                'countryCode' => \strtolower($geo->get($request->getIP())->getCountryCode()),
+                'ip' => $request->getClientIP(),
+                'countryCode' => \strtolower($geo->get($request->getClientIP())->getCountryCode()),
                 'expire' => DateTime::addSeconds(new \DateTime(), $authDuration)
             ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
         }

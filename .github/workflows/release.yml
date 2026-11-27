@@ -71,8 +71,10 @@ jobs:
         context: .
         platforms: linux/amd64,linux/arm64
         target: production
+        # The extension reports the release too, as appwrite/utopia-extension:<version> does.
         build-args: |
           VERSION=${{ steps.meta.outputs.version }}
+          UTOPIA_EXTENSION_VERSION=${{ steps.meta.outputs.version }}
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}

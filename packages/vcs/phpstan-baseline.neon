@@ -873,13 +873,13 @@ parameters:
 		-
 			message: '#^Cannot access offset ''name'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
-			count: 8
+			count: 6
 			path: src/Adapter/Git/GitLab.php
 
 		-
 			message: '#^Cannot access offset ''namespace'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
-			count: 4
+			count: 2
 			path: src/Adapter/Git/GitLab.php
 
 		-
@@ -903,7 +903,7 @@ parameters:
 		-
 			message: '#^Cannot access offset ''path'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
-			count: 4
+			count: 3
 			path: src/Adapter/Git/GitLab.php
 
 		-
@@ -1021,12 +1021,6 @@ parameters:
 			path: src/Adapter/Git/GitLab.php
 
 		-
-			message: '#^Cannot access offset mixed on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: src/Adapter/Git/GitLab.php
-
-		-
 			message: '#^Cannot cast mixed to int\.$#'
 			identifier: cast.int
 			count: 2
@@ -1077,7 +1071,7 @@ parameters:
 		-
 			message: '#^Method Utopia\\VCS\\Adapter\\Git\\GitLab\:\:getOwnerName\(\) should return string but returns mixed\.$#'
 			identifier: return.type
-			count: 2
+			count: 1
 			path: src/Adapter/Git/GitLab.php
 
 		-
@@ -1111,7 +1105,7 @@ parameters:
 			path: src/Adapter/Git/GitLab.php
 
 		-
-			message: '#^Parameter \#1 \$array of function array_key_last expects array, mixed given\.$#'
+			message: '#^Parameter \#1 \$array of function array_last expects array, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Adapter/Git/GitLab.php

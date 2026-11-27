@@ -107,8 +107,19 @@ function ScheduleDayCard({
         ) : null}
       </div>
 
-      <h4 className="mt-3 text-[15px] font-semibold leading-none text-foreground">
-        {day.title}
+      {/* "Introducing" sits on its own line above the product name; every
+          title reserves two lines so the descriptions line up. */}
+      <h4 className="mt-3 min-h-[2lh] text-[15px] font-semibold leading-tight text-foreground">
+        {day.title.startsWith('Introducing ') ? (
+          <>
+            <span className="block">Introducing</span>
+            <span className="block">
+              {day.title.slice('Introducing '.length)}
+            </span>
+          </>
+        ) : (
+          day.title
+        )}
       </h4>
       <p className="mt-3 min-h-[2lh] line-clamp-2 text-[12px] leading-normal text-muted-foreground">
         {day.description}

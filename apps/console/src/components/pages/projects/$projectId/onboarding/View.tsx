@@ -26,6 +26,7 @@ import {
 import { useDebugMode } from '@/components/global/providers/DebugMode'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import {
+  useOnboardingProductCategories,
   useOnboardingProgressFromSnapshot,
   useOnboardingStepStates,
   useProjectOnboardingSnapshot,
@@ -36,7 +37,6 @@ import {
   getOnboardingGroupState,
   isOnboardingStepDone,
   ONBOARDING_CONNECT,
-  ONBOARDING_PRODUCT_CATEGORIES,
   connectStepGatesProductSections,
   subStepCountsTowardProgress,
   type OnboardingStepState,
@@ -687,8 +687,9 @@ export function View({ initialData }: ViewProps = {}) {
   const { unlockOnboardingLocks } = useDebugOverrides()
   const skipStepMutation = useSkipOnboardingStep(projectId)
 
+  const categories = useOnboardingProductCategories(projectId)
   const { progress, completedSteps, totalSteps } =
-    useOnboardingProgressFromSnapshot(snapshot)
+    useOnboardingProgressFromSnapshot(snapshot, categories)
   const stepStates = useOnboardingStepStates(snapshot)
 
   const connectComplete =
@@ -701,8 +702,8 @@ export function View({ initialData }: ViewProps = {}) {
   const showSkeleton = isLoading && !snapshot
 
   const productBreakdown = useMemo(
-    () => computeOnboardingProductBreakdown(snapshot ?? EMPTY_SNAPSHOT),
-    [snapshot],
+    () => computeOnboardingProductBreakdown(snapshot ?? EMPTY_SNAPSHOT, categories),
+    [snapshot, categories],
   )
 
   /** Per-category open accordion item ids (`type="multiple"`). */
@@ -785,7 +786,7 @@ export function View({ initialData }: ViewProps = {}) {
           </ul>
           </div>
 
-          {ONBOARDING_PRODUCT_CATEGORIES.map((category) => {
+          {categories.map((category) => {
             const categoryGroupIds = category.groups.map((g) => g.id)
             const openForCategory = accordionOpenByCategory[category.id] ?? []
             const hasAnyOpen = openForCategory.length > 0

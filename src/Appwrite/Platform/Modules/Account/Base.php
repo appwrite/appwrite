@@ -37,9 +37,52 @@ use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Emails\Email;
 use Utopia\Locale\Locale;
+use Utopia\System\System;
 
 abstract class Base extends Action
 {
+    /**
+     * Where an OAuth2 provider sends the person back once they signed in there:
+     * getOAuth2CallbackPath() on the host the request came to. The start of a flow
+     * and its end must hand the provider the same URL, or it refuses the token
+     * exchange, so both read it from here.
+     */
+    protected function getOAuth2Callback(string $provider, Document $project, Request $request): string
+    {
+        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+        $port = $request->getPort();
+        $callbackBase = $protocol . '://' . $request->getHostname();
+        // An empty port means the host named none, so the scheme's default applies
+        if ($port !== '' && $port !== ($protocol === 'https' ? '443' : '80')) {
+            $callbackBase .= ':' . $port;
+        }
+
+        return $callbackBase . $this->getOAuth2CallbackPath($provider, $project);
+    }
+
+    /**
+     * The route an OAuth2 provider sends the person back to. A flow that lands on
+     * a route of its own overrides it, in the actions that route runs.
+     */
+    protected function getOAuth2CallbackPath(string $provider, Document $project): string
+    {
+        return '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
+    }
+
+    /**
+     * What is known about the OAuth2 provider $provider: the `class` that talks to
+     * it and its `name`, as the `oAuthProviders` config lists them. Empty for a
+     * provider the config does not list. A flow whose provider is not in that
+     * config overrides it and brings routes of its own: the stock routes accept
+     * only the providers the config lists.
+     *
+     * @return array<string, mixed>
+     */
+    protected function getOAuth2Provider(string $provider): array
+    {
+        return Config::getParam('oAuthProviders', [])[$provider] ?? [];
+    }
+
     protected const OAUTH_DEFAULT_SUCCESS = '/auth/oauth2/success';
     protected const OAUTH_DEFAULT_FAILURE = '/auth/oauth2/failure';
 
@@ -47,6 +90,7 @@ abstract class Base extends Action
     {
         // Attempt to decode secret as a JWT (used by OAuth2 token flow to carry provider info)
         $oauthProvider = null;
+        $oauthIdentity = null;
         try {
             $payload = EncryptionKey::decode($secret, maxAge: 60);
 
@@ -55,6 +99,7 @@ abstract class Base extends Action
             }
 
             $oauthProvider = $payload['provider'];
+            $oauthIdentity = $payload['identity'] ?? null;
             $secret = $payload['secret'];
         } catch (\Ahc\Jwt\JWTException) {
             // Not a JWT — use secret as-is (non-OAuth flows)
@@ -104,14 +149,21 @@ abstract class Base extends Action
             default => SESSION_PROVIDER_TOKEN,
         };
 
+        // An account can hold several identities with one provider, and the token names the one that signed in:
+        // the session is that identity's and no other's. A token issued before it named one falls back to any of them
+        $identityQueries = [
+            Query::equal('userInternalId', [$user->getSequence()]),
+            Query::equal('provider', [$oauthProvider]),
+        ];
+        if (\is_string($oauthIdentity) && $oauthIdentity !== '') {
+            $identityQueries[] = Query::equal('$id', [$oauthIdentity]);
+        }
+
         // For OAuth2 tokens, carry the provider credentials from the identity onto the session,
         // mirroring the cookie-based createOAuth2Session flow.
         $providerCredentials = [];
         if ($verifiedToken->getAttribute('type') === TOKEN_TYPE_OAUTH2) {
-            $identity = $authorization->skip(fn () => $dbForProject->findOne('identities', [
-                Query::equal('userInternalId', [$user->getSequence()]),
-                Query::equal('provider', [$oauthProvider]),
-            ]));
+            $identity = $authorization->skip(fn () => $dbForProject->findOne('identities', $identityQueries));
 
             if (!$identity->isEmpty()) {
                 $providerCredentials = [
@@ -123,7 +175,7 @@ abstract class Base extends Action
             }
         }
 
-        $geoRecord = $geo->get($request->getIP());
+        $geoRecord = $geo->get($request->getClientIP());
         $session = new Document(array_merge(
             [
                 '$id' => Id::unique(),
@@ -135,7 +187,7 @@ abstract class Base extends Action
                 'provider' => $provider,
                 'secret' => $proofForToken->hash($sessionSecret), // One way hash encryption to protect DB leak
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
-                'ip' => $request->getIP(),
+                'ip' => $request->getClientIP(),
                 'factors' => [$factor],
                 'countryCode' => \strtolower($geoRecord->getCountryCode()),
                 'continentCode' => $geoRecord->getContinentCode() === '--' ? null : $geoRecord->getContinentCode(),
@@ -159,10 +211,7 @@ abstract class Base extends Action
         ));
 
         if ($verifiedToken->getAttribute('type') === TOKEN_TYPE_OAUTH2) {
-            $identity = $authorization->skip(fn () => $dbForProject->findOne('identities', [
-                Query::equal('provider', [$oauthProvider]),
-                Query::equal('userInternalId', [$user->getSequence()]),
-            ]));
+            $identity = $authorization->skip(fn () => $dbForProject->findOne('identities', $identityQueries));
 
             if ($identity->isEmpty()) {
                 throw new Exception(Exception::USER_INVALID_TOKEN);

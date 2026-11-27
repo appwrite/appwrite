@@ -60,7 +60,6 @@ async function buildRouter() {
     parseSearch,
     stringifySearch,
     defaultPreload: getDefaultRouterPreload(),
-    // Touchstart used to start preload in ~50ms and steal the tap's next paint.
     defaultPreloadDelay: ROUTER_PRELOAD_DELAY_MS,
     // Keep the previous page visible while loaders run. A finite pendingMs with
     // defaultPendingComponent: () => null blanks the outlet after 1s on slow
@@ -68,6 +67,11 @@ async function buildRouter() {
     // UI set their own pendingMs + pendingComponent.
     defaultPendingMs: Infinity,
     defaultPendingComponent: () => null,
+    // Client-rendered (`ssr: false`) routes present this empty pending state
+    // on the first load, and the router's default 500ms minimum then held the
+    // whole console back after its data had arrived. The fullscreen loader
+    // already covers that moment, so there is nothing to hold on screen.
+    defaultPendingMinMs: 0,
     defaultNotFoundComponent: NotFound,
     defaultErrorComponent: ({ error, info, reset }) => (
       <ErrorComponent error={error} info={info} reset={reset} />

@@ -8,7 +8,7 @@ import { expect, test } from './fixtures'
  * It used to load the first 100 reviewed repositories with no paging or
  * search, and adding one went through a dialog that closed after every pick.
  * Now "Reviewed" pages through what the project reviews, and "All
- * repositories" pages and searches through the GitHub installation, with a
+ * repositories" pages and searches through a GitHub installation, with a
  * switch on every row that turns review on or off in place.
  *
  * The API is mocked at the network layer, with more repositories than fit on
@@ -299,7 +299,7 @@ test.describe('review repositories', () => {
     await expect(toggle('service-011')).toBeChecked()
     await expect(toggle('service-012')).not.toBeChecked()
 
-    await page.getByPlaceholder('Search GitHub repositories...').fill('130')
+    await page.getByPlaceholder('Search repositories...').fill('130')
     await expect(row('service-130')).toBeVisible()
     await expect(row('service-000')).toHaveCount(0)
 
@@ -313,5 +313,34 @@ test.describe('review repositories', () => {
     // And off again.
     await toggle('service-130').click()
     await expect(toggle('service-130')).not.toBeChecked()
+
+    // A row's right-click menu matches its ⋯ menu.
+    await row('service-130').click({ button: 'right' })
+    await expect(
+      page.getByRole('menuitem', { name: 'Open on GitHub' }),
+    ).toBeVisible()
+    await page.getByRole('menuitem', { name: 'Copy' }).hover()
+    await expect(
+      page.getByRole('menuitem', { name: 'Copy name' }),
+    ).toBeVisible()
+    await page.keyboard.press('Escape')
+    await page.keyboard.press('Escape')
+
+    // Add repository opens GitHub's list, ready to search.
+    await page.getByPlaceholder('Search repositories...').fill('')
+    await page.getByRole('radio', { name: /Reviewed/ }).click()
+    await page.getByRole('button', { name: 'Add repository' }).click()
+    await expect(
+      page.getByRole('radio', { name: 'All repositories' }),
+    ).toBeChecked()
+    await expect(
+      page.getByPlaceholder('Search repositories...'),
+    ).toBeFocused()
+    await expect(toggle('service-000')).toBeChecked()
+    if (process.env.REVIEWS_SCREENSHOTS) {
+      await page.screenshot({
+        path: `${process.env.REVIEWS_SCREENSHOTS}/repositories-toolbar.png`,
+      })
+    }
   })
 })

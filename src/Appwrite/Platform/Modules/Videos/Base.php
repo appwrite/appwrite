@@ -14,8 +14,11 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\PermissionType;
+use Utopia\Database\Query;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
+use Utopia\Query\Method as QueryMethod;
 
 /**
  * Shared behaviour for the Videos module.
@@ -236,6 +239,63 @@ abstract class Base extends Action
     public const MIN_DIMENSION = 16;
     public const MAX_DIMENSION = 4320;
 
+    /**
+     * Profiles store kilobits per second, the unit encoders take; the API takes
+     * bits per second, the unit a video's probed bitrates are reported in.
+     */
+    protected static function toKilobits(string $param, int $bitsPerSecond): int
+    {
+        if ($bitsPerSecond % 1000 !== 0) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid `' . $param . '` param: Value must be in bits per second and a multiple of 1000');
+        }
+
+        return \intdiv($bitsPerSecond, 1000);
+    }
+
+    /**
+     * Profiles and renditions store kilobits per second; filters arrive in bits per
+     * second, like the response. Logical queries hold their children in their values.
+     *
+     * @param array<Query> $queries
+     */
+    protected function toStoredBitRates(array $queries): void
+    {
+        foreach ($queries as $query) {
+            $method = $query->getMethod();
+            if (\in_array($method, [QueryMethod::And, QueryMethod::Or], true)) {
+                $this->toStoredBitRates($query->getValues());
+                continue;
+            }
+
+            if (!\in_array($query->getAttribute(), ['videoBitRate', 'audioBitRate'], true)) {
+                continue;
+            }
+
+            $values = $query->getValues();
+            foreach ($values as $index => $value) {
+                if (!\is_int($value)) {
+                    continue;
+                }
+
+                $lower = $method === QueryMethod::GreaterThanEqual
+                    || $method === QueryMethod::LessThan
+                    || (\in_array($method, [QueryMethod::Between, QueryMethod::NotBetween], true) && $index === 0);
+                $upper = $method === QueryMethod::GreaterThan
+                    || $method === QueryMethod::LessThanEqual
+                    || \in_array($method, [QueryMethod::Between, QueryMethod::NotBetween], true);
+
+                $values[$index] = match (true) {
+                    $value % 1000 === 0 => \intdiv($value, 1000),
+                    $lower => (int) \ceil($value / 1000),
+                    $upper => (int) \floor($value / 1000),
+                    // No stored rate is that large, so equal never matches and notEqual always does.
+                    default => PHP_INT_MAX,
+                };
+            }
+            $query->setValues($values);
+        }
+    }
+
     /** Videos one project may create within ENCODE_PERIOD. */
     public const VIDEO_LIMIT = 10;
 
@@ -321,14 +381,101 @@ abstract class Base extends Action
     }
 
     /**
-     * Playback routes authenticate via a `project` query parameter (see the
-     * `locationAuth` on each SDK method), so every URL a player follows out of a
-     * manifest or timeline has to carry it forward or the next request has no
-     * project context.
+     * The binding a playback request authenticated with, as query parameters.
+     * Players cannot send headers, so every URL they follow out of a manifest or
+     * timeline must carry the same binding: the project the request named, and
+     * the project environment (X-Appwrite-Environment) and impersonated user when
+     * it carried them. The project is the one named, not `$project->getId()`:
+     * under an environment the resolved project is the environment's own, which
+     * is not addressable directly.
+     *
+     * @return array<string, string>
      */
-    protected function withProject(string $uri, Document $project): string
+    protected function binding(Request $request): array
     {
-        return $uri . (\str_contains($uri, '?') ? '&' : '?') . 'project=' . \urlencode($project->getId());
+        $binding = ['project' => $request->getProject()];
+
+        foreach ([
+            'environment' => 'x-appwrite-environment',
+            'impersonateuserid' => 'x-appwrite-impersonate-user-id',
+        ] as $param => $header) {
+            $value = $request->getHeaderLine($header, '');
+            if ($value === '') {
+                $value = $request->getQuery($param, '');
+            }
+            if (\is_string($value) && $value !== '') {
+                $binding[$param] = $value;
+            }
+        }
+
+        return $binding;
+    }
+
+    /**
+     * Appends the request's binding (see binding()) to a URL a player follows.
+     * `updatedAt` is the video document's last write: a fresh playlist emits a
+     * new value and Fastly treats those segment addresses as new objects. Copies
+     * that still carry an older time share the video's Surrogate-Key and are
+     * dropped by purgeVideoSegmentCache.
+     */
+    protected function withProject(string $uri, Request $request, Document $video): string
+    {
+        $query = \http_build_query(
+            $this->binding($request) + ['updatedAt' => $video->getUpdatedAt()],
+            '',
+            '&'
+        );
+
+        return $uri . (\str_contains($uri, '?') ? '&' : '?') . $query;
+    }
+
+    /**
+     * True when the video is world-readable. Shared caches may store a segment
+     * only then: the same URL is 200 for every caller.
+     */
+    protected function isPublicRead(Document $video): bool
+    {
+        return \in_array(
+            Role::any()->toString(),
+            \array_map('strval', $video->getPermissionsByType(PermissionType::Read)),
+            true
+        );
+    }
+
+    /**
+     * Surrogate-Key Fastly stores with every public segment of this video.
+     * One purge of this name drops the whole ladder, including URLs that still
+     * carry an older updatedAt.
+     */
+    public static function videoSurrogateKey(string $projectId, string $videoId): string
+    {
+        return \strtolower('video-' . $projectId . '-' . $videoId);
+    }
+
+    /**
+     * Cache policy for a playback segment whose URL carries the video's updatedAt.
+     *
+     * A world-readable video may sit at a shared cache; the Surrogate-Key is
+     * what one purge uses to drop every copy, including older updatedAt URLs.
+     * Anything else stays private so that cache cannot keep serving the URL
+     * after access is revoked.
+     */
+    protected function cachePlaybackSegment(Response $response, Document $project, Document $video): void
+    {
+        $public = $this->isPublicRead($video);
+        $response->addHeader(
+            'Cache-Control',
+            $public
+                ? 'public, max-age=31536000, immutable'
+                : 'private, max-age=31536000, immutable'
+        );
+        if ($public) {
+            // CORS echoes Origin with credentials; without Vary, Fastly would
+            // reuse the first viewer's origin for every later site.
+            $response
+                ->addHeader('Vary', 'Origin')
+                ->addHeader('Surrogate-Key', self::videoSurrogateKey($project->getId(), $video->getId()));
+        }
     }
 
     /**

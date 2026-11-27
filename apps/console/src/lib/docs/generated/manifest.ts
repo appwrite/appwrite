@@ -129,6 +129,55 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 3
   },
   {
+    "slug": "advanced/environments",
+    "title": "Project environments",
+    "description": "Give an Appwrite Cloud project development, staging, and QA environments with their own databases, storage, users, functions, and sites, under the same project ID and bill.",
+    "layout": "article",
+    "readingTimeMinutes": 4
+  },
+  {
+    "slug": "advanced/environments/connect",
+    "title": "Connect to an environment",
+    "description": "Point Appwrite SDKs, the REST API, the CLI, and the MCP server at a project environment with the project ID and the environment ID.",
+    "layout": "article",
+    "readingTimeMinutes": 3
+  },
+  {
+    "slug": "advanced/environments/copy",
+    "title": "Copy a project into an environment",
+    "description": "Learn what an Appwrite project environment copies from its project, from database schemas and buckets to functions, sites, and settings, and what always stays behind.",
+    "layout": "article",
+    "readingTimeMinutes": 3
+  },
+  {
+    "slug": "advanced/environments/create",
+    "title": "Create an environment",
+    "description": "Create an Appwrite project environment from the Console, as an empty environment or as a copy of the project, and switch between production and its environments.",
+    "layout": "article",
+    "readingTimeMinutes": 3
+  },
+  {
+    "slug": "advanced/environments/limits",
+    "title": "Limits and billing",
+    "description": "How many environments each Appwrite Cloud plan includes per project, the request and user limits of an environment, and how environment usage is billed.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "advanced/environments/manage",
+    "title": "Manage environments",
+    "description": "Rename, reorder, and delete Appwrite project environments, and learn what happens to environments when their project is transferred or deleted.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "advanced/environments/workflow",
+    "title": "Development workflow",
+    "description": "Move Appwrite changes from a development environment to staging and production with one CLI config, one API key per environment, and a CI pipeline.",
+    "layout": "article",
+    "readingTimeMinutes": 3
+  },
+  {
     "slug": "advanced/migrations",
     "title": "Migrations",
     "description": "Learn how to use Appwrite Migrations service to move projects from other vendors to Appwrite Cloud or from self-hosting to Cloud and the other way around.",
@@ -770,7 +819,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "API keys",
     "description": "Secure your application with Appwrite API Keys. Discover how to create and manage API keys to control access and enhance your application's security.",
     "layout": "article",
-    "readingTimeMinutes": 6
+    "readingTimeMinutes": 7
   },
   {
     "slug": "partners/project/auth-methods",
@@ -882,7 +931,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Proxy API",
     "description": "Point custom domains at a customer's Appwrite project API, functions, and sites with the Proxy API, then verify them over DNS.",
     "layout": "article",
-    "readingTimeMinutes": 4
+    "readingTimeMinutes": 5
   },
   {
     "slug": "partners/quick-start",
@@ -1174,9 +1223,9 @@ export const DOCS_PAGES: DocsPageMeta[] = [
   {
     "slug": "products/analytics/dashboard",
     "title": "Dashboard",
-    "description": "A tour of the Appwrite Analytics dashboard, from the metrics and chart to date ranges, live visitors, and the cards that break traffic down by source, page, location, technology, bots, and custom events.",
+    "description": "A tour of the Appwrite Analytics dashboard, from the metrics, chart, and notes to date ranges, live visitors, and the cards that break traffic down by source, page, location, technology, bots, and custom events.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 5
   },
   {
     "slug": "products/analytics/events",
@@ -1400,7 +1449,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Message templates",
     "description": "Communicate using your brand and voice by customizing email and SMS message templates, localized to your user's language.",
     "layout": "article",
-    "readingTimeMinutes": 5
+    "readingTimeMinutes": 6
   },
   {
     "slug": "products/auth/mfa",
@@ -2475,7 +2524,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Backups",
     "description": "Learn how to efficiently back up your databases on Appwrite Cloud, ensuring data security and seamless recovery.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/databases/tablesdb/bulk-operations",
@@ -3035,7 +3084,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Develop Appwrite Functions",
     "description": "Master serverless function development with Appwrite. Learn how to write and test functions locally, debug code, and optimize for efficient execution.",
     "layout": "article",
-    "readingTimeMinutes": 11
+    "readingTimeMinutes": 16
   },
   {
     "slug": "products/functions/develop-locally",
@@ -3049,7 +3098,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Domains",
     "description": "Execute Appwrite Functions through domains using standard HTTP GET, POST, or other request methods to serve static, JSON, HTML, or other content.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "products/functions/email",
@@ -3134,6 +3183,20 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Deliver push notifications from Appwrite to apps built with the Web, Flutter, React Native, Android, and Apple SDKs, without Firebase or device tokens.",
     "layout": "article",
     "readingTimeMinutes": 18
+  },
+  {
+    "slug": "products/messaging/bird-email",
+    "title": "Bird email",
+    "description": "Send emails to your Appwrite users through Bird's email API and Appwrite Messaging.",
+    "layout": "article",
+    "readingTimeMinutes": 5
+  },
+  {
+    "slug": "products/messaging/bird-sms",
+    "title": "Bird SMS",
+    "description": "Send SMS messages to your Appwrite users using Bird and Appwrite Messaging.",
+    "layout": "article",
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/messaging/fcm",
@@ -3392,7 +3455,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Domains",
     "description": "Discover how domains can be managed for an Appwrite Site",
     "layout": "article",
-    "readingTimeMinutes": 6
+    "readingTimeMinutes": 7
   },
   {
     "slug": "products/sites/environment-variables",
@@ -3595,7 +3658,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Image transformations",
     "description": "Optimize image storage and processing with Appwrite. Explore image resizing, transformations, and manipulation to deliver rich media experiences in your apps.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 5
   },
   {
     "slug": "products/storage/permissions",
@@ -3686,7 +3749,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Renditions",
     "description": "Learn how Appwrite Videos encodes a rendition per profile and output, how rendition status and progress work, and how to retry a failed encode.",
     "layout": "article",
-    "readingTimeMinutes": 5
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/videos/timeline",

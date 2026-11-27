@@ -11,7 +11,6 @@ use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\System\System;
 
 class XList extends Base
 {
@@ -35,8 +34,6 @@ class XList extends Base
                 namespace: 'videos',
                 group: 'codecs',
                 name: 'listCodecs',
-                // Hidden until videos is generally available; preview SDK builds show it.
-                hide: System::getEnv('_APP_SDK_PREVIEW', 'disabled') !== 'enabled',
                 description: '/docs/references/videos/list-codecs.md',
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [
