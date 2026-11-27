@@ -697,7 +697,7 @@ test.describe('runtime logs', () => {
     await expect(lastHour).toHaveCount(0)
     await expect(page).toHaveURL(/from=.*to=/)
     await expect(chart).toContainText('0 lines')
-    await expect(page.getByText('No logs', { exact: true })).toBeVisible()
+    await expect(page.getByText('No logs in this time range')).toBeVisible()
 
     await chart.getByRole('button', { name: 'Reset zoom' }).click()
     await expect(lastHour).toBeVisible()
@@ -846,6 +846,49 @@ test.describe('runtime logs', () => {
       ),
       { timeout: 30_000 },
     )
+  })
+
+  test('the project Logs page opens on its product empty state', async ({
+    page,
+  }) => {
+    await enableRuntimeLogs(page)
+    await mockAppwriteApi(page)
+    // A project that hasn't written a line yet
+    await page.route('**/v1/logs**', (route) => {
+      const url = new URL(route.request().url())
+      const body = url.pathname.endsWith('/usage')
+        ? { interval: '1m', linesTotal: 0, buckets: [] }
+        : { total: 0, logs: [] }
+      return route.fulfill({
+        status: 200,
+        headers: {
+          'access-control-allow-origin':
+            route.request().headers()['origin'] ?? '*',
+          'access-control-allow-credentials': 'true',
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      })
+    })
+
+    await page.goto(`/projects/${PROJECT.$id}/logs`, {
+      waitUntil: 'domcontentloaded',
+    })
+    await expect(
+      page.getByRole('heading', { name: "Your project's runtime logs" }),
+    ).toBeVisible({ timeout: 30_000 })
+    await expect(
+      page.getByRole('link', { name: 'Read the docs' }),
+    ).toBeVisible()
+    // No empty chart under it, and the toolbar stays to look further back
+    await expect(page.getByRole('region', { name: 'Log volume' })).toHaveCount(
+      0,
+    )
+    await expect(page.getByPlaceholder('Search logs...')).toBeVisible()
+
+    // A narrowed list is just empty, not new
+    await page.getByPlaceholder('Search logs...').fill('timeout')
+    await expect(page.getByText('No matching lines')).toBeVisible()
   })
 
   test('the project Logs page keeps its filters in the URL', async ({
