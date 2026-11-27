@@ -70,8 +70,6 @@ import {
 } from '@/lib/specifications'
 import { useFunctionWizard } from './WizardContext'
 import { useT } from '@/lib/i18n/translate'
-import { useActiveEnvironmentId } from '@/lib/active-environment'
-import { EnvironmentGitNotice } from '@/components/global/shared/EnvironmentGitNotice'
 import { getVcsProvider } from '@/lib/vcs/providers'
 import { validateVariables } from '@/lib/variables'
 import {
@@ -98,7 +96,6 @@ export function RepositoryConfigView({
 }: RepositoryConfigViewProps) {
   const t = useT()
   const { projectId } = useParams({ strict: false })
-  const environmentId = useActiveEnvironmentId(projectId)
   const { project } = useProject(projectId)
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -476,19 +473,6 @@ export function RepositoryConfigView({
       </div>
     </div>
   )
-
-  // Git installations cannot be connected from inside an environment
-  if (environmentId) {
-    return (
-      <WizardLayout
-        title={t('Create function')}
-        fallbackPath={`/projects/${projectId}/functions`}
-        fullscreen
-      >
-        <EnvironmentGitNotice />
-      </WizardLayout>
-    )
-  }
 
   return (
     <WizardLayout

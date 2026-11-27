@@ -7,8 +7,6 @@
  */
 
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { useActiveEnvironmentId } from '@/lib/active-environment'
-import { EnvironmentGitNotice } from '@/components/global/shared/EnvironmentGitNotice'
 import { useParams, useNavigate, Link } from '@tanstack/react-router'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -110,7 +108,6 @@ export function CreateSiteView() {
   const { vcsProviders } = useConsoleVariables()
   const vcsOAuthProviders = getVisibleVcsOAuthProviders(vcsProviders)
   const { projectId } = useParams({ strict: false })
-  const environmentId = useActiveEnvironmentId(projectId)
   const navigate = useNavigate()
   const { installations, updateFormData, setCurrentPath } = useWizard()
 
@@ -368,9 +365,7 @@ export function CreateSiteView() {
     >
       <div className="grid gap-12 lg:grid-cols-5">
         <CreateWizardLeftColumn title={t('Import repository')}>
-          {environmentId ? (
-            <EnvironmentGitNotice />
-          ) : !hasInstallations ? (
+          {!hasInstallations ? (
             <div className="rounded-lg border border-border bg-card/50 p-6 text-center">
               <div className="mb-3 flex justify-center">
                 <AuthFlowHeaderIcon icon={GitIcon} />

@@ -8,7 +8,6 @@ import {
   useOrganizationScopes,
   useProject,
 } from '@/lib/react-query/hooks'
-import { useActiveEnvironmentId } from '@/lib/active-environment'
 
 /**
  * Whether code review shows in a project, by the same rule as the sidebar's
@@ -19,14 +18,11 @@ export function useReviewsAccess(projectId: string | null | undefined) {
   const { features } = useConsoleProfile()
   const { access } = useOrganizationScopes(project?.teamId)
   const { reviewsEnabled } = useConsoleVariables(project?.region)
-  // Reviews run on Git installations, which an environment cannot connect
-  const environmentId = useActiveEnvironmentId(projectId ?? undefined)
 
   const visible =
     features.reviews &&
     reviewsEnabled &&
-    canSeeProjectNavItem(access, features, 'reviews') &&
-    !environmentId
+    canSeeProjectNavItem(access, features, 'reviews')
 
   return {
     visible,

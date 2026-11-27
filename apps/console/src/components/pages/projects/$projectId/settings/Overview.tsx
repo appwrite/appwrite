@@ -250,13 +250,13 @@ export function ProjectSettingsOverview({
   const [updatingProtocols, setUpdatingProtocols] = useState<
     Set<ProjectProtocolId>
   >(new Set())
-  const [protocols, setProtocols] = useState<
-    Record<ProjectProtocolId, boolean>
-  >({
-    [ProjectProtocolId.Rest]: true,
-    [ProjectProtocolId.Graphql]: true,
-    [ProjectProtocolId.Websocket]: true,
-  })
+  const [protocols, setProtocols] = useState<Record<ProjectProtocolId, boolean>>(
+    {
+      [ProjectProtocolId.Rest]: true,
+      [ProjectProtocolId.Graphql]: true,
+      [ProjectProtocolId.Websocket]: true,
+    },
+  )
   const [protocolDialogOpen, setProtocolDialogOpen] = useState(false)
   const [protocolBulkStatus, setProtocolBulkStatus] = useState<boolean | null>(
     null,
@@ -634,7 +634,9 @@ export function ProjectSettingsOverview({
     deleteEnvironmentMutation.mutate(environmentId, {
       onSuccess: async () => {
         toast.success(
-          name ? `${name} ${t('has been deleted')}` : t('Environment deleted'),
+          name
+            ? `${name} ${t('has been deleted')}`
+            : t('Environment deleted'),
         )
         // Back to production. Leaving the environment drops the project's
         // cached queries, so the navigation loads production fresh.
@@ -776,9 +778,7 @@ export function ProjectSettingsOverview({
           className="rounded-xl border border-border bg-card/50 overflow-hidden"
         >
           <div className="px-6 py-4">
-            <h3 className="text-[15px] font-semibold text-foreground">
-              {t('Name')}
-            </h3>
+            <h3 className="text-[15px] font-semibold text-foreground">{t('Name')}</h3>
           </div>
           <div className="border-t border-border" />
           <div className="px-6 py-4">
@@ -842,13 +842,8 @@ export function ProjectSettingsOverview({
             <div className="@[600px]:w-64 shrink-0">
               <p className="text-[13px] text-muted-foreground">
                 {environmentId
-                  ? t(
-                      "Access this environment with the project's API Endpoint and Project ID, and the Environment ID that tells it apart from production.",
-                    ) /* pragma: allowlist secret */
-                  : t(
-                      "Access Appwrite services using this project's API Endpoint and Project ID.",
-                    )}{' '}
-                {/* pragma: allowlist secret */}
+                  ? t("Access this environment with the project's API Endpoint and Project ID, and the Environment ID that tells it apart from production.") /* pragma: allowlist secret */
+                  : t("Access Appwrite services using this project's API Endpoint and Project ID.")} {/* pragma: allowlist secret */}
               </p>
             </div>
             <div className="flex-1 min-w-0">
@@ -874,10 +869,7 @@ export function ProjectSettingsOverview({
                   <Label className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-1.5 block">
                     {t('API Endpoint')}
                   </Label>
-                  <CopyableInput
-                    value={projectEndpoint}
-                    label={t('API Endpoint')}
-                  />
+                  <CopyableInput value={projectEndpoint} label={t('API Endpoint')} />
                 </div>
               </div>
             </div>
@@ -910,9 +902,7 @@ export function ProjectSettingsOverview({
               <div className="flex gap-6 @[600px]:flex-row flex-col">
                 <div className="@[600px]:w-64 shrink-0">
                   <p className="text-[13px] text-muted-foreground">
-                    {t(
-                      'Protocol settings control access through REST, GraphQL, and WebSocket APIs independently from service-level access.',
-                    )}
+                    {t('Protocol settings control access through REST, GraphQL, and WebSocket APIs independently from service-level access.')}
                   </p>
                 </div>
                 <div className="flex-1 min-w-0">
@@ -1008,9 +998,7 @@ export function ProjectSettingsOverview({
               <div className="flex gap-6 @[600px]:flex-row flex-col">
                 <div className="@[600px]:w-64 shrink-0">
                   <p className="text-[13px] text-muted-foreground">
-                    {t(
-                      'Choose services you wish to enable or disable for the client API. When disabled, the services are not accessible to client SDKs but remain accessible to server SDKs.',
-                    )}
+                    {t('Choose services you wish to enable or disable for the client API. When disabled, the services are not accessible to client SDKs but remain accessible to server SDKs.')}
                   </p>
                 </div>
                 <div className="flex-1 min-w-0">
@@ -1093,19 +1081,17 @@ export function ProjectSettingsOverview({
             </div>
           </div>
 
-          {/* Git installations cannot be connected from inside an environment */}
-          {!environmentId && (
-            <GitConfigurationCard
-              projectId={projectId}
-              page={installationsPage}
-              limit={installationsLimit}
-              onPageChange={setInstallationsPage}
-              getGitHubAuthUrl={getGitHubAuthUrl}
-              getVcsAuthUrl={getVcsAuthUrl}
-              isSelfHosted={false} // TODO: Get from organization plan
-              isVcsEnabled={true} // TODO: Get from project settings
-            />
-          )}
+          {/* Git Configuration Section */}
+          <GitConfigurationCard
+            projectId={projectId}
+            page={installationsPage}
+            limit={installationsLimit}
+            onPageChange={setInstallationsPage}
+            getGitHubAuthUrl={getGitHubAuthUrl}
+            getVcsAuthUrl={getVcsAuthUrl}
+            isSelfHosted={false} // TODO: Get from organization plan
+            isVcsEnabled={true} // TODO: Get from project settings
+          />
 
           {/* An add-on is the project's, and its environments have it with it */}
           {!environmentId && <PremiumGeoDBCard projectId={projectId} />}
@@ -1180,9 +1166,7 @@ export function ProjectSettingsOverview({
                 <DialogDescription className="text-[13px] mt-2">
                   {protocolBulkStatus
                     ? t('All project protocols will be enabled.')
-                    : t(
-                        'Are you sure you want to disable all protocols? This will disable client access over those protocols until they are re-enabled.',
-                      )}
+                    : t('Are you sure you want to disable all protocols? This will disable client access over those protocols until they are re-enabled.')}
                 </DialogDescription>
               </DialogHeader>
               <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -1265,9 +1249,7 @@ function DeleteEnvironmentSection({
         <div className="border-t border-destructive/20" />
         <div className="px-6 py-4">
           <p className="text-[13px] text-muted-foreground">
-            {t(
-              'Permanently delete this environment with its resources and users. The project it belongs to and its other environments are not affected. This action cannot be undone.',
-            )}
+            {t('Permanently delete this environment with its resources and users. The project it belongs to and its other environments are not affected. This action cannot be undone.')}
           </p>
 
           <div className="mt-4 flex items-center gap-3">
@@ -1276,10 +1258,7 @@ function DeleteEnvironmentSection({
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-purple-500/30 bg-purple-500/10"
             >
               <span
-                className={cn(
-                  'h-2.5 w-2.5 rounded-full',
-                  PROJECT_ENVIRONMENT_DOT_CLASS,
-                )}
+                className={cn('h-2.5 w-2.5 rounded-full', PROJECT_ENVIRONMENT_DOT_CLASS)}
               />
             </span>
             <div className="min-w-0 flex-1">
@@ -1365,9 +1344,7 @@ function DeleteProjectSection({
         <div className="border-t border-destructive/20" />
         <div className="px-6 py-4">
           <p className="text-[13px] text-muted-foreground">
-            {t(
-              'Permanently delete this project and all associated data. This action cannot be undone.',
-            )}
+            {t('Permanently delete this project and all associated data. This action cannot be undone.')}
           </p>
 
           {/* Project Info Summary */}
@@ -1377,9 +1354,7 @@ function DeleteProjectSection({
               <div className="flex-1 min-w-0">
                 <p
                   className="text-[14px] font-medium text-foreground truncate"
-                  title={
-                    getProjectNameDisplayTitle(project.name) ?? project.name
-                  }
+                  title={getProjectNameDisplayTitle(project.name) ?? project.name}
                 >
                   {formatProjectNameForDisplay(project.name)}
                 </p>
@@ -1414,16 +1389,12 @@ function DeleteProjectSection({
                   {project && (
                     <span
                       className="font-medium text-foreground"
-                      title={
-                        getProjectNameDisplayTitle(project.name) ?? project.name
-                      }
+                      title={getProjectNameDisplayTitle(project.name) ?? project.name}
                     >
                       {formatProjectNameForDisplay(project.name)}
                     </span>
                   )}{' '}
-                  {t(
-                    'and all its databases, functions, and files? This action cannot be undone.',
-                  )}
+                  {t('and all its databases, functions, and files? This action cannot be undone.')}
                 </DialogDescription>
               </DialogHeader>
               <div className="border-t border-border" />
