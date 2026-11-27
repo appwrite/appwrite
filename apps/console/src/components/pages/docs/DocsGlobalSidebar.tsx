@@ -71,6 +71,7 @@ import {
 } from '@/lib/docs/nav-styles'
 import { isAgentDocsPathname } from '@/lib/docs/agent-docs-feature'
 import { isAnalyticsDocsPathname } from '@/lib/docs/analytics-docs-feature'
+import { isMonitorsDocsPathname } from '@/lib/docs/monitors-docs-feature'
 import { isPartnersDocsPathname } from '@/lib/docs/partners-docs-feature'
 import { isVideosDocsPathname } from '@/lib/docs/videos-docs-feature'
 import { isZeroDocsPathname } from '@/lib/docs/zero-docs-feature'
@@ -580,11 +581,16 @@ export function DocsGlobalSidebar({
       navigate({ to: '/docs', replace: true })
       return
     }
+    if (!features.alerts && isMonitorsDocsPathname(pathname)) {
+      navigate({ to: '/docs', replace: true })
+      return
+    }
     if (!features.zero && isZeroDocsPathname(pathname)) {
       navigate({ to: '/docs', replace: true })
     }
   }, [
     features.agent,
+    features.alerts,
     features.analytics,
     features.partnersDocs,
     features.videos,

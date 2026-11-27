@@ -1,0 +1,71 @@
+---
+layout: article
+title: Monitors
+description: Watch project usage and check endpoint availability with Appwrite Monitors. Configure alerts, choose who to notify, and track recovery in the Console.
+---
+
+Appwrite **Monitors** checks your project usage or an endpoint on a schedule. A monitor opens an alert when a usage condition is met or an endpoint check fails. You can choose who gets notified, escalate to more people until someone responds, and review when each alert fired and recovered.
+
+You manage monitors and their alerts under **Observe** > **Monitors** in your project.
+
+{% only_dark %}
+![Monitors tab listing three usage monitors, an HTTP check, and an SMTP check, each with its severity and latest result, and the executions monitor firing](/images/docs/monitors/dark/monitors.avif)
+{% /only_dark %}
+{% only_light %}
+![Monitors tab listing three usage monitors, an HTTP check, and an SMTP check, each with its severity and latest result, and the executions monitor firing](/images/docs/monitors/monitors.avif)
+{% /only_light %}
+
+# Monitor types {% #monitor-types %}
+
+| Type | What it checks | Where to use it |
+| --- | --- | --- |
+| [Usage](/docs/products/monitors/usage) | A project or resource metric, such as outbound bandwidth, database reads, or storage used. | Appwrite Cloud and self-hosted Appwrite |
+| [HTTP](/docs/products/monitors/endpoint-checks#http) | A URL's response status, response time, and HTTPS certificate expiry. | Paid Appwrite Cloud plans |
+| [DNS](/docs/products/monitors/endpoint-checks#dns) | Whether a domain resolves and returns the expected answer. | Paid Appwrite Cloud plans |
+| [TCP](/docs/products/monitors/endpoint-checks#tcp) | Whether a host accepts a connection on a port. | Paid Appwrite Cloud plans |
+| [SMTP](/docs/products/monitors/endpoint-checks#smtp) | Whether a mail server accepts an SMTP session and completes the configured TLS handshake. | Paid Appwrite Cloud plans |
+
+# How it works {% #how-it-works %}
+
+1. Create a monitor and define the condition or failed check that should open an alert.
+2. Choose a severity and who should be notified. You can notify organization roles or use an escalation to notify people in steps.
+3. Use the **Monitors** tab to manage checks and see their latest results. Use the **Alerts** tab to review firing and resolved alerts, and acknowledge them.
+
+Each alert is also a project event, so [webhooks and functions](/docs/products/monitors/alerts#use-project-events) can post it to chat, pause a runaway function, or log an incident. You can manage monitors and alerts with the server SDKs too.
+
+# Plan limits {% #plan-limits %}
+
+On Appwrite Cloud, the plan sets how many monitors you can create and how often they run:
+
+| | Free | Pro |
+| --- | --- | --- |
+| Usage monitors | 3 per project, checked every 15 minutes | 25 per project, checked every minute |
+| Synthetic checks (HTTP, DNS, TCP, SMTP) | Not available | 10 per organization, then $2 per check per month, as often as every minute |
+| Escalations | 1, with up to 2 steps | 10, with up to 10 steps each |
+| On-call responders | 1 | 3 included, then $25 per responder per month |
+
+On Pro, the **Create monitor** page shows how many synthetic checks the organization uses and what an additional one costs. It tells you when you reach a limit. See [Pricing](/pricing) for Enterprise limits.
+
+# Get started {% #getting-started %}
+
+Create a usage monitor for outbound bandwidth and see its first check.
+
+{% arrow_link href="/docs/products/monitors/quick-start" %}
+Quick start
+{% /arrow_link %}
+
+# Guides {% #guides %}
+
+Set up each type of monitor and decide who hears about its alerts.
+
+{% cards %}
+{% cards_item href="/docs/products/monitors/usage" title="Usage monitors" %}
+Watch an Appwrite metric and choose a threshold for your project or resource.
+{% /cards_item %}
+{% cards_item href="/docs/products/monitors/endpoint-checks" title="Endpoint checks" %}
+Check HTTP, DNS, TCP, and SMTP endpoints from Appwrite Cloud.
+{% /cards_item %}
+{% cards_item href="/docs/products/monitors/alerts" title="Alerts and notifications" %}
+Review alerts, set up notifications and escalations, and respond when a check fires.
+{% /cards_item %}
+{% /cards %}

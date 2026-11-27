@@ -1,0 +1,508 @@
+---
+layout: article
+title: Endpoint checks
+description: Check HTTP, DNS, TCP, and SMTP endpoints on a schedule with Appwrite Cloud synthetic checks, and set the rules that open an alert.
+---
+
+Endpoint checks, called synthetic checks in the Console, are available on paid Appwrite Cloud plans. Appwrite connects to your target on a schedule and opens an alert when the check fails.
+
+Synthetic checks count toward one allowance for the whole organization, across all of its projects. Pro includes 10 checks, and each additional check costs $2 per month. The shortest check interval is 1 minute on Pro and 30 seconds on Enterprise. Synthetic checks aren't available on the Free plan, and an organization can't move to Free while it has any. See [Pricing](/pricing) for details.
+
+# Create an endpoint check {% #create-an-endpoint-check %}
+
+1. In your project, open **Observe** > **Monitors**, then click **Create monitor**.
+2. Choose **HTTP**, **DNS**, **TCP**, or **SMTP** as the type. Under **Target**, enter what to check and what a healthy response looks like.
+3. Under **Checks**, set how often to check and how long a check can take before it times out. Checks run from every 30 seconds to every hour, and your plan sets the shortest interval. The timeout ranges from 5 seconds to 1 minute and can't be longer than the interval.
+4. Choose recipients under **Notify** and pick a **Severity**. To set a name or change the cooldown, expand **Name, cooldown**.
+5. Click **Create**.
+
+{% only_dark %}
+![Create monitor page with an HTTP check of api.example.com/health that expects status 200 and warns 14 days before the certificate expires](/images/docs/monitors/dark/http-target.avif)
+{% /only_dark %}
+{% only_light %}
+![Create monitor page with an HTTP check of api.example.com/health that expects status 200 and warns 14 days before the certificate expires](/images/docs/monitors/http-target.avif)
+{% /only_light %}
+
+The **Monitors** list shows the latest result, latency, and time of each check. Open a monitor to see its status, target, latest result, and when it last fired.
+
+Some failures always open an alert, whatever you expect from the target: a timeout, a domain that doesn't resolve, a refused or failed connection, a failed TLS handshake, or a target in a private network, which Appwrite doesn't connect to.
+
+# HTTP {% #http %}
+
+Enter an `http://` or `https://` URL and choose a request method. You can add headers and, for methods that send one, a request body. Appwrite follows redirects and ignores the response body.
+
+Enter a comma-separated list of **Expected status codes**, or leave it empty to accept any 2xx response.
+
+For an HTTPS URL, **Certificate expiry warning** sets how many days before the certificate expires the check fails. It defaults to 14 days. So that certificates renewed on a normal schedule don't fire, the warning also waits until less than a quarter of the certificate's lifetime is left. Set it to `0` to turn the warning off. An invalid certificate still fails the check.
+
+# DNS {% #dns %}
+
+Enter the domain and select an **A**, **AAAA**, **CNAME**, **MX**, **TXT**, or **NS** record. Enter an **Expected answer** to fail when the first record doesn't match it, or leave it empty to fail only when the domain returns no records. Appwrite compares answers in lowercase, without the trailing dot.
+
+**Resolver** takes an IP address with an optional port, such as `1.1.1.1` or `[2606:4700:4700::1111]:53`. Leave it empty to use Appwrite's resolver.
+
+# TCP {% #tcp %}
+
+Enter a host and port. The check passes when Appwrite can open a TCP connection to that port within the timeout, and it closes the connection straight away. Use an HTTP or SMTP check when you also need to verify how the service responds.
+
+# SMTP {% #smtp %}
+
+Enter the mail server's host and port. Appwrite reads the server's greeting, sends `EHLO`, and secures the connection as the **TLS** setting asks. It never signs in or sends mail.
+
+| TLS setting | Behavior |
+| --- | --- |
+| **From the port** | Implicit TLS on port 465, STARTTLS on port 587, and a plain connection on other ports. |
+| **None** | Connect without TLS. |
+| **Upgrade with STARTTLS** | Upgrade the session with STARTTLS. The check fails if the server doesn't offer it. |
+| **Implicit TLS** | Start TLS as soon as the connection opens. |
+
+# Create with a server SDK {% #create-with-a-server-sdk %}
+
+Each type has its own method: `createHttpMonitor`, `createDnsMonitor`, `createTcpMonitor`, and `createSmtpMonitor`. To call them, create an API key with the `monitors.write` scope under **Connect** > **API Keys** in your project. This example checks `https://api.example.com/health` every minute and opens a **Critical** alert when the response isn't a 2xx status or takes longer than 2 seconds.
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const monitors = new sdk.Monitors(client);
+
+const monitor = await monitors.createHttpMonitor({
+    monitorId: 'api-health',
+    name: 'API health',
+    url: 'https://api.example.com/health',
+    rules: [
+        sdk.Query.or([
+            sdk.Query.notBetween('statusCode', 200, 299),
+            sdk.Query.greaterThan('latency', 2000)
+        ])
+    ], // optional
+    interval: 60, // optional
+    timeout: 10, // optional
+    severity: sdk.MonitorSeverity.Critical // optional
+});
+```
+
+```server-python
+from appwrite.client import Client
+from appwrite.services.monitors import Monitors
+from appwrite.query import Query
+from appwrite.enums.monitor_severity import MonitorSeverity
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<API_KEY>')
+
+monitors = Monitors(client)
+
+monitor = monitors.create_http_monitor(
+    monitor_id = 'api-health',
+    name = 'API health',
+    url = 'https://api.example.com/health',
+    rules = [
+        Query.or_queries([
+            Query.not_between('statusCode', 200, 299),
+            Query.greater_than('latency', 2000)
+        ])
+    ], # optional
+    interval = 60, # optional
+    timeout = 10, # optional
+    severity = MonitorSeverity.CRITICAL # optional
+)
+```
+
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+import 'package:dart_appwrite/enums.dart' as enums;
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+Monitors monitors = Monitors(client);
+
+final monitor = await monitors.createHttpMonitor(
+    monitorId: 'api-health',
+    name: 'API health',
+    url: 'https://api.example.com/health',
+    rules: [
+        Query.or([
+            Query.notBetween('statusCode', 200, 299),
+            Query.greaterThan('latency', 2000),
+        ]),
+    ], // (optional)
+    interval: 60, // (optional)
+    timeout: 10, // (optional)
+    severity: enums.MonitorSeverity.critical, // (optional)
+);
+```
+
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Monitors;
+use Appwrite\Query;
+use Appwrite\Enums\MonitorSeverity;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<API_KEY>');
+
+$monitors = new Monitors($client);
+
+$monitor = $monitors->createHttpMonitor(
+    monitorId: 'api-health',
+    name: 'API health',
+    url: 'https://api.example.com/health',
+    rules: [
+        Query::or([
+            Query::notBetween('statusCode', 200, 299),
+            Query::greaterThan('latency', 2000)
+        ])
+    ], // optional
+    interval: 60, // optional
+    timeout: 10, // optional
+    severity: MonitorSeverity::CRITICAL() // optional
+);
+```
+
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+include Appwrite::Enums
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<API_KEY>')
+
+monitors = Monitors.new(client)
+
+monitor = monitors.create_http_monitor(
+    monitor_id: 'api-health',
+    name: 'API health',
+    url: 'https://api.example.com/health',
+    rules: [
+        Query.or([
+            Query.not_between('statusCode', 200, 299),
+            Query.greater_than('latency', 2000)
+        ])
+    ], # optional
+    interval: 60, # optional
+    timeout: 10, # optional
+    severity: MonitorSeverity::CRITICAL # optional
+)
+```
+
+```server-dotnet
+using Appwrite;
+using Appwrite.Enums;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<API_KEY>");
+
+Monitors monitors = new Monitors(client);
+
+// Fully qualified, since System.Threading also has a Monitor class.
+Appwrite.Models.Monitor monitor = await monitors.CreateHttpMonitor(
+    monitorId: "api-health",
+    name: "API health",
+    url: "https://api.example.com/health",
+    rules: new List<string> {
+        Query.Or(new List<string> {
+            Query.NotBetween("statusCode", 200, 299),
+            Query.GreaterThan("latency", 2000)
+        })
+    }, // optional
+    interval: 60, // optional
+    timeout: 10, // optional
+    severity: MonitorSeverity.Critical // optional
+);
+```
+
+```server-deno
+import { Client, Monitors, Query, MonitorSeverity } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const monitors = new Monitors(client);
+
+const monitor = await monitors.createHttpMonitor({
+    monitorId: 'api-health',
+    name: 'API health',
+    url: 'https://api.example.com/health',
+    rules: [
+        Query.or([
+            Query.notBetween('statusCode', 200, 299),
+            Query.greaterThan('latency', 2000)
+        ])
+    ], // optional
+    interval: 60, // optional
+    timeout: 10, // optional
+    severity: MonitorSeverity.Critical // optional
+});
+```
+
+```server-go
+package main
+
+import (
+	"fmt"
+
+	"github.com/appwrite/sdk-for-go/v7/appwrite"
+	"github.com/appwrite/sdk-for-go/v7/monitors"
+	"github.com/appwrite/sdk-for-go/v7/query"
+)
+
+func main() {
+	client := appwrite.NewClient(
+		appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+		appwrite.WithProject("<PROJECT_ID>"),
+		appwrite.WithKey("<API_KEY>"),
+	)
+
+	service := monitors.New(client)
+
+	monitor, err := service.CreateHttpMonitor(
+		"api-health",
+		"API health",
+		"https://api.example.com/health",
+		service.WithCreateHttpMonitorRules([]string{
+			query.Or([]string{
+				query.NotBetween("statusCode", 200, 299),
+				query.GreaterThan("latency", 2000),
+			}),
+		}),
+		service.WithCreateHttpMonitorInterval(60),
+		service.WithCreateHttpMonitorTimeout(10),
+		service.WithCreateHttpMonitorSeverity("critical"),
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(monitor)
+}
+```
+
+```server-swift
+import Appwrite
+import AppwriteEnums
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>")
+
+let monitors = Monitors(client)
+
+let monitor = try await monitors.createHttpMonitor(
+    monitorId: "api-health",
+    name: "API health",
+    url: "https://api.example.com/health",
+    rules: [
+        Query.or([
+            Query.notBetween("statusCode", start: 200, end: 299),
+            Query.greaterThan("latency", value: 2000)
+        ])
+    ], // optional
+    interval: 60, // optional
+    timeout: 10, // optional
+    severity: .critical // optional
+)
+```
+
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.Query
+import io.appwrite.enums.MonitorSeverity
+import io.appwrite.services.Monitors
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>")
+
+val monitors = Monitors(client)
+
+val monitor = monitors.createHttpMonitor(
+    monitorId = "api-health",
+    name = "API health",
+    url = "https://api.example.com/health",
+    rules = listOf(
+        Query.or(listOf(
+            Query.notBetween("statusCode", 200, 299),
+            Query.greaterThan("latency", 2000)
+        ))
+    ), // optional
+    interval = 60, // optional
+    timeout = 10, // optional
+    severity = MonitorSeverity.CRITICAL // optional
+)
+```
+
+```server-java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.exceptions.AppwriteException;
+import io.appwrite.Query;
+import io.appwrite.enums.MonitorSeverity;
+import io.appwrite.services.Monitors;
+import java.util.List;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>");
+
+Monitors monitors = new Monitors(client);
+
+try {
+    monitors.createHttpMonitor(
+        "api-health", // monitorId
+        "API health", // name
+        "https://api.example.com/health", // url
+        null, // method (optional)
+        null, // headers (optional)
+        null, // body (optional)
+        List.of(
+            Query.or(List.of(
+                Query.notBetween("statusCode", 200, 299),
+                Query.greaterThan("latency", 2000)
+            ))
+        ), // rules (optional)
+        60L, // interval (optional)
+        10L, // timeout (optional)
+        null, // cooldown (optional)
+        null, // enabled (optional)
+        null, // notify (optional)
+        MonitorSeverity.CRITICAL, // severity (optional)
+        new CoroutineCallback<>((result, error) -> {
+            if (error != null) {
+                error.printStackTrace();
+                return;
+            }
+
+            System.out.println(result);
+        })
+    );
+} catch (AppwriteException e) {
+    e.printStackTrace();
+}
+```
+
+```server-rust
+use appwrite::Client;
+use appwrite::enums::MonitorSeverity;
+use appwrite::query::Query;
+use appwrite::services::Monitors;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1");
+    client.set_project("<PROJECT_ID>");
+    client.set_key("<API_KEY>");
+
+    let monitors = Monitors::new(&client);
+
+    let monitor = monitors.create_http_monitor(
+        "api-health",
+        "API health",
+        "https://api.example.com/health",
+        None, // method
+        None, // headers
+        None, // body
+        Some(vec![
+            Query::or(vec![
+                Query::not_between("statusCode", 200, 299).to_string(),
+                Query::greater_than("latency", 2000).to_string(),
+            ]).to_string(),
+        ]), // rules
+        Some(60), // interval
+        Some(10), // timeout
+        None, // cooldown
+        None, // enabled
+        None, // notify
+        Some(MonitorSeverity::Critical), // severity
+        None // escalationId
+    ).await?;
+
+    println!("{:?}", monitor);
+
+    Ok(())
+}
+```
+
+```http
+POST /v1/monitors/http HTTP/1.1
+Content-Type: application/json
+X-Appwrite-Project: <PROJECT_ID>
+X-Appwrite-Key: <API_KEY>
+
+{
+  "monitorId": "api-health",
+  "name": "API health",
+  "url": "https://api.example.com/health",
+  "rules": ["{\"method\":\"or\",\"values\":[{\"method\":\"notBetween\",\"attribute\":\"statusCode\",\"values\":[200,299]},{\"method\":\"greaterThan\",\"attribute\":\"latency\",\"values\":[2000]}]}"],
+  "interval": 60,
+  "timeout": 10,
+  "severity": "critical"
+}
+```
+{% /multicode %}
+
+Each type takes its own target parameters:
+
+| Method | Target parameters |
+| --- | --- |
+| `createHttpMonitor` | `url`, plus optional `method`, `headers`, and `body`. `method` defaults to `GET` and also takes `HEAD`, `POST`, `PUT`, `PATCH`, `DELETE`, or `OPTIONS`. `body` takes up to 16,384 characters. |
+| `createDnsMonitor` | `domain`, plus optional `record` and `resolver`. `record` defaults to `A` and also takes `AAAA`, `CNAME`, `MX`, `TXT`, or `NS`. |
+| `createTcpMonitor` | `host` and `port` |
+| `createSmtpMonitor` | `host` and `port`, plus optional `tlsMode`. It defaults to `auto`, which chooses from the port, and also takes `none`, `starttls`, or `implicit`. |
+
+All four also take these parameters:
+
+| Parameter | Purpose |
+| --- | --- |
+| `rules` | Queries that describe a failing check. See [Rules](#rules). |
+| `interval` | Seconds between checks. Defaults to 60, or to your plan's shortest interval when that's longer. |
+| `timeout` | Seconds a check can take, from 1 to 60 and no longer than `interval`. Defaults to 10. |
+| `cooldown`, `enabled`, `notify`, `severity`, `escalationId` | The same as for [usage monitors](/docs/products/monitors/usage#create-with-a-server-sdk). |
+
+Each type has a matching update method, such as `updateHttpMonitor`, which only changes the parameters you pass.
+
+# Rules {% #rules %}
+
+Rules describe a failing check: the monitor opens an alert when they match. Every top-level rule must match. Wrap rules in `Query.or()` to fire when any of them matches, and use `Query.and()` to group rules inside it. Rules take the `equal`, `notEqual`, `lessThan`, `lessThanEqual`, `greaterThan`, `greaterThanEqual`, `between`, and `notBetween` queries.
+
+| Type | Attributes | Fails by default on |
+| --- | --- | --- |
+| HTTP | `statusCode`, `latency` in milliseconds, `certificateDays` left, and `certificateLifetime`, the percentage of the certificate's lifetime left | A status outside 200 to 299, or a certificate with fewer than 14 days and less than 25% of its lifetime left |
+| DNS | `answer`, the first record in lowercase without the trailing dot, which only takes `equal` and `notEqual`; `answers`, the number of records; and `latency` | No records |
+| TCP | `latency` | Connection failures only |
+| SMTP | `code`, the server's reply code, plus `latency`, `certificateDays`, and `certificateLifetime` | Connection failures only |
+
+Your rules replace the defaults, so add certificate rules to an HTTP check if you still want it to warn before the certificate expires. Passing `rules` to an update method replaces all of the monitor's rules. The failures listed under [Create an endpoint check](#create-an-endpoint-check) open an alert whatever the rules say.
+
+The Console saves **Expected status codes**, **Certificate expiry warning**, and **Expected answer** as rules. It keeps rules set through the API that those fields can't show until you change one of the fields.
+
+{% arrow_link href="/docs/products/monitors/alerts" %}
+Review alerts from endpoint checks
+{% /arrow_link %}

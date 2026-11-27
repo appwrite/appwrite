@@ -1,9 +1,12 @@
 import { createFileRoute, notFound, redirect } from '@tanstack/react-router'
 import { NotFoundView } from '@/components/error/NotFound'
 import { View } from '@/components/pages/docs/View'
+import { getProfileFeaturesForCookieHeader } from '@/lib/console-profiles'
 import { getDocsMarkdownExport, getDocsPage } from '@/lib/docs/content'
 import { isFeatureGatedDocsSlugHidden } from '@/lib/docs/feature-gated-docs'
+import { isMonitorsDocsSlug } from '@/lib/docs/monitors-docs-feature'
 import { getDocsRedirectTarget } from '@/lib/docs/redirects'
+import { getProductPageFeatures } from '@/lib/products/availability-ssr'
 import { respondWithPrebuiltOrRuntime } from '@/lib/seo/export-response'
 import { generateDocsLlmsTxt } from '@/lib/seo/llms-content'
 import { trackServerPageview } from '@/lib/server-analytics'
@@ -49,7 +52,17 @@ export const Route = createFileRoute('/docs/$')({
             deferPartnersOnServer: true,
             deferAnalyticsOnServer: true,
             deferVideosOnServer: true,
+            deferMonitorsOnServer: true,
           })
+        ) {
+          return new Response('Not found', { status: 404 })
+        }
+        // Monitors docs follow the `alerts` preview, which reaches the server
+        // through the debug profile cookie.
+        if (
+          isMonitorsDocsSlug(slug) &&
+          !getProfileFeaturesForCookieHeader(request.headers.get('cookie'))
+            .alerts
         ) {
           return new Response('Not found', { status: 404 })
         }
@@ -64,7 +77,11 @@ export const Route = createFileRoute('/docs/$')({
         return new Response(markdown, {
           headers: {
             'Content-Type': 'text/markdown; charset=utf-8',
-            'Cache-Control': 'public, max-age=3600',
+            // A shared cache would hand a preview reader's copy of Monitors
+            // docs to readers without the preview.
+            'Cache-Control': isMonitorsDocsSlug(slug)
+              ? 'private, no-store'
+              : 'public, max-age=3600',
           },
         })
       },
@@ -79,9 +96,15 @@ export const Route = createFileRoute('/docs/$')({
         deferPartnersOnServer: true,
         deferAnalyticsOnServer: true,
         deferVideosOnServer: true,
+        deferMonitorsOnServer: true,
         deferZeroOnServer: true,
       })
     ) {
+      throw redirect({ to: '/docs', replace: true })
+    }
+    // The server reads the `alerts` preview from the debug profile cookie, so
+    // it doesn't render Monitors docs for anyone without the preview.
+    if (isMonitorsDocsSlug(splat) && !getProductPageFeatures().alerts) {
       throw redirect({ to: '/docs', replace: true })
     }
   },
@@ -101,6 +124,7 @@ export const Route = createFileRoute('/docs/$')({
           deferPartnersOnServer: true,
           deferAnalyticsOnServer: true,
           deferVideosOnServer: true,
+          deferMonitorsOnServer: true,
           deferZeroOnServer: true,
         })
       ) {

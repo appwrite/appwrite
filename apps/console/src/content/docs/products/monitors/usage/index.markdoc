@@ -1,0 +1,423 @@
+---
+layout: article
+title: Usage monitors
+description: Set thresholds on Appwrite usage metrics and monitor your whole project or an individual resource from the Console or a server SDK.
+---
+
+Usage monitors compare a metric with a threshold. In your project, open **Observe** > **Monitors** and click **Create monitor**. On Appwrite Cloud, choose **Usage** as the type. Under **Condition**, choose a **Metric**, what it **Applies to**, a comparator, and a threshold. **Applies to** only lists the scopes that metric supports.
+
+# Choose a metric and scope {% #choose-a-metric-and-scope %}
+
+Choose **The whole project** for a project-wide total, or a single resource when the metric supports it. Counters are summed over the period in **Counted over**. Gauges compare their latest reading.
+
+| Metric | API name | Applies to | Compares |
+| --- | --- | --- | --- |
+| Requests | `network.requests` | Project | Sum |
+| Inbound bandwidth | `network.inbound` | Project | Sum |
+| Outbound bandwidth | `network.outbound` | Project | Sum |
+| Executions | `executions` | Project, function, or site | Sum |
+| Execution GB-hours | `executions.mbSeconds` | Project, function, or site | Sum |
+| Concurrent connections | `realtime.connections` | Project | Latest |
+| Monthly active users | `users.mau` | Project | Latest |
+| Sign-ups | `users` | Project | Rise over the period |
+| OTP attempts | `auth.method.phone` | Project | Sum |
+| Database reads | `databases.operations.reads` | Project or database | Sum |
+| Database writes | `databases.operations.writes` | Project or database | Sum |
+| Database storage | `databases.storage` | Project or database | Latest |
+| Storage used | `storage` | Project, database, bucket, function, or site | Latest |
+| File storage | `files.storage` | Project | Latest |
+| Messages sent | `messages.sent` | Project | Sum |
+| SMS messages sent | `messages.sms.sent` | Project | Sum |
+| Messages failed | `messages.failed` | Project | Sum |
+| Webhook events sent | `webhooks.events.sent` | Project | Sum |
+| Webhook events failed | `webhooks.events.failed` | Project | Sum |
+| Screenshots generated | `avatars.screenshotsGenerated` | Project | Sum |
+
+On Appwrite Cloud, [dedicated databases](/docs/products/databases/postgresql/monitoring) add **CPU**, **Memory**, **Disk usage**, **Connections**, **Queries per second**, **Read IOPS**, and **Write IOPS**. Their API names are `dedicatedDatabases.cpu`, `dedicatedDatabases.memory`, `dedicatedDatabases.storage`, `dedicatedDatabases.connections`, `dedicatedDatabases.qps`, `dedicatedDatabases.iopsRead`, and `dedicatedDatabases.iopsWrite`, and each compares its latest reading.
+
+Deleting a database, bucket, function, or site also deletes the monitors that watch it.
+
+# Set the condition {% #set-the-condition %}
+
+Under **Alert when the value is**, choose **greater than**, **greater than or equal**, **less than**, or **less than or equal**, and enter the threshold. A usage monitor compares one metric with one threshold.
+
+**Counted over** sets the period a counter is summed over, from 5 minutes to 30 days. An outbound bandwidth monitor counted over 1 hour compares the sum over the preceding hour at each check. Gauges such as storage used compare their latest reading, so the Console hides **Counted over** for them.
+
+{% only_dark %}
+![Create monitor page with a usage condition of outbound bandwidth greater than 10 GB counted over 1 hour, and a chart of the last 24 hours showing it would not have fired](/images/docs/monitors/dark/usage-condition.avif)
+{% /only_dark %}
+{% only_light %}
+![Create monitor page with a usage condition of outbound bandwidth greater than 10 GB counted over 1 hour, and a chart of the last 24 hours showing it would not have fired](/images/docs/monitors/usage-condition.avif)
+{% /only_light %}
+
+Appwrite reads usage about 2 minutes behind real time, so requests still being recorded count toward a later check. If a check has no usage reading, the monitor keeps its status and any open alert. Check the monitor's last reading in the Console before adjusting the threshold.
+
+# How often usage is checked {% #how-often-usage-is-checked %}
+
+On Appwrite Cloud, usage monitors are checked every 15 minutes on the Free plan and every minute on paid plans. Free projects can have 3 usage monitors and Pro projects 25. See [Pricing](/pricing) for other plans.
+
+On self-hosted Appwrite, each usage monitor is checked every 60 seconds. Set the `_APP_ALERTS_INTERVAL` environment variable to change the interval in seconds. Usage monitors read the usage stats that the [`_APP_USAGE_STATS`](/docs/advanced/self-hosting/configuration/environment-variables) variable turns on. It's enabled by default. If you set it to `disabled`, Appwrite never checks your usage monitors.
+
+# Create with a server SDK {% #create-with-a-server-sdk %}
+
+In your project, open **Connect** > **API Keys** and create an API key with the `monitors.write` scope. Then call `createUsageMonitor`. This monitor opens an alert when the project sends more than 1 GB of outbound bandwidth in an hour, and notifies owners and developers at **Error** severity.
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const monitors = new sdk.Monitors(client);
+
+const monitor = await monitors.createUsageMonitor({
+    monitorId: 'outbound-bandwidth',
+    name: 'Outbound bandwidth spike',
+    rules: [sdk.Query.greaterThan('network.outbound', 1000000000)],
+    window: 3600, // optional
+    cooldown: 1800, // optional
+    notify: ['owner', 'developer'], // optional
+    severity: sdk.MonitorSeverity.Error // optional
+});
+```
+
+```server-python
+from appwrite.client import Client
+from appwrite.services.monitors import Monitors
+from appwrite.query import Query
+from appwrite.enums.monitor_severity import MonitorSeverity
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<API_KEY>')
+
+monitors = Monitors(client)
+
+monitor = monitors.create_usage_monitor(
+    monitor_id = 'outbound-bandwidth',
+    name = 'Outbound bandwidth spike',
+    rules = [Query.greater_than('network.outbound', 1000000000)],
+    window = 3600, # optional
+    cooldown = 1800, # optional
+    notify = ['owner', 'developer'], # optional
+    severity = MonitorSeverity.ERROR # optional
+)
+```
+
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+import 'package:dart_appwrite/enums.dart' as enums;
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+Monitors monitors = Monitors(client);
+
+final monitor = await monitors.createUsageMonitor(
+    monitorId: 'outbound-bandwidth',
+    name: 'Outbound bandwidth spike',
+    rules: [Query.greaterThan('network.outbound', 1000000000)],
+    window: 3600, // (optional)
+    cooldown: 1800, // (optional)
+    notify: ['owner', 'developer'], // (optional)
+    severity: enums.MonitorSeverity.error, // (optional)
+);
+```
+
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Monitors;
+use Appwrite\Query;
+use Appwrite\Enums\MonitorSeverity;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<API_KEY>');
+
+$monitors = new Monitors($client);
+
+$monitor = $monitors->createUsageMonitor(
+    monitorId: 'outbound-bandwidth',
+    name: 'Outbound bandwidth spike',
+    rules: [Query::greaterThan('network.outbound', 1000000000)],
+    window: 3600, // optional
+    cooldown: 1800, // optional
+    notify: ['owner', 'developer'], // optional
+    severity: MonitorSeverity::ERROR() // optional
+);
+```
+
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+include Appwrite::Enums
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<API_KEY>')
+
+monitors = Monitors.new(client)
+
+monitor = monitors.create_usage_monitor(
+    monitor_id: 'outbound-bandwidth',
+    name: 'Outbound bandwidth spike',
+    rules: [Query.greater_than('network.outbound', 1000000000)],
+    window: 3600, # optional
+    cooldown: 1800, # optional
+    notify: ['owner', 'developer'], # optional
+    severity: MonitorSeverity::ERROR # optional
+)
+```
+
+```server-dotnet
+using Appwrite;
+using Appwrite.Enums;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<API_KEY>");
+
+Monitors monitors = new Monitors(client);
+
+// Fully qualified, since System.Threading also has a Monitor class.
+Appwrite.Models.Monitor monitor = await monitors.CreateUsageMonitor(
+    monitorId: "outbound-bandwidth",
+    name: "Outbound bandwidth spike",
+    rules: new List<string> { Query.GreaterThan("network.outbound", 1000000000) },
+    window: 3600, // optional
+    cooldown: 1800, // optional
+    notify: new List<string> { "owner", "developer" }, // optional
+    severity: MonitorSeverity.Error // optional
+);
+```
+
+```server-deno
+import { Client, Monitors, Query, MonitorSeverity } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const monitors = new Monitors(client);
+
+const monitor = await monitors.createUsageMonitor({
+    monitorId: 'outbound-bandwidth',
+    name: 'Outbound bandwidth spike',
+    rules: [Query.greaterThan('network.outbound', 1000000000)],
+    window: 3600, // optional
+    cooldown: 1800, // optional
+    notify: ['owner', 'developer'], // optional
+    severity: MonitorSeverity.Error // optional
+});
+```
+
+```server-go
+package main
+
+import (
+	"fmt"
+
+	"github.com/appwrite/sdk-for-go/v7/appwrite"
+	"github.com/appwrite/sdk-for-go/v7/monitors"
+	"github.com/appwrite/sdk-for-go/v7/query"
+)
+
+func main() {
+	client := appwrite.NewClient(
+		appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+		appwrite.WithProject("<PROJECT_ID>"),
+		appwrite.WithKey("<API_KEY>"),
+	)
+
+	service := monitors.New(client)
+
+	monitor, err := service.CreateUsageMonitor(
+		"outbound-bandwidth",
+		"Outbound bandwidth spike",
+		[]string{query.GreaterThan("network.outbound", 1000000000)},
+		service.WithCreateUsageMonitorWindow(3600),
+		service.WithCreateUsageMonitorCooldown(1800),
+		service.WithCreateUsageMonitorNotify([]string{"owner", "developer"}),
+		service.WithCreateUsageMonitorSeverity("error"),
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(monitor)
+}
+```
+
+```server-swift
+import Appwrite
+import AppwriteEnums
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>")
+
+let monitors = Monitors(client)
+
+let monitor = try await monitors.createUsageMonitor(
+    monitorId: "outbound-bandwidth",
+    name: "Outbound bandwidth spike",
+    rules: [Query.greaterThan("network.outbound", value: 1000000000)],
+    window: 3600, // optional
+    cooldown: 1800, // optional
+    notify: ["owner", "developer"], // optional
+    severity: .error // optional
+)
+```
+
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.Query
+import io.appwrite.enums.MonitorSeverity
+import io.appwrite.services.Monitors
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>")
+
+val monitors = Monitors(client)
+
+val monitor = monitors.createUsageMonitor(
+    monitorId = "outbound-bandwidth",
+    name = "Outbound bandwidth spike",
+    rules = listOf(Query.greaterThan("network.outbound", 1000000000)),
+    window = 3600, // optional
+    cooldown = 1800, // optional
+    notify = listOf("owner", "developer"), // optional
+    severity = MonitorSeverity.ERROR // optional
+)
+```
+
+```server-java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.exceptions.AppwriteException;
+import io.appwrite.Query;
+import io.appwrite.enums.MonitorSeverity;
+import io.appwrite.services.Monitors;
+import java.util.List;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>");
+
+Monitors monitors = new Monitors(client);
+
+try {
+    monitors.createUsageMonitor(
+        "outbound-bandwidth", // monitorId
+        "Outbound bandwidth spike", // name
+        List.of(Query.greaterThan("network.outbound", 1000000000)), // rules
+        3600L, // window (optional)
+        1800L, // cooldown (optional)
+        null, // enabled (optional)
+        List.of("owner", "developer"), // notify (optional)
+        MonitorSeverity.ERROR, // severity (optional)
+        new CoroutineCallback<>((result, error) -> {
+            if (error != null) {
+                error.printStackTrace();
+                return;
+            }
+
+            System.out.println(result);
+        })
+    );
+} catch (AppwriteException e) {
+    e.printStackTrace();
+}
+```
+
+```server-rust
+use appwrite::Client;
+use appwrite::enums::MonitorSeverity;
+use appwrite::query::Query;
+use appwrite::services::Monitors;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1");
+    client.set_project("<PROJECT_ID>");
+    client.set_key("<API_KEY>");
+
+    let monitors = Monitors::new(&client);
+
+    let monitor = monitors.create_usage_monitor(
+        "outbound-bandwidth",
+        "Outbound bandwidth spike",
+        vec![Query::greater_than("network.outbound", 1000000000).to_string()],
+        Some(3600), // window
+        Some(1800), // cooldown
+        None, // enabled
+        Some(vec!["owner".to_string(), "developer".to_string()]), // notify
+        Some(MonitorSeverity::Error), // severity
+        None // escalationId
+    ).await?;
+
+    println!("{:?}", monitor);
+
+    Ok(())
+}
+```
+
+```http
+POST /v1/monitors/usage HTTP/1.1
+Content-Type: application/json
+X-Appwrite-Project: <PROJECT_ID>
+X-Appwrite-Key: <API_KEY>
+
+{
+  "monitorId": "outbound-bandwidth",
+  "name": "Outbound bandwidth spike",
+  "rules": ["{\"method\":\"greaterThan\",\"attribute\":\"network.outbound\",\"values\":[1000000000]}"],
+  "window": 3600,
+  "cooldown": 1800,
+  "notify": ["owner", "developer"],
+  "severity": "error"
+}
+```
+{% /multicode %}
+
+Each monitor ID must be unique in the project, and up to 36 characters long. Pass `ID.unique()` to have Appwrite generate one.
+
+| Parameter | Purpose |
+| --- | --- |
+| `rules` | One `greaterThan`, `greaterThanEqual`, `lessThan`, or `lessThanEqual` query on a metric's [API name](#choose-a-metric-and-scope). To watch one resource instead of the whole project, add `equal` queries on `resourceType` and `resourceId`. `resourceType` takes `database`, `bucket`, `function`, `site`, or `dedicatedDatabase`. Thresholds use the metric's API unit: bytes for bandwidth and storage, MB-seconds for GB-hours, a percentage for dedicated database CPU and memory, and a count otherwise. |
+| `window` | Seconds a counter is summed over, from 60 to 2,592,000. Defaults to 3,600. Gauges ignore it. |
+| `cooldown` | Minimum seconds between notifications for two alerts from this monitor, from 300 to 2,592,000. Defaults to 3,600. |
+| `enabled` | Set to `false` to create the monitor paused. Defaults to `true`. |
+| `notify` | Organization roles to notify, such as `owner` or `developer`. On Appwrite Cloud, `editor`, `analyst`, and `billing` also work. Defaults to `["owner"]`. Pass an empty list to rely on [project events](/docs/products/monitors/alerts#use-project-events) alone. |
+| `severity` | `info`, `warning`, `error`, or `critical`. Defaults to `warning`. |
+| `escalationId` | An organization [escalation](/docs/products/monitors/alerts#escalate-an-alert) to notify instead of `notify`. Pass an empty string on update to go back to `notify`. |
+
+To read monitors back, call `list` with [queries](/docs/products/databases/tablesdb/queries) or `get` with a monitor ID. Both need the `monitors.read` scope. `updateUsageMonitor` changes only the parameters you pass, including `enabled` to pause or resume a monitor, and `delete` removes one. Both need `monitors.write`. Deleting a monitor resolves its open alert and keeps its alert history.
+
+# Budget alerts {% #budget-alerts %}
+
+Usage monitors watch a single project. To be warned about your organization's spending on Appwrite Cloud, open the organization's **Billing** page, turn on **Budget cap**, and add percentages of the cap under **Billing alerts**. When this billing cycle's additional usage passes one of them, and again when it reaches the cap, Appwrite notifies the roles you choose there, owners and billing members by default. Budget alerts belong to the organization, so they don't appear on a project's **Monitors** page. Learn more in [Budget cap](/docs/advanced/billing/payments#budget-cap).
+
+{% arrow_link href="/docs/products/monitors/alerts" %}
+Configure alert delivery
+{% /arrow_link %}

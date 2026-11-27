@@ -730,6 +730,45 @@ export const DOCS_LOCAL_SECTION_NAVS: DocsSectionNavConfig[] = [
     ],
   },
   {
+    prefix: 'products/monitors',
+    parent: {
+      href: '/docs',
+      label: 'Monitors',
+    },
+    navigation: [
+      {
+        label: 'Getting started',
+        items: [
+          {
+            label: 'Overview',
+            href: '/docs/products/monitors',
+          },
+          {
+            label: 'Quick start',
+            href: '/docs/products/monitors/quick-start',
+          },
+        ],
+      },
+      {
+        label: 'Guides',
+        items: [
+          {
+            label: 'Usage monitors',
+            href: '/docs/products/monitors/usage',
+          },
+          {
+            label: 'Endpoint checks',
+            href: '/docs/products/monitors/endpoint-checks',
+          },
+          {
+            label: 'Alerts and notifications',
+            href: '/docs/products/monitors/alerts',
+          },
+        ],
+      },
+    ],
+  },
+  {
     prefix: 'products/videos',
     parent: {
       href: '/docs',

@@ -3325,6 +3325,41 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 2
   },
   {
+    "slug": "products/monitors",
+    "title": "Monitors",
+    "description": "Watch project usage and check endpoint availability with Appwrite Monitors. Configure alerts, choose who to notify, and track recovery in the Console.",
+    "layout": "article",
+    "readingTimeMinutes": 3
+  },
+  {
+    "slug": "products/monitors/alerts",
+    "title": "Alerts and notifications",
+    "description": "Review Appwrite monitor alerts, notify organization members, and use escalations to reach the right people when an alert keeps firing.",
+    "layout": "article",
+    "readingTimeMinutes": 6
+  },
+  {
+    "slug": "products/monitors/endpoint-checks",
+    "title": "Endpoint checks",
+    "description": "Check HTTP, DNS, TCP, and SMTP endpoints on a schedule with Appwrite Cloud synthetic checks, and set the rules that open an alert.",
+    "layout": "article",
+    "readingTimeMinutes": 6
+  },
+  {
+    "slug": "products/monitors/quick-start",
+    "title": "Start with Monitors",
+    "description": "Create your first Appwrite usage monitor, get alerted when outbound bandwidth spikes, and check its first reading in the Console.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "products/monitors/usage",
+    "title": "Usage monitors",
+    "description": "Set thresholds on Appwrite usage metrics and monitor your whole project or an individual resource from the Console or a server SDK.",
+    "layout": "article",
+    "readingTimeMinutes": 5
+  },
+  {
     "slug": "products/network",
     "title": "Network",
     "description": "Discover Appwrite's network architecture with global regions, edge nodes, and optimized routing. Explore how it ensures low latency, reliable performance, and scalable infrastructure for modern applications.",

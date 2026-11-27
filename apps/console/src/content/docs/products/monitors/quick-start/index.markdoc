@@ -1,0 +1,34 @@
+---
+layout: article
+title: Start with Monitors
+description: Create your first Appwrite usage monitor, get alerted when outbound bandwidth spikes, and check its first reading in the Console.
+difficulty: beginner
+readtime: 5
+---
+
+In this quick start you create a monitor that alerts your team when your project sends more than 1 GB of data in an hour.
+
+# Create a usage monitor {% #create-a-usage-monitor %}
+
+1. Sign in to the Appwrite Console and open a project.
+2. Open **Monitors** under **Observe** in the sidebar and click **Create monitor**.
+3. On Appwrite Cloud, choose **Usage** as the type. Self-hosted Appwrite only has usage monitors, so it skips this choice.
+4. Under **Condition**, set the **Metric** to **Outbound bandwidth** and leave **Applies to** on **The whole project**.
+5. Set **Alert when the value is** to **greater than**, enter `1`, and select **GB**. Leave **Counted over** set to **1 hour**.
+6. Under **Notify**, keep **Owners** selected.
+7. Expand **Name, cooldown** and enter a name such as `Outbound bandwidth spike`. If you leave it blank, the Console names the monitor after its condition.
+8. Click **Create**.
+
+The Console fills in a starting threshold from your recent usage, so check that it reads `1` before you create the monitor. The chart under the condition plots your recent outbound bandwidth against the threshold and tells you how often the monitor would have fired. Choose a threshold that fits your project's normal traffic.
+
+# Check the result {% #check-the-result %}
+
+Until Appwrite evaluates the new monitor, the **Monitors** list shows it as **Pending**. Open it to see its **Status** and **Last value**. If the monitor fires, its alert appears on the **Alerts** tab.
+
+To stop evaluating the monitor, turn off its switch in the **Monitors** list. You can also open the monitor, go to **Settings**, switch **Status** to **Paused**, and click **Update**. Turn it back on to resume.
+
+# Next steps {% #next-steps %}
+
+- [Usage monitors](/docs/products/monitors/usage) covers every metric and scope, and creating monitors with a server SDK.
+- [Endpoint checks](/docs/products/monitors/endpoint-checks) watch HTTP, DNS, TCP, and SMTP endpoints on paid Appwrite Cloud plans.
+- [Alerts and notifications](/docs/products/monitors/alerts) covers acknowledging alerts, escalations, and project events.

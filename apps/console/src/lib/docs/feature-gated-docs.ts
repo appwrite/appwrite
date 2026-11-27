@@ -5,6 +5,11 @@ import {
   shouldBlockAnalyticsDocs,
 } from './analytics-docs-feature'
 import {
+  isMonitorsDocsEnabled,
+  isMonitorsDocsSlug,
+  shouldBlockMonitorsDocs,
+} from './monitors-docs-feature'
+import {
   isPartnersDocsEnabled,
   isPartnersDocsSlug,
   shouldBlockPartnersDocs,
@@ -29,6 +34,7 @@ export function isFeatureGatedDocsSlugHidden(
     deferPartnersOnServer?: boolean
     deferAnalyticsOnServer?: boolean
     deferVideosOnServer?: boolean
+    deferMonitorsOnServer?: boolean
     deferZeroOnServer?: boolean
   },
 ): boolean {
@@ -44,6 +50,10 @@ export function isFeatureGatedDocsSlugHidden(
   if (isVideosDocsSlug(slug)) {
     if (options?.deferVideosOnServer) return shouldBlockVideosDocs()
     return !isVideosDocsEnabled()
+  }
+  if (isMonitorsDocsSlug(slug)) {
+    if (options?.deferMonitorsOnServer) return shouldBlockMonitorsDocs()
+    return !isMonitorsDocsEnabled()
   }
   if (isZeroDocsSlug(slug)) {
     if (options?.deferZeroOnServer) return shouldBlockZeroDocs()

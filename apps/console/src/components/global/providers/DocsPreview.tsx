@@ -38,6 +38,7 @@ import { getDocsPage } from '@/lib/docs/content'
 import { isAgentDocsSlug } from '@/lib/docs/agent-docs-feature'
 import { isAnalyticsDocsSlug } from '@/lib/docs/analytics-docs-feature'
 import { isVideosDocsSlug } from '@/lib/docs/videos-docs-feature'
+import { isMonitorsDocsSlug } from '@/lib/docs/monitors-docs-feature'
 import { isZeroDocsSlug } from '@/lib/docs/zero-docs-feature'
 import {
   isDomainsDocsEnabled,
@@ -75,6 +76,7 @@ export function DocsPreviewContent() {
   const agentDocsEnabled = features.agent
   const analyticsDocsEnabled = features.analytics
   const videosDocsEnabled = features.videos
+  const monitorsDocsEnabled = features.alerts
   const zeroDocsEnabled = features.zero
 
   const showMenu =
@@ -88,6 +90,7 @@ export function DocsPreviewContent() {
     (!isAgentDocsSlug(slug) || agentDocsEnabled) &&
     (!isAnalyticsDocsSlug(slug) || analyticsDocsEnabled) &&
     (!isVideosDocsSlug(slug) || videosDocsEnabled) &&
+    (!isMonitorsDocsSlug(slug) || monitorsDocsEnabled) &&
     (!isZeroDocsSlug(slug) || zeroDocsEnabled)
 
   const { data: page, isLoading, isError } = useQuery({
@@ -104,6 +107,7 @@ export function DocsPreviewContent() {
       (!isAgentDocsSlug(slug!) || agentDocsEnabled) &&
       (!isAnalyticsDocsSlug(slug!) || analyticsDocsEnabled) &&
       (!isVideosDocsSlug(slug!) || videosDocsEnabled) &&
+      (!isMonitorsDocsSlug(slug!) || monitorsDocsEnabled) &&
       (!isZeroDocsSlug(slug!) || zeroDocsEnabled) &&
       isClientQueryEnabled,
     staleTime: 5 * 60 * 1000,
@@ -140,6 +144,10 @@ export function DocsPreviewContent() {
         openDocsPreview('', { view: 'article' })
         return
       }
+      if (isMonitorsDocsSlug(nextSlug) && !monitorsDocsEnabled) {
+        openDocsPreview('', { view: 'article' })
+        return
+      }
       if (isZeroDocsSlug(nextSlug) && !zeroDocsEnabled) {
         openDocsPreview('', { view: 'article' })
         return
@@ -153,6 +161,7 @@ export function DocsPreviewContent() {
       analyticsDocsEnabled,
       domainsDocsEnabled,
       firewallDocsEnabled,
+      monitorsDocsEnabled,
       openDocsPreview,
       partnersDocsEnabled,
       slug,
@@ -188,6 +197,9 @@ export function DocsPreviewContent() {
       openDocsPreview('', { view: 'article' })
       return
     }
+    if (!monitorsDocsEnabled && isMonitorsDocsSlug(slug)) {
+      openDocsPreview('', { view: 'article' })
+    }
     if (!zeroDocsEnabled && isZeroDocsSlug(slug)) {
       openDocsPreview('', { view: 'article' })
     }
@@ -197,6 +209,7 @@ export function DocsPreviewContent() {
     domainsDocsEnabled,
     firewallDocsEnabled,
     isOpen,
+    monitorsDocsEnabled,
     openDocsPreview,
     partnersDocsEnabled,
     slug,
@@ -278,6 +291,9 @@ export function DocsPreviewContent() {
     return null
   }
 
+  if (!monitorsDocsEnabled && isMonitorsDocsSlug(slug)) {
+    return null
+  }
   if (!zeroDocsEnabled && isZeroDocsSlug(slug)) {
     return null
   }

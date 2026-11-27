@@ -5185,6 +5185,60 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "products/monitors",
+    "title": "Monitors",
+    "description": "Watch project usage and check endpoint availability with Appwrite Monitors. Configure alerts, choose who to notify, and track recovery in the Console.",
+    "excerpt": "Appwrite **Monitors** checks your project usage or an endpoint on a schedule. A monitor opens an alert when a usage condition is met or an endpoint check fails. You can choose who gets notified, escalate to more people until someone responds, and review when each alert fired and recovered. You manage monitors and their alerts under **Observe** > **Monitors** in your project. Monitor types | Type | What it checks | Where to use it | | --- | ---…",
+    "breadcrumbs": [
+      "products",
+      "Monitors"
+    ]
+  },
+  {
+    "slug": "products/monitors/alerts",
+    "title": "Alerts and notifications",
+    "description": "Review Appwrite monitor alerts, notify organization members, and use escalations to reach the right people when an alert keeps firing.",
+    "excerpt": "An alert records one period during which a monitor's condition is met or an endpoint check is failing. Appwrite opens the alert as **Firing** and marks it **Resolved** when a check passes again. If the monitor fires again after it recovers, Appwrite opens a new alert. Review and acknowledge alerts 1. In your project, open **Observe** > **Monitors** and select the **Alerts** tab. 2. Filter by **All**, **Firing**, or **Resolved**, then select an alert to see when it started, the…",
+    "breadcrumbs": [
+      "products",
+      "Monitors",
+      "Alerts and notifications"
+    ]
+  },
+  {
+    "slug": "products/monitors/endpoint-checks",
+    "title": "Endpoint checks",
+    "description": "Check HTTP, DNS, TCP, and SMTP endpoints on a schedule with Appwrite Cloud synthetic checks, and set the rules that open an alert.",
+    "excerpt": "Endpoint checks, called synthetic checks in the Console, are available on paid Appwrite Cloud plans. Appwrite connects to your target on a schedule and opens an alert when the check fails. Synthetic checks count toward one allowance for the whole organization, across all of its projects. Pro includes 10 checks, and each additional check costs $2 per month. The shortest check interval is 1 minute on Pro and 30 seconds on Enterprise. Synthetic checks aren't available on the Free plan,…",
+    "breadcrumbs": [
+      "products",
+      "Monitors",
+      "Endpoint checks"
+    ]
+  },
+  {
+    "slug": "products/monitors/quick-start",
+    "title": "Start with Monitors",
+    "description": "Create your first Appwrite usage monitor, get alerted when outbound bandwidth spikes, and check its first reading in the Console.",
+    "excerpt": "In this quick start you create a monitor that alerts your team when your project sends more than 1 GB of data in an hour. Create a usage monitor 1. Sign in to the Appwrite Console and open a project. 2. Open **Monitors** under **Observe** in the sidebar and click **Create monitor**. 3. On Appwrite Cloud, choose **Usage** as the type. Self-hosted Appwrite only has usage monitors, so it skips this choice. 4. Under **Condition**, set the **Metric** to **Outbound…",
+    "breadcrumbs": [
+      "products",
+      "Monitors",
+      "Start with Monitors"
+    ]
+  },
+  {
+    "slug": "products/monitors/usage",
+    "title": "Usage monitors",
+    "description": "Set thresholds on Appwrite usage metrics and monitor your whole project or an individual resource from the Console or a server SDK.",
+    "excerpt": "Usage monitors compare a metric with a threshold. In your project, open **Observe** > **Monitors** and click **Create monitor**. On Appwrite Cloud, choose **Usage** as the type. Under **Condition**, choose a **Metric**, what it **Applies to**, a comparator, and a threshold. **Applies to** only lists the scopes that metric supports. Choose a metric and scope Choose **The whole project** for a project-wide total, or a single resource when the metric supports it. Counters are summed over the period in **Counted…",
+    "breadcrumbs": [
+      "products",
+      "Monitors",
+      "Usage monitors"
+    ]
+  },
+  {
     "slug": "products/network",
     "title": "Network",
     "description": "Discover Appwrite's network architecture with global regions, edge nodes, and optimized routing. Explore how it ensures low latency, reliable performance, and scalable infrastructure for modern applications.",
