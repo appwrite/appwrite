@@ -83,15 +83,8 @@ class Create extends Action
             throw new Exception(Exception::USER_UNAUTHORIZED, 'Invalid Apple webhook signature.');
         }
 
-        $connection = $authorization->skip(fn () => $dbForProject->getDocument('distributionConnections', $connectionId));
-        if ($connection->isEmpty() || Provider::tryFrom((string) $connection->getAttribute('provider', '')) !== Provider::Apple) {
-            throw new Exception(Exception::USER_UNAUTHORIZED, 'Invalid Apple webhook signature.');
-        }
-
         $body = $request->getRawPayload();
-        if (!Webhooks::verify($connection, $targetId, $body, $request->getHeaderLine(Webhook::HEADER))) {
-            throw new Exception(Exception::USER_UNAUTHORIZED, 'Invalid Apple webhook signature.');
-        }
+        $authorization->skip(fn () => $this->verify($dbForProject, $connectionId, $targetId, $body, $request->getHeaderLine(Webhook::HEADER)));
 
         $data = $this->data($body);
         $eventId = \is_string($data['id'] ?? null) && $data['id'] !== '' ? $data['id'] : null;
@@ -100,22 +93,11 @@ class Create extends Action
             return;
         }
 
-        $target = $authorization->skip(fn () => $dbForProject->getDocument('distributionTargets', $targetId));
-        if (
-            $target->isEmpty()
-            || Platform::tryFrom((string) $target->getAttribute('platform', '')) !== Platform::Ios
-            || $target->getAttribute('connectionId') !== $connectionId
-        ) {
+        $submissions = $authorization->skip(fn () => $this->submissions($dbForProject, $connectionId, $targetId));
+        if ($submissions === null) {
             $response->noContent();
             return;
         }
-
-        $submissions = $authorization->skip(fn () => $dbForProject->find('distributionSubmissions', [
-            Query::equal('targetInternalId', [$target->getSequence()]),
-            Query::equal('status', [...Submissions::ACTIVE, Status::Published->value]),
-            Query::orderDesc('$sequence'),
-            Query::limit(APP_LIMIT_SUBQUERY),
-        ]));
 
         $failed = false;
         foreach ($submissions as $submission) {
@@ -138,6 +120,48 @@ class Create extends Action
         Webhooks::remember($cache, $project, $connectionId, $targetId, $eventId);
 
         $response->noContent();
+    }
+
+    /**
+     * The caller is Apple, known only by the signature, so the connection holding its
+     * secret is the one read made before authentication, and it never leaves this
+     * step unless the signature verifies against it.
+     */
+    private function verify(Database $dbForProject, string $connectionId, string $targetId, string $body, string $signature): void
+    {
+        $connection = $dbForProject->getDocument('distributionConnections', $connectionId);
+        if (
+            $connection->isEmpty()
+            || Provider::tryFrom((string) $connection->getAttribute('provider', '')) !== Provider::Apple
+            || !Webhooks::verify($connection, $targetId, $body, $signature)
+        ) {
+            throw new Exception(Exception::USER_UNAUTHORIZED, 'Invalid Apple webhook signature.');
+        }
+    }
+
+    /**
+     * The live submissions of the iOS target the verified connection's webhook was
+     * registered for, or null when that target is gone or has moved to another connection.
+     *
+     * @return array<Document>|null
+     */
+    private function submissions(Database $dbForProject, string $connectionId, string $targetId): ?array
+    {
+        $target = $dbForProject->getDocument('distributionTargets', $targetId);
+        if (
+            $target->isEmpty()
+            || Platform::tryFrom((string) $target->getAttribute('platform', '')) !== Platform::Ios
+            || $target->getAttribute('connectionId') !== $connectionId
+        ) {
+            return null;
+        }
+
+        return $dbForProject->find('distributionSubmissions', [
+            Query::equal('targetInternalId', [$target->getSequence()]),
+            Query::equal('status', [...Submissions::ACTIVE, Status::Published->value]),
+            Query::orderDesc('$sequence'),
+            Query::limit(APP_LIMIT_SUBQUERY),
+        ]);
     }
 
     /**
