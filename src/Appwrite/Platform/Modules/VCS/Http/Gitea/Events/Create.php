@@ -2,27 +2,36 @@
 
 namespace Appwrite\Platform\Modules\VCS\Http\Gitea\Events;
 
+use Appwrite\Event\Publisher\Review as ReviewPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\VCS\Http\GitHub\Deployment;
+use Appwrite\Platform\Modules\VCS\Http\GitHub\Reviews;
+use Appwrite\Reviews\Provider;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\InstallationTokens;
+use Appwrite\Vcs\RepositoryPath;
 use Utopia\Bus\Bus;
+use Utopia\Config\Config;
 use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\DSN\DSN;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Span\Span;
+use Utopia\System\System;
 use Utopia\VCS\Adapter\Git;
+use Utopia\VCS\Adapter\Git\Gitea;
 
 class Create extends Action
 {
     use HTTP;
     use Deployment;
+    use Reviews;
 
     public static function getName()
     {
@@ -48,6 +57,7 @@ class Create extends Action
             ->inject('getProjectDB')
             ->inject('deploymentsFactory')
             ->inject('platform')
+            ->inject('publisherForReviews')
             ->callback($this->action(...));
     }
 
@@ -62,7 +72,8 @@ class Create extends Action
         Bus $bus,
         callable $getProjectDB,
         callable $deploymentsFactory,
-        array $platform
+        array $platform,
+        ReviewPublisher $publisherForReviews,
     ) {
         $vcs = $vcsFactory->fromProvider('gitea');
 
@@ -83,6 +94,16 @@ class Create extends Action
         $parsedPayloads = $vcs->getEvents($event, $payload);
 
         foreach ($parsedPayloads as $parsedPayload) {
+            // Before the deployments, which may throw; queueing a review never does.
+            // Without the secret no review service runs (optional on self-hosted), so nothing would consume the job.
+            if (System::getEnv('_APP_REVIEWS_SECRET', '') !== '') {
+                match ($event) {
+                    'pull_request' => $this->queueReviews('gitea', $parsedPayload, $vcsFactory, $installationTokens, $dbForPlatform, $authorization, $getProjectDB, $publisherForReviews, $platform),
+                    'issue_comment' => $this->queueComment('gitea', $this->describeComment($parsedPayload, $vcsFactory, $installationTokens, $dbForPlatform, $authorization), $vcsFactory, $installationTokens, $dbForPlatform, $authorization, $getProjectDB, $publisherForReviews, $platform),
+                    default => null,
+                };
+            }
+
             match ($event) {
                 'push' => $this->handlePushEvent($parsedPayload, $vcsFactory, $installationTokens, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory),
                 'pull_request' => $this->handlePullRequestEvent($parsedPayload, $vcsFactory, $installationTokens, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory),
@@ -287,5 +308,117 @@ class Create extends Action
                 }
             }
         }
+    }
+
+    /**
+     * Mentions name the account that connected the installation, which the reviewer posts as.
+     */
+    protected function getReviewerHandle(Document $installation): string
+    {
+        return $installation->getAttribute('organization', '');
+    }
+
+    /**
+     * The reviewer posts as the account that connected the installation. Its own comments are
+     * told apart by their markers and by its id, see getCommentAuthorAssociation().
+     */
+    protected function getReviewerLogin(Document $installation): string
+    {
+        return $installation->getAttribute('organization', '');
+    }
+
+    /**
+     * Gitea sends no association with a comment, so the author's permission on the repository is read: its owner and admins count as owners, writers as collaborators. The account the reviewer posts as is never trusted, so it does
+     * not answer itself; a failed read leaves the author untrusted.
+     */
+    protected function getCommentAuthorAssociation(array $parsedPayload, Document $installation, VcsFactory $vcsFactory, InstallationTokens $installationTokens, Database $dbForPlatform): string
+    {
+        $authorId = \strval($parsedPayload['commentAuthorId'] ?? '');
+        if (($parsedPayload['commentAuthorType'] ?? '') !== 'User' || $authorId === '' || $authorId === $installation->getAttribute('providerInstallationId', '')) {
+            return '';
+        }
+
+        try {
+            $installation = $dbForPlatform->getAuthorization()->skip(fn () => $installationTokens->refreshForInstallation($installation, $dbForPlatform, $vcsFactory));
+            $vcs = $vcsFactory->fromInstallation($installation);
+            if (!$vcs instanceof Gitea) {
+                return '';
+            }
+
+            $permission = $vcs->getCollaboratorPermission(\strval($parsedPayload['owner'] ?? ''), \strval($parsedPayload['repositoryName'] ?? ''), \strval($parsedPayload['commentAuthor'] ?? ''));
+        } catch (\Throwable $error) {
+            Console::warning("Failed to read the permission of comment author '{$authorId}': " . $error->getMessage());
+
+            return '';
+        }
+
+        return $this->getAssociationFromPermission($permission);
+    }
+
+    /**
+     * A comment with its thread, when it is a review comment: Gitea sends review thread replies
+     * like conversation comments, so the pull request's review comments are read to tell. Only
+     * comments on repositories some project reviews are looked up, through the first
+     * installation that reaches the repository.
+     */
+    private function describeComment(array $parsedPayload, VcsFactory $vcsFactory, InstallationTokens $installationTokens, Database $dbForPlatform, Authorization $authorization): array
+    {
+        $commentId = \strval($parsedPayload['commentId'] ?? '');
+        $pullNumber = (int) ($parsedPayload['pullRequestNumber'] ?? 0);
+        // The reviewer's own comments, which queue nothing, are not worth the reads.
+        if ($commentId === '' || $pullNumber <= 0 || \str_contains(\strval($parsedPayload['commentBody'] ?? ''), '<!-- ' . self::REVIEWER_MARKER_NAMESPACE . ':')) {
+            return $parsedPayload;
+        }
+
+        $repositories = $this->findReviewRepositories('gitea', \strval($parsedPayload['repositoryId'] ?? ''), '', $dbForPlatform, $authorization);
+        if (empty($repositories)) {
+            return $parsedPayload;
+        }
+
+        try {
+            $installation = $authorization->skip(fn () => $installationTokens->refreshForInstallation($repositories[0]['installation'], $dbForPlatform, $vcsFactory));
+            $vcs = $vcsFactory->fromInstallation($installation);
+            if (!$vcs instanceof Gitea) {
+                return $parsedPayload;
+            }
+
+            // The delivery's names are not trusted with this credential: the webhook secret is
+            // instance-wide, so the repository is the one connected under the id it matched.
+            [$owner, $repositoryName] = RepositoryPath::read($vcs, Provider::Gitea, \strval($installation->getAttribute('providerInstallationId', '')), \strval($repositories[0]['repository']->getAttribute('providerRepositoryId', '')));
+            $rootId = $vcs->getReviewCommentThread($owner, $repositoryName, $pullNumber, $commentId);
+        } catch (\Throwable $error) {
+            Console::warning("Failed to look up the thread of comment '{$commentId}': " . $error->getMessage());
+
+            return $parsedPayload;
+        }
+
+        if ($rootId === '') {
+            return $parsedPayload;
+        }
+
+        return [
+            ...$parsedPayload,
+            'commentKind' => 'review',
+            'commentThreadId' => $rootId,
+            'commentReplyToId' => $rootId === $commentId ? '' : $rootId,
+        ];
+    }
+
+    private function isProjectInCurrentRegion(Document $project): bool
+    {
+        try {
+            $dsn = new DSN($project->getAttribute('database'));
+            $databaseName = $dsn->getHost();
+        } catch (\InvalidArgumentException) {
+            $databaseName = $project->getAttribute('database');
+        }
+
+        $databases = Config::getParam('pools-database', []);
+        if (!\in_array($databaseName, $databases)) {
+            Console::warning("Skipping project {$project->getId()}: database '{$databaseName}' is not part of region " . System::getEnv('_APP_REGION'));
+            return false;
+        }
+
+        return true;
     }
 }

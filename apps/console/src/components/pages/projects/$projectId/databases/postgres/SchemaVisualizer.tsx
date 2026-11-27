@@ -511,7 +511,9 @@ export function PostgresSchemaVisualizer({ databaseId }: SchemaVisualizerProps) 
 
       <div
         className="relative min-h-0 flex-1 overflow-hidden"
-        style={{ backgroundColor: 'hsl(var(--muted) / 0.3)' }}
+        style={{
+          backgroundColor: 'color-mix(in oklab, var(--muted) 30%, transparent)',
+        }}
       >
         <div
           ref={canvasRef}
@@ -852,7 +854,9 @@ function EmptySchemaState({ schema }: { schema: string }) {
   return (
     <div
       className="relative flex flex-1 items-center justify-center overflow-hidden"
-      style={{ backgroundColor: 'hsl(var(--muted) / 0.3)' }}
+      style={{
+        backgroundColor: 'color-mix(in oklab, var(--muted) 30%, transparent)',
+      }}
     >
       <SchemaBlueprintMat />
       <div className="relative z-10 max-w-lg px-6 text-center">

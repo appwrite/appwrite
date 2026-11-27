@@ -65,7 +65,9 @@ export const Route = createFileRoute('/_marketing/alternative-to/$competitor')({
       throw notFound()
     }
 
-    return { competitor: id }
+    // Read here rather than in `head`: the loader ships with the page, while
+    // `head` loads with the route tree on every page.
+    return { competitor: id, faq: getAlternativeContent(id).faq }
   },
   head: ({ params, loaderData }) => {
     const id =
@@ -75,7 +77,6 @@ export const Route = createFileRoute('/_marketing/alternative-to/$competitor')({
     }
 
     const meta = ALTERNATIVE_REGISTRY[id]
-    const content = getAlternativeContent(id)
     const pageName = translate(meta.metaTitle)
     const description = translate(meta.metaDescription)
     const canonicalPath = `/alternative-to/${id}`
@@ -98,7 +99,7 @@ export const Route = createFileRoute('/_marketing/alternative-to/$competitor')({
           href: `${canonicalPath}.md`,
         },
       ],
-      scripts: [getMarketingFaqScript(content.faq)],
+      scripts: loaderData?.faq ? [getMarketingFaqScript(loaderData.faq)] : [],
     }
   },
   component: AlternativePage,

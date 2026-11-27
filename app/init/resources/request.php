@@ -268,9 +268,10 @@ return function (Container $context): void {
     }, ['databaseFactory', 'dbForPlatform']);
 
     /**
-     * List of allowed request hostnames for the request.
+     * Hostnames the request may come from or redirect to. Native platforms' app IDs are trusted
+     * as origins only, see Platform::getHostnames().
      */
-    $context->set('allowedHostnames', function (array $platform, Document $project, Document $rule, Request $request, string $mode) {
+    $hostnamesFor = function (array $platform, Document $project, Document $rule, Request $request, string $mode, bool $appIds): array {
         $allowed = [...($platform['hostnames'] ?? [])];
 
         /* Add the console host, the default OAuth2 redirects land on it even when _APP_CONSOLE_URL points elsewhere */
@@ -282,7 +283,7 @@ return function (Container $context): void {
         /* Add platform configured hostnames, admin mode carries the console session so only console hosts may use it */
         if (! $project->isEmpty() && $project->getId() !== 'console' && $mode !== APP_MODE_ADMIN) {
             $platforms = $project->getAttribute('platforms', []);
-            $hostnames = Platform::getHostnames($platforms);
+            $hostnames = Platform::getHostnames($platforms, $appIds);
             $allowed = [...$allowed, ...$hostnames];
         }
 
@@ -307,7 +308,17 @@ return function (Container $context): void {
         }
 
         return array_unique($allowed);
-    }, ['platform', 'project', 'rule', 'request', 'mode']);
+    };
+
+    /**
+     * List of allowed request hostnames for the request.
+     */
+    $context->set('allowedHostnames', fn (array $platform, Document $project, Document $rule, Request $request, string $mode) => $hostnamesFor($platform, $project, $rule, $request, $mode, true), ['platform', 'project', 'rule', 'request', 'mode']);
+
+    /**
+     * List of hostnames the request may redirect to: the allowed hostnames without native app IDs.
+     */
+    $context->set('allowedRedirectHostnames', fn (array $platform, Document $project, Document $rule, Request $request, string $mode) => $hostnamesFor($platform, $project, $rule, $request, $mode, false), ['platform', 'project', 'rule', 'request', 'mode']);
 
     /**
      * List of allowed request schemes for the request.
@@ -442,14 +453,14 @@ return function (Container $context): void {
 
     $context->set(
         'originValidator',
-        fn (array $allowedHostnames, array $allowedSchemes) => new Origin($allowedHostnames, $allowedSchemes),
+        fn (array $allowedHostnames, array $allowedSchemes) => new Origin($allowedHostnames, $allowedSchemes, System::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled'),
         ['allowedHostnames', 'allowedSchemes']
     );
 
     $context->set(
         'redirectValidator',
-        fn (array $allowedHostnames, array $allowedSchemes) => new Redirect($allowedHostnames, $allowedSchemes),
-        ['allowedHostnames', 'allowedSchemes']
+        fn (array $allowedRedirectHostnames, array $allowedSchemes) => new Redirect($allowedRedirectHostnames, $allowedSchemes, System::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled'),
+        ['allowedRedirectHostnames', 'allowedSchemes']
     );
 
     $context->set('user', function (string $mode, Project $project, Project $console, Request $request, Response $response, Database $dbForProject, Database $dbForPlatform, Store $store, Token $proofForToken, $authorization) {
@@ -624,23 +635,13 @@ return function (Container $context): void {
     }, ['request', 'utopia']);
 
     /**
-     * The ID of the project the request names: the `project` param or the X-Appwrite-Project
+     * The ID of the project the request names: a `project` query parameter or the X-Appwrite-Project
      * header, else the access key of an S3 request or the path of a deprecated project alias.
      * Empty, or `console`, for the console. Kept apart from the project document so that a
      * comparison with what the client sent never depends on how the document was looked up.
      */
     $context->set('projectId', function (Request $request, Http $utopia, string $projectIdFromPath): string {
-        $projectId = $request->getParam('project', $request->getHeaderLine('x-appwrite-project', ''));
-        // Realtime channel "project" can send project=Query array
-        if (! \is_string($projectId)) {
-            $projectId = $request->getHeaderLine('x-appwrite-project', '');
-        }
-        // For non-GET requests getParam() reads the body, so a project passed
-        // as a query parameter (e.g. presigned artifact URLs) is only visible
-        // via getQuery().
-        if ($projectId === '') {
-            $projectId = (string) $request->getQuery('project', '');
-        }
+        $projectId = $request->getProject();
 
         $route = $utopia->match($request)?->route;
 
@@ -988,17 +989,8 @@ return function (Container $context): void {
          * - 'default' => Requests for Client and Server Side
          * - 'admin' => Request from the Console on non-console projects
          */
-        $mode = $request->getParam('mode', $request->getHeaderLine('x-appwrite-mode', APP_MODE_DEFAULT));
-        // Request bodies can carry their own 'mode' key
-        if (! \is_string($mode)) {
-            $mode = $request->getHeaderLine('x-appwrite-mode', APP_MODE_DEFAULT);
-        }
-
-        $named = $request->getParam('project', $request->getHeaderLine('x-appwrite-project', ''));
-        // GitLab webhook bodies carry a 'project' object, not a project ID
-        if (! \is_string($named)) {
-            $named = $request->getHeaderLine('x-appwrite-project', '');
-        }
+        $mode = $request->getMode();
+        $named = $request->getProject();
 
         // The request acts on a project other than the one it names, as a deprecated alias
         // under /v1/projects/:projectId does for the console
@@ -1024,16 +1016,24 @@ return function (Container $context): void {
         return $requestTimestamp;
     }, ['request']);
 
-    $context->set('team', function (Document $project, Database $dbForPlatform, Http $utopia, Request $request, Authorization $authorization, string $projectIdFromPath) {
+    /**
+     * The organization the request acts on, from the matched route. A GraphQL field
+     * runs its own route in a child scope and rebuilds this, and everything built from
+     * it, there (see Appwrite\GraphQL\Resolvers), so it must not depend on resources
+     * that stay fixed for the outer request.
+     */
+    $context->set('team', function (Document $project, Database $dbForPlatform, Http $utopia, Request $request, Authorization $authorization) {
         $teamInternalId = '';
         if ($project->getId() !== 'console') {
             $teamInternalId = $project->getAttribute('teamInternalId', '');
         } else {
-            $route = $utopia->match($request)?->route;
+            $match = $utopia->match($request);
+            $route = $match?->route;
             $path = ! empty($route) ? $route->getPath() : $request->getURI();
             $orgHeader = $request->getHeaderLine('x-appwrite-organization', '');
             if (str_starts_with($path, '/v1/projects/:projectId')) {
-                $p = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectIdFromPath));
+                $projectId = (string) ($match->params['projectId'] ?? '');
+                $p = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
                 $teamInternalId = $p->getAttribute('teamInternalId', '');
             } elseif ($path === '/v1/projects') {
                 $teamId = $request->getParam('teamId', '');
@@ -1065,7 +1065,7 @@ return function (Container $context): void {
         });
 
         return $team;
-    }, ['project', 'dbForPlatform', 'utopia', 'request', 'authorization', 'projectIdFromPath']);
+    }, ['project', 'dbForPlatform', 'utopia', 'request', 'authorization']);
 
     $context->set('previewHostname', function (Request $request, ?Key $apiKey) {
         $host = $request->getQuery('appwrite-hostname', $request->getHeaderLine('x-appwrite-hostname', '')) ?? '';

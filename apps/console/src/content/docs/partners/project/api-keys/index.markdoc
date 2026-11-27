@@ -23,6 +23,8 @@ API keys should be treated as a secret. Never share the API key and keep API key
 
 To create a new API key, open **API Keys** in the project sidebar and click **Create API key**.
 
+A key acts only in the project or [environment](/docs/advanced/environments) it was created in. To create a key for an environment, switch to the environment in the Console first. Keys are never copied into an environment.
+
 You can then use the API key to initialize the Appwrite client in your server-side apps.
 
 {% multicode %}

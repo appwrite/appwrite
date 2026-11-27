@@ -48,13 +48,15 @@ readonly class Unsubscribe
     }
 
     /**
+     * @param string $scope what the monitor's chosen ID is unique within, as `Monitors::scope()` gives it
      * @param ?int $now Unix time the token is issued at; the current time when null
      */
-    public function token(string $userId, string $monitorId, string $type, ?int $now = null): string
+    public function token(string $userId, string $monitorId, string $type, string $scope, ?int $now = null): string
     {
         return $this->jwt($this->secrets[0] ?? '', $now)->encode([
             'userId' => $userId,
             'monitorId' => $monitorId,
+            'scope' => $scope,
             'type' => $type,
             'purpose' => self::PURPOSE,
         ]);
@@ -62,7 +64,7 @@ readonly class Unsubscribe
 
     /**
      * @param ?int $now Unix time the token is checked at; the current time when null
-     * @return array{userId: string, monitorId: string, type: string}
+     * @return array{userId: string, monitorId: string, scope: string, type: string}
      * @throws \InvalidArgumentException when the token is not a valid unsubscribe token
      */
     public function verify(string $token, ?int $now = null): array
@@ -84,12 +86,13 @@ readonly class Unsubscribe
             ($claims['purpose'] ?? null) !== self::PURPOSE
             || !\is_string($claims['userId'] ?? null) || $claims['userId'] === ''
             || !\is_string($claims['monitorId'] ?? null) || $claims['monitorId'] === ''
+            || !\is_string($claims['scope'] ?? '')
             || !\is_string($claims['type'] ?? null) || $claims['type'] === ''
         ) {
             throw new \InvalidArgumentException('Invalid unsubscribe token.');
         }
 
-        return ['userId' => $claims['userId'], 'monitorId' => $claims['monitorId'], 'type' => $claims['type']];
+        return ['userId' => $claims['userId'], 'monitorId' => $claims['monitorId'], 'scope' => $claims['scope'] ?? '', 'type' => $claims['type']];
     }
 
     private function jwt(string $secret, ?int $now): JWT

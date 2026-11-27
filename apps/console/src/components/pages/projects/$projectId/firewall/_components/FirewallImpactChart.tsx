@@ -116,7 +116,7 @@ export function FirewallImpactChart({
                 </defs>
                 <CartesianGrid
                   strokeDasharray="3 3"
-                  stroke="hsl(var(--border))"
+                  stroke="var(--border)"
                   vertical={false}
                 />
                 <UsageChartXAxis
@@ -143,7 +143,7 @@ export function FirewallImpactChart({
                         <div className="space-y-1">
                           <div className="flex justify-between gap-6 text-[11px]">
                             <span className="flex items-center gap-1.5 text-muted-foreground">
-                              <ChartSeriesDot color="hsl(var(--muted-foreground))" />
+                              <ChartSeriesDot color="var(--muted-foreground)" />
                               {t('Total traffic')}
                             </span>
                             <span className="font-medium tabular-nums text-foreground">
@@ -169,7 +169,7 @@ export function FirewallImpactChart({
                     type="monotone"
                     dataKey="total"
                     name={t('Total traffic')}
-                    stroke="hsl(var(--muted-foreground))"
+                    stroke="var(--muted-foreground)"
                     strokeWidth={1.5}
                     strokeDasharray="4 4"
                     fill="transparent"

@@ -7,3 +7,5 @@ Each video may have only one rendition per profile and output combination. Creat
 A video accepts 10 rendition creates per hour. The next create returns `general_rate_limit_exceeded`.
 
 CMAF packs shared fMP4 segments once and exposes both HLS (`/outputs/cmaf/master.m3u8`) and DASH (`/outputs/cmaf/master.mpd`) masters for the same encode.
+
+Renditions can only be created from the Console or a server SDK with an API key that has the `videos.write` scope. Each encode spends the project's compute, so client sessions receive `user_unauthorized`.

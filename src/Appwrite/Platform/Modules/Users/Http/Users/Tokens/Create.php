@@ -84,7 +84,7 @@ class Create extends Action
             'secret' => $proofForToken->hash($secret),
             'expire' => $expire,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
-            'ip' => $request->getIP()
+            'ip' => $request->getClientIP()
         ]);
 
         $token = $dbForProject->createDocument('tokens', $token);

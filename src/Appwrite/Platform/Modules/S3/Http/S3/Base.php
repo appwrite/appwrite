@@ -78,6 +78,7 @@ abstract class Base extends Action
             ->inject('publisherForFunctions')
             ->inject('queueForWebhooks')
             ->inject('eventProcessor')
+            ->inject('plan')
             ->callback($this->action(...));
     }
 
@@ -98,9 +99,10 @@ abstract class Base extends Action
         FunctionPublisher $publisherForFunctions,
         Event $queueForWebhooks,
         EventProcessor $eventProcessor,
+        array $plan,
     ): void {
         try {
-            $this->route($request, $response, $dbForProject, $project, $team, $user, $deviceForFiles, $locks, $cache, $queueForEvents, $publisherForDeletes, $publisherForAudits, $queueForRealtime, $publisherForFunctions, $queueForWebhooks, $eventProcessor);
+            $this->route($request, $response, $dbForProject, $project, $team, $user, $deviceForFiles, $locks, $cache, $queueForEvents, $publisherForDeletes, $publisherForAudits, $queueForRealtime, $publisherForFunctions, $queueForWebhooks, $eventProcessor, $plan);
         } catch (Contention $error) {
             $this->sendError($response, 'SlowDown', 'The object is busy. Please retry.', $request->getURI(), Response::STATUS_CODE_SERVICE_UNAVAILABLE);
         } catch (AppwriteException $error) {
@@ -110,7 +112,7 @@ abstract class Base extends Action
         }
     }
 
-    abstract protected function route(Request $request, Response $response, Database $dbForProject, Document $project, Document $team, User $user, Device $deviceForFiles, callable $locks, Cache $cache, Event $queueForEvents, DeletePublisher $publisherForDeletes, AuditPublisher $publisherForAudits, Event $queueForRealtime, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, EventProcessor $eventProcessor): void;
+    abstract protected function route(Request $request, Response $response, Database $dbForProject, Document $project, Document $team, User $user, Device $deviceForFiles, callable $locks, Cache $cache, Event $queueForEvents, DeletePublisher $publisherForDeletes, AuditPublisher $publisherForAudits, Event $queueForRealtime, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, EventProcessor $eventProcessor, array $plan): void;
 
     protected function authorize(Request $request, Document $project, Document $team, User $user, array $scopes): void
     {
@@ -605,7 +607,25 @@ abstract class Base extends Action
         ));
     }
 
-    protected function createBucket(Database $dbForProject, string $bucketId): void
+    /**
+     * The per-file limit a new bucket gets, as the REST endpoint gives it: the plan's fileSize
+     * (in MB), or the platform's storage limit where the plan sets none.
+     *
+     * @param array<string, mixed> $plan
+     */
+    public static function maximumFileSize(array $plan): int
+    {
+        if (empty($plan['fileSize'])) {
+            return (int) System::getEnv('_APP_STORAGE_LIMIT', 0);
+        }
+
+        return (int) $plan['fileSize'] * 1000 * 1000;
+    }
+
+    /**
+     * @param array<string, mixed> $plan The organization's plan, which caps each file
+     */
+    protected function createBucket(Database $dbForProject, string $bucketId, array $plan): void
     {
         $validator = new UID();
         if (!$validator->isValid($bucketId)) {
@@ -628,7 +648,7 @@ abstract class Base extends Action
                 '$collection' => 'buckets',
                 '$permissions' => $permissions,
                 'name' => $bucketId,
-                'maximumFileSize' => (int) System::getEnv('_APP_STORAGE_LIMIT', 0),
+                'maximumFileSize' => self::maximumFileSize($plan),
                 'allowedFileExtensions' => [],
                 'fileSecurity' => false,
                 'enabled' => true,

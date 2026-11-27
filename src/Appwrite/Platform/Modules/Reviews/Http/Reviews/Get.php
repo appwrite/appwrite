@@ -9,6 +9,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
@@ -17,6 +18,9 @@ use Utopia\System\System;
 class Get extends Action
 {
     use HTTP;
+
+    /** Finding severities, least severe first, so a severity ranks by its index. */
+    private const array SEVERITIES = ['info', 'minor', 'major', 'critical'];
 
     public static function getName()
     {
@@ -71,6 +75,12 @@ class Get extends Action
         ]);
 
         $review->setAttribute('findings', $findings);
+
+        // What it posted, as a list counts it: dropped findings were never posted.
+        $posted = \array_filter($findings, fn (Document $finding) => $finding->getAttribute('status') !== 'dropped');
+        $ranks = \array_filter(\array_map(fn (Document $finding) => \array_search($finding->getAttribute('severity'), self::SEVERITIES, true), $posted), 'is_int');
+        $review->setAttribute('findingsTotal', \count($posted));
+        $review->setAttribute('severity', empty($ranks) ? '' : self::SEVERITIES[\max($ranks)]);
 
         $response->dynamic($review, Response::MODEL_REVIEW);
     }

@@ -5,6 +5,12 @@ namespace Appwrite\Platform\Modules\Alerts\Services;
 use Appwrite\Platform\Modules\Alerts\Http\Alerts\Get as GetAlert;
 use Appwrite\Platform\Modules\Alerts\Http\Alerts\Update as UpdateAlert;
 use Appwrite\Platform\Modules\Alerts\Http\Alerts\XList as ListAlerts;
+use Appwrite\Platform\Modules\Alerts\Http\Escalations\Create as CreateEscalation;
+use Appwrite\Platform\Modules\Alerts\Http\Escalations\Delete as DeleteEscalation;
+use Appwrite\Platform\Modules\Alerts\Http\Escalations\Get as GetEscalation;
+use Appwrite\Platform\Modules\Alerts\Http\Escalations\Init as InitEscalations;
+use Appwrite\Platform\Modules\Alerts\Http\Escalations\Update as UpdateEscalation;
+use Appwrite\Platform\Modules\Alerts\Http\Escalations\XList as ListEscalations;
 use Appwrite\Platform\Modules\Alerts\Http\Init;
 use Appwrite\Platform\Modules\Alerts\Http\Monitors\Delete as DeleteMonitor;
 use Appwrite\Platform\Modules\Alerts\Http\Monitors\Get as GetMonitor;
@@ -30,5 +36,12 @@ class Http extends Service
         $this->addAction('listAlerts', ListAlerts::class);
         $this->addAction('getAlert', GetAlert::class);
         $this->addAction('updateAlert', UpdateAlert::class);
+
+        $this->addAction('initEscalations', InitEscalations::class);
+        $this->addAction('createEscalation', CreateEscalation::class);
+        $this->addAction('listEscalations', ListEscalations::class);
+        $this->addAction('getEscalation', GetEscalation::class);
+        $this->addAction('updateEscalation', UpdateEscalation::class);
+        $this->addAction('deleteEscalation', DeleteEscalation::class);
     }
 }

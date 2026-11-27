@@ -1,13 +1,9 @@
 import type { Models } from '@appwrite.io/console'
-import { useState } from 'react'
+import { useState, type ComponentProps } from 'react'
 import { CodeXml, MonitorPlay } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import {
-  ContextMenuItem,
-} from '@/components/ui/context-menu'
-import {
-  ContextMenuIcon,
-} from '@/components/global/shared/ContextMenuIcon'
+import { ContextMenuItem } from '@/components/ui/context-menu'
+import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
 import {
   Tooltip,
   TooltipContent,
@@ -19,6 +15,7 @@ import { openInNewTab } from '@/lib/utils/context-menu'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import { VideoEmbed } from './VideoEmbed'
+import { VideoPreviewPopover } from './VideoPreviewPopover'
 
 type VideoPreviewEmbedMenuProps = {
   projectId: string
@@ -47,10 +44,12 @@ export function VideoPreviewEmbedMenu({
   const playerUrl = getVideoEmbedPlayerUrl(projectId, video.$id)
   const title = video.name?.trim() || t('Video player')
 
+  // The context menu has nothing to anchor the preview panel to.
   const preview = () => {
     if (disabled) return
     openInNewTab(playerUrl)
   }
+  const fillsRow = className?.includes('w-full')
 
   const openEmbed = () => {
     if (disabled) return
@@ -73,15 +72,27 @@ export function VideoPreviewEmbedMenu({
         <ContextMenuIcon icon={MonitorPlay} />
         {t('Preview')}
       </ContextMenuItem>
-    ) : (
+    ) : disabled ? (
       <ActionButton
         label={t('Preview')}
         icon={MonitorPlay}
-        disabled={disabled}
+        disabled
         disabledTooltip={disabledTooltip}
-        onClick={preview}
-        className={className?.includes('w-full') ? 'flex-1' : undefined}
+        className={fillsRow ? 'flex-1' : undefined}
       />
+    ) : (
+      <VideoPreviewPopover
+        projectId={projectId}
+        video={video}
+        align={fillsRow ? 'start' : 'end'}
+      >
+        <ActionButton
+          label={t('Preview')}
+          icon={MonitorPlay}
+          disabled={false}
+          className={fillsRow ? 'flex-1' : undefined}
+        />
+      </VideoPreviewPopover>
     )
 
   const embedControl =
@@ -107,7 +118,7 @@ export function VideoPreviewEmbedMenu({
         disabled={disabled}
         disabledTooltip={disabledTooltip}
         onClick={openEmbed}
-        className={className?.includes('w-full') ? 'flex-1' : undefined}
+        className={fillsRow ? 'flex-1' : undefined}
       />
     )
 
@@ -136,6 +147,7 @@ export function VideoPreviewEmbedMenu({
   )
 }
 
+/** Extra props come from a trigger it sits in, like the preview panel's. */
 function ActionButton({
   label,
   icon: Icon,
@@ -143,16 +155,18 @@ function ActionButton({
   disabledTooltip,
   onClick,
   className,
-}: {
+  ...props
+}: Omit<ComponentProps<typeof Button>, 'children'> & {
   label: string
   icon: typeof MonitorPlay
   disabled: boolean
   disabledTooltip?: string
-  onClick: () => void
+  onClick?: ComponentProps<typeof Button>['onClick']
   className?: string
 }) {
   const button = (
     <Button
+      {...props}
       type="button"
       variant="outline"
       size="sm"

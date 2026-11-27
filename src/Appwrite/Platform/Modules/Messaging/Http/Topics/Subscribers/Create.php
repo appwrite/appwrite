@@ -118,24 +118,28 @@ class Create extends Action
             ]),
         ]);
 
+        $totalAttribute = match ($target->getAttribute('providerType')) {
+            MESSAGE_TYPE_EMAIL => 'emailTotal',
+            MESSAGE_TYPE_SMS => 'smsTotal',
+            MESSAGE_TYPE_PUSH => 'pushTotal',
+            default => throw new Exception(Exception::TARGET_PROVIDER_INVALID_TYPE),
+        };
+
         try {
-            $subscriber = $dbForProject->createDocument('subscribers', $subscriber);
+            $subscriber = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $subscriber, $topicId, $totalAttribute) {
+                $created = $dbForProject->createDocument('subscribers', $subscriber);
 
-            $totalAttribute = match ($target->getAttribute('providerType')) {
-                MESSAGE_TYPE_EMAIL => 'emailTotal',
-                MESSAGE_TYPE_SMS => 'smsTotal',
-                MESSAGE_TYPE_PUSH => 'pushTotal',
-                default => throw new Exception(Exception::TARGET_PROVIDER_INVALID_TYPE),
-            };
+                $authorization->skip(fn () => $dbForProject->skipFilters(
+                    fn () => $dbForProject->increaseDocumentAttribute(
+                        'topics',
+                        $topicId,
+                        $totalAttribute,
+                    ),
+                    APP_TOPICS_SUBQUERIES
+                ));
 
-            $authorization->skip(fn () => $dbForProject->skipFilters(
-                fn () => $dbForProject->increaseDocumentAttribute(
-                    'topics',
-                    $topicId,
-                    $totalAttribute,
-                ),
-                APP_TOPICS_SUBQUERIES
-            ));
+                return $created;
+            });
         } catch (DuplicateException) {
             throw new Exception(Exception::SUBSCRIBER_ALREADY_EXISTS);
         }
