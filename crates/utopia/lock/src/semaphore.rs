@@ -50,7 +50,7 @@ impl Semaphore {
     }
 
     fn release_inner(&self) {
-        if self.held.fetch_update(Ordering::AcqRel, Ordering::Acquire, |h| h.checked_sub(1)).is_ok() {
+        if self.held.try_update(Ordering::AcqRel, Ordering::Acquire, |h| h.checked_sub(1)).is_ok() {
             self.inner.add_permits(1);
         }
     }

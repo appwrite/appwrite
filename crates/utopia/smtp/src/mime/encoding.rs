@@ -87,8 +87,8 @@ pub(crate) fn base64_into(value: &[u8], out: &mut Vec<u8>) {
     }
     // 57 input bytes are exactly one 76 character line.
     for line in value.chunks(CHUNK) {
-        let mut groups = line.chunks_exact(3);
-        for g in &mut groups {
+        let (groups, remainder) = line.as_chunks::<3>();
+        for g in groups {
             let n = (u32::from(g[0]) << 16) | (u32::from(g[1]) << 8) | u32::from(g[2]);
             out.extend_from_slice(&[
                 BASE64[(n >> 18) as usize & 63],
@@ -97,7 +97,7 @@ pub(crate) fn base64_into(value: &[u8], out: &mut Vec<u8>) {
                 BASE64[n as usize & 63],
             ]);
         }
-        match *groups.remainder() {
+        match *remainder {
             [a] => {
                 let n = u32::from(a) << 16;
                 out.extend_from_slice(&[BASE64[(n >> 18) as usize & 63], BASE64[(n >> 12) as usize & 63], b'=', b'=']);

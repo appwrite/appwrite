@@ -241,7 +241,7 @@ fn resolve(base: &str, location: &str) -> String {
     if location.starts_with('/') {
         format!("{}{location}", &base[..host_end])
     } else {
-        let dir_end = base.rfind('/').filter(|&p| p >= host_end).map_or(host_end, |p| p);
+        let dir_end = base.rfind('/').filter(|&p| p >= host_end).unwrap_or(host_end);
         format!("{}/{location}", &base[..dir_end])
     }
 }

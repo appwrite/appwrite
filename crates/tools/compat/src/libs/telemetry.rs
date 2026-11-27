@@ -781,7 +781,7 @@ mod otlp_decode {
     fn packed(b: &[u8], n: u64) -> Result<Vec<[u8; 8]>, Fault> {
         let mut out = Vec::new();
         for s in msgs(b, n)? {
-            out.extend(s.chunks_exact(8).map(|c| <[u8; 8]>::try_from(c).unwrap_or_default()));
+            out.extend(s.as_chunks::<8>().0.iter().copied());
         }
         Ok(out)
     }

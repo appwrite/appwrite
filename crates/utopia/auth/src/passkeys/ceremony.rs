@@ -156,14 +156,14 @@ fn b64_decode(s: &[u8], url: bool, strict: bool) -> Result<Vec<u8>, Vec<u8>> {
             0
         })
     };
-    let mut chunks = s.chunks_exact(4);
-    for c in &mut chunks {
+    let (chunks, remainder) = s.as_chunks::<4>();
+    for c in chunks {
         let (a, b, cc, d) = (v(c[0], &mut bad), v(c[1], &mut bad), v(c[2], &mut bad), v(c[3], &mut bad));
         out.push(((a << 2) | (b >> 4)) as u8);
         out.push(((b << 4) | (cc >> 2)) as u8);
         out.push(((cc << 6) | d) as u8);
     }
-    match chunks.remainder() {
+    match remainder {
         [] => {}
         [a, b, c] => {
             let (a, b, c) = (v(*a, &mut bad), v(*b, &mut bad), v(*c, &mut bad));

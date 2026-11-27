@@ -369,6 +369,8 @@ impl Wire {
 
     /// Reads one query string's messages up to `ReadyForQuery`, keeping
     /// its last result; on a failure, the last result read so far.
+    // The error carries the partial result PDO keeps, by value as its callers take it.
+    #[allow(clippy::result_large_err)]
     async fn receive(&mut self) -> Result<Outcome, Option<Outcome>> {
         let mut last: Option<Outcome> = None;
         let mut current: Option<Outcome> = None;

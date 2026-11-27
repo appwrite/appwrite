@@ -160,7 +160,7 @@ impl Leasable {
             let registers = key.ends_with("#state")
                 && matches!(data, Value::Array(a) if matches!(a.get_str("owners"), Some(Value::Array(o)) if !o.is_empty()));
             (registers
-                && left.fetch_update(std::sync::atomic::Ordering::SeqCst, std::sync::atomic::Ordering::SeqCst, |n| n.checked_sub(1)).is_ok())
+                && left.try_update(std::sync::atomic::Ordering::SeqCst, std::sync::atomic::Ordering::SeqCst, |n| n.checked_sub(1)).is_ok())
             .then(|| Err(utopia_cache::Error::Unavailable { message: "Cache write failed".to_owned(), previous: None }))
         });
     }

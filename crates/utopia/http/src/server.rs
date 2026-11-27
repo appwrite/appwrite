@@ -212,7 +212,7 @@ struct Held<'a> {
 impl Held<'_> {
     /// Counts `bytes` more, unless that takes the total past `max`.
     fn reserve(&mut self, bytes: usize, max: usize) -> bool {
-        let reserved = self.buffered.fetch_update(Ordering::SeqCst, Ordering::SeqCst, |total| {
+        let reserved = self.buffered.try_update(Ordering::SeqCst, Ordering::SeqCst, |total| {
             total.checked_add(bytes).filter(|&next| next <= max)
         });
         if reserved.is_ok() {
