@@ -3712,6 +3712,19 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertSame('dist/main.js', $nestjs['entrypoint']);
         $this->assertSame('npm install && npm run build', $nestjs['installCommand']);
 
+        // Test for SUCCESS: Flask and Django, served by the Python runtime's gunicorn
+        $python = \array_column(\array_filter($frameworks['body']['frameworks'], fn (array $framework): bool => \in_array($framework['key'], ['flask', 'django'], true)), null, 'key');
+        $this->assertSame('Flask', $python['flask']['name'] ?? null);
+        $this->assertSame('app.py', $python['flask']['entrypoint']);
+        $this->assertSame('Django', $python['django']['name'] ?? null);
+        $this->assertSame('manage.py', $python['django']['entrypoint']);
+        foreach ($python as $framework) {
+            $this->assertSame('pip install -r requirements.txt', $framework['installCommand']);
+            foreach ($framework['runtimes'] as $runtime) {
+                $this->assertStringStartsWith('python-', $runtime);
+            }
+        }
+
         // Test for SUCCESS: the total can be skipped
         $frameworks = $this->client->call(Client::METHOD_GET, '/functions/frameworks', array_merge([
             'content-type' => 'application/json',
@@ -3887,6 +3900,156 @@ final class FunctionsCustomServerTest extends Scope
         ], $this->getHeaders()), [
             'userId' => Id::unique(),
             'name' => 'NestJS event user',
+        ]);
+        $this->assertSame(201, $user['headers']['status-code']);
+        $userId = $user['body']['$id'];
+
+        $this->assertEventually(function () use ($functionId, $userId) {
+            $executions = $this->listExecutions($functionId);
+            $events = \array_values(\array_filter($executions['body']['executions'], fn (array $execution): bool => $execution['trigger'] === 'event'));
+            $this->assertNotEmpty($events);
+            $this->assertSame('completed', $events[0]['status']);
+            $this->assertSame(200, $events[0]['responseStatusCode']);
+            $this->assertStringContainsString('trigger=event event=users.' . $userId . '.create', (string) $events[0]['logs']);
+        }, 20000, 500);
+
+        $this->client->call(Client::METHOD_DELETE, '/users/' . $userId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->cleanupFunction($functionId);
+    }
+
+    public function testFlaskFunction(): void
+    {
+        // Test for SUCCESS: a Flask app needs only the framework; the runtime serves its
+        // `app` with gunicorn, so it never calls app.run().
+        $function = $this->createFunction([
+            'functionId' => Id::unique(),
+            'name' => 'Flask app',
+            'runtime' => 'python-3.14',
+            'framework' => 'flask',
+            'events' => ['users.*.create'],
+            'timeout' => 15,
+            'logging' => true,
+        ]);
+        $this->assertSame(201, $function['headers']['status-code'], \json_encode($function['body']));
+        $this->assertSame('flask', $function['body']['framework']);
+        $this->assertSame('app.py', $function['body']['entrypoint']);
+        $this->assertSame('pip install -r requirements.txt', $function['body']['commands']);
+        $functionId = $function['body']['$id'];
+
+        $this->setupDeployment($functionId, [
+            'code' => $this->packageFunction('flask'),
+            'activate' => true,
+        ]);
+
+        // Routing, method and JSON response, served by Flask itself
+        $execution = $this->createExecution($functionId, ['async' => 'false', 'path' => '/', 'method' => 'GET']);
+        $this->assertSame(201, $execution['headers']['status-code']);
+        $this->assertSame(['framework' => 'flask', 'method' => 'GET', 'path' => '/'], $this->executionOutput($execution));
+
+        // JSON body, request header, status code and response header
+        $execution = $this->createExecution($functionId, [
+            'async' => 'false',
+            'path' => '/echo',
+            'method' => 'POST',
+            'body' => \json_encode(['hello' => 'world']),
+            'headers' => ['content-type' => 'application/json', 'x-test' => 'from-test'],
+        ]);
+        $this->assertSame(201, $execution['body']['responseStatusCode']);
+        $this->assertSame(['body' => ['hello' => 'world'], 'header' => 'from-test'], $this->executionOutput($execution));
+        $this->assertContains(['name' => 'x-echo', 'value' => 'yes'], $execution['body']['responseHeaders']);
+
+        // The function's variables and the port the app is served on; print() reaches the execution's logs
+        $execution = $this->createExecution($functionId, ['async' => 'false', 'path' => '/env', 'method' => 'GET']);
+        $this->assertSame(['functionId' => $functionId, 'port' => '3000'], $this->executionOutput($execution));
+        $this->assertStringContainsString('flask log line', (string) $execution['body']['logs']);
+
+        // Events reach the app as POST /, told apart by x-appwrite-trigger and x-appwrite-event
+        $user = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => Id::unique(),
+            'name' => 'Flask event user',
+        ]);
+        $this->assertSame(201, $user['headers']['status-code']);
+        $userId = $user['body']['$id'];
+
+        $this->assertEventually(function () use ($functionId, $userId) {
+            $executions = $this->listExecutions($functionId);
+            $events = \array_values(\array_filter($executions['body']['executions'], fn (array $execution): bool => $execution['trigger'] === 'event'));
+            $this->assertNotEmpty($events);
+            $this->assertSame('completed', $events[0]['status']);
+            $this->assertSame(200, $events[0]['responseStatusCode']);
+            $this->assertStringContainsString('trigger=event event=users.' . $userId . '.create', (string) $events[0]['logs']);
+        }, 20000, 500);
+
+        $this->client->call(Client::METHOD_DELETE, '/users/' . $userId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->cleanupFunction($functionId);
+    }
+
+    public function testDjangoFunction(): void
+    {
+        // Test for SUCCESS: a Django project needs only the framework; the runtime finds
+        // its WSGI_APPLICATION from manage.py and serves it with gunicorn.
+        $function = $this->createFunction([
+            'functionId' => Id::unique(),
+            'name' => 'Django app',
+            'runtime' => 'python-3.14',
+            'framework' => 'django',
+            'events' => ['users.*.create'],
+            'timeout' => 15,
+            'logging' => true,
+        ]);
+        $this->assertSame(201, $function['headers']['status-code'], \json_encode($function['body']));
+        $this->assertSame('django', $function['body']['framework']);
+        $this->assertSame('manage.py', $function['body']['entrypoint']);
+        $this->assertSame('pip install -r requirements.txt', $function['body']['commands']);
+        $functionId = $function['body']['$id'];
+
+        $this->setupDeployment($functionId, [
+            'code' => $this->packageFunction('django'),
+            'activate' => true,
+        ]);
+
+        // Routing, method and JSON response, served by Django itself
+        $execution = $this->createExecution($functionId, ['async' => 'false', 'path' => '/', 'method' => 'GET']);
+        $this->assertSame(201, $execution['headers']['status-code']);
+        $this->assertSame(['framework' => 'django', 'method' => 'GET', 'path' => '/'], $this->executionOutput($execution));
+
+        // JSON body, request header, status code and response header
+        $execution = $this->createExecution($functionId, [
+            'async' => 'false',
+            'path' => '/echo',
+            'method' => 'POST',
+            'body' => \json_encode(['hello' => 'world']),
+            'headers' => ['content-type' => 'application/json', 'x-test' => 'from-test'],
+        ]);
+        $this->assertSame(201, $execution['body']['responseStatusCode']);
+        $this->assertSame(['body' => ['hello' => 'world'], 'header' => 'from-test'], $this->executionOutput($execution));
+        $this->assertContains(['name' => 'x-echo', 'value' => 'yes'], $execution['body']['responseHeaders']);
+
+        // The function's variables and the port the app is served on; print() reaches the execution's logs
+        $execution = $this->createExecution($functionId, ['async' => 'false', 'path' => '/env', 'method' => 'GET']);
+        $this->assertSame(['functionId' => $functionId, 'port' => '3000'], $this->executionOutput($execution));
+        $this->assertStringContainsString('django log line', (string) $execution['body']['logs']);
+
+        // Events reach the app as POST /, told apart by x-appwrite-trigger and x-appwrite-event
+        $user = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => Id::unique(),
+            'name' => 'Django event user',
         ]);
         $this->assertSame(201, $user['headers']['status-code']);
         $userId = $user['body']['$id'];
