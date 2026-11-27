@@ -789,7 +789,12 @@ export function MysqlDatabasePitrCard({
                 <span className="font-medium text-foreground">
                   {formatCurrency(pitrCost, 'USD')} {t('per month')}
                 </span>{' '}
-                ({pitrRatePercent}% {t('of your database price')}).
+                (
+                {t('{percent}% of your database price').replace(
+                  '{percent}',
+                  String(pitrRatePercent),
+                )}
+                ).
               </p>
             </AlertDescription>
           </Alert>

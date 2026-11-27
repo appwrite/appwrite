@@ -1495,7 +1495,7 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Each replica is billed at': '各レプリカの課金額',
   'of your compute tier per month.': 'コンピュートティア/月の',
   'of your compute tier per month when enabled.': '有効時のコンピュートティア/月の',
-  'of your database price': 'のデータベース料金',
+  '{percent}% of your database price': 'データベース料金の{percent}%',
   'Coming soon in your project region. Available in': 'プロジェクトリージョンでは近日公開予定。利用可能:',
   'No compute fee': 'コンピュート料金なし',
   'No monthly compute charge. Storage and database operations use your plan quota.':

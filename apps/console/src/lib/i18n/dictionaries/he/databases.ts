@@ -1620,7 +1620,7 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Each replica is billed at': 'כל replica מחויב ב-',
   'of your compute tier per month.': 'מרמת המחשוב שלכם בחודש.',
   'of your compute tier per month when enabled.': 'מרמת המחשוב שלכם בחודש כשהאפשרות מופעלת.',
-  'of your database price': 'ממחיר מסד הנתונים שלכם',
+  '{percent}% of your database price': '{percent}% ממחיר מסד הנתונים שלכם',
   'Coming soon in your project region. Available in': 'בקרוב באזור הפרויקט שלכם. זמין ב-',
   'No compute fee': 'ללא דמי מחשוב',
   'No monthly compute charge. Storage and database operations use your plan quota.':
