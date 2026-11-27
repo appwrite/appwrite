@@ -4,46 +4,64 @@ title: Alerts and notifications
 description: Review Appwrite monitor alerts, notify organization members, and use escalations to reach the right people when an alert keeps firing.
 ---
 
-An alert records one period during which a monitor's condition is met or an endpoint check is failing. Appwrite opens the alert as **Firing** and marks it **Resolved** when the monitor recovers. If the monitor fires again after it recovers, Appwrite opens a new alert.
+An alert records one period during which a monitor's condition is met or an endpoint check is failing. Appwrite opens the alert as **Firing** and marks it **Resolved** when a check passes again. If the monitor fires again after it recovers, Appwrite opens a new alert.
 
 # Review and acknowledge alerts {% #review-and-acknowledge-alerts %}
 
 1. In your project, open **Observe** > **Monitors** and select the **Alerts** tab.
-2. Filter by **All**, **Firing**, or **Resolved**, then select an alert to see when it started and the usage reading or check result that opened it. For a resolved alert, you also see when it recovered.
-3. For a firing alert, click **Acknowledge** to show your team that someone is handling it. The alert keeps firing until the monitor recovers. Acknowledging also stops any pending escalation steps.
+2. Filter by **All**, **Firing**, or **Resolved**, then select an alert to see when it started, the usage reading or check result that opened it, its peak, and how many notifications went out. For a resolved alert, you also see when it recovered.
+3. For a firing alert, click **Acknowledge** to show your team that someone is handling it. The alert keeps firing until the monitor recovers. Acknowledging also stops the alert's escalation.
 
 {% only_dark %}
-![Alerts tab with one firing alert and two resolved alerts, grouped by date](/images/docs/monitors/dark/alert-history.avif)
+![Alerts tab with a firing executions alert today, a resolved API health check alert from yesterday, and a resolved bandwidth alert, grouped by date](/images/docs/monitors/dark/alert-history.avif)
 {% /only_dark %}
 {% only_light %}
-![Alerts tab with one firing alert and two resolved alerts, grouped by date](/images/docs/monitors/alert-history.avif)
+![Alerts tab with a firing executions alert today, a resolved API health check alert from yesterday, and a resolved bandwidth alert, grouped by date](/images/docs/monitors/alert-history.avif)
 {% /only_light %}
 
-You can also acknowledge an alert by right-clicking it in the list, or from the **Open alerts** card on the monitor's page. To revert, use **Undo acknowledgement**. The count on the **Alerts** tab only includes firing alerts that nobody has acknowledged.
+You can also acknowledge an alert by right-clicking it in the list, or from the **Open alerts** card on the monitor's page. To revert, use **Undo acknowledgement**. Once an alert resolves, its acknowledgement can't change. The count on the **Alerts** tab only includes firing alerts that nobody has acknowledged.
+
+Deleting a monitor resolves its open alert without notifying anyone, and keeps its alert history.
 
 # Choose who gets notified {% #choose-who-gets-notified %}
 
 Choose recipients under **Notify** when you create a monitor. To change them later, open the monitor and go to **Settings** > **Notifications** > **Recipients**. You can pick the **Owners** and **Developers** roles of your organization, or an [escalation](#escalate-an-alert).
 
-Confirmed members in the selected roles receive an email and a Console notification when the monitor fires and again when it resolves. Members with a registered device can also get a push notification. Remove every recipient to keep alerts in the Console and use their [project events](#use-project-events) without notifying anyone directly.
+Confirmed members in the selected roles get an email and a Console notification once when an alert fires, and again when it resolves. Remove every recipient to keep alerts in the Console and use their [project events](#use-project-events) without notifying anyone directly.
 
-Each monitor has a **Severity** of **Info**, **Warning**, **Error**, or **Critical**. Critical push notifications can use higher urgency on supported devices.
+On Appwrite Cloud, members also get a push notification in Appwrite Beep, the Appwrite Cloud app on the [App Store](https://apps.apple.com/app/id6831213827) and [Google Play](https://play.google.com/store/apps/details?id=io.appwrite.beep). From a push, they can acknowledge, snooze, or mute an alert.
 
-**Cooldown** sets the minimum time between two firing notifications from the same monitor. Set it under **Name, cooldown** when you create a monitor, or in **Settings** > **Notifications** later. Alerts are still recorded while the cooldown holds back notifications.
+Each monitor has a **Severity** of **Info**, **Warning**, **Error**, or **Critical**. On Android, Beep rings critical alerts through silent mode.
+
+**Cooldown** sets the minimum time between notifications for two alerts from the same monitor. If the monitor fires again within the cooldown, Appwrite records the alert and notifies your team once the cooldown ends, if the alert is still firing. Set the cooldown under **Name, cooldown** when you create a monitor, or in **Settings** > **Notifications** later.
 
 # Escalate an alert {% #escalate-an-alert %}
 
+An escalation notifies people in steps until someone acknowledges the alert. Escalations belong to the organization, so monitors in any of its projects can use them.
+
 1. In your organization, open **Settings** > **Escalations** and click **Create escalation**.
-2. Add steps with the roles or members to notify, and how long to **Wait** before each step.
-3. Open the monitor and go to **Settings** > **Notifications**. In **Recipients**, click **Add**, select the escalation under **Escalations**, and click **Update**. An escalation replaces the roles the monitor notified before.
+2. Enter a name and add steps. For each step, choose the roles or members to notify and how many seconds to **Wait**. The first step waits from when the alert fires, and each later step from the step before it.
+3. Under **Repeat**, choose how many times to run the steps again, up to 9. Each repeat starts from the first step, one monitor cooldown after the last step.
+4. Click **Create**.
 
-You can also pick an escalation under **Notify** when you create a monitor.
+{% only_dark %}
+![Create escalation dialog that notifies developers when an alert fires, then owners and Priya Shah 900 seconds later, and repeats once](/images/docs/monitors/dark/escalation.avif)
+{% /only_dark %}
+{% only_light %}
+![Create escalation dialog that notifies developers when an alert fires, then owners and Priya Shah 900 seconds later, and repeats once](/images/docs/monitors/escalation.avif)
+{% /only_light %}
 
-Appwrite follows the steps while the alert is firing. The escalation stops when someone acknowledges the alert or the monitor recovers. If the alert keeps firing and you undo the acknowledgement, the escalation continues from its next step.
+To use the escalation, open a monitor and go to **Settings** > **Notifications**. In **Recipients**, click **Add**, select the escalation under **Escalations**, and click **Update**. An escalation replaces the roles the monitor notified before. You can also pick an escalation under **Notify** when you create a monitor.
+
+Appwrite follows the steps while the alert is firing, and stops when someone acknowledges the alert or it resolves. When it resolves, everyone the escalation reached hears about it. If you undo an acknowledgement while the alert is still firing, the escalation continues with the next step it hadn't sent yet.
+
+Changing an escalation's steps only affects alerts that fire afterwards. You can't delete an escalation while a monitor uses it.
+
+On Appwrite Cloud, the Free plan includes 1 escalation of up to 2 steps, without repeats. Pro includes 10 escalations of up to 10 steps each. Every confirmed member that an escalation step names, directly or through a role, is an on-call responder. Pro includes 3 on-call responders, and each additional responder costs $25 per month. See [Pricing](/pricing) for other plans.
 
 # Acknowledge with a server SDK {% #acknowledge-with-a-server-sdk %}
 
-To acknowledge alerts from your own tools, such as a chat command or an on-call integration, create an [API key](/docs/advanced/platform/api-keys) with the `alerts.write` scope and call `update`. Pass `acknowledged: false` to undo an acknowledgement.
+To acknowledge alerts from your own tools, such as a chat command or an on-call integration, create an [API key](/docs/partners/project/api-keys) with the `alerts.write` scope and call `update`. Pass `acknowledged: false` to undo an acknowledgement. An alert acknowledged with an API key has an empty `acknowledgedBy`.
 
 {% multicode %}
 ```server-nodejs
@@ -297,15 +315,38 @@ X-Appwrite-Key: <API_KEY>
 ```
 {% /multicode %}
 
-To read alerts, call `list` with [queries](/docs/products/databases/tablesdb/queries) or `get` with an alert ID. Both need the `alerts.read` scope.
+To read alerts, call `list` with [queries](/docs/products/databases/tablesdb/queries) or `get` with an alert ID. Both need the `alerts.read` scope. You can filter the list on `monitorId`, `name`, `status`, `severity`, `type`, `resourceType`, `resourceId`, `metric`, `escalationId`, `acknowledgedAt`, and `resolvedAt`, and use `Query.search('search', '<TERM>')` to search alert IDs, names, and metrics.
 
 # Use project events {% #use-project-events %}
 
-For project monitors, use alert events to integrate with [webhooks](/docs/apis/webhooks), [Functions](/docs/products/functions), or [Realtime](/docs/apis/realtime). The event includes the alert as its payload.
+Every alert is also a project event that [webhooks](/docs/apis/webhooks) and [Functions](/docs/products/functions) can subscribe to. The event carries the alert as its payload. Alert events don't reach client SDKs over Realtime.
 
 | Event | When it fires |
 | --- | --- |
-| `monitors.[monitorId].alerts.[alertId].create` | The monitor starts firing and opens an alert. |
+| `monitors.[monitorId].alerts.[alertId].create` | The monitor starts failing and opens an alert. |
 | `monitors.[monitorId].alerts.[alertId].update` | The alert resolves, is acknowledged, or has its acknowledgement undone. |
 
-To tell the `update` cases apart, check the alert's `status` and `acknowledgedAt` in the payload. The cooldown only applies to team notifications. Project events fire on every change.
+Use wildcards such as `monitors.*.alerts.*.create` to subscribe to every monitor. Project events fire on every change, whatever the cooldown.
+
+To tell the `update` cases apart, read the alert's fields:
+
+| Field | Value |
+| --- | --- |
+| `status` | `firing` or `resolved`. |
+| `acknowledgedAt` | When someone acknowledged the alert, or `null`. |
+| `severity` | The monitor's severity when the alert fired. |
+| `metric`, `comparator`, `threshold` | A usage monitor's condition. Empty for endpoint checks. |
+| `value`, `peak` | A usage monitor's latest reading, and the reading furthest past the threshold. |
+| `result` | Why an endpoint check failed, such as `timeout`, `status_mismatch`, `tls_expiring`, or `rule_matched`. |
+| `latency` | An endpoint check's latest response time, in milliseconds. |
+| `notifications` | How many times your team was notified about the alert. |
+
+## Act on alerts with a function {% #act-on-alerts-with-a-function %}
+
+On the **Monitors** and **Alerts** tabs, click **Deploy an alert function** to browse the **Monitoring** function templates, or **Send alerts to a webhook** to create a webhook already subscribed to both alert events.
+
+| Template | What it does |
+| --- | --- |
+| **Alerts to chat** | Posts firing and resolved alerts to Slack, Discord, Microsoft Teams, or Google Chat, which it tells apart from the webhook URL. |
+| **Pause on usage spike** | Turns off the function or site that a usage monitor watches when it fires, at or above the `MIN_SEVERITY` you set. It never turns the resource back on. |
+| **Uptime incident log** | Records endpoint check alerts as incidents in a table you can show on a status page, and can notify a Messaging topic. Available on Appwrite Cloud. |

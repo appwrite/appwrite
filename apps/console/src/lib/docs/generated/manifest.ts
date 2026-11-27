@@ -3329,21 +3329,21 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Monitors",
     "description": "Watch project usage and check endpoint availability with Appwrite Monitors. Configure alerts, choose who to notify, and track recovery in the Console.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "products/monitors/alerts",
     "title": "Alerts and notifications",
     "description": "Review Appwrite monitor alerts, notify organization members, and use escalations to reach the right people when an alert keeps firing.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 6
   },
   {
     "slug": "products/monitors/endpoint-checks",
     "title": "Endpoint checks",
-    "description": "Check the availability of HTTP, DNS, TCP, and SMTP endpoints on a schedule with Appwrite Cloud synthetic monitoring.",
+    "description": "Check HTTP, DNS, TCP, and SMTP endpoints on a schedule with Appwrite Cloud synthetic checks, and set the rules that open an alert.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 6
   },
   {
     "slug": "products/monitors/quick-start",
@@ -3357,7 +3357,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Usage monitors",
     "description": "Set thresholds on Appwrite usage metrics and monitor your whole project or an individual resource from the Console or a server SDK.",
     "layout": "article",
-    "readingTimeMinutes": 4
+    "readingTimeMinutes": 5
   },
   {
     "slug": "products/network",
