@@ -139,13 +139,20 @@ final class FakeGitHub implements ClientInterface
         }
 
         $path = $request->getUri()->getPath();
+        $segments = \explode('/', \trim($path, '/'));
+        $installationId = \count($segments) === 4
+            && $segments[0] === 'user'
+            && $segments[1] === 'installations'
+            && $segments[3] === 'repositories'
+                ? $segments[2]
+                : null;
 
         $body = match (true) {
             $path === '/user' => $this->user,
             $path === '/user/installations' => ['total_count' => \count($this->installations), 'installations' => $this->installations],
-            \preg_match('#^/user/installations/([^/]+)/repositories$#', $path, $matches) === 1 => [
-                'total_count' => \count($this->repositories[$matches[1]] ?? []),
-                'repositories' => $this->repositories[$matches[1]] ?? [],
+            $installationId !== null => [
+                'total_count' => \count($this->repositories[$installationId] ?? []),
+                'repositories' => $this->repositories[$installationId] ?? [],
             ],
             default => null,
         };
