@@ -2,6 +2,11 @@
 
 namespace Appwrite\Platform\Modules\Distribution\Services;
 
+use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Artifacts\Create as CreateArtifact;
+use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Artifacts\Delete as DeleteArtifact;
+use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Artifacts\Download\Get as GetArtifactDownload;
+use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Artifacts\Get as GetArtifact;
+use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Artifacts\XList as ListArtifacts;
 use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Create as CreateApp;
 use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Delete as DeleteApp;
 use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Get as GetApp;
@@ -75,5 +80,11 @@ class Http extends Service
         $this->addAction(UpdateSigningIdentity::getName(), UpdateSigningIdentity::class);
         $this->addAction(DeleteSigningIdentity::getName(), DeleteSigningIdentity::class);
         $this->addAction(GetSigningIdentityDownload::getName(), GetSigningIdentityDownload::class);
+
+        $this->addAction(CreateArtifact::getName(), CreateArtifact::class);
+        $this->addAction(ListArtifacts::getName(), ListArtifacts::class);
+        $this->addAction(GetArtifact::getName(), GetArtifact::class);
+        $this->addAction(GetArtifactDownload::getName(), GetArtifactDownload::class);
+        $this->addAction(DeleteArtifact::getName(), DeleteArtifact::class);
     }
 }

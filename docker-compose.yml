@@ -81,6 +81,7 @@ services:
       - appwrite-builds:/storage/builds:rw
       - appwrite-videos:/storage/videos:rw
       - appwrite-videos-tmp:/storage/videos-tmp:rw
+      - appwrite-distribution:/storage/distribution:rw
     depends_on:
       - redis
       - ${_APP_DB_HOST:-postgresql}
@@ -296,6 +297,24 @@ services:
       - _APP_DISTRIBUTION
       - _APP_DISTRIBUTION_APPLE_ENDPOINT
       - _APP_DISTRIBUTION_GOOGLE_ENDPOINT
+      - _APP_DISTRIBUTION_JOBS_HOST
+      - _APP_DISTRIBUTION_JOBS_SECRET
+      - _APP_DISTRIBUTION_SIGNING_JOBS_HOST
+      - _APP_DISTRIBUTION_SIGNING_JOBS_SECRET
+      - _APP_DISTRIBUTION_CALLBACK_SECRET
+      - _APP_DISTRIBUTION_SIGNING_CALLBACK_SECRET
+      - _APP_DISTRIBUTION_IMAGE_ANDROID
+      - _APP_DISTRIBUTION_IMAGE_TOOLS
+      - _APP_DISTRIBUTION_BUILD_TIMEOUT
+      - _APP_DISTRIBUTION_BUILD_SPECIFICATION
+      - _APP_DISTRIBUTION_SIZE_LIMIT
+      - _APP_DISTRIBUTION_LOGS_LIMIT
+      - _APP_DISTRIBUTION_ARTIFACT_RETENTION
+      - _APP_DISTRIBUTION_VOLUME
+      - _APP_DISTRIBUTION_RUNNER_SECRET
+      - _APP_DISTRIBUTION_IOS_SIGNING
+      - _APP_DISTRIBUTION_BUILDS_QUEUE_NAME
+      - _APP_DISTRIBUTION_SUBMISSIONS_QUEUE_NAME
   appwrite-console:
     logging:
       driver: json-file
@@ -500,6 +519,7 @@ services:
       - appwrite-certificates:/storage/certificates:rw
       - appwrite-videos:/storage/videos:rw
       - appwrite-videos-tmp:/storage/videos-tmp:rw
+      - appwrite-distribution:/storage/distribution:rw
       - appwrite-config:/storage/config:rw
       - appwrite-imports:/storage/imports:rw
     extra_hosts:
@@ -905,6 +925,7 @@ services:
       - appwrite-certificates:/storage/certificates:rw
       - appwrite-videos:/storage/videos:rw
       - appwrite-videos-tmp:/storage/videos-tmp:rw
+      - appwrite-distribution:/storage/distribution:rw
       - appwrite-imports:/storage/imports:rw
     environment:
       - _APP_ENV
@@ -2360,4 +2381,6 @@ volumes:
   appwrite-videos: null
   # Scratch for source download + ffmpeg; swap this volume for block storage later.
   appwrite-videos-tmp: null
+  appwrite-distribution:
+    name: appwrite-distribution
   openruntimes-node-modules-cache: null

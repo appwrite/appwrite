@@ -41,6 +41,11 @@ trait DistributionBase
         yield 'updateSigningIdentity' => [Client::METHOD_PATCH, '/distribution/signing-identities/missing', 'distribution.credentials.write'];
         yield 'deleteSigningIdentity' => [Client::METHOD_DELETE, '/distribution/signing-identities/missing', 'distribution.credentials.write'];
         yield 'getSigningIdentityDownload' => [Client::METHOD_GET, '/distribution/signing-identities/missing/download', 'distribution.credentials.write'];
+        yield 'createArtifact' => [Client::METHOD_POST, '/distribution/apps/missing/artifacts', 'distribution.write'];
+        yield 'listArtifacts' => [Client::METHOD_GET, '/distribution/apps/missing/artifacts', 'distribution.read'];
+        yield 'getArtifact' => [Client::METHOD_GET, '/distribution/apps/missing/artifacts/missing', 'distribution.read'];
+        yield 'getArtifactDownload' => [Client::METHOD_GET, '/distribution/apps/missing/artifacts/missing/download', 'distribution.read'];
+        yield 'deleteArtifact' => [Client::METHOD_DELETE, '/distribution/apps/missing/artifacts/missing', 'distribution.write'];
     }
 
     /**

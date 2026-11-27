@@ -1991,6 +1991,10 @@
             "issuerId",
             "privateKey"
         ],
+        "distribution.createArtifact": [
+            "appId",
+            "file"
+        ],
         "distribution.createGoogleConnection": [
             "connectionId",
             "name",
@@ -2031,6 +2035,10 @@
         "distribution.deleteApp": [
             "appId"
         ],
+        "distribution.deleteArtifact": [
+            "appId",
+            "artifactId"
+        ],
         "distribution.deleteConnection": [
             "connectionId"
         ],
@@ -2047,6 +2055,14 @@
         ],
         "distribution.getApp": [
             "appId"
+        ],
+        "distribution.getArtifact": [
+            "appId",
+            "artifactId"
+        ],
+        "distribution.getArtifactDownload": [
+            "appId",
+            "artifactId"
         ],
         "distribution.getConnection": [
             "connectionId"
@@ -2066,6 +2082,11 @@
             "variableId"
         ],
         "distribution.listApps": [
+            "queries",
+            "total"
+        ],
+        "distribution.listArtifacts": [
+            "appId",
             "queries",
             "total"
         ],
@@ -6709,6 +6730,10 @@
             "issuerId",
             "privateKey"
         ],
+        "distribution.createArtifact": [
+            "appId",
+            "file"
+        ],
         "distribution.createGoogleConnection": [
             "connectionId",
             "name",
@@ -6749,6 +6774,10 @@
         "distribution.deleteApp": [
             "appId"
         ],
+        "distribution.deleteArtifact": [
+            "appId",
+            "artifactId"
+        ],
         "distribution.deleteConnection": [
             "connectionId"
         ],
@@ -6765,6 +6794,14 @@
         ],
         "distribution.getApp": [
             "appId"
+        ],
+        "distribution.getArtifact": [
+            "appId",
+            "artifactId"
+        ],
+        "distribution.getArtifactDownload": [
+            "appId",
+            "artifactId"
         ],
         "distribution.getConnection": [
             "connectionId"
@@ -6784,6 +6821,11 @@
             "variableId"
         ],
         "distribution.listApps": [
+            "queries",
+            "total"
+        ],
+        "distribution.listArtifacts": [
+            "appId",
             "queries",
             "total"
         ],

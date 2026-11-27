@@ -9,6 +9,7 @@ use Appwrite\Deletes\Targets;
 use Appwrite\Deployment\Deployments;
 use Appwrite\Deployment\Retention;
 use Appwrite\Deployment\Retention\Reason;
+use Appwrite\Distribution\Artifact\Status as ArtifactStatus;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Message\Usage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
@@ -87,6 +88,7 @@ class Deletes extends Action
             ->inject('deviceForSites')
             ->inject('deviceForBuilds')
             ->inject('deviceForVideos')
+            ->inject('deviceForDistribution')
             ->inject('telemetry')
             ->inject('mqtt')
             ->inject('certificates')
@@ -123,6 +125,7 @@ class Deletes extends Action
         Device $deviceForSites,
         Device $deviceForBuilds,
         Device $deviceForVideos,
+        Device $deviceForDistribution,
         Telemetry $telemetry,
         Mqtt $mqtt,
         Provider $certificates,
@@ -162,6 +165,7 @@ class Deletes extends Action
             $deviceForSites,
             $deviceForBuilds,
             $deviceForVideos,
+            $deviceForDistribution,
             $telemetry,
             $mqtt,
             $certificates,
@@ -261,6 +265,7 @@ class Deletes extends Action
         Device $deviceForSites,
         Device $deviceForBuilds,
         Device $deviceForVideos,
+        Device $deviceForDistribution,
         Telemetry $telemetry,
         Mqtt $mqtt,
         Provider $certificates,
@@ -340,6 +345,9 @@ class Deletes extends Action
                         break;
                     case DELETE_TYPE_TRANSACTIONS:
                         $this->deleteTransactionLogs($getProjectDB, $document, $project);
+                        break;
+                    case DELETE_TYPE_DISTRIBUTION_ARTIFACTS:
+                        $this->deleteDistributionArtifact($deviceForDistribution, $document);
                         break;
                     default:
                         Console::error('No lazy delete operation available for document of type: ' . $document->getCollection());
@@ -2615,6 +2623,32 @@ class Deletes extends Action
             $deviceForVideos->delete($path);
         } catch (Throwable $th) {
             Console::error('Failed to delete caption storage file: ' . $th->getMessage());
+        }
+    }
+
+    /**
+     * Removes an artifact's file, aborting the multipart upload of one that never finished.
+     */
+    private function deleteDistributionArtifact(Device $deviceForDistribution, Document $artifact): void
+    {
+        $path = $artifact->getAttribute('path', '');
+
+        if ($path === '') {
+            return;
+        }
+
+        if ($artifact->getAttribute('status') === ArtifactStatus::Uploading->value) {
+            try {
+                $deviceForDistribution->abort($path, $artifact->getAttribute('metadata', [])['uploadId'] ?? '');
+            } catch (Throwable $th) {
+                Console::warning('Failed to abort artifact upload ' . $artifact->getId() . ': ' . $th->getMessage());
+            }
+        }
+
+        try {
+            $deviceForDistribution->delete($path);
+        } catch (Throwable $th) {
+            Console::error('Failed to delete artifact file ' . $artifact->getId() . ': ' . $th->getMessage());
         }
     }
 

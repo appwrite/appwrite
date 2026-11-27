@@ -401,12 +401,14 @@
         "src/Appwrite/Platform/Modules/Distribution/",
         "src/Appwrite/Platform/Modules/Compute/Validator/VariableKey.php",
         "src/Appwrite/Distribution/",
+        "src/Appwrite/Platform/Workers/Deletes.php",
         "packages/distribution/",
         "src/Appwrite/Usage/Distribution.php",
         "src/Appwrite/Platform/Modules/Mock/Http/Mock/Distribution/",
         "src/Appwrite/Utopia/Response/Model/Distribution",
         "src/Appwrite/Utopia/Database/Validator/Queries/Distribution",
-        "app/config/distribution.php"
+        "app/config/distribution.php",
+        "tests/resources/distribution/"
       ]
     },
     {
