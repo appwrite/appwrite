@@ -501,7 +501,7 @@ class Store
      * the create before the snapshot exists, so a buffered first write leaves
      * the execution unreadable for the whole window.
      *
-     * @return array<string, int>
+     * @return array<string, int|string>
      */
     private function insertSettings(bool $buffered): array
     {
