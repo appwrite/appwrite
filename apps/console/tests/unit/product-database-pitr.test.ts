@@ -4,6 +4,7 @@ import { DatabaseType } from '@/lib/databases/database-type'
 import {
   createProjectDatabase,
   updateProductDatabasePitr,
+  updateProjectDatabase,
   waitForCreatedDatabasePitrReady,
 } from '@/lib/react-query/hooks/databases'
 
@@ -171,6 +172,25 @@ describe('product database PITR', () => {
       enabled: true,
       pitr: false,
     })
+  })
+
+  test('renaming a disabled database keeps it disabled', async () => {
+    const calls = mockSdk()
+
+    await updateProjectDatabase(
+      PROJECT_ID,
+      DATABASE_ID,
+      { name: ' Orders ', enabled: false },
+      'vectorsdb',
+    )
+
+    expect(calls).toEqual([
+      {
+        service: 'vectorsDB',
+        method: 'update',
+        params: { databaseId: DATABASE_ID, name: 'Orders', enabled: false },
+      },
+    ])
   })
 
   test('the create wizard reads pitr from the product API', async () => {

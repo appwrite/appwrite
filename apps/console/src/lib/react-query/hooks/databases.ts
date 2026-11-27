@@ -1564,27 +1564,19 @@ export async function waitForCreatedDatabasePitrReady(
 export async function updateProjectDatabase(
   projectId: string,
   databaseId: string,
-  data: { name: string; enabled?: boolean },
+  data: ProductDatabaseIdentity,
   dbKind: DatabaseRouteKind,
 ) {
   if (!projectId || !databaseId) {
     throw new Error('Project ID and Database ID are required')
   }
-  const projectSdk = sdk.forProject(projectId)
-  const kind = resolveProjectDatabaseType(dbKind)
-  const payload = {
-    databaseId,
-    name: data.name.trim(),
-    ...(data.enabled !== undefined ? { enabled: data.enabled } : {}),
-  }
-
-  if (kind === DatabaseType.Documentsdb) {
-    return await projectSdk.documentsDB.update(payload)
-  }
-  if (kind === DatabaseType.Vectorsdb) {
-    return await projectSdk.vectorsDB.update(payload)
-  }
-  return await projectSdk.tablesDB.update(payload)
+  return await productDatabaseService(sdk.forProject(projectId), dbKind).update(
+    {
+      databaseId,
+      name: data.name.trim(),
+      enabled: data.enabled,
+    },
+  )
 }
 
 export async function deleteTablesDatabaseMigration(

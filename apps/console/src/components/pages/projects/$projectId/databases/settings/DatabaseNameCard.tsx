@@ -48,7 +48,7 @@ export function DatabaseNameCard({
       await updateProjectDatabase(
         projectId,
         databaseId,
-        { name: trimmed },
+        { name: trimmed, enabled: database.enabled !== false },
         dbKind,
       )
     },
