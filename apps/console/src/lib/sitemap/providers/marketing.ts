@@ -22,6 +22,9 @@ function toSitemapPath(path: string): string {
   return path === '/home' ? '/' : path
 }
 
+/** Solution pages share one view; their copy lives in the solutions library. */
+const SOLUTION_PATHS = new Set(['/startups', '/agencies', '/innovation-teams'])
+
 /** Index pages that list other content: their own entries carry the dates. */
 const LISTING_PATHS = new Set(['/blog', '/changelog', '/integrations'])
 
@@ -30,6 +33,9 @@ function marketingSources(path: string): string[] {
   if (path === '/') return ['src/components/pages/home']
   if (path === '/pricing') return ['src/components/pages/pricing', 'src/lib/pricing']
   if (LEGAL_PATHS.has(path) || LISTING_PATHS.has(path)) return []
+  if (SOLUTION_PATHS.has(path)) {
+    return ['src/components/pages/solutions', 'src/lib/solutions/content.ts']
+  }
 
   const [section, id] = path.slice(1).split('/')
   if (section === 'products') return [`src/lib/products/content/${id}.ts`]

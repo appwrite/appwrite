@@ -12,6 +12,7 @@ export const CONTENT_DATE_SOURCES = [
   'src/lib/products/content',
   'src/lib/alternatives/content',
   'src/lib/pricing',
+  'src/lib/solutions',
 ]
 
 const packageRoot = path.resolve(
