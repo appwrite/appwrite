@@ -220,6 +220,22 @@ export function getRecordName(domain: string): string {
   return normalized.slice(0, -(apex.length + 1))
 }
 
+/**
+ * Where a DNS provider put a record whose full domain was entered as the
+ * host: it appends its zone, so `shop.example.com` lands at
+ * `shop.example.com.example.com`. The server looks there for a 'misplaced'
+ * check.
+ */
+export function getMisplacedName(name: string): string {
+  return `${name}.${getZone(name)}`
+}
+
+/** The zone a DNS provider appends to the host: the domain after its record name. */
+export function getZone(name: string): string {
+  const host = getRecordName(name)
+  return host === '@' ? name : name.slice(host.length + 1)
+}
+
 export type VerificationMethod =
   | 'cname'
   | 'alias'

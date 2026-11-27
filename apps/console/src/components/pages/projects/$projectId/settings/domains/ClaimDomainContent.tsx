@@ -5,12 +5,12 @@ import {
   getClaimRecord,
   type DomainClaimReason,
 } from '@/lib/utils/proxy-domains'
+import { DNS_PROVIDERS_LINK } from '@/components/global/shared/dns/DnsBannerAlert'
+import { DnsRecordsTable } from '@/components/global/shared/dns/DnsRecordsTable'
 import {
-  DNS_PROVIDERS_LINK,
-  DnsRecordsTable,
   DomainVerificationAlert,
   type DomainVerificationError,
-} from './VerifyDomainContent'
+} from '@/components/global/shared/dns/DomainVerificationAlert'
 
 interface ClaimDomainContentProps {
   domain: string

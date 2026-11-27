@@ -13,12 +13,12 @@ import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
 import type { Models } from '@appwrite.io/console'
 import { canRetryRule } from '@/lib/utils/proxy-domains'
+import { VerifyDomainContent } from './VerifyDomainContent'
 import {
-  VerifyDomainContent,
   dnsPendingVerificationError,
   domainVerificationError,
   type DomainVerificationError,
-} from './VerifyDomainContent'
+} from '@/components/global/shared/dns/DomainVerificationAlert'
 
 interface RetryDomainDialogProps {
   open: boolean

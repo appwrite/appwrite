@@ -7,12 +7,12 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { useVerifyDomain } from '@/lib/react-query/hooks/project-domains'
+import { VerifyDomainContent } from '@/components/pages/projects/$projectId/settings/domains/VerifyDomainContent'
 import {
-  VerifyDomainContent,
   dnsPendingVerificationError,
   domainVerificationError,
   type DomainVerificationError,
-} from '@/components/pages/projects/$projectId/settings/domains/VerifyDomainContent'
+} from '@/components/global/shared/dns/DomainVerificationAlert'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import type { Models } from '@appwrite.io/console'

@@ -1,9 +1,39 @@
 import type { Models } from '@appwrite.io/console'
+import type { ProxyRuleRecordRegion } from '@/lib/appwrite/proxy-rules'
 
-/** An email domain an organization claimed for single sign-on. */
-export type SSODomain = Models.SsoDomain
+/**
+ * What DNS had for a domain's TXT record at its last check. The pinned Console
+ * SDK's `Models.SsoDomain` has no `check` yet; move to the SDK model once the
+ * pin carries it.
+ */
+export type SSODomainCheck = {
+  type: 'TXT'
+  /** The name it was looked up at, e.g. `_appwrite.example.com`. */
+  name: string
+  /** The value the record must hold, e.g. `team:<teamId>`. */
+  expected: string
+  /** The values found, at most 10. */
+  current: string[]
+  /** Per-region results, empty when only one region checks. */
+  regions: ProxyRuleRecordRegion[]
+  status: 'verified' | 'missing' | 'mismatch' | 'misplaced' | 'failed'
+  /** Why the check did not pass. Empty when verified. */
+  message: string
+  checkedAt: string
+}
 
-export type SSODomainList = Models.SsoDomainList
+/**
+ * An email domain an organization claimed for single sign-on. `status` is its
+ * ownership; `check` the last DNS check, absent on older servers and before
+ * any check ran.
+ */
+export type SSODomain = Models.SsoDomain & {
+  check?: SSODomainCheck | null
+}
+
+export type SSODomainList = Omit<Models.SsoDomainList, 'domains'> & {
+  domains: SSODomain[]
+}
 
 /** An organization's identity provider. The client secret never leaves the server. */
 export type SSOProvider = Models.SsoProvider

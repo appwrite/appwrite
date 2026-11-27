@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { useVerifyDomain } from '@/lib/react-query/hooks'
-import type { DomainVerificationError } from '@/components/pages/projects/$projectId/settings/domains/VerifyDomainContent'
+import type { DomainVerificationError } from '@/components/global/shared/dns/DomainVerificationAlert'
 import type { SmtpProxyRule } from '@/lib/function-smtp-domain'
 import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'

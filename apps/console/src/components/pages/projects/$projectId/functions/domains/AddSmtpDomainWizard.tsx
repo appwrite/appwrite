@@ -17,7 +17,7 @@ import {
   dnsPendingVerificationError,
   domainVerificationError,
 } from './VerifySmtpDomainContent'
-import type { DomainVerificationError } from '@/components/pages/projects/$projectId/settings/domains/VerifyDomainContent'
+import type { DomainVerificationError } from '@/components/global/shared/dns/DomainVerificationAlert'
 import { ClaimDomainContent } from '@/components/pages/projects/$projectId/settings/domains/ClaimDomainContent'
 import {
   useCreateSmtpDomainRule,
