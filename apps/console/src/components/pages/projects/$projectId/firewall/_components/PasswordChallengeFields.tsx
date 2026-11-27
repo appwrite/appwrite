@@ -66,7 +66,9 @@ export function PasswordChallengeFields({
         />
         {password && !isChallengePasswordValid(password, true) ? (
           <p className="text-[12px] text-destructive">
-            {t('Use 8 to 256 characters.')}
+            {t(
+              'Use 8 to 256 bytes. Some characters, like emoji or non-Latin letters, take more than one byte.',
+            )}
           </p>
         ) : (
           <p className="text-[12px] text-muted-foreground">

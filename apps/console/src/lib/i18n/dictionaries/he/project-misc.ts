@@ -573,7 +573,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Challenge type': 'סוג אתגר',
   'Password challenges apply to sites and functions only.':
     'אתגרי סיסמה חלים על אתרים ופונקציות בלבד.',
-  'Use 8 to 256 characters.': 'השתמשו ב-8 עד 256 תווים.',
+  'Use 8 to 256 bytes. Some characters, like emoji or non-Latin letters, take more than one byte.':
+    'השתמשו ב-8 עד 256 בתים. תווים מסוימים, כמו אימוג׳י או אותיות שאינן לטיניות, תופסים יותר מבית אחד.',
   'Visitors must enter this password before they can continue.':
     'מבקרים חייבים להזין את הסיסמה הזו לפני שיוכלו להמשיך.',
   'Match requests when all conditions are true.':

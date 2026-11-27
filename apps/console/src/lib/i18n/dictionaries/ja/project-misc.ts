@@ -248,7 +248,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Challenge type': 'チャレンジの種類',
   'Password challenges apply to sites and functions only.':
     'パスワードチャレンジはサイトと関数にのみ適用されます。',
-  'Use 8 to 256 characters.': '8〜256 文字で入力してください。',
+  'Use 8 to 256 bytes. Some characters, like emoji or non-Latin letters, take more than one byte.':
+    '8〜256 バイトで入力してください。絵文字や日本語などの文字は 1 文字で複数バイトになります。',
   'Visitors must enter this password before they can continue.':
     '訪問者は続行する前にこのパスワードを入力する必要があります。',
   'Match requests when all conditions are true.':
