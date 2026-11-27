@@ -34,6 +34,7 @@ utopia-emails = { path = "crates/utopia/emails" }
 utopia-dsn = { path = "crates/utopia/dsn" }
 utopia-image = { path = "crates/utopia/image", default-features = false }
 utopia-locale = { path = "crates/utopia/locale" }
+utopia-async = { path = "crates/utopia/async" }
 utopia-query = { path = "crates/utopia/query" }
 utopia-user-agent = { path = "crates/utopia/user-agent" }
 utopia-validators = { path = "crates/utopia/validators" }
@@ -45,7 +46,7 @@ ext-php-rs = "0.16.5"
 aho-corasick = "1"
 # JetStream for utopia-queue, which shares queues with utopia-php/queue's Broker\Nats.
 async-nats = "0.53"
-futures-util = { version = "0.3", default-features = false, features = ["std"] }
+futures-util = { version = "0.3", default-features = false, features = ["std", "async-await-macro"] }
 argon2 = { version = "0.5", features = ["std"] }
 # BLAKE2b for php-std's Argon2, which fills lanes on scoped threads (the `argon2` crate, a test
 # reference, fills them one after the other).
@@ -54,9 +55,10 @@ blowfish = { version = "0.9", features = ["bcrypt"] }
 # C brotli 1.2.1, built from source and linked statically: the library PHP's ext-brotli links.
 brotlic-sys = "0.2.5"
 bytes = "1"
+http = "1"
 http-body-util = "0.1"
+hyper = { version = "1", features = ["server", "http1"] }
 # The Sentry transport (utopia-span): HTTP/1.1 client over rustls with the WebPKI roots.
-hyper = "1"
 hyper-rustls = { version = "0.27", default-features = false, features = ["http1", "ring", "tls12", "webpki-roots"] }
 hyper-util = "0.1"
 cc = "1"
@@ -112,10 +114,16 @@ lzma-rust2 = { version = "0.22", default-features = false, features = ["std", "e
 # The extension's allocator: musl's, on the Alpine image, is slow. `local_dynamic_tls` is what a
 # library PHP loads with dlopen needs there.
 mimalloc = { version = "0.1.52", default-features = false, features = ["local_dynamic_tls"] }
+pin-project-lite = "0.2"
 png = "0.18"
+proc-macro2 = { version = "1", default-features = false, features = ["span-locations"] }
+quote = { version = "1", default-features = false }
 rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
+socket2 = { version = "0.6", features = ["all"] }
+syn = { version = "2", default-features = false, features = ["full", "parsing", "printing"] }
 thiserror = "2"
 tokio = { version = "1", features = ["time"] }
+tower-service = "0.3"
 # libzstd 1.5.7, built from source and linked statically, as PHP's ext-zstd links it. No
 # `zstdmt`: multithreaded compression would start threads in a process that forks.
 zstd-safe = { version = "8", default-features = false, features = ["std"] }

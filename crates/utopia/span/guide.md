@@ -46,7 +46,7 @@ use utopia_span::{Auto, Span, Task, Value};
 
 Span::set_storage(Some(Arc::new(Auto::new())));
 
-# tokio::runtime::Builder::new_current_thread().build().unwrap().block_on(async {
+# utopia_async::Builder::current_thread().build().unwrap().block_on(async {
 let first = Task::scope(async {
     let span = Span::init("job", None);
     Span::add("job.id", "a");
