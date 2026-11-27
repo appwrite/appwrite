@@ -50,28 +50,41 @@ Give bypass rules a lower priority number than the deny or rate limit rules they
 
 Challenge verifies matching requests before allowing them through. Clients that pass the challenge reach your application. Clients that fail do not.
 
-Use challenge instead of deny on paths that attract abuse, such as sign-in and sign-up, where a deny rule would also block legitimate users.
+A challenge rule has one of two **challenge types**:
+
+- **Compute** (`compute`, the default): the visitor's browser solves a proof-of-work puzzle. Use it instead of deny on paths that attract abuse, such as sign-in and sign-up, where a deny rule would also block legitimate users.
+- **Password** (`password`): the visitor enters a password you set on the rule. Use it to keep a site or function private. Password challenges apply to **Sites** and **Functions** only. See [Password protect a site or function](/docs/products/firewall/password-protect).
 
 | Setting | Purpose | Limits |
 |---------|---------|--------|
-| **Difficulty** | Client-side proof-of-work cost. Higher values slow automated clients more, and also slow the challenge for legitimate users | `1` (easiest) to `5` (hardest), Console default `3` |
+| **Challenge type** | Compute or password | `compute` or `password`, Console default **Compute** |
+| **Difficulty** | Compute only. Client-side proof-of-work cost. Higher values slow automated clients more, and also slow the challenge for legitimate users | `1` (easiest) to `5` (hardest), Console default `3` |
+| **Password** | Password only. The password visitors enter | `8` to `256` characters |
+| **Wrong guesses allowed** | Password only. Wrong passwords allowed per visitor network in each window | `1` to `100`, default `10` |
+| **Counted over (seconds)** | Password only. The window wrong guesses are counted over | `60` to `86400`, default `300` |
 | **TTL (seconds)** | How long a visitor stays cleared after they pass the challenge | `900` (15 minutes) to `86400` (24 hours), Console default `1800` (30 minutes) |
 
 ## Only browser navigation gets a challenge page {% #only-browser-navigation %}
 
 Appwrite serves the challenge page only for `GET` requests that accept HTML. Form posts, `fetch` calls, requests for a site's CSS and images, and every request matched by an **API** rule get `403` with a challenge-required error instead.
 
+A password challenge also accepts the password in the `X-Appwrite-WAF-Password` header, so scripts and servers can pass without the page. See [Send the password from code](/docs/products/firewall/password-protect#send-the-password-from-code).
+
 See [Challenge automated traffic](/docs/products/firewall/challenge-bots) for a worked example.
 
 ## Known bots are denied, not challenged {% #known-bots-are-denied %}
 
-Appwrite denies obvious automated clients before it issues a challenge, including requests with no `User-Agent` and those containing a marker such as `curl/`, `python-requests`, `go-http-client`, or `headlesschrome`.
+Appwrite denies obvious automated clients before it issues a compute challenge, including requests with no `User-Agent` and those containing a marker such as `curl/`, `python-requests`, `go-http-client`, or `headlesschrome`.
 
 They count as **Denied** and never as **Challenged**, so a challenge rule aimed at them does nothing. Use **Deny** for clients you already know are scripts, and **Challenge** for traffic that might be a browser.
 
+Password challenges skip this check. The password decides access, so a script that sends the right password passes.
+
 ## Clearance lasts for the whole site {% #clearance %}
 
-Once a visitor solves a challenge, they stay cleared for the length of the TTL across every challenge rule on that hostname, not just the rule that challenged them.
+Once a visitor solves a compute challenge, they stay cleared for the length of the TTL across every compute challenge rule on that hostname, not just the rule that challenged them.
+
+A password clearance is different: it opens only the rule that issued it, and it ends as soon as the rule's password changes.
 
 To challenge **every** visitor to a site without building a rule by hand, use [Attack mode](/docs/products/firewall/attack-mode).
 

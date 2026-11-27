@@ -1,0 +1,131 @@
+---
+layout: article
+title: Password protect a site or function
+description: Create an Appwrite Firewall password challenge that asks visitors for a password before a site or function responds.
+difficulty: beginner
+readtime: 6
+---
+
+A password challenge asks for a password before a request reaches your site or function. Visitors in a browser see a password page. Scripts, servers, and CI jobs send the password in a request header.
+
+Use it when you need to keep a site or endpoint private without building sign-in into the app:
+
+- Pre-launch and staging sites
+- Previews you share with a client
+- Internal tools and admin routes
+- Internal function endpoints called by cron jobs or CI
+
+A password challenge is a [challenge](/docs/products/firewall/actions#challenge) rule with **Challenge type** set to **Password**. It applies to **Sites** and **Functions** only. The default **Compute** type, a proof-of-work puzzle, is covered in [Challenge automated traffic](/docs/products/firewall/challenge-bots).
+
+This guide protects the `/admin` path of a site.
+
+# Create the password rule {% #create-the-password-rule %}
+
+1. Open **Firewall** in your project.
+2. Click **Create rule**.
+3. Enter a **Rule name**, for example `Password protect admin`.
+4. Set **Resource type** to **Sites** and select your site.
+5. Under conditions, set **Path** **Starts with** `/admin`. To protect the whole site, add no conditions.
+6. Under **Then**, choose **Challenge**.
+7. Set **Challenge type** to **Password**.
+8. Enter a **Password** of at least 8 characters.
+9. Keep **Wrong guesses allowed** at `10` and **Counted over (seconds)** at `300`. See [Guess limits](#guess-limits).
+10. Set **TTL (seconds)** to how long a visitor stays signed in after entering the password.
+11. Click **Create rule**.
+
+The rules list shows the rule's challenge type and guess limit, for example `Password · 10 guesses / 5 min`. **Difficulty** applies only to compute challenges, so it is hidden for password rules.
+
+To ask for the password only at certain times, for example outside office hours, turn on **Schedule** on the rule.
+
+# What visitors see {% #what-visitors-see %}
+
+A browser that opens a protected page gets a password page. The right password sets a clearance cookie for that rule, and the visitor reaches the page without being asked again until the rule's **TTL** runs out. The TTL is at least `900` seconds (15 minutes).
+
+A clearance only opens the rule that issued it. A visitor cleared on one password rule is still asked by every other password rule, even on the same site.
+
+Requests that are not browser page loads, such as `fetch` calls and requests for images or scripts, get `403` instead of a password page when they carry no clearance.
+
+# Send the password from code {% #send-the-password-from-code %}
+
+Scripts, servers, cron jobs, and CI cannot fill in the password page. Send the password in the `X-Appwrite-WAF-Password` header instead:
+
+```sh
+curl https://<YOUR_SITE_DOMAIN>/admin/report \
+  -H "X-Appwrite-WAF-Password: <PASSWORD>"
+```
+
+- A correct password passes the request and also sets the clearance cookie.
+- A wrong password gets `403` with no password page.
+- Appwrite removes the header before the request reaches your site or function, so your code never sees the password.
+- The header is checked only against the rule that matched the request.
+
+Browsers should use the password page. A cross-origin `fetch` call that sets this header fails the CORS preflight.
+
+# Create the rule through the API {% #create-the-rule-through-the-api %}
+
+Create a password rule with `POST /v1/waf/rules/challenge` and `challengeType` set to `password`:
+
+```sh
+curl -X POST https://cloud.appwrite.io/v1/waf/rules/challenge \
+  -H "Content-Type: application/json" \
+  -H "X-Appwrite-Project: <PROJECT_ID>" \
+  -H "X-Appwrite-Key: <API_KEY>" \
+  -d '{
+    "ruleId": "unique()",
+    "name": "Password protect admin",
+    "resourceType": "sites",
+    "resourceId": "<SITE_ID>",
+    "priority": 100,
+    "enabled": true,
+    "challengeType": "password",
+    "password": "<PASSWORD>",
+    "attempts": 10,
+    "attemptsInterval": 300,
+    "ttl": 1800,
+    "conditions": [
+      { "method": "startsWith", "attribute": "path", "values": ["/admin"] }
+    ]
+  }'
+```
+
+| Field | Purpose | Limits |
+|-------|---------|--------|
+| `password` | The password visitors enter | `8` to `256` characters. Required on create |
+| `attempts` | Wrong guesses allowed per visitor network | `1` to `100`, default `10` |
+| `attemptsInterval` | Seconds the wrong guesses are counted over | `60` to `86400`, default `300` |
+| `ttl` | Seconds a visitor stays cleared after entering the password | `900` to `86400` |
+
+Update the rule with `PATCH /v1/waf/rules/challenge/{ruleId}`. Leave `password` out to keep the stored password. Switching an existing compute rule to `password` requires a password.
+
+The API rejects:
+
+- `password`, `attempts`, or `attemptsInterval` on a `compute` challenge, with `waf_rule_invalid_config`.
+- A password rule on the `api` resource, with `waf_rule_invalid_resource`.
+
+The API counts the password length in bytes, so a multibyte character such as an emoji uses more than one of the 256.
+
+# Guess limits {% #guess-limits %}
+
+Each rule allows **Wrong guesses allowed** (`attempts`) wrong passwords per **Counted over** window (`attemptsInterval`). Guesses are counted per visitor network: per IP address for IPv4, and per `/64` for IPv6. Guesses through the password page and through the header share the same count.
+
+Once a network goes over the limit, Appwrite answers `429` with a `Retry-After` header until the window ends.
+
+# Change the password {% #change-the-password %}
+
+1. Open **Firewall** and open the rule's actions menu.
+2. Click **Update**.
+3. Enter the new password. Leave the field blank to keep the current one.
+4. Save the rule.
+
+Changing the password ends every existing clearance for that rule immediately. Visitors and scripts need the new password on their next request.
+
+Appwrite stores only a salted Argon2 hash of the password, the same way it stores account passwords. The API never returns the password, so keep a copy where your team can find it.
+
+# Scope and limits {% #scope-and-limits %}
+
+- **Sites and functions only.** A password rule does not protect Appwrite API endpoints. Executions created with `POST /v1/functions/{functionId}/executions` follow the function's execute permissions, not the password rule on its domain. To control access to files, use [permissions](/docs/products/storage/permissions) or [file tokens](/docs/products/storage/file-tokens).
+- **Not per-user authentication.** Everyone with the password gets the same access, and you cannot revoke one person without changing the password for everyone. Use [Appwrite Auth](/docs/products/auth) when you need individual accounts.
+
+{% arrow_link href="/docs/products/firewall/actions#challenge" %}
+Challenge settings
+{% /arrow_link %}

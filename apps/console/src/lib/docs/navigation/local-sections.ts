@@ -614,6 +614,10 @@ export const DOCS_LOCAL_SECTION_NAVS: DocsSectionNavConfig[] = [
             href: '/docs/products/firewall/challenge-bots',
           },
           {
+            label: 'Password protect',
+            href: '/docs/products/firewall/password-protect',
+          },
+          {
             label: 'Redirect for maintenance',
             href: '/docs/products/firewall/site-maintenance',
           },

@@ -4662,7 +4662,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/firewall/challenge-bots",
     "title": "Challenge automated traffic",
     "description": "Create Appwrite Firewall challenge rules that verify suspected bots before their requests continue.",
-    "excerpt": "A challenge rule makes a visitor's browser solve a small puzzle before the request continues. Browsers solve it and pass, usually without the visitor noticing. Scripts do not. Use a challenge on pages that attract abuse, such as sign-up, sign-in, and password reset, where an IP or country block would also stop legitimate users. This guide puts a challenge in front of the sign-up page of a site. Create the challenge rule 1. Open **Firewall** in your project. 2. Click…",
+    "excerpt": "A challenge rule makes a visitor's browser solve a small puzzle before the request continues. Browsers solve it and pass, usually without the visitor noticing. Scripts do not. Use a challenge on pages that attract abuse, such as sign-up, sign-in, and password reset, where an IP or country block would also stop legitimate users. This guide puts a compute challenge, the default challenge type, in front of the sign-up page of a site. To ask visitors for a password instead,…",
     "breadcrumbs": [
       "Firewall",
       "Guides",
@@ -4689,6 +4689,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       "Firewall",
       "Concepts",
       "Traffic overview"
+    ]
+  },
+  {
+    "slug": "products/firewall/password-protect",
+    "title": "Password protect a site or function",
+    "description": "Create an Appwrite Firewall password challenge that asks visitors for a password before a site or function responds.",
+    "excerpt": "A password challenge asks for a password before a request reaches your site or function. Visitors in a browser see a password page. Scripts, servers, and CI jobs send the password in a request header. Use it when you need to keep a site or endpoint private without building sign-in into the app: - Pre-launch and staging sites - Previews you share with a client - Internal tools and admin routes - Internal function endpoints called by cron jobs or…",
+    "breadcrumbs": [
+      "Firewall",
+      "Guides",
+      "Password protect"
     ]
   },
   {

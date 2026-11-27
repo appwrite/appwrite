@@ -2965,7 +2965,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Actions",
     "description": "Learn Firewall actions in Appwrite: deny, bypass, challenge, rate limit, and redirect, including status codes and rate-limit behavior.",
     "layout": "article",
-    "readingTimeMinutes": 6
+    "readingTimeMinutes": 7
   },
   {
     "slug": "products/firewall/allowlist-ips",
@@ -3008,6 +3008,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "The metrics Appwrite Firewall reports for project traffic, and what the rule impact preview can estimate.",
     "layout": "article",
     "readingTimeMinutes": 3
+  },
+  {
+    "slug": "products/firewall/password-protect",
+    "title": "Password protect a site or function",
+    "description": "Create an Appwrite Firewall password challenge that asks visitors for a password before a site or function responds.",
+    "layout": "article",
+    "readingTimeMinutes": 5
   },
   {
     "slug": "products/firewall/priority",

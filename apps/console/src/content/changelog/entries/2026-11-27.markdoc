@@ -1,0 +1,16 @@
+---
+layout: changelog
+title: "Password protect sites and functions with Firewall"
+date: 2026-11-27
+tags: firewall, security, sites, functions
+---
+
+[**Firewall**](/docs/products/firewall) challenge rules have a new **Password** challenge type. Visitors to a protected site or function see a password page, and the right password keeps them cleared for the rule's TTL. Scripts, servers, cron jobs, and CI send the password in the `X-Appwrite-WAF-Password` header, which Appwrite removes before the request reaches your code.
+
+Like any rule, a password rule can cover a whole site or function or only matching paths such as `/admin`, and it works with rule schedules. Each rule limits wrong guesses per visitor network, 10 per 5 minutes by default. Changing the password ends existing clearances immediately. Appwrite stores only a salted Argon2 hash of the password.
+
+Choose **Challenge** and then **Challenge type: Password** when you create a rule, or pass `challengeType: "password"` to the challenge rule endpoints. Password challenges apply to Sites and Functions, not the Appwrite API. It's live on Appwrite Cloud now.
+
+{% arrow_link href="/docs/products/firewall/password-protect" %}
+Password protect a site or function
+{% /arrow_link %}

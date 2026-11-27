@@ -10,7 +10,7 @@ A challenge rule makes a visitor's browser solve a small puzzle before the reque
 
 Use a challenge on pages that attract abuse, such as sign-up, sign-in, and password reset, where an IP or country block would also stop legitimate users.
 
-This guide puts a challenge in front of the sign-up page of a site.
+This guide puts a compute challenge, the default challenge type, in front of the sign-up page of a site. To ask visitors for a password instead, see [Password protect a site or function](/docs/products/firewall/password-protect).
 
 # Create the challenge rule {% #create-the-challenge-rule %}
 
