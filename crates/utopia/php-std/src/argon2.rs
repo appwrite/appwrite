@@ -35,8 +35,8 @@ impl Block {
 
     fn from_bytes(bytes: &[u8; BLOCK_BYTES]) -> Self {
         let mut block = Self::ZERO;
-        for (word, chunk) in block.0.iter_mut().zip(bytes.chunks_exact(8)) {
-            *word = u64::from_le_bytes(chunk.try_into().expect("8 bytes"));
+        for (word, chunk) in block.0.iter_mut().zip(bytes.as_chunks::<8>().0) {
+            *word = u64::from_le_bytes(*chunk);
         }
         block
     }
@@ -143,8 +143,8 @@ pub(crate) fn hash(params: &Params, password: &[u8], salt: &[u8], out: &mut [u8]
         last.xor(block(lane * lane_length + lane_length - 1));
     }
     let mut bytes = [0u8; BLOCK_BYTES];
-    for (chunk, word) in bytes.chunks_exact_mut(8).zip(last.0) {
-        chunk.copy_from_slice(&word.to_le_bytes());
+    for (chunk, word) in bytes.as_chunks_mut::<8>().0.iter_mut().zip(last.0) {
+        *chunk = word.to_le_bytes();
     }
     long(&[&bytes], out);
 
@@ -338,7 +338,7 @@ fn compress(x: &Block, y: &Block) -> Block {
     let mut r = *x;
     r.xor(y);
     let mut q = r;
-    for row in q.0.chunks_exact_mut(16) {
+    for row in q.0.as_chunks_mut::<16>().0 {
         #[rustfmt::skip]
         round!(
             row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],

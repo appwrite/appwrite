@@ -1,5 +1,8 @@
 <?php
 
+// Registered by the utopia PHP extension (crates/extension in appwrite/appwrite). This file only
+// declares the class for static analysis and editors; it is never loaded.
+
 namespace Utopia\Compression\Algorithms;
 
 use Utopia\Compression\Compression;
@@ -10,30 +13,17 @@ class Deflate extends Compression
 
     public function getName(): string
     {
-        return Compression::DEFLATE;
     }
 
-    /**
-     * Compress.
-     */
     public function compress(string $data): string
     {
-        return gzdeflate($data, $this->level);
     }
 
-    /**
-     * Decompress.
-     */
     public function decompress(string $data): string
     {
-        return gzinflate($data);
     }
 
-    /**
-     * Check if the algorithm is supported.
-     */
     public static function isSupported(): bool
     {
-        return \function_exists('gzdeflate');
     }
 }

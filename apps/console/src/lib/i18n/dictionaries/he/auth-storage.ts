@@ -1817,19 +1817,62 @@ export const heAuthStorageDictionary: Record<string, string> = {
   "Members on the team's verified domains who signed in another way keep their account but lose the team's roles until they sign in through one of its identity providers. Their other teams are not affected. Team owners keep their roles, so a broken identity provider never locks the team out.":
     'חברים בדומיינים המאומתים של הצוות שהתחברו בדרך אחרת ישמרו על החשבון שלהם, אבל יאבדו את תפקידי הצוות עד שיתחברו דרך אחד מספקי הזהויות שלו. הצוותים האחרים שלהם לא מושפעים. בעלי הצוות שומרים על התפקידים שלהם, כך שספק זהויות תקול לעולם לא ינעל את הצוות בחוץ.',
   'Add sign-in to your app': 'הוספת התחברות לאפליקציה שלכם',
-  'There is no SDK method for it yet: your app sends these two requests.':
-    'עדיין אין לזה מתודה ב-SDK: האפליקציה שלכם שולחת את שתי הבקשות האלה.',
-  '1. Find the identity providers for an email':
-    '1. מציאת ספקי הזהויות לכתובת אימייל',
-  'It answers with the identity providers that can sign that email in, each with its $id and name.':
-    'התשובה כוללת את ספקי הזהויות שיכולים לחבר את כתובת האימייל הזו, כל אחד עם ה-$id והשם שלו.',
-  '2. Send the browser to the chosen one': '2. שליחת הדפדפן לספק שנבחר',
-  "On success, the browser returns to the success URL with the user's session cookie for this project set.":
-    'בהצלחה, הדפדפן חוזר לכתובת ההצלחה כשעוגיית הסשן של המשתמש בפרויקט הזה כבר מוגדרת.',
+  'Declare the API key':
+    'הצהרה על מפתח ה-API',
+  'SvelteKit reads it from the environment when the app starts. Put it in .env locally.':
+    'SvelteKit קורא אותו מהסביבה כשהאפליקציה עולה. בפיתוח מקומי שימו אותו ב-.env.',
+  'Turn on desugaring':
+    'הפעלת desugaring',
+  'Android only: the Appwrite SDK needs core library desugaring, or the build fails.':
+    'Android בלבד: ה-SDK של Appwrite צריך core library desugaring, אחרת הבנייה נכשלת.',
+  'Build settings':
+    'הגדרות בנייה',
+  'People type their work email, sign in at their identity provider and come back signed in, as members of this team. Hand the setup to your AI tool, or follow the steps.':
+    'אנשים מקלידים את כתובת האימייל של העבודה, מתחברים אצל ספק הזהויות שלהם וחוזרים מחוברים, כחברים בצוות הזה. העבירו את ההגדרה לכלי ה-AI שלכם, או עקבו אחרי השלבים.',
+  'Find the identity providers for an email':
+    'מציאת ספקי הזהויות לכתובת אימייל',
+  'People type their work email. None found: offer your other sign-in methods. Several: let them choose by name.':
+    'אנשים מקלידים את כתובת האימייל של העבודה. לא נמצא ספק: הציעו את שיטות ההתחברות האחרות שלכם. כמה ספקים: תנו להם לבחור לפי שם.',
+  'Send the browser to the chosen one':
+    'שליחת הדפדפן לספק שנבחר',
+  'With a fresh random state, so your app only accepts sign-ins it started.':
+    'עם state אקראי חדש, כדי שהאפליקציה שלכם תקבל רק התחברויות שהיא עצמה התחילה.',
+  'Create the session when it comes back':
+    'יצירת הסשן כשהדפדפן חוזר',
+  'The success URL gets userId, secret and state. Check the state, then trade the rest for the session.':
+    'כתובת ההצלחה מקבלת userId,‏ secret ו-state. בדקו את ה-state, ואז המירו את השאר לסשן.',
+  'Handle the callback scheme':
+    'טיפול בסכמת ה-callback',
+  'Android only: let flutter_web_auth_2 receive the callback. iOS needs nothing.':
+    'Android בלבד: אפשרו ל-flutter_web_auth_2 לקבל את ה-callback. ב-iOS לא צריך כלום.',
+  'Register the scheme so the system hands the callback back to the app.':
+    'רשמו את הסכמה כדי שהמערכת תחזיר את ה-callback לאפליקציה.',
+  'The Custom Tab hands the callback to this activity.':
+    'ה-Custom Tab מעביר את ה-callback לאקטיביטי הזה.',
+  'Find providers':
+    'מציאת ספקים',
+  'Create session':
+    'יצירת סשן',
+  'Callback scheme':
+    'סכמת callback',
+  "Add your site as a Web platform of this project first: Appwrite only sends people back to its platforms' hostnames, and localhost.":
+    'קודם הוסיפו את האתר שלכם כפלטפורמת ווב של הפרויקט הזה: Appwrite מחזיר אנשים רק לשמות המארח של הפלטפורמות שלו, ול-localhost.',
+  'The server trades the token for the session with an API key that has the sessions.write scope, then keeps the session in its own cookie.':
+    'השרת ממיר את הטוקן לסשן בעזרת מפתח API עם ההרשאה sessions.write, ושומר את הסשן בעוגייה משלו.',
+  'The sign-in opens in a system browser sheet and comes back to the appwrite-callback scheme, which every app of this project may use.':
+    'ההתחברות נפתחת בחלון דפדפן של המערכת וחוזרת לסכמה appwrite-callback, שכל אפליקציה של הפרויקט הזה יכולה להשתמש בה.',
+  'ASWebAuthenticationSession catches the appwrite-callback scheme itself, so there is nothing to register in Info.plist.':
+    'ASWebAuthenticationSession תופס את הסכמה appwrite-callback בעצמו, כך שאין מה לרשום ב-Info.plist.',
+  'The sign-in opens in a Custom Tab and comes back to an activity that handles the appwrite-callback scheme.':
+    'ההתחברות נפתחת ב-Custom Tab וחוזרת לאקטיביטי שמטפל בסכמה appwrite-callback.',
+  'Any language works: two requests and one browser redirect. With an API key, the session response includes its secret for your own cookie.':
+    'כל שפה מתאימה: שתי בקשות והפניה אחת של הדפדפן. עם מפתח API, תשובת הסשן כוללת את ה-secret שלו בשביל העוגייה שלכם.',
+  'Installation':
+    'התקנה',
+  'Add to your app':
+    'הוספה לאפליקציה',
+  'Select step':
+    'בחירת שלב',
   'Users can sign in through this identity provider.':
     'משתמשים יכולים להתחבר דרך ספק הזהויות הזה.',
-  'Both URLs must be on the hostname of a web platform added to this project.':
-    'שתי הכתובות חייבות להיות בשם המארח של פלטפורמת ווב שנוספה לפרויקט הזה.',
-  'On failure, it returns to the failure URL with an error query parameter that holds JSON with message, type and code.':
-    'בכישלון, הוא חוזר לכתובת הכישלון עם פרמטר השאילתה error, שמכיל JSON עם message,‏ type ו-code.',
 }

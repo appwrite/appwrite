@@ -21,6 +21,7 @@ parameters:
     - vendor/swoole/ide-helper
     - packages/query/stubs
     - packages/detector/stubs
+    - packages/compression/stubs
   excludePaths:
     - tests/resources
   ignoreErrors:

@@ -24,7 +24,7 @@ sprites/def#xywh=160,0,160,90
 thumbnails/ghi#xywh=320,0,160,90
 VTT;
 
-        $out = Timeline::withProjectOnThumbnailCues($vtt, 'proj1');
+        $out = Timeline::withProjectOnThumbnailCues($vtt, ['project' => 'proj1']);
 
         $this->assertStringContainsString(
             'thumbnails/abc?project=proj1#xywh=0,0,160,90',
@@ -45,6 +45,6 @@ VTT;
     public function testLeavesNonCueLinesAlone(): void
     {
         $vtt = "WEBVTT\n\nNOTE keep me\n";
-        $this->assertSame($vtt, Timeline::withProjectOnThumbnailCues($vtt, 'proj1'));
+        $this->assertSame($vtt, Timeline::withProjectOnThumbnailCues($vtt, ['project' => 'proj1']));
     }
 }

@@ -161,6 +161,11 @@ function normalizeDateRangeKey(
 ): {
   rangeKeyPart: string
   getBounds: () => { from: Date; to: Date }
+  /**
+   * Rolling windows (last 24h, this month) move with the clock, so their
+   * charts refetch on mount once the cached copy is stale. Not when it is
+   * fresh: the page's loader has usually just fetched it.
+   */
   refetchOnMountRolling: boolean
 } {
   const { dateRangePresetId, logRetentionHours } = options ?? {}
@@ -344,7 +349,7 @@ export function bandwidthOverviewQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -412,7 +417,7 @@ export function firewallTrafficOverviewQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -481,7 +486,7 @@ export function requestsOverviewQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -527,7 +532,7 @@ export function executionsOverviewQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -573,7 +578,7 @@ export function functionExecutionsOverviewQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -619,7 +624,7 @@ export function functionExecutionsForFunctionChartQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId && functionId ? 5 * 60 * 1000 : 0,
   })
@@ -678,7 +683,7 @@ export function siteExecutionsForSiteChartQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId && siteId ? 5 * 60 * 1000 : 0,
   })
@@ -742,7 +747,7 @@ export function siteExecutionsOverviewQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -788,7 +793,7 @@ export function gbHoursOverviewQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -834,7 +839,7 @@ export function functionGbHoursOverviewQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -871,7 +876,7 @@ export function functionGbHoursForFunctionChartQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId && functionId ? 5 * 60 * 1000 : 0,
   })
@@ -930,7 +935,7 @@ export function siteGbHoursForSiteChartQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId && siteId ? 5 * 60 * 1000 : 0,
   })
@@ -990,7 +995,7 @@ export function requestsForResourceChartQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId && resourceId ? 5 * 60 * 1000 : 0,
   })
@@ -1052,7 +1057,7 @@ export function bandwidthForResourceChartQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId && resourceId ? 5 * 60 * 1000 : 0,
   })
@@ -1118,7 +1123,7 @@ export function siteGbHoursOverviewQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -1164,7 +1169,7 @@ export function videoGbHoursOverviewQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -1210,7 +1215,7 @@ export function storageOverviewQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -1257,7 +1262,7 @@ export function overviewStorageOverviewQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -1300,7 +1305,7 @@ export function requestsChartOverviewQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -1829,7 +1834,7 @@ function storageResourceTypeUsageQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -1872,7 +1877,7 @@ function imageTransformationsUsageQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -2215,7 +2220,7 @@ export function requestsBreakdownQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -2260,7 +2265,7 @@ export function requestsBreakdownDrawerQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -2456,7 +2461,7 @@ export function bandwidthBreakdownQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -2501,7 +2506,7 @@ export function bandwidthBreakdownDrawerQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -2743,7 +2748,7 @@ function databaseReadsChartQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -2785,7 +2790,7 @@ function databaseWritesChartQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -2827,7 +2832,7 @@ function databaseCollectionsChartQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -2869,7 +2874,7 @@ function databaseDocumentsChartQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -3006,7 +3011,7 @@ function databaseReadsBreakdownQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -3049,7 +3054,7 @@ function databaseWritesBreakdownQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -3094,7 +3099,7 @@ function databaseReadsBreakdownDrawerQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -3139,7 +3144,7 @@ function databaseWritesBreakdownDrawerQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -3413,7 +3418,7 @@ function realtimeConnectionsChartQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -3455,7 +3460,7 @@ function realtimeMessagesChartQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -3497,7 +3502,7 @@ function realtimeBandwidthChartQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -3622,7 +3627,7 @@ export function authMauChartQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -3664,7 +3669,7 @@ function authOtpChartQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -3706,7 +3711,7 @@ export function authSignupsChartQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -3836,7 +3841,7 @@ function avatarsScreenshotsChartQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -3914,7 +3919,7 @@ function messagingMessagesChartQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -3956,7 +3961,7 @@ function messagingSmsChartQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -3998,7 +4003,7 @@ function messagingTopicsChartQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -4125,7 +4130,7 @@ function webhooksEventsSentChartQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -4167,7 +4172,7 @@ function webhooksEventsFailedChartQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -4209,7 +4214,7 @@ function webhooksCountChartQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -4338,7 +4343,7 @@ function videosTrafficChartQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -4383,7 +4388,7 @@ function videosTrafficBreakdownQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -4427,7 +4432,7 @@ function renditionsChartQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -4469,7 +4474,7 @@ function videosCountChartQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })

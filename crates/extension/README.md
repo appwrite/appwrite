@@ -107,13 +107,13 @@ utopia.libraries = "validators,dsn,domains"
 `Utopia\Image\Canvas`, `Utopia\Image\Font`, `Utopia\DSN\DSN`, `Utopia\Locale\Locale`,
 `Utopia\UserAgent\UserAgent`, `Utopia\Domains\Domain`, `Utopia\Emails\Email`, the validators
 of `packages/validators`, the password hashes of `packages/auth`, every class of
-`packages/detector` and the 104 classes of
+`packages/detector` and `packages/compression` and the 104 classes of
 `packages/query` listed under [Utopia\Query](#utopiaquery-the-classifiers-the-tokenizers-query-the-ast-and-the-schemas) are registered unless
 `utopia.libraries` leaves them out: they have no PHP implementation. Their signatures are in `stubs/`, `packages/image/stubs/`,
 `packages/user-agent/stubs/`, `packages/domains/stubs/`, `packages/emails/stubs/`,
-`packages/validators/stubs/`, `packages/auth/stubs/`, `packages/query/stubs/` and `packages/detector/stubs/` for PHPStan, which runs without the
+`packages/validators/stubs/`, `packages/auth/stubs/`, `packages/query/stubs/`, `packages/detector/stubs/` and `packages/compression/stubs/` for PHPStan, which runs without the
 extension. A library that still has a PHP implementation is registered only when
-`_APP_EXTENSION_LIBRARIES` names its package; today those are `compression` and `balancer`.
+`_APP_EXTENSION_LIBRARIES` names its package; today that is `balancer`.
 Otherwise Composer loads the package's PHP class as before. (`Id`, `Role`, `Permission` and
 `DateTime` of `utopia-php/database` are registered by default too, but their PHP stays in
 `vendor/`: see [Utopia\Database](#utopiadatabase-id-role-permission-and-datetime).)
@@ -201,9 +201,10 @@ Known differences from the PHP classes:
 
 ## Utopia\Compression
 
-Over `crates/utopia/compression`, registered when `_APP_EXTENSION_LIBRARIES` names `compression`:
-the abstract `Compression` and the seven algorithms of `packages/compression` (`Brotli`, `Deflate`,
-`GZIP`, `LZ4`, `Snappy`, `XZ`, `Zstd`), so none of the package's PHP classes loads. Off by default.
+Over `crates/utopia/compression`, always registered: the abstract `Compression` and the seven
+algorithms of `packages/compression` (`Brotli`, `Deflate`, `GZIP`, `LZ4`, `Snappy`, `XZ`, `Zstd`).
+The PHP sources were removed once it ran in every Cloud region (2026-11-25); their signatures are
+in `packages/compression/stubs/`, for PHPStan and editors.
 
 Built by hand like the detector, in `src/compression.rs`: the same names, inheritance, constants,
 signatures and typed properties (`Brotli`'s `$level` and `$mode`, `Deflate`'s private `$level`,
@@ -232,8 +233,9 @@ defines a reset stream as a new one); zstd's contexts and brotli's coders are cr
 per call, as PHP does, but zstd's and the brotli encoder's small blocks come from PHP's allocator
 rather than `malloc()`. A kept zstd context changed which error a corrupt frame reports, so none is kept.
 
-`packages/compression/tests` run on the extension, and `tests/compression.php` (5,702 lines) is
-identical on both: what every algorithm writes at every level (Brotli 0 to 11, LZ4 0 to 12, Zstd -5
+`packages/compression/tests` run on the extension, and so does `tests/compression.php` (5,702
+lines), diffed against `tests/compression.expected.jsonl`: what it printed on the PHP classes
+before they were removed (it was identical on both). It covers what every algorithm writes at every level (Brotli 0 to 11, LZ4 0 to 12, Zstd -5
 to 22) for 15 inputs up to 3 MB, read back by the class and by PHP's own function; what PHP's
 functions wrote (gzencode and gzdeflate at every level, zstd_compress at every level,
 brotli_compress at every level and mode, lz4_compress, snappy_compress, and their incremental forms)
@@ -242,7 +244,10 @@ skippable and legacy zstd frames (`tests/fixtures/compression`, written by zstd 
 every algorithm's output truncated and corrupted at a dozen places; 65 MB both ways; levels,
 constructors and argument coercion; `fromName()` and 1,342 `fromAcceptEncoding()` cases (61 headers
 against 22 `$supported` lists); reflection of every class; PHP subclasses; and, in processes of
-their own, frames claiming more than `memory_limit`. The differences below are asserted at its end.
+their own, frames claiming more than `memory_limit`. The differences below are asserted at its
+end. What PECL `zstd`, `lz4` and `snappy` wrote, and what their decoders said of the classes' bytes,
+is stored in `tests/fixtures/compression/pecl.json` (written by `pecl.php` there, on
+`appwrite/base` 2.5, which has them), so the corpus runs without them; PECL `brotli` is called.
 Nothing in Appwrite or Cloud subclasses a compression class.
 
 Known differences from the PHP classes:
@@ -258,8 +263,10 @@ Known differences from the PHP classes:
   under 2 MiB (each freed by the end of the call), so it counts against `memory_limit` while a call
   runs, where `malloc()` did not; near the limit, blocks come from `malloc()` again.
 
-Once every region runs it, PECL `brotli`, `zstd`, `lz4` and `snappy` can leave `appwrite/base`: the
-classes need none of them, and only the corpus's PHP side does.
+The classes need none of PECL `brotli`, `zstd`, `lz4` and `snappy`, and neither does the corpus but
+for `brotli`, so `zstd`, `lz4` and `snappy` can leave `appwrite/base`; `brotli` stays while
+`packages/http`'s `Response` streams with `brotli_compress_init()` (without it, a streamed
+response falls back to gzip).
 
 ## Utopia\Balancer
 

@@ -44,6 +44,7 @@ const client = new sdk.Client()
 const videos = new sdk.Videos(client);
 
 const video = await videos.create({
+    videoId: '<VIDEO_ID>',
     bucketId: '<BUCKET_ID>',
     fileId: '<FILE_ID>',
     permissions: [sdk.Permission.read(sdk.Role.team('<TEAM_ID>'))] // optional
@@ -64,6 +65,7 @@ client.set_key('<API_KEY>')
 videos = Videos(client)
 
 video = videos.create(
+    video_id = '<VIDEO_ID>',
     bucket_id = '<BUCKET_ID>',
     file_id = '<FILE_ID>',
     permissions = [Permission.read(Role.team('<TEAM_ID>'))] # optional
@@ -81,6 +83,7 @@ Client client = Client()
 Videos videos = Videos(client);
 
 final video = await videos.create(
+    videoId: '<VIDEO_ID>',
     bucketId: '<BUCKET_ID>',
     fileId: '<FILE_ID>',
     permissions: [Permission.read(Role.team('<TEAM_ID>'))], // (optional)
@@ -122,6 +125,7 @@ client = Client.new
 videos = Videos.new(client)
 
 video = videos.create(
+    video_id: '<VIDEO_ID>',
     bucket_id: '<BUCKET_ID>',
     file_id: '<FILE_ID>',
     permissions: [Permission.read(Role.team('<TEAM_ID>'))] # optional
@@ -141,6 +145,7 @@ Client client = new Client()
 Videos videos = new Videos(client);
 
 Video video = await videos.Create(
+    videoId: "<VIDEO_ID>",
     bucketId: "<BUCKET_ID>",
     fileId: "<FILE_ID>",
     permissions: new List<string> { Permission.Read(Role.Team("<TEAM_ID>")) } // optional
@@ -158,6 +163,7 @@ const client = new Client()
 const videos = new Videos(client);
 
 const video = await videos.create({
+    videoId: '<VIDEO_ID>',
     bucketId: '<BUCKET_ID>',
     fileId: '<FILE_ID>',
     permissions: [Permission.read(Role.team('<TEAM_ID>'))] // optional
@@ -186,6 +192,7 @@ func main() {
 	service := videos.New(client)
 
 	video, err := service.Create(
+		"<VIDEO_ID>",
 		"<BUCKET_ID>",
 		"<FILE_ID>",
 		service.WithCreatePermissions([]string{permission.Read(role.Team("<TEAM_ID>", ""))}),
@@ -209,6 +216,7 @@ let client = Client()
 let videos = Videos(client)
 
 let video = try await videos.create(
+    videoId: "<VIDEO_ID>",
     bucketId: "<BUCKET_ID>",
     fileId: "<FILE_ID>",
     permissions: [Permission.read(Role.team("<TEAM_ID>"))] // optional
@@ -229,6 +237,7 @@ val client = Client()
 val videos = Videos(client)
 
 val video = videos.create(
+    videoId = "<VIDEO_ID>",
     bucketId = "<BUCKET_ID>",
     fileId = "<FILE_ID>",
     permissions = listOf(Permission.read(Role.team("<TEAM_ID>"))) // optional
@@ -253,6 +262,7 @@ Videos videos = new Videos(client);
 
 try {
     videos.create(
+        "<VIDEO_ID>", // videoId
         "<BUCKET_ID>", // bucketId
         "<FILE_ID>", // fileId
         null, // name (optional)
@@ -287,6 +297,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let videos = Videos::new(&client);
 
     let video = videos.create(
+        "<VIDEO_ID>",
         "<BUCKET_ID>",
         "<FILE_ID>",
         None, // name
@@ -318,7 +329,7 @@ In the Console, open the video, select **Settings**, and use the **Access** card
 
 While a video has no Read for Any, every tab of the video shows a **This video is private** notice with a link to these settings.
 
-With a server SDK, update the video's permissions with `videos.update()`. The new list replaces the old one, and `name` is required, so pass the current name to keep it:
+With a server SDK, update the video's permissions with `videos.update()`. The new list replaces the old one. Only the fields you pass change, so the name is kept:
 
 {% multicode %}
 ```server-nodejs
@@ -333,7 +344,6 @@ const videos = new sdk.Videos(client);
 
 const video = await videos.update({
     videoId: '<VIDEO_ID>',
-    name: '<VIDEO_NAME>',
     permissions: [sdk.Permission.read(sdk.Role.users())] // optional
 });
 ```
@@ -353,7 +363,6 @@ videos = Videos(client)
 
 video = videos.update(
     video_id = '<VIDEO_ID>',
-    name = '<VIDEO_NAME>',
     permissions = [Permission.read(Role.users())] # optional
 )
 ```
@@ -370,7 +379,6 @@ Videos videos = Videos(client);
 
 final video = await videos.update(
     videoId: '<VIDEO_ID>',
-    name: '<VIDEO_NAME>',
     permissions: [Permission.read(Role.users())], // (optional)
 );
 ```
@@ -392,7 +400,6 @@ $videos = new Videos($client);
 
 $video = $videos->update(
     videoId: '<VIDEO_ID>',
-    name: '<VIDEO_NAME>',
     permissions: [Permission::read(Role::users())] // optional
 );
 ```
@@ -411,7 +418,6 @@ videos = Videos.new(client)
 
 video = videos.update(
     video_id: '<VIDEO_ID>',
-    name: '<VIDEO_NAME>',
     permissions: [Permission.read(Role.users())] # optional
 )
 ```
@@ -430,7 +436,6 @@ Videos videos = new Videos(client);
 
 Video video = await videos.Update(
     videoId: "<VIDEO_ID>",
-    name: "<VIDEO_NAME>",
     permissions: new List<string> { Permission.Read(Role.Users()) } // optional
 );
 ```
@@ -447,7 +452,6 @@ const videos = new Videos(client);
 
 const video = await videos.update({
     videoId: '<VIDEO_ID>',
-    name: '<VIDEO_NAME>',
     permissions: [Permission.read(Role.users())] // optional
 });
 ```
@@ -475,7 +479,6 @@ func main() {
 
 	video, err := service.Update(
 		"<VIDEO_ID>",
-		"<VIDEO_NAME>",
 		service.WithUpdatePermissions([]string{permission.Read(role.Users(""))}),
 	)
 	if err != nil {
@@ -498,7 +501,6 @@ let videos = Videos(client)
 
 let video = try await videos.update(
     videoId: "<VIDEO_ID>",
-    name: "<VIDEO_NAME>",
     permissions: [Permission.read(Role.users())] // optional
 )
 ```
@@ -518,7 +520,6 @@ val videos = Videos(client)
 
 val video = videos.update(
     videoId = "<VIDEO_ID>",
-    name = "<VIDEO_NAME>",
     permissions = listOf(Permission.read(Role.users())) // optional
 )
 ```
@@ -542,7 +543,7 @@ Videos videos = new Videos(client);
 try {
     videos.update(
         "<VIDEO_ID>", // videoId
-        "<VIDEO_NAME>", // name
+        null, // name (optional)
         List.of(Permission.read(Role.users())), // permissions (optional)
         new CoroutineCallback<>((result, error) -> {
             if (error != null) {
@@ -575,7 +576,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let video = videos.update(
         "<VIDEO_ID>",
-        "<VIDEO_NAME>",
+        None, // name
         Some(vec![Permission::read(Role::users(None)).to_string()]) // permissions
     ).await?;
 

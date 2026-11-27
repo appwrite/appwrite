@@ -23,11 +23,13 @@ class VideoCodec extends Model
                 'example' => 'H.264',
             ])
             ->addRule('outputs', [
-                'type' => self::TYPE_STRING,
+                'type' => self::TYPE_ENUM,
                 'description' => 'Streaming output formats this codec may be packaged into.',
                 'default' => [],
                 'example' => ['hls', 'dash', 'cmaf'],
                 'array' => true,
+                'enum' => ['hls', 'dash', 'cmaf'],
+                'enumSDKName' => 'VideoOutput',
             ])
         ;
     }

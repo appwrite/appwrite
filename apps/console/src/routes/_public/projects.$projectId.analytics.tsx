@@ -27,7 +27,7 @@ export const Route = createFileRoute('/_public/projects/$projectId/analytics')({
       })
     }
   },
-  loader: async ({ params, context }) => {
+  loader: async ({ params, context, location }) => {
     if (typeof window === 'undefined') return
 
     const { projectId } = params
@@ -40,6 +40,16 @@ export const Route = createFileRoute('/_public/projects/$projectId/analytics')({
       queryFn: () => fetchProject(projectId),
       staleTime: 5 * 60 * 1000,
     })
+
+    // The rest is the list's data. The add form and property pages load their
+    // own, so they do not wait for a list they do not show.
+    const listPath = `/projects/${projectId}/analytics`
+    if (
+      location.pathname !== listPath &&
+      location.pathname !== `${listPath}/`
+    ) {
+      return
+    }
 
     // Same page/limit/search defaults as the View so the query keys match.
     // The plan and the one-row count feed the plan limit warning under the
