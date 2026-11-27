@@ -15,6 +15,7 @@ use Utopia\Database\Id;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Validator\AnyOf;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Range;
@@ -60,7 +61,7 @@ class Update extends Base
             ->param('summary', '', new Text(65535, 0), 'Review summary in Markdown.', true)
             ->param('walkthrough', [], new ArrayList(new Assoc(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'What each changed file does, as path and change.', true)
             ->param('findings', [], new ArrayList(new Assoc(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Findings of the review, posted or dropped.', true)
-            ->param('providerReviewId', 0, new Range(0, PHP_INT_MAX), 'GitHub review ID.', true)
+            ->param('providerReviewId', 0, new AnyOf([new Range(0, PHP_INT_MAX), new Text(64, 0)]), 'Review ID on the provider: a number, or a string on providers whose IDs are strings.', true)
             ->param('reason', '', new Text(2048, 0), 'Why the review was skipped or failed, shown to the project\'s users.', true)
             ->inject('request')
             ->inject('response')
@@ -83,7 +84,7 @@ class Update extends Base
         string $summary,
         array $walkthrough,
         array $findings,
-        int $providerReviewId,
+        int|string $providerReviewId,
         string $reason,
         Request $request,
         Response $response,
@@ -167,7 +168,7 @@ class Update extends Base
     /**
      * @param array<mixed> $walkthrough
      */
-    private function complete(string $verdict, string $tier, string $tierReason, string $summary, array $walkthrough, int $providerReviewId): Document
+    private function complete(string $verdict, string $tier, string $tierReason, string $summary, array $walkthrough, int|string $providerReviewId): Document
     {
         if ($verdict === '' || $tier === '') {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Param "verdict" and "tier" are required when the status is completed.');
@@ -189,7 +190,7 @@ class Update extends Base
             'tierReason' => $tierReason,
             'summary' => $summary,
             'walkthrough' => $entries,
-            'providerReviewId' => $providerReviewId === 0 ? '' : \strval($providerReviewId),
+            'providerReviewId' => \in_array($providerReviewId, [0, '', '0'], true) ? '' : \strval($providerReviewId),
             'completedAt' => DateTime::now(),
         ]);
     }
@@ -225,10 +226,10 @@ class Update extends Base
                 && ($suggestion === null || (\is_string($suggestion) && \strlen($suggestion) <= 65535))
                 && \in_array($status, ['posted', 'dropped'], true)
                 && ($dropReason === null || (\is_string($dropReason) && \strlen($dropReason) <= 2048))
-                && ($providerCommentId === null || \is_int($providerCommentId));
+                && ($providerCommentId === null || \is_int($providerCommentId) || (\is_string($providerCommentId) && $providerCommentId !== '' && \strlen($providerCommentId) <= 64));
 
             if (!$valid) {
-                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, "Finding {$index} is invalid: it needs path, startLine, endLine (from startLine), severity (" . \implode(', ', self::SEVERITIES) . '), category, title and body, with an optional suggestion, status (posted or dropped), dropReason and numeric providerCommentId.');
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, "Finding {$index} is invalid: it needs path, startLine, endLine (from startLine), severity (" . \implode(', ', self::SEVERITIES) . '), category, title and body, with an optional suggestion, status (posted or dropped), dropReason and providerCommentId (a number, or a string on providers whose IDs are strings).');
             }
 
             $documents[] = new Document([

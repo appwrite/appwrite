@@ -22,18 +22,14 @@
         }
     },
     "require": {
-        "php": ">=8.1"
+        "php": ">=8.4",
+        "ext-utopia": "*"
     },
     "minimum-stability": "dev",
     "scripts": {
         "test": "phpunit --configuration phpunit.xml"
     },
     "suggest": {
-        "ext-zstd": "Required for the Zstd algorithm",
-        "ext-brotli": "Required for the Brotli algorithm",
-        "ext-lz4": "Required for the LZ4 algorithm",
-        "ext-snappy": "Required for the Snappy algorithm",
-        "ext-xz": "Required for the XZ algorithm",
-        "ext-zlib": "Required for the GZIP and Deflate algorithms"
+        "ext-xz": "Required for the XZ algorithm, which calls xzencode() and xzdecode()"
     }
 }

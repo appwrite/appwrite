@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Videos\Services;
 
+use Appwrite\Platform\Modules\Videos\Http\Init;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Captions\Create as CreateCaption;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Captions\Delete as DeleteCaption;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Captions\Update as UpdateCaption;
@@ -34,6 +35,8 @@ class Http extends Service
     public function __construct()
     {
         $this->type = Service::TYPE_HTTP;
+
+        $this->addAction(Init::getName(), new Init());
 
         // Videos
         $this->addAction(CreateVideo::getName(), new CreateVideo());

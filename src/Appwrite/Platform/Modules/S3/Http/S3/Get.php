@@ -33,7 +33,7 @@ class Get extends Base
         parent::__construct(Action::HTTP_REQUEST_METHOD_GET);
     }
 
-    protected function route(Request $request, Response $response, Database $dbForProject, Document $project, Document $team, User $user, Device $deviceForFiles, callable $locks, Cache $cache, Event $queueForEvents, DeletePublisher $publisherForDeletes, AuditPublisher $publisherForAudits, Event $queueForRealtime, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, EventProcessor $eventProcessor): void
+    protected function route(Request $request, Response $response, Database $dbForProject, Document $project, Document $team, User $user, Device $deviceForFiles, callable $locks, Cache $cache, Event $queueForEvents, DeletePublisher $publisherForDeletes, AuditPublisher $publisherForAudits, Event $queueForRealtime, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, EventProcessor $eventProcessor, array $plan): void
     {
         $isHead = $request->getMethod() === Action::HTTP_REQUEST_METHOD_HEAD
             || \in_array($this->query($request, 'x-id'), ['HeadObject', 'HeadBucket'], true);
@@ -219,20 +219,30 @@ class Get extends Base
                     }
                 }
 
+                $length = $size;
                 if ($range !== null) {
                     [$start, $end] = $range;
+                    $length = $end - $start + 1;
                     $response
                         ->setStatusCode(Response::STATUS_CODE_PARTIALCONTENT)
-                        ->addHeader('Content-Range', 'bytes ' . $start . '-' . $end . '/' . $size)
-                        ->addHeader('Content-Length', (string) ($end - $start + 1));
-                } else {
-                    $response->addHeader('Content-Length', (string) $size);
+                        ->addHeader('Content-Range', 'bytes ' . $start . '-' . $end . '/' . $size);
                 }
 
                 if ($isHead) {
+                    if ($request->getMethod() === Action::HTTP_REQUEST_METHOD_HEAD) {
+                        $response->addHeader('Content-Length', (string) $length);
+                    } else {
+                        // A GET answered as HeadObject (a proxy rewrote the HEAD) sends no
+                        // body, so a declared length would leave the client waiting for
+                        // bytes that never come. The length goes in a header of its own,
+                        // replacing user metadata of the same name so there is one value.
+                        $response->setHeader('x-amz-meta-content-length', (string) $length);
+                    }
                     $response->send('');
                     return;
                 }
+
+                $response->addHeader('Content-Length', (string) $length);
 
                 if ($body === null && $deviceForFiles->getType() === DeviceType::Local) {
                     throw new AppwriteException(AppwriteException::GENERAL_SERVER_ERROR, 'Missing object stream.');

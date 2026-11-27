@@ -9,7 +9,7 @@ use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Cache;
 
 /**
- * Drives Adapter::call() against a local server that answers every request with a 500.
+ * Drives Adapter::call() against a local `php -S` server.
  */
 final class AdapterCallTest extends TestCase
 {
@@ -18,7 +18,7 @@ final class AdapterCallTest extends TestCase
 
     private string $endpoint = '';
 
-    protected function setUp(): void
+    private function serve(string $router): void
     {
         $socket = stream_socket_server('tcp://127.0.0.1:0');
         if ($socket === false) {
@@ -29,7 +29,7 @@ final class AdapterCallTest extends TestCase
 
         $this->endpoint = 'http://' . $address;
         $server = proc_open(
-            [PHP_BINARY, '-S', $address, __DIR__ . '/Fixtures/server-error.php'],
+            [PHP_BINARY, '-S', $address, __DIR__ . '/Fixtures/' . $router],
             [1 => ['file', '/dev/null', 'w'], 2 => ['file', '/dev/null', 'w']],
             $pipes,
         );
@@ -59,6 +59,7 @@ final class AdapterCallTest extends TestCase
 
     public function testServerErrorDoesNotWriteRequestParamsToOutput(): void
     {
+        $this->serve('server-error.php');
         $adapter = new ProviderGitea(new Cache(new None()));
         $adapter->setEndpoint($this->endpoint);
 
@@ -71,5 +72,32 @@ final class AdapterCallTest extends TestCase
         $this->assertIsArray($response['headers']);
         $this->assertSame(500, $response['headers']['status-code']);
         $this->assertSame(['message' => 'Internal Server Error'], $response['body']);
+    }
+
+    public function testRequestNamesClientAsUserAgent(): void
+    {
+        $this->serve('server-echo.php');
+        $adapter = new ProviderGitea(new Cache(new None()));
+        $adapter->setEndpoint($this->endpoint);
+
+        $response = $adapter->request('GET', '/user', []);
+
+        $this->assertIsArray($response['body']);
+        $this->assertSame(ProviderGitea::USER_AGENT, $response['body']['user-agent'] ?? null);
+    }
+
+    public function testBitbucketRequestSkipsXsrfCheck(): void
+    {
+        $this->serve('server-echo.php');
+        $adapter = new ProviderBitbucket(new Cache(new None()));
+        $adapter->setEndpoint($this->endpoint);
+
+        $response = $adapter->request('POST', '/repositories/owner/repository/hooks', [
+            'url' => 'https://example.com/hook',
+        ]);
+
+        $this->assertIsArray($response['body']);
+        $this->assertSame('no-check', $response['body']['x-atlassian-token'] ?? null);
+        $this->assertSame('application/json', $response['body']['content-type'] ?? null);
     }
 }

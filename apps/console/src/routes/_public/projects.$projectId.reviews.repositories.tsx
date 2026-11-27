@@ -3,6 +3,7 @@ import { View } from '@/components/pages/projects/$projectId/reviews/View'
 import {
   projectQueryOptions,
   reviewRepositoriesQueryOptions,
+  reviewSummaryQueryOptions,
   vcsInstallationsQueryOptions,
 } from '@/lib/react-query/hooks'
 import { pageTitle } from '@/lib/utils/page-title'
@@ -17,6 +18,9 @@ export const Route = createFileRoute(
     const { queryClient } = context
 
     await queryClient.ensureQueryData(projectQueryOptions(projectId))
+    // Each repository's activity fills in after the tab opens: managing
+    // repositories never waits on it.
+    void queryClient.prefetchQuery(reviewSummaryQueryOptions(projectId))
     await Promise.all([
       queryClient.ensureQueryData(reviewRepositoriesQueryOptions(projectId)),
       // Rows name their installation, and the add dialog lists them.

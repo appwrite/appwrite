@@ -40,21 +40,28 @@ function player(timing: Partial<StreamPlayerState>): StreamPlayerState {
 }
 
 describe('computeQoeMetrics startup', () => {
-  test('starts at the stream request, not while the player library loads', () => {
+  test("counts from the manifest's last byte to the first frame", () => {
     const metrics = computeQoeMetrics(
       qoe,
-      player({ loadStartedAt: 1000, requestedAt: 1500, firstFrameAt: 1660 }),
+      player({
+        loadStartedAt: 1000,
+        requestedAt: 1500,
+        manifestLoadedAt: 1620,
+        firstFrameAt: 1706,
+      }),
       null,
     )
-    expect(metrics.startupMs).toBe(160)
+    expect(metrics.startupMs).toBe(86)
+    expect(metrics.manifestMs).toBe(120)
   })
 
-  test('falls back to the mount when the request time is unknown', () => {
+  test('waits for the manifest instead of counting from the request', () => {
     const metrics = computeQoeMetrics(
       qoe,
-      player({ loadStartedAt: 1000, firstFrameAt: 1660 }),
+      player({ loadStartedAt: 1000, requestedAt: 1500, firstFrameAt: 1706 }),
       null,
     )
-    expect(metrics.startupMs).toBe(660)
+    expect(metrics.startupMs).toBeNull()
+    expect(metrics.manifestMs).toBeNull()
   })
 })

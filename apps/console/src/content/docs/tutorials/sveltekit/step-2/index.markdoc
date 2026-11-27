@@ -7,12 +7,11 @@ step: 2
 
 ## Create SvelteKit project {% #create-sveltekit-project %}
 
-Create a SvelteKit app with the `npm create` command and select `Skeleton project`
+Create a SvelteKit app using the minimal template.
 
 ```sh
-npm create svelte@latest ideas-tracker
+npx sv create ideas-tracker --template minimal --types jsdoc --no-add-ons --install npm
 cd ideas-tracker
-npm install
 ```
 
 ## Add dependencies {% #add-dependencies %}

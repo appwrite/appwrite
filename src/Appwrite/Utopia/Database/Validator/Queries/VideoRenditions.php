@@ -14,8 +14,6 @@ class VideoRenditions extends Base
         'height',
         'videoBitRate',
         'audioBitRate',
-        'progress',
-        'targetDuration',
         'size',
         'startedAt',
         'endedAt',

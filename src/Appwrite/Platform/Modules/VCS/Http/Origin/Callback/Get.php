@@ -64,6 +64,15 @@ class Get extends Action
         VcsFactory $vcsFactory,
     ) {
         if (empty($installationReceipt)) {
+            // A cancelled or denied install comes back with only the state it
+            // was given; when it is ours, send the user back to the Console
+            $cancelled = State::verify($state, ...EncryptionKey::accepted());
+            if ($cancelled !== null) {
+                $settings = ($platform['consoleUrl'] ?? '') . "/projects/{$cancelled->projectId}/settings";
+                $this->failure($response, $cancelled->failure ?: $settings, 'The Origin installation was cancelled. Please restart the installation from the Appwrite Console.');
+                return;
+            }
+
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Missing installation receipt. Please restart the installation from the Appwrite Console.');
         }
 

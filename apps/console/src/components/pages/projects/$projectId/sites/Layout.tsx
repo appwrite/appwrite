@@ -72,6 +72,7 @@ import {
   clearSettingsRedeployPending,
   useSettingsRedeployPending,
 } from '@/lib/utils/settings-redeploy-alert'
+import { useReviewsAccess } from '../reviews/_components/useReviewsAccess'
 
 /** When provided, Deployments view renders this below the header (filter + create). */
 export const DeploymentsToolbarContext =
@@ -111,7 +112,9 @@ function SiteLayoutContent() {
         [
           'overview',
           'deployments',
+          'reviews',
           'logs',
+          'runtime-logs',
           'domains',
           'usage',
           'firewall',
@@ -149,6 +152,9 @@ function SiteLayoutContent() {
   const showUsageTab = features.usageStats && canSeeUsageNav(access, features)
   const showFirewallTab =
     isCloudProfile() && canSeeProjectNavItem(access, features, 'firewall')
+  // Cloud only: self-hosted doesn't serve `/v1/logs`, even with the flag on.
+  const showRuntimeLogsTab = isCloudProfile() && features.runtimeLogs
+  const { visible: showReviewsTab } = useReviewsAccess(projectId)
 
   const [cancelBuildDialogOpen, setCancelBuildDialogOpen] = useState(false)
   const [redeployDialogOpen, setRedeployDialogOpen] = useState(false)
@@ -327,6 +333,16 @@ function SiteLayoutContent() {
         to: '/projects/$projectId/sites/$siteId/deployments',
         params: { projectId: projectId!, siteId: siteId! },
       },
+      ...(showReviewsTab
+        ? [
+            {
+              id: 'reviews' as const,
+              label: t('Reviews'),
+              to: '/projects/$projectId/sites/$siteId/reviews',
+              params: { projectId: projectId!, siteId: siteId! },
+            },
+          ]
+        : []),
       {
         id: 'domains',
         label: t('Domains'),
@@ -335,10 +351,21 @@ function SiteLayoutContent() {
       },
       {
         id: 'logs',
-        label: t('Logs'),
+        // Runtime output takes the Logs name once it ships
+        label: showRuntimeLogsTab ? t('Requests') : t('Logs'),
         to: '/projects/$projectId/sites/$siteId/logs',
         params: { projectId: projectId!, siteId: siteId! },
       },
+      ...(showRuntimeLogsTab
+        ? [
+            {
+              id: 'runtime-logs' as const,
+              label: t('Logs'),
+              to: '/projects/$projectId/sites/$siteId/runtime-logs',
+              params: { projectId: projectId!, siteId: siteId! },
+            },
+          ]
+        : []),
       ...(showUsageTab
         ? [
             {
@@ -376,7 +403,16 @@ function SiteLayoutContent() {
           ]
         : []),
     ],
-    [projectId, siteId, showUsageTab, showFirewallTab, showSettingsTab, t],
+    [
+      projectId,
+      siteId,
+      showUsageTab,
+      showFirewallTab,
+      showRuntimeLogsTab,
+      showReviewsTab,
+      showSettingsTab,
+      t,
+    ],
   )
 
   // Redirect from settings or variables when user lacks permission
@@ -391,7 +427,7 @@ function SiteLayoutContent() {
     }
   }, [showSettingsTab, activeTab, projectId, siteId, navigate])
 
-  const isLogsTabLayout = activeTab === 'logs'
+  const isLogsTabLayout = activeTab === 'logs' || activeTab === 'runtime-logs'
 
   const buildingAlert = isBuilding ? (
     <div className="border-b border-border bg-blue-500/5">
@@ -501,6 +537,7 @@ function SiteLayoutContent() {
             fullWidthBorder
             fullWidth={
               activeTab === 'logs' ||
+              activeTab === 'runtime-logs' ||
               activeTab === 'usage' ||
               activeTab === 'firewall'
             }
