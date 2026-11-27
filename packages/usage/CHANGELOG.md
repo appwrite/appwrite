@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Requires utopia-php/database `^10.3.1` instead of `^8.3.4`, and utopia-php/query `^0.8.0`
+  instead of `^0.7`: database 8 holds query at 0.7, and Appwrite runs this package on database 10.
+  Query 0.9 is left out because it needs the utopia extension.
+
 ## 0.17.0 (unreleased) — utopia-php/database 8
 
 ### Added

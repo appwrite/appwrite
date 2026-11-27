@@ -2,6 +2,14 @@
 
 All notable changes to `utopia-php/audit` are documented in this file.
 
+## Unreleased
+
+- Requires utopia-php/database `^10.3.1` instead of `^8.3.4`, and utopia-php/query `^0.8.0`
+  instead of `^0.7`: database 8 holds query at 0.7, and Appwrite runs this package on database 10.
+  The ClickHouse adapter's snapshots already expect 0.8's enclosed raw conditions. Query 0.9 is
+  left out because it needs the utopia extension, and a standalone install cannot tell whether
+  it is loaded.
+
 ## 5.0.0 (unreleased) — utopia-php/database 8
 
 ### Breaking changes
