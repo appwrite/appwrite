@@ -716,6 +716,57 @@ trait RealtimeQueryBase
 
         $client->close();
 
+        // Inclusive range: level 10 is between 5 and 10, level 15 is not
+        $between = $this->getWebsocket(['documents'], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ], null, [
+            Query::between('level', 5, 10)->toString(),
+        ], 10);
+        $this->assertConnectionStatusIfSupported($between);
+
+        $notBetween = $this->getWebsocket(['documents'], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ], null, [
+            Query::notBetween('level', 5, 10)->toString(),
+        ], 10);
+        $this->assertConnectionStatusIfSupported($notBetween);
+
+        foreach ([10, 15] as $level) {
+            $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+            ], $this->getHeaders()), [
+                'documentId' => Id::unique(),
+                'data' => [
+                    'level' => $level
+                ],
+                'permissions' => [
+                    Permission::read(Role::any()),
+                ],
+            ]);
+        }
+
+        $event = json_decode($between->receive(), true);
+        $this->assertEquals('event', $event['type']);
+        $this->assertEquals(10, $event['data']['payload']['level']);
+
+        $event = json_decode($notBetween->receive(), true);
+        $this->assertEquals('event', $event['type']);
+        $this->assertEquals(15, $event['data']['payload']['level']);
+
+        foreach ([$between, $notBetween] as $client) {
+            try {
+                $client->receive();
+                $this->fail('Expected TimeoutException - event should be filtered');
+            } catch (TimeoutException $e) {
+                $this->addToAssertionCount(1);
+            }
+
+            $client->close();
+        }
+
         // Setup database and collection
         $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
             'content-type' => 'application/json',

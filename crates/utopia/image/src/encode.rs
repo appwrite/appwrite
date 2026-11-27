@@ -41,15 +41,21 @@ pub(crate) fn encode(
 /// a grey: such an image is written with one colour channel, as ImageMagick does.
 fn gray(pixels: &RgbaImage, alpha: bool) -> Option<Vec<u8>> {
     let raw = pixels.as_raw();
-    if !raw.chunks_exact(4).all(|px| px[0] == px[1] && px[1] == px[2]) {
+    if !raw.as_chunks::<4>().0.iter().all(|px| px[0] == px[1] && px[1] == px[2]) {
         return None;
     }
-    Some(raw.chunks_exact(4).flat_map(|px| [px[0], px[3]].into_iter().take(if alpha { 2 } else { 1 })).collect())
+    Some(
+        raw.as_chunks::<4>()
+            .0
+            .iter()
+            .flat_map(|px| [px[0], px[3]].into_iter().take(if alpha { 2 } else { 1 }))
+            .collect(),
+    )
 }
 
 fn rgb(pixels: &RgbaImage) -> Vec<u8> {
     let mut out = Vec::with_capacity(pixels.len() / 4 * 3);
-    for px in pixels.as_raw().chunks_exact(4) {
+    for px in pixels.as_raw().as_chunks::<4>().0 {
         out.extend_from_slice(&px[..3]);
     }
     out

@@ -331,6 +331,7 @@ export function ActiveFilterChips({
   onRemoveFilter,
   onClearAllFilters,
   fixedTag,
+  displayValue,
 }: {
   filterMap: FilterMap
   columns: FilterColumn[]
@@ -344,6 +345,8 @@ export function ActiveFilterChips({
   onClearAllFilters: () => void
   /** Tag for a filter that reads better in its own words; it cannot be edited. */
   fixedTag?: (key: CompactFilterKey) => string | undefined
+  /** How a value reads on its chip (a user's name for their ID); the raw value when undefined. */
+  displayValue?: (key: CompactFilterKey) => string | undefined
 }) {
   const t = useT()
   const keys = Array.from(filterMap.keys())
@@ -368,10 +371,13 @@ export function ActiveFilterChips({
       {keys.map((key) => {
         const fixed = fixedTag?.(key)
         // Show country names rather than ISO codes, like the Locations card.
+        const shown = displayValue?.(key)
         const displayKey =
-          key.c === 'country' && typeof key.v === 'string' && countryLookups
-            ? { ...key, v: resolveCountryDisplayName(key.v, countryLookups) }
-            : key
+          shown !== undefined
+            ? { ...key, v: shown }
+            : key.c === 'country' && typeof key.v === 'string' && countryLookups
+              ? { ...key, v: resolveCountryDisplayName(key.v, countryLookups) }
+              : key
         return (
           <FilterChip
             key={`${key.c}:${key.o}:${String(key.v)}`}

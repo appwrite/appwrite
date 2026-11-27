@@ -2,10 +2,10 @@ import { ANALYTICS_PRODUCT_ICON } from '@/lib/analytics/product-icon'
 import {
   Bot,
   Check,
-  Cookie,
-  Smartphone,
+  Globe,
   Sparkles,
   User,
+  UserCheck,
   type LucideIcon,
 } from 'lucide-react'
 import {
@@ -22,7 +22,7 @@ import {
 } from '@/components/pages/products/features/analytics/AnalyticsArtParts'
 import { useT } from '@/lib/i18n/translate'
 
-/** Traffic arriving at the property: people, an AI referral, a crawler, an app. */
+/** Traffic arriving at the property: a visitor, a signed-in user, an AI referral, a crawler. */
 const INCOMING: {
   icon: LucideIcon
   label: string
@@ -33,10 +33,11 @@ const INCOMING: {
   { icon: User, label: 'Visitor', detail: 'Berlin · Chrome', tone: 'primary', delayMs: 120 },
   { icon: Sparkles, label: 'From ChatGPT', detail: 'AI channel', tone: 'secondary', delayMs: 240 },
   { icon: Bot, label: 'GPTBot', detail: 'AI crawler', tone: 'neutral', delayMs: 360 },
-  { icon: Smartphone, label: 'Mobile app', detail: 'screen_view', tone: 'neutral', delayMs: 480 },
+  { icon: UserCheck, label: 'Jake Barnby', detail: 'Signed in · Auth', tone: 'primary', delayMs: 480 },
 ]
 
-const GUARANTEES = ['No cookies set', 'IP discarded', 'ID rotates daily'] as const
+/** What the built-in property does that a pasted script can't, plus the privacy floor. */
+const GUARANTEES = ['Tracker added by Sites', 'Users named by Auth', 'No cookies set'] as const
 
 /** Humans vs bots split shown under the chart. */
 const SPLIT = [
@@ -64,7 +65,7 @@ function PropertyNode() {
           <div className="min-w-0">
             <p className="text-[13px] font-semibold text-foreground">{t('Analytics')}</p>
             <p dir="ltr" className="truncate font-mono text-[10.5px] text-muted-foreground">
-              example.com
+              my-store.com
             </p>
           </div>
           <ArtLiveDot className="ms-auto" />
@@ -136,9 +137,9 @@ function DashboardPanel() {
 }
 
 /**
- * Traffic flows in from the start side (people, AI referrals, crawlers, apps),
- * passes through the property where nothing personal is kept, and comes out
- * as a dashboard on the end side.
+ * Traffic flows in from the start side (visitors, signed-in users, AI
+ * referrals, crawlers), passes through the site's built-in property, and comes
+ * out as a dashboard on the end side.
  */
 export function AnalyticsHeroArt() {
   const t = useT()
@@ -183,8 +184,8 @@ export function AnalyticsHeroArt() {
 
       <ArtChip className="-top-2 end-[6%] hidden sm:block" delayMs={900} floatDelayMs={300}>
         <div className="flex items-center gap-2">
-          <Cookie className="size-3.5 text-[var(--tone-ink)]" aria-hidden />
-          <span className="text-[11.5px] font-medium text-foreground">{t('0 cookies')}</span>
+          <Globe className="size-3.5 text-[var(--tone-ink)]" aria-hidden />
+          <span className="text-[11.5px] font-medium text-foreground">{t('No script to paste')}</span>
         </div>
       </ArtChip>
       <ArtChip className="-bottom-3 start-[30%] hidden lg:block" delayMs={1050} floatDelayMs={900}>

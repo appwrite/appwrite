@@ -1,5 +1,4 @@
 import type { Models } from '@appwrite.io/console'
-import { format } from 'sql-formatter'
 import { quotePostgresIdentifier } from '@/lib/postgres-database-routes'
 
 const POSTGRES_NAMESPACE_SYSTEM_FILTER = `
@@ -834,12 +833,17 @@ export function buildPostgresCountSql(schema: string, table: string): string {
   )
 }
 
-/** Pretty-print SQL for the Postgres SQL editor. Returns the original string on parse errors. */
-export function formatPostgresSql(sql: string): string {
+/**
+ * Pretty-print SQL for the Postgres SQL editor. Returns the original string on parse errors.
+ * The formatter loads on first use: it is large, and only the editor's Format
+ * action needs it.
+ */
+export async function formatPostgresSql(sql: string): Promise<string> {
   const trimmed = sql.trim()
   if (!trimmed) return sql
 
   try {
+    const { format } = await import('sql-formatter')
     return format(trimmed, {
       language: 'postgresql',
       tabWidth: 2,

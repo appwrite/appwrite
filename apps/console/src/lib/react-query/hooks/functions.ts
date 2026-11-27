@@ -1611,26 +1611,11 @@ export async function createSmtpDomainRule(
     throw new Error('Domain and Function ID are required')
   }
 
-  const projectSdk = sdk.forProject(projectId)
-  const uri = new URL(`${projectSdk.client.config.endpoint}/proxy/rules/smtp`)
-  const payload: Record<string, string> = {
+  return (await sdk.forProject(projectId).proxy.createSMTPRule({
     domain,
     functionId,
-  }
-  if (params.branch?.trim()) {
-    payload.branch = params.branch.trim()
-  }
-
-  return (await projectSdk.client.call(
-    'post',
-    uri,
-    {
-      'X-Appwrite-Project': projectSdk.client.config.project,
-      'content-type': 'application/json',
-      accept: 'application/json',
-    },
-    payload,
-  )) as SmtpProxyRule
+    branch: params.branch?.trim() || undefined,
+  })) as SmtpProxyRule
 }
 
 /**

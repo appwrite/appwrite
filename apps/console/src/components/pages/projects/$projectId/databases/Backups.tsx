@@ -804,6 +804,14 @@ export function BackupsView({ databaseId, dbKind }: BackupsViewProps) {
                                 {t('Project-wide')}
                               </Badge>
                             ) : null}
+                            {policy.enabled === false ? (
+                              <Badge
+                                variant="secondary"
+                                className="text-[12px] font-normal"
+                              >
+                                {t('Paused')}
+                              </Badge>
+                            ) : null}
                           </div>
                           <p className="text-[13px] text-muted-foreground">
                             {scheduleText} • {retentionText}
@@ -856,7 +864,9 @@ export function BackupsView({ databaseId, dbKind }: BackupsViewProps) {
                             {t('Next')}
                           </div>
                           <div className="text-foreground">
-                            {getNextBackupDate(policy.schedule)}
+                            {policy.enabled === false
+                              ? '-'
+                              : getNextBackupDate(policy.schedule)}
                           </div>
                         </div>
                       </div>

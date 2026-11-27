@@ -92,6 +92,7 @@ function mockApp(overrides?: Partial<Models.App>): Models.App {
     userId: 'demo-user',
     installationScopes: [],
     installationRedirectUrl: '',
+    installs: 0,
     secrets: [],
     ...overrides,
   }

@@ -15,6 +15,7 @@ import { ChevronDown } from 'lucide-react'
 import {
   Bar,
   BarChart,
+  CartesianGrid,
   Cell,
   Customized,
   ResponsiveContainer,
@@ -716,6 +717,11 @@ export function ActivityLogVolumeChart({
                     setTooltipPointer(null)
                   }}
                 >
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="var(--border)"
+                    vertical={false}
+                  />
                   <SeriesChartXAxis
                     pointCount={chartData.length}
                     dataKey="label"
