@@ -1,7 +1,15 @@
 import { Fragment, useState, useMemo, type ReactNode } from 'react'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useConsoleVariables } from '@/lib/react-query/hooks/console-variables'
-import { isDnsUnverified, isWaitingForDns } from '@/lib/utils/status-badge'
+import type {
+  ProxyRuleRecord,
+  ProxyRuleRecordRegion,
+} from '@/lib/appwrite/proxy-rules'
+import {
+  getLaggingRegions,
+  isDnsUnverified,
+  isWaitingForDns,
+} from '@/lib/utils/status-badge'
 import {
   getRecordName,
   getVerificationMethods,
@@ -18,6 +26,9 @@ import {
   AlertCircle,
   CheckCircle2,
   AlertTriangle,
+  Check,
+  Clock,
+  X,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
@@ -72,13 +83,14 @@ const POINTING_METHODS: Record<string, VerificationMethod> = {
  * never the target the developer set.
  */
 function getAliasCheck(
-  checks: Models.ProxyRuleRecord[] | null,
+  checks: ProxyRuleRecord[] | null,
   value: string,
-): Models.ProxyRuleRecord | undefined {
+): ProxyRuleRecord | undefined {
   const addresses =
     checks?.filter((check) => check.type === 'A' || check.type === 'AAAA') ?? []
   const check =
     addresses.find((c) => c.status === 'verified') ??
+    addresses.find((c) => getLaggingRegions(c).length > 0) ??
     addresses.find((c) => c.status === 'mismatch') ??
     addresses.find((c) => c.status === 'failed') ??
     addresses[0]
@@ -89,6 +101,7 @@ function getAliasCheck(
     expected: value,
     current: [],
     message: '',
+    regions: check.regions?.map((region) => ({ ...region, current: [] })),
   }
 }
 
@@ -162,11 +175,11 @@ export type DnsRecord = {
   priority?: number
   badge?: string
   /** What DNS had for this record at the last check. */
-  check?: Models.ProxyRuleRecord
+  check?: ProxyRuleRecord
   /** The record type that already verifies the domain, when this one is an unused alternative. */
   notNeeded?: string
   /** A record of another type that answers the name instead of this missing one, such as a provider's URL redirect. */
-  conflict?: Models.ProxyRuleRecord
+  conflict?: ProxyRuleRecord
 }
 
 /** A section label, outlined so it never reads as a record status. */
@@ -202,6 +215,95 @@ function RecordType({ type }: { type: string }) {
   )
 }
 
+/**
+ * How a region's result reads in the region list. A region that is behind is
+ * amber, not red: it only needs time. Red is for a lookup that failed.
+ */
+const REGION_STATUS: Record<
+  ProxyRuleRecordRegion['status'],
+  { Icon: typeof Check; className: string; label: string }
+> = {
+  verified: {
+    Icon: Check,
+    className: 'text-emerald-600 dark:text-emerald-400',
+    label: 'Sees your record',
+  },
+  missing: {
+    Icon: Clock,
+    className: 'text-amber-600 dark:text-amber-400',
+    label: 'Not there yet',
+  },
+  mismatch: {
+    Icon: Clock,
+    className: 'text-amber-600 dark:text-amber-400',
+    label: 'Not there yet',
+  },
+  failed: {
+    Icon: X,
+    className: 'text-red-600 dark:text-red-400',
+    label: 'Lookup failed',
+  },
+}
+
+/** Each region and what it sees, for a record that is still propagating. */
+function RegionList({ regions }: { regions: ProxyRuleRecordRegion[] }) {
+  const t = useT()
+  const muted = 'text-muted-foreground'
+  const values = 'font-mono break-all text-foreground'
+  return (
+    <ul className="grid grid-cols-[auto_auto_minmax(0,1fr)] items-baseline gap-x-2.5 gap-y-1.5 text-start">
+      {regions.map((region) => {
+        // A status a newer server adds reads as not there yet
+        const { Icon, className, label } =
+          REGION_STATUS[region.status] ?? REGION_STATUS.missing
+        let seen: ReactNode
+        if (region.status === 'failed') {
+          seen = <span className={muted}>{t('lookup failed')}</span>
+        } else if (region.current.length === 0) {
+          // An ALIAS keeps no values: they are addresses the developer never set.
+          seen = (
+            <span className={muted}>
+              {region.status === 'verified'
+                ? t('sees it')
+                : t('not visible yet')}
+            </span>
+          )
+        } else if (region.status === 'mismatch') {
+          // Split around the value so each language places it in its order.
+          const [before = '', after = ''] =
+            t('still sees {value}').split('{value}')
+          seen = (
+            <>
+              {before && <span className={muted}>{before}</span>}
+              <span className={values} dir="ltr">
+                {region.current.join(', ')}
+              </span>
+              {after && <span className={muted}>{after}</span>}
+            </>
+          )
+        } else {
+          seen = (
+            <span className={values} dir="ltr">
+              {region.current.join(', ')}
+            </span>
+          )
+        }
+        return (
+          <li key={region.id} className="contents">
+            <span className="text-foreground">{region.name}</span>
+            <Icon
+              className={`h-3.5 w-3.5 self-center ${className}`}
+              role="img"
+              aria-label={t(label)}
+            />
+            <span className="min-w-0">{seen}</span>
+          </li>
+        )
+      })}
+    </ul>
+  )
+}
+
 /** The status pill of one record at the last check. */
 function RecordStatus({
   record,
@@ -227,6 +329,42 @@ function RecordStatus({
       >
         {t('Not needed')}
       </Badge>
+    )
+  }
+  // Some regions already see the record: it only needs time, so the pill
+  // opens what each region sees instead of a status to act on.
+  // Past the check window the record needs fixing, whatever some regions see
+  if (
+    waiting &&
+    check.status !== 'verified' &&
+    getLaggingRegions(check).length > 0
+  ) {
+    const regions = check.regions ?? []
+    const seen = t('{n} of {total} regions see your record')
+      .replace(
+        '{n}',
+        String(regions.filter((r) => r.status === 'verified').length),
+      )
+      .replace('{total}', String(regions.length))
+    return (
+      <Popover>
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            className="cursor-pointer rounded-md focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+            aria-label={`${t('Propagating')}: ${seen}`}
+          >
+            <Badge variant="warning" className={pill}>
+              {t('Propagating')}
+              <Info aria-hidden />
+            </Badge>
+          </button>
+        </PopoverTrigger>
+        <PopoverContent align="end" className="w-auto max-w-xs p-3 text-xs">
+          <p className="mb-2 font-medium text-foreground">{seen}</p>
+          <RegionList regions={regions} />
+        </PopoverContent>
+      </Popover>
     )
   }
   const title = check.message || undefined
@@ -378,14 +516,20 @@ function RecordSection({
           <TableBody>
             {records.map((r) => {
               // A misplaced record is wrong where it is, not in its value.
-              const misplaced = r.check?.status === 'misplaced' && !r.notNeeded
+              const misplaced =
+                r.check?.status === 'misplaced' &&
+                !r.notNeeded &&
+                getLaggingRegions(r.check).length === 0
               // Another record type answers where this one is missing.
               const conflict =
                 r.check?.status === 'missing' && !r.notNeeded
                   ? r.conflict
                   : undefined
+              // A propagating record shows what each region sees in its pill.
+              const propagating =
+                !!r.check && getLaggingRegions(r.check).length > 0
               const found =
-                r.check?.status === 'mismatch' && !r.notNeeded
+                r.check?.status === 'mismatch' && !r.notNeeded && !propagating
                   ? r.check.current
                   : misplaced && r.check
                     ? [getMisplacedName(r.check.name)]
@@ -533,9 +677,9 @@ function DnsBannerAlert({ banner }: { banner: DnsBanner }) {
 function getDnsBanners(
   t: (text: string) => string,
   rule: Models.ProxyRule,
-  pointing: Models.ProxyRuleRecord[],
-  caa: Models.ProxyRuleRecord | undefined,
-  conflict: Models.ProxyRuleRecord | undefined,
+  pointing: ProxyRuleRecord[],
+  caa: ProxyRuleRecord | undefined,
+  conflict: ProxyRuleRecord | undefined,
 ): DnsBanner[] {
   const verified = pointing.find((check) => check.status === 'verified')
   const banners: DnsBanner[] = []
@@ -561,6 +705,8 @@ function getDnsBanners(
   }
   if (!verified) {
     for (const check of pointing) {
+      // A record some regions already see only needs time.
+      if (getLaggingRegions(check).length > 0) continue
       if (check.status === 'misplaced') {
         banners.push({
           tone: 'error',
@@ -600,6 +746,28 @@ function getDnsBanners(
   }
   if (banners.length > 0) return banners
 
+  // Some regions see the record and others do not yet: nothing to fix, and
+  // not a failure on Appwrite's side either.
+  // Only while Appwrite still checks on its own: past that window it needs fixing.
+  const propagating =
+    verified || !isWaitingForDns(rule)
+      ? undefined
+      : pointing.find((check) => getLaggingRegions(check).length > 0)
+  if (propagating) {
+    const regions = propagating.regions ?? []
+    const seen = regions.filter((r) => r.status === 'verified').length
+    return [
+      {
+        tone: 'warning',
+        prefix: t('DNS is still propagating'),
+        text: `${t('{n} of {total} regions see your new record.')
+          .replace('{n}', String(seen))
+          .replace('{total}', String(regions.length))} ${t(
+          "This usually finishes within an hour, and Appwrite keeps checking. You don't need to change anything.",
+        )}`,
+      },
+    ]
+  }
   if (!verified && pointing.some((check) => check.status === 'failed')) {
     return [
       {
@@ -708,9 +876,12 @@ function getDnsBanners(
 function DnsCheckMeta({
   rule,
   checkedAt,
+  regionCount,
 }: {
   rule: Models.ProxyRule
   checkedAt: string
+  /** How many regions checked DNS, 0 when the server does not say. */
+  regionCount: number
 }) {
   const t = useT()
   const label = 'text-[12px] text-muted-foreground'
@@ -734,6 +905,11 @@ function DnsCheckMeta({
         <dd className={value}>
           <DateTooltip date={checkedAt} live />
         </dd>
+        {regionCount > 1 && (
+          <dd className="mt-0.5 text-[12px] text-muted-foreground">
+            {t('Checked from {n} regions').replace('{n}', String(regionCount))}
+          </dd>
+        )}
       </div>
     </dl>
   )
@@ -925,7 +1101,7 @@ export function VerifyDomainContent({
   } = useConsoleVariables(region)
   // The records the last DNS check saved. Older servers and rules nobody
   // checked have none, and the screen shows only the records to add.
-  const records = rule.records
+  const records: ProxyRuleRecord[] | null | undefined = rule.records
   const checks = records?.length ? records : null
   // A subdomain points with its CNAME, so an A or AAAA record found where the
   // CNAME is missing answers in its place: a provider's URL redirect or parking
@@ -933,13 +1109,17 @@ export function VerifyDomainContent({
   const conflict =
     getRecordName(rule.domain) !== '@' &&
     checks?.some(
-      (check) => check.type === 'CNAME' && check.status === 'missing',
+      (check) =>
+        check.type === 'CNAME' &&
+        check.status === 'missing' &&
+        getLaggingRegions(check).length === 0,
     )
       ? checks.find(
           (check) =>
             (check.type === 'A' || check.type === 'AAAA') &&
             check.status === 'mismatch' &&
-            check.current.length > 0,
+            check.current.length > 0 &&
+            getLaggingRegions(check).length === 0,
         )
       : undefined
 
@@ -1001,9 +1181,15 @@ export function VerifyDomainContent({
   )?.expected
 
   // Once one record points the domain at Appwrite, the others are not needed.
-  const verifiedType = checks?.find(
-    (check) => check.type in POINTING_METHODS && check.status === 'verified',
-  )?.type
+  // A record some regions already see counts too: it is only propagating.
+  const verifiedType =
+    checks?.find(
+      (check) => check.type in POINTING_METHODS && check.status === 'verified',
+    )?.type ??
+    checks?.find(
+      (check) =>
+        check.type in POINTING_METHODS && getLaggingRegions(check).length > 0,
+    )?.type
 
   const getRecord = (type: string, value: string): DnsRecord => {
     const check = findCheck(type, value)
@@ -1013,8 +1199,14 @@ export function VerifyDomainContent({
       value,
       ttl: 3600,
       check,
+      // The propagating record is the one that points the domain, so it is
+      // never an unused alternative of itself.
       notNeeded:
-        check && check.status !== 'verified' ? verifiedType : undefined,
+        check &&
+        check.status !== 'verified' &&
+        !(check.type === verifiedType && getLaggingRegions(check).length > 0)
+          ? verifiedType
+          : undefined,
     }
   }
 
@@ -1196,7 +1388,14 @@ export function VerifyDomainContent({
 
   const checkedRecords = checks ? (
     <div className="space-y-6">
-      <DnsCheckMeta rule={rule} checkedAt={checkedAt} />
+      <DnsCheckMeta
+        rule={rule}
+        checkedAt={checkedAt}
+        regionCount={Math.max(
+          0,
+          ...checks.map((check) => check.regions?.length ?? 0),
+        )}
+      />
       {/* Only the banners are live: the times above tick. */}
       <div role="status" aria-live="polite" className="space-y-3">
         {banners.map((banner) => (

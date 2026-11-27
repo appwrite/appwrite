@@ -97,6 +97,9 @@ export const jaSitesDictionary: Record<string, string> = {
   'Certificate generation failed': '証明書の発行に失敗しました',
   'A DNS record has the wrong value or name. Open Records to see which one and what to change it to.':
     'DNS レコードの値または名前が正しくありません。「レコード」を開いて、どのレコードを何に変更するかを確認してください。',
+  Propagating: '反映中',
+  "Some regions don't see your new record yet. Appwrite keeps checking, and you don't need to change anything.":
+    '一部のリージョンではまだ新しいレコードが見えていません。Appwrite が確認を続けるため、変更は不要です。',
   'Waiting for DNS': 'DNS を待機中',
   'Appwrite checks the DNS records every few minutes for 3 days after the domain is added. Use Check now to look again right away.':
     'Appwrite はドメインの追加後 3 日間、数分ごとに DNS レコードを確認します。すぐに確認するには「今すぐ確認」を使用してください。',
@@ -638,6 +641,21 @@ export const jaSitesDictionary: Record<string, string> = {
     '次に Appwrite が SSL 証明書を発行します。',
   'Not detected yet': 'まだ検出されていません',
   'Not detected': '検出されません',
+  '{n} of {total} regions see your record':
+    '{total} リージョン中 {n} リージョンでレコードを確認できます',
+  'Sees your record': 'レコードを確認済み',
+  'Not there yet': 'まだ反映されていません',
+  'Lookup failed': '確認に失敗しました',
+  'lookup failed': '確認に失敗しました',
+  'sees it': '確認済み',
+  'not visible yet': 'まだ見えていません',
+  'still sees {value}': 'まだ {value} が見えています',
+  'DNS is still propagating': 'DNS はまだ反映中です',
+  '{n} of {total} regions see your new record.':
+    '{total} リージョン中 {n} リージョンで新しいレコードを確認できます。',
+  "This usually finishes within an hour, and Appwrite keeps checking. You don't need to change anything.":
+    '通常は 1 時間以内に完了し、Appwrite が確認を続けます。変更は不要です。',
+  'Checked from {n} regions': '{n} リージョンから確認',
   'Tracked pageviews and events are billed as analytics usage, which adds up quickly on a high-traffic site.':
     '計測されたページビューとイベントはアナリティクスの使用量として課金されます。トラフィックの多いサイトでは料金がすぐに増えます。',
   'If your site sets a Content-Security-Policy, in a header or a <meta> tag, add these sources. Otherwise the browser blocks the tracker and no data is recorded.':
