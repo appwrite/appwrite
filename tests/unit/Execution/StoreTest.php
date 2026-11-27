@@ -482,13 +482,16 @@ final class StoreTest extends TestCase
             new Document(['$id' => 'done', 'resourceType' => 'functions', 'status' => 'completed']),
         ]);
 
-        $this->assertCount(3, $client->requests);
+        $this->assertCount(4, $client->requests);
         $modes = \array_map(function ($request) {
             \parse_str($request->getUri()->getQuery(), $parameters);
             return $parameters['async_insert'] ?? null;
         }, $client->requests);
-        // A batch with any later snapshot keeps the buffer.
-        $this->assertSame(['0', '0', '1'], $modes);
+        // A mixed batch writes its first snapshots unbuffered and the rest buffered.
+        $this->assertSame(['0', '0', '0', '1'], $modes);
+        $this->assertStringContainsString('"queued"', (string) $client->requests[2]->getBody());
+        $this->assertStringNotContainsString('"done"', (string) $client->requests[2]->getBody());
+        $this->assertStringContainsString('"done"', (string) $client->requests[3]->getBody());
     }
 
     public function testWriteFailuresPropagate(): void
