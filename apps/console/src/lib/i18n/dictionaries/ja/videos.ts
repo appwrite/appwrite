@@ -739,7 +739,10 @@ export const jaVideosDictionary: Record<string, string> = {
   Fair: '普通',
   Poor: '悪い',
   Startup: '起動',
-  'Time until the first frame': '最初のフレームまでの時間',
+  'Time from the manifest to the first frame':
+    'マニフェストから最初のフレームまでの時間',
+  'Manifest (not counted)': 'マニフェスト（計測外）',
+  'Metadata (not counted)': 'メタデータ（計測外）',
   Smoothness: 'スムーズさ',
   'Stalls and time spent rebuffering': '停止回数とリバッファリング時間',
   'Picture quality': '画質',

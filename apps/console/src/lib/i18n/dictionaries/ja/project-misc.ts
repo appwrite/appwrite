@@ -94,6 +94,63 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Manage sites': 'サイトの管理',
   'Run a production deploy': '本番デプロイを実行',
   'View site': 'サイトを表示',
+  // Onboarding: Init 5 products (Videos, Analytics, Monitors, Code review)
+  'Upload video once and stream it everywhere, with adaptive renditions and captions.':
+    '動画を一度アップロードするだけで、アダプティブなレンディションと字幕付きでどこにでも配信できます。',
+  'Upload a video':
+    '動画をアップロード',
+  'Add a video file; Appwrite transcodes it into streaming renditions.':
+    '動画ファイルを追加すると、Appwrite がストリーミング用のレンディションにトランスコードします。',
+  'Upload video':
+    '動画のアップロード',
+  'Manage videos':
+    '動画の管理',
+  'Attach captions in any language so every viewer can follow along.':
+    'どの言語の字幕も追加でき、すべての視聴者が内容を理解できます。',
+  'Open videos':
+    '動画を開く',
+  'Play it in your app':
+    'アプリで再生',
+  'Point your player at the HLS or DASH manifest to start streaming.':
+    'プレーヤーに HLS または DASH のマニフェストを指定して、ストリーミングを開始します。',
+  'Set up playback':
+    '再生を設定',
+  'See who visits your sites and apps, where they come from, and what they do.':
+    'サイトやアプリの訪問者、流入元、行動を把握できます。',
+  'Add a property':
+    'プロパティを追加',
+  'Track a website, mobile app, or AI agent as its own property.':
+    'Web サイト、モバイルアプリ、AI エージェントをそれぞれのプロパティとして計測します。',
+  'Add property':
+    'プロパティの追加',
+  'Manage properties':
+    'プロパティの管理',
+  'Record your first visit':
+    '最初の訪問を記録',
+  'Turn on analytics for a site, or send page views and events from your app.':
+    'サイトでアナリティクスを有効にするか、アプリからページビューとイベントを送信します。',
+  'Start tracking':
+    '計測を開始',
+  'View traffic':
+    'トラフィックを表示',
+  'Watch your endpoints and usage, and get alerted the moment something needs you.':
+    'エンドポイントと使用量を監視し、対応が必要になった瞬間にアラートを受け取れます。',
+  'Create a monitor':
+    'モニターを作成',
+  'Check an endpoint, a domain, or a usage limit on a schedule.':
+    'エンドポイント、ドメイン、使用量の上限をスケジュールに沿ってチェックします。',
+  'Manage monitors':
+    'モニターの管理',
+  'Get an AI review on every pull request, with findings that learn from your team.':
+    'すべてのプルリクエストに AI レビューが付き、指摘はチームから学習します。',
+  'Turn on code review':
+    'コードレビューを有効化',
+  'Add a repository, and its next pull request gets a review.':
+    'リポジトリを追加すると、次のプルリクエストからレビューされます。',
+  'Manage repositories':
+    'リポジトリの管理',
+  'Observe':
+    '監視',
   'Nice - you\\u2019re already moving.': '順調です。すでに進んでいます。',
   'You\\u2019re gaining steam - keep going.':
     '勢いが出てきました。このまま続けましょう。',

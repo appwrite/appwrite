@@ -6,6 +6,7 @@
  */
 
 import { useState, useEffect, useMemo } from 'react'
+import { useActiveEnvironmentId } from '@/lib/active-environment'
 import { useParams, useNavigate } from '@tanstack/react-router'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -26,11 +27,7 @@ import { Loader2, Key, Tag, GitBranch } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import {
-  ID,
-  TemplateReferenceType,
-  type Runtime,
-} from '@appwrite.io/console'
+import { ID, TemplateReferenceType, type Runtime } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
   useFunctionTemplate,
@@ -75,6 +72,7 @@ export function TemplateConfigView({
 }: TemplateConfigViewProps) {
   const t = useT()
   const { projectId } = useParams({ strict: false })
+  const environmentId = useActiveEnvironmentId(projectId)
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { formData, updateFormData, installations, generateDomain } =
@@ -678,58 +676,65 @@ export function TemplateConfigView({
       />
 
       {/* Git connection section – same as site template wizard */}
-      <RadioGroup
-        value={gitConnection}
-        onValueChange={(value) => setGitConnection(value as 'now' | 'later')}
-        className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6"
-      >
-        <Label
-          htmlFor="git-now"
-          className={cn(
-            'relative flex items-start cursor-pointer rounded-xl border p-5 transition-all',
-            gitConnection === 'now'
-              ? 'border-foreground bg-card/80'
-              : 'border-border bg-card/50 hover:border-border/80 hover:bg-card/60',
-          )}
+      {/* Git installations cannot be connected from inside an environment */}
+      {!environmentId && (
+        <RadioGroup
+          value={gitConnection}
+          onValueChange={(value) => setGitConnection(value as 'now' | 'later')}
+          className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6"
         >
-          <RadioGroupItem value="now" id="git-now" className="mt-1 shrink-0" />
-          <div className="ms-3 flex-1">
-            <span className="text-[14px] font-medium text-foreground">
-              {t('Connect your repository')}
-            </span>
-            <p className="mt-1.5 text-[12px] text-muted-foreground leading-relaxed">
-              {t(
-                'Clone this template into a new Git repository or link it to an existing one.',
-              )}
-            </p>
-          </div>
-        </Label>
-        <Label
-          htmlFor="git-later"
-          className={cn(
-            'relative flex items-start cursor-pointer rounded-xl border p-5 transition-all',
-            gitConnection === 'later'
-              ? 'border-foreground bg-card/80'
-              : 'border-border bg-card/50 hover:border-border/80 hover:bg-card/60',
-          )}
-        >
-          <RadioGroupItem
-            value="later"
-            id="git-later"
-            className="mt-1 shrink-0"
-          />
-          <div className="ms-3 flex-1">
-            <span className="text-[14px] font-medium text-foreground">
-              {t('Connect later')}
-            </span>
-            <p className="mt-1.5 text-[12px] text-muted-foreground leading-relaxed">
-              {t(
-                'Deploy now and connect your version control later via CLI or Git integration in your function settings.',
-              )}
-            </p>
-          </div>
-        </Label>
-      </RadioGroup>
+          <Label
+            htmlFor="git-now"
+            className={cn(
+              'relative flex items-start cursor-pointer rounded-xl border p-5 transition-all',
+              gitConnection === 'now'
+                ? 'border-foreground bg-card/80'
+                : 'border-border bg-card/50 hover:border-border/80 hover:bg-card/60',
+            )}
+          >
+            <RadioGroupItem
+              value="now"
+              id="git-now"
+              className="mt-1 shrink-0"
+            />
+            <div className="ms-3 flex-1">
+              <span className="text-[14px] font-medium text-foreground">
+                {t('Connect your repository')}
+              </span>
+              <p className="mt-1.5 text-[12px] text-muted-foreground leading-relaxed">
+                {t(
+                  'Clone this template into a new Git repository or link it to an existing one.',
+                )}
+              </p>
+            </div>
+          </Label>
+          <Label
+            htmlFor="git-later"
+            className={cn(
+              'relative flex items-start cursor-pointer rounded-xl border p-5 transition-all',
+              gitConnection === 'later'
+                ? 'border-foreground bg-card/80'
+                : 'border-border bg-card/50 hover:border-border/80 hover:bg-card/60',
+            )}
+          >
+            <RadioGroupItem
+              value="later"
+              id="git-later"
+              className="mt-1 shrink-0"
+            />
+            <div className="ms-3 flex-1">
+              <span className="text-[14px] font-medium text-foreground">
+                {t('Connect later')}
+              </span>
+              <p className="mt-1.5 text-[12px] text-muted-foreground leading-relaxed">
+                {t(
+                  'Deploy now and connect your version control later via CLI or Git integration in your function settings.',
+                )}
+              </p>
+            </div>
+          </Label>
+        </RadioGroup>
+      )}
 
       {gitConnection === 'now' && (
         <ConnectRepositorySection
@@ -826,8 +831,7 @@ export function TemplateConfigView({
                     setVariables(newVars)
                   }}
                   placeholder={
-                    templateVar?.placeholder ||
-                    `${t('Enter')} ${variable.key}`
+                    templateVar?.placeholder || `${t('Enter')} ${variable.key}`
                   }
                   type={variable.secret ? 'password' : 'text'}
                   className="h-9 text-[13px] font-mono"

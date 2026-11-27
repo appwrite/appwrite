@@ -725,7 +725,10 @@ export const heVideosDictionary: Record<string, string> = {
   Fair: 'סביר',
   Poor: 'חלש',
   Startup: 'זמן פתיחה',
-  'Time until the first frame': 'הזמן עד לפריים הראשון',
+  'Time from the manifest to the first frame':
+    'הזמן מהמניפסט ועד לפריים הראשון',
+  'Manifest (not counted)': 'מניפסט (לא נספר)',
+  'Metadata (not counted)': 'מטא-נתונים (לא נספרים)',
   Smoothness: 'רציפות',
   'Stalls and time spent rebuffering': 'עצירות וזמן המתנה לטעינה',
   'Picture quality': 'איכות תמונה',

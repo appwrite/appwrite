@@ -214,6 +214,41 @@ class Create extends Action
     }
 
     /**
+     * Origin's comment deliveries do not name the pull request's author, so the pull request is
+     * read, and its author compared with the comment's by id. A failed read leaves the comment
+     * unanswered.
+     */
+    protected function isPullRequestAuthor(array $parsedPayload, Document $installation, VcsFactory $vcsFactory): bool
+    {
+        $authorId = \strval($parsedPayload['commentAuthorId'] ?? '');
+        if ($authorId === '') {
+            return false;
+        }
+
+        try {
+            $vcs = $vcsFactory->fromInstallation($installation);
+            if (!$vcs instanceof Origin) {
+                return false;
+            }
+
+            $pullRequest = $vcs->getPullRequest(\strval($parsedPayload['owner'] ?? ''), \strval($parsedPayload['repositoryName'] ?? ''), (int) ($parsedPayload['pullRequestNumber'] ?? 0));
+        } catch (\Throwable $error) {
+            Console::warning('Failed to read the author of pull request ' . ($parsedPayload['pullRequestNumber'] ?? '') . ': ' . $error->getMessage());
+
+            return false;
+        }
+
+        $author = \is_array($pullRequest['author'] ?? null) ? $pullRequest['author'] : [];
+        foreach (['user', 'app', 'serviceAccount'] as $kind) {
+            if (\is_array($author[$kind] ?? null) && \is_scalar($author[$kind]['id'] ?? null)) {
+                return \strval($author[$kind]['id']) === $authorId;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Origin sends no association with a comment, so a human author's permission on the
      * repository is read: admin counts as an owner, write as a collaborator. Reading it needs the
      * repository:members:read scope; an installation approved without it, or a failed read,

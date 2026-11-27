@@ -167,6 +167,7 @@ export const heCatalog: EnCatalog = {
           network: 'רשת',
           analytics: 'אנליטיקה',
           firewall: 'Firewall',
+          reviews: 'סקירת קוד',
           mcp1: 'MCP1',
         },
         learn: {
@@ -388,6 +389,8 @@ export const heCatalog: EnCatalog = {
         startBuilding: 'התחילו לבנות',
         viewDocs: 'צפו בדוקומנטציה',
         viewPricing: 'צפו במחירים',
+        appStore: 'הורידו מ-App Store',
+        googlePlay: 'הורידו מ-Google Play',
       },
       productNames: {
         ...enCatalog.website.products.productNames,
@@ -399,6 +402,7 @@ export const heCatalog: EnCatalog = {
         videos: 'סרטונים',
         sites: 'אתרים',
         analytics: 'אנליטיקה',
+        reviews: 'סקירת קוד',
       },
       explore: {
         ...enCatalog.website.products.explore,
@@ -437,8 +441,11 @@ export const heCatalog: EnCatalog = {
           domainsName: 'Domains',
           domainsTagline: 'חיפוש, רכישה, העברה וניהול דומיינים.',
           analyticsTagline: 'אנליטיקה ללא עוגיות, מובנית ב-Sites וב-Auth שלכם.',
+          monitorsTagline: 'התראות על ספי שימוש ועל נקודות קצה שנכשלות.',
+          beepTagline: 'התראות ושימוש מכל פרויקט, בטלפון שלכם.',
           firewallName: 'חומת אש',
           firewallTagline: 'כללי פרויקט לחסימה, הגבלת קצב והפניית תעבורה.',
+          reviewsTagline: 'סקירת קוד מבוססת AI לכל Pull Request, לצד הפריסות שלכם.',
           advisorName: 'יועץ',
           advisorTagline: 'תובנות אבטחה וביצועים.',
         },

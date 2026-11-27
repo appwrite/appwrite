@@ -101,4 +101,21 @@ return [
     'videos.getDashManifest' => true,
     'videos.getCmafHlsManifest' => true,
     'videos.getCmafDashManifest' => true,
+
+    // Analytics (Cloud). An event also completes the property step in the UI,
+    // since a site with analytics on gets its property without this call.
+    'analytics.createProperty' => true,
+    'analytics.createEvent' => true,
+
+    // Monitors — probe monitors are Cloud, usage monitors are in every edition.
+    // OR them in the UI for a single "created a monitor" milestone.
+    'monitors.createHttpMonitor' => true,
+    'monitors.createDnsMonitor' => true,
+    'monitors.createTcpMonitor' => true,
+    'monitors.createSmtpMonitor' => true,
+    'monitors.createUsageMonitor' => true,
+
+    // Reviews — adding a repository or reviewing every new one turns code review on.
+    'reviews.createRepository' => true,
+    'reviews.updateInstallation' => true,
 ];

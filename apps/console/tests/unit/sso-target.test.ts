@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import type { Client } from '@appwrite.io/console'
-import { ssoCallbackURL, TeamSSO } from '@/lib/appwrite/team-sso'
+import { ssoCallbackURL, ssoRedirectURL } from '@/lib/appwrite/team-sso'
 import {
   getSSODomainRecord,
   ssoQueryKey,
@@ -30,7 +30,7 @@ describe('the single sign-on redirect URL', () => {
     expect(ssoCallbackURL(ENDPOINT, 'console')).toBe(
       `${ENDPOINT}/account/sessions/sso/callback`,
     )
-    expect(new TeamSSO(clientFor('console')).redirectURL()).toBe(
+    expect(ssoRedirectURL(clientFor('console'))).toBe(
       `${ENDPOINT}/account/sessions/sso/callback`,
     )
   })
@@ -39,7 +39,7 @@ describe('the single sign-on redirect URL', () => {
     expect(ssoCallbackURL(ENDPOINT, 'storefront')).toBe(
       `${ENDPOINT}/account/sessions/sso/callback/storefront`,
     )
-    expect(new TeamSSO(clientFor('storefront')).redirectURL()).toBe(
+    expect(ssoRedirectURL(clientFor('storefront'))).toBe(
       `${ENDPOINT}/account/sessions/sso/callback/storefront`,
     )
   })

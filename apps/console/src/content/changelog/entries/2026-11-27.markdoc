@@ -1,0 +1,19 @@
+---
+layout: changelog
+title: "Run PostgreSQL 19 and upgrade to it online from the Console"
+date: 2026-11-27
+cover: /images/blog/announcing-postgresql-19/cover.avif
+tags: databases, console
+---
+
+Appwrite [managed PostgreSQL databases](/docs/products/databases/postgresql#versions) now support PostgreSQL 19, released by the PostgreSQL project on November 19. New databases run PostgreSQL 19 by default, and PostgreSQL 18 and 17 remain supported.
+
+Existing databases upgrade online from a new **Version** card under **Settings** > **General**, or with `createUpgrade` through the API. The database keeps serving reads and writes while data copies to the new instance. At the cutover, open connections are closed and your application has to reconnect, using the same hostname and credentials. An upgrade can't be reversed, so check the [PostgreSQL 19 behavior changes](/docs/products/databases/postgresql/maintenance#postgresql-19) and your extensions before you start.
+
+{% arrow_link href="/blog/post/announcing-postgresql-19" %}
+Read the announcement
+{% /arrow_link %}
+
+{% arrow_link href="/docs/products/databases/postgresql/maintenance#upgrades" %}
+Upgrade your database
+{% /arrow_link %}
