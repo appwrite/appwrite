@@ -53,6 +53,7 @@ export function View() {
     null,
   )
   const [copiedNewSecret, setCopiedNewSecret] = useState(false)
+  const [copiedClientId, setCopiedClientId] = useState(false)
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null)
 
   if (!app || !orgId) return null
@@ -80,6 +81,8 @@ export function View() {
       </div>
     )
   }
+
+  const deleteTarget = secrets.find((secret) => secret.$id === deleteTargetId)
 
   const handleCreateSecret = async () => {
     try {
@@ -218,7 +221,8 @@ export function View() {
                         </span>
                         <CopyableId
                           id={secret.$id}
-                          copyLabel="Secret ID"
+                          copyLabel={t('Copy ID')}
+                          showCopyOnHover={false}
                           copyToastLabel="Secret ID"
                           variant="inline"
                           size="xs"
@@ -278,7 +282,37 @@ export function View() {
               <div className="flex items-center justify-between gap-2 border-b border-border bg-muted/40 px-3 py-2">
                 <div className="flex min-w-0 items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                   <Terminal className="h-3.5 w-3.5 shrink-0" />
-                  {t('Secret value')}
+                  {t('Client ID')}
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 shrink-0 px-2 text-[12px]"
+                  onClick={async () => {
+                    await copyToClipboard('Client ID', appId!)
+                    setCopiedClientId(true)
+                    setTimeout(() => setCopiedClientId(false), 2000)
+                  }}
+                >
+                  {copiedClientId ? (
+                    <Check className="me-1.5 h-3.5 w-3.5 text-emerald-500" />
+                  ) : (
+                    <Copy className="me-1.5 h-3.5 w-3.5" />
+                  )}
+                  {t('Copy')}
+                </Button>
+              </div>
+              <pre className="overflow-auto p-4 font-mono text-[13px] leading-relaxed text-foreground break-all whitespace-pre-wrap">
+                {appId!}
+              </pre>
+            </div>
+
+            <div className="min-w-0 overflow-hidden rounded-lg border border-border bg-muted/20">
+              <div className="flex items-center justify-between gap-2 border-b border-border bg-muted/40 px-3 py-2">
+                <div className="flex min-w-0 items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  <Terminal className="h-3.5 w-3.5 shrink-0" />
+                  {t('Client secret')}
                 </div>
                 <Button
                   type="button"
@@ -331,10 +365,10 @@ export function View() {
           <div className="px-6 py-4">
             {deleteTargetId && (
               <div className="rounded-lg border border-border bg-muted/30 px-4 py-3">
-                <p className="text-[12px] font-medium uppercase tracking-wider text-muted-foreground">
-                  {t('Secret ID')}
+                <p className="font-mono text-[13px] font-medium text-foreground break-all">
+                  secret_{deleteTarget?.hint}
                 </p>
-                <p className="mt-1 font-mono text-[13px] text-foreground break-all">
+                <p className="mt-1 font-mono text-[12px] text-muted-foreground break-all">
                   {deleteTargetId}
                 </p>
               </div>

@@ -117,9 +117,13 @@ final class UploaderTest extends TestCase
 
             $segments = $this->segments(4);
             $uploader->take($segments[0]);
-            Coroutine::sleep(0.01);
             $uploader->take($segments[1]);
-            Coroutine::sleep(0.01);
+
+            $deadline = \microtime(true) + 5;
+            while (!$uploader->failed() && \microtime(true) < $deadline) {
+                Coroutine::sleep(0.001);
+            }
+            $this->assertTrue($uploader->failed(), 'the second upload never failed');
 
             $thrown = null;
             try {

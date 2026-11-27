@@ -212,7 +212,7 @@ export function ManualUploadView() {
         outputDirectory: outputDirectory || undefined,
         adapter: defaults.adapter || undefined,
         fallbackFile:
-          defaults.adapter === 'static' ? fallbackFile || undefined : undefined,
+          defaults.adapter !== 'ssr' ? fallbackFile || undefined : undefined,
         analytics: features.analytics && analytics,
       })
       createdSiteId = site.$id

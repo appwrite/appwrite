@@ -1,9 +1,6 @@
-includes:
-    - phpstan-baseline.neon
-
 parameters:
     level: max
     paths:
-        - src
-    scanFiles:
-        - tests/phpstan-stubs.php
+        - tests
+    scanDirectories:
+        - stubs

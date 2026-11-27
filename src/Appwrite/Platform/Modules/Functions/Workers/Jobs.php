@@ -851,7 +851,8 @@ class Jobs extends Action
             $adapter = $site->getAttribute('adapter', '');
             $update['adapter'] = $detection->getName();
             if (empty($adapter)) {
-                $update['fallbackFile'] = $detection->getFallbackFile() ?? '';
+                $fallbackFile = (string) $site->getAttribute('fallbackFile', '');
+                $update['fallbackFile'] = $fallbackFile !== '' ? $fallbackFile : ($detection->getFallbackFile() ?? '');
             }
             if ($adapter === 'ssr' && $detection->getName() === 'static') {
                 return [$deployment, 'Adapter mismatch. Detected: ' . $detection->getName() . ' does not match with the set adapter: ' . $adapter];

@@ -6,7 +6,17 @@ import {
 } from '@tanstack/react-query'
 import { Query, type Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
+import {
+  mergeBeepPrefs,
+  readBeepPrefs,
+  type BeepPrefs,
+} from '@/lib/notifications/beep-prefs'
 import { DEFAULT_STALE_TIME, isClientQueryEnabled } from './constants'
+import {
+  changeAccountPrefs,
+  syncConsoleAccountAfterMutation,
+  type ConsoleAccountCache,
+} from './auth'
 
 export const CONSOLE_NOTIFICATIONS_LIMIT = 50
 
@@ -16,7 +26,9 @@ export const consoleNotificationsQueryKey = [
   CONSOLE_NOTIFICATIONS_LIMIT,
 ] as const
 
-export async function fetchConsoleNotifications(limit = CONSOLE_NOTIFICATIONS_LIMIT) {
+export async function fetchConsoleNotifications(
+  limit = CONSOLE_NOTIFICATIONS_LIMIT,
+) {
   const response = await sdk.forConsole.notifications.list({
     queries: [Query.orderDesc('$createdAt'), Query.limit(limit)],
   })
@@ -126,4 +138,105 @@ export function useMarkAllConsoleNotificationsRead() {
       })
     },
   })
+}
+
+const BEEP_PREFS_MUTATION_KEY = ['account', 'prefs', 'beep'] as const
+
+/**
+ * Acknowledges the firing alert a notification is about, as Beep does from a
+ * push. Alerts live in their project, so each call names it; that project's
+ * alert feed refetches with the acknowledgement, and the inbox with the
+ * notification's new status, which the server keeps for every member.
+ */
+export function useAcknowledgeAlert() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      projectId,
+      alertId,
+    }: {
+      projectId: string
+      alertId: string
+    }) =>
+      await sdk
+        .forProject(projectId)
+        .alerts.update({ alertId, acknowledged: true }),
+    onSuccess: (_alert, { projectId }) =>
+      queryClient.invalidateQueries({
+        queryKey: ['alerts', 'project', projectId],
+      }),
+    onSettled: () =>
+      queryClient.invalidateQueries({
+        queryKey: consoleNotificationsQueryKey,
+      }),
+  })
+}
+
+/**
+ * Push settings shared with Beep, read from the account and changed against
+ * the server's latest prefs: Beep may have changed them on a phone, or
+ * another tab may have changed other keys, since this tab loaded the account.
+ * Changes run one at a time, so each one reads what the last one saved.
+ */
+export function useBeepPrefs(account: ConsoleAccountCache | undefined) {
+  const queryClient = useQueryClient()
+  const beep = readBeepPrefs(
+    account?.prefs as Record<string, unknown> | undefined,
+  )
+
+  const mutation = useMutation({
+    mutationKey: BEEP_PREFS_MUTATION_KEY,
+    scope: { id: 'beep-prefs' },
+    mutationFn: async (change: (current: BeepPrefs) => BeepPrefs) => {
+      const updated = await changeAccountPrefs(
+        (latest) => mergeBeepPrefs(latest, change(readBeepPrefs(latest))),
+        'beep-push-settings',
+        { force: true },
+      )
+      if (!updated) {
+        // `changeAccountPrefs` skips writes while impersonating.
+        throw new Error('Push settings were not saved.')
+      }
+      return updated
+    },
+    onMutate: (change) => {
+      queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
+        { queryKey: ['account', 'console'] },
+        (current) =>
+          current
+            ? {
+                ...current,
+                prefs: mergeBeepPrefs(
+                  current.prefs,
+                  change(readBeepPrefs(current.prefs)),
+                ),
+              }
+            : current,
+      )
+    },
+    onSuccess: (updatedAccount) => {
+      // A queued change would be undone on screen until it saves, so the
+      // last change in the queue syncs the account.
+      if (
+        queryClient.isMutating({ mutationKey: BEEP_PREFS_MUTATION_KEY }) > 1
+      ) {
+        return
+      }
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
+    },
+    onError: () => {
+      // Drop the optimistic copy; the account reloads with what was saved.
+      void queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
+    },
+  })
+
+  return {
+    beep,
+    error: mutation.error,
+    change: mutation.mutate,
+    isPending: mutation.isPending,
+  }
 }

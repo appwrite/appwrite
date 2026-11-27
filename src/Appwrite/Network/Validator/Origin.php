@@ -11,14 +11,16 @@ class Origin extends Validator
     protected ?string $scheme = null;
     protected ?string $host = null;
     protected string $origin = '';
+    protected bool $insecure = false;
 
     /**
      * Constructor
      *
      * @param array<string> $allowedHostnames
      * @param array<string> $allowedSchemes
+     * @param bool $requireHttps Refuse plain `http` unless the host is loopback. Set it when the deployment forces HTTPS.
      */
-    public function __construct(protected array $allowedHostnames, protected array $allowedSchemes)
+    public function __construct(protected array $allowedHostnames, protected array $allowedSchemes, protected bool $requireHttps = false)
     {
     }
 
@@ -58,6 +60,7 @@ class Origin extends Validator
         $this->origin = $origin;
         $this->scheme = null;
         $this->host = null;
+        $this->insecure = false;
 
         $this->scheme = $this->parseScheme($origin);
         $this->host = strtolower(parse_url($origin, PHP_URL_HOST) ?? '');
@@ -65,6 +68,13 @@ class Origin extends Validator
         // parse_url() and browser URL parsers split http(s) authority differently
         // when it contains `\`. Require host[:port] so both agree on the host.
         if ($this->isHttpScheme($this->scheme) && !$this->hasNormalizedAuthority($origin)) {
+            return false;
+        }
+
+        // Anyone on the network path can read or forge plain http, so a deployment
+        // that forces HTTPS accepts it only from the device itself
+        if ($this->requireHttps && $this->scheme === Platform::SCHEME_HTTP && !$this->isLoopback($this->host)) {
+            $this->insecure = true;
             return false;
         }
 
@@ -107,6 +117,10 @@ class Origin extends Validator
 
         if (empty($this->host) && empty($this->scheme)) {
             return 'Invalid Origin.';
+        }
+
+        if ($this->insecure) {
+            return 'Invalid Origin. This server only accepts https origins, except for localhost. Use https://' . $this->host . ' instead.';
         }
 
         if (empty($platform)) {
@@ -158,6 +172,12 @@ class Origin extends Validator
         } else {
             return $scheme;
         }
+    }
+
+    protected function isLoopback(?string $host): bool
+    {
+        return $host === Platform::LOOPBACK_HOSTNAME
+            || \in_array($host, Platform::LOOPBACK_ALIASES, true);
     }
 
     private function isHttpScheme(?string $scheme): bool

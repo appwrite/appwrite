@@ -16,7 +16,10 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useInitPresence } from '@/lib/init/init-presence-context'
 import { formatInitPresenceDisplayName } from '@/lib/init/format-init-presence-display-name'
 import { formatInitCappedCount } from '@/lib/init/presence'
-import { parseInitReactingActivity, formatInitPresenceActivityDisplay } from '@/lib/init/reactions'
+import {
+  parseInitReactingActivity,
+  formatInitPresenceActivityDisplay,
+} from '@/lib/init/reactions'
 import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
@@ -31,13 +34,14 @@ import {
 import { useQuery } from '@tanstack/react-query'
 import { ChevronLeft, HelpCircle, LogIn, X } from 'lucide-react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
-import { useMemo, useState, type CSSProperties } from 'react'
+import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { useInitGiveawayRaffleContext } from './init-giveaway-raffle-context'
 import { InitPresenceReactionSpark } from './InitPresenceReactionSpark'
 import { InitPresenceReactions } from './InitPresenceReactions'
 import { InitPresenceStatusControl } from './InitPresenceStatusControl'
 import { InitPresenceThemeBar } from './InitPresenceThemeBar'
 import { OnlineUserReactionBadgeSlot } from './OnlineUserReactionBadge'
+import { Init5Storm } from './init5/Init5Storm'
 
 interface OnlineUsersNavProps {
   event: LaunchEvent
@@ -49,11 +53,30 @@ interface OnlineUsersNavProps {
 
 type AvatarSize = 'sm' | 'md'
 
+/**
+ * Init 5's list carries the hero's light: a storm at the foot of the panel,
+ * a comet down its edge, light-trail rings on everyone online, and a strike
+ * on each row as its person comes online. Earlier weeks keep the plain list.
+ */
+const ELECTRIC_EVENT_IDS = new Set(['init-nov-2026'])
+
+/** Rows that arrive after this long are people joining, not the first load. */
+const JOIN_STRIKE_AFTER_MS = 1500
+
 const PRESENCE_LIST_EASE: [number, number, number, number] = [0.22, 1, 0.36, 1]
 const PRESENCE_LIST_TRANSITION = { duration: 0.22, ease: PRESENCE_LIST_EASE }
-const PRESENCE_ACTIVITY_ENTER_TRANSITION = { duration: 0.22, ease: PRESENCE_LIST_EASE }
-const PRESENCE_ACTIVITY_EXIT_TRANSITION = { duration: 0.14, ease: PRESENCE_LIST_EASE }
-const PRESENCE_RING_PULSE_TRANSITION = { duration: 0.42, ease: PRESENCE_LIST_EASE }
+const PRESENCE_ACTIVITY_ENTER_TRANSITION = {
+  duration: 0.22,
+  ease: PRESENCE_LIST_EASE,
+}
+const PRESENCE_ACTIVITY_EXIT_TRANSITION = {
+  duration: 0.14,
+  ease: PRESENCE_LIST_EASE,
+}
+const PRESENCE_RING_PULSE_TRANSITION = {
+  duration: 0.42,
+  ease: PRESENCE_LIST_EASE,
+}
 
 /** Readable popover-style tooltip for collapsed sidebar rows (not inverted xs pills). */
 const ONLINE_USER_TOOLTIP_CLASS =
@@ -99,7 +122,10 @@ function RaffleWinnerSparkles() {
   if (reduceMotion) return null
 
   return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-md" aria-hidden>
+    <div
+      className="pointer-events-none absolute inset-0 overflow-hidden rounded-md"
+      aria-hidden
+    >
       {sparkAnchors.map((anchor) => (
         <span
           key={anchor.id}
@@ -135,11 +161,12 @@ function OnlineUserTooltipDetails({
         name={name}
         activity={activity}
         reactionPulse={reactionPulse}
-        isSelf={Boolean(
-          selfUserId && userId && (userId === selfUserId),
-        )}
+        isSelf={Boolean(selfUserId && userId && userId === selfUserId)}
       />
-      <OnlineUserActivity activity={activity} className="text-muted-foreground/70" />
+      <OnlineUserActivity
+        activity={activity}
+        className="text-muted-foreground/70"
+      />
     </div>
   )
 }
@@ -166,7 +193,10 @@ function OnlineUserName({
     <p className="flex min-h-[18px] min-w-0 items-center gap-2 text-[13px] font-medium leading-snug text-foreground">
       <span className="min-w-0 flex-1 truncate">{name}</span>
       <span className="inline-flex size-5 shrink-0 items-center justify-center">
-        <OnlineUserReactionBadgeSlot reaction={reaction} animationKey={animationKey} />
+        <OnlineUserReactionBadgeSlot
+          reaction={reaction}
+          animationKey={animationKey}
+        />
       </span>
     </p>
   )
@@ -179,6 +209,8 @@ function PresenceAvatar({
   identityVisible,
   size = 'sm',
   isRaffleWinner = false,
+  electric = false,
+  striking = false,
 }: {
   user: LaunchEventOnlineUser
   displayName: string
@@ -186,13 +218,21 @@ function PresenceAvatar({
   identityVisible: boolean
   size?: AvatarSize
   isRaffleWinner?: boolean
+  /** Init 5: a light-trail ring around the avatar. */
+  electric?: boolean
+  /** The ring flares as the person comes online. */
+  striking?: boolean
 }) {
   const reduceMotion = useReducedMotion()
 
   return (
     <motion.span
       key={isRaffleWinner ? `winner-${user.id}` : user.id}
-      className={PRESENCE_AVATAR_SHELL_CLASS}
+      className={cn(
+        PRESENCE_AVATAR_SHELL_CLASS,
+        electric && 'init5-online-ring',
+        striking && 'init5-online-ring--strike',
+      )}
       initial={false}
       animate={
         reduceMotion || !isRaffleWinner ? undefined : { scale: [1, 1.14, 1] }
@@ -206,7 +246,10 @@ function PresenceAvatar({
         isSelf={isSelf}
         identityVisible={identityVisible}
         size={size}
-        className={cn('rounded-full', isRaffleWinner && RAFFLE_WINNER_AVATAR_CLASS)}
+        className={cn(
+          'rounded-full',
+          isRaffleWinner && RAFFLE_WINNER_AVATAR_CLASS,
+        )}
       />
     </motion.span>
   )
@@ -270,6 +313,8 @@ function OnlineUserRow({
   identityVisible,
   reactionPulse = 0,
   isRaffleWinner = false,
+  electric = false,
+  strikeOnMount = false,
 }: {
   user: LaunchEventOnlineUser
   presence: LaunchEventUserPresence
@@ -280,8 +325,14 @@ function OnlineUserRow({
   identityVisible: boolean
   reactionPulse?: number
   isRaffleWinner?: boolean
+  electric?: boolean
+  /** Init 5: light the row like a strike as it arrives (someone just joined). */
+  strikeOnMount?: boolean
 }) {
   const reduceMotion = useReducedMotion()
+  // Decided once, when the row arrives.
+  const [striking] = useState(strikeOnMount && !reduceMotion)
+  const ringed = electric && presence === 'online'
   const avatarSize: AvatarSize = isMobile ? 'md' : 'sm'
   const selfMapKey = selfPresenceMapKey ?? selfUserId
   const isSelf = Boolean(
@@ -308,6 +359,7 @@ function OnlineUserRow({
       )}
     >
       {isRaffleWinner ? <RaffleWinnerSparkles /> : null}
+      {striking ? <span aria-hidden className="init5-online-strike" /> : null}
       <PresenceAvatar
         user={user}
         displayName={displayName}
@@ -315,6 +367,8 @@ function OnlineUserRow({
         identityVisible={identityVisible}
         size={avatarSize}
         isRaffleWinner={isRaffleWinner}
+        electric={ringed}
+        striking={striking}
       />
       {(!collapsed || isMobile) && (
         <div className="relative z-[1] min-w-0 flex-1 text-start">
@@ -356,12 +410,17 @@ function OnlineUserRow({
               className={cn(
                 'relative flex w-full cursor-default select-none items-center justify-center rounded-md px-0 py-1.5',
                 'transition-colors duration-300',
-                isRaffleWinner ? RAFFLE_WINNER_SURFACE_CLASS : 'hover:bg-accent/50',
+                isRaffleWinner
+                  ? RAFFLE_WINNER_SURFACE_CLASS
+                  : 'hover:bg-accent/50',
                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
               )}
               aria-label={`${displayName}. ${isRaffleWinner ? 'Winner!' : displayActivity}`}
             >
               {isRaffleWinner ? <RaffleWinnerSparkles /> : null}
+              {striking ? (
+                <span aria-hidden className="init5-online-strike" />
+              ) : null}
               <PresenceAvatar
                 user={user}
                 displayName={displayName}
@@ -369,6 +428,8 @@ function OnlineUserRow({
                 identityVisible={identityVisible}
                 size={avatarSize}
                 isRaffleWinner={isRaffleWinner}
+                electric={ringed}
+                striking={striking}
               />
             </button>
           </TooltipTrigger>
@@ -395,7 +456,13 @@ function OnlineUserRow({
   return animatedRow
 }
 
-function UserCategoryCount({ count, capped = false }: { count: number; capped?: boolean }) {
+function UserCategoryCount({
+  count,
+  capped = false,
+}: {
+  count: number
+  capped?: boolean
+}) {
   const reduceMotion = useReducedMotion()
   const label = formatInitCappedCount(count, capped)
 
@@ -469,6 +536,7 @@ function UserCategory({
   hiddenCount = 0,
   totalOnlineCount,
   totalOnlineCountCapped = false,
+  electric = false,
 }: {
   label: string
   users: LaunchEventOnlineUser[]
@@ -484,16 +552,22 @@ function UserCategory({
   hiddenCount?: number
   totalOnlineCount?: number
   totalOnlineCountCapped?: boolean
+  electric?: boolean
 }) {
   const t = useT()
   const reduceMotion = useReducedMotion()
+  // Rows present on the first load arrive quietly; later ones are joins.
+  const [settled, setSettled] = useState(false)
+  useEffect(() => {
+    const timer = setTimeout(() => setSettled(true), JOIN_STRIKE_AFTER_MS)
+    return () => clearTimeout(timer)
+  }, [])
   const sortedUsers = useMemo(
     () => sortUsersWithRaffleWinner(users, raffleWinnerId),
     [raffleWinnerId, users],
   )
   const headerCount = totalOnlineCount ?? users.length + hiddenCount
-  const headerCapped =
-    totalOnlineCount != null ? totalOnlineCountCapped : false
+  const headerCapped = totalOnlineCount != null ? totalOnlineCountCapped : false
 
   return (
     <AnimatePresence initial={false}>
@@ -528,13 +602,20 @@ function UserCategory({
                         <HelpCircle className="size-3" />
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent side="top" sideOffset={4} className="max-w-[220px] text-[12px]">
+                    <TooltipContent
+                      side="top"
+                      sideOffset={4}
+                      className="max-w-[220px] text-[12px]"
+                    >
                       {t(infoTooltip)}
                     </TooltipContent>
                   </Tooltip>
                 ) : null}
               </div>
-              <UserCategoryCounts totalCount={headerCount} capped={headerCapped} />
+              <UserCategoryCounts
+                totalCount={headerCount}
+                capped={headerCapped}
+              />
             </div>
           )}
           <AnimatePresence initial={false} mode="popLayout">
@@ -549,7 +630,11 @@ function UserCategory({
                 selfPresenceMapKey={selfPresenceMapKey}
                 identityVisible={identityVisible}
                 reactionPulse={reactionPulse}
-                isRaffleWinner={Boolean(raffleWinnerId && user.id === raffleWinnerId)}
+                isRaffleWinner={Boolean(
+                  raffleWinnerId && user.id === raffleWinnerId,
+                )}
+                electric={electric}
+                strikeOnMount={electric && settled && presence === 'online'}
               />
             ))}
           </AnimatePresence>
@@ -596,7 +681,9 @@ function OnlineUserRowSkeleton({
       <div className="flex justify-center py-1.5">
         <SkeletonPulse
           className={cn('rounded-full', avatarSize)}
-          style={reduceMotion ? undefined : { animationDelay: `${staggerMs}ms` }}
+          style={
+            reduceMotion ? undefined : { animationDelay: `${staggerMs}ms` }
+          }
         />
       </div>
     ) : (
@@ -607,20 +694,29 @@ function OnlineUserRowSkeleton({
         )}
       >
         <SkeletonPulse
-          className={cn('shrink-0 rounded-full ring-2 ring-background', avatarSize)}
-          style={reduceMotion ? undefined : { animationDelay: `${staggerMs}ms` }}
+          className={cn(
+            'shrink-0 rounded-full ring-2 ring-background',
+            avatarSize,
+          )}
+          style={
+            reduceMotion ? undefined : { animationDelay: `${staggerMs}ms` }
+          }
         />
         <div className="min-w-0 flex-1 space-y-1.5">
           <SkeletonPulse
             className={cn('h-3.5', nameWidth)}
             style={
-              reduceMotion ? undefined : { animationDelay: `${staggerMs + 40}ms` }
+              reduceMotion
+                ? undefined
+                : { animationDelay: `${staggerMs + 40}ms` }
             }
           />
           <SkeletonPulse
             className={cn('h-3', activityWidth)}
             style={
-              reduceMotion ? undefined : { animationDelay: `${staggerMs + 80}ms` }
+              reduceMotion
+                ? undefined
+                : { animationDelay: `${staggerMs + 80}ms` }
             }
           />
         </div>
@@ -667,7 +763,9 @@ function UserCategorySkeleton({
           collapsed={collapsed}
           isMobile={isMobile}
           nameWidth={nameWidths[(rowOffset + index) % nameWidths.length]}
-          activityWidth={activityWidths[(rowOffset + index) % activityWidths.length]}
+          activityWidth={
+            activityWidths[(rowOffset + index) % activityWidths.length]
+          }
           index={rowOffset + index}
         />
       ))}
@@ -683,10 +781,7 @@ function OnlineUsersListSkeletonView({
   isMobile?: boolean
 }) {
   return (
-    <div
-      aria-busy="true"
-      aria-label="Loading online participants"
-    >
+    <div aria-busy="true" aria-label="Loading online participants">
       {collapsed && !isMobile ? (
         <div className="space-y-0.5">
           {Array.from({ length: 5 }, (_, index) => (
@@ -752,6 +847,7 @@ function OnlineUsersNavContent({
   const showSkeleton = showPanel && isLoading
   const showEmpty = showPanel && !isLoading && !hasUsers
   const showList = !showSkeleton && hasUsers
+  const electric = ELECTRIC_EVENT_IDS.has(event.id)
 
   const emptyMessage = isAuthenticated
     ? t('No one else online yet. You are connected.')
@@ -769,7 +865,10 @@ function OnlineUsersNavContent({
             exit={reduceMotion ? undefined : { opacity: 0 }}
             transition={PRESENCE_LIST_TRANSITION}
           >
-            <OnlineUsersListSkeletonView collapsed={collapsed} isMobile={isMobile} />
+            <OnlineUsersListSkeletonView
+              collapsed={collapsed}
+              isMobile={isMobile}
+            />
           </motion.div>
         ) : null}
       </AnimatePresence>
@@ -810,11 +909,13 @@ function OnlineUsersNavContent({
             reactionPulse={reactionPulse}
             raffleWinnerId={raffleWinnerId}
             infoTooltip="This feature is powered by Appwrite Realtime and Appwrite Presences."
+            electric={electric}
           />
           <UserCategory
             label="Recently online"
             users={event.recentlyOnlineUsers}
             presence="recent"
+            electric={electric}
             collapsed={collapsed}
             isMobile={isMobile}
             selfUserId={selfUserId}
@@ -847,12 +948,7 @@ function OnlineUsersLoginCta({
       <div className="flex justify-center py-2">
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button
-              variant="brandCta"
-              size="icon"
-              className="size-9"
-              asChild
-            >
+            <Button variant="brandCta" size="icon" className="size-9" asChild>
               <Link
                 to="/sign-in"
                 search={{ redirect: '/init' }}
@@ -875,12 +971,27 @@ function OnlineUsersLoginCta({
       <p className="text-[12px] leading-snug text-muted-foreground">
         {t('Sign in to join the event')}
       </p>
-      <Button variant="brandCta" size="sm" className="h-8 w-full text-[12px]" asChild>
+      <Button
+        variant="brandCta"
+        size="sm"
+        className="h-8 w-full text-[12px]"
+        asChild
+      >
         <Link to="/sign-in" search={{ redirect: '/init' }}>
           {t('Sign in')}
         </Link>
       </Button>
     </div>
+  )
+}
+
+/** Init 5: fog rising from the foot of the panel and a comet down its edge. */
+function OnlineUsersStorm() {
+  return (
+    <>
+      <Init5Storm edges="bottom" className="opacity-40" />
+      <span aria-hidden className="init5-online-edge" />
+    </>
   )
 }
 
@@ -903,12 +1014,17 @@ export function OnlineUsersNav({
   const [collapsed, setCollapsed] = useState(false)
   const [reactionPulse, setReactionPulse] = useState(0)
   const { data: account } = useQuery(consoleAccountQueryOptions())
-  const { isReady: isPresenceReady, onlineThemeCounts, identityVisible, selfPresenceMapKey } =
-    useInitPresence()
+  const {
+    isReady: isPresenceReady,
+    onlineThemeCounts,
+    identityVisible,
+    selfPresenceMapKey,
+  } = useInitPresence()
   const raffle = useInitGiveawayRaffleContext()
   const isAuthenticated = Boolean(account)
   const isLoadingPresence = showPanel && isAuthenticated && !isPresenceReady
   const selfUserId = account?.$id
+  const electric = ELECTRIC_EVENT_IDS.has(event.id)
 
   if (!showPanel && !hasOnlineUsersNav(event)) return null
 
@@ -923,13 +1039,17 @@ export function OnlineUsersNav({
       >
         <aside
           className={cn(
-            'flex h-full w-full flex-col overflow-hidden border-e border-border bg-background',
+            'relative flex h-full w-full flex-col overflow-hidden border-e border-border bg-background',
             '[transform:translateZ(0)] [backface-visibility:hidden]',
           )}
         >
-          <div className="flex min-h-0 flex-1 flex-col">
+          {electric ? <OnlineUsersStorm /> : null}
+          <div className="relative flex min-h-0 flex-1 flex-col">
             <nav
-              className={cn('min-h-0 flex-1 overflow-y-auto px-3 py-4', ONLINE_USERS_LIST_CLASS)}
+              className={cn(
+                'min-h-0 flex-1 overflow-y-auto px-3 py-4',
+                ONLINE_USERS_LIST_CLASS,
+              )}
               role="navigation"
               aria-label="Online participants"
             >
@@ -966,7 +1086,7 @@ export function OnlineUsersNav({
           </div>
 
           {showPanel ? (
-            <div className="shrink-0 border-t border-border bg-muted/20">
+            <div className="relative shrink-0 border-t border-border bg-muted/20">
               {isAuthenticated ? (
                 <InitPresenceStatusControl collapsed={collapsed} />
               ) : (
@@ -983,7 +1103,9 @@ export function OnlineUsersNav({
             'absolute end-0 top-1/2 z-10 flex h-6 w-6 shrink-0 -translate-y-1/2 cursor-pointer items-center justify-center rounded-md border border-border bg-card text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
             SIDEBAR_EDGE_TOGGLE_OVERFLOW,
           )}
-          aria-label={collapsed ? 'Expand online panel' : 'Collapse online panel'}
+          aria-label={
+            collapsed ? 'Expand online panel' : 'Collapse online panel'
+          }
         >
           <ChevronLeft
             className={cn(
@@ -1006,8 +1128,11 @@ export function OnlineUsersNav({
         aria-label="Online participants"
         inert={!mobileOpen ? true : undefined}
       >
-        <div className="flex h-14 items-center justify-between border-b border-border px-4">
-          <p className="text-[14px] font-semibold text-foreground">Who&apos;s online</p>
+        {electric && mobileOpen ? <OnlineUsersStorm /> : null}
+        <div className="relative flex h-14 items-center justify-between border-b border-border px-4">
+          <p className="text-[14px] font-semibold text-foreground">
+            Who&apos;s online
+          </p>
           <button
             type="button"
             onClick={onMobileClose}
@@ -1018,9 +1143,12 @@ export function OnlineUsersNav({
           </button>
         </div>
 
-        <div className="flex min-h-0 flex-1 flex-col">
+        <div className="relative flex min-h-0 flex-1 flex-col">
           <nav
-            className={cn('min-h-0 flex-1 overflow-y-auto px-4 py-4', ONLINE_USERS_LIST_CLASS)}
+            className={cn(
+              'min-h-0 flex-1 overflow-y-auto px-4 py-4',
+              ONLINE_USERS_LIST_CLASS,
+            )}
             role="navigation"
             aria-label="Mobile online participants"
           >
@@ -1058,7 +1186,7 @@ export function OnlineUsersNav({
         </div>
 
         {showPanel ? (
-          <div className="shrink-0 border-t border-border bg-muted/20 px-4 py-3">
+          <div className="relative shrink-0 border-t border-border bg-muted/20 px-4 py-3">
             {isAuthenticated ? (
               <InitPresenceStatusControl isMobile />
             ) : (

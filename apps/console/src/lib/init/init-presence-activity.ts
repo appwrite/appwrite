@@ -173,22 +173,18 @@ export function buildInitExploringActivity(label: string): string {
   return `Exploring ${label}`
 }
 
-const DAILY_PRIZE_PRESENCE_ACTIVITIES: Record<number, string> = {
-  1: 'Eyeing day 1 swag',
-  2: 'Keyboard envy',
-  3: 'Dark keyboard dreams',
-  4: 'Bottle and tee wishlist',
+/** Each event names its own swag on its giveaways (`presenceActivity`). */
+export function buildInitViewingDailyPrizeActivity(giveaway: {
+  day: number
+  presenceActivity?: string
+}): string {
+  return giveaway.presenceActivity ?? `Eyeing day ${giveaway.day} swag`
 }
 
-export function buildInitViewingDailyPrizeActivity(
-  day: number,
-  _prizeLabel: string,
-): string {
-  return DAILY_PRIZE_PRESENCE_ACTIVITIES[day] ?? `Eyeing day ${day} swag`
-}
-
-export function buildInitViewingGrandPrizeActivity(_title: string): string {
-  return 'Grand prize dreams'
+export function buildInitViewingGrandPrizeActivity(grandPrize: {
+  presenceActivity?: string
+}): string {
+  return grandPrize.presenceActivity ?? 'Grand prize dreams'
 }
 
 export function buildInitRunningGiveawayRaffleActivity(day: number): string {

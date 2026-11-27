@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import type { Models } from '@appwrite.io/console'
 import { useParams } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -28,15 +29,20 @@ import { DeleteAppCard } from './_components/DeleteAppCard'
 import { useT } from '@/lib/i18n/translate'
 
 export function View() {
-  const t = useT()
   const { orgId, appId } = useParams({ strict: false })
   const { app } = useOrganizationApp(appId)
   if (!app || !orgId) return null
 
+  return <GeneralSettings orgId={orgId} app={app} />
+}
+
+function GeneralSettings({ orgId, app }: { orgId: string; app: Models.App }) {
+  const t = useT()
   const mapped = mapAppToMarketplaceApp(app, { organizationId: orgId })
   const { submit, isUpdating } = useOrgAppUpdate(orgId, app)
 
   const handleEnabledToggle = async (enabled: boolean) => {
+    statusSavedRef.current = true
     try {
       await submit(
         { enabled },
@@ -46,6 +52,7 @@ export function View() {
       )
     } catch {
       // toast handled in submit
+      statusSavedRef.current = false
     }
   }
 
@@ -56,7 +63,17 @@ export function View() {
     mapped.category,
   )
 
+  // Toggling status refetches the app; keep unsaved Details edits across it.
+  const statusSavedRef = useRef(false)
+  const syncedAppRef = useRef(app)
+
   useEffect(() => {
+    if (syncedAppRef.current === app) return
+    syncedAppRef.current = app
+    if (statusSavedRef.current) {
+      statusSavedRef.current = false
+      return
+    }
     const nextMapped = mapAppToMarketplaceApp(app, { organizationId: orgId })
     setName(app.name)
     setTagline(app.tagline ?? '')
@@ -72,12 +89,16 @@ export function View() {
 
   const handleUpdate = async () => {
     if (!trimOrEmpty(name)) return
-    await submit({
-      name: trimOrEmpty(name),
-      tagline: trimOrEmpty(tagline),
-      description: trimOrEmpty(description),
-      tags: buildMarketplaceAppTags(category, app.tags ?? []),
-    })
+    try {
+      await submit({
+        name: trimOrEmpty(name),
+        tagline: trimOrEmpty(tagline),
+        description: trimOrEmpty(description),
+        tags: buildMarketplaceAppTags(category, app.tags ?? []),
+      })
+    } catch {
+      // toast handled in submit
+    }
   }
 
   return (

@@ -5,6 +5,7 @@ Deployable applications that live in this repository but are not part of the PHP
 | App                | What it is                                                 | Image          |
 | ------------------ | ---------------------------------------------------------- | -------------- |
 | [console](console) | The Appwrite Console and appwrite.io, Bun + TanStack Start | `appwrite/new` |
+| [utopia/docs](utopia/docs) | API documentation of the Rust Utopia crates, Bun + TanStack Start | local tool |
 
 ## Apps, packages, and app
 

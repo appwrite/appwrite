@@ -24,8 +24,7 @@
         }
     },
     "require": {
-        "php": ">=8.0",
-        "ext-json": "*",
-        "ext-yaml": "*"
+        "php": ">=8.4",
+        "ext-utopia": "*"
     }
 }
