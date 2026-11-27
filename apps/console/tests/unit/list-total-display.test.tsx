@@ -1,7 +1,7 @@
 import { afterAll, afterEach, describe, expect, test } from 'bun:test'
-import { GlobalRegistrator } from '@happy-dom/global-registrator'
+import { registerDom, unregisterDom } from './dom.ts'
 
-GlobalRegistrator.register()
+registerDom()
 const { cleanup, render } = await import('@testing-library/react')
 const { Pagination } = await import(
   '../../src/components/global/shared/Pagination.tsx'
@@ -18,7 +18,7 @@ afterEach(() => cleanup())
 
 // Every DOM test file in this suite shares one process, so the next one can register its own.
 afterAll(async () => {
-  await GlobalRegistrator.unregister()
+  await unregisterDom()
 })
 
 describe('a clamped list total on screen', () => {

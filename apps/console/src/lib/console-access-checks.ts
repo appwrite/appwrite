@@ -177,6 +177,48 @@ export function canWriteReviewRepositories(
   return whenOrgRoles(access, features, access.canWriteReviews)
 }
 
+export function canCreateDistributionApp(
+  access: ConsoleAccess,
+  features: AccessCheckFeatures,
+): boolean {
+  return whenOrgRoles(access, features, access.canWriteDistribution)
+}
+
+export function canWriteDistributionApp(
+  access: ConsoleAccess,
+  features: AccessCheckFeatures,
+): boolean {
+  return whenOrgRoles(access, features, access.canWriteDistribution)
+}
+
+export function canShowDistributionCredentials(
+  access: ConsoleAccess,
+  features: AccessCheckFeatures,
+): boolean {
+  return whenOrgRoles(access, features, access.canSeeDistributionCredentials)
+}
+
+export function canManageDistributionCredentials(
+  access: ConsoleAccess,
+  features: AccessCheckFeatures,
+): boolean {
+  return whenOrgRoles(access, features, access.canWriteDistributionCredentials)
+}
+
+export function canShowDistributionSubmissions(
+  access: ConsoleAccess,
+  features: AccessCheckFeatures,
+): boolean {
+  return whenOrgRoles(access, features, access.canSeeDistributionSubmissions)
+}
+
+export function canManageDistributionSubmissions(
+  access: ConsoleAccess,
+  features: AccessCheckFeatures,
+): boolean {
+  return whenOrgRoles(access, features, access.canWriteDistributionSubmissions)
+}
+
 export function canShowVideoSettings(
   access: ConsoleAccess,
   features: AccessCheckFeatures,
@@ -345,6 +387,8 @@ export function canSeeProjectNavItem(
       return access.canSeeVideos
     case 'reviews':
       return access.canSeeReviews
+    case 'distribution':
+      return access.canSeeDistribution
     case 'usage':
     case 'monitors':
     case 'playground':
@@ -433,18 +477,12 @@ export function canAccessOrgSettingsOAuthOrApiKeys(
 }
 
 /** Organization settings → OAuth apps (cloud profile + owners/developers). */
-export function canShowOrgOAuthAppsSettings(
-  access: ConsoleAccess,
-  _features: AccessCheckFeatures,
-): boolean {
+export function canShowOrgOAuthAppsSettings(access: ConsoleAccess): boolean {
   return isCloudProfile() && canAccessOrgSettingsOAuthOrApiKeys(access)
 }
 
 /** Organization settings → Installed apps (any member can read; owners manage). */
-export function canShowOrgInstalledAppsSettings(
-  _access: ConsoleAccess,
-  _features: AccessCheckFeatures,
-): boolean {
+export function canShowOrgInstalledAppsSettings(): boolean {
   return isCloudProfile()
 }
 
@@ -542,10 +580,8 @@ export function getFirstAllowedOrgSettingsPath(
   if (canAccessOrgSettingsBilling(access)) return `${basePath}/billing`
   if (canAccessOrgSettingsCompliance(access) && features.compliance)
     return `${basePath}/compliance`
-  if (canShowOrgOAuthAppsSettings(access, features))
-    return `${basePath}/oauth-apps`
-  if (canShowOrgInstalledAppsSettings(access, features))
-    return `${basePath}/installations`
+  if (canShowOrgOAuthAppsSettings(access)) return `${basePath}/oauth-apps`
+  if (canShowOrgInstalledAppsSettings()) return `${basePath}/installations`
   if (canShowOrgApiKeysSettings(access, features)) return `${basePath}/partners`
   if (canShowOrgSsoSettings(access, features)) return `${basePath}/sso`
   return basePath

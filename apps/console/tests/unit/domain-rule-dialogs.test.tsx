@@ -1,5 +1,5 @@
 import { afterAll, afterEach, describe, expect, mock, test } from 'bun:test'
-import { GlobalRegistrator } from '@happy-dom/global-registrator'
+import { registerDom, unregisterDom } from './dom.ts'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createElement, type ReactNode } from 'react'
 import { join } from 'node:path'
@@ -7,7 +7,7 @@ import type { Models } from '@appwrite.io/console'
 // Loaded before the DOM exists, so it does not sync its clock with the server
 import '../../src/lib/appwrite/sdk.ts'
 
-GlobalRegistrator.register()
+registerDom()
 const { cleanup, render } = await import('@testing-library/react')
 
 const consoleRoot = join(import.meta.dir, '../..')
@@ -82,7 +82,7 @@ afterEach(() => cleanup())
 afterAll(async () => {
   mock.module(dialogPath, () => realDialog)
   mock.restore()
-  await GlobalRegistrator.unregister()
+  await unregisterDom()
 })
 
 describe('ClaimDomainContent', () => {

@@ -7,7 +7,7 @@ import {
   mock,
   test,
 } from 'bun:test'
-import { GlobalRegistrator } from '@happy-dom/global-registrator'
+import { registerDom, unregisterDom } from './dom.ts'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import * as actualRouter from '@tanstack/react-router'
 import { cleanup, render } from '@testing-library/react'
@@ -191,13 +191,8 @@ function installMocks() {
 
   mock.module('@tanstack/react-router', () => ({
     ...actualRouter,
-    Link: ({
-      children,
-      ...props
-    }: {
-      children?: ReactNode
-      to?: string
-    }) => createElement('a', props, children),
+    Link: ({ children, ...props }: { children?: ReactNode; to?: string }) =>
+      createElement('a', props, children),
     useNavigate: () => () => {},
     useParams: () => ({
       projectId: 'project-1',
@@ -216,14 +211,14 @@ function installMocks() {
 }
 
 beforeAll(async () => {
-  GlobalRegistrator.register()
+  registerDom()
   installMocks()
 })
 
 afterAll(async () => {
   cleanup()
   mock.restore()
-  await GlobalRegistrator.unregister()
+  await unregisterDom()
 })
 
 afterEach(() => {

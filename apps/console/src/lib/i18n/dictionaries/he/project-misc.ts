@@ -713,13 +713,11 @@ export const heProjectMiscDictionary: Record<string, string> = {
   Country: 'מדינה',
 
   // Stores (Distribution)
-  Distribution: 'הפצה',
   'No distribution apps yet': 'אין עדיין אפליקציות הפצה',
   'Create an app to build and submit to Google Play, the App Store, and the Microsoft Store.':
     'צרו אפליקציה כדי לבנות ולהגיש ל-Google Play, ל-App Store ול-Microsoft Store.',
   'Search apps...': 'חיפוש אפליקציות...',
   'Create app': 'יצירת אפליקציה',
-  'Loading apps...': 'טוען אפליקציות...',
   App: 'אפליקציה',
   Platforms: 'פלטפורמות',
   Identifier: 'מזהה',
@@ -731,45 +729,19 @@ export const heProjectMiscDictionary: Record<string, string> = {
   Canceled: 'בוטל',
   Queued: 'בתור',
   Processing: 'בעיבוד',
-  'In review': 'בבדיקה',
   Approved: 'אושר',
-  Published: 'פורסם',
-  Rejected: 'נדחה',
-  'Distribution app created': 'אפליקציית ההפצה נוצרה',
-  'Failed to create distribution app': 'יצירת אפליקציית ההפצה נכשלה',
-  'Create distribution app': 'יצירת אפליקציית הפצה',
-  'Pick a framework and platforms to start shipping builds to the app stores.':
-    'בחרו פריימוורק ופלטפורמות כדי להתחיל לשלוח בניות לחנויות האפליקציות.',
-  'My app': 'האפליקציה שלי',
   Framework: 'Framework',
-  'Identifier (optional)': 'מזהה (אופציונלי)',
   'Creating...': 'יוצר...',
   Create: 'יצירה',
   'App not found': 'האפליקציה לא נמצאה',
-  'This distribution app does not exist or has been removed.':
-    'אפליקציית הפצה זו אינה קיימת או שהוסרה.',
-  'Back to Distribution': 'חזרה להפצה',
   Configuration: 'תצורה',
-  'Default track': 'מסלול ברירת מחדל',
-  'Auto submit': 'הגשה אוטומטית',
   Builds: 'בניות',
-  'Loading builds...': 'טוען בניות...',
-  'No builds yet': 'אין עדיין בניות',
-  'Trigger a build to create an artifact for the stores.':
-    'הפעילו בנייה כדי ליצור קובץ עבור החנויות.',
   Platform: 'פלטפורמה',
   Version: 'גרסה',
   Duration: 'משך',
   Created: 'נוצר',
-  Submissions: 'הגשות',
-  'Loading submissions...': 'טוען הגשות...',
-  'No submissions yet': 'אין עדיין הגשות',
-  'Submit a ready build to a store to track its review status here.':
-    'הגישו בנייה מוכנה לחנות כדי לעקוב כאן אחרי סטטוס הבדיקה שלה.',
   Provider: 'ספק',
-  Track: 'מסלול',
   Release: 'שחרור',
-  Submitted: 'הוגש',
 
   // Activity
   Activity: 'פעילות',
@@ -3733,18 +3705,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Bring your data to Appwrite': 'העבירו את הנתונים שלכם ל-Appwrite',
   'Move users, databases, files, and functions from another Appwrite project or a different platform. Your source stays untouched while the import runs.':
     'העבירו משתמשים, מסדי נתונים, קבצים ופונקציות מפרויקט Appwrite אחר או מפלטפורמה אחרת. המקור נשאר ללא שינוי בזמן הייבוא.',
-  'Create the app': 'יצירת האפליקציה',
-  'Pick the framework, from Flutter and React Native to native Android, iOS, or .NET MAUI, and the platforms you ship to.':
-    'בחרו את ה-framework, מ-Flutter ו-React Native ועד Android,‏ iOS או .NET MAUI נייטיב, ואת הפלטפורמות שאליהן אתם מפיצים.',
-  'Build every platform': 'בנייה לכל פלטפורמה',
-  'Each version gets its own build per platform, with status and duration tracked here.':
-    'כל גרסה מקבלת Build משלה לכל פלטפורמה, והסטטוס ומשך הזמן מוצגים כאן.',
-  'Submit to the stores': 'הגשה לחנויות',
-  'Send builds to Google Play, App Store Connect, and the Microsoft Store, or turn on auto submit.':
-    'שלחו Builds ל-Google Play,‏ App Store Connect ו-Microsoft Store, או הפעילו הגשה אוטומטית.',
-  'Ship your apps to every store': 'הפצת האפליקציות שלכם לכל חנות',
-  'Build Android, iOS, and Windows releases from one place and submit them to Google Play, the App Store, and the Microsoft Store.':
-    'בנו גרסאות Android,‏ iOS ו-Windows ממקום אחד והגישו אותן ל-Google Play,‏ App Store ו-Microsoft Store.',
   'Create a link that lets another organization claim this project. Each link can be claimed once.':
     'צרו קישור שמאפשר לארגון אחר לקבל את הפרויקט. ניתן לממש כל קישור פעם אחת.',
   'Failed to load transfer links': 'טעינת קישורי ההעברה נכשלה',

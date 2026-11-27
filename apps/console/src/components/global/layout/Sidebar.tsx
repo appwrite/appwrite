@@ -256,11 +256,10 @@ const getNavItems = (projectId: string, sidebarCopy: SidebarCopy) => {
           path: `/projects/${projectId}/sites`,
         },
         {
-          id: 'stores',
+          id: 'distribution',
           label: sidebarCopy.items.distribution,
           icon: Package,
-          path: `/projects/${projectId}/stores`,
-          comingSoon: true,
+          path: `/projects/${projectId}/distribution`,
         },
       ],
     },
@@ -373,7 +372,9 @@ export function ConsoleSidebar({
   const { isDebugModeOpen } = useDebugMode()
   const { features, isCloud } = useConsoleProfile()
   const { project, projectData } = useProject(projectId)
-  const { reviewsEnabled } = useConsoleVariables(project?.region)
+  const { reviewsEnabled, distributionEnabled } = useConsoleVariables(
+    project?.region,
+  )
   const { access, isLoading: scopesLoading } = useOrganizationScopes(
     project?.teamId,
   )
@@ -429,6 +430,12 @@ export function ConsoleSidebar({
               reviewsEnabled &&
               canSeeProjectNavItem(access, features, item.id)
             )
+          if (item.id === 'distribution')
+            return (
+              features.distribution &&
+              distributionEnabled &&
+              canSeeProjectNavItem(access, features, item.id)
+            )
           if (item.id === 'agents')
             return (
               showProjectAgents && canShowAgentMcpConnectCta(access, features)
@@ -445,6 +452,7 @@ export function ConsoleSidebar({
     sidebarCopy,
     showProjectAgents,
     reviewsEnabled,
+    distributionEnabled,
   ])
 
   const showOverview = canSeeProjects(access, features)

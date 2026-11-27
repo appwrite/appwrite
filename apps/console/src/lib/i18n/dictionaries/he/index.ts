@@ -3,6 +3,7 @@ import { heSitesDictionary } from './sites'
 import { heFunctionsDictionary } from './functions'
 import { heAuthStorageDictionary } from './auth-storage'
 import { heProjectMiscDictionary } from './project-misc'
+import { heDistributionDictionary } from './distribution'
 import { heOrganizationsDictionary } from './organizations'
 import { heAccountGlobalDictionary } from './account-global'
 import { heSharedUiDictionary } from './shared-ui'
@@ -32,6 +33,7 @@ export const heDictionary: Record<string, string> = {
   ...heAccountGlobalDictionary,
   ...heOrganizationsDictionary,
   ...heProjectMiscDictionary,
+  ...heDistributionDictionary,
   ...heAuthStorageDictionary,
   ...heFunctionsDictionary,
   ...heSitesDictionary,

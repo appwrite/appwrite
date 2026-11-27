@@ -7,7 +7,7 @@ import {
   mock,
   test,
 } from 'bun:test'
-import { GlobalRegistrator } from '@happy-dom/global-registrator'
+import { registerDom, unregisterDom } from './dom.ts'
 import { cleanup, render } from '@testing-library/react'
 import { createElement } from 'react'
 import { join } from 'node:path'
@@ -66,14 +66,14 @@ function installMocks() {
 }
 
 beforeAll(() => {
-  GlobalRegistrator.register()
+  registerDom()
   installMocks()
 })
 
 afterAll(async () => {
   cleanup()
   mock.restore()
-  await GlobalRegistrator.unregister()
+  await unregisterDom()
 })
 
 afterEach(() => {

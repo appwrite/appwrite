@@ -142,7 +142,7 @@ const ORG_SETTINGS_TABS: CommandEntry[] = [
     description: 'Third-party OAuth apps with access to this organization',
     icon: Key,
     keywords: ['oauth', 'apps', 'third party', 'integrations'],
-    available: (ctx) => canShowOrgOAuthAppsSettings(ctx.access, ctx.features),
+    available: (ctx) => canShowOrgOAuthAppsSettings(ctx.access),
     to: (ctx) => `/organizations/${ctx.orgId}/settings/oauth-apps`,
   },
   {
@@ -160,8 +160,7 @@ const ORG_SETTINGS_TABS: CommandEntry[] = [
       'marketplace',
       'uninstall',
     ],
-    available: (ctx) =>
-      canShowOrgInstalledAppsSettings(ctx.access, ctx.features),
+    available: () => canShowOrgInstalledAppsSettings(),
     to: (ctx) => `/organizations/${ctx.orgId}/settings/installations`,
   },
   {

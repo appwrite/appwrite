@@ -501,23 +501,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'No distribution apps yet': 'Distribution アプリがまだありません',
   'Search apps...': 'アプリを検索...',
   'Create app': 'アプリの作成',
-  'Loading apps...': 'アプリを読み込み中...',
-  'In review': 'レビュー中',
-  'Distribution app created': 'Distribution アプリを作成しました',
-  'Failed to create distribution app':
-    'Distribution アプリの作成に失敗しました',
-  'Create distribution app': 'Distribution アプリの作成',
-  'My app': 'マイアプリ',
-  'Identifier (optional)': '識別子 (任意)',
   'Creating...': '作成中...',
   'App not found': 'アプリが見つかりません',
-  'Back to Distribution': 'Distribution に戻る',
-  'Default track': 'デフォルトトラック',
-  'Auto submit': '自動送信',
-  'Loading builds...': 'ビルドを読み込み中...',
-  'No builds yet': 'ビルドがまだありません',
-  'Loading submissions...': '送信を読み込み中...',
-  'No submissions yet': '送信がまだありません',
   'IP address': 'IP アドレス',
   'Loading activities': 'アクティビティを読み込み中',
   'Activity log not found or unavailable.':
@@ -2854,14 +2839,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'ルールがリクエストを処理し始めると、ここにファイアウォールログが表示されます',
   'Create an app to build and submit to Google Play, the App Store, and the Microsoft Store.':
     'Google Play、App Store、Microsoft Store 向けにビルドして提出するアプリを作成します。',
-  'Pick a framework and platforms to start shipping builds to the app stores.':
-    'アプリストアへビルドを配信し始めるために、Framework とプラットフォームを選択してください。',
-  'This distribution app does not exist or has been removed.':
-    'この Distribution アプリは存在しないか、削除されています。',
-  'Trigger a build to create an artifact for the stores.':
-    'ストア向けのアーティファクトを作成するためにビルドをトリガーします。',
-  'Submit a ready build to a store to track its review status here.':
-    '準備できたビルドをストアに提出すると、ここでレビュー状況を追跡できます。',
   'Upgrade for longer retention.':
     'より長い保持期間が必要な場合は、アップグレードしてください。',
   'Longer retention is available on Enterprise.':
@@ -3058,7 +3035,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   Path: 'パス',
   Method: 'メソッド',
   Country: '国',
-  Distribution: 'Distribution',
   App: 'アプリ',
   Platforms: 'プラットフォーム',
   Identifier: '識別子',
@@ -3071,8 +3047,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   Queued: 'キュー済み',
   Processing: '処理中',
   Approved: '承認済み',
-  Published: '公開済み',
-  Rejected: '拒否済み',
   Framework: 'Framework',
   Create: '作成',
   Configuration: '設定',
@@ -3081,11 +3055,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   Version: 'バージョン',
   Duration: '所要時間',
   Created: '作成日',
-  Submissions: '提出',
   Provider: 'プロバイダー',
-  Track: 'トラック',
   Release: 'リリース',
-  Submitted: '提出済み',
   Activity: 'アクティビティ',
   Event: 'イベント',
   Actor: '実行者',
@@ -3803,18 +3774,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Bring your data to Appwrite': 'データを Appwrite に移行',
   'Move users, databases, files, and functions from another Appwrite project or a different platform. Your source stays untouched while the import runs.':
     '別の Appwrite プロジェクトや他のプラットフォームから、ユーザー、データベース、ファイル、Functions を移行できます。インポート中も移行元は変更されません。',
-  'Create the app': 'アプリを作成する',
-  'Pick the framework, from Flutter and React Native to native Android, iOS, or .NET MAUI, and the platforms you ship to.':
-    'Flutter や React Native からネイティブの Android、iOS、.NET MAUI までのフレームワークと、配布先のプラットフォームを選びます。',
-  'Build every platform': '全プラットフォームをビルドする',
-  'Each version gets its own build per platform, with status and duration tracked here.':
-    '各バージョンはプラットフォームごとにビルドされ、ステータスと所要時間をここで確認できます。',
-  'Submit to the stores': 'ストアに提出する',
-  'Send builds to Google Play, App Store Connect, and the Microsoft Store, or turn on auto submit.':
-    'ビルドを Google Play、App Store Connect、Microsoft Store に送信するか、自動送信をオンにします。',
-  'Ship your apps to every store': 'アプリをすべてのストアに配信',
-  'Build Android, iOS, and Windows releases from one place and submit them to Google Play, the App Store, and the Microsoft Store.':
-    'Android、iOS、Windows のリリースを 1 か所でビルドし、Google Play、App Store、Microsoft Store に提出できます。',
   'Create a link that lets another organization claim this project. Each link can be claimed once.':
     '別の組織がこのプロジェクトを受け取れるリンクを作成します。各リンクは 1 回だけ使用できます。',
   'Failed to load transfer links': '転送リンクの読み込みに失敗しました',

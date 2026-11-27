@@ -7,6 +7,7 @@
 
 import { Account, Activities, Affiliates, Analytics, Apps, Avatars, Backups, Client, Console, Functions, Growth, ImageFormat, Locale, Logs, Manager, Messaging, Migrations, Oauth2, Project, Project as ProjectApi, Projects, Proxy, Realtime, Storage, Teams, Users, Vcs, Sites, Tokens, TablesDB, DocumentsDB, VectorsDB, Postgresql, Mysql, Mongo, Domains, Organization, Organizations, Presences, Usage, Webhooks, Notifications, Waf, Videos } from '@appwrite.io/console'
 import { Agent } from '@/lib/appwrite/agent'
+import { Distribution } from '@/lib/appwrite/distribution'
 import { Reviews } from '@/lib/appwrite/reviews'
 import { TeamSSO } from '@/lib/appwrite/team-sso'
 import { Zero } from '@/lib/appwrite/zero'
@@ -567,8 +568,10 @@ const createProjectSdkRaw = (clientProject: Client) => ({
   users: new Users(clientProject),
   vcs: new Vcs(clientProject),
   proxy: new Proxy(clientProject),
-  // Hand-written until a Console SDK release carries the reviews service.
+  // Hand-written until a Console SDK release carries the reviews and
+  // distribution services.
   reviews: new Reviews(clientProject),
+  distribution: new Distribution(clientProject),
   migrations: new Migrations(clientProject),
   sites: new Sites(clientProject),
   tablesDB: new TablesDB(clientProject),

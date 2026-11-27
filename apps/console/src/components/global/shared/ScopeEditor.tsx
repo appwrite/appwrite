@@ -1,9 +1,5 @@
 import { useMemo, useState, useRef, useEffect, useLayoutEffect } from 'react'
 import type { fetchConsoleProjectScopes } from '@/lib/react-query/hooks/console-project-scopes'
-
-type ConsoleKeyScopeEntry = NonNullable<
-  NonNullable<Awaited<ReturnType<typeof fetchConsoleProjectScopes>>['scopes']>
->[number]
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -19,6 +15,10 @@ import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
 import { isCloudProfile } from '@/lib/console-profiles'
 import { useQuery } from '@tanstack/react-query'
+import { useParams } from '@tanstack/react-router'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { useConsoleVariables } from '@/lib/react-query/hooks/console-variables'
+import { projectQueryOptions } from '@/lib/react-query/hooks/projects'
 import {
   consoleOrganizationScopesQueryOptions,
   consoleProjectScopesQueryOptions,
@@ -40,6 +40,10 @@ import {
 import { Loader2, MoreHorizontal, Search } from 'lucide-react'
 import { useT } from '@/lib/i18n/translate'
 
+type ConsoleKeyScopeEntry = NonNullable<
+  NonNullable<Awaited<ReturnType<typeof fetchConsoleProjectScopes>>['scopes']>
+>[number]
+
 interface ScopeEditorProps {
   value: string[]
   onChange: (scopes: string[]) => void
@@ -55,7 +59,17 @@ export function ScopeEditor({
 }: ScopeEditorProps) {
   const t = useT()
   const isCloud = isCloudEnvironment()
-  const { data: scopeList, isLoading, isError, error } = useQuery(
+  const { features } = useConsoleProfile()
+  const { projectId } = useParams({ strict: false })
+  const { data: project } = useQuery(projectQueryOptions(projectId))
+  const { distributionEnabled } = useConsoleVariables(project?.region)
+  const distribution = features.distribution && distributionEnabled
+  const {
+    data: scopeList,
+    isLoading,
+    isError,
+    error,
+  } = useQuery(
     catalog === 'organization'
       ? consoleOrganizationScopesQueryOptions()
       : consoleProjectScopesQueryOptions(),
@@ -74,6 +88,7 @@ export function ScopeEditor({
     const base = consoleKeyScopesToEditorRows(scopeList, {
       isCloud,
       oauth2Server: isCloudProfile(),
+      distribution,
       catalog,
     })
     const byId = new Map(base.map((r) => [r.scope, r]))
@@ -113,7 +128,7 @@ export function ScopeEditor({
           !isOAuth2AppsScopeEditorRow(row),
       )
       .sort(compareScopeEditorRowsForDisplay)
-  }, [catalog, scopeList, isCloud, value])
+  }, [catalog, scopeList, isCloud, distribution, value])
 
   const filteredScopes = useMemo(
     () => filterScopeEditorRows(availableScopes, searchQuery),
@@ -190,7 +205,8 @@ export function ScopeEditor({
     const grantable = getCategoryGrantableRows(category)
     const grantableIds = new Set(grantable.map((row) => row.scope))
     const extras = (scopesByCategory[category] || []).filter(
-      (row) => !grantableIds.has(row.scope) && displayScopes.includes(row.scope),
+      (row) =>
+        !grantableIds.has(row.scope) && displayScopes.includes(row.scope),
     )
     return extras.length > 0 ? [...grantable, ...extras] : grantable
   }
@@ -231,7 +247,9 @@ export function ScopeEditor({
     e.stopPropagation()
     isSelectingAllRef.current = true
     isUserInteractionRef.current = true
-    const filteredIds = new Set(filteredScopes.map((scopeDef) => scopeDef.scope))
+    const filteredIds = new Set(
+      filteredScopes.map((scopeDef) => scopeDef.scope),
+    )
     onChange(value.filter((scope) => !filteredIds.has(scope)))
     requestAnimationFrame(() => {
       isSelectingAllRef.current = false
@@ -391,8 +409,12 @@ export function ScopeEditor({
                           {t(category)}
                         </span>
                       </div>
-                      <Badge variant="secondary" className="shrink-0 text-[12px]">
-                        {selectedCount} {selectedCount === 1 ? t('Scope') : t('Scopes')}
+                      <Badge
+                        variant="secondary"
+                        className="shrink-0 text-[12px]"
+                      >
+                        {selectedCount}{' '}
+                        {selectedCount === 1 ? t('Scope') : t('Scopes')}
                       </Badge>
                     </div>
                   </AccordionRowTrigger>
@@ -413,7 +435,10 @@ export function ScopeEditor({
                           <Checkbox
                             checked={isSelected}
                             onCheckedChange={(checked) => {
-                              handleScopeToggle(scopeDef.scope, checked === true)
+                              handleScopeToggle(
+                                scopeDef.scope,
+                                checked === true,
+                              )
                             }}
                             disabled={disabled}
                             className="mt-0.5"
@@ -422,7 +447,10 @@ export function ScopeEditor({
                             <div className="flex flex-wrap items-center gap-2 text-[13px] font-mono text-foreground">
                               <span>{scopeDef.scope}</span>
                               {scopeDef.deprecated ? (
-                                <Badge variant="warning" className="text-[10px] shrink-0">
+                                <Badge
+                                  variant="warning"
+                                  className="text-[10px] shrink-0"
+                                >
                                   {t('Deprecated')}
                                 </Badge>
                               ) : null}

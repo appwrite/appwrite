@@ -73,6 +73,13 @@ export type ConsoleProfileFeatures = {
    */
   reviews: boolean
   /**
+   * Internal only, switched on from the debug menu. Distribution product
+   * (build, sign and submit iOS and Android apps to the stores) via the
+   * `distribution` service. Even when on, it shows only where the server
+   * reports `_APP_DISTRIBUTION_ENABLED`.
+   */
+  distribution: boolean
+  /**
    * Organization settings → Single sign-on (Cloud only, owners). Owners verify
    * domains with a DNS record and connect identity providers, so people on
    * those domains sign in with single sign-on. Also single sign-on for the
@@ -152,6 +159,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   gitInstallationReuse: 'Git installation reuse',
   alertCtas: 'Alert CTAs',
   reviews: 'Review',
+  distribution: 'Distribution',
   sso: 'Single sign-on',
   alerts: 'Alerts',
   multiRegion: 'Multi-region',
@@ -210,6 +218,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       gitInstallationReuse: false,
       alertCtas: false,
       reviews: false,
+      distribution: false,
       sso: true,
       alerts: false,
       multiRegion: true,
@@ -258,6 +267,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       gitInstallationReuse: false,
       alertCtas: false,
       reviews: false,
+      distribution: false,
       sso: false,
       alerts: false,
       multiRegion: false,

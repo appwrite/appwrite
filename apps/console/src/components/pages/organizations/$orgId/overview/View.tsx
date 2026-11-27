@@ -699,7 +699,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
               ]},
           ]
         : []),
-      ...(canShowOrgOAuthAppsSettings(access, features)
+      ...(canShowOrgOAuthAppsSettings(access)
         ? [
             {
               id: 'oauth-apps',
@@ -709,7 +709,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
               keywords: ['oauth', 'sso', 'apps', 'login']},
           ]
         : []),
-      ...(canShowOrgInstalledAppsSettings(access, features)
+      ...(canShowOrgInstalledAppsSettings()
         ? [
             {
               id: 'installations',
@@ -760,9 +760,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
           if (item.id === 'compliance')
             return canAccessOrgSettingsCompliance(access)
           if (item.id === 'oauth-apps')
-            return canShowOrgOAuthAppsSettings(access, features)
+            return canShowOrgOAuthAppsSettings(access)
           if (item.id === 'installations')
-            return canShowOrgInstalledAppsSettings(access, features)
+            return canShowOrgInstalledAppsSettings()
           if (item.id === 'partners')
             return canShowOrgApiKeysSettings(access, features)
           if (item.id === 'sso') return canShowOrgSsoSettings(access, features)
@@ -865,9 +865,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     if (
       (settingsSubTab === 'compliance' && !features.compliance) ||
       (settingsSubTab === 'oauth-apps' &&
-        !canShowOrgOAuthAppsSettings(access, features)) ||
+        !canShowOrgOAuthAppsSettings(access)) ||
       (settingsSubTab === 'installations' &&
-        !canShowOrgInstalledAppsSettings(access, features)) ||
+        !canShowOrgInstalledAppsSettings()) ||
       (settingsSubTab === 'partners' && !features.orgApiKeys) ||
       (settingsSubTab === 'sso' && !showSso) ||
       (settingsSubTab === 'escalations' && !features.alerts)
@@ -887,9 +887,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         (settingsSubTab === 'compliance' &&
           canAccessOrgSettingsCompliance(access)) ||
         (settingsSubTab === 'oauth-apps' &&
-          canShowOrgOAuthAppsSettings(access, features)) ||
+          canShowOrgOAuthAppsSettings(access)) ||
         (settingsSubTab === 'installations' &&
-          canShowOrgInstalledAppsSettings(access, features)) ||
+          canShowOrgInstalledAppsSettings()) ||
         (settingsSubTab === 'partners' &&
           canShowOrgApiKeysSettings(access, features)) ||
         (settingsSubTab === 'sso' && showSso) ||

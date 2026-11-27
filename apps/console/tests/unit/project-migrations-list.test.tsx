@@ -1,5 +1,5 @@
 import { afterAll, afterEach, describe, expect, test } from 'bun:test'
-import { GlobalRegistrator } from '@happy-dom/global-registrator'
+import { registerDom, unregisterDom } from './dom.ts'
 import { createElement, type ReactNode } from 'react'
 import { QueryClientProvider } from '@tanstack/react-query'
 
@@ -7,8 +7,10 @@ import { QueryClientProvider } from '@tanstack/react-query'
 // the way it reads the network's
 const NativeResponse = globalThis.Response
 
-GlobalRegistrator.register({ url: 'http://localhost/' })
-const { act, cleanup, renderHook } = await import('@testing-library/react')
+registerDom({ url: 'http://localhost/' })
+const { act, cleanup, renderHook, waitFor } = await import(
+  '@testing-library/react'
+)
 const { getContext } = await import(
   '@/integrations/tanstack-query/root-provider'
 )
@@ -62,28 +64,8 @@ describe('the project migrations list', () => {
 
   afterAll(async () => {
     globalThis.fetch = realFetch
-    await GlobalRegistrator.unregister()
+    await unregisterDom()
   })
-
-  /**
-   * Wait inside act(), so React flushes the hook's updates itself. RTL's waitFor
-   * leaves them to React's scheduler, which earlier DOM tests in a full run leave
-   * without a window to run on.
-   */
-  async function until(check: () => void, timeout = 2000) {
-    const started = Date.now()
-    for (;;) {
-      try {
-        check()
-        return
-      } catch (error) {
-        if (Date.now() - started > timeout) throw error
-      }
-      await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 10))
-      })
-    }
-  }
 
   function render() {
     // The Console's own client, with its defaults: no retries, no refetch on focus
@@ -98,7 +80,7 @@ describe('the project migrations list', () => {
   test('a read that fails after one that succeeded keeps the list, and reports the failure', async () => {
     answers.push(listed())
     const { result } = render()
-    await until(() => expect(result.current.hasData).toBe(true))
+    await waitFor(() => expect(result.current.hasData).toBe(true))
     expect(result.current.migrations.map((m) => m.$id)).toEqual(['mig1'])
 
     answers.push(refused())
@@ -106,7 +88,7 @@ describe('the project migrations list', () => {
       await result.current.refetch()
     })
 
-    await until(() =>
+    await waitFor(() =>
       expect(result.current.error?.message).toBe('Server Error'),
     )
     expect(result.current.hasData).toBe(true)
@@ -117,7 +99,7 @@ describe('the project migrations list', () => {
   test('a first read that fails has no list to show', async () => {
     answers.push(refused())
     const { result } = render()
-    await until(() => expect(result.current.error).toBeTruthy())
+    await waitFor(() => expect(result.current.error).toBeTruthy())
     expect(result.current.hasData).toBe(false)
     expect(result.current.migrations).toEqual([])
   })

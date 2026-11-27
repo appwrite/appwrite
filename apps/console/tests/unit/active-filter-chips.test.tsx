@@ -1,9 +1,9 @@
 import { afterAll, afterEach, describe, expect, test } from 'bun:test'
-import { GlobalRegistrator } from '@happy-dom/global-registrator'
+import { registerDom, unregisterDom } from './dom.ts'
 import { createElement } from 'react'
 import type { CompactFilterKey, FilterColumn } from '@/lib/table-filters'
 
-GlobalRegistrator.register({ url: 'http://localhost/' })
+registerDom({ url: 'http://localhost/' })
 const { cleanup, render } = await import('@testing-library/react')
 const { ActiveFilterChips } = await import(
   '../../src/components/global/shared/ActiveFilterChips.tsx'
@@ -28,7 +28,7 @@ function renderChips(key: CompactFilterKey, fixedTag?: string) {
 }
 
 afterEach(() => cleanup())
-afterAll(() => GlobalRegistrator.unregister())
+afterAll(() => unregisterDom())
 
 describe('ActiveFilterChips', () => {
   test('a fixed tag keeps its own wording and cannot be edited', () => {
