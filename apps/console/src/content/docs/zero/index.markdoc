@@ -1,0 +1,197 @@
+---
+layout: article
+title: Appwrite Zero
+description: Create an Appwrite Cloud project without an account, build with a coding agent, and claim the project to keep it.
+---
+
+Appwrite **Zero** creates an Appwrite Cloud project without an account. A CLI command creates the project and an API key for a coding agent to use.
+
+A Zero project has a 60-minute build window, then pauses. The claim deadline is 24 hours after the first 60 minutes end. At the claim deadline, an unclaimed project and its data are deleted. Claiming moves the project into an Appwrite organization with its ID, data, and API key unchanged.
+
+# How it works {% #how-it-works %}
+
+{% only_dark %}
+![Lifecycle of a Zero project: build, paused, deleted, with claim available until the deadline](/images/docs/zero/dark/lifecycle.avif)
+{% /only_dark %}
+{% only_light %}
+![Lifecycle of a Zero project: build, paused, deleted, with claim available until the deadline](/images/docs/zero/lifecycle.avif)
+{% /only_light %}
+
+1. **Build.** For 60 minutes, the project works like any other Appwrite project. Extend the build window up to three times, by one hour each.
+2. **Paused.** When the build window ends, the project stops serving requests. Its data is kept until the claim deadline, 24 hours after the first 60 minutes end.
+3. **Deleted.** At the claim deadline, an unclaimed project is deleted with all of its data.
+
+Claim the project before the claim deadline to keep it.
+
+# Create a project with AI {% #ai %}
+
+{% only_dark %}
+{% video src="/images/docs/zero/dark/ai-demo.mp4" title="A coding agent creates a Zero project, builds a guestbook, and returns the site link and the claim link" autoplay=true /%}
+{% /only_dark %}
+{% only_light %}
+{% video src="/images/docs/zero/ai-demo.mp4" title="A coding agent creates a Zero project, builds a guestbook, and returns the site link and the claim link" autoplay=true /%}
+{% /only_light %}
+
+Ask a coding agent that runs terminal commands, such as Claude Code, Codex, or Cursor, to build your app on Appwrite Zero.
+
+The agent creates the project, builds the tables, functions, and sites the app needs, and deploys them. It replies with a site link and a claim link. The CLI keeps the project's API key in its session, so the agent's later CLI commands use it.
+
+# Create a project with the CLI {% #start %}
+
+Run the `zero` command of the [Appwrite CLI](/docs/tooling/command-line/installation) in your app's directory. `npx` runs the latest CLI without installing it:
+
+```sh
+npx appwrite-cli@latest zero
+```
+
+The CLI creates the project, links the directory to it in `appwrite.config.json`, and signs the CLI in to it. Every other CLI command, such as `appwrite push`, then works against the new project.
+
+```text
+✓ Success: Your Appwrite Zero project is live → appwrite.config.json
+
+  Project    <PROJECT_ID>
+  Endpoint   https://fra.cloud.appwrite.io/v1
+
+  You have 59m to build. Claim it within 1d 59m to keep it:
+    https://appwrite.io/transfer?transferId=<TRANSFER_ID>&secret=<SECRET>
+```
+
+Add `--json` to print the project details as JSON for an agent to read. The output includes the claim link and the access token for private previews, but not the API key.
+
+The other `zero` commands, such as `appwrite zero status`, need an installed CLI 28.15.0 or later. Without one, run them as `npx appwrite-cli@latest zero status`. See all [Zero commands](/docs/tooling/command-line/zero).
+
+The project is created in the region closest to you. To pick one, pass `--region` with `fra`, `nyc`, `sfo`, `sgp`, `syd`, or `tor`.
+
+# Open the project in the Console {% #console %}
+
+{% only_dark %}
+![Console overview of a Zero project with the countdown banner](/images/docs/zero/dark/console-banner.avif)
+{% /only_dark %}
+{% only_light %}
+![Console overview of a Zero project with the countdown banner](/images/docs/zero/console-banner.avif)
+{% /only_light %}
+
+Run `appwrite zero console` in the project's directory to open it in the Console, signed in as the project's temporary owner, the account that holds the project until it's claimed. The sign-in link works once, for a few minutes. Add `--json` to print the link instead of opening a browser, so an agent can pass it on.
+
+The banner at the top counts down the build window. Its **Claim project** button opens the claim link.
+
+# Share sites and functions {% #sites %}
+
+{% only_dark %}
+![Site deployed to a Zero project, with the Powered by Appwrite Zero banner](/images/docs/zero/dark/site-banner.avif)
+{% /only_dark %}
+{% only_light %}
+![Site deployed to a Zero project, with the Powered by Appwrite Zero banner](/images/docs/zero/site-banner.avif)
+{% /only_light %}
+
+Sites and functions in a Zero project are public, so a link can be shared right away. Every page of a site shows a **Powered by Appwrite Zero** banner that counts down the build window, with **Claim** and **Report abuse** buttons. The banner goes away when the project is claimed.
+
+Deployment preview domains stay private. To open one in a browser, use its owner link from `appwrite zero status`. Agents can also send the access token from the `appwrite zero --json` output in the `X-Appwrite-Zero-Token` header.
+
+## Claim from a site {% #claim-from-site %}
+
+{% only_dark %}
+![Claim this app dialog with a prompt to paste into the agent](/images/docs/zero/dark/site-claim.avif)
+{% /only_dark %}
+{% only_light %}
+![Claim this app dialog with a prompt to paste into the agent](/images/docs/zero/site-claim.avif)
+{% /only_light %}
+
+**Claim** on the site's banner opens a dialog with a prompt for the agent that built the app. Only that agent's machine holds the claim link, so the prompt asks it to run `appwrite zero status` and return the link.
+
+# When the build window ends {% #paused %}
+
+{% only_dark %}
+![Build window ended screen with the claim deadline and a Claim project button](/images/docs/zero/dark/build-window-ended.avif)
+{% /only_dark %}
+{% only_light %}
+![Build window ended screen with the claim deadline and a Claim project button](/images/docs/zero/build-window-ended.avif)
+{% /only_light %}
+
+The project pauses. The Console shows **Build window ended** with the time left to claim, and sites show a paused page that still offers the claim.
+
+[Extend the build window](#extend) while extensions remain, or claim the project to keep it. At the claim deadline, the project and its data are deleted. To delete it sooner, run `appwrite zero delete`.
+
+# Extend the build window {% #extend %}
+
+Extend the build window up to three times, by one hour each:
+
+```sh
+appwrite zero extend
+```
+
+Extending a paused project resumes it. The claim deadline doesn't move, so an extension never runs past it.
+
+# Claim the project {% #claim %}
+
+The claim link is a [project transfer](/docs/advanced/billing/project-transfers) link that expires at the claim deadline. Anyone with the claim link can claim the project, so share it only with the person who should own the project.
+
+## Open the claim link {% #open-claim-link %}
+
+{% only_dark %}
+![Claim project page asking to sign in or create an account](/images/docs/zero/dark/claim-sign-in.avif)
+{% /only_dark %}
+{% only_light %}
+![Claim project page asking to sign in or create an account](/images/docs/zero/claim-sign-in.avif)
+{% /only_light %}
+
+Open the claim link from the CLI output or from the agent. Sign in, or create an Appwrite account and verify its email. The Console then returns to the link.
+
+## Choose an organization {% #choose-organization %}
+
+{% only_dark %}
+![Claim project page with the target organization selected](/images/docs/zero/dark/claim-organization.avif)
+{% /only_dark %}
+{% only_light %}
+![Claim project page with the target organization selected](/images/docs/zero/claim-organization.avif)
+{% /only_light %}
+
+1. Under **Target organization**, select the organization that should own the project. On a new account, click **Create a free organization** first.
+2. Click **Claim project**.
+
+The receiving organization's plan applies from the moment of the claim, and the usual [transfer requirements](/docs/advanced/billing/project-transfers#requirements) are checked.
+
+## Keep building {% #keep-building %}
+
+{% only_dark %}
+![Claimed project in its new organization, without the Zero banner](/images/docs/zero/dark/claimed-project.avif)
+{% /only_dark %}
+{% only_light %}
+![Claimed project in its new organization, without the Zero banner](/images/docs/zero/claimed-project.avif)
+{% /only_light %}
+
+The project opens in the organization, without the banner or the countdown. It keeps its ID, region, endpoint, and data, and a paused project resumes.
+
+The project's API key, held by the CLI, keeps working and no longer expires, so the agent's setup doesn't change. The temporary owner is removed, so `appwrite zero console` stops working. Run `appwrite login` to sign the CLI in to your own account, or `appwrite login --switch` if your account is already signed in to the CLI.
+
+# Limits {% #limits %}
+
+{% table %}
+* Limit
+* Value
+---
+* Projects created
+* 5 per IP address per day
+---
+* Build window
+* 60 minutes
+---
+* Extensions
+* 3, one hour each
+---
+* Claim deadline
+* 24 hours after the first 60 minutes end
+---
+* Function executions
+* 500 per hour
+---
+* Deployments
+* 20 per hour
+---
+* Everything else
+* Same as the [Free plan](/docs/advanced/billing/free)
+{% /table %}
+
+Each region holds a limited number of Zero projects at a time. When a region is full, creating a project there fails. Try again later, or pick another region with `--region`.
+
+Until the project is claimed, its temporary owner can't create other projects or organizations, change the plan, or move the project anywhere except through its claim link.

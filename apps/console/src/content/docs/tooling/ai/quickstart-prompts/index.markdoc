@@ -20,6 +20,10 @@ Quick start prompts offer several advantages when building with Appwrite:
 3. Paste the prompt and let the AI guide you through the setup process.
 4. When prompted, provide your Appwrite project details (region and project ID) from the Appwrite Console.
 
+{% feature_gate anyOf="zero" %}
+Without an Appwrite account, ask the assistant to run `npx appwrite-cli@latest zero` to create an [Appwrite Zero](/docs/zero) project without an account. Claim the project to keep it.
+{% /feature_gate %}
+
 {% info title="MCP server" %}
 For the best experience, consider using Appwrite's [MCP server](/docs/tooling/ai/mcp-servers) alongside quick start prompts. The MCP server allows AI assistants to directly interact with your Appwrite project and access up-to-date documentation.
 {% /info %}

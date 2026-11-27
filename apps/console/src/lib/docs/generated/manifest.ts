@@ -4501,6 +4501,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 4
   },
   {
+    "slug": "tooling/command-line/zero",
+    "title": "Zero",
+    "description": "Create and manage Appwrite Zero projects from the CLI without an Appwrite account.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
     "slug": "tooling/terraform",
     "title": "Terraform provider",
     "description": "Manage Appwrite infrastructure as code with the official Terraform provider. Works with Appwrite Cloud and Community Edition.",
@@ -5503,6 +5510,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "layout": "tutorial",
     "readingTimeMinutes": 1,
     "step": 8
+  },
+  {
+    "slug": "zero",
+    "title": "Appwrite Zero",
+    "description": "Create an Appwrite Cloud project without an account, build with a coding agent, and claim the project to keep it.",
+    "layout": "article",
+    "readingTimeMinutes": 5
   }
 ] as DocsPageMeta[]
 

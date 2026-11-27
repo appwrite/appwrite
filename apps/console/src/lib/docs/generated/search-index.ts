@@ -6979,6 +6979,16 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "tooling/command-line/zero",
+    "title": "Zero",
+    "description": "Create and manage Appwrite Zero projects from the CLI without an Appwrite account.",
+    "excerpt": "The command creates an Appwrite Zero project without an account and links the current directory to it. The other commands check the time left, open the Console, extend the build window, list the Zero projects created on this machine, and delete a project. is available in Appwrite CLI version 28.15.0 and later. Update your CLI to the latest version before you start. Create a project Run in your app's directory, or pass a directory name to create a new one:…",
+    "breadcrumbs": [
+      "Tooling",
+      "Zero"
+    ]
+  },
+  {
     "slug": "tooling/terraform",
     "title": "Terraform provider",
     "description": "Manage Appwrite infrastructure as code with the official Terraform provider. Works with Appwrite Cloud and Community Edition.",
@@ -8329,6 +8339,15 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       "Vue",
       "Steps",
       "Next steps"
+    ]
+  },
+  {
+    "slug": "zero",
+    "title": "Appwrite Zero",
+    "description": "Create an Appwrite Cloud project without an account, build with a coding agent, and claim the project to keep it.",
+    "excerpt": "Appwrite **Zero** creates an Appwrite Cloud project without an account. A CLI command creates the project and an API key for a coding agent to use. A Zero project has a 60-minute build window, then pauses. The claim deadline is 24 hours after the first 60 minutes end. At the claim deadline, an unclaimed project and its data are deleted. Claiming moves the project into an Appwrite organization with its ID, data, and API key unchanged. How it works 1.…",
+    "breadcrumbs": [
+      "Appwrite Zero"
     ]
   }
 ] as DocsSearchEntry[]

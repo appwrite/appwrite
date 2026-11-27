@@ -1,0 +1,129 @@
+---
+layout: post
+title: "Introducing Appwrite Zero"
+description: Appwrite Zero creates a real Appwrite Cloud project for a developer or coding agent upfront, skipping signup and card entry. Projects run for an hour, and claiming one keeps everything already built inside.
+date: 2026-12-01
+cover: /images/blog/introducing-appwrite-zero/cover.avif
+timeToRead: 6
+author: chirag-aggarwal
+category: announcements, ai
+featured: false
+draft: true
+callToAction: true
+faqs:
+  - question: "What does Appwrite Zero do?"
+    answer: "Appwrite Zero creates a live Appwrite Cloud project without requiring an account first. Running `npx appwrite-cli@latest zero` provisions the project alongside an API key, letting a person or a coding agent start building immediately. The backend stays active for 60 minutes and can be claimed into an Appwrite organization to keep it."
+  - question: "Does starting a Zero project require an Appwrite account?"
+    answer: "No. Zero projects start directly from the CLI, so creating and building on one never asks for an account, an email verification step, or a card. An Appwrite account only comes in when claiming the project to keep it."
+  - question: "How much does Appwrite Zero cost?"
+    answer: "Appwrite Zero is free. Unclaimed projects run on a dedicated Zero plan with hourly caps without collecting a card. Once claimed, a project moves onto the receiving organization's plan, which can be the Free plan."
+  - question: "What happens once the build window runs out?"
+    answer: "The project pauses and stops handling requests while keeping all stored data intact. Running `appwrite zero extend` adds another hour to the build window, up to three times. Projects remain claimable for 24 hours after the initial 60 minutes end. Any project left unclaimed past that deadline is deleted along with its data."
+  - question: "What stays intact after claiming a Zero project?"
+    answer: "Everything in the project stays intact. Its ID, region, endpoint, stored data, deployments, and API key all carry over into the target organization owned by the claiming account. The API key stops expiring, and deployed sites remove the Powered by Appwrite Zero banner."
+  - question: "Which coding agents are compatible with Appwrite Zero?"
+    answer: "Any coding agent with terminal access works, including Claude Code, Codex, and Cursor. The agent runs `npx appwrite-cli@latest zero`, builds on the project through the Appwrite CLI, and hands back both the site link and the claim link."
+  - question: "What limits apply to unclaimed Zero projects?"
+    answer: "A single network can create five Zero projects per day. While unclaimed, each project is capped at 500 function executions and 20 deployments per hour, with all other quotas matching the Free plan. Because every region holds a finite pool of unclaimed projects at once, creation requests may prompt a retry later."
+---
+
+Today we are launching Appwrite Zero, a real Appwrite Cloud project that people and coding agents can spin up before making an account. One command brings up a working backend for an hour while bypassing signup forms, email verification, and card entry. Once the build is ready to keep, claiming the project preserves everything already built inside it.
+
+Coding agents increasingly write the application, configure the backend, deploy the app, and come back with a link. Appwrite Zero lets an agent run all of those steps on Appwrite before anyone signs up, leaving account creation for the end once someone decides to keep the result.
+
+# Why signup moved to the end
+
+Coding agents can carry an idea straight through to a deployed application by writing code, running terminal commands, and shipping builds. Provisioning the backend was the point where that loop broke. Creating an Appwrite account requires filling out a signup form and verifying an email address, two steps an agent cannot complete independently. Work had to pause for a manual handoff: register an account, create a project, generate an API key, and paste that key back into the chat. Each manual step adds another point where a good idea gets abandoned.
+
+Asking for an account commitment before anything runs slows a person down and blocks a coding agent. Putting the build phase first pushes sign-in to the point where a working app is worth keeping.
+
+# Real Appwrite Cloud projects from the start
+
+{% only_dark %}
+![Appwrite Console view of a Zero project displaying the countdown banner](/images/docs/zero/dark/console-banner.avif)
+{% /only_dark %}
+{% only_light %}
+![Appwrite Console view of a Zero project displaying the countdown banner](/images/docs/zero/console-banner.avif)
+{% /only_light %}
+
+Every Zero project runs as a standard Appwrite Cloud project on a plan with hourly caps. It behaves like any other Appwrite project from the first request and opens directly in the Appwrite Console with a banner counting down the remaining time.
+
+Claiming transfers the existing project in place without copying data or running a migration. Its ID, endpoint, data, deployments, and API key all stay intact, so code written by the agent continues running untouched.
+
+# How coding agents build on Zero
+
+{% only_dark %}
+{% video src="/images/docs/zero/dark/ai-demo.mp4" title="A coding agent creates a Zero project, builds a guestbook, and returns the site link and the claim link" autoplay=true /%}
+{% /only_dark %}
+{% only_light %}
+{% video src="/images/docs/zero/ai-demo.mp4" title="A coding agent creates a Zero project, builds a guestbook, and returns the site link and the claim link" autoplay=true /%}
+{% /only_light %}
+
+Any coding agent with terminal access, including Claude Code, Codex, and Cursor, can build an application on Appwrite Zero starting with one command. That command creates a project in the nearest region, links the current directory, and signs the Appwrite CLI in so every following CLI command targets the new project:
+
+```sh
+npx appwrite-cli@latest zero
+```
+
+From there, the agent creates the tables, functions, and sites the app needs, deploys them, and replies with two links: one opens the deployed app and the other claims the project. The Appwrite CLI [agent skill](/docs/tooling/ai/skills) already guides agents to start with this command whenever no account is available.
+
+# How long a Zero project lasts
+
+{% only_dark %}
+![Diagram of a Zero project lifecycle across build, paused, and deleted states with claiming open until the deadline](/images/docs/zero/dark/lifecycle.avif)
+{% /only_dark %}
+{% only_light %}
+![Diagram of a Zero project lifecycle across build, paused, and deleted states with claiming open until the deadline](/images/docs/zero/lifecycle.avif)
+{% /only_light %}
+
+Each Zero project opens with a 60-minute build window. Running `appwrite zero extend` adds another hour, up to three times. Once that window closes, the project pauses and stops handling requests while preserving all of its data.
+
+Ownership can be claimed at any point from the opening minutes until 24 hours after the first hour finishes. Any project still unclaimed when that deadline passes is deleted along with its data.
+
+# Live links from the first deployment
+
+{% only_dark %}
+![Deployed site hosted on a Zero project showing the Powered by Appwrite Zero banner](/images/docs/zero/dark/site-banner.avif)
+{% /only_dark %}
+{% only_light %}
+![Deployed site hosted on a Zero project showing the Powered by Appwrite Zero banner](/images/docs/zero/site-banner.avif)
+{% /only_light %}
+
+Sites and functions deployed to a Zero project become publicly reachable from the first deployment, so the URL returned by the agent works for anyone who opens it. While the project stays unclaimed, every page on a site displays a **Powered by Appwrite Zero** banner with the remaining time and a **Claim** button.
+
+# Moving a project into an organization
+
+{% only_dark %}
+![Appwrite Console claim screen with a destination organization selected](/images/docs/zero/dark/claim-organization.avif)
+{% /only_dark %}
+{% only_light %}
+![Appwrite Console claim screen with a destination organization selected](/images/docs/zero/claim-organization.avif)
+{% /only_light %}
+
+The claim link opens the Appwrite Console for sign-in or free account creation. Choosing an organization and clicking **Claim project** moves the project into that organization and removes both the countdown and the site banner.
+
+The agent's setup stays intact across the claim. Because the CLI's API key stops expiring, the agent can continue building on the same project immediately.
+
+# Where Zero fits
+
+Dropping the signup barrier changes both who can start on Appwrite and how fast a backend comes online:
+
+- **End-to-end agent runs:** A coding agent can move from an initial prompt to a deployed app backed by Appwrite without pausing mid-run for credentials.
+- **Single-command evaluation:** Anyone testing Appwrite can work inside a live project before deciding whether to open an account.
+- **Shorter guides and starter templates:** A single CLI command can open a tutorial or starter template, replacing a list of Console setup steps.
+- **Shareable prototypes during development:** Early builds get a public URL while work is still underway, letting teammates or clients test them before anyone commits to keeping the project.
+
+When someone decides to keep the build, claiming retains the same project used from the beginning, so nothing needs to be rebuilt.
+
+# Unclaimed project limits
+
+A single network can create up to five Zero projects per day, and each region caps how many unclaimed projects it holds at once. Before a claim, hourly limits sit at 500 function executions and 20 deployments, with all remaining quotas matching the [Free plan](/docs/advanced/billing/free). Once claimed, the receiving organization's plan applies.
+
+# Try Appwrite Zero
+
+Appwrite Zero exists so the first minutes with a backend go straight into building. Point a coding agent at an idea for an hour, and claim the project once the result is worth keeping. We are looking forward to seeing what gets built with it, so share a link or ask anything in the [Appwrite Discord](https://appwrite.io/discord).
+
+- [Appwrite Zero documentation](/docs/zero)
+- [Zero commands in the Appwrite CLI](/docs/tooling/command-line/zero)
+- [Project transfers](/docs/advanced/billing/project-transfers)
+- [Appwrite Zero](/zero)

@@ -123,6 +123,12 @@ Before you can use the CLI, you need to login to your Appwrite account using
 appwrite login
 ```
 
+{% feature_gate anyOf="zero" %}
+{% info title="No account yet?" %}
+Run `appwrite zero` to create an [Appwrite Zero](/docs/tooling/command-line/zero) project without an account. The CLI signs in to the new project. Claim the project to keep it.
+{% /info %}
+{% /feature_gate %}
+
 Add the `--endpoint` flag if you're using a self-hosted instance of Appwrite. This flag requires you to add the URL string you're using for your self-hosted instance after the `--endpoint` flag.
 
 ```sh

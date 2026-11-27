@@ -3,6 +3,21 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "introducing-appwrite-zero",
+    "href": "/blog/post/introducing-appwrite-zero",
+    "title": "Introducing Appwrite Zero",
+    "description": "Appwrite Zero creates a real Appwrite Cloud project for a developer or coding agent upfront, skipping signup and card entry. Projects run for an hour, and claiming one keeps everything already built inside.",
+    "date": "2026-12-01",
+    "lastUpdated": "2026-12-01",
+    "timeToRead": 6,
+    "author": "chirag-aggarwal",
+    "category": "announcements, ai",
+    "featured": false,
+    "draft": true,
+    "cover": "/images/blog/introducing-appwrite-zero/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-automatic-image-format",
     "href": "/blog/post/announcing-automatic-image-format",
     "title": "Announcing automatic image formats based on browser support",
