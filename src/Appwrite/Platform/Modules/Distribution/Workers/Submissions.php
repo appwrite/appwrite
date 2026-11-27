@@ -13,9 +13,12 @@ use Appwrite\Event\Message\DistributionSubmissionAction;
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Publisher\DistributionSubmission as DistributionSubmissionPublisher;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
+use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
+use Appwrite\Usage\Context as UsageContext;
+use Appwrite\Usage\Distribution as DistributionUsage;
 use Appwrite\Utopia\Response\Model\DistributionRelease as ReleaseModel;
 use Appwrite\Utopia\Response\Model\DistributionSubmission as SubmissionModel;
 use Utopia\Database\Database;
@@ -54,6 +57,8 @@ class Submissions extends Action
             ->inject('publisherForFunctions')
             ->inject('queueForRealtime')
             ->inject('locks')
+            ->inject('usage')
+            ->inject('publisherForUsage')
             ->callback($this->action(...));
     }
 
@@ -70,6 +75,8 @@ class Submissions extends Action
         FunctionPublisher $publisherForFunctions,
         Realtime $queueForRealtime,
         callable $locks,
+        UsageContext $usage,
+        UsagePublisher $publisherForUsage,
     ): void {
         if ($project->isEmpty()) {
             return;
@@ -99,13 +106,20 @@ class Submissions extends Action
             $keys[] = DistributionSubmissions::storeLock($connection, (string) $target->getAttribute('identifier', ''));
         }
 
-        $emit = function (Document $before, Document $after) use ($project, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime): void {
+        $emit = function (Document $before, Document $after) use ($project, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $dbForProject, $usage, $publisherForUsage): void {
             if (
                 $before->getAttribute('status') === $after->getAttribute('status')
                 && (float) $before->getAttribute('rollout', 1) === (float) $after->getAttribute('rollout', 1)
                 && $before->getAttribute('errorCode') === $after->getAttribute('errorCode')
             ) {
                 return;
+            }
+
+            if ($this->isActive($before) && !$this->isActive($after)) {
+                $app = $dbForProject->getDocument('distributionApps', (string) $after->getAttribute('appId', ''));
+                if (!$app->isEmpty()) {
+                    DistributionUsage::publishSubmission($usage, $app, $after, $project, $publisherForUsage);
+                }
             }
 
             $this->publish($queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $project, 'distributionApps.[appId].submissions.[submissionId].update', [

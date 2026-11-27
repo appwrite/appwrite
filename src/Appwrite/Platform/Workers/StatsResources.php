@@ -2,9 +2,11 @@
 
 namespace Appwrite\Platform\Workers;
 
+use Appwrite\Distribution\Artifact\Status as ArtifactStatus;
 use Appwrite\Event\Message\StatsResources as StatsResourcesMessage;
 use Appwrite\Platform\Action;
 use Appwrite\Usage\Connection;
+use Appwrite\Usage\Distribution as DistributionUsage;
 use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -142,6 +144,7 @@ class StatsResources extends Action
         array_push($gauges, ...$this->deploymentGauges($project, $dbForProject));
         array_push($gauges, ...$this->photoGauges($project, $dbForProject));
         array_push($gauges, ...$this->videoGauges($project, $dbForProject));
+        array_push($gauges, ...$this->distributionGauges($project, $dbForProject));
 
         return $gauges;
     }
@@ -326,6 +329,52 @@ class StatsResources extends Action
             }
 
             $gauges[] = ['metric' => METRIC_VIDEOS_STORAGE, 'value' => $storage, 'service' => 'videos', 'resourceType' => 'video', 'resourceId' => $video->getId(), 'resourceInternalId' => (string) $video->getSequence()];
+        });
+
+        return $gauges;
+    }
+
+    /**
+     * Distribution resource counts, plus bytes held by `ready` artifacts for
+     * the project and per app.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function distributionGauges(Document $project, Database $dbForProject): array
+    {
+        $gauges = [];
+        foreach ([
+            METRIC_DISTRIBUTION_APPS => 'distributionApps',
+            METRIC_DISTRIBUTION_CONNECTIONS => 'distributionConnections',
+            METRIC_DISTRIBUTION_SIGNING_IDENTITIES => 'distributionSigningIdentities',
+        ] as $metric => $collection) {
+            $value = $this->safeCount($dbForProject, $collection);
+            if ($value !== null) {
+                $gauges[] = ['metric' => $metric, 'value' => $value, 'service' => DistributionUsage::SERVICE, 'resourceType' => 'project', 'resourceId' => $project->getId()];
+            }
+        }
+
+        $ready = [Query::equal('status', [ArtifactStatus::Ready->value])];
+
+        try {
+            $gauges[] = ['metric' => METRIC_DISTRIBUTION_ARTIFACTS_STORAGE, 'value' => (int) $dbForProject->sum('distributionArtifacts', 'size', $ready), 'service' => DistributionUsage::SERVICE, 'resourceType' => 'project', 'resourceId' => $project->getId()];
+        } catch (\Throwable $th) {
+            Console::warning("Failed to measure distribution artifacts for {$project->getId()}: " . $th->getMessage());
+            return $gauges;
+        }
+
+        $this->foreachDocument($dbForProject, 'distributionApps', [], function (Document $app) use ($dbForProject, $ready, &$gauges): void {
+            try {
+                $storage = (int) $dbForProject->sum('distributionArtifacts', 'size', [
+                    Query::equal('appInternalId', [(string) $app->getSequence()]),
+                    ...$ready,
+                ]);
+            } catch (\Throwable $th) {
+                Console::warning("Failed to measure distribution app {$app->getId()}: " . $th->getMessage());
+                return;
+            }
+
+            $gauges[] = ['metric' => METRIC_DISTRIBUTION_ARTIFACTS_STORAGE, 'value' => $storage, 'service' => DistributionUsage::SERVICE, 'resourceType' => DistributionUsage::RESOURCE, 'resourceId' => $app->getId(), 'resourceInternalId' => (string) $app->getSequence()];
         });
 
         return $gauges;

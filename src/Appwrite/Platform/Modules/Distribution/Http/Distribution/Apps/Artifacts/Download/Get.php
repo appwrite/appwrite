@@ -10,6 +10,8 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Usage\Context as UsageContext;
+use Appwrite\Usage\Distribution as DistributionUsage;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\UID;
@@ -64,6 +66,7 @@ class Get extends Action
             ->inject('response')
             ->inject('dbForProject')
             ->inject('deviceForDistribution')
+            ->inject('usage')
             ->callback($this->action(...));
     }
 
@@ -74,6 +77,7 @@ class Get extends Action
         Response $response,
         Database $dbForProject,
         Device $deviceForDistribution,
+        UsageContext $usage,
     ): void {
         $app = $dbForProject->getDocument('distributionApps', $appId);
 
@@ -135,6 +139,8 @@ class Get extends Action
                 ->addHeader('Content-Length', (string) $length)
                 ->setStatusCode(Response::STATUS_CODE_PARTIALCONTENT)
                 ->send($data);
+
+            DistributionUsage::addTransfer($usage, $app, METRIC_DISTRIBUTION_ARTIFACTS_OUTBOUND, $length);
             return;
         }
 
@@ -161,6 +167,8 @@ class Get extends Action
             }
 
             $response->chunk('', true);
+
+            DistributionUsage::addTransfer($usage, $app, METRIC_DISTRIBUTION_ARTIFACTS_OUTBOUND, $size);
         } catch (\Throwable $error) {
             if ($started) {
                 $response->abort();

@@ -16,6 +16,8 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Usage\Context as UsageContext;
+use Appwrite\Usage\Distribution as DistributionUsage;
 use Appwrite\Utopia\Request\Validator\File;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
@@ -84,6 +86,7 @@ class Create extends Action
             ->inject('deviceForLocal')
             ->inject('plan')
             ->inject('locks')
+            ->inject('usage')
             ->callback($this->action(...));
     }
 
@@ -103,6 +106,7 @@ class Create extends Action
         Device $deviceForLocal,
         array $plan,
         callable $locks,
+        UsageContext $usage,
     ): void {
         $app = $dbForProject->getDocument('distributionApps', $appId);
 
@@ -226,7 +230,7 @@ class Create extends Action
         }
 
         try {
-            $locks($lockKey, 600, function () use ($app, $artifactId, $chunk, &$chunks, $dbForProject, $deviceForDistribution, $deviceForLocal, $fileSize, $fileTmpName, &$metadata, $path, $project, $publisherForDistributionBuilds, $queueForEvents, $response, $type): void {
+            $locks($lockKey, 600, function () use ($app, $artifactId, $chunk, &$chunks, $dbForProject, $deviceForDistribution, $deviceForLocal, $fileSize, $fileTmpName, &$metadata, $path, $project, $publisherForDistributionBuilds, $queueForEvents, $response, $type, $usage): void {
                 $artifact = $this->getArtifact($dbForProject, $app, $artifactId);
 
                 if ($artifact->isEmpty()) {
@@ -261,6 +265,8 @@ class Create extends Action
                 if (empty($chunksUploaded)) {
                     throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed moving file');
                 }
+
+                DistributionUsage::addTransfer($usage, $app, METRIC_DISTRIBUTION_ARTIFACTS_INBOUND, $deviceForLocal->getFileSize($fileTmpName));
 
                 $chunksUploaded = \max($uploaded, $chunksUploaded, (int) ($metadata['chunks'] ?? 0));
 
