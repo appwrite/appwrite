@@ -19,7 +19,10 @@ import {
   dedicatedDatabaseByIdQueryOptions,
   useProjectDatabase,
 } from '@/lib/react-query/hooks'
-import { canConfigureDedicatedReplication } from '@/lib/databases/database-compute'
+import {
+  canConfigureDedicatedReplication,
+  hasDedicatedSpecification,
+} from '@/lib/databases/database-compute'
 import {
   isCloudDedicatedDatabasesEnabled,
   isDatabaseRouteKind,
@@ -31,6 +34,7 @@ type DatabaseSettingsPath =
   | '/projects/$projectId/databases/$dbKind/$databaseId/settings'
   | '/projects/$projectId/databases/$dbKind/$databaseId/settings/specification'
   | '/projects/$projectId/databases/$dbKind/$databaseId/settings/replication'
+  | '/projects/$projectId/databases/$dbKind/$databaseId/settings/pitr'
   | '/projects/$projectId/databases/$dbKind/$databaseId/settings/security'
 
 const DATABASE_SETTINGS_TO: Record<
@@ -42,6 +46,7 @@ const DATABASE_SETTINGS_TO: Record<
     '/projects/$projectId/databases/$dbKind/$databaseId/settings/specification',
   replication:
     '/projects/$projectId/databases/$dbKind/$databaseId/settings/replication',
+  pitr: '/projects/$projectId/databases/$dbKind/$databaseId/settings/pitr',
   security:
     '/projects/$projectId/databases/$dbKind/$databaseId/settings/security',
 }
@@ -52,7 +57,9 @@ function useActiveSettingsSection(pathname: string): string {
     const i = parts.indexOf('settings')
     const next = i >= 0 ? parts[i + 1] : undefined
     if (!next) return 'general'
-    if (['specification', 'replication', 'security'].includes(next)) return next
+    if (['specification', 'replication', 'pitr', 'security'].includes(next)) {
+      return next
+    }
     return 'general'
   }, [pathname])
 }
@@ -116,14 +123,21 @@ export function DatabaseSettingsShell() {
   const showSpecification = features.databaseSpecifications
   const showReplicationSection =
     isCloudDedicatedDatabasesEnabled() && showReplication
+  const showPitr =
+    isCloudDedicatedDatabasesEnabled() &&
+    hasDedicatedSpecification(
+      (productDatabase as { specification?: string | null } | null)
+        ?.specification,
+    )
 
   const visibleNav = useMemo(
     () =>
       visibleDatabaseSettingsNav({
         showSpecification,
         showReplication: showReplicationSection,
+        showPitr,
       }),
-    [showSpecification, showReplicationSection],
+    [showSpecification, showReplicationSection, showPitr],
   )
 
   const cardIndex = useMemo(
@@ -131,8 +145,9 @@ export function DatabaseSettingsShell() {
       visibleDatabaseSettingsCards(DATABASE_SETTINGS_CARD_INDEX, {
         showSpecification,
         showReplication: showReplicationSection,
+        showPitr,
       }),
-    [showSpecification, showReplicationSection],
+    [showSpecification, showReplicationSection, showPitr],
   )
 
   const layoutNavItems = useMemo(

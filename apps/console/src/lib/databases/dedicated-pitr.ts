@@ -6,6 +6,21 @@ import {
 } from '@/lib/databases/native-database-engines'
 import { zonedPartsToDate } from '@/lib/timezones/zoned-time'
 
+export const MIN_PITR_RETENTION_DAYS = 1
+
+/** Whole days within [1, max]; null for anything else, including an empty field. */
+export function parsePitrRetentionDays(
+  value: string,
+  max: number | null,
+): number | null {
+  const trimmed = value.trim()
+  if (!/^\d+$/.test(trimmed)) return null
+  const days = Number.parseInt(trimmed, 10)
+  if (days < MIN_PITR_RETENTION_DAYS) return null
+  if (max != null && days > max) return null
+  return days
+}
+
 export function parsePitrInstant(
   value: string | number | null | undefined,
 ): Date | null {

@@ -4,6 +4,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createElement, type ReactNode } from 'react'
 import { join } from 'node:path'
 import * as actualSdk from '@/lib/appwrite/sdk'
+import * as actualConsoleProfile from '../../src/hooks/use-console-profile.ts'
+import * as actualHooks from '../../src/lib/react-query/hooks/index.ts'
 
 GlobalRegistrator.register()
 const { act, cleanup, fireEvent, render, waitFor } = await import(
@@ -76,8 +78,50 @@ mock.module('@/lib/appwrite/sdk', () => ({
   },
 }))
 
+const consoleProfilePath = join(consoleRoot, 'src/hooks/use-console-profile.ts')
+const hooksPath = join(consoleRoot, 'src/lib/react-query/hooks/index.ts')
+const realConsoleProfile = { ...actualConsoleProfile }
+const realHooks = { ...actualHooks }
+mock.module(consoleProfilePath, () => ({
+  ...actualConsoleProfile,
+  useConsoleProfile: () => ({ features: { billing: true } }),
+}))
+mock.module(hooksPath, () => ({
+  ...actualHooks,
+  useProject: () => ({ project: { teamId: 'team1', region: 'fra' } }),
+  useOrganizationPlan: () => ({
+    plan: { dedicatedDatabases: { maxPitrRetentionDays: 35 } },
+  }),
+  useDatabaseSpecifications: () => ({
+    data: {
+      specifications: [
+        {
+          slug: 's-2vcpu-4gb',
+          name: 'Standard Plus',
+          price: 40,
+          storageOverageRate: 0.25,
+          bandwidthOverageRate: 0,
+          replicaRate: 0.5,
+          pitrRate: 0.2,
+          cpu: 2000,
+          memory: 4096,
+          maxConnections: 200,
+          includedStorage: 50,
+          includedBandwidth: 0,
+          enabled: true,
+        },
+      ],
+      pricing: { replicaRate: 0.5, pitrRate: 0.2 },
+    },
+    isSuccess: true,
+  }),
+}))
+
 const { DatabaseNameCard } = await import(
   join(settingsDir, 'DatabaseNameCard.tsx')
+)
+const { DatabasePitrCard } = await import(
+  join(settingsDir, 'DatabasePitrCard.tsx')
 )
 const { TooltipProvider } = await import(
   join(consoleRoot, 'src/components/ui/tooltip.tsx')
@@ -107,6 +151,8 @@ afterEach(() => {
 })
 
 afterAll(async () => {
+  mock.module(hooksPath, () => realHooks)
+  mock.module(consoleProfilePath, () => realConsoleProfile)
   mock.module(inputPath, () => realInput)
   mock.module('@/lib/appwrite/sdk', () => realSdk)
   mock.restore()
@@ -134,5 +180,75 @@ describe('DatabaseNameCard', () => {
       method: 'update',
       params: { databaseId: DATABASE_ID, name: 'Invoices', enabled: false },
     })
+  })
+})
+
+describe('DatabasePitrCard', () => {
+  const dedicated = {
+    ...database,
+    enabled: true,
+    specification: 's-2vcpu-4gb',
+    pitr: false,
+    pitrRetentionDays: 7,
+  }
+
+  function renderCard(overrides: Record<string, unknown> = {}) {
+    return wrap(
+      createElement(DatabasePitrCard, {
+        projectId: PROJECT_ID,
+        databaseId: DATABASE_ID,
+        dbKind: 'vectorsdb',
+        database: { ...dedicated, ...overrides },
+        canWrite: true,
+      }),
+    )
+  }
+
+  test('turning pitr on sends it with the new retention, name and enabled', async () => {
+    const view = renderCard()
+
+    fireEvent.click(view.getByRole('switch'))
+    expect(view.getByText(/\$8\.00/)).toBeTruthy()
+    type('pitr-retention', '14')
+    fireEvent.click(view.getByText('Update'))
+
+    await waitFor(() => expect(calls.length).toBeGreaterThan(0))
+    expect(calls[0]).toEqual({
+      service: 'vectorsDB',
+      method: 'update',
+      params: {
+        databaseId: DATABASE_ID,
+        name: 'Orders',
+        enabled: true,
+        pitr: true,
+        pitrRetentionDays: 14,
+      },
+    })
+  })
+
+  test('turning pitr off leaves the retention alone', async () => {
+    const view = renderCard({ pitr: true })
+
+    fireEvent.click(view.getByRole('switch'))
+    fireEvent.click(view.getByText('Update'))
+
+    await waitFor(() => expect(calls.length).toBeGreaterThan(0))
+    expect(calls[0]?.params).toEqual({
+      databaseId: DATABASE_ID,
+      name: 'Orders',
+      enabled: true,
+      pitr: false,
+    })
+  })
+
+  test('a retention past the plan maximum cannot be saved', () => {
+    const view = renderCard({ pitr: true })
+
+    type('pitr-retention', '36')
+
+    expect(
+      view.getByText('Retention must be between 1 and 35 days.'),
+    ).toBeTruthy()
+    expect(view.getByText('Update').closest('button')?.disabled).toBe(true)
   })
 })

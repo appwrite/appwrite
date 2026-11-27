@@ -41,6 +41,16 @@ export const DATABASE_SETTINGS_CARD_INDEX: SettingsCardIndexEntry[] = [
     keywords: ['primary', 'main', 'leader', 'failover', 'promote', 'promotion'],
   },
   {
+    sectionId: 'pitr',
+    title: 'Point-in-time recovery (PITR)',
+    keywords: ['pitr', 'retention', 'restore', 'recovery', 'point in time'],
+  },
+  {
+    sectionId: 'pitr',
+    title: 'Restore to a point in time',
+    keywords: ['pitr', 'restore', 'recovery', 'point in time', 'timestamp'],
+  },
+  {
     sectionId: 'security',
     title: 'Permissions',
     keywords: ['permissions', 'rls', 'row level', 'access', 'security'],

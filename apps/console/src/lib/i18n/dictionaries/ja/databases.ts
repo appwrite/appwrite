@@ -2238,4 +2238,12 @@ export const jaDatabasesDictionary: Record<string, string> = {
     'インストール済みの拡張機能が対象バージョンに対応しているか確認してください。',
   'You cannot downgrade afterwards.':
     'アップグレード後にダウングレードすることはできません。',
+  'Retention must be between 1 and {max} days.':
+    '保持期間は 1 から {max} 日の範囲で指定してください。',
+  'Retention must be at least 1 day.':
+    '保持期間は 1 日以上で指定してください。',
+  'Point-in-time recovery is available on dedicated databases':
+    'ポイントインタイムリカバリは専用データベースで利用できます',
+  'Upgrade this database to a dedicated specification to restore it to any moment within a retention window.':
+    '保持期間内の任意の時点へ復元するには、このデータベースを専用スペックにアップグレードしてください。',
 }

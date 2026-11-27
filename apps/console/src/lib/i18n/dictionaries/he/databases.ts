@@ -2303,4 +2303,12 @@ export const heDatabasesDictionary: Record<string, string> = {
     'ודאו שההרחבות המותקנות תומכות בגרסת היעד.',
   'You cannot downgrade afterwards.':
     'לא ניתן לחזור לגרסה קודמת אחר כך.',
+  'Retention must be between 1 and {max} days.':
+    'השמירה חייבת להיות בין 1 ל-{max} ימים.',
+  'Retention must be at least 1 day.':
+    'השמירה חייבת להיות לפחות יום אחד.',
+  'Point-in-time recovery is available on dedicated databases':
+    'שחזור לנקודת זמן זמין במסדי נתונים ייעודיים',
+  'Upgrade this database to a dedicated specification to restore it to any moment within a retention window.':
+    'שדרגו את מסד הנתונים למפרט ייעודי כדי לשחזר אותו לכל רגע בתוך חלון השמירה.',
 }
