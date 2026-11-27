@@ -16,6 +16,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Task\Validator\Cron;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
+use Appwrite\Vcs\InstallationRepositories;
 use Appwrite\Vcs\RepositoryWebhooks;
 use Appwrite\Vcs\Validator\Directory;
 use Executor\Executor;
@@ -125,6 +126,7 @@ class Update extends Base
             ->inject('buildTimeout')
             ->inject('dbForPlatform')
             ->inject('vcsFactory')
+            ->inject('installationRepositories')
             ->inject('repositoryWebhooks')
             ->inject('executor')
             ->inject('authorization')
@@ -172,6 +174,7 @@ class Update extends Base
         int $buildTimeout,
         Database $dbForPlatform,
         VcsFactory $vcsFactory,
+        InstallationRepositories $installationRepositories,
         RepositoryWebhooks $repositoryWebhooks,
         Executor $executor,
         Authorization $authorization,
@@ -275,7 +278,7 @@ class Update extends Base
         // Git connect logic
         if (!$isConnected && !empty($providerRepositoryId)) {
             $providerAdapter = $vcsFactory->fromInstallation($installation);
-            [$owner, $repositoryName] = $this->resolveInstallationRepository($providerAdapter, $installation, $providerRepositoryId);
+            [$owner, $repositoryName] = $installationRepositories->resolve($providerAdapter, $installation, $providerRepositoryId);
 
             $teamId = $project->getAttribute('teamId', '');
 
@@ -313,7 +316,7 @@ class Update extends Base
                 && $repository->getAttribute('providerRepositoryId') === $providerRepositoryId
                 && $repository->getAttribute('installationInternalId') !== $installation->getSequence()
             ) {
-                $this->resolveInstallationRepository($vcsFactory->fromInstallation($installation), $installation, $providerRepositoryId);
+                $installationRepositories->resolve($vcsFactory->fromInstallation($installation), $installation, $providerRepositoryId);
 
                 $dbForPlatform->updateDocument('repositories', $repository->getId(), new Document([
                     'installationId' => $installation->getId(),

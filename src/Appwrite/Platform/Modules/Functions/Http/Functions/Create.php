@@ -27,6 +27,7 @@ use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Vcs\Factory as VcsFactory;
+use Appwrite\Vcs\InstallationRepositories;
 use Appwrite\Vcs\RepositoryWebhooks;
 use Appwrite\Vcs\Validator\Directory;
 use Utopia\Abuse\Adapter\TimeLimit;
@@ -146,6 +147,7 @@ class Create extends Base
             ->inject('certificateIssuer')
             ->inject('request')
             ->inject('vcsFactory')
+            ->inject('installationRepositories')
             ->inject('repositoryWebhooks')
             ->inject('authorization')
             ->inject('bus')
@@ -202,6 +204,7 @@ class Create extends Base
         Certificates $certificateIssuer,
         Request $request,
         VcsFactory $vcsFactory,
+        InstallationRepositories $installationRepositories,
         RepositoryWebhooks $repositoryWebhooks,
         Authorization $authorization,
         Bus $bus,
@@ -272,7 +275,7 @@ class Create extends Base
 
         if (!empty($providerRepositoryId)) {
             $providerAdapter = $vcsFactory->fromInstallation($installation);
-            [$owner, $repositoryName] = $this->resolveInstallationRepository($providerAdapter, $installation, $providerRepositoryId);
+            [$owner, $repositoryName] = $installationRepositories->resolve($providerAdapter, $installation, $providerRepositoryId);
         }
 
         try {
