@@ -531,6 +531,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "advanced/security/sso",
+    "title": "Single sign-on",
+    "description": "Let your organization's members sign in to the Appwrite Console through your company's identity provider, such as Okta or Microsoft Entra ID, with OpenID Connect.",
+    "excerpt": "Single sign-on (SSO) lets the members of your Appwrite organization sign in to the Console with the accounts your company manages in an identity provider, such as Okta, Microsoft Entra ID, Google Workspace, or Keycloak. You verify your company's email domains, connect your identity provider over OpenID Connect, and choose the roles people get when they join. The first time someone signs in through your identity provider, Appwrite creates their Console account, or signs them in to the account that…",
+    "breadcrumbs": [
+      "Security",
+      "Access control",
+      "Single sign-on"
+    ]
+  },
+  {
     "slug": "advanced/security/tls",
     "title": "TLS",
     "description": "Appwrite helps keep the web secure by generating TLS (Transport Layer Security) certificates for all user and generated domains.",

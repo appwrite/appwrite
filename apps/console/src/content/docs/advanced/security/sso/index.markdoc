@@ -1,0 +1,282 @@
+---
+layout: article
+title: Single sign-on
+description: Let your organization's members sign in to the Appwrite Console through your company's identity provider, such as Okta or Microsoft Entra ID, with OpenID Connect.
+---
+
+Single sign-on (SSO) lets the members of your Appwrite organization sign in to the Console with the accounts your company manages in an identity provider, such as Okta, Microsoft Entra ID, Google Workspace, or Keycloak. You verify your company's email domains, connect your identity provider over OpenID Connect, and choose the [roles](/docs/advanced/security/roles) people get when they join.
+
+The first time someone signs in through your identity provider, Appwrite creates their Console account, or signs them in to the account that already uses their email, and adds them to your organization. You don't invite each person.
+
+- **Your IT team decides who gets in.** Access is managed at your identity provider, for example only the engineering department. Nobody keeps a second list of members in Appwrite.
+- **Offboarding happens in one place.** With [Require SSO](#require-sso), someone who leaves the company loses access to your organization when IT disables them at the identity provider, even if they set a Console password earlier.
+
+{% info title="Looking to add SSO to your app?" %}
+This page covers SSO for the Appwrite Console. To let your customers' employees sign in to your app through their company's identity provider, follow the [Single sign-on guide](/docs/products/auth/sso).
+{% /info %}
+
+# How it works {% #how-it-works %}
+
+1. A member opens the Console's sign-in page, clicks **Sign in with SSO**, and enters their work email.
+2. Appwrite finds the identity providers of the organization that verified the email's domain. If there are several, the member chooses one by name.
+3. The member signs in at your identity provider and comes back to the Console, signed in and a member of your organization.
+
+An identity provider only signs in emails on its organization's verified domains. Each domain belongs to one organization on Appwrite Cloud at a time, so no other organization's identity provider can sign in people with your company's email.
+
+# Before you start {% #before-you-start %}
+
+- Your organization needs a Pro plan or higher, and the [Single sign-on add-on](#add-on).
+- Only organization owners can set up SSO.
+- You need access to your company's DNS and to an admin account at your identity provider, or the help of someone who has them.
+
+# Enable the add-on {% #add-on %}
+
+{% only_dark %}
+![The Single sign-on add-on card in organization settings, with its price and the Enable add-on button](/images/docs/advanced/security/sso/dark/add-on.avif)
+{% /only_dark %}
+{% only_light %}
+![The Single sign-on add-on card in organization settings, with its price and the Enable add-on button](/images/docs/advanced/security/sso/add-on.avif)
+{% /only_light %}
+
+1. In the Appwrite Console, open your organization and go to **Settings** > **Single sign-on**.
+2. On the **Single sign-on** card, click **Enable add-on**.
+3. Review the monthly price and the prorated amount due today, then click **Enable**.
+
+If your bank asks for payment authentication, the card shows **Payment pending** until you complete it. Click **Refresh** afterwards to confirm the payment. On a plan that doesn't sell the add-on, the card shows **Upgrade plan** instead.
+
+{% info title="Pricing" %}
+The Single sign-on add-on for your organization is billed monthly and prorated for the first billing cycle. See the [pricing page](/pricing) for its price. It's separate from the [project add-on](/docs/products/auth/sso#add-on) that adds SSO to your app, and neither one includes the other.
+{% /info %}
+
+## Disable the add-on {% #disable %}
+
+On the **Single sign-on** card, click **Disable**, then **Disable add-on**. The add-on stays active until the end of your current billing cycle and isn't renewed. After that, nobody signs in through your identity providers, and Require SSO has no effect. Members who can only sign in through your identity provider can't sign in.
+
+Your domains, identity providers, and the Require SSO setting stay, so SSO works again as soon as you turn the add-on back on. While the add-on is off, you can still delete domains and identity providers, and turn Require SSO off.
+
+# Verify a domain {% #verify-domain %}
+
+Verify each domain your company's email addresses use. Your identity providers only sign in people with an email on a verified domain.
+
+{% only_dark %}
+![The Domains card of an organization, with one verified and one unverified domain](/images/docs/advanced/security/sso/dark/domains.avif)
+{% /only_dark %}
+{% only_light %}
+![The Domains card of an organization, with one verified and one unverified domain](/images/docs/advanced/security/sso/domains.avif)
+{% /only_light %}
+
+1. Under **Domains**, click **Add domain**.
+2. Enter the domain of your company's email addresses, such as `example.com`, without the `@`, and click **Add**.
+3. Add the TXT record that the **Verify domain** dialog shows at your domain's DNS provider.
+4. Click **Verify**.
+
+The TXT record proves that your organization owns the domain:
+
+{% table %}
+* Type {% width=100 %}
+* Name
+* Value
+---
+* `TXT`
+* `_appwrite.example.com`
+* `team:<ORGANIZATION_ID>`
+{% /table %}
+
+The Console shows the name relative to the domain's DNS zone, such as `_appwrite`, because most DNS providers add the zone for you.
+
+{% only_dark %}
+![The Verify domain dialog with the TXT record to add](/images/docs/advanced/security/sso/dark/verify-domain.avif)
+{% /only_dark %}
+{% only_light %}
+![The Verify domain dialog with the TXT record to add](/images/docs/advanced/security/sso/verify-domain.avif)
+{% /only_light %}
+
+DNS changes can take a few minutes to propagate. If verification fails, the dialog says whether it found no record or a record with another value. Click **Verify** on the domain's row to check again, or select **DNS records** in its actions menu to see the record. Until the domain is verified, nobody can sign in with SSO on it.
+
+- Each domain needs its own entry. Verifying `example.com` doesn't cover `eu.example.com`.
+- If another organization holds the domain, adding it fails with the TXT record your organization needs. Add that record and add the domain again. The domain moves to your organization, already verified.
+- You can't claim domains Appwrite owns, or a domain ending on its own, such as `com` or `co.uk`.
+
+# Connect an identity provider {% #connect-provider %}
+
+Appwrite connects to identity providers over OpenID Connect. SAML is coming soon.
+
+First, create an application at your identity provider:
+
+1. Create an OpenID Connect web application that uses the authorization code flow and has a client secret.
+2. Register this redirect URL. The Console shows it with a copy button when you add the identity provider.
+
+    ```text
+    https://cloud.appwrite.io/v1/account/sessions/sso/callback
+    ```
+
+3. Let the application share the user's email address. Appwrite requests the `openid`, `profile`, and `email` scopes, and refuses the sign-in when the identity provider returns no email.
+4. Assign the people or groups who may use the Appwrite Console. The identity provider only lets them sign in.
+5. Copy the client ID, the client secret, and the discovery URL.
+
+Then add the identity provider in the Console:
+
+1. Under **Identity providers**, click **Add identity provider**.
+2. Fill in the settings below.
+3. Click **Add**.
+
+{% only_dark %}
+![The Add identity provider dialog filled in for Okta, with the redirect URL, roles, client ID, client secret, and discovery URL](/images/docs/advanced/security/sso/dark/add-identity-provider.avif)
+{% /only_dark %}
+{% only_light %}
+![The Add identity provider dialog filled in for Okta, with the redirect URL, roles, client ID, client secret, and discovery URL](/images/docs/advanced/security/sso/add-identity-provider.avif)
+{% /only_light %}
+
+{% table %}
+* Setting {% width=180 %}
+* Description
+---
+* Name
+* Shown when people choose how to sign in, such as `Okta`. Up to 128 characters.
+---
+* Roles
+* The [organization roles](/docs/advanced/security/roles) people get when they join through this identity provider: **Developer**, **Editor**, **Analyst**, or **Billing**. **Developer** is selected by default. Pick at least one. The owner role can't be given through SSO, so nobody gets full control of your organization just by signing in.
+---
+* Client ID
+* The client ID of the application at your identity provider.
+---
+* Client secret
+* The client secret of that application. Appwrite never shows it again. When you update the identity provider, leave it empty to keep the stored secret.
+---
+* Discovery URL
+* Your identity provider's OpenID Connect discovery document, which ends in `/.well-known/openid-configuration`.
+---
+* Authorization URL, Token URL, User info URL
+* Select **Set the endpoints manually** to override what the discovery document publishes, or to set all three when your identity provider has no discovery document.
+---
+* Enabled
+* Whether people can sign in through this identity provider. On by default.
+{% /table %}
+
+Every URL must start with `https://`, because Appwrite sends the client secret and the user's tokens to them.
+
+These are the discovery URLs of common identity providers:
+
+{% table %}
+* Identity provider {% width=200 %}
+* Discovery URL
+---
+* Okta
+* `https://<OKTA_DOMAIN>/.well-known/openid-configuration`
+---
+* Microsoft Entra ID
+* `https://login.microsoftonline.com/<TENANT_ID>/v2.0/.well-known/openid-configuration`
+---
+* Google Workspace
+* `https://accounts.google.com/.well-known/openid-configuration`
+---
+* Keycloak
+* `https://<KEYCLOAK_HOST>/realms/<REALM>/.well-known/openid-configuration`
+---
+* Auth0
+* `https://<AUTH0_DOMAIN>/.well-known/openid-configuration`
+{% /table %}
+
+Google's discovery URL is the same for every Google account. That is safe here, because the identity provider only signs in emails on your verified domains.
+
+{% only_dark %}
+![The Identity providers card of an organization, with an enabled and a disabled identity provider and their roles](/images/docs/advanced/security/sso/dark/identity-providers.avif)
+{% /only_dark %}
+{% only_light %}
+![The Identity providers card of an organization, with an enabled and a disabled identity provider and their roles](/images/docs/advanced/security/sso/identity-providers.avif)
+{% /only_light %}
+
+To turn an identity provider on or off, use its switch in the **Enabled** column. To change its settings, open its actions menu and select **Update**.
+
+## Several identity providers {% #several-providers %}
+
+Every person who joins through an identity provider gets its roles. Appwrite doesn't read roles or groups from the identity provider. To give different groups different roles, create an application for each group at your identity provider, assign each group to its own application, and connect each one with the roles that group needs. For example, an `Engineering` identity provider can give **Developer** and a `Finance` one **Billing**.
+
+A company where departments use different identity providers can connect each of them the same way. When an email's domain has several enabled identity providers, the Console asks the member to choose one by name.
+
+## Share an SSO URL {% #sso-url %}
+
+Open an identity provider's actions menu and select **Copy SSO URL**. The URL ends in `/sso?provider=<PROVIDER_ID>` and starts the sign-in through that identity provider right away, without asking for an email. Add it as a bookmark or an app tile in your identity provider's dashboard, so members open the Console from there.
+
+# Members and roles {% #members %}
+
+When someone signs in through one of your identity providers:
+
+- If they don't have a Console account, Appwrite creates one with the email from your identity provider. If an account already uses that email, they sign in to it.
+- If they aren't a member yet, they join your organization with the identity provider's roles.
+- If you had invited them and they hadn't accepted yet, they join with the roles of the invitation.
+- If they're already a member, nothing changes. Roles you change on the **Members** page stay as you set them.
+
+The **Members** page labels members whose email isn't on one of your verified domains as **External**, such as contractors who sign in with a personal account.
+
+When you remove a member whose email is on a verified domain, they can join again the next time they sign in with SSO. To keep them out, remove them at your identity provider too.
+
+# Require SSO {% #require-sso %}
+
+{% only_dark %}
+![The Require SSO card of an organization, with Require single sign-on turned on](/images/docs/advanced/security/sso/dark/require-sso.avif)
+{% /only_dark %}
+{% only_light %}
+![The Require SSO card of an organization, with Require single sign-on turned on](/images/docs/advanced/security/sso/require-sso.avif)
+{% /only_light %}
+
+When your organization requires SSO, members with an email on your verified domains can open the organization and its projects only after signing in through one of your identity providers. This matters most when someone leaves the company: once IT disables them at the identity provider, a password or GitHub login they set up earlier no longer opens your organization.
+
+A member who signed in another way, such as with a password, GitHub, or a session from before you turned it on, keeps their account. When they open your organization, the Console sends them to **Sign in with SSO** and brings them back to the same page afterwards. Requests to the organization and its projects fail with `sso_required` until they do. Their other organizations aren't affected.
+
+Two kinds of members are exempt:
+
+- Owners can always sign in with any method, so a broken identity provider never locks your organization out.
+- Members with an email on another domain, such as contractors, keep their usual sign-in, because none of your identity providers can sign them in.
+
+To turn it on:
+
+1. On the **Single sign-on** settings page, find **Require SSO**.
+2. Turn on **Require single sign-on** and click **Update**.
+3. Click **Require SSO** to confirm.
+
+Your organization needs a verified domain and an enabled identity provider first. If it later loses either one, or the add-on ends, the Console shows Require SSO as **Paused**, and it applies to nobody until your organization has both again.
+
+A session counts as SSO when one of your organization's identity providers issued it. Sessions from an identity provider you disable later still count. Sessions from an identity provider you delete don't.
+
+While Require SSO applies to a member, they can't change their account's email. Otherwise, they could move their account to another domain and open your organization with a password again.
+
+# Sign in with SSO {% #sign-in %}
+
+{% only_dark %}
+![The Sign in with SSO page asking the member to choose between two identity providers](/images/docs/advanced/security/sso/dark/sign-in.avif)
+{% /only_dark %}
+{% only_light %}
+![The Sign in with SSO page asking the member to choose between two identity providers](/images/docs/advanced/security/sso/sign-in.avif)
+{% /only_light %}
+
+Members sign in from the Console's sign-in page:
+
+1. Click **Sign in with SSO**.
+2. Enter your work email and click **Continue**.
+3. If your organization has several identity providers, choose one.
+4. Sign in at your identity provider.
+
+You come back to the Console in your organization. Your account's **Sessions** page lists the session with **Single sign-on** as its sign-in method.
+
+# Troubleshooting {% #troubleshooting %}
+
+{% table %}
+* Message {% width=280 %}
+* What to check
+---
+* Single sign-on isn't set up for `<DOMAIN>`.
+* The email's domain isn't verified by any organization, the organization has no enabled identity provider, or its add-on isn't active.
+---
+* Your identity provider returned an email that isn't on a domain your organization verified.
+* The member signed in at the identity provider with an account on another domain. Verify that domain too, or have them use their work account.
+---
+* Your identity provider didn't share your email address.
+* Let the application at your identity provider share the email, and check that the member's account there has one.
+---
+* Single sign-on for your organization isn't set up correctly.
+* Check the identity provider's client ID, client secret, discovery URL, and the redirect URL registered at your identity provider.
+---
+* This sign-in was started in another browser or took too long.
+* Start the sign-in again from the Console's sign-in page, in the same browser.
+{% /table %}

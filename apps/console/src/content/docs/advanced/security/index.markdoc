@@ -105,6 +105,10 @@ Control which users can access which resources.
 Learn about Console organization member roles and the access each one grants.
 {% /cards_item %}
 
+{% cards_item href="/docs/advanced/security/sso" title="Single sign-on" %}
+Let your organization's members sign in to the Console through your company's identity provider.
+{% /cards_item %}
+
 {% cards_item href="/docs/advanced/security/rate-limits" title="Rate limits" %}
 Appwrite has rate limits on some endpoints to prevent abuse.
 {% /cards_item %}

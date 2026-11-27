@@ -339,6 +339,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 2
   },
   {
+    "slug": "advanced/security/sso",
+    "title": "Single sign-on",
+    "description": "Let your organization's members sign in to the Appwrite Console through your company's identity provider, such as Okta or Microsoft Entra ID, with OpenID Connect.",
+    "layout": "article",
+    "readingTimeMinutes": 11
+  },
+  {
     "slug": "advanced/security/tls",
     "title": "TLS",
     "description": "Appwrite helps keep the web secure by generating TLS (Transport Layer Security) certificates for all user and generated domains.",
