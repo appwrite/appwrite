@@ -4,7 +4,7 @@ title: Grafana
 description: Connect Grafana to an Appwrite native PostgreSQL database as a data source and build dashboards. Create a read-only reporting role, configure the PostgreSQL data source with TLS, and provision it from YAML.
 ---
 
-An Appwrite [native PostgreSQL database](/docs/products/databases/postgresql) exposes a standard managed PostgreSQL 18 or 17 engine, so [Grafana](https://grafana.com/) connects to it through the built-in **PostgreSQL data source** with no Appwrite-specific configuration. Point the data source at your database hostname, authenticate with a read-only reporting role, and query your tables to build dashboards and alerts.
+An Appwrite [native PostgreSQL database](/docs/products/databases/postgresql) exposes a standard managed PostgreSQL 19, 18, or 17 engine, so [Grafana](https://grafana.com/) connects to it through the built-in **PostgreSQL data source** with no Appwrite-specific configuration. Point the data source at your database hostname, authenticate with a read-only reporting role, and query your tables to build dashboards and alerts.
 
 {% info title="Before you start" %}
 You'll need a native PostgreSQL database in a `ready` state and its credentials. In the Console, open the database and click **Credentials**. Use the **Details** tab for individual values, or copy a ready-made string from the **DSN**, **.env**, **Prisma**, **Drizzle**, or **psql** tab. You can also call `postgresql.get()` from the Appwrite API to read `hostname`, `connectionUser`, `connectionPassword`, and `connectionString`. The primary user is `admin`, and Appwrite generates the database name for each database.

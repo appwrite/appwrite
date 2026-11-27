@@ -4,6 +4,7 @@ import { Query } from '@appwrite.io/console'
 import {
   Area,
   AreaChart,
+  CartesianGrid,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -228,6 +229,11 @@ export function InstallsPanel({
                       data={data}
                       margin={{ top: 4, right: 4, bottom: 0, left: 4 }}
                     >
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        stroke="var(--border)"
+                        vertical={false}
+                      />
                       <defs>
                         <linearGradient
                           id={gradientId}

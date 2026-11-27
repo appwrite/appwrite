@@ -19,6 +19,9 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { VcsProviderButtons } from '@/components/global/shared/VcsProviderButtons'
+import { GitInstallationReuseDialog } from '@/components/global/shared/GitInstallationReuseDialog'
+import { useReusableVcsInstallations } from '@/lib/react-query/hooks/vcs'
+import { useParams } from '@tanstack/react-router'
 import { Pagination } from '@/components/global/shared/Pagination'
 import {
   fetchRepositories,
@@ -231,6 +234,9 @@ export function RepositoriesActions({
   canWrite: boolean
 }) {
   const t = useT()
+  const { projectId } = useParams({ strict: false })
+  const { data: reusable = [] } = useReusableVcsInstallations(projectId)
+  const [reuseOpen, setReuseOpen] = useState(false)
   if (scope.loading || scope.filter !== 'all' || !scope.installationId) {
     return null
   }
@@ -246,17 +252,38 @@ export function RepositoriesActions({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            {scope.connectProviders.map((provider) => (
-              <DropdownMenuItem key={provider.id} asChild>
-                <a href={scope.connectUrl(provider.id)}>
+            {scope.connectProviders.map((provider) =>
+              provider.id === 'github' && reusable.length > 0 ? (
+                <DropdownMenuItem
+                  key={provider.id}
+                  onSelect={() => setReuseOpen(true)}
+                >
                   <provider.Icon className="h-4 w-4" />
                   {provider.label}
-                </a>
-              </DropdownMenuItem>
-            ))}
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem key={provider.id} asChild>
+                  <a href={scope.connectUrl(provider.id)}>
+                    <provider.Icon className="h-4 w-4" />
+                    {provider.label}
+                  </a>
+                </DropdownMenuItem>
+              ),
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       )}
+      <GitInstallationReuseDialog
+        open={reuseOpen}
+        onOpenChange={setReuseOpen}
+        projectId={projectId}
+        installations={reusable}
+        installLink={
+          <a href={scope.connectUrl('github')}>
+            {t('Install on another account')}
+          </a>
+        }
+      />
       <Button
         variant="outline"
         size="sm"

@@ -262,6 +262,7 @@ import { useServiceListViewMode } from '@/hooks/use-service-list-view-mode'
 import { ServiceListViewToggle } from '@/components/pages/projects/$projectId/shared/ServiceListViewToggle'
 import { useT } from '@/lib/i18n/translate'
 import { useIsZeroAccount } from '@/hooks/use-zero-account'
+import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue'
 
 /** Organization routes the overview navigates between; keeps `navigate` and `Link` typed. */
 type OrgRoutePath =
@@ -1405,7 +1406,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const updateTeamPrefsMutation = useUpdateConsoleTeamPrefs(orgTeamId)
 
   /** While searching, list API must include pinned rows if they match; pinned section is hidden in the UI. */
-  const projectsSearchActive = Boolean(searchQuery.trim())
+  // Search the API once typing pauses, not on every keystroke.
+  const debouncedSearchQuery = useDebouncedValue(searchQuery.trim(), 300)
+  const projectsSearchActive = Boolean(debouncedSearchQuery)
   const listExcludePinnedIds = projectsSearchActive ? undefined : pinnedIds
 
   const { data: pinnedProjectsData } = useQuery({
@@ -1432,7 +1435,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       orgTeamId,
       requestedPage - 1,
       urlProjectsLimit,
-      searchQuery,
+      debouncedSearchQuery,
       listExcludePinnedIds,
       restrictToProjectIds,
     ),
@@ -1445,7 +1448,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         orgTeamId,
         displayedPage - 1,
         urlProjectsLimit,
-        searchQuery,
+        debouncedSearchQuery,
         listExcludePinnedIds,
         restrictToProjectIds,
       ),
@@ -1476,7 +1479,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   useEffect(() => {
     setRequestedPage(1)
     setDisplayedPage(1)
-  }, [searchQuery])
+  }, [debouncedSearchQuery])
 
   useEffect(() => {
     setPinnedDragOverIndex(null)
@@ -2167,8 +2170,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
               nextOrgId,
               page,
               urlProjectsLimit,
-              searchQuery,
-              searchQuery.trim() ? undefined : nextPinnedIds,
+              debouncedSearchQuery,
+              debouncedSearchQuery ? undefined : nextPinnedIds,
               nextProjectScope,
             ),
           ),
@@ -2214,7 +2217,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       features.orgRoles,
       queryClient,
       requestedPage,
-      searchQuery,
+      debouncedSearchQuery,
       urlProjectsLimit,
     ],
   )

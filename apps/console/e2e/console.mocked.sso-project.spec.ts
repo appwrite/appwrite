@@ -999,11 +999,12 @@ test.describe("setting up a team's single sign-on", () => {
     await expect(page.getByRole('button', { name: 'Notify me' })).toBeVisible()
   })
 
-  test("spells out the app's two requests with this project's endpoint and ID", async ({
+  test("shows each platform's steps with this project's endpoint, ID, domain and provider", async ({
     page,
   }) => {
     const mock = await mockAppwriteApi(page, {
       domains: [domain('acme.com', 'verified')],
+      providers: [provider('Okta', ['admin'])],
     })
     await openTeamSso(page)
 
@@ -1012,19 +1013,122 @@ test.describe("setting up a team's single sign-on", () => {
     // The endpoint is the one the Console sends this project's requests to
     await expect.poll(() => mock.sent.sso.length).toBeGreaterThan(0)
     const endpoint = `${mock.sent.sso[0].origin}/v1`
+    const platforms = app.getByRole('tablist', { name: 'Platform' })
+    const steps = app.getByRole('tablist', { name: 'Select step' })
+    await expect(platforms.getByRole('tab')).toHaveText([
+      'Web',
+      'Next.js',
+      'SvelteKit',
+      'Flutter',
+      'React Native',
+      'Apple',
+      'Android',
+      'Python',
+      'HTTP',
+    ])
+
+    // Web: three steps, the first one open, with this project's values
+    await expect(platforms.getByRole('tab', { name: 'Web' })).toHaveAttribute('aria-selected', 'true')
+    await expect(app).toContainText('npm install appwrite')
+    await expect(steps.getByRole('tab')).toHaveText([
+      '1. Find providers',
+      '2. Redirect',
+      '3. Create session',
+    ])
+    await expect(app).toContainText(`export const ENDPOINT = '${endpoint}'`)
+    await expect(app).toContainText(`export const PROJECT_ID = '${PROJECT.$id}'`)
+    await expect(app).toContainText('/account/sessions/sso/providers')
+
+    // A step on the left opens its code, and the code tabs follow
+    await app.getByRole('button', { name: /Send the browser to the chosen one/ }).click()
+    await expect(steps.getByRole('tab', { name: '2. Redirect' })).toHaveAttribute('aria-selected', 'true')
+    await expect(app).toContainText('/account/tokens/sso')
+    await expect(app).toContainText("sessionStorage.setItem('sso-state', state)")
+    await steps.getByRole('tab', { name: '3. Create session' }).click()
+    await expect(app).toContainText('src/pages/sso-callback.ts')
+    await expect(app).toContainText('await account.createSession({')
+
+    // A server: the API key trades the token, the session goes in a cookie
+    await platforms.getByRole('tab', { name: 'Next.js' }).click()
+    await expect(app).toContainText('npm install node-appwrite')
+    await steps.getByRole('tab', { name: '3. Create session' }).click()
+    await expect(app).toContainText('app/auth/sso/callback/route.ts')
+    await expect(app).toContainText('.setKey(process.env.APPWRITE_API_KEY!)')
+    await expect(app).toContainText(`a_session_\${PROJECT_ID}`)
+
+    // SvelteKit declares the key it reads
+    await platforms.getByRole('tab', { name: 'SvelteKit' }).click()
+    await steps.getByRole('tab', { name: '4. API key' }).click()
+    await expect(app).toContainText('src/env.ts')
+    await expect(app).toContainText('defineEnvVars')
+
+    // A mobile app returns to the project's callback scheme
+    await platforms.getByRole('tab', { name: 'Flutter' }).click()
     await expect(app).toContainText(
-      `curl '${endpoint}/account/sessions/sso/providers?email=jane%40example.com'`,
+      'flutter pub add appwrite && flutter pub add flutter_web_auth_2 http',
     )
-    await expect(app).toContainText(`-H 'X-Appwrite-Project: ${PROJECT.$id}'`)
-    await expect(app).toContainText(
-      `${endpoint}/account/sessions/sso?project=${PROJECT.$id}&providerId=PROVIDER_ID&success=`,
-    )
-    await expect(app).toContainText(
-      "On success, the browser returns to the success URL with the user's session cookie for this project set.",
-    )
-    await expect(app).toContainText(
-      'On failure, it returns to the failure URL with an error query parameter that holds JSON with message, type and code.',
-    )
-    await expect(app.getByRole('button', { name: 'Copy code' })).toHaveCount(2)
+    await expect(steps.getByRole('tab')).toHaveCount(5)
+    await steps.getByRole('tab', { name: '4. Callback scheme' }).click()
+    await expect(app).toContainText(`appwrite-callback-${PROJECT.$id}`)
+
+    // HTTP shows a real request and answer, with this team's domain and provider
+    await platforms.getByRole('tab', { name: 'HTTP' }).click()
+    await expect(app).not.toContainText('Installation')
+    await expect(app).toContainText('GET /v1/account/sessions/sso/providers?email=jane%40acme.com')
+    await expect(app).toContainText(`X-Appwrite-Project: ${PROJECT.$id}`)
+    await expect(app).toContainText('"name": "Okta"')
+    await steps.getByRole('tab', { name: '2. Redirect' }).click()
+    await expect(app).toContainText(`GET ${endpoint}/account/tokens/sso`)
+    await expect(app).toContainText('&providerId=provider-okta')
+  })
+
+  test('copies a prompt for an AI tool with the setup of the platform shown', async ({
+    page,
+  }) => {
+    const mock = await mockAppwriteApi(page, {
+      domains: [domain('acme.com', 'verified')],
+      providers: [provider('Okta', ['admin']), provider('Old login', ['admin'], false)],
+    })
+    await openTeamSso(page)
+    await expect.poll(() => mock.sent.sso.length).toBeGreaterThan(0)
+    const endpoint = `${mock.sent.sso[0].origin}/v1`
+    // A real clipboard is not available headless
+    await page.evaluate(() => {
+      ;(window as unknown as { __copied: string[] }).__copied = []
+      navigator.clipboard.writeText = async (text: string) => {
+        ;(window as unknown as { __copied: string[] }).__copied.push(text)
+      }
+    })
+    const copied = () =>
+      page.evaluate(() => (window as unknown as { __copied: string[] }).__copied)
+
+    const app = card(page, 'Add sign-in to your app')
+    await app.getByRole('button', { name: 'Copy prompt' }).click()
+    await expect(app.getByRole('button', { name: 'Copied' })).toBeVisible()
+    await expect.poll(async () => (await copied()).length).toBe(1)
+    const web = (await copied())[0]
+    expect(web).toContain('Add single sign-on (SSO) to this web app')
+    expect(web).toContain(`- Appwrite endpoint: ${endpoint}`)
+    expect(web).toContain(`- Project ID: ${PROJECT.$id}`)
+    expect(web).toContain(`- Team: ${TEAM.$id}.`)
+    expect(web).toContain('- Email domains that use SSO: acme.com')
+    // Only the providers people can sign in through
+    expect(web).toContain('- Identity providers: Okta (provider-okta).')
+    expect(web).not.toContain('Old login')
+    expect(web).toContain('do not invent SDK methods such as listSSOProviders or createSSOToken')
+    expect(web).toContain('npm install appwrite')
+    expect(web).toContain('(src/pages/sso-callback.ts):')
+
+    // The prompt follows the platform
+    await app
+      .getByRole('tablist', { name: 'Platform' })
+      .getByRole('tab', { name: 'Python' })
+      .click()
+    await app.getByRole('button', { name: /Copy prompt|Copied/ }).click()
+    await expect.poll(async () => (await copied()).length).toBe(2)
+    const python = (await copied())[1]
+    expect(python).toContain('Python web app (Flask')
+    expect(python).toContain('pip install appwrite flask requests')
+    expect(python).toContain('only the sessions.write scope')
   })
 })

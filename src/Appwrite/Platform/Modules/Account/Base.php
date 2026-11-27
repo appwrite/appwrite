@@ -90,6 +90,7 @@ abstract class Base extends Action
     {
         // Attempt to decode secret as a JWT (used by OAuth2 token flow to carry provider info)
         $oauthProvider = null;
+        $oauthIdentity = null;
         try {
             $payload = EncryptionKey::decode($secret, maxAge: 60);
 
@@ -98,6 +99,7 @@ abstract class Base extends Action
             }
 
             $oauthProvider = $payload['provider'];
+            $oauthIdentity = $payload['identity'] ?? null;
             $secret = $payload['secret'];
         } catch (\Ahc\Jwt\JWTException) {
             // Not a JWT — use secret as-is (non-OAuth flows)
@@ -147,14 +149,21 @@ abstract class Base extends Action
             default => SESSION_PROVIDER_TOKEN,
         };
 
+        // An account can hold several identities with one provider, and the token names the one that signed in:
+        // the session is that identity's and no other's. A token issued before it named one falls back to any of them
+        $identityQueries = [
+            Query::equal('userInternalId', [$user->getSequence()]),
+            Query::equal('provider', [$oauthProvider]),
+        ];
+        if (\is_string($oauthIdentity) && $oauthIdentity !== '') {
+            $identityQueries[] = Query::equal('$id', [$oauthIdentity]);
+        }
+
         // For OAuth2 tokens, carry the provider credentials from the identity onto the session,
         // mirroring the cookie-based createOAuth2Session flow.
         $providerCredentials = [];
         if ($verifiedToken->getAttribute('type') === TOKEN_TYPE_OAUTH2) {
-            $identity = $authorization->skip(fn () => $dbForProject->findOne('identities', [
-                Query::equal('userInternalId', [$user->getSequence()]),
-                Query::equal('provider', [$oauthProvider]),
-            ]));
+            $identity = $authorization->skip(fn () => $dbForProject->findOne('identities', $identityQueries));
 
             if (!$identity->isEmpty()) {
                 $providerCredentials = [
@@ -202,10 +211,7 @@ abstract class Base extends Action
         ));
 
         if ($verifiedToken->getAttribute('type') === TOKEN_TYPE_OAUTH2) {
-            $identity = $authorization->skip(fn () => $dbForProject->findOne('identities', [
-                Query::equal('provider', [$oauthProvider]),
-                Query::equal('userInternalId', [$user->getSequence()]),
-            ]));
+            $identity = $authorization->skip(fn () => $dbForProject->findOne('identities', $identityQueries));
 
             if ($identity->isEmpty()) {
                 throw new Exception(Exception::USER_INVALID_TOKEN);

@@ -1073,15 +1073,15 @@ html:not([lang='en']):not([lang='he']) {
 @keyframes video-toggle-flash {
   0% {
     opacity: 0;
-    transform: scale(0.7);
+    transform: scale(0.82);
   }
-  18% {
+  20% {
     opacity: 1;
     transform: scale(1);
   }
   100% {
     opacity: 0;
-    transform: scale(1.45);
+    transform: scale(1.25);
   }
 }
 
@@ -1095,7 +1095,7 @@ html:not([lang='en']):not([lang='he']) {
 }
 
 .animate-video-toggle-flash {
-  animation: video-toggle-flash 750ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: video-toggle-flash 650ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
   will-change: transform, opacity;
 }
 
@@ -1141,8 +1141,16 @@ html:not([lang='en']):not([lang='he']) {
   color: #fff;
 }
 
+/* Cues ride above the controls and settle toward the edge when they hide. */
 .video-stream-player::-webkit-media-text-track-container {
   transform: translateY(calc(-1 * var(--video-subtitle-bottom-offset)));
+  transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .video-stream-player::-webkit-media-text-track-container {
+    transition: none;
+  }
 }
 
 .video-stream-player::-webkit-media-text-track-display {

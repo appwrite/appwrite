@@ -69,30 +69,39 @@ export async function fetchReusableVcsInstallations(
   projectId: string,
 ): Promise<Models.Installation[]> {
   const projectSdk = sdk.forProject(projectId)
-  const { client } = projectSdk
   try {
     const [shared, own] = await Promise.all([
-      client.call(
-        'get',
-        new URL(`${client.config.endpoint}/vcs/installations`),
-        {},
-        { shared: true, queries: [Query.limit(100)] },
-      ) as Promise<Models.InstallationList>,
+      projectSdk.vcs.listInstallations({
+        shared: true,
+        queries: [Query.limit(100)],
+      }),
       projectSdk.vcs.listInstallations({ queries: [Query.limit(100)] }),
     ])
-    // Installation IDs are only unique within a provider, and only GitHub ones are shared
+    // Only GitHub installations are shared. One account can be installed from several
+    // projects under different IDs, so accounts are matched by name.
+    const account = (i: Models.Installation) => i.organization.toLowerCase()
     const linked = new Set(
-      own.installations
-        .filter((i) => i.provider === 'github')
-        .map((i) => i.providerInstallationId),
+      own.installations.filter((i) => i.provider === 'github').map(account),
     )
-    return [
-      ...new Map(
-        shared.installations
-          .filter((i) => !linked.has(i.providerInstallationId))
-          .map((i) => [i.providerInstallationId, i]),
-      ).values(),
-    ]
+    // Only organization installations are offered for reuse.
+    // A reinstalled app leaves the old row behind with a dead ID. GitHub IDs only grow, so
+    // the highest one per account is the live installation.
+    const latest = new Map<string, Models.Installation>()
+    for (const i of shared.installations) {
+      if ((i as { personal?: boolean }).personal || linked.has(account(i))) {
+        continue
+      }
+      const kept = latest.get(account(i))
+      if (
+        !kept ||
+        Number(i.providerInstallationId) > Number(kept.providerInstallationId)
+      ) {
+        latest.set(account(i), i)
+      }
+    }
+    return [...latest.values()].sort((a, b) =>
+      account(a).localeCompare(account(b)),
+    )
   } catch {
     // Servers without installation reuse reject the shared param
     return []
@@ -492,13 +501,9 @@ export function useReuseVcsInstallation(projectId: string | null | undefined) {
 
   return useMutation({
     mutationFn: async (installationId: string) => {
-      const { client } = sdk.forProject(projectId!)
-      return (await client.call(
-        'post',
-        new URL(`${client.config.endpoint}/vcs/installations`),
-        { 'content-type': 'application/json' },
-        { installationId },
-      )) as Models.Installation
+      return await sdk
+        .forProject(projectId!)
+        .vcs.createInstallation({ installationId })
     },
     onSuccess: () => {
       queryClient.invalidateQueries({

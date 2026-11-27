@@ -1,5 +1,18 @@
 # Change Log
 
+## 28.18.0
+
+* Added: `videos` commands to create, list, get, update and delete videos, renditions and captions, and to get manifests, thumbnails and timelines
+* Added: `project list-video-profiles`, `create-video-profile`, `get-video-profile`, `update-video-profile` and `delete-video-profile`
+* Added: `--password`, `--attempts` and `--attempts-interval` on `waf create-challenge-rule` and `waf update-challenge-rule`
+* Updated: `clerk` listed among the OAuth2 providers
+
+## 28.17.0
+
+* Added: `monitors` commands to create, list, get, update and delete HTTP, DNS, TCP, SMTP and usage monitors
+* Added: `alerts list`, `alerts get` and `alerts update` to read and acknowledge alerts
+* Added: `organization list-escalations`, `create-escalation`, `get-escalation`, `update-escalation` and `delete-escalation`
+
 ## 28.16.0
 
 * Breaking: `teams get-photo`, `update-photo` and `delete-photo` removed; team photos moved to the Avatars API

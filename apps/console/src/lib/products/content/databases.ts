@@ -14,7 +14,7 @@ export const databasesProductContent: ProductPageContent = {
     {
       question: 'Does Appwrite offer managed PostgreSQL?',
       answer:
-        'Yes. Native PostgreSQL databases are dedicated, managed PostgreSQL instances in your project region. You connect with psql, Prisma, Drizzle, or any PostgreSQL driver over TLS. Appwrite provisions compute, backups, replicas, a connection pooler, and point-in-time recovery. PostgreSQL 18 is the default, with 17 also supported.',
+        'Yes. Native PostgreSQL databases are dedicated, managed PostgreSQL instances in your project region. You connect with psql, Prisma, Drizzle, or any PostgreSQL driver over TLS. Appwrite provisions compute, backups, replicas, a connection pooler, and point-in-time recovery. PostgreSQL 19 is the default, with 17 and 18 also supported.',
       links: [
         { label: 'PostgreSQL docs', href: '/docs/products/databases/postgresql' },
         { label: 'PostgreSQL quick start', href: '/docs/products/databases/postgresql/quick-start' },

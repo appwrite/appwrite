@@ -15,7 +15,7 @@ members = ["crates/utopia/*", "crates/extension"]
 [workspace.package]
 version = "0.1.0"
 edition = "2024"
-rust-version = "1.97"
+rust-version = "1.100"
 license = "BSD-3-Clause"
 repository = "https://github.com/appwrite/appwrite"
 # The crates under crates/utopia are published to crates.io. See rfc/monorepo.md.
@@ -43,6 +43,9 @@ utopia-validators = { path = "crates/utopia/validators" }
 ext-php-rs = "0.16.5"
 # Multi-needle substring search (utopia-user-agent: the bot table, in one pass).
 aho-corasick = "1"
+# JetStream for utopia-queue, which shares queues with utopia-php/queue's Broker\Nats.
+async-nats = "0.53"
+futures-util = { version = "0.3", default-features = false, features = ["std"] }
 argon2 = { version = "0.5", features = ["std"] }
 # BLAKE2b for php-std's Argon2, which fills lanes on scoped threads (the `argon2` crate, a test
 # reference, fills them one after the other).
@@ -57,8 +60,6 @@ getrandom = "0.3"
 gost94 = "0.10"
 hex = "0.4"
 hashbrown = { version = "0.17", default-features = false }
-icu_normalizer = { version = "2.3", default-features = false, features = ["compiled_data"] }
-icu_properties = { version = "2.3", default-features = false, features = ["compiled_data"] }
 indexmap = "2"
 md-5 = "0.10"
 md2 = "0.10"
@@ -108,6 +109,7 @@ lzma-rust2 = { version = "0.22", default-features = false, features = ["std", "e
 mimalloc = { version = "0.1.52", default-features = false, features = ["local_dynamic_tls"] }
 png = "0.18"
 thiserror = "2"
+tokio = { version = "1", features = ["time"] }
 # libzstd 1.5.7, built from source and linked statically, as PHP's ext-zstd links it. No
 # `zstdmt`: multithreaded compression would start threads in a process that forks.
 zstd-safe = { version = "8", default-features = false, features = ["std"] }

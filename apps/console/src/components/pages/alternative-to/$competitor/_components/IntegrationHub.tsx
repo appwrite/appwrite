@@ -1,15 +1,15 @@
 import { useLayoutEffect, useRef, useState, type Ref } from 'react'
 import { Clapperboard } from 'lucide-react'
 import { riseStyle } from '@/components/pages/products/_components/ArtParts'
-import type { PlatformProductId } from '@/lib/alternatives/platform'
 import { useT } from '@/lib/i18n/translate'
 import { PRODUCT_NAV_REGISTRY } from '@/lib/products/registry'
-import type { ProductIcon } from '@/lib/products/types'
+import type { ProductIcon, ProductNavItemId } from '@/lib/products/types'
 import { cn } from '@/lib/utils'
 import { ComparisonHeading, ComparisonSection } from './ComparisonParts'
 
 export type IntegrationHubItem = {
-  id: PlatformProductId | 'videos'
+  /** Any product in the Products menu, such as Sites, Monitors, or Beep. */
+  id: ProductNavItemId
   title: string
   description: string
   soon?: boolean

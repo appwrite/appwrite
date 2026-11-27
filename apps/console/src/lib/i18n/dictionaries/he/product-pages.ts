@@ -447,8 +447,8 @@ export const heProductPagesDictionary: Record<string, string> = {
     'PostgreSQL ו-MySQL מתארחים עם לקוחות סטנדרטיים ועורך SQL בקונסולה. השתמשו ב-pgvector, PostGIS, סכמות ניידות וב-ORMs שכבר רצים אצלכם.',
   'Run managed PostgreSQL next to tables, documents, and vectors. Connect with Prisma or psql, install pgvector, and scale dedicated compute with backups, replicas, and PITR.':
     'הריצו PostgreSQL מנוהל לצד טבלאות, מסמכים ווקטורים. התחברו עם Prisma או psql, התקינו pgvector, והגדילו Compute ייעודי עם גיבויים, replicas ו-PITR.',
-  'Yes. Native PostgreSQL databases are dedicated, managed PostgreSQL instances in your project region. You connect with psql, Prisma, Drizzle, or any PostgreSQL driver over TLS. Appwrite provisions compute, backups, replicas, a connection pooler, and point-in-time recovery. PostgreSQL 18 is the default, with 17 also supported.':
-    'כן. מסדי PostgreSQL מקוריים הם מופעי PostgreSQL מנוהלים ייעודיים באזור הפרויקט שלכם. מתחברים עם psql, Prisma, Drizzle או כל דרייבר PostgreSQL מעל TLS. Appwrite מקצה Compute, גיבויים, replicas, מאגר חיבורים ו-point-in-time recovery. PostgreSQL 18 הוא ברירת המחדל, וגם 17 נתמך.',
+  'Yes. Native PostgreSQL databases are dedicated, managed PostgreSQL instances in your project region. You connect with psql, Prisma, Drizzle, or any PostgreSQL driver over TLS. Appwrite provisions compute, backups, replicas, a connection pooler, and point-in-time recovery. PostgreSQL 19 is the default, with 17 and 18 also supported.':
+    'כן. מסדי PostgreSQL מקוריים הם מופעי PostgreSQL מנוהלים ייעודיים באזור הפרויקט שלכם. מתחברים עם psql, Prisma, Drizzle או כל דרייבר PostgreSQL מעל TLS. Appwrite מקצה Compute, גיבויים, replicas, מאגר חיבורים ו-point-in-time recovery. PostgreSQL 19 הוא ברירת המחדל, וגם 17 ו-18 נתמכים.',
   'Do Appwrite DBs integrate with Auth permissions?': 'האם Appwrite DBs משתלבים עם הרשאות אימות?',
   'Embeddings and similarity search for semantic retrieval and AI features.':
     'Embeddings וחיפוש דמיון לשליפה סמנטית וליכולות AI.',
@@ -909,8 +909,8 @@ export const heProductPagesDictionary: Record<string, string> = {
   // Managed PostgreSQL, shortened FAQ answers
   'A managed PostgreSQL database is the raw engine with its own compute, storage, and credentials. You talk to it over the PostgreSQL wire protocol instead of an Appwrite SDK, so schema, migrations, roles, and queries are standard PostgreSQL. Use TablesDB, DocumentsDB, or VectorsDB when you want Appwrite SDKs and platform permissions for app data instead.':
     'מסד נתונים מנוהל של PostgreSQL הוא המנוע עצמו, עם מחשוב, אחסון ופרטי גישה משלו. אתם מדברים איתו דרך פרוטוקול התקשורת של PostgreSQL ולא דרך SDK של Appwrite, ולכן הסכימה, המיגרציות, התפקידים והשאילתות הם PostgreSQL רגיל. השתמשו ב-TablesDB, ב-DocumentsDB או ב-VectorsDB כשאתם רוצים SDKs של Appwrite והרשאות פלטפורמה לנתוני האפליקציה.',
-  'New databases run PostgreSQL 18 by default, and you can pick PostgreSQL 17 at create time. Upgrades run online: a second instance is provisioned on the new version, data streams over with logical replication, and traffic cuts over once it catches up. Connections are closed at the cutover, so your application has to reconnect.':
-    'מסדי נתונים חדשים רצים על PostgreSQL 18 כברירת מחדל, ואפשר לבחור PostgreSQL 17 בזמן היצירה. השדרוגים מתבצעים בזמן ריצה: instance שני מוקם בגרסה החדשה, הנתונים זורמים אליו עם logical replication, והתעבורה עוברת אליו ברגע שהוא מדביק את הפער. החיבורים נסגרים ברגע המעבר, ולכן האפליקציה שלכם צריכה להתחבר מחדש.',
+  'New databases run PostgreSQL 19 by default, and you can pick PostgreSQL 17 or 18 at create time. Upgrades run online: a second instance is provisioned on the new version, data streams over with logical replication, and traffic cuts over once it catches up. Connections are closed at the cutover, so your application has to reconnect.':
+    'מסדי נתונים חדשים רצים על PostgreSQL 19 כברירת מחדל, ואפשר לבחור PostgreSQL 17 או 18 בזמן היצירה. השדרוגים מתבצעים בזמן ריצה: instance שני מוקם בגרסה החדשה, הנתונים זורמים אליו עם logical replication, והתעבורה עוברת אליו ברגע שהוא מדביק את הפער. החיבורים נסגרים ברגע המעבר, ולכן האפליקציה שלכם צריכה להתחבר מחדש.',
   'Every Appwrite Cloud region: Frankfurt, New York, San Francisco, Singapore, Sydney, and Toronto. A database takes the region of the project that owns it, so create your project close to your users first. Each database gets a hostname in the form db-<hash>.<region>.appwrite.center and the data does not leave the region.':
     'כל אזור של Appwrite Cloud: פרנקפורט, ניו יורק, סן פרנסיסקו, סינגפור, סידני וטורונטו. מסד נתונים מקבל את האזור של הפרויקט שמחזיק אותו, ולכן צרו קודם את הפרויקט שלכם קרוב למשתמשים. כל מסד נתונים מקבל hostname בצורה db-<hash>.<region>.appwrite.center והנתונים לא יוצאים מהאזור.',
   'PostgreSQL uses the same dedicated compute tiers as pricing: reserved CPU, memory, and connections, from $10/mo per database. Reads and writes are included in the tier. High availability replicas are billed at the full compute tier price per replica, and point-in-time recovery is +20% of base. Extra storage and bandwidth are usage-based overage. Managed databases need a paid plan.':
@@ -1297,7 +1297,555 @@ export const heProductPagesDictionary: Record<string, string> = {
   'Segment to paint a frame': 'סגמנט עד לפריים',
   'Picture on screen': 'תמונה על המסך',
   'Climbs the ladder': 'מטפס בסולם',
+
+  // Monitors, Beep, and Reviews product pages
+  // Beep product page
+  'Beep: the Appwrite Cloud app for your phone':
+    'Beep: האפליקציה של Appwrite Cloud לטלפון שלכם',
+  'Appwrite Beep is the free Appwrite Cloud app for iPhone, iPad, and Android. Get a push when a monitor fires, acknowledge it for your team, page the next person in line, and check usage across every project.':
+    'Appwrite Beep היא האפליקציה החינמית של Appwrite Cloud ל-iPhone, ל-iPad ול-Android. קבלו התראת push כשמוניטור מופעל, אשרו טיפול כדי שהצוות ידע, הזעיקו את הבא בתור ועקבו אחרי השימוש בכל הפרויקטים.',
+  'Your projects, in your pocket': 'הפרויקטים שלכם, בכיס',
+  'Appwrite Beep is the Appwrite Cloud app for iPhone, iPad, and Android. Get a push the moment a monitor fires, acknowledge it for your team, and check usage across every project. You choose what reaches you.':
+    'Appwrite Beep היא האפליקציה של Appwrite Cloud ל-iPhone, ל-iPad ול-Android. קבלו התראת push ברגע שמוניטור מופעל, אשרו טיפול כדי שהצוות ידע ועקבו אחרי השימוש בכל הפרויקטים. אתם בוחרים מה מגיע אליכם.',
+  'On the App Store and Google Play': 'ב-App Store וב-Google Play',
+  'All your organizations and projects': 'כל הארגונים והפרויקטים שלכם',
+  'Acknowledge, snooze, or mute': 'אישור טיפול, השתקה זמנית או השתקת מוניטור',
+  '30 minutes to 24 hours': 'מ-30 דקות עד 24 שעות',
+  'Rings through silent mode on Android': 'מצלצל גם במצב שקט ב-Android',
+  'What is Appwrite Beep?': 'מה זה Appwrite Beep?',
+  'Beep is the Appwrite Cloud app for your phone. It pushes alerts from your monitors as they fire and resolve, lets you acknowledge, snooze, and escalate them, and shows usage, Appwrite Cloud status, and the changelog for every organization and project you belong to.':
+    'Beep היא האפליקציה של Appwrite Cloud לטלפון שלכם. היא שולחת לכם את ההתראות מהמוניטורים ברגע שהן מופעלות וכשהן נסגרות, מאפשרת לאשר בהן טיפול, להשתיק אותן זמנית ולהסלים אותן, ומציגה את השימוש, את הסטטוס של Appwrite Cloud ואת יומן השינויים לכל ארגון ופרויקט שאתם חברים בהם.',
+  'Is Beep free?': 'האם Beep בחינם?',
+  'Yes. Beep is free on the App Store and Google Play, with no ads or in-app purchases. Sign in with your Appwrite Cloud account. The monitors that send alerts follow your organization’s plan.':
+    'כן. Beep זמינה בחינם ב-App Store וב-Google Play, בלי פרסומות ובלי רכישות בתוך האפליקציה. התחברו עם חשבון Appwrite Cloud שלכם. המוניטורים ששולחים את ההתראות כפופים לתוכנית של הארגון שלכם.',
+  'Which notifications reach my phone?': 'אילו התראות מגיעות לטלפון שלי?',
+  'Alerts from usage monitors, budget thresholds, and HTTP, DNS, TCP, and SMTP endpoint checks when they fire, and when they resolve if you want, plus a push when Appwrite publishes a changelog entry. Appwrite Cloud incidents show in the Updates tab.':
+    'התראות ממוניטורי שימוש, מספי תקציב ומבדיקות Endpoint של HTTP, DNS, TCP ו-SMTP כשהן מופעלות, וגם כשהן נסגרות אם תרצו, ובנוסף התראת push כש-Appwrite מפרסמת עדכון ביומן השינויים. תקלות ב-Appwrite Cloud מופיעות בלשונית העדכונים.',
+  'Appwrite Monitors': 'Appwrite Monitors',
+  'Who gets a push when a monitor fires?':
+    'מי מקבל התראת push כשמוניטור מופעל?',
+  'The organization roles the monitor notifies, Owners by default, on every phone where they are signed in to Beep. With an escalation, each step notifies its roles and people in turn until someone acknowledges the alert or it resolves. The same people also get an email and a Console notification.':
+    'חברי הארגון בתפקידים שהמוניטור מתריע להם (כברירת מחדל, הבעלים), בכל טלפון שבו הם מחוברים ל-Beep. כשיש הסלמה, כל שלב מתריע בתורו לתפקידים ולאנשים שהוגדרו בו, עד שמישהו מאשר טיפול בהתראה או שהיא נסגרת. אותם אנשים מקבלים גם אימייל והתראה בקונסולה.',
+  'Can I stop notifications without missing alerts?':
+    'אפשר להשתיק התראות בלי לפספס אף התראה?',
+  'Yes. Snooze one organization or all of them for 30 minutes, 1 hour, 4 hours, or 24 hours, turn off organizations and projects you don’t watch, or mute a single monitor. Snoozed alerts still fire and still show in Beep, the Console, and email. Muting a monitor also stops its emails to you.':
+    'כן. השתיקו זמנית ארגון אחד או את כולם ל-30 דקות, לשעה אחת, ל-4 שעות או ל-24 שעות, כבו ארגונים ופרויקטים שאתם לא עוקבים אחריהם, או השתיקו מוניטור בודד. התראות שהושתקו זמנית עדיין מופעלות ועדיין מופיעות ב-Beep, בקונסולה ובאימייל. השתקת מוניטור מפסיקה גם את האימיילים שלו אליכם.',
+  'Do critical alerts ring through silent mode?':
+    'האם התראות קריטיות מצלצלות גם במצב שקט?',
+  'On Android, yes. Monitors your team sets to Critical ring at alarm volume, even on silent, and in Do Not Disturb once you let Beep’s critical alerts override it. On iPhone, critical monitors arrive as normal notifications that follow your silent switch and Focus for now.':
+    'ב-Android, כן. מוניטורים שהצוות שלכם הגדיר כקריטיים מצלצלים בעוצמת השעון המעורר, גם במצב שקט, וגם במצב נא לא להפריע אחרי שתאפשרו להתראות הקריטיות של Beep לעקוף אותו. ב-iPhone, בינתיים מוניטורים קריטיים מגיעים כהתראות רגילות, שכפופות למתג המצב השקט ולמצב הריכוז.',
+  'Can I create monitors in Beep?': 'אפשר ליצור מוניטורים ב-Beep?',
+  'Monitors are created in the Console. In Beep you can acknowledge alerts, adjust a usage monitor’s threshold, pause or resume a monitor, and create and assign escalations.':
+    'מוניטורים נוצרים בקונסולה. ב-Beep אפשר לאשר טיפול בהתראות, לכוונן את הסף של מוניטור שימוש, להשהות מוניטור או לחדש אותו, וליצור הסלמות ולשייך אותן.',
+  'Does Beep work with self-hosted Appwrite?':
+    'האם Beep עובדת עם Appwrite באירוח עצמי?',
+  'No. Beep signs in to Appwrite Cloud only.':
+    'לא. Beep מתחברת ל-Appwrite Cloud בלבד.',
+  'Put your projects in your pocket': 'שימו את הפרויקטים שלכם בכיס',
+  'Download Beep, sign in with your Appwrite account, and choose what reaches you.':
+    'הורידו את Beep, התחברו עם חשבון Appwrite שלכם ובחרו מה יגיע אליכם.',
+  'Know the moment a monitor fires': 'דעו ברגע שמוניטור מופעל',
+  'Usage monitors, budget thresholds, and endpoint checks push to every phone you are signed in on, with the severity in the title and the reading in the body. Acknowledge, snooze for an hour, or mute the monitor right from the notification.':
+    'מוניטורי שימוש, ספי תקציב ובדיקות Endpoint שולחים התראת push לכל טלפון שאתם מחוברים בו, עם רמת החומרה בכותרת והערך שנמדד בגוף ההודעה. אשרו טיפול, השתיקו לשעה או השתיקו את המוניטור, ישירות מההתראה.',
+  'Know how bad it really is': 'דעו כמה זה באמת חמור',
+  'Open an alert for the reading against its threshold, its peak, and the hours around it. Endpoint checks show the result, the response time, and when the certificate expires. Acknowledge it so your team sees you have it, adjust the threshold, or jump to the project.':
+    'פתחו התראה כדי לראות את הערך שנמדד מול הסף, את השיא ואת השעות שסביבה. בבדיקות Endpoint תראו את התוצאה, את זמן התגובה ומתי יפוג תוקף התעודה. אשרו טיפול כדי שהצוות יראה שאתם מטפלים בזה, כווננו את הסף או עברו ישר לפרויקט.',
+  'Page the next person in line': 'הזעיקו את הבא בתור',
+  'Give a monitor an escalation and Beep notifies each step’s roles and people in turn, right away or after a wait you choose, until someone acknowledges the alert or it resolves. Create, edit, and assign escalations from your phone.':
+    'הגדירו הסלמה למוניטור, ו-Beep תתריע לתפקידים ולאנשים של כל שלב בתורם, מיד או אחרי זמן המתנה שתבחרו, עד שמישהו מאשר טיפול בהתראה או שהיא נסגרת. צרו, ערכו ושייכו הסלמות מהטלפון.',
+  'Appwrite Cloud, at a glance': 'Appwrite Cloud, במבט אחד',
+  'Home shows what is firing, how Appwrite Cloud is doing, and two weeks of alerts by severity, with your projects one tap away. Switch organizations from the menu and everything follows.':
+    'מסך הבית מציג אילו התראות פעילות, מה מצב Appwrite Cloud ושבועיים של התראות לפי חומרה, והפרויקטים שלכם במרחק הקשה אחת. החליפו ארגון מהתפריט, והכול מתעדכן בהתאם.',
+  'Usage for every project': 'השימוש בכל פרויקט',
+  'Search and filter every project in the organization, with firing ones first. Open one for bandwidth, requests, storage, executions, and compute over the last day, week, or month, next to the databases, functions, sites, and users it holds.':
+    'חפשו וסננו את כל הפרויקטים בארגון, כשהפרויקטים עם התראות פעילות מופיעים ראשונים. פתחו פרויקט כדי לראות רוחב פס, בקשות, אחסון, הרצות ומחשוב ביום, בשבוע או בחודש האחרונים, לצד מסדי הנתונים, הפונקציות, האתרים והמשתמשים שבו.',
+  'You choose what reaches you': 'אתם בוחרים מה מגיע אליכם',
+  'Turn organizations and projects on or off, decide whether resolved alerts and Appwrite updates reach you, and mute a single noisy monitor. Your choices belong to your account, so they apply on every device and in the Console.':
+    'הפעילו או כבו ארגונים ופרויקטים, החליטו אם התראות שנסגרו ועדכונים מ-Appwrite יגיעו אליכם, והשתיקו מוניטור בודד שמרעיש. ההגדרות שייכות לחשבון שלכם, ולכן הן חלות בכל מכשיר וגם בקונסולה.',
+  'Quiet the noise while you fix it': 'השתיקו את הרעש בזמן שאתם מתקנים',
+  'When one incident sends a burst of pushes, Home offers to snooze. Pause one organization or all of them for up to 24 hours. Alerts keep firing and showing in Beep, the Console, and email, and Beep tells you when notifications are back on.':
+    'כשתקלה אחת שולחת גל של התראות push, מסך הבית מציע השתקה זמנית. השהו את ההתראות מארגון אחד או מכולם, עד 24 שעות. ההתראות ממשיכות לפעול ולהופיע ב-Beep, בקונסולה ובאימייל, ו-Beep מודיעה לכם כשההתראות חוזרות לפעול.',
+  'Ring through silent mode': 'צלצול גם במצב שקט',
+  'On Android, monitors your team sets to Critical ring like an alarm, at alarm volume, even on silent, and in Do Not Disturb once you allow it. Everything else stays a normal notification.':
+    'ב-Android, מוניטורים שהצוות שלכם הגדיר כקריטיים מצלצלים כמו שעון מעורר ובאותה עוצמה, גם במצב שקט, וגם במצב נא לא להפריע אחרי שתאשרו זאת. כל השאר מגיע כהתראה רגילה.',
+  'Keep up with every release': 'הישארו מעודכנים בכל השקה',
+  'The Updates tab shows Appwrite Cloud incidents as they happen and every changelog entry, with a push when something new ships. Read it in the app, or turn product updates off in settings.':
+    'לשונית העדכונים מציגה תקלות ב-Appwrite Cloud בזמן אמת ואת כל העדכונים ביומן השינויים, עם התראת push כשמשהו חדש יוצא. קראו אותם באפליקציה, או כבו את עדכוני המוצר בהגדרות.',
+  'On every device you carry': 'בכל מכשיר שאיתכם',
+  'Beep runs on iPhone, iPad, Android phones and foldables, and Macs with Apple silicon. Sign in once with your Appwrite account and every device gets your alerts.':
+    'Beep פועלת ב-iPhone, ב-iPad, בטלפונים ובמכשירים מתקפלים עם Android ובמחשבי Mac עם Apple silicon. התחברו פעם אחת עם חשבון Appwrite שלכם, וכל מכשיר יקבל את ההתראות שלכם.',
+  'Now · Outbound bandwidth': 'עכשיו · תעבורה יוצאת',
+  '> 5 GB threshold · peak 6.9 GB': 'סף \u200E> 5 GB · שיא 6.9 GB',
+  'Adjust': 'כוונון',
+  'Around this alert, per hour': 'סביב ההתראה, לפי שעה',
+  'Announced': 'נשלחה התראה',
+  'Open in console': 'פתיחה בקונסולה',
+  'Mute this monitor': 'השתקת המוניטור הזה',
+  'Budget': 'תקציב',
+  'Home': 'בית',
+  'Outbound bandwidth · storefront-prod': 'תעבורה יוצאת · storefront-prod',
+  'Checkout API health': 'תקינות Checkout API',
+  'Budget at 100%': 'התקציב הגיע ל-100%',
+  'Budget used · Organization budget': 'תקציב שנוצל · תקציב הארגון',
+  'Do Not Disturb': 'נא לא להפריע',
+  'Critical alerts': 'התראות קריטיות',
+  'Open alert': 'פתיחת ההתראה',
+  'Ring for what matters': 'צלצול רק כשזה חשוב',
+  'Monitors your team sets to Critical ring this phone like an alarm, even on silent and in Do Not Disturb. Everything else stays a normal notification.':
+    'מוניטורים שהצוות שלכם הגדיר כקריטיים מצלצלים בטלפון הזה כמו שעון מעורר, גם במצב שקט וגם במצב נא לא להפריע. כל השאר מגיע כהתראה רגילה.',
+  'Set monitors to Critical': 'הגדירו מוניטורים כקריטיים',
+  'In the console, as a usage monitor’s severity or on a budget threshold.':
+    'בקונסולה, כרמת החומרה של מוניטור שימוש או בסף תקציב.',
+  'Let them override Do Not Disturb': 'אפשרו להן לעקוף את מצב נא לא להפריע',
+  'Android asks you to switch it on for the channel.':
+    'ב-Android תתבקשו להפעיל את זה עבור הערוץ.',
+  'Set the volume': 'קבעו את עוצמת הקול',
+  'They ring at your alarm volume.': 'הן מצלצלות בעוצמת השעון המעורר שלכם.',
+  'iOS 16.4 or later, in light or dark mode with your system.':
+    'iOS 16.4 ואילך, במצב בהיר או כהה לפי הגדרות המערכת.',
+  'A dashboard layout with what is firing, usage, and projects side by side.':
+    'פריסת דשבורד עם התראות פעילות, שימוש ופרויקטים זה לצד זה.',
+  'Phones and foldables, with critical alerts that ring through silent mode.':
+    'טלפונים ומכשירים מתקפלים, עם התראות קריטיות שמצלצלות גם במצב שקט.',
+  'Mac': 'Mac',
+  'Runs on Macs with Apple silicon, with a sidebar instead of tabs.':
+    'פועלת במחשבי Mac עם Apple silicon, עם סרגל צד במקום לשוניות.',
+  'Your Appwrite account': 'חשבון Appwrite שלכם',
+  'Sign in with GitHub, Google, or email, with the same MFA as the Console.':
+    'התחברו עם GitHub, Google או אימייל, עם אותו MFA כמו בקונסולה.',
+  'Works offline': 'עובדת גם בלי חיבור',
+  'Lose signal and Beep shows the last data it loaded, for up to 24 hours.':
+    'כשאין קליטה, Beep מציגה את הנתונים האחרונים שהיא טענה, עד 24 שעות.',
+  'Shortcuts': 'קיצורי דרך',
+  'Long-press the app icon for firing alerts, or to snooze for an hour.':
+    'לחצו לחיצה ארוכה על סמל האפליקציה כדי לראות התראות פעילות או כדי להשתיק לשעה.',
+  'Free on the App Store and Google Play, with no ads or in-app purchases.':
+    'בחינם ב-App Store וב-Google Play, בלי פרסומות ובלי רכישות בתוך האפליקציה.',
+  'Who an alert notifies, step by step, until someone acknowledges it or it resolves.':
+    'למי ההתראה נשלחת, שלב אחר שלב, עד שמישהו מאשר בה טיפול או שהיא נסגרת.',
+  'Then repeats 2 more times': 'ואז חוזרת עוד 2 פעמים',
+  'Your team sees that you have it, and the escalation stops.':
+    'הצוות רואה שאתם מטפלים בזה, וההסלמה נעצרת.',
+  'Create and edit escalations on the phone': 'יצירה ועריכה של הסלמות בטלפון',
+  '3 firing': '3 פעילות',
+  '2 critical · 1 error · 2 acknowledged': '2 קריטיות · 1 שגיאה · 2 בטיפול',
+  'Appwrite Cloud · Delayed Realtime events':
+    'Appwrite Cloud · עיכוב באירועי Realtime',
+  'Alerts fired · last 14 days': 'התראות שהופעלו · 14 הימים האחרונים',
+  '4 critical · busiest day Nov 19, 8 alerts':
+    '4 קריטיות · היום העמוס ביותר: 19 בנובמבר, 8 התראות',
+  'See all': 'הצגת הכל',
+  'Frankfurt · 379K requests in 24h': 'פרנקפורט · 379K בקשות ב-24 שעות',
+  'New York · 432K requests in 24h': 'ניו יורק · 432K בקשות ב-24 שעות',
+  'Sydney · 58K requests in 24h': 'סידני · 58K בקשות ב-24 שעות',
+  'Requests · 24h': 'בקשות · 24 שע׳',
+  '375K previous 24h': '375K ב-24 השעות הקודמות',
+  'In this project': 'בפרויקט הזה',
+  'Thursday, December 3': 'יום חמישי, 3 בדצמבר',
+  'Your team sees you have it': 'הצוות רואה שאתם מטפלים בזה',
+  'Snooze 1 hour': 'השתקה לשעה אחת',
+  'Snooze': 'השתקה זמנית',
+  'Resolved alerts': 'התראות שנסגרו',
+  'When an alert stops firing': 'כשהתראה מפסיקה לפעול',
+  'When Appwrite publishes a changelog entry':
+    'כש-Appwrite מפרסמת עדכון ביומן השינויים',
+  'Acme Inc': 'Acme Inc',
+  'Side projects': 'פרויקטים צדדיים',
+  '7 notifications in 30 minutes': '7 התראות ב-30 דקות',
+  'Snooze notifications while you look into it. Alerts keep showing here and in the console.':
+    'השתיקו את ההתראות זמנית בזמן שאתם בודקים מה קרה. ההתראות ימשיכו להופיע כאן ובקונסולה.',
+  'Snooze notifications': 'השתקה זמנית של התראות',
+  'All organizations': 'כל הארגונים',
+  'No notifications from Acme Inc until then, critical alerts included, on all your devices. Alerts still fire and show here, in the console and in email.':
+    'עד אז לא יגיעו התראות מ-Acme Inc, כולל התראות קריטיות, באף אחד מהמכשירים שלכם. ההתראות עדיין מופעלות ומופיעות כאן, בקונסולה ובאימייל.',
+  'Cloud status': 'סטטוס Cloud',
+  'Ongoing · Nov 19 at 4:14 PM': 'מתמשך · 19 בנובמבר ב-4:14 PM',
+  'Delayed Realtime events': 'עיכוב באירועי Realtime',
+  'Changelog': 'יומן שינויים',
+  'One-click APNs setup with the Appwrite CLI':
+    'הגדרת APNs בלחיצה אחת עם Appwrite CLI',
+  'Set up APNs for an iOS app with one CLI command':
+    'הגדירו APNs לאפליקציית iOS בפקודת CLI אחת',
+  'Run appwrite init apns in your iOS project and the CLI sets up push notifications in one command.':
+    'הריצו appwrite init apns בפרויקט ה-iOS שלכם, וה-CLI יגדיר התראות push בפקודה אחת.',
+  'Usage monitors for every project': 'מוניטורי שימוש לכל פרויקט',
+  'Get notified when a project crosses a usage threshold, by email or on your phone.':
+    'קבלו התראה כשפרויקט חוצה סף שימוש, באימייל או בטלפון.',
+  '[Critical] Egress spike on storefront-prod':
+    '[קריטי] קפיצה בתעבורה יוצאת ב-storefront-prod',
+  '6.2 GB > 5 GB · storefront-prod · Acme Inc · Frankfurt':
+    '6.2 GB > 5 GB · storefront-prod · Acme Inc · פרנקפורט',
+  '[Error] Checkout API health on checkout-api':
+    '[שגיאה] תקינות Checkout API ב-checkout-api',
+  'The HTTP check of api.checkout.example.com/v1/health failed: unexpected status code (503).':
+    'בדיקת ה-HTTP של api.checkout.example.com/v1/health נכשלה: קוד סטטוס לא צפוי (503).',
+  '[Critical] Budget at 100% on Acme Inc':
+    '[קריטי] התקציב הגיע ל-100% ב-Acme Inc',
+  '102% > 100% · Organization budget': '102% > 100% · תקציב הארגון',
+  // Reviews product page
+  'Reviews: AI code review for every pull request':
+    'Reviews: סקירת קוד עם AI לכל Pull request',
+  'Appwrite Reviews reviews every pull request on your Sites, Functions, and repositories on GitHub, GitLab, and Bitbucket. A summary, findings on the lines they concern, a verdict, and a merge confidence grade, on the same Git connection, Console, and bill as your deploys.':
+    'Appwrite Reviews סוקר כל Pull request באתרים, בפונקציות ובמאגרים שלכם ב-GitHub, ב-GitLab וב-Bitbucket. סיכום, ממצאים על השורות הרלוונטיות, החלטה וציון ביטחון למיזוג, על אותו חיבור Git, באותה קונסולה ובאותו חשבון כמו הפריסות שלכם.',
+  'Every pull request, reviewed': 'כל Pull request עובר סקירה',
+  'Appwrite Reviews reads each pull request on your Sites, Functions, and repositories, and posts a summary, findings on the lines they concern, a verdict, and a merge confidence grade. It runs on the same Git connection, Console, and bill as your deploys.':
+    'Appwrite Reviews קורא כל Pull request באתרים, בפונקציות ובמאגרים שלכם, ומפרסם סיכום, ממצאים על השורות הרלוונטיות, החלטה וציון ביטחון למיזוג. הוא פועל על אותו חיבור Git, באותה קונסולה ובאותו חשבון כמו הפריסות שלכם.',
+  'On GitHub, GitLab, and Bitbucket':
+    'ב-GitHub, ב-GitLab וב-Bitbucket',
+  'Merge confidence on every review': 'ביטחון למיזוג בכל סקירה',
+  'Each finding checked before it posts': 'כל ממצא נבדק לפני שהוא מתפרסם',
+  'Credits from your Appwrite plan': 'קרדיטים מהתוכנית שלכם ב-Appwrite',
+  'For new Sites and Functions': 'לאתרים ולפונקציות חדשים',
+  'What is Appwrite Reviews?': 'מה זה Appwrite Reviews?',
+  'Appwrite Reviews is AI code review built into Appwrite. It reviews every pull request on the repositories you turn it on for, and posts a summary, findings on the lines they concern, a verdict, and a merge confidence grade from S to F on the pull request, with the full review and its trace in the Console.':
+    'Appwrite Reviews הוא שירות סקירת קוד מבוסס AI שמובנה ב-Appwrite. הוא סוקר כל Pull request במאגרים שהפעלתם עבורם את השירות, ומפרסם ב-Pull request סיכום, ממצאים על השורות הרלוונטיות, החלטה וציון ביטחון למיזוג מ-S עד F, כשהסקירה המלאה והמעקב שלה זמינים בקונסולה.',
+  'Which Git providers are supported?': 'אילו ספקי Git נתמכים?',
+  'GitHub, GitLab, including self-managed GitLab, and Bitbucket. On GitHub the reviewer is the same Appwrite app that deploys your Sites and Functions. On GitLab and Bitbucket it comments as the account that connected the installation.':
+    'GitHub, GitLab (כולל GitLab בניהול עצמי) ו-Bitbucket. ב-GitHub, הסוקר הוא אותה אפליקציית Appwrite שפורסת את האתרים והפונקציות שלכם. ב-GitLab וב-Bitbucket הוא מגיב בשם החשבון שחיבר את ההתקנה.',
+  'When does a review run?': 'מתי מתבצעת סקירה?',
+  'When a pull request is opened, reopened, or marked ready for review, and again when it gets new commits, which are reviewed incrementally. Mention the app with “review” to run it again. Drafts and closed pull requests are skipped.':
+    'כש-Pull request נפתח, נפתח מחדש או מסומן כמוכן לסקירה, ושוב כשהוא מקבל קומיטים חדשים, שנסקרים באופן מצטבר. תייגו את האפליקציה עם "review" כדי להריץ את הסקירה שוב. על טיוטות ועל Pull requests סגורים מדלגים.',
+  'What does the reviewer read?': 'מה הסוקר קורא?',
+  'The pull request and the repository: the diff, the code at the pull request’s head, the title and description, linked issues, failed checks from your other CI apps, dependency changes, and guideline files such as AGENTS.md, CLAUDE.md, and CONTRIBUTING.md. It doesn’t read your Appwrite project’s databases, files, logs, or secrets.':
+    'את ה-Pull request ואת המאגר: ה-diff, הקוד ב-head של ה-Pull request, הכותרת והתיאור, Issues מקושרים, בדיקות שנכשלו מאפליקציות ה-CI האחרות שלכם, שינויים בתלויות וקובצי הנחיות כמו AGENTS.md, CLAUDE.md ו-CONTRIBUTING.md. הוא לא קורא את מסדי הנתונים, הקבצים, הלוגים או הסודות של פרויקט ה-Appwrite שלכם.',
+  'Does it approve pull requests?': 'האם הוא מאשר Pull requests?',
+  'It posts a verdict with every review: approve, request changes, or comment. The verdict and the grade cap are decided by code from the findings, not by the model, and a pull request from someone without write access is not approved by default. Each review also posts a status check, so your branch rules can require it.':
+    'הוא מפרסם החלטה בכל סקירה: אישור, בקשת שינויים או תגובה. ההחלטה ותקרת הציון נקבעות על ידי קוד לפי הממצאים, לא על ידי המודל, ו-Pull request ממי שאין לו הרשאת כתיבה לא מאושר כברירת מחדל. כל סקירה מפרסמת גם בדיקת סטטוס, כך שכללי ה-Branch שלכם יכולים לדרוש אותה.',
+  'Can I talk to the reviewer?': 'אפשר לדבר עם הסוקר?',
+  'Yes. Reply to any of its findings or mention the app with a question. It reads the code to answer, can resolve or dismiss a finding when the conversation settles it, and can save a learning for later reviews. Answers use no credits.':
+    'כן. השיבו לכל אחד מהממצאים שלו או תייגו את האפליקציה עם שאלה. הוא קורא את הקוד כדי לענות, יכול לסמן ממצא כנפתר או לדחות אותו כשהשיחה מכריעה בעניין, ויכול לשמור למידה לסקירות הבאות. תשובות לא צורכות קרדיטים.',
+  'How is Reviews priced?': 'כמה עולה סקירת הקוד?',
+  'Reviews use credits from your Appwrite plan, with no per-seat fees. A Basic review uses 10 credits, Normal 50, and Expert 500. Free includes 100 credits a month for your organization, Pro includes 2,000 a month per project, and Scale 20,000. On paid plans, extra credits cost $1 per 100. Answers in conversations, failed reviews, and skipped reviews are free.':
+    'הסקירות משתמשות בקרדיטים מתוכנית Appwrite שלכם, בלי חיוב לפי משתמש. סקירה בסיסית צורכת 10 קרדיטים, סקירה רגילה 50 וסקירת מומחה 500. Free כוללת 100 קרדיטים בחודש לארגון שלכם, Pro כוללת 2,000 בחודש לכל פרויקט, ו-Scale כוללת 20,000. בתוכניות בתשלום, קרדיטים נוספים עולים $1 לכל 100. תשובות בשיחות, סקירות שנכשלו וסקירות שדולגו הן בחינם.',
+  'Does Reviews work with self-hosted Appwrite?':
+    'האם סקירת הקוד עובדת עם Appwrite באירוח עצמי?',
+  'Self-hosted instances can opt in by running the review service with their own model provider. Reviews there read the code without running commands in a sandbox.':
+    'מופעים באירוח עצמי יכולים להפעיל אותה באמצעות הרצת שירות הסקירה עם ספק מודלים משלהם. הסקירות שם קוראות את הקוד בלי להריץ פקודות בסביבה מבודדת.',
+  'Review your next pull request': 'סקרו את ה-Pull request הבא שלכם',
+  'Turn on Reviews for a repository, open a pull request, and get a summary, findings, and a merge confidence grade where you already work.':
+    'הפעילו סקירת קוד למאגר, פתחו Pull request וקבלו סיכום, ממצאים וציון ביטחון למיזוג במקום שבו אתם כבר עובדים.',
+  'On where your code already ships': 'כבר מופעל איפה שהקוד שלכם נפרס',
+  'Create a site or function from a repository and Review pull requests is already on. Turn it on for any other repository on GitHub, GitLab, or Bitbucket from the Repositories tab, one switch at a time or all at once.':
+    'צרו אתר או פונקציה ממאגר, והאפשרות "סקירת Pull requests" כבר מופעלת. הפעילו אותה לכל מאגר אחר ב-GitHub, ב-GitLab או ב-Bitbucket מהלשונית Repos, מתג אחד בכל פעם או את כולם יחד.',
+  'A review on every pull request': 'סקירה לכל Pull request',
+  'When a pull request opens or gets new commits, the reviewer posts one summary that it edits in place: what changed, a verdict, and a merge confidence grade from S to F, with the findings, a walkthrough, and what was fixed since the last review. New commits get an incremental review of just what changed.':
+    'כש-Pull request נפתח או מקבל קומיטים חדשים, הסוקר מפרסם סיכום אחד שהוא מעדכן במקום: מה השתנה, החלטה וציון ביטחון למיזוג מ-S עד F, יחד עם הממצאים, מעבר על השינויים ומה תוקן מאז הסקירה הקודמת. קומיטים חדשים מקבלים סקירה מצטברת של מה שהשתנה בלבד.',
+  'Findings on the lines they concern': 'ממצאים על השורות הרלוונטיות',
+  'Each finding lands on the changed line with its severity, its category, and a plain explanation. When the fix is small, local, and certain, it comes as a suggested change, and every finding carries a prompt to fix it with AI.':
+    'כל ממצא מופיע על השורה שהשתנתה, עם רמת החומרה, הקטגוריה והסבר פשוט. כשהתיקון קטן, מקומי וודאי, הוא מגיע כשינוי מוצע, וכל ממצא כולל הנחיה לתיקון עם AI.',
+  'Grounded in your code, checked before it posts':
+    'מבוסס על הקוד שלכם ונבדק לפני פרסום',
+  'The reviewer reads the whole repository at the pull request’s head, your team’s guideline files, linked issues, and failed checks from your other CI apps. On Normal and Expert it can run commands in an isolated sandbox to confirm a suspected bug, and a second model checks every finding before anything is posted.':
+    'הסוקר קורא את כל המאגר ב-head של ה-Pull request, את קובצי ההנחיות של הצוות שלכם, Issues מקושרים ובדיקות שנכשלו מאפליקציות ה-CI האחרות שלכם. בסקירה רגילה ובסקירת מומחה הוא יכול להריץ פקודות בסביבה מבודדת כדי לאמת חשד לבאג, ומודל שני בודק כל ממצא לפני שמשהו מתפרסם.',
+  'Reply to a finding or mention the app with a question. It reads the code to answer, settles the thread when you are right, and holds its ground on bugs and security issues until the facts say otherwise. Answers use no credits.':
+    'השיבו לממצא או תייגו את האפליקציה עם שאלה. הוא קורא את הקוד כדי לענות, סוגר את השרשור כשאתם צודקים, ועומד על שלו בבאגים ובבעיות אבטחה עד שהעובדות מראות אחרת. תשובות לא צורכות קרדיטים.',
+  'It remembers how your team works': 'הוא זוכר איך הצוות שלכם עובד',
+  'Ask it to remember a preference in any pull request and it becomes a learning that later reviews and answers in that repository follow. See every learning in the Console, who asked for it, and remove the ones you no longer want.':
+    'בקשו ממנו לזכור העדפה בכל Pull request, והיא הופכת ללמידה שהסקירות והתשובות הבאות במאגר הזה פועלות לפיה. ראו בקונסולה כל למידה ומי ביקש אותה, והסירו את אלה שאתם כבר לא צריכים.',
+  'Choose how hard it looks': 'בחרו כמה לעומק הוא בודק',
+  'Set a strength per repository. Basic reads the code with cheaper models, Normal runs commands in a sandbox, and Expert splits the work across subagents with stronger models. Each review costs credits from your plan, with no per-seat fees.':
+    'הגדירו עוצמה לכל מאגר. סקירה בסיסית קוראת את הקוד עם מודלים זולים יותר, סקירה רגילה מריצה פקודות בסביבה מבודדת, וסקירת מומחה מחלקת את העבודה בין סוכני משנה עם מודלים חזקים יותר. כל סקירה עולה קרדיטים מהתוכנית שלכם, בלי חיוב לפי משתמש.',
+  'Ready for your coding agents': 'מוכן לסוכני הפיתוח שלכם',
+  'Pull requests from coding agents get reviewed like anyone else’s. The summary and every finding include a prompt to hand to your agent, and Appwrite agent skills read the review, push fixes, and ask again until the pull request reaches Tier S.':
+    'Pull requests מסוכני פיתוח נסקרים כמו של כל אחד אחר. הסיכום וכל ממצא כוללים הנחיה שאפשר להעביר לסוכן שלכם, וה-Agent Skills של Appwrite קוראים את הסקירה, דוחפים תיקונים ומבקשים סקירה חוזרת עד שה-Pull request מגיע ל-Tier S.',
+  'See what it catches': 'ראו מה הוא תופס',
+  'The Performance tab shows pull requests reviewed, how many were approved and how many on the first try, findings per pull request, how often findings were fixed rather than dismissed, and the median review time, by author, repository, and category.':
+    'לשונית הביצועים מציגה כמה Pull requests נסקרו, כמה אושרו וכמה מהם בניסיון הראשון, ממצאים לכל Pull request, באיזו תדירות ממצאים תוקנו ולא נדחו, ואת זמן הסקירה החציוני, לפי מחבר, מאגר וקטגוריה.',
+  'From pull request to production, on one platform':
+    'מ-Pull request ועד פרודקשן, בפלטפורמה אחת',
+  'Reviews is part of the project that builds, hosts, and watches your app. The pull request it reviews deploys to Sites and Functions, Monitors watch what you merged, and Beep pages your phone when something needs you, all in one Console and on one bill.':
+    'סקירת הקוד היא חלק מאותו פרויקט שבונה, מארח ומנטר את האפליקציה שלכם. ה-Pull request שהיא סוקרת נפרס לאתרים ולפונקציות, המוניטורים עוקבים אחרי מה שמיזגתם, ו-Beep מזעיקה אתכם בטלפון כשמשהו דורש את תשומת הלב שלכם, הכול בקונסולה אחת ובחשבון אחד.',
+  'Every finding includes a prompt to fix it with AI':
+    'כל ממצא כולל הנחיה לתיקון עם AI',
+  'Get acme/storefront#482 to Tier S': 'תביא את acme/storefront#482 ל-Tier S',
+  'Fix: a wrong password retries forever':
+    'תיקון: סיסמה שגויה גורמת לניסיונות חוזרים בלי סוף',
+  'Gitea': 'Gitea',
+  'on src/mail/send.ts': 'ב-src/mail/send.ts',
+  'Errors from sendEmail are swallowed': 'שגיאות מ-sendEmail נבלעות',
+  'just now': 'לפני רגע',
+  'this is fine, the queue retries failed sends.':
+    'זה בסדר, התור שולח שוב הודעות שנכשלו.',
+  'Confirmed in the mail queue: failed sends retry three times, then land in the dead-letter queue. Dismissing this finding.':
+    'אומת בתור הדואר: שליחות שנכשלו נשלחות שוב שלוש פעמים, ואז עוברות ל-dead-letter queue. דוחה את הממצא הזה.',
+  'Answers use no credits': 'תשובות לא צורכות קרדיטים',
+  'Reviews use your organization’s review credits.':
+    'הסקירות משתמשות בקרדיטי הסקירה של הארגון שלכם.',
+  'Suggested change': 'שינוי מוצע',
+  'Prompt to fix with AI': 'הנחיה לתיקון עם AI',
+  'Reply if this doesn’t apply.': 'השיבו אם זה לא רלוונטי.',
+  'Up to 15 inline findings per review': 'עד 15 ממצאים על שורות הקוד בכל סקירה',
+  'on #491': 'ב-#491',
+  'remember: we use early returns instead of nested ifs.':
+    'תזכור: אנחנו משתמשים ב-early return במקום תנאי if מקוננים.',
+  'Saved. Later reviews and answers in this repository will follow it.':
+    'נשמר. הסקירות והתשובות הבאות במאגר הזה יפעלו לפי זה.',
+  'Use early returns instead of nested ifs.':
+    'להשתמש ב-early return במקום תנאי if מקוננים.',
+  'Never log tokens, even hashed ones.':
+    'לא לרשום טוקנים בלוג, גם לא אחרי hash.',
+  'Read rows with Query.select, not whole documents.':
+    'לקרוא שורות עם Query.select, ולא מסמכים שלמים.',
+  'A learning can tell the reviewer to flag fewer of them.':
+    'למידה יכולה להורות לסוקר לסמן פחות מהם.',
+  'One Git connection': 'חיבור Git אחד',
+  'The Appwrite Git app that deploys your Sites and Functions reviews their pull requests too.':
+    'אפליקציית ה-Git של Appwrite שפורסת את האתרים והפונקציות שלכם סוקרת גם את ה-Pull requests שלהם.',
+  'Appwrite Reviews': 'Appwrite Reviews',
+  'A summary, findings on the lines they concern, a verdict, and a grade on every pull request.':
+    'סיכום, ממצאים על השורות הרלוונטיות, החלטה וציון בכל Pull request.',
+  'Sites and Functions': 'אתרים ופונקציות',
+  'A preview for the pull request, then production on merge, with rollbacks one click away.':
+    'תצוגה מקדימה ל-Pull request, ואז פרודקשן במיזוג, עם שחזור גרסה בלחיצה אחת.',
+  'Usage thresholds and endpoint checks tell you when what you merged misbehaves.':
+    'ספי שימוש ובדיקות Endpoint מתריעים כשמה שמיזגתם לא מתנהג כמו שצריך.',
+  'Appwrite Beep': 'Appwrite Beep',
+  'The alert reaches your phone, and the next person in line if nobody acknowledges it.':
+    'ההתראה מגיעה לטלפון שלכם, ולבא בתור אם אף אחד לא מאשר בה טיפול.',
+  'edited': 'נערך',
+  'Mergeable after minor fixes': 'ניתן למזג אחרי תיקונים קלים',
+  'Sign-in now stops on a wrong password and caps retries at five. One minor finding is left: the backoff ignores the Retry-After header.':
+    'ההתחברות נעצרת עכשיו כשהסיסמה שגויה, ומספר הניסיונות החוזרים מוגבל לחמישה. נשאר ממצא קל אחד: ה-backoff מתעלם מהכותרת Retry-After.',
+  'Latest changes': 'שינויים אחרונים',
+  'Stops retrying on 401 responses and adds a limit of five attempts.':
+    'מפסיק לנסות שוב בתגובות 401 ומוסיף מגבלה של חמישה ניסיונות.',
+  'To re-run it, comment:': 'כדי להריץ את הסקירה שוב, כתבו בתגובה:',
+  'Merge confidence': 'ביטחון למיזוג',
+  'Fix with agent prompt': 'הנחיה לתיקון עם סוכן',
+  'Walkthrough': 'מעבר על השינויים',
+  'Fixed since the last review': 'תוקן מאז הסקירה הקודמת',
+  'Incremental review': 'סקירה מצטברת',
+  'A second model checks every finding against the code before anything is posted.':
+    'מודל שני בודק כל ממצא מול הקוד לפני שמשהו מתפרסם.',
+  'The diff and the repository': 'ה-diff והמאגר',
+  'Read at the pull request’s head': 'נקראים ב-head של ה-Pull request',
+  'Your team’s guidelines': 'ההנחיות של הצוות שלכם',
+  'AGENTS.md, CLAUDE.md, CONTRIBUTING.md':
+    'AGENTS.md, CLAUDE.md, CONTRIBUTING.md',
+  'Linked issues': 'Issues מקושרים',
+  'What the change is for': 'מה מטרת השינוי',
+  'Failed checks': 'בדיקות שנכשלו',
+  'From your other CI apps': 'מאפליקציות ה-CI האחרות שלכם',
+  'Dependency changes': 'שינויים בתלויות',
+  'Versions bumped in the lockfile': 'גרסאות שעודכנו ב-lockfile',
+  'Rules your team asked it to keep': 'כללים שהצוות ביקש ממנו לשמור',
+  'Kept 3 of 5 findings': 'נשמרו 3 מתוך 5 ממצאים',
+  'Posted': 'פורסם',
+  '3 comments and a summary': '3 תגובות וסיכום',
+  '2 min ago': 'לפני 2 דקות',
+  '1 min ago': 'לפני דקה',
+  'Needs changes': 'דורש שינויים',
+  'Adds exponential backoff to sign-in retries. One finding: a wrong password retries forever.':
+    'מוסיף exponential backoff לניסיונות התחברות חוזרים. ממצא אחד: סיסמה שגויה גורמת לניסיונות חוזרים בלי סוף.',
+  'One Git app deploys and reviews': 'אפליקציית Git אחת פורסת וסוקרת',
+  // Monitors product page
+  'Monitors: usage alerts and endpoint checks for your Appwrite project':
+    'Monitors: התראות שימוש ובדיקות Endpoint לפרויקט Appwrite שלכם',
+  'Appwrite Monitors watch your project usage and your endpoints and alert you by email, in the Console, and on your phone when a metric crosses your threshold or a check fails. Escalate, acknowledge, and act on alerts with webhooks, functions, and MCP.':
+    'Appwrite Monitors עוקבים אחרי השימוש בפרויקט ואחרי ה-Endpoints שלכם, ומתריעים לכם באימייל, בקונסולה ובטלפון כשמדד חוצה את הסף שהגדרתם או כשבדיקה נכשלת. הסלימו התראות, אשרו בהן טיפול ופעלו לפיהן עם Webhooks, פונקציות ו-MCP.',
+  'Know when your project needs you': 'דעו מתי הפרויקט שלכם צריך אתכם',
+  'Appwrite Monitors watch your project usage and your endpoints, and tell you the moment a metric crosses your threshold or a check fails, by email, in the Console, and on your phone with Appwrite Beep.':
+    'Appwrite Monitors עוקבים אחרי השימוש בפרויקט ואחרי ה-Endpoints שלכם, ומודיעים לכם ברגע שמדד חוצה את הסף שהגדרתם או שבדיקה נכשלת, באימייל, בקונסולה ובטלפון עם Appwrite Beep.',
+  'Usage metrics across every service': 'מדדי שימוש בכל השירותים',
+  'HTTP, DNS, TCP, and SMTP endpoints': 'Endpoints של HTTP, DNS, TCP ו-SMTP',
+  'Between usage checks on Pro': 'בין בדיקות שימוש ב-Pro',
+  'Until someone acknowledges': 'עד שמישהו מאשר טיפול',
+  'Ask your agent what is firing': 'שאלו את הסוכן שלכם אילו התראות פעילות',
+  'What can Appwrite Monitors watch?':
+    'אחרי מה Appwrite Monitors יכולים לעקוב?',
+  'Usage monitors compare one project metric with a threshold you set, such as outbound bandwidth, executions, database reads, storage, realtime connections, or webhook failures, for the whole project or a single resource. On Appwrite Cloud, endpoint checks also test an HTTP URL, a DNS record, a TCP port, or a mail server, and budget alerts watch your organization’s spend.':
+    'מוניטורי שימוש משווים מדד אחד של הפרויקט לסף שאתם קובעים, כמו תעבורה יוצאת, הרצות, קריאות ממסד הנתונים, אחסון, חיבורי Realtime או כשלים ב-Webhooks, עבור הפרויקט כולו או עבור משאב בודד. ב-Appwrite Cloud, בדיקות Endpoint בודקות גם כתובת HTTP, רשומת DNS, פורט TCP או שרת דואר, והתראות תקציב עוקבות אחרי ההוצאות של הארגון שלכם.',
+  'How are thresholds set?': 'איך קובעים ספים?',
+  'A threshold is a value in the metric’s own unit, like 5 GB of outbound bandwidth or a million database reads, counted over a window from 5 minutes to 30 days or compared with the latest reading. The Console suggests one from your recent peak and shows how often it would have fired before you save.':
+    'סף הוא ערך ביחידה של המדד עצמו, כמו 5 GB של תעבורה יוצאת או מיליון קריאות ממסד הנתונים, שנספר לאורך חלון זמן של 5 דקות עד 30 ימים או מושווה לקריאה האחרונה. הקונסולה מציעה סף לפי השיא האחרון שלכם ומראה כמה פעמים הוא היה מופעל, עוד לפני שאתם שומרים.',
+  'Who gets notified when a monitor fires?': 'מי מקבל התראה כשמוניטור מופעל?',
+  'The organization roles a monitor notifies, Owners by default, by email, in the Console, and with a push on every phone signed in to Appwrite Beep. With an escalation, each step notifies its roles and people in turn until someone acknowledges the alert or it resolves. Members hear about an alert once when it fires and once when it resolves.':
+    'חברי הארגון בתפקידים שהמוניטור מתריע להם (כברירת מחדל, הבעלים), באימייל, בקונסולה ובהתראת push לכל טלפון שמחובר ל-Appwrite Beep. כשיש הסלמה, כל שלב מתריע בתורו לתפקידים ולאנשים שהוגדרו בו, עד שמישהו מאשר טיפול בהתראה או שהיא נסגרת. חברי הארגון מקבלים הודעה על התראה פעם אחת כשהיא מופעלת ופעם אחת כשהיא נסגרת.',
+  'What happens when usage recovers?': 'מה קורה כשהשימוש חוזר לשגרה?',
+  'The alert resolves on its own when the condition stops holding or the next check passes, and everyone who was told it fired gets a resolved notice. Resolved alerts stay in the Alerts tab with how long they fired and how far past the threshold they went.':
+    'ההתראה נסגרת מעצמה כשהתנאי מפסיק להתקיים או כשהבדיקה הבאה עוברת, וכל מי שקיבל הודעה שהיא הופעלה מקבל הודעה שהיא נסגרה. התראות שנסגרו נשארות בלשונית ההתראות, עם משך הזמן שבו הן היו פעילות ובכמה הן חרגו מהסף.',
+  'Can my code react to alerts?': 'הקוד שלי יכול להגיב להתראות?',
+  'Yes. Every alert fires monitors.[monitorId].alerts.[alertId].create when it opens and an update event when it is acknowledged or resolves. Deliver them to webhooks and function triggers, or start from the Alerts to chat or Pause on usage spike function templates.':
+    'כן. כל התראה מפעילה את monitors.[monitorId].alerts.[alertId].create כשהיא נפתחת, ואירוע עדכון כשמאשרים בה טיפול או כשהיא נסגרת. שלחו אותם ל-Webhooks ולטריגרים של פונקציות, או התחילו מתבניות הפונקציות Alerts to chat או Pause on usage spike.',
+  'Which plans include Monitors?': 'אילו תוכניות כוללות מוניטורים?',
+  'Free includes 3 usage monitors per project, checked every 15 minutes. Pro includes 25 usage monitors per project checked every minute, budget alerts, and 10 endpoint checks for your organization, with more at $2 a month each. Scale raises that to 100 usage monitors per project, 50 endpoint checks, and checks as often as every 30 seconds.':
+    'Free כוללת 3 מוניטורי שימוש לכל פרויקט, שנבדקים כל 15 דקות. Pro כוללת 25 מוניטורי שימוש לכל פרויקט שנבדקים כל דקה, התראות תקציב ו-10 בדיקות Endpoint לארגון שלכם, ובדיקות נוספות ב-$2 לחודש כל אחת. Scale מעלה את זה ל-100 מוניטורי שימוש לכל פרויקט, 50 בדיקות Endpoint ובדיקות בתדירות של עד כל 30 שניות.',
+  'Do Monitors work on self-hosted Appwrite?':
+    'האם מוניטורים עובדים ב-Appwrite באירוח עצמי?',
+  'Yes, for usage monitors, which self-hosted Appwrite evaluates every minute with the same API, SDKs, and project events. Endpoint checks, budget alerts, and pushes to Appwrite Beep run on Appwrite Cloud.':
+    'כן, במוניטורי שימוש, ש-Appwrite באירוח עצמי בודקת כל דקה עם אותם API, SDKs ואירועי פרויקט. בדיקות Endpoint, התראות תקציב והתראות push ל-Appwrite Beep פועלות ב-Appwrite Cloud.',
+  'Know before your users do': 'דעו לפני המשתמשים שלכם',
+  'Start from a monitor suggested by your own usage, and get the alert by email, in the Console, and on your phone.':
+    'התחילו ממוניטור שמוצע לפי השימוש שלכם, וקבלו את ההתראה באימייל, בקונסולה ובטלפון.',
+  'Start from your own usage': 'התחילו מהשימוש שלכם',
+  'Monitors suggests its first monitors from your last 7 days of usage: an egress spike, a surge in database reads, storage growth, and failing webhooks, each with a threshold set from what your project really does. Pick one and the form opens filled in.':
+    'המוניטורים הראשונים מוצעים לפי השימוש שלכם ב-7 הימים האחרונים: קפיצה בתעבורה יוצאת, זינוק בקריאות ממסד הנתונים, גידול באחסון ו-Webhooks שנכשלים, כל אחד עם סף שנקבע לפי מה שהפרויקט שלכם באמת עושה. בחרו אחד, והטופס ייפתח כשהוא כבר ממולא.',
+  'Drag the line, see what would have fired': 'גררו את הקו וראו מה היה מופעל',
+  'Pick a metric and the Console charts its real history behind a dashed threshold. Drag the line, and before you save it tells you how often the monitor would have fired over the last 12 hours to 30 days, with every breach shaded red.':
+    'בחרו מדד, והקונסולה תציג גרף של ההיסטוריה האמיתית שלו מאחורי קו סף מקווקו. גררו את הקו, ועוד לפני שתשמרו היא תראה לכם כמה פעמים המוניטור היה מופעל ב-12 השעות עד 30 הימים האחרונים, כשכל חריגה מסומנת באדום.',
+  'Watch any number your project produces':
+    'עקבו אחרי כל מספר שהפרויקט שלכם מייצר',
+  'Requests, bandwidth, executions, realtime connections, active users, database reads and writes, storage, messages, webhooks, and more. Watch the whole project or a single database, bucket, function, or site, counted over 5 minutes to 30 days.':
+    'בקשות, רוחב פס, הרצות, חיבורי Realtime, משתמשים פעילים, קריאות וכתיבות במסד הנתונים, אחסון, הודעות, Webhooks ועוד. עקבו אחרי הפרויקט כולו או אחרי מסד נתונים, באקט, פונקציה או אתר בודדים, בספירה לאורך 5 דקות עד 30 ימים.',
+  'Know when an endpoint stops answering': 'דעו מתי Endpoint מפסיק להגיב',
+  'On Appwrite Cloud, check an HTTP URL, a DNS record, a TCP port, or a mail server on the interval you choose. An HTTP check fails on any status outside 2xx, or when its certificate is about to expire, and you set the codes and the warning window.':
+    'ב-Appwrite Cloud, בדקו כתובת HTTP, רשומת DNS, פורט TCP או שרת דואר במרווח שתבחרו. בדיקת HTTP נכשלת בכל סטטוס מחוץ לטווח 2xx, או כשתוקף התעודה שלה עומד לפוג, ואתם קובעים את הקודים ואת חלון האזהרה.',
+  'Every alert says how bad it is': 'כל התראה מראה כמה זה חמור',
+  'An alert keeps the latest reading, its peak, and how far past the threshold it went. Open it for the timeline from the first firing to recovery, and acknowledge it so your team knows you have it. It resolves on its own when usage recovers or the next check passes.':
+    'התראה שומרת את הקריאה האחרונה, את השיא ואת מידת החריגה מהסף. פתחו אותה כדי לראות את ציר הזמן מההפעלה הראשונה ועד החזרה לשגרה, ואשרו טיפול כדי שהצוות ידע שאתם מטפלים בזה. היא נסגרת מעצמה כשהשימוש חוזר לשגרה או כשהבדיקה הבאה עוברת.',
+  'Escalate until someone answers': 'הסלימו עד שמישהו עונה',
+  'Build an escalation once for your organization and pick it on any monitor. Each step notifies roles or named people, right away or after a wait, and repeats if nobody responds. It stops as soon as someone acknowledges the alert or it resolves.':
+    'בנו הסלמה פעם אחת לארגון ובחרו אותה בכל מוניטור. כל שלב מתריע לתפקידים או לאנשים מסוימים, מיד או אחרי המתנה, וההסלמה חוזרת על עצמה אם אף אחד לא מגיב. היא נעצרת ברגע שמישהו מאשר טיפול בהתראה או שההתראה נסגרת.',
+  'Email, the Console, and your phone': 'אימייל, קונסולה וטלפון',
+  'The people a monitor notifies get an email with a button to pause it, a notification in the Console, and a push in Appwrite Beep with Acknowledge, Snooze, and Mute. Monitors set to Critical ring Android phones through silent mode.':
+    'האנשים שמוניטור מתריע להם מקבלים אימייל עם כפתור להשהיית המוניטור, התראה בקונסולה והתראת push ב-Appwrite Beep עם אפשרויות לאישור טיפול, להשתקה זמנית ולהשתקת המוניטור. מוניטורים שהוגדרו כקריטיים מצלצלים בטלפונים עם Android גם במצב שקט.',
+  'Alerts your code can act on': 'התראות שהקוד שלכם יכול לפעול לפיהן',
+  'Every alert fires a project event when it opens and again when it is acknowledged or resolves. Send it to a webhook, trigger a function, or start from a template that posts to Slack, Discord, Microsoft Teams, or Google Chat, or pauses a function or site on a usage spike.':
+    'כל התראה מפעילה אירוע פרויקט כשהיא נפתחת, ושוב כשמאשרים בה טיפול או כשהיא נסגרת. שלחו אותו ל-Webhook, הפעילו פונקציה, או התחילו מתבנית שמפרסמת ב-Slack, ב-Discord, ב-Microsoft Teams או ב-Google Chat, או שמשהה פונקציה או אתר כשיש קפיצה בשימוש.',
+  'Connect the Appwrite MCP server to Claude, Cursor, VS Code, or any MCP client. Your agent can create usage monitors and endpoint checks, list the alerts that are firing, and acknowledge them, and the same works from the server SDKs and the CLI.':
+    'חברו את שרת Appwrite MCP ל-Claude, ל-Cursor, ל-VS Code או לכל לקוח MCP. הסוכן שלכם יכול ליצור מוניטורי שימוש ובדיקות Endpoint, להציג את ההתראות הפעילות ולאשר בהן טיפול, וכל זה עובד גם מה-SDKs לצד השרת ומה-CLI.',
+  'Budget alerts before the bill': 'התראות תקציב לפני שהחשבון מגיע',
+  'Set budget alerts in your organization’s billing settings and Monitors watches how much of your budget cap this cycle has used, with up to four thresholds and the cap itself at 100%. They reach you by email and on your phone.':
+    'הגדירו התראות תקציב בהגדרות החיוב של הארגון, והמוניטורים יעקבו אחרי החלק מתקרת התקציב שנוצל במחזור הנוכחי, עם עד ארבעה ספים ועם התקרה עצמה ב-100%. ההתראות מגיעות אליכם באימייל ובטלפון.',
+  'Appwrite MCP · OAuth, no API keys': 'Appwrite MCP · OAuth, בלי מפתחות API',
+  'Is anything firing on storefront-prod? If it is bandwidth, acknowledge it for me.':
+    'יש התראות פעילות ב-storefront-prod? אם זה רוחב פס, תאשר טיפול בשמי.',
+  'One alert is firing: outbound bandwidth reached 6.2 GB in the last hour, 1.2× its 5 GB threshold, for 18 minutes.':
+    'התראה אחת פעילה: התעבורה היוצאת הגיעה ל-6.2 GB בשעה האחרונה, פי 1.2 מהסף של 5 GB, כבר 18 דקות.',
+  'Acknowledged by Ana Silva': 'בטיפול של Ana Silva',
+  'within 1 hour': 'בתוך שעה אחת',
+  '1.2× the threshold': '1.2× מהסף',
+  '1.4× the threshold': '1.4× מהסף',
+  'Email, push, and Console': 'אימייל, push וקונסולה',
+  'Budget used this cycle': 'התקציב שנוצל במחזור הזה',
+  'Cap': 'תקרה',
+  'Over 75% of budget used · Acme Inc': 'נוצל יותר מ-75% מהתקציב · Acme Inc',
+  'Email to Owners': 'אימייל לבעלים',
+  'Update budget cap': 'עדכון תקרת התקציב',
+  'HTTP check': 'בדיקת HTTP',
+  '14 days': '14 ימים',
+  '1 min': '1 דק׳',
+  '10 s': '10 שניות',
+  'Appwrite Cloud, Pro and Scale': 'Appwrite Cloud, בתוכניות Pro ו-Scale',
+  'Storefront': 'Storefront',
+  'Storefront DNS': 'DNS של Storefront',
+  'Queue': 'תור',
+  'Mail server': 'שרת דואר',
+  'On call': 'כוננות',
+  '2 times': '2 פעמים',
+  'Starts again from the first step, a monitor’s cooldown after the last one.':
+    'מתחילה שוב מהשלב הראשון, פרק הצינון של המוניטור אחרי השלב האחרון.',
+  'Developers now → Ana, Ben after 10 m · repeats 2×':
+    'מפתחים מיד ← Ana, Ben אחרי 10 דק׳ · חוזרת 2×',
+  'Owners now': 'בעלים מיד',
+  'Ana Silva': 'Ana Silva',
+  'Ben Okafor': 'Ben Okafor',
+  'Project events': 'אירועי פרויקט',
+  'Function template': 'תבנית פונקציה',
+  'Alerts to chat': 'Alerts to chat',
+  'Post alerts to Slack, Discord, Microsoft Teams, or Google Chat.':
+    'מפרסמת התראות ב-Slack, ב-Discord, ב-Microsoft Teams או ב-Google Chat.',
+  'Pause on usage spike': 'Pause on usage spike',
+  'Turn off a function or site when its monitor fires.':
+    'מכבה פונקציה או אתר כשהמוניטור שלהם מופעל.',
+  'Cloud': 'Cloud',
+  'Requests and bandwidth': 'בקשות ורוחב פס',
+  'Outbound bandwidth is above 5 GB': 'התעבורה היוצאת מעל 5 GB',
+  'Outbound bandwidth reached 6.2 GB in the last hour, 1.2× the threshold.':
+    'התעבורה היוצאת הגיעה ל-6.2 GB בשעה האחרונה, פי 1.2 מהסף.',
+  'Summed over 1 hour': 'סך הכול בשעה אחת',
+  'View alert': 'הצגת ההתראה',
+  'Pause this monitor': 'השהיית המוניטור הזה',
+  'Console notification': 'התראה בקונסולה',
+  'Twice your peak, rounded up': 'פי שניים מהשיא שלכם, מעוגל כלפי מעלה',
+  'HTTP monitor': 'מוניטור HTTP',
+  'DNS monitor': 'מוניטור DNS',
+  'TCP monitor': 'מוניטור TCP',
+  'SMTP monitor': 'מוניטור SMTP',
+  'Would have fired 2× in the last 24 hours':
+    'היה מופעל 2 פעמים ב-24 השעות האחרונות',
+  'Fires when': 'מופעל כאשר',
+  'Resolves on its own when usage recovers': 'נסגרת מעצמה כשהשימוש חוזר לשגרה',
+  '[Firing] Egress spike · storefront-prod':
+    '[פעילה] קפיצה בתעבורה יוצאת · storefront-prod',
+  'Egress spike is firing': 'קפיצה בתעבורה יוצאת: התראה פעילה',
+  // Monitors, Beep, and Reviews visuals: data fields the page components pass
+  // through t() (times, steps, scopes, tiers, hints, credits)
+  '4 min ago': 'לפני 4 דקות',
+  '12 min ago': 'לפני 12 דקות',
+  '18 min ago': 'לפני 18 דקות',
+  '12m ago': 'לפני 12 דק׳',
+  '18m ago': 'לפני 18 דק׳',
+  '2h ago': 'לפני 2 שע׳',
+  'Frankfurt': 'פרנקפורט',
+  'Unexpected status code · HTTP 503': 'קוד סטטוס לא צפוי · HTTP 503',
+  '3 firing · 2 acknowledged': '3 פעילות · 2 בטיפול',
+  'Right away': 'מיד',
+  'After 10 min': 'אחרי 10 דק׳',
+  'After 30 min': 'אחרי 30 דק׳',
+  'Notified at 9:37': 'קיבלו התראה ב-9:37',
+  'Next, in 6 min': 'הבא בתור, בעוד 6 דק׳',
+  'Projects in Acme Inc': 'פרויקטים ב-Acme Inc',
+  'These settings belong to your console account and apply on all your devices. Emails are unaffected.':
+    'ההגדרות האלה שייכות לחשבון הקונסולה שלכם וחלות בכל המכשירים שלכם. אימיילים לא מושפעים מהן.',
+  '4 hours': '4 שעות',
+  'Nov 19, 2026': '19 בנובמבר 2026',
+  'Nov 17, 2026': '17 בנובמבר 2026',
+  'After 10 minutes': 'אחרי 10 דקות',
+  'Used by 4 monitors': 'בשימוש ב-4 מוניטורים',
+  'Used by 1 monitor': 'בשימוש במוניטור אחד',
+  '5 min': '5 דק׳',
+  '15 min': '15 דק׳',
+  'The project, a function, or a site': 'הפרויקט, פונקציה או אתר',
+  'The project or one database': 'הפרויקט או מסד נתונים אחד',
+  'The project, a bucket, a database, a function, or a site':
+    'הפרויקט, באקט, מסד נתונים, פונקציה או אתר',
+  'One dedicated database': 'מסד נתונים ייעודי אחד',
+  'The whole project, bot traffic excluded': 'הפרויקט כולו, ללא תעבורת בוטים',
+  'Your organization, from billing settings': 'הארגון שלכם, מהגדרות החיוב',
+  'Read and write IOPS': 'IOPS של קריאה וכתיבה',
+  'Analytics events': 'אירועי אנליטיקה',
+  'Analytics pageviews': 'צפיות בדפים באנליטיקה',
+  'Budget used': 'תקציב שנוצל',
+  'Peak hour 2.4 GB': 'שעת שיא 2.4 GB',
+  'Peak hour 380K': 'שעת שיא 380K',
+  'Peak hour 3': 'שעת שיא 3',
+  'Now 18 GB': 'עכשיו 18 GB',
+  'Ready to merge': 'מוכן למיזוג',
+  'Needs changes before merging': 'נדרשים שינויים לפני מיזוג',
+  'Significant problems': 'בעיות משמעותיות',
+  'Serious problems': 'בעיות חמורות',
+  'Do not merge': 'אין למזג',
+  'Token is logged before it is hashed': 'הטוקן נרשם בלוג לפני שהוא עובר hash',
+  'The raw session token reaches your logs on every sign-in. Log the session ID instead.':
+    'טוקן הסשן הגולמי מגיע ללוגים שלכם בכל התחברות. רשמו בלוג את מזהה הסשן במקומו.',
+  'A wrong password retries forever':
+    'סיסמה שגויה גורמת לניסיונות חוזרים בלי סוף',
+  'The loop has no exit when signIn rejects with invalid credentials. Stop on a 401 and cap the attempts.':
+    'ללולאה אין יציאה כש-signIn נדחה עם פרטי אימות שגויים. עצרו בתגובת 401 והגבילו את מספר הניסיונות.',
+  '412 reviews': '412 סקירות',
+  '48% first try': '48% בניסיון הראשון',
+  '6 critical': '6 קריטיים',
+  'Fixed, not dismissed': 'תוקנו, לא נדחו',
+  'Observe': 'ניטור',
+  'Respond': 'טיפול',
+  'One organization bill': 'חשבון אחד לארגון',
+  'Same team and roles': 'אותו צוות ואותם תפקידים',
+  'No per-seat fees': 'בלי חיוב לפי משתמש',
+  '10 credits per review': '10 קרדיטים לכל סקירה',
+  '50 credits per review': '50 קרדיטים לכל סקירה',
+  '500 credits per review': '500 קרדיטים לכל סקירה',
+  '4 files': '4 קבצים',
+  'Retry sign-in with backoff': 'ניסיונות התחברות חוזרים עם backoff',
+  'Every org': 'כל ארגון',
+  'From the push': 'ישירות מההתראה',
+  '4 checks': '4 בדיקות',
+  'Every PR': 'כל PR',
+  'S to F': 'מ-S עד F',
+  'No seats': 'בלי חיוב למשתמש',
+  'On by default': 'מופעל כברירת מחדל',
+  'iPhone': 'iPhone',
+  'iPad': 'iPad',
+  'Free of charge': 'ללא עלות',
+  'Stop on a 401 and cap the attempts.': 'עצרו בתגובת 401 והגבילו את מספר הניסיונות.',
 }
-
-
-

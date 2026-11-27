@@ -3,6 +3,21 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-postgresql-19",
+    "href": "/blog/post/announcing-postgresql-19",
+    "title": "Managed PostgreSQL 19 is now available on Appwrite Cloud",
+    "description": "New Appwrite managed PostgreSQL databases now run PostgreSQL 19, and existing PostgreSQL 17 and 18 databases upgrade to it online from the Console or API.",
+    "date": "2026-11-27",
+    "lastUpdated": "2026-11-27",
+    "timeToRead": 6,
+    "author": "jake-barnby",
+    "category": "announcements",
+    "featured": false,
+    "unlisted": false,
+    "cover": "/images/blog/announcing-postgresql-19/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-automatic-image-format",
     "href": "/blog/post/announcing-automatic-image-format",
     "title": "Announcing automatic image formats based on browser support",
@@ -14,6 +29,20 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-automatic-image-format/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "announcing-project-environments",
+    "href": "/blog/post/announcing-project-environments",
+    "title": "Announcing project environments: dev, staging, and QA for Appwrite projects",
+    "description": "Appwrite Cloud projects now have environments: dev, staging, and QA backends with their own data and users, under the same project ID and on the same bill.",
+    "date": "2026-11-26",
+    "lastUpdated": "2026-11-26",
+    "timeToRead": 5,
+    "author": "matej-baco",
+    "category": "announcements, products",
+    "featured": false,
+    "cover": "/images/blog/announcing-project-environments/cover.avif",
     "hasCover": true
   },
   {

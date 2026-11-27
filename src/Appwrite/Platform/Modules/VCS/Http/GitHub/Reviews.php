@@ -6,8 +6,10 @@ use Appwrite\Event\Message\Review as ReviewMessage;
 use Appwrite\Event\Message\ReviewChat as ReviewChatMessage;
 use Appwrite\Event\Publisher\Review as ReviewPublisher;
 use Appwrite\Extend\Exception;
+use Appwrite\Reviews\Provider;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\InstallationTokens;
+use Appwrite\Vcs\RepositoryPath;
 use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -45,10 +47,23 @@ trait Reviews
 
     /**
      * The comment author's standing in the repository, as GitHub's author association names it:
-     * OWNER, MEMBER or COLLABORATOR may queue work, anything else may not. A provider that sends
-     * none asks for the author's permission through the installation.
+     * OWNER, MEMBER or COLLABORATOR lets the pull request's author queue work, anything else does
+     * not. A provider that sends none asks for the author's permission through the installation.
      */
     abstract protected function getCommentAuthorAssociation(array $parsedPayload, Document $installation, VcsFactory $vcsFactory, InstallationTokens $installationTokens, Database $dbForPlatform): string;
+
+    /**
+     * Whether the comment's author opened the pull request. Only they may queue work from a
+     * comment: the pull request and its findings are theirs to answer for. Logins are compared as
+     * the delivery names them; a provider whose comment deliveries do not name the pull request's
+     * author reads it instead.
+     */
+    protected function isPullRequestAuthor(array $parsedPayload, Document $installation, VcsFactory $vcsFactory): bool
+    {
+        $author = \strtolower(\strval($parsedPayload['pullRequestAuthor'] ?? ''));
+
+        return $author !== '' && $author === \strtolower(\strval($parsedPayload['commentAuthor'] ?? ''));
+    }
 
     /**
      * Queues a review of the pull request for each project that has code review on for the
@@ -58,6 +73,8 @@ trait Reviews
     protected function queueReviews(
         string $provider,
         array $parsedPayload,
+        VcsFactory $vcsFactory,
+        InstallationTokens $installationTokens,
         Database $dbForPlatform,
         Authorization $authorization,
         callable $getProjectDB,
@@ -81,7 +98,7 @@ trait Reviews
 
         $repositories = $this->findReviewRepositories($provider, $providerRepositoryId, \strval($parsedPayload['installationId'] ?? ''), $dbForPlatform, $authorization);
 
-        foreach ($repositories as ['repository' => $repository]) {
+        foreach ($repositories as ['repository' => $repository, 'installation' => $installation]) {
             try {
                 $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $repository->getAttribute('projectId', '')));
                 if ($project->isEmpty() || !$this->isProjectInCurrentRegion($project)) {
@@ -90,7 +107,7 @@ trait Reviews
 
                 $this->queueReview(
                     $provider,
-                    $parsedPayload,
+                    $this->withStoredRepository($provider, $parsedPayload, $repository, $installation, $vcsFactory, $installationTokens, $dbForPlatform, $authorization),
                     $project,
                     $repository,
                     $getProjectDB($project),
@@ -165,13 +182,23 @@ trait Reviews
         $isReviewThread = $commentKind === 'review';
         // Asked once per installation: several projects may review the repository through one.
         $associations = [];
+        $authors = [];
 
         foreach ($repositories as ['repository' => $repository, 'installation' => $installation]) {
             try {
-                // Every answer is a model run the project pays for: trusted humans and other apps
-                // may ask, never the reviewer itself. Checked once code review is known to be on, as
-                // a provider may have to be asked who the author is.
-                $association = $associations[$installation->getId()] ??= $this->getCommentAuthorAssociation($parsedPayload, $installation, $vcsFactory, $installationTokens, $dbForPlatform);
+                $delivery = $this->withStoredRepository($provider, $parsedPayload, $repository, $installation, $vcsFactory, $installationTokens, $dbForPlatform, $authorization);
+
+                // Every answer is a model run the project pays for: only the pull request's author
+                // may ask, if trusted or another app, and never the reviewer itself. Checked once
+                // code review is known to be on, as a provider may have to be asked who the author is.
+                if (!($authors[$installation->getId()] ??= $this->isPullRequestAuthor($delivery, $installation, $vcsFactory))) {
+                    if ($authorType !== 'Bot' && $authorType !== 'App') {
+                        Console::info("Ignored {$subject} for repository '{$repository->getId()}': the author did not open the pull request");
+                    }
+                    continue;
+                }
+
+                $association = $associations[$installation->getId()] ??= $this->getCommentAuthorAssociation($delivery, $installation, $vcsFactory, $installationTokens, $dbForPlatform);
                 if (!$this->canTriggerFromComment($author, $authorType, $association, $this->getReviewerLogin($installation))) {
                     // Other apps may ask, so the only bot refused here is the reviewer itself, whose
                     // own comments arrive on every review. Everyone else refused gets a line.
@@ -198,7 +225,7 @@ trait Reviews
                     // The service reviews whatever the head is when it runs, so no head is read here.
                     $this->queueReview(
                         $provider,
-                        $parsedPayload,
+                        $delivery,
                         $project,
                         $repository,
                         $dbForProject,
@@ -238,7 +265,7 @@ trait Reviews
                         'providerPullRequestId' => (string) $pullNumber,
                         'providerCommentId' => $commentId,
                         'kind' => $commentKind,
-                        'author' => $parsedPayload['commentAuthor'] ?? '',
+                        'author' => $delivery['commentAuthor'] ?? '',
                     ])));
                 } catch (DuplicateException) {
                     Console::info("Ignored {$subject} for repository '{$repository->getId()}': it is already queued");
@@ -248,9 +275,9 @@ trait Reviews
                 $comment = [
                     'id' => $this->toPayloadId($commentId),
                     'kind' => $commentKind,
-                    'author' => $parsedPayload['commentAuthor'] ?? '',
+                    'author' => $delivery['commentAuthor'] ?? '',
                     'authorAssociation' => $association,
-                    'url' => $parsedPayload['commentUrl'] ?? '',
+                    'url' => $delivery['commentUrl'] ?? '',
                 ];
                 // A review thread's replies attach to its first comment, which this one is when it replies to nothing,
                 // or, where the provider names threads, to the thread.
@@ -260,7 +287,7 @@ trait Reviews
 
                 try {
                     $queued = $publisherForReviews->enqueue(new ReviewChatMessage(
-                        repository: $this->getReviewRepository($provider, $parsedPayload, $project, $repository, $platform),
+                        repository: $this->getReviewRepository($provider, $delivery, $project, $repository, $platform),
                         pullNumber: $pullNumber,
                         comment: $comment,
                         unmentioned: $unmentioned,
@@ -459,9 +486,10 @@ trait Reviews
     }
 
     /**
-     * Whether a comment may queue work. Humans need an owner, member or collaborator association;
-     * other apps and bots may ask too (an agent answering a finding), but never the reviewer
-     * itself, so it does not answer itself in a loop. $self is the login the reviewer comments as.
+     * Whether the pull request's author may queue work with a comment. Humans need an owner,
+     * member or collaborator association; other apps and bots may ask too (an agent answering a
+     * finding on its pull request), but never the reviewer itself, so it does not answer itself in
+     * a loop. $self is the login the reviewer comments as.
      */
     private function canTriggerFromComment(string $login, string $type, string $association, string $self): bool
     {
@@ -547,6 +575,47 @@ trait Reviews
         $lines = \array_filter(\explode("\n", $text), fn (string $line) => !\str_starts_with(\ltrim($line), '>'));
 
         return \implode("\n", $lines);
+    }
+
+    /**
+     * The delivery with the repository it names replaced by the one the project connected.
+     *
+     * GitLab, Gitea and Bitbucket authenticate deliveries with one instance-wide secret that
+     * Appwrite registers on every connected repository, so the body speaks for no particular
+     * repository: whoever holds the secret could pair this repository's id with any owner and
+     * name. The job carries this installation's credential, so the owner and name are read from
+     * the provider for the stored repository id, as the repository was when it was connected, and
+     * the ids are the stored ones. App providers sign each delivery for its installation, and
+     * findReviewRepositories() only matched rows of that installation, so theirs is kept.
+     *
+     * @param array<string, mixed> $parsedPayload
+     * @return array<string, mixed>
+     */
+    private function withStoredRepository(string $provider, array $parsedPayload, Document $repository, Document $installation, VcsFactory $vcsFactory, InstallationTokens $installationTokens, Database $dbForPlatform, Authorization $authorization): array
+    {
+        if ($this->isAppProvider($provider)) {
+            return $parsedPayload;
+        }
+
+        $providerRepositoryId = \strval($repository->getAttribute('providerRepositoryId', ''));
+        $providerInstallationId = \strval($installation->getAttribute('providerInstallationId', ''));
+
+        $installation = $authorization->skip(fn () => $installationTokens->refreshForInstallation($installation, $dbForPlatform, $vcsFactory));
+        $vcs = $vcsFactory->fromInstallation($installation);
+
+        [$owner, $repositoryName] = RepositoryPath::read($vcs, Provider::from($provider), $providerInstallationId, $providerRepositoryId);
+
+        if (($parsedPayload['owner'] ?? '') !== $owner || ($parsedPayload['repositoryName'] ?? '') !== $repositoryName) {
+            Console::warning("Delivery named repository '{$providerRepositoryId}' as '" . ($parsedPayload['owner'] ?? '') . '/' . ($parsedPayload['repositoryName'] ?? '') . "', the provider names it '{$owner}/{$repositoryName}'");
+        }
+
+        return [
+            ...$parsedPayload,
+            'repositoryId' => $providerRepositoryId,
+            'installationId' => $providerInstallationId,
+            'owner' => $owner,
+            'repositoryName' => $repositoryName,
+        ];
     }
 
     /**

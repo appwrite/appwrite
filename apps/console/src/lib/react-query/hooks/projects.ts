@@ -156,26 +156,24 @@ function getProjectStatusQueries(): string[] {
 }
 
 /**
- * Legacy console project list search: fulltext on the `search` attribute OR
- * substring match on `labels` (e.g. finding a project by ID used as a label).
+ * Project list search: fulltext on the `search` attribute OR substring match on
+ * `labels`, plus an exact `$id` match when the term could be a project ID, so a
+ * pasted ID resolves in the same request.
  * Prefer this over the list endpoint's `search` param, which does not mirror that OR.
  */
 function projectListSearchOrQuery(trimmedSearch: string): string {
   return Query.or([
     Query.search('search', trimmedSearch),
     Query.contains('labels', trimmedSearch),
+    ...(isProbableConsoleProjectId(trimmedSearch)
+      ? [Query.equal('$id', trimmedSearch)]
+      : []),
   ])
 }
 
 /** Console project custom ID rules (a–z, 0–9, hyphen; max 36; no leading special char). */
 function isProbableConsoleProjectId(value: string): boolean {
   return /^[a-z0-9][a-z0-9-]{0,35}$/i.test(value)
-}
-
-function projectMatchesActiveListStatus(project: Models.Project): boolean {
-  if (!getActiveProfileFeatures().billing) return true
-  const status = project.status
-  return status == null || status !== 'archived'
 }
 
 // ============================================================================
@@ -246,7 +244,6 @@ export async function fetchActiveProjects(
   if (isRestricted && allowedIds.length === 0) {
     return { projects: [], total: 0 }
   }
-  const allowedIdSet = new Set(allowedIds)
   const restrictQueries = isRestricted
     ? [
         allowedIds.length === 1
@@ -283,29 +280,6 @@ export async function fetchActiveProjects(
     excludeProjectIds.every((id) => typeof id === 'string' && id.length > 0)
       ? excludeProjectIds
       : []
-
-  // `projects.list` only documents filters on name/teamId/labels/search - not `$id`.
-  // Pasting a project ID never hits fulltext/labels, so resolve ID-shaped terms via get.
-  if (trimmedSearch && isProbableConsoleProjectId(trimmedSearch)) {
-    try {
-      const direct = await fetchProjectById(trimmedSearch)
-      if (
-        !excludeIds.includes(direct.$id) &&
-        direct.teamId === teamId &&
-        // Pasting an id must not reveal a project outside the member's scope.
-        (!isRestricted || allowedIdSet.has(direct.$id)) &&
-        projectMatchesActiveListStatus(direct) &&
-        !(hideEnvironments && direct.parentId)
-      ) {
-        return {
-          projects: page === 0 ? [direct] : [],
-          total: 1,
-        }
-      }
-    } catch {
-      // Not found, wrong console, or no access - fall through to list search.
-    }
-  }
 
   const queries =
     excludeIds.length > 0

@@ -21,6 +21,7 @@ import {
   Database,
   FileText,
   Folder,
+  GitBranch,
   Globe,
   Home,
   Key,
@@ -157,6 +158,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   text: Type,
   platform: Layers,
   refresh: RefreshCw,
+  environments: GitBranch,
   radio: Radio,
 }
 

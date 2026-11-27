@@ -16,9 +16,9 @@ import {
   keepPreviousData,
 } from '@tanstack/react-query'
 import {
-  AppwriteException,
+  ID,
   Query,
-  VideoCodec,
+  VideoCodecId,
   VideoOutput,
   type Models,
 } from '@appwrite.io/console'
@@ -55,8 +55,11 @@ export function isVideoRenditionActive(status: string | undefined): boolean {
 }
 
 /** Rendition progress arrives as a string percentage (`"42"`, `"42.5"`). */
-export function parseVideoProgress(progress: string | undefined): number {
-  const value = Number.parseFloat(progress ?? '')
+export function parseVideoProgress(
+  progress: number | string | undefined,
+): number {
+  const value =
+    typeof progress === 'number' ? progress : Number.parseFloat(progress ?? '')
   if (!Number.isFinite(value)) return 0
   return Math.min(100, Math.max(0, value))
 }
@@ -89,11 +92,7 @@ export function getVideoEncodingStatus(
  * report an empty status; treat those as possibly ready.
  */
 export type VideoTimelineState =
-  | 'processing'
-  | 'ready'
-  | 'skipped'
-  | 'error'
-  | 'unknown'
+  'processing' | 'ready' | 'skipped' | 'error' | 'unknown'
 
 export function getVideoTimelineState(
   video: Pick<Models.Video, 'timelineStatus'> | null | undefined,
@@ -215,37 +214,33 @@ export async function fetchVideoCodecs(
 const VIDEO_PROFILES_LIMIT = 100
 
 /**
- * Profiles belong to one codec and the API lists one codec at a time
- * (`h264` when none is given), so list every enabled codec and merge.
+ * Profiles of every enabled codec, filtered with `Query.equal('codec', ...)`
+ * so profiles left over from a codec the instance has since disabled stay out
+ * of the pickers.
  */
 export async function fetchVideoProfiles(
   projectId: string,
 ): Promise<Models.VideoProfileList> {
   const codecs = await fetchVideoCodecs(projectId)
   const ids = codecs.length
-    ? codecs.map((codec) => codec.$id as VideoCodec)
-    : [VideoCodec.H264]
+    ? codecs.map((codec) => codec.$id)
+    : [VideoCodecId.H264]
   const project = sdk.forProject(projectId).project
-  // Page through each codec: the pickers and the profiles page list them all.
-  const listCodec = async (codec: VideoCodec) => {
-    const profiles: Models.VideoProfile[] = []
-    for (;;) {
-      const page = await project.listVideoProfiles({
-        codec,
-        queries: [
-          Query.limit(VIDEO_PROFILES_LIMIT),
-          Query.offset(profiles.length),
-        ],
-      })
-      const batch = page.profiles ?? []
-      profiles.push(...batch)
-      if (batch.length < VIDEO_PROFILES_LIMIT || profiles.length >= page.total)
-        return profiles
-    }
+  // Page through every profile: the pickers and the profiles page list them all.
+  const profiles: Models.VideoProfile[] = []
+  for (;;) {
+    const page = await project.listVideoProfiles({
+      queries: [
+        Query.equal('codec', ids),
+        Query.limit(VIDEO_PROFILES_LIMIT),
+        Query.offset(profiles.length),
+      ],
+    })
+    const batch = page.profiles ?? []
+    profiles.push(...batch)
+    if (batch.length < VIDEO_PROFILES_LIMIT || profiles.length >= page.total)
+      return { total: profiles.length, profiles }
   }
-  const lists = await Promise.all(ids.map(listCodec))
-  const profiles = lists.flat()
-  return { total: profiles.length, profiles }
 }
 
 /** Whether a profile's codec can be packaged as `output` on this instance. */
@@ -318,13 +313,7 @@ export function getVideoTimelineUrl(
   projectId: string,
   videoId: string,
 ): string {
-  const endpoint = sdk.forProject(projectId).client.config.endpoint
-  const url = new URL(
-    `${endpoint}/videos/${encodeURIComponent(videoId)}/timelines`,
-  )
-  url.searchParams.set('project', projectId)
-  url.searchParams.set('mode', 'admin')
-  return url.toString()
+  return sdk.forProject(projectId).videos.getTimeline({ videoId })
 }
 
 /** `null` while no timeline exists (`video_timelines_not_found`). */
@@ -333,13 +322,14 @@ export async function fetchVideoTimeline(
   videoId: string,
 ): Promise<{ url: string; vtt: string; cues: VideoTimelineCue[] } | null> {
   const url = getVideoTimelineUrl(projectId, videoId)
-  try {
-    const vtt = await sdk.forProject(projectId).videos.getTimelines({ videoId })
-    return { url, vtt, cues: parseVideoTimelineVtt(vtt, url, projectId) }
-  } catch (error) {
-    if (error instanceof AppwriteException && error.code === 404) return null
-    throw error
+  // A location method: load it with the Console session, like the thumbnails it lists.
+  const response = await fetch(url, { credentials: 'include' })
+  if (response.status === 404) return null
+  if (!response.ok) {
+    throw new Error(`Timeline request failed (HTTP ${response.status})`)
   }
+  const vtt = await response.text()
+  return { url, vtt, cues: parseVideoTimelineVtt(vtt, url, projectId) }
 }
 
 // ---------------------------------------------------------------------------
@@ -624,7 +614,6 @@ export function useUpdateVideoPermissions(
     mutationFn: (permissions: string[]) =>
       sdk.forProject(projectId!).videos.update({
         videoId: video.$id,
-        name: video.name,
         permissions,
       }),
     onSuccess: async (updated) => {
@@ -738,7 +727,7 @@ export function useCreateVideoCaption(
         bucketId: input.bucketId,
         fileId: input.fileId,
         name: input.name,
-        code: input.code,
+        language: input.code,
         xdefault: input.isDefault,
       }),
     onSuccess: async () => {
@@ -769,7 +758,7 @@ export function useUpdateVideoCaption(
         bucketId: input.bucketId,
         fileId: input.fileId,
         name: input.name,
-        code: input.code,
+        language: input.code,
         xdefault: input.isDefault,
       }),
     onSuccess: async () => {
@@ -806,7 +795,7 @@ export type VideoProfileInput = {
   videoBitRate: number
   audioBitRate: number
   /** Set on create only; a profile keeps its codec. */
-  codec?: VideoCodec
+  codec?: VideoCodecId
 }
 
 /** True when probe metadata includes an audio stream (after prepare / encode probe). */
@@ -826,7 +815,11 @@ export function useSaveVideoProfile(projectId: string | null | undefined) {
       const { profileId, codec, ...payload } = input
       return profileId
         ? project.updateVideoProfile({ profileId, ...payload })
-        : project.createVideoProfile({ ...payload, codec })
+        : project.createVideoProfile({
+            profileId: ID.unique(),
+            ...payload,
+            codec,
+          })
     },
     onSuccess: async () => {
       await queryClient.refetchQueries({
@@ -846,7 +839,9 @@ export function useCreateVideoProfiles(projectId: string | null | undefined) {
     mutationFn: async (inputs: VideoProfileInput[]) => {
       const project = sdk.forProject(projectId!).project
       const results = await Promise.allSettled(
-        inputs.map((input) => project.createVideoProfile(input)),
+        inputs.map((input) =>
+          project.createVideoProfile({ profileId: ID.unique(), ...input }),
+        ),
       )
       return results.flatMap((result, index) =>
         result.status === 'rejected'

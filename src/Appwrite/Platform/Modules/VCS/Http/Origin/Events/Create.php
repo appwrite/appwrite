@@ -143,7 +143,7 @@ class Create extends Action
             if (System::getEnv('_APP_REVIEWS_SECRET', '') !== '') {
                 match (true) {
                     $event === Origin::EVENT_PULL_REQUEST_COMMENT => $this->queueComment('origin', $parsedPayload, $vcsFactory, $installationTokens, $dbForPlatform, $authorization, $getProjectDB, $publisherForReviews, $platform),
-                    \str_starts_with($event, Origin::EVENT_PULL_REQUEST . '.') => $this->queueReviews('origin', $parsedPayload, $dbForPlatform, $authorization, $getProjectDB, $publisherForReviews, $platform),
+                    \str_starts_with($event, Origin::EVENT_PULL_REQUEST . '.') => $this->queueReviews('origin', $parsedPayload, $vcsFactory, $installationTokens, $dbForPlatform, $authorization, $getProjectDB, $publisherForReviews, $platform),
                     default => null,
                 };
             }
@@ -211,6 +211,41 @@ class Create extends Action
     protected function getReviewerLogin(Document $installation): string
     {
         return System::getEnv('_APP_VCS_ORIGIN_CLIENT_ID', '');
+    }
+
+    /**
+     * Origin's comment deliveries do not name the pull request's author, so the pull request is
+     * read, and its author compared with the comment's by id. A failed read leaves the comment
+     * unanswered.
+     */
+    protected function isPullRequestAuthor(array $parsedPayload, Document $installation, VcsFactory $vcsFactory): bool
+    {
+        $authorId = \strval($parsedPayload['commentAuthorId'] ?? '');
+        if ($authorId === '') {
+            return false;
+        }
+
+        try {
+            $vcs = $vcsFactory->fromInstallation($installation);
+            if (!$vcs instanceof Origin) {
+                return false;
+            }
+
+            $pullRequest = $vcs->getPullRequest(\strval($parsedPayload['owner'] ?? ''), \strval($parsedPayload['repositoryName'] ?? ''), (int) ($parsedPayload['pullRequestNumber'] ?? 0));
+        } catch (\Throwable $error) {
+            Console::warning('Failed to read the author of pull request ' . ($parsedPayload['pullRequestNumber'] ?? '') . ': ' . $error->getMessage());
+
+            return false;
+        }
+
+        $author = \is_array($pullRequest['author'] ?? null) ? $pullRequest['author'] : [];
+        foreach (['user', 'app', 'serviceAccount'] as $kind) {
+            if (\is_array($author[$kind] ?? null) && \is_scalar($author[$kind]['id'] ?? null)) {
+                return \strval($author[$kind]['id']) === $authorId;
+            }
+        }
+
+        return false;
     }
 
     /**

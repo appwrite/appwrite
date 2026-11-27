@@ -61,9 +61,9 @@ export type ConsoleProfileFeatures = {
   nativeDbsMongo: boolean
   /** An experiment, off by default; the quality team turns it on from the header Previews menu. Videos product (transcoding, renditions, subtitles, HLS/DASH playback) via the `videos` SDK service. */
   videos: boolean
-  /** An experiment, off by default; the quality team turns it on from the header Previews menu. A project without a Git installation reuses the GitHub organization installations of the organization's other projects. */
+  /** Internal only, switched on from the debug menu. A project without a Git installation reuses the GitHub organization installations of the organization's other projects. */
   gitInstallationReuse: boolean
-  /** An experiment, off by default; the quality team turns it on from the header Previews menu. Link buttons on notification rows that open the Console page an alert acts on. */
+  /** Internal only, switched on from the debug menu. Link buttons on notification rows that open the Console page an alert acts on. */
   alertCtas: boolean
   /**
    * Internal only, switched on from the debug menu. Review product (AI code
@@ -118,6 +118,12 @@ export type ConsoleProfileFeatures = {
    * Enable from Debug → Feature flags; at launch, default it on.
    */
   zero: boolean
+  /**
+   * Appwrite Beep marketing page (`/products/beep`), the Beep mobile app's
+   * Products menu and footer links. Off until launch: the page returns 404
+   * while this is off. Enable from Debug → Feature flags; at launch, default it on.
+   */
+  beep: boolean
 }
 
 /** Short labels for debug UI (profile comparison, etc.). */
@@ -164,6 +170,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   appwritePush: 'Appwrite push',
   runtimeLogs: 'Runtime logs',
   zero: 'Zero',
+  beep: 'Beep',
 }
 
 export type ConsoleProfile = {
@@ -224,6 +231,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       // Off until launch; enable from Debug → Feature flags.
       runtimeLogs: false,
       zero: false,
+      beep: false,
     },
   },
   'self-hosted': {
@@ -270,6 +278,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       appwritePush: true,
       runtimeLogs: false,
       zero: false,
+      beep: false,
     },
   },
 }
@@ -551,6 +560,7 @@ function applyCloudOnlyFeatureGates(
       multiTenancy: false,
       sso: false,
       zero: false,
+      beep: false,
     }
   }
   return features
