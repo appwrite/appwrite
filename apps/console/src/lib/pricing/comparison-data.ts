@@ -552,7 +552,7 @@ export const comparisonTables: ComparisonTable[] = [
                     title: 'Escalations',
                     free: '1, up to 2 steps',
                     pro: '10, up to 10 steps each',
-                    enterprise: 'Unlimited',
+                    enterprise: 'Custom',
                     info: 'Who is notified about an alert, in which order, and how often it repeats.'
                 },
                 {
