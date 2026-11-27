@@ -44,8 +44,8 @@ export interface LibrarySummary {
     appwrite: number
   }
   size: Size
-  /** The date of the last commit to the crate, or to the PHP package without one. */
-  updated: string | null
+  /** The day crates.io published the crate version shown; null without a crate. */
+  released: string | null
 }
 
 export interface Category {
