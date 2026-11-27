@@ -13,8 +13,11 @@ class DNS extends BaseDNS
 
     /**
      * What each region saw, when the record was checked from several: its ID, name,
-     * status (verified, missing, mismatch or failed) and the values it found. Empty
-     * when the record was checked from one region only.
+     * status (verified, missing, mismatch or failed) and the values it found.
+     *
+     * This validator checks from one place, so it leaves the list empty and checks
+     * store none. A validator that also checks from other regions extends this one
+     * and fills it; checkRecords() stores and returns whatever it holds.
      *
      * @var array<array{id: string, name: string, status: string, current: array<string>}>
      */
