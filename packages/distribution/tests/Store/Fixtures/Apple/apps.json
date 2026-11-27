@@ -1,0 +1,39 @@
+{
+    "data": [
+        {
+            "type": "apps",
+            "id": "6450000002",
+            "attributes": {
+                "bundleId": "io.example.app.widget",
+                "name": "Example Widget",
+                "sku": "EXAMPLE-WIDGET",
+                "primaryLocale": "en-US"
+            },
+            "links": {
+                "self": "https://api.appstoreconnect.apple.com/v1/apps/6450000002"
+            }
+        },
+        {
+            "type": "apps",
+            "id": "6450000001",
+            "attributes": {
+                "bundleId": "io.example.app",
+                "name": "Example",
+                "sku": "EXAMPLE",
+                "primaryLocale": "en-US"
+            },
+            "links": {
+                "self": "https://api.appstoreconnect.apple.com/v1/apps/6450000001"
+            }
+        }
+    ],
+    "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/apps?filter%5BbundleId%5D=io.example.app&fields%5Bapps%5D=name%2CbundleId%2Csku%2CprimaryLocale&limit=200"
+    },
+    "meta": {
+        "paging": {
+            "total": 2,
+            "limit": 200
+        }
+    }
+}

@@ -1,0 +1,14 @@
+{
+    "error": {
+        "code": 404,
+        "message": "Package not found: io.example.app.",
+        "status": "NOT_FOUND",
+        "errors": [
+            {
+                "reason": "applicationNotFound",
+                "domain": "global",
+                "message": "Package not found: io.example.app."
+            }
+        ]
+    }
+}

@@ -1,0 +1,14 @@
+{
+    "error": {
+        "code": 429,
+        "message": "Quota exceeded for quota metric 'Queries' and limit 'Queries per minute' of service 'androidpublisher.googleapis.com'.",
+        "status": "RESOURCE_EXHAUSTED",
+        "errors": [
+            {
+                "reason": "rateLimitExceeded",
+                "domain": "global",
+                "message": "Quota exceeded for quota metric 'Queries' and limit 'Queries per minute' of service 'androidpublisher.googleapis.com'."
+            }
+        ]
+    }
+}

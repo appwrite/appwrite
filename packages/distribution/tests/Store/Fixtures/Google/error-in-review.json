@@ -1,0 +1,14 @@
+{
+    "error": {
+        "code": 400,
+        "message": "Changes are already in review.",
+        "status": "FAILED_PRECONDITION",
+        "details": [
+            {
+                "@type": "type.googleapis.com/google.rpc.ErrorInfo",
+                "reason": "CHANGES_ALREADY_IN_REVIEW",
+                "domain": "androidpublisher.googleapis.com"
+            }
+        ]
+    }
+}

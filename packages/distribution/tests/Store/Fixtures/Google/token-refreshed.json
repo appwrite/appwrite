@@ -1,0 +1,6 @@
+{
+    "access_token": "ya29.c.fixture-refreshed-token",
+    "scope": "https://www.googleapis.com/auth/androidpublisher",
+    "token_type": "Bearer",
+    "expires_in": 3600
+}

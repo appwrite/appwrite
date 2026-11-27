@@ -1,0 +1,13 @@
+{
+    "error": {
+        "code": 403,
+        "message": "APK specifies a version code that has already been used.",
+        "errors": [
+            {
+                "reason": "apkUpgradeVersionConflict",
+                "domain": "androidpublisher",
+                "message": "APK specifies a version code that has already been used."
+            }
+        ]
+    }
+}

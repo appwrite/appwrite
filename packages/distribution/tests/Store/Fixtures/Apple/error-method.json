@@ -1,0 +1,11 @@
+{
+    "errors": [
+        {
+            "id": "0c5a5f53-6b3e-4b0e-9a63-6f2a2f1d0007",
+            "status": "405",
+            "code": "METHOD_NOT_ALLOWED",
+            "title": "The request method is not valid for the resource path.",
+            "detail": "The request method used for this request is not valid for the resource path. Please consult the documentation."
+        }
+    ]
+}

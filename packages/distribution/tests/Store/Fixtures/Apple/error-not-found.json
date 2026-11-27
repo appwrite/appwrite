@@ -1,0 +1,11 @@
+{
+    "errors": [
+        {
+            "id": "0c5a5f53-6b3e-4b0e-9a63-6f2a2f1d0005",
+            "status": "404",
+            "code": "NOT_FOUND",
+            "title": "The specified resource does not exist",
+            "detail": "There is no resource of type 'apps' with id '6450000009'"
+        }
+    ]
+}

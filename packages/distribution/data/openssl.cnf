@@ -1,0 +1,9 @@
+[req]
+distinguished_name = subject
+x509_extensions = extensions
+string_mask = utf8only
+
+[subject]
+
+[extensions]
+subjectKeyIdentifier = hash

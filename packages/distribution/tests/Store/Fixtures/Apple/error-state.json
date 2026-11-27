@@ -1,0 +1,35 @@
+{
+    "errors": [
+        {
+            "id": "0c5a5f53-6b3e-4b0e-9a63-6f2a2f1d0008",
+            "status": "409",
+            "code": "STATE_ERROR",
+            "title": "The request cannot be fulfilled because of the state of another resource.",
+            "detail": "Submit for review errors found.",
+            "meta": {
+                "associatedErrors": {
+                    "/v1/appScreenshots/": [
+                        {
+                            "id": "0c5a5f53-6b3e-4b0e-9a63-6f2a2f1d0009",
+                            "status": "409",
+                            "code": "STATE_ERROR.SCREENSHOT_REQUIRED.APP_IPHONE_67",
+                            "title": "App screenshot missing (APP_IPHONE_67)."
+                        }
+                    ],
+                    "/v1/builds/a1b2c3d4-0000-4000-8000-000000000001": [
+                        {
+                            "id": "0c5a5f53-6b3e-4b0e-9a63-6f2a2f1d0010",
+                            "status": "409",
+                            "code": "ENTITY_ERROR.ATTRIBUTE.REQUIRED",
+                            "title": "The provided entity is missing a required attribute",
+                            "detail": "You must provide a value for the attribute 'usesNonExemptEncryption' with this request",
+                            "source": {
+                                "pointer": "/data/attributes/usesNonExemptEncryption"
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+    ]
+}

@@ -1,0 +1,12 @@
+{
+    "data": [],
+    "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/builds?filter%5Bapp%5D=6450000001&sort=-uploadedDate&limit=200&fields%5Bbuilds%5D=version"
+    },
+    "meta": {
+        "paging": {
+            "total": 0,
+            "limit": 200
+        }
+    }
+}
