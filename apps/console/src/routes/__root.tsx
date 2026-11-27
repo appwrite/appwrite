@@ -672,6 +672,11 @@ function RootAppProviders({ children }: { children: React.ReactNode }) {
 }
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+  // The video player page is embedded on other sites and in the Init page:
+  // it renders the player alone, without the site's shell, prompts or trackers.
+  const embedPlayer = useRouterState({
+    select: (s) => isEmbedPlayerPath(s.location.pathname),
+  })
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -691,65 +696,78 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         {/* Must run before <Scripts /> so entry/main chunk 404s after deploy can
             auto-recover before the app module graph (and router listeners) load. */}
         <ScriptOnce>{STALE_CHUNK_BOOT_SCRIPT}</ScriptOnce>
-        <DynamicFavicon />
-        <UploadWarning />
-        <ContextualDocumentTitle />
-        {/* I18n outside ClientThemeProvider so FullscreenLoader is not remounted when
-            ThemeProvider attaches after client mount (that remount reset the 1.5s spinner). */}
-        <I18nProvider>
-          {/* Isolated so auth / query / loader updates do not re-render the page. */}
-          <RootInitialLoadCoordinator>
-            <RootBrowserApi />
-            <RootAnalyticsTracker />
-            <RootAcquisitionSource />
-            <RootConsoleScopesPrefetch />
-            <ClientThemeProvider>
-              <PreLaunchRedirect />
-              <MarketingDisabledRedirect />
-              <SelfHostedRouteRedirect />
-              <AnalyticsSessionPropsSync />
-              <PageDirectionProvider>
-                <CookieConsentProvider>
-                  <NavigationHistoryProvider>
-                    <RecentResourcesProvider>
-                      <SentryContextProvider>
-                        <RootShellCatchBoundary>
-                          <DebugModeProvider>
-                            <ScreenshotModeProvider>
-                              <ConsoleRightPaneProvider>
-                                <RootAppProviders>{children}</RootAppProviders>
-                                <ClientOnly>
-                                  <CommunitySupportPromptProvider />
-                                </ClientOnly>
-                                <ClientOnly>
-                                  <GithubStarPromptProvider />
-                                </ClientOnly>
-                                <ClientOnly>
-                                  <PasswordBreachCurtain />
-                                </ClientOnly>
-                              </ConsoleRightPaneProvider>
-                            </ScreenshotModeProvider>
-                          </DebugModeProvider>
-                        </RootShellCatchBoundary>
-                      </SentryContextProvider>
-                      <ClientOnly>
-                        <DocsContentHmrRefresh />
-                      </ClientOnly>
-                      <ClientOnly>
-                        <Toaster />
-                      </ClientOnly>
-                      <ClientOnly>
-                        <RootUploadProgress />
-                      </ClientOnly>
-                    </RecentResourcesProvider>
-                  </NavigationHistoryProvider>
-                </CookieConsentProvider>
-              </PageDirectionProvider>
-            </ClientThemeProvider>
-          </RootInitialLoadCoordinator>
-        </I18nProvider>
+        {embedPlayer ? (
+          <I18nProvider>{children}</I18nProvider>
+        ) : (
+          <RootSiteDocument>{children}</RootSiteDocument>
+        )}
         <Scripts />
       </body>
     </html>
+  )
+}
+
+/** Everything the site and console render around a page. */
+function RootSiteDocument({ children }: { children: React.ReactNode }) {
+  return (
+    <>
+      <DynamicFavicon />
+      <UploadWarning />
+      <ContextualDocumentTitle />
+      {/* I18n outside ClientThemeProvider so FullscreenLoader is not remounted when
+            ThemeProvider attaches after client mount (that remount reset the 1.5s spinner). */}
+      <I18nProvider>
+        {/* Isolated so auth / query / loader updates do not re-render the page. */}
+        <RootInitialLoadCoordinator>
+          <RootBrowserApi />
+          <RootAnalyticsTracker />
+          <RootAcquisitionSource />
+          <RootConsoleScopesPrefetch />
+          <ClientThemeProvider>
+            <PreLaunchRedirect />
+            <MarketingDisabledRedirect />
+            <SelfHostedRouteRedirect />
+            <AnalyticsSessionPropsSync />
+            <PageDirectionProvider>
+              <CookieConsentProvider>
+                <NavigationHistoryProvider>
+                  <RecentResourcesProvider>
+                    <SentryContextProvider>
+                      <RootShellCatchBoundary>
+                        <DebugModeProvider>
+                          <ScreenshotModeProvider>
+                            <ConsoleRightPaneProvider>
+                              <RootAppProviders>{children}</RootAppProviders>
+                              <ClientOnly>
+                                <CommunitySupportPromptProvider />
+                              </ClientOnly>
+                              <ClientOnly>
+                                <GithubStarPromptProvider />
+                              </ClientOnly>
+                              <ClientOnly>
+                                <PasswordBreachCurtain />
+                              </ClientOnly>
+                            </ConsoleRightPaneProvider>
+                          </ScreenshotModeProvider>
+                        </DebugModeProvider>
+                      </RootShellCatchBoundary>
+                    </SentryContextProvider>
+                    <ClientOnly>
+                      <DocsContentHmrRefresh />
+                    </ClientOnly>
+                    <ClientOnly>
+                      <Toaster />
+                    </ClientOnly>
+                    <ClientOnly>
+                      <RootUploadProgress />
+                    </ClientOnly>
+                  </RecentResourcesProvider>
+                </NavigationHistoryProvider>
+              </CookieConsentProvider>
+            </PageDirectionProvider>
+          </ClientThemeProvider>
+        </RootInitialLoadCoordinator>
+      </I18nProvider>
+    </>
   )
 }

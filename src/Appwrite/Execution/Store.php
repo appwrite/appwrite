@@ -107,15 +107,23 @@ class Store
 
     private bool $ready = false;
 
+    /** Statuses of the snapshot that makes an execution readable. */
+    private const array FIRST_STATUSES = ['waiting', 'scheduled'];
+
     private float $checkedAt = 0.0;
 
     /** @var array<int, int> */
     private array $lastVersions = [];
 
+    /**
+     * @param int $insertBuffer Milliseconds ClickHouse may hold snapshots to
+     *                          write them together. 0 writes each insert at once.
+     */
     public function __construct(
         private readonly string $dsn,
         private readonly ?ClientInterface $client,
         private readonly int $retention = 1_209_600,
+        private readonly int $insertBuffer = 0,
     ) {
         $this->requestFactory = new RequestFactory();
     }
@@ -239,12 +247,23 @@ class Store
             return;
         }
 
-        $rows = [];
+        $first = [];
+        $later = [];
         foreach ($executions as $execution) {
-            $rows[] = $this->snapshot($projectId, $execution, false);
+            $row = $this->snapshot($projectId, $execution, false);
+            if ($this->insertBuffer > 0 && \in_array($execution->getAttribute('status', ''), self::FIRST_STATUSES, true)) {
+                $first[] = $row;
+            } else {
+                $later[] = $row;
+            }
         }
 
-        $this->insert($rows);
+        if ($first !== []) {
+            $this->insert($first, buffered: false);
+        }
+        if ($later !== []) {
+            $this->insert($later);
+        }
     }
 
     public function delete(string $projectId, Document $execution): void
@@ -428,22 +447,21 @@ class Store
     }
 
     /** @param array<array<string, mixed>> $rows */
-    private function insert(array $rows): void
+    private function insert(array $rows, bool $buffered = true): void
     {
-        $this->insertRows($this->database() . '.' . self::TABLE, self::COLUMNS, $rows);
+        $this->insertRows($this->database() . '.' . self::TABLE, self::COLUMNS, $rows, $buffered);
     }
 
     /**
      * @param list<string> $columns
      * @param list<array<string, mixed>> $rows
      */
-    private function insertRows(string $table, array $columns, array $rows): void
+    private function insertRows(string $table, array $columns, array $rows, bool $buffered = true): void
     {
         $statement = (new ClickHouseBuilder())
             ->from($table)
             ->bulkInsert(Format::JSONEachRow, $rows, $columns);
-        // Async inserts wait up to 200ms for a flush that batches almost nothing for one-row snapshots.
-        $url = $this->url() . '?' . \http_build_query(['query' => $statement->query, 'async_insert' => 0]);
+        $url = $this->url() . '?' . \http_build_query(['query' => $statement->query] + $this->insertSettings($buffered));
         $body = $statement->body;
         $request = $this->requestFactory->body(Method::POST, $url, $body, 'application/x-ndjson', $this->headers());
 
@@ -456,6 +474,39 @@ class Store
         if ($response->getStatusCode() !== 200) {
             throw new \RuntimeException('ClickHouse execution insert failed with HTTP ' . $response->getStatusCode() . ': ' . (string) $response->getBody());
         }
+    }
+
+    /**
+     * Every snapshot is its own insert, and ClickHouse writes one part per
+     * insert and partition. By default the insert bypasses the async insert
+     * buffer: at a few writes a second the buffer has almost nothing to batch
+     * and only delays the snapshot.
+     *
+     * At a high write rate that many parts outrun the merges, on a replicated
+     * table in particular, where merges are assigned through Keeper. With an
+     * insert buffer the server collects the snapshots of every writer for a
+     * fixed window and writes them together. The insert still returns only
+     * once its rows are stored, so each write takes up to the window and holds
+     * a pooled connection for that long.
+     *
+     * The first snapshot of an execution bypasses the buffer: the API answers
+     * the create before the snapshot exists, so a buffered first write leaves
+     * the execution unreadable for the whole window.
+     *
+     * @return array<string, int>
+     */
+    private function insertSettings(bool $buffered): array
+    {
+        if (!$buffered || $this->insertBuffer <= 0) {
+            return ['async_insert' => 0];
+        }
+
+        return [
+            'async_insert' => 1,
+            'wait_for_async_insert' => 1,
+            'async_insert_use_adaptive_busy_timeout' => 0,
+            'async_insert_busy_timeout_max_ms' => $this->insertBuffer,
+        ];
     }
 
     private function deleteWhere(

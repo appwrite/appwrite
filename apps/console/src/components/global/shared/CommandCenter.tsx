@@ -1,4 +1,6 @@
 import {
+  lazy,
+  Suspense,
   useState,
   useEffect,
   useLayoutEffect,
@@ -100,8 +102,6 @@ import type { ConsoleProfileFeatures } from '@/lib/console-profiles'
 import { VIDEOS_PRODUCT_ICON } from '@/lib/videos/product-icon'
 import { FULL_ACCESS } from '@/lib/console-roles'
 import { useCommandCenterResourceSearch } from '@/hooks/use-command-center-resource-search'
-import { DocsSearchView } from '@/components/pages/docs/DocsSearchView'
-import { BlogSearchView } from '@/components/pages/blog/BlogSearchView'
 import { CommandCenterFeedbackView } from '@/components/global/shared/CommandCenterFeedbackView'
 import { CommandCenterSupportView } from '@/components/global/shared/CommandCenterSupportView'
 import { useDocsPreview } from '@/components/global/providers/DocsPreviewContext'
@@ -112,12 +112,26 @@ import { isConsoleDocsPreviewPath } from '@/lib/docs/docs-preview-context'
 import { docsHrefToRoute } from '@/lib/docs/docs-href'
 import { getDocsPageUrlFromSlug } from '@/lib/marketing/urls'
 import { openInNewWindow } from '@/lib/utils/context-menu'
+import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue'
 import type {
   CommandCenterContext,
   CreateResourceType,
 } from './CommandCenter.types'
 
 export type { CommandCenterContext, CreateResourceType }
+
+// Docs and blog search bring their search indexes (the docs one is about half
+// a megabyte), so they load when their page in the dialog first opens.
+const DocsSearchView = lazy(() =>
+  import('@/components/pages/docs/DocsSearchView').then((m) => ({
+    default: m.DocsSearchView,
+  })),
+)
+const BlogSearchView = lazy(() =>
+  import('@/components/pages/blog/BlogSearchView').then((m) => ({
+    default: m.BlogSearchView,
+  })),
+)
 
 type ResourceScope =
   | 'databases'
@@ -699,6 +713,8 @@ export function CommandCenter({
   const hasSearch = search.trim().length > 0
   const hasScope = searchScope !== null
   const shouldFetch = hasSearch || hasScope
+  // Scoped lists hit the API, so they search once typing pauses.
+  const debouncedSearch = useDebouncedValue(search, 300)
 
   const { projects: orgProjects, isLoading: orgProjectsLoading } =
     useProjectsForTeam(
@@ -707,7 +723,7 @@ export function CommandCenter({
         : null,
       0,
       100,
-      shouldFetch && searchScope === 'projects' ? search : undefined,
+      shouldFetch && searchScope === 'projects' ? debouncedSearch : undefined,
     )
 
   const { databases: projectDatabases, isLoading: databasesLoading } =
@@ -720,7 +736,7 @@ export function CommandCenter({
         : null,
       0,
       100,
-      shouldFetch && searchScope === 'databases' ? search : undefined,
+      shouldFetch && searchScope === 'databases' ? debouncedSearch : undefined,
     )
 
   const { users: projectUsers, isLoading: usersLoading } = useProjectUsers(
@@ -729,7 +745,7 @@ export function CommandCenter({
       : null,
     0,
     100,
-    shouldFetch && searchScope === 'users' ? search : undefined,
+    shouldFetch && searchScope === 'users' ? debouncedSearch : undefined,
   )
 
   const { teams: projectTeams, isLoading: teamsLoading } = useProjectTeams(
@@ -738,7 +754,7 @@ export function CommandCenter({
       : null,
     0,
     100,
-    shouldFetch && searchScope === 'teams' ? search : undefined,
+    shouldFetch && searchScope === 'teams' ? debouncedSearch : undefined,
   )
 
   const { buckets: projectBuckets, isLoading: bucketsLoading } =
@@ -748,7 +764,7 @@ export function CommandCenter({
         : null,
       0,
       100,
-      shouldFetch && searchScope === 'buckets' ? search : undefined,
+      shouldFetch && searchScope === 'buckets' ? debouncedSearch : undefined,
     )
 
   const { functions: projectFunctions, isLoading: functionsLoading } =
@@ -761,7 +777,7 @@ export function CommandCenter({
         : null,
       0,
       100,
-      shouldFetch && searchScope === 'functions' ? search : undefined,
+      shouldFetch && searchScope === 'functions' ? debouncedSearch : undefined,
     )
 
   const { sites: projectSites, isLoading: sitesLoading } = useProjectSites(
@@ -770,7 +786,7 @@ export function CommandCenter({
       : null,
     0,
     100,
-    shouldFetch && searchScope === 'sites' ? search : undefined,
+    shouldFetch && searchScope === 'sites' ? debouncedSearch : undefined,
   )
 
   const { messages: projectMessages, isLoading: messagesLoading } =
@@ -780,7 +796,7 @@ export function CommandCenter({
         : null,
       0,
       100,
-      shouldFetch && searchScope === 'messages' ? search : undefined,
+      shouldFetch && searchScope === 'messages' ? debouncedSearch : undefined,
     )
 
   const { topics: projectTopics, isLoading: topicsLoading } = useProjectTopics(
@@ -789,7 +805,7 @@ export function CommandCenter({
       : null,
     0,
     100,
-    shouldFetch && searchScope === 'topics' ? search : undefined,
+    shouldFetch && searchScope === 'topics' ? debouncedSearch : undefined,
   )
 
   const { providers: projectProviders, isLoading: providersLoading } =
@@ -802,7 +818,7 @@ export function CommandCenter({
         : null,
       0,
       100,
-      shouldFetch && searchScope === 'providers' ? search : undefined,
+      shouldFetch && searchScope === 'providers' ? debouncedSearch : undefined,
     )
 
   const { videos: projectVideos, isLoading: videosLoading } = useProjectVideos(
@@ -811,7 +827,7 @@ export function CommandCenter({
       : null,
     0,
     100,
-    shouldFetch && searchScope === 'videos' ? search : undefined,
+    shouldFetch && searchScope === 'videos' ? debouncedSearch : undefined,
   )
 
   const searchableResourceKinds = useMemo(() => {
@@ -1655,24 +1671,28 @@ export function CommandCenter({
             onKeyDown={handleKeyDown}
           />
         ) : currentPage === 'docs' ? (
-          <DocsSearchView
-            isMobile={isMobile}
-            inputRef={docsInputRef}
-            onBack={() => setPages([])}
-            onClose={() => onOpenChange(false)}
-            onKeyDown={handleKeyDown}
-            onSelect={handleDocsSelect}
-            onOpenShortcuts={() => setPages((p) => [...p, 'shortcuts'])}
-          />
+          <Suspense fallback={null}>
+            <DocsSearchView
+              isMobile={isMobile}
+              inputRef={docsInputRef}
+              onBack={() => setPages([])}
+              onClose={() => onOpenChange(false)}
+              onKeyDown={handleKeyDown}
+              onSelect={handleDocsSelect}
+              onOpenShortcuts={() => setPages((p) => [...p, 'shortcuts'])}
+            />
+          </Suspense>
         ) : currentPage === 'blog' ? (
-          <BlogSearchView
-            isMobile={isMobile}
-            inputRef={blogInputRef}
-            onBack={() => setPages([])}
-            onClose={() => onOpenChange(false)}
-            onKeyDown={handleKeyDown}
-            onOpenShortcuts={() => setPages((p) => [...p, 'shortcuts'])}
-          />
+          <Suspense fallback={null}>
+            <BlogSearchView
+              isMobile={isMobile}
+              inputRef={blogInputRef}
+              onBack={() => setPages([])}
+              onClose={() => onOpenChange(false)}
+              onKeyDown={handleKeyDown}
+              onOpenShortcuts={() => setPages((p) => [...p, 'shortcuts'])}
+            />
+          </Suspense>
         ) : currentPage === 'feedback' ? (
           <CommandCenterFeedbackView
             isMobile={isMobile}

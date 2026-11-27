@@ -6,6 +6,7 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Videos\Base;
+use Appwrite\Platform\Modules\Videos\SegmentCache;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -47,8 +48,6 @@ class Delete extends Base
                 namespace: 'videos',
                 group: 'renditions',
                 name: 'deleteRendition',
-                // Hidden until videos is generally available; preview SDK builds show it.
-                hide: System::getEnv('_APP_SDK_PREVIEW', 'disabled') !== 'enabled',
                 description: '/docs/references/videos/delete-rendition.md',
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [
@@ -68,6 +67,7 @@ class Delete extends Base
             ->inject('project')
             ->inject('queueForEvents')
             ->inject('publisherForDeletes')
+            ->inject('purgeVideoSegmentCache')
             ->callback($this->action(...));
     }
 
@@ -80,7 +80,8 @@ class Delete extends Base
         Authorization $authorization,
         Document $project,
         Event $queueForEvents,
-        DeletePublisher $publisherForDeletes
+        DeletePublisher $publisherForDeletes,
+        SegmentCache $segmentCache
     ): void {
         $video = $this->getAuthorizedVideo($dbForProject, $authorization, $user, $videoId);
         $this->assertCanUpdateVideo($authorization, $user, $video);
@@ -112,6 +113,11 @@ class Delete extends Base
             $project,
             $rendition
         );
+
+        // Deleting a rendition does not bump the video's $updatedAt, so the
+        // video key is what takes the cached segments down. The other
+        // qualities share that key and are re-fetched on the next miss.
+        $segmentCache->purge($project->getId(), $video->getId());
 
         $queueForEvents
             ->setParam('videoId', $video->getId())

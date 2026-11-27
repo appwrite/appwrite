@@ -38,8 +38,7 @@ const ACCOUNT = {
   emailVerification: true,
   phoneVerification: false,
   mfa: false,
-  // Keeps the firewall announcement from covering the overview.
-  prefs: { 'console.dismissedBanners': 'firewall-moved-2026-11' },
+  prefs: {},
   targets: [],
   accessedAt: NOW,
 } satisfies Partial<Models.User<Models.Preferences>>

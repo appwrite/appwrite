@@ -14,6 +14,7 @@ export const BLOG_INDEX_SPOTLIGHT_EXCLUDED_SLUGS = new Set<string>([
  * Posts not listed keep date order after these.
  */
 export const BLOG_FEATURED_SLUG_ORDER = [
+  'appwrite-is-moving-from-php-to-rust',
   'announcing-appwrite-2',
   'native-databases-all-appwrite-cloud-regions',
   'announcing-appwrite-chatgpt-plugin',

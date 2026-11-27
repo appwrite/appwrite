@@ -76,12 +76,19 @@ export type OverviewStorageBreakdownType =
   | 'functions'
   | 'sites'
 
-export interface OverviewStorageBreakdownOption {
-  value: OverviewStorageBreakdownType
+/** Usage page panels: the overview families plus Videos (shown behind its flag). */
+export type StorageBreakdownType = OverviewStorageBreakdownType | 'videos'
+
+export interface OverviewStorageBreakdownOption<
+  T extends StorageBreakdownType = OverviewStorageBreakdownType,
+> {
+  value: T
   label: string
   title: string
   /** `resourceType` tag values that roll up into this panel. */
   resourceTypes: readonly string[]
+  /** Gauge to read; defaults to the unified `storage` gauge. */
+  metric?: string
   description: string
 }
 
@@ -123,14 +130,40 @@ export const OVERVIEW_STORAGE_BREAKDOWN_OPTIONS: ReadonlyArray<OverviewStorageBr
     },
   ] as const
 
+/**
+ * Video renditions, captions and timelines. Read from the `videos.storage`
+ * project-total row (`resourceType=project`), which both Cloud and
+ * self-hosted workers publish. Self-hosted does not fold video bytes into
+ * the unified `storage` gauge, and Cloud records them there as one row per
+ * project, so this panel has no per-resource breakdown either way.
+ * Shown on the Usage page only while the Videos product is enabled; the
+ * project overview toggle keeps to the options above.
+ */
+export const VIDEOS_STORAGE_BREAKDOWN_OPTION: OverviewStorageBreakdownOption<'videos'> =
+  {
+    value: 'videos',
+    label: 'Videos',
+    title: 'Videos',
+    resourceTypes: ['project'],
+    metric: 'videos.storage',
+    description:
+      'Storage used by video renditions, captions, and thumbnail timelines. Counts toward your plan storage limit.',
+  }
+
+export const VIDEOS_STORAGE_DOCS_HREF = '/docs/products/videos'
+
 export const OVERVIEW_STORAGE_BREAKDOWN_TYPES =
   OVERVIEW_STORAGE_BREAKDOWN_OPTIONS.map(
     (option) => option.value,
   ) as readonly OverviewStorageBreakdownType[]
 
 export function getOverviewStorageBreakdownOption(
-  value: OverviewStorageBreakdownType,
-): OverviewStorageBreakdownOption {
+  value: StorageBreakdownType,
+): OverviewStorageBreakdownOption<StorageBreakdownType> {
+  if (value === VIDEOS_STORAGE_BREAKDOWN_OPTION.value) {
+    return VIDEOS_STORAGE_BREAKDOWN_OPTION
+  }
+
   return (
     OVERVIEW_STORAGE_BREAKDOWN_OPTIONS.find(
       (option) => option.value === value,
@@ -140,7 +173,7 @@ export function getOverviewStorageBreakdownOption(
 
 /** Utopia `queries[]` scoping the unified gauge to one panel's resource types. */
 function storageResourceTypeQueries(
-  breakdownType: OverviewStorageBreakdownType,
+  breakdownType: StorageBreakdownType,
   queries?: string[],
 ): string[] {
   return [
@@ -305,7 +338,9 @@ export async function fetchProjectOverviewStorageOverview(
     ),
   ])
 
-  const chartPoints = mergeOverviewStorageChartPoints(series.chartPointsBySeries)
+  const chartPoints = mergeOverviewStorageChartPoints(
+    series.chartPointsBySeries,
+  )
   const previousChartPoints = mergeOverviewStorageChartPoints(
     series.previousChartPointsBySeries,
   )
@@ -333,7 +368,7 @@ export async function fetchProjectOverviewStorageOverview(
 export async function fetchProjectStorageResourceTypeUsageOverview(
   projectId: string,
   dateRange: DateRange | undefined,
-  breakdownType: OverviewStorageBreakdownType,
+  breakdownType: StorageBreakdownType,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   options?: FetchUsageOverviewOptions,
 ): Promise<StorageResourceTypeUsageOverview> {
@@ -349,7 +384,7 @@ export async function fetchProjectStorageResourceTypeUsageOverview(
     fetchProjectUsageGaugeChartSeriesByResourceType(
       projectId,
       dateRange,
-      STORAGE_GAUGE_METRIC,
+      option.metric ?? STORAGE_GAUGE_METRIC,
       [{ key: option.value, resourceTypes: option.resourceTypes }],
       interval,
       options?.queries,
@@ -357,7 +392,7 @@ export async function fetchProjectStorageResourceTypeUsageOverview(
     includeBreakdown
       ? fetchUsageGaugeBreakdown(
           projectId,
-          STORAGE_GAUGE_METRIC,
+          option.metric ?? STORAGE_GAUGE_METRIC,
           from,
           to,
           ['resourceId', 'resourceType'],

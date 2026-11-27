@@ -58,6 +58,8 @@ export type RecordInitTicketVideoOptions = {
   backgroundColor?: string
   borderColor?: string
   usesDarkChrome?: boolean
+  /** Init 5: draw the hero's electric fog and edge light into the clip. */
+  electricFog?: boolean
   onProgress?: (progress: number) => void
   /** Fired after the still is captured, before frame encoding. */
   onVisibleCaptureComplete?: () => void
@@ -80,6 +82,7 @@ export async function recordInitTicketVideo({
   backgroundColor,
   borderColor,
   usesDarkChrome,
+  electricFog = false,
   onProgress,
   onVisibleCaptureComplete,
 }: RecordInitTicketVideoOptions): Promise<InitTicketVideoRecording> {
@@ -131,6 +134,13 @@ export async function recordInitTicketVideo({
         readCssColor(root, '--background', '#09090b'),
       borderColor: borderColor ?? readCssColor(root, '--border', '#27272a'),
       usesDarkChrome,
+      fog: electricFog
+        ? {
+            accent: readCssColor(root, '--brand-cta', '#fd366e'),
+            violet: readCssColor(root, '--network-globe-edge', '#8b5cf6'),
+            peach: readCssColor(root, '--network-globe-region', '#fe9c87'),
+          }
+        : undefined,
     })
 
     try {

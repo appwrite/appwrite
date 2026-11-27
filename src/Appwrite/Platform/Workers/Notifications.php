@@ -3,6 +3,8 @@
 namespace Appwrite\Platform\Workers;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Alert\Acknowledgements;
+use Appwrite\Alert\Change;
 use Appwrite\Alert\Unsubscribe;
 use Appwrite\Messaging\PushService;
 use Appwrite\Network\Validator\PublicHostname;
@@ -479,14 +481,23 @@ class Notifications extends Action
             $consoleRecipient['recipientHash'] = $recipientHash;
         }
 
+        // A monitor alert's push names the alert, so the bell keeps one notification per alert that it
+        // can open and acknowledge. Its severity is the notification's type, as the bell draws one icon per type.
+        $data = \array_map('strval', $payload['push']['data'] ?? []);
+        $alert = ($data['type'] ?? '') === 'alert' ? $data : [];
+
         $consoleMessage = new ConsoleMessage(
             recipients: [$consoleRecipient],
             title: $title,
             body: $body,
-            type: $payload['type'] ?? 'info',
+            type: ($alert['severity'] ?? '') !== '' ? $alert['severity'] : ($payload['type'] ?? 'info'),
             messageId: $messageId !== '' ? $messageId : null,
             projectId: $project->getId(),
             projectInternalId: $project->getSequence(),
+            teamId: ($alert['organizationId'] ?? '') !== '' ? $alert['organizationId'] : null,
+            subjectType: ($alert['alertId'] ?? '') !== '' ? RESOURCE_TYPE_ALERTS : '',
+            subjectId: $alert['alertId'] ?? '',
+            status: $alert['status'] ?? '',
         );
 
         $adapter = new ConsoleAdapter($dbForPlatform);
@@ -495,6 +506,16 @@ class Notifications extends Action
         if (($result['deliveredTo'] ?? 0) === 0) {
             $error = $result['results'][0]['error'] ?? 'unknown error';
             throw new Exception('Console alert delivery failed: ' . $error);
+        }
+
+        // An alert acknowledged while its firing notice waited in the queue shows acknowledged. Read after writing, so an
+        // acknowledgement made meanwhile either finds the notification or is seen here. Only ever marks it acknowledged,
+        // as a stale read must not undo an acknowledgement made since.
+        if (($alert['status'] ?? '') === Change::Firing->value) {
+            $firing = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->getDocument('monitorAlerts', $alert['alertId'] ?? ''));
+            if ($firing->getAttribute('acknowledgedAt') !== null) {
+                (new Acknowledgements($dbForPlatform))->updateNotifications($firing);
+            }
         }
 
         return $alertId;

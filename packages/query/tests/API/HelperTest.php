@@ -982,18 +982,27 @@ class HelperTest extends TestCase
         $this->assertCount(1, Query::diff($a, $b));
     }
 
-    // ── #[\Deprecated] on Query::containsString() ────────────────────
+    // ── Query::contains() is deprecated ──────────────────────────────
 
-    public function testContainsHasDeprecatedAttribute(): void
+    public function testContainsRaisesADeprecation(): void
     {
-        $ref = new \ReflectionMethod(Query::class, 'contains');
-        $attrs = $ref->getAttributes(\Deprecated::class);
-        $this->assertCount(1, $attrs);
+        $raised = [];
+        \set_error_handler(function (int $level, string $message) use (&$raised): bool {
+            $raised[] = [$level, $message];
 
-        /** @var \Deprecated $instance */
-        $instance = $attrs[0]->newInstance();
-        $this->assertNotNull($instance->message);
-        $this->assertStringContainsString('containsAny', $instance->message);
+            return true;
+        });
+        try {
+            $query = Query::contains('tags', ['a']);
+        } finally {
+            \restore_error_handler();
+        }
+
+        $this->assertSame(Method::Contains, $query->getMethod());
+        $this->assertCount(1, $raised);
+        $this->assertSame(E_USER_DEPRECATED, $raised[0][0]);
+        $this->assertStringContainsString('Query::contains() is deprecated', $raised[0][1]);
+        $this->assertStringContainsString('containsAny', $raised[0][1]);
     }
 
     public function testContainsStillFunctions(): void

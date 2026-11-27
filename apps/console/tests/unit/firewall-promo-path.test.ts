@@ -7,8 +7,9 @@ import {
 describe('isFirewallPromoPath', () => {
   test('hides the promo on every Firewall page', () => {
     for (const pathname of [
+      '/projects/project_1/firewall',
+      '/projects/project_1/firewall/functions',
       '/projects/project_1/firewall/create',
-      '/projects/project_1/settings/firewall',
       '/projects/project_1/functions/function_1/firewall',
       '/projects/project_1/sites/site_1/firewall',
     ]) {
