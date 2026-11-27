@@ -1,5 +1,46 @@
 # Change Log
 
+## v7.25.1
+
+* Fixed: examples pass an empty `[]string{}` instead of the invalid `"example"` placeholder
+
+## v7.25.0
+
+* Added: `videos` service to create, list, get, update and delete videos from files in Storage
+* Added: `videos.createRendition`, `listRenditions`, `getRendition` and `deleteRendition` to transcode a video into HLS, DASH or CMAF
+* Added: `videos.createCaption`, `listCaptions`, `updateCaption` and `deleteCaption` for subtitle tracks
+* Added: `getHlsManifest`, `getDashManifest`, `getCmafHlsManifest`, `getCmafDashManifest`, `getCaptionManifest`, `getThumbnail` and `getTimeline` playback URLs, and `listCodecs`
+* Added: `project.listVideoProfiles`, `createVideoProfile`, `getVideoProfile`, `updateVideoProfile` and `deleteVideoProfile`
+* Added: `Video`, `VideoCodec`, `VideoProfile`, `VideoRendition` and `VideoCaption` models and their list models
+
+## v7.24.0
+
+* Added: `password`, `attempts` and `attemptsInterval` options on `waf.CreateChallengeRule` and `waf.UpdateChallengeRule`
+
+## v7.23.0
+
+* Added: `monitors` service to create, list, get, update and delete HTTP, DNS, TCP, SMTP and usage monitors
+* Added: `alerts` service to list and get alerts, and acknowledge them with `alerts.update`
+* Added: `organization.listEscalations`, `createEscalation`, `getEscalation`, `updateEscalation` and `deleteEscalation`
+* Added: `Monitor`, `Alert`, `Escalation` and `EscalationStep` models and their list models
+
+## v7.22.0
+
+* Breaking: `Teams.GetPhoto`, `UpdatePhoto` and `DeletePhoto` moved to `Avatars.GetTeamPhoto`, `UpdateTeamPhoto` and `DeleteTeamPhoto`
+* Added: `Logs` service with `List` and `Get`, and the `RuntimeLog` and `RuntimeLogList` models
+* Added: Bird email and SMS providers on `Messaging`, created and updated with `CreateBirdEmailProvider` and its siblings
+* Added: `MutableContent` option on `Messaging.CreatePush` and `Messaging.UpdatePush`
+* Added: `Project.UpdateOAuth2Bird` and `Project.UpdateOAuth2Supabase`, with the `OAuth2Bird` and `OAuth2Supabase` models
+* Added: `WithForwardedIP` client option to forward the end user's IP address
+* Added: `Records` on `ProxyRule`, `Installs` on `App`, and review credit and monitoring limits on billing models
+
+## v7.21.0
+
+* Added: `ProviderComments`, `ProviderDeployments` and `ProviderStatuses` options on function and site create and update, and fields on `Function` and `Site`
+* Added: `Teams.GetPhoto`, `Teams.UpdatePhoto` and `Teams.DeletePhoto`
+* Added: `Analytics` annotation methods to list, create, get, update and delete annotations
+* Added: `Project` OAuth2 settings for Atlassian, Instagram, LINE, Linear, Netlify, Patreon, Railway, Reddit, Roblox, Strava, Vercel, VK and WorkOS
+
 ## v7.20.0
 
 * Added: `Account.CreateLDAPSession` for LDAP sign-in

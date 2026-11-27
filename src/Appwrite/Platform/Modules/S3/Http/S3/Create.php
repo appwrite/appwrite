@@ -32,7 +32,7 @@ class Create extends Base
         $this->setHttpMethods([Action::HTTP_REQUEST_METHOD_PUT, Action::HTTP_REQUEST_METHOD_POST]);
     }
 
-    protected function route(Request $request, Response $response, Database $dbForProject, Document $project, Document $team, User $user, Device $deviceForFiles, callable $locks, Cache $cache, Event $queueForEvents, DeletePublisher $publisherForDeletes, AuditPublisher $publisherForAudits, Event $queueForRealtime, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, EventProcessor $eventProcessor): void
+    protected function route(Request $request, Response $response, Database $dbForProject, Document $project, Document $team, User $user, Device $deviceForFiles, callable $locks, Cache $cache, Event $queueForEvents, DeletePublisher $publisherForDeletes, AuditPublisher $publisherForAudits, Event $queueForRealtime, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, EventProcessor $eventProcessor, array $plan): void
     {
         [$bucketId, $key] = $this->parts($request);
         if ($bucketId === '') {
@@ -185,7 +185,7 @@ class Create extends Base
 
         if ($key === '') {
             $this->authorize($request, $project, $team, $user, ['buckets.write']);
-            $this->createBucket($dbForProject, $bucketId);
+            $this->createBucket($dbForProject, $bucketId, $plan);
             $bucket = $this->bucket($dbForProject, $bucketId);
             $this->queueBucketEvent($queueForEvents, $response, $bucket, 'create');
             $this->enqueueAudit($publisherForAudits, $request, $project, $user, 'bucket.create', $bucket, 'bucket');

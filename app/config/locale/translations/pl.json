@@ -245,5 +245,5 @@
     "emails.otpSession.clientInfo": "To logowanie zostało zażądane przy użyciu {{agentClient}} na {{agentDevice}} {{agentOs}}. Jeśli nie zażądałeś logowania, możesz bezpiecznie zignorować tę wiadomość e-mail.",
     "emails.otpSession.securityPhrase": "Hasłem zabezpieczającym dla tego e-maila jest {{phrase}}. Możesz zaufać temu e-mailowi, jeśli hasło zgadza się z hasłem wyświetlonym podczas logowania.",
     "emails.otpSession.thanks": "Dzięki,",
-    "emails.otpSession.signature": "team {{project}}"
+    "emails.otpSession.signature": "Zespół {{project}}"
 }

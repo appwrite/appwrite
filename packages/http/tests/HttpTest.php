@@ -16,10 +16,12 @@ use Utopia\Http\Http;
 use Utopia\Http\Route;
 use Utopia\Validator\AnyOf;
 use Utopia\Validator\ArrayList;
+use Utopia\Validator\Assoc;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Integer;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
+use Utopia\Validator\Validator;
 use Utopia\Validator\WhiteList;
 
 final class HttpTest extends TestCase
@@ -1128,6 +1130,44 @@ final class HttpTest extends TestCase
             });
 
         $this->assertSame(\var_export('false', true), $this->dispatch(['total' => 'false']));
+    }
+
+    public function testEmptyObjectReachesAnAssocParamAsAnArray(): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'PATCH';
+        $_SERVER['REQUEST_URI'] = '/items';
+
+        Http::patch('/items')
+            ->param('prefs', [], new Assoc(), 'prefs param', true)
+            ->param('headers', null, new Nullable(new Assoc()), 'headers param', true)
+            ->param('data', null, new class () extends Validator {
+                public function getDescription(): string
+                {
+                    return 'Value must be an object';
+                }
+
+                public function isArray(): bool
+                {
+                    return false;
+                }
+
+                public function getType(): string
+                {
+                    return self::TYPE_OBJECT;
+                }
+
+                public function isValid(mixed $value): bool
+                {
+                    return $value instanceof \stdClass;
+                }
+            }, 'data param', true)
+            ->action(function (array $prefs, ?array $headers, mixed $data) {
+                echo \var_export([$prefs, $headers, $data instanceof \stdClass], true);
+            });
+
+        $result = $this->dispatch(['prefs' => new \stdClass(), 'headers' => new \stdClass(), 'data' => new \stdClass()]);
+
+        $this->assertSame(\var_export([[], [], true], true), $result);
     }
 
     public function testOmittedBooleanParamKeepsItsDefault(): void

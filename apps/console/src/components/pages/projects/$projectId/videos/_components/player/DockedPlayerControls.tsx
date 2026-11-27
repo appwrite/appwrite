@@ -48,7 +48,7 @@ export function DockedPlayerControls({
   const video = videoRef.current
   const togglePlay = () => {
     if (!video) return
-    if (video.paused) void video.play()
+    if (video.paused) void video.play().catch(() => {})
     else video.pause()
   }
 
@@ -56,9 +56,8 @@ export function DockedPlayerControls({
     <div className="flex min-w-0 flex-1 items-center gap-3">
       <Button
         type="button"
-        variant="outline"
         size="icon"
-        className="size-9 shrink-0 rounded-full"
+        className="size-9 shrink-0 rounded-full shadow-sm"
         onClick={togglePlay}
         aria-label={playing ? t('Pause') : t('Play')}
       >
@@ -68,17 +67,20 @@ export function DockedPlayerControls({
           <Play className="size-4 translate-x-px fill-current" />
         )}
       </Button>
-      <div className="flex min-w-0 flex-1 flex-col gap-2">
+      <div className="flex min-w-0 flex-1 flex-col gap-1.5">
         <div className="flex min-w-0 items-baseline justify-between gap-3">
           <span className="truncate text-[13px] font-medium text-foreground">
             {title}
           </span>
-          <span className="shrink-0 font-mono text-[12px] tabular-nums text-muted-foreground">
-            {formatPlayerClock(time)} / {formatPlayerClock(duration)}
+          <span className="shrink-0 text-[12px] tabular-nums text-muted-foreground">
+            {formatPlayerClock(time)}
+            <span className="px-1 text-muted-foreground/50">/</span>
+            {formatPlayerClock(duration)}
           </span>
         </div>
         <Slider
           aria-label={t('Seek')}
+          className="group/docked-seek h-3 [&_[data-slot=slider-range]]:bg-foreground [&_[data-slot=slider-thumb]]:size-3 [&_[data-slot=slider-thumb]]:scale-0 [&_[data-slot=slider-thumb]]:border-0 [&_[data-slot=slider-thumb]]:bg-foreground [&_[data-slot=slider-thumb]]:shadow-sm [&_[data-slot=slider-thumb]]:transition-transform [&_[data-slot=slider-thumb]]:hover:ring-0 hover:[&_[data-slot=slider-thumb]]:scale-100 [&_[data-slot=slider-thumb]:focus-visible]:scale-100 [&_[data-slot=slider-track]]:h-1 [&_[data-slot=slider-track]]:bg-foreground/15"
           min={0}
           max={duration || 1}
           step={0.1}
@@ -93,7 +95,7 @@ export function DockedPlayerControls({
         type="button"
         variant="ghost"
         size="icon"
-        className="size-9 shrink-0 text-muted-foreground"
+        className="size-8 shrink-0 rounded-full"
         onClick={() => {
           if (!video) return
           video.muted = !muted

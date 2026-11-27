@@ -1,5 +1,8 @@
-import type { ReactElement, ReactNode } from 'react'
+import { Fragment, useState, type ReactElement, type ReactNode } from 'react'
+import { useParams } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
+import { GitInstallationReuseDialog } from '@/components/global/shared/GitInstallationReuseDialog'
+import { useReusableVcsInstallations } from '@/lib/react-query/hooks'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import {
@@ -48,6 +51,7 @@ export function VcsProviderButtons({
   className?: string
 }) {
   const t = useT()
+  const reusable = useReusableInstallations()
   if (providers.length === 0) return null
 
   const columns = getVcsProviderColumns(providers.length)
@@ -60,28 +64,54 @@ export function VcsProviderButtons({
           groupWidthClassName[columns],
         )}
       >
-        {providers.map((provider) => (
-          <Button
-            key={provider.id}
-            variant={variant}
-            size="sm"
-            className={cn(
-              'h-9 min-w-0 text-[13px]',
-              tileBasisClassName[columns],
-            )}
-            aria-label={t(`Connect ${provider.label}`)}
-            title={provider.label}
-            asChild
-          >
-            {link(
-              provider,
-              <>
-                <provider.Icon className={vcsProviderButtonIconClassName} />
-                <span className="min-w-0 truncate">{provider.label}</span>
-              </>,
-            )}
-          </Button>
-        ))}
+        {providers.map((provider) => {
+          const content = (
+            <>
+              <provider.Icon className={vcsProviderButtonIconClassName} />
+              <span className="min-w-0 truncate">{provider.label}</span>
+            </>
+          )
+          const tile = cn(
+            'h-9 min-w-0 text-[13px]',
+            tileBasisClassName[columns],
+          )
+          if (provider.id === 'github' && reusable.installations.length > 0) {
+            return (
+              <Fragment key={provider.id}>
+                <Button
+                  variant={variant}
+                  size="sm"
+                  className={tile}
+                  aria-label={t(`Connect ${provider.label}`)}
+                  title={provider.label}
+                  onClick={() => reusable.setOpen(true)}
+                >
+                  {content}
+                </Button>
+                <GitInstallationReuseDialog
+                  open={reusable.open}
+                  onOpenChange={reusable.setOpen}
+                  projectId={reusable.projectId}
+                  installations={reusable.installations}
+                  installLink={link(provider, t('Install on another account'))}
+                />
+              </Fragment>
+            )
+          }
+          return (
+            <Button
+              key={provider.id}
+              variant={variant}
+              size="sm"
+              className={tile}
+              aria-label={t(`Connect ${provider.label}`)}
+              title={provider.label}
+              asChild
+            >
+              {link(provider, content)}
+            </Button>
+          )
+        })}
       </div>
     </div>
   )
@@ -99,6 +129,7 @@ export function VcsAccountLinks({
   href: (provider: VcsProviderMeta) => string
 }) {
   const t = useT()
+  const reusable = useReusableInstallations()
   if (providers.length === 0) return null
 
   return (
@@ -112,18 +143,63 @@ export function VcsAccountLinks({
           providers.length > 1 && 'grid-cols-2',
         )}
       >
-        {providers.map((provider) => (
-          <a
-            key={provider.id}
-            href={href(provider)}
-            aria-label={t(`Add ${provider.label} account`)}
-            className="flex min-w-0 items-center gap-2 py-1.5 text-[11px] text-muted-foreground hover:text-foreground"
-          >
-            <provider.Icon className="h-3 w-3 shrink-0" />
-            <span className="min-w-0 truncate">{provider.label}</span>
-          </a>
-        ))}
+        {providers.map((provider) => {
+          const className =
+            'flex min-w-0 items-center gap-2 py-1.5 text-[11px] text-muted-foreground hover:text-foreground'
+          const content = (
+            <>
+              <provider.Icon className="h-3 w-3 shrink-0" />
+              <span className="min-w-0 truncate">{provider.label}</span>
+            </>
+          )
+          if (provider.id === 'github' && reusable.installations.length > 0) {
+            return (
+              <Fragment key={provider.id}>
+                <button
+                  type="button"
+                  aria-label={t(`Add ${provider.label} account`)}
+                  className={className}
+                  onClick={() => reusable.setOpen(true)}
+                >
+                  {content}
+                </button>
+                <GitInstallationReuseDialog
+                  open={reusable.open}
+                  onOpenChange={reusable.setOpen}
+                  projectId={reusable.projectId}
+                  installations={reusable.installations}
+                  installLink={
+                    <a href={href(provider)}>
+                      {t('Install on another account')}
+                    </a>
+                  }
+                />
+              </Fragment>
+            )
+          }
+          return (
+            <a
+              key={provider.id}
+              href={href(provider)}
+              aria-label={t(`Add ${provider.label} account`)}
+              className={className}
+            >
+              {content}
+            </a>
+          )
+        })}
       </div>
     </div>
   )
+}
+
+/**
+ * GitHub installations other projects in the organization connected, which
+ * the preview offers to reuse before sending the user through GitHub.
+ */
+function useReusableInstallations() {
+  const { projectId } = useParams({ strict: false })
+  const [open, setOpen] = useState(false)
+  const { data } = useReusableVcsInstallations(projectId)
+  return { projectId, open, setOpen, installations: data ?? [] }
 }

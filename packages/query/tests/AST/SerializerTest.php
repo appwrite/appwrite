@@ -478,6 +478,25 @@ class SerializerTest extends TestCase
         $this->assertSame('SELECT (SELECT COUNT(*) FROM `orders`) FROM `users`', $result);
     }
 
+    public function testEqualPrecedenceRightOperandKeepsItsGrouping(): void
+    {
+        // Written without the parentheses, each of these reads back as a different expression.
+        foreach ([
+            'SELECT `a` = (`b` = `c`) FROM `t`',
+            'SELECT `a` * (`b` / `c`) FROM `t`',
+            'SELECT `a` + (`b` - `c`) FROM `t`',
+            'SELECT `a` < (`b` < `c`) FROM `t`',
+        ] as $sql) {
+            $this->assertSame($sql, $this->roundTrip($sql));
+        }
+    }
+
+    public function testSameAssociativeOperatorDropsTheGrouping(): void
+    {
+        $this->assertSame('SELECT `a` + `b` + `c` FROM `t`', $this->roundTrip('SELECT `a` + (`b` + `c`) FROM `t`'));
+        $this->assertSame('SELECT `a` FROM `t` WHERE `a` AND `b` AND `c`', $this->roundTrip('SELECT `a` FROM `t` WHERE `a` AND (`b` AND `c`)'));
+    }
+
     public function testPrecedenceMultiplicationOverAddition(): void
     {
         $result = $this->roundTrip('SELECT a + b * c FROM t');

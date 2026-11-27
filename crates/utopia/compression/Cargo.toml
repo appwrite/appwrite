@@ -1,0 +1,38 @@
+[package]
+name = "utopia-compression"
+description = "Compression algorithms (Brotli, Deflate, GZIP, LZ4, Snappy, XZ, Zstd) and Accept-Encoding negotiation, byte for byte as PHP's extensions."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[features]
+# One feature per PHP extension the algorithm needs. Without its feature, an
+# algorithm reports itself unsupported and fails like PHP without the
+# extension. `xz` is off by default: PHP's dev image has no ext-xz.
+default = ["brotli", "lz4", "zlib", "zstd"]
+brotli = ["dep:brotlic-sys"]
+lz4 = ["dep:lz4-sys"]
+xz = ["dep:lzma-rust2"]
+zlib = ["dep:libz-sys"]
+zstd = ["dep:zstd-safe"]
+
+[dependencies]
+# The C libraries PHP's extensions link, at the same versions: brotli 1.2.1 and LZ4 1.10.0 built
+# from source, zlib the system's, libzstd 1.5.7 built from source or, with
+# ZSTD_SYS_USE_PKG_CONFIG=1 (as the PHP extension is built), the system's.
+brotlic-sys = { workspace = true, optional = true }
+libz-sys = { workspace = true, optional = true }
+lz4-sys = { workspace = true, optional = true }
+lzma-rust2 = { workspace = true, optional = true }
+php-std.workspace = true
+thiserror.workspace = true
+# Legacy frames (zstd v0.5 to v0.7) are recognised, as by the libzstd PHP links; `experimental`
+# for contexts on a caller's allocator (`ZSTD_createCCtx_advanced()`).
+zstd-safe = { workspace = true, optional = true, features = ["legacy", "experimental"] }
+
+[package.metadata.utopia]
+category = "utilities"
+php-sync = "8053de67394b55f7237191aa4569a16f666da749"

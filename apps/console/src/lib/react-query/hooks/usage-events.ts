@@ -29,6 +29,7 @@ import {
   fetchProjectFunctionGbHoursOverview,
   fetchProjectGbHoursOverview,
   fetchProjectSiteGbHoursOverview,
+  fetchProjectVideoGbHoursOverview,
   type ProjectGbHoursOverview,
 } from '@/lib/usage/gb-hours-events'
 import {
@@ -60,7 +61,7 @@ import {
   fetchProjectStorageResourceTypeUsageOverview,
   fetchProjectOverviewStorageOverview,
   fetchProjectStorageOverview,
-  type OverviewStorageBreakdownType,
+  type StorageBreakdownType,
   type ProjectOverviewStorageOverview,
   type StorageImageTransformationsOverview,
   type StorageResourceTypeUsageOverview,
@@ -133,6 +134,15 @@ import {
   fetchProjectWebhooksEventsSentOverview,
 } from '@/lib/usage/webhooks-usage'
 import {
+  fetchProjectRenditionsOverview,
+  fetchProjectVideosCountOverview,
+  fetchProjectVideosTrafficBreakdown,
+  fetchProjectVideosTrafficOverview,
+  type VideosRenditionsEventMetric,
+  type VideosTrafficBreakdownDimension,
+  type VideosTrafficEventMetric,
+} from '@/lib/usage/videos-usage'
+import {
   appendUsageFiltersToQueryKey,
   mergeUsageFetchOptions,
   type UsageFilterQueries,
@@ -151,6 +161,11 @@ function normalizeDateRangeKey(
 ): {
   rangeKeyPart: string
   getBounds: () => { from: Date; to: Date }
+  /**
+   * Rolling windows (last 24h, this month) move with the clock, so their
+   * charts refetch on mount once the cached copy is stale. Not when it is
+   * fresh: the page's loader has usually just fetched it.
+   */
   refetchOnMountRolling: boolean
 } {
   const { dateRangePresetId, logRetentionHours } = options ?? {}
@@ -334,7 +349,7 @@ export function bandwidthOverviewQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -402,7 +417,7 @@ export function firewallTrafficOverviewQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -471,7 +486,7 @@ export function requestsOverviewQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -517,7 +532,7 @@ export function executionsOverviewQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -563,7 +578,7 @@ export function functionExecutionsOverviewQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -609,7 +624,7 @@ export function functionExecutionsForFunctionChartQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId && functionId ? 5 * 60 * 1000 : 0,
   })
@@ -668,7 +683,7 @@ export function siteExecutionsForSiteChartQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId && siteId ? 5 * 60 * 1000 : 0,
   })
@@ -732,7 +747,7 @@ export function siteExecutionsOverviewQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -778,7 +793,7 @@ export function gbHoursOverviewQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -824,7 +839,7 @@ export function functionGbHoursOverviewQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -861,7 +876,7 @@ export function functionGbHoursForFunctionChartQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId && functionId ? 5 * 60 * 1000 : 0,
   })
@@ -920,7 +935,7 @@ export function siteGbHoursForSiteChartQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId && siteId ? 5 * 60 * 1000 : 0,
   })
@@ -980,7 +995,7 @@ export function requestsForResourceChartQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId && resourceId ? 5 * 60 * 1000 : 0,
   })
@@ -1042,7 +1057,7 @@ export function bandwidthForResourceChartQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId && resourceId ? 5 * 60 * 1000 : 0,
   })
@@ -1108,7 +1123,53 @@ export function siteGbHoursOverviewQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
+      : usageEventsQueryOptionsBase.refetchOnMount,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function videoGbHoursOverviewQueryOptions(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  includeBreakdown = true,
+  filterQueries?: UsageFilterQueries,
+  logRetentionHours?: number,
+  dateRangePresetId?: string | null,
+) {
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } =
+    normalizeDateRangeKey(dateRange, { dateRangePresetId, logRetentionHours })
+
+  return queryOptions({
+    queryKey: appendUsageFiltersToQueryKey(
+      [
+        'usage-events',
+        'video-gb-hours',
+        usageOverviewQueryScope(includeBreakdown),
+        'project',
+        projectId,
+        rangeKeyPart,
+        interval,
+      ],
+      filterQueries,
+    ),
+    queryFn: () =>
+      fetchProjectVideoGbHoursOverview(
+        projectId!,
+        getBounds(),
+        interval,
+        mergeUsageFetchOptions(
+          { includeBreakdown },
+          filterQueries,
+          logRetentionHours,
+        ),
+      ),
+    enabled: !!projectId,
+    ...usageEventsQueryOptionsBase,
+    placeholderData: keepPreviousUsageChartDataForProject(projectId),
+    refetchOnMount: refetchOnMountRolling
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -1154,7 +1215,7 @@ export function storageOverviewQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -1201,7 +1262,7 @@ export function overviewStorageOverviewQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -1244,7 +1305,7 @@ export function requestsChartOverviewQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -1605,6 +1666,45 @@ export function useProjectSiteGbHoursOverview(
   })
 }
 
+/** Video encode GB-hours (`executions.mbSeconds` with `service=videos`). */
+export function useProjectVideoGbHoursOverview(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  enabled = true,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  includeBreakdown = true,
+) {
+  const { filterQueries, logRetentionHours, dateRangePresetId, usageLogRetentionReady } = useUsageSectionFilterQueries()
+
+  const queryClient = useQueryClient()
+
+  return useQuery({
+    ...videoGbHoursOverviewQueryOptions(
+      projectId,
+      dateRange,
+      interval,
+      includeBreakdown,
+      filterQueries,
+      logRetentionHours,
+      dateRangePresetId,
+    ),
+    enabled: !!projectId && enabled && usageLogRetentionReady,
+    placeholderData: usageOverviewPlaceholderData<ProjectGbHoursOverview>(
+      queryClient,
+      projectId,
+      videoGbHoursOverviewQueryOptions(
+        projectId,
+        dateRange,
+        interval,
+        !includeBreakdown,
+        filterQueries,
+        logRetentionHours,
+      dateRangePresetId,
+      ).queryKey,
+    ),
+  })
+}
+
 export function useProjectStorageOverview(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
@@ -1692,7 +1792,7 @@ export function useProjectOverviewStorageOverview(
 }
 
 function storageResourceTypeUsageQueryOptions(
-  breakdownType: OverviewStorageBreakdownType,
+  breakdownType: StorageBreakdownType,
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
@@ -1734,7 +1834,7 @@ function storageResourceTypeUsageQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -1777,7 +1877,7 @@ function imageTransformationsUsageQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -1785,7 +1885,7 @@ function imageTransformationsUsageQueryOptions(
 
 /** Unified storage gauge scoped to one resource family (buckets, databases, …). */
 export function useProjectStorageResourceTypeUsage(
-  breakdownType: OverviewStorageBreakdownType,
+  breakdownType: StorageBreakdownType,
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
   enabled = true,
@@ -2120,7 +2220,7 @@ export function requestsBreakdownQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -2165,7 +2265,7 @@ export function requestsBreakdownDrawerQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -2361,7 +2461,7 @@ export function bandwidthBreakdownQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -2406,7 +2506,7 @@ export function bandwidthBreakdownDrawerQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -2648,7 +2748,7 @@ function databaseReadsChartQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -2690,7 +2790,7 @@ function databaseWritesChartQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -2732,7 +2832,7 @@ function databaseCollectionsChartQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -2774,7 +2874,7 @@ function databaseDocumentsChartQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -2911,7 +3011,7 @@ function databaseReadsBreakdownQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -2954,7 +3054,7 @@ function databaseWritesBreakdownQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -2999,7 +3099,7 @@ function databaseReadsBreakdownDrawerQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -3044,7 +3144,7 @@ function databaseWritesBreakdownDrawerQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -3318,7 +3418,7 @@ function realtimeConnectionsChartQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -3360,7 +3460,7 @@ function realtimeMessagesChartQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -3402,7 +3502,7 @@ function realtimeBandwidthChartQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -3527,7 +3627,7 @@ export function authMauChartQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -3569,7 +3669,7 @@ function authOtpChartQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -3611,7 +3711,7 @@ export function authSignupsChartQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -3741,7 +3841,7 @@ function avatarsScreenshotsChartQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -3819,7 +3919,7 @@ function messagingMessagesChartQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -3861,7 +3961,7 @@ function messagingSmsChartQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -3903,7 +4003,7 @@ function messagingTopicsChartQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -4030,7 +4130,7 @@ function webhooksEventsSentChartQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -4072,7 +4172,7 @@ function webhooksEventsFailedChartQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -4114,7 +4214,7 @@ function webhooksCountChartQueryOptions(
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageEventsQueryOptionsBase.refetchOnMount,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -4205,6 +4305,303 @@ export function refetchProjectWebhooksUsageQueries(
   })
 }
 
+function videosTrafficChartQueryOptions(
+  projectId: string | null | undefined,
+  metric: VideosTrafficEventMetric,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  filterQueries?: UsageFilterQueries,
+  logRetentionHours?: number,
+  dateRangePresetId?: string | null,
+) {
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } =
+    normalizeDateRangeKey(dateRange, { dateRangePresetId, logRetentionHours })
+
+  return queryOptions({
+    queryKey: appendUsageFiltersToQueryKey(
+      [
+        'usage-events',
+        'videos',
+        metric,
+        'chart',
+        'project',
+        projectId,
+        rangeKeyPart,
+        interval,
+      ],
+      filterQueries,
+    ),
+    queryFn: () =>
+      fetchProjectVideosTrafficOverview(
+        projectId!,
+        metric,
+        getBounds(),
+        interval,
+        mergeUsageFetchOptions(undefined, filterQueries, logRetentionHours),
+      ),
+    enabled: !!projectId,
+    ...usageEventsQueryOptionsBase,
+    placeholderData: keepPreviousUsageChartDataForProject(projectId),
+    refetchOnMount: refetchOnMountRolling
+      ? true
+      : usageEventsQueryOptionsBase.refetchOnMount,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+function videosTrafficBreakdownQueryOptions(
+  projectId: string | null | undefined,
+  metric: VideosTrafficEventMetric,
+  dimension: VideosTrafficBreakdownDimension,
+  dateRange: DateRange | undefined,
+  filterQueries?: UsageFilterQueries,
+  logRetentionHours?: number,
+  dateRangePresetId?: string | null,
+) {
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } =
+    normalizeDateRangeKey(dateRange, { dateRangePresetId, logRetentionHours })
+
+  return queryOptions({
+    queryKey: appendUsageFiltersToQueryKey(
+      [
+        'usage-events',
+        'videos',
+        metric,
+        'breakdown',
+        dimension,
+        'project',
+        projectId,
+        rangeKeyPart,
+      ],
+      filterQueries,
+    ),
+    queryFn: () =>
+      fetchProjectVideosTrafficBreakdown(
+        projectId!,
+        metric,
+        getBounds(),
+        dimension,
+        usageBreakdownQueries(filterQueries),
+        logRetentionHours,
+      ),
+    enabled: !!projectId,
+    ...usageEventsQueryOptionsBase,
+    placeholderData: keepPreviousUsageChartDataForProject(projectId),
+    refetchOnMount: refetchOnMountRolling
+      ? true
+      : usageEventsQueryOptionsBase.refetchOnMount,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+function renditionsChartQueryOptions(
+  projectId: string | null | undefined,
+  metric: VideosRenditionsEventMetric,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  filterQueries?: UsageFilterQueries,
+  logRetentionHours?: number,
+  dateRangePresetId?: string | null,
+) {
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } =
+    normalizeDateRangeKey(dateRange, { dateRangePresetId, logRetentionHours })
+
+  return queryOptions({
+    queryKey: appendUsageFiltersToQueryKey(
+      [
+        'usage-events',
+        'videos',
+        metric,
+        'chart',
+        'project',
+        projectId,
+        rangeKeyPart,
+        interval,
+      ],
+      filterQueries,
+    ),
+    queryFn: () =>
+      fetchProjectRenditionsOverview(
+        projectId!,
+        metric,
+        getBounds(),
+        interval,
+        mergeUsageFetchOptions(undefined, filterQueries, logRetentionHours),
+      ),
+    enabled: !!projectId,
+    ...usageEventsQueryOptionsBase,
+    placeholderData: keepPreviousUsageChartDataForProject(projectId),
+    refetchOnMount: refetchOnMountRolling
+      ? true
+      : usageEventsQueryOptionsBase.refetchOnMount,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+function videosCountChartQueryOptions(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  filterQueries?: UsageFilterQueries,
+  logRetentionHours?: number,
+  dateRangePresetId?: string | null,
+) {
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } =
+    normalizeDateRangeKey(dateRange, { dateRangePresetId, logRetentionHours })
+
+  return queryOptions({
+    queryKey: appendUsageFiltersToQueryKey(
+      [
+        'usage-gauges',
+        'videos',
+        'count',
+        'chart',
+        'project',
+        projectId,
+        rangeKeyPart,
+        interval,
+      ],
+      filterQueries,
+    ),
+    queryFn: () =>
+      fetchProjectVideosCountOverview(
+        projectId!,
+        getBounds(),
+        interval,
+        mergeUsageFetchOptions(undefined, filterQueries, logRetentionHours),
+      ),
+    enabled: !!projectId,
+    ...usageEventsQueryOptionsBase,
+    placeholderData: keepPreviousUsageChartDataForProject(projectId),
+    refetchOnMount: refetchOnMountRolling
+      ? true
+      : usageEventsQueryOptionsBase.refetchOnMount,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+/** Videos API bandwidth (`network.outbound`) or requests over time. */
+export function useProjectVideosTrafficChart(
+  projectId: string | null | undefined,
+  metric: VideosTrafficEventMetric,
+  dateRange: DateRange | undefined,
+  enabled = true,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  const { filterQueries, logRetentionHours, dateRangePresetId, usageLogRetentionReady } = useUsageSectionFilterQueries()
+
+  return useQuery({
+    ...videosTrafficChartQueryOptions(
+      projectId,
+      metric,
+      dateRange,
+      interval,
+      filterQueries,
+      logRetentionHours,
+      dateRangePresetId,
+    ),
+    enabled: !!projectId && enabled && usageLogRetentionReady,
+  })
+}
+
+/** Top videos, countries, or endpoints for Videos API traffic. */
+export function useProjectVideosTrafficBreakdown(
+  projectId: string | null | undefined,
+  metric: VideosTrafficEventMetric,
+  dimension: VideosTrafficBreakdownDimension,
+  dateRange: DateRange | undefined,
+  enabled = true,
+) {
+  const { filterQueries, logRetentionHours, dateRangePresetId, usageLogRetentionReady } = useUsageSectionFilterQueries()
+
+  return useQuery({
+    ...videosTrafficBreakdownQueryOptions(
+      projectId,
+      metric,
+      dimension,
+      dateRange,
+      filterQueries,
+      logRetentionHours,
+      dateRangePresetId,
+    ),
+    enabled: !!projectId && enabled && usageLogRetentionReady,
+  })
+}
+
+/** Encoded (`renditions.success`) or failed renditions over time. */
+export function useProjectRenditionsChart(
+  projectId: string | null | undefined,
+  metric: VideosRenditionsEventMetric,
+  dateRange: DateRange | undefined,
+  enabled = true,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  const { filterQueries, logRetentionHours, dateRangePresetId, usageLogRetentionReady } = useUsageSectionFilterQueries()
+
+  return useQuery({
+    ...renditionsChartQueryOptions(
+      projectId,
+      metric,
+      dateRange,
+      interval,
+      filterQueries,
+      logRetentionHours,
+      dateRangePresetId,
+    ),
+    enabled: !!projectId && enabled && usageLogRetentionReady,
+  })
+}
+
+export function useProjectVideosCountChart(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  enabled = true,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  const {
+    filterQueries,
+    logRetentionHours,
+    dateRangePresetId,
+    usageLogRetentionReady,
+  } = useUsageSectionFilterQueries('gauges')
+
+  return useQuery({
+    ...videosCountChartQueryOptions(
+      projectId,
+      dateRange,
+      interval,
+      filterQueries,
+      logRetentionHours,
+      dateRangePresetId,
+    ),
+    enabled: !!projectId && enabled && usageLogRetentionReady,
+  })
+}
+
+/**
+ * Refetch the Videos usage page: traffic, renditions, and the video count,
+ * plus the encode compute and storage cards it shares with other pages.
+ */
+export function refetchProjectVideosUsageQueries(
+  queryClient: QueryClient,
+  projectId: string,
+) {
+  return queryClient.refetchQueries({
+    predicate: (query) =>
+      Array.isArray(query.queryKey) &&
+      query.queryKey.includes('project') &&
+      query.queryKey.includes(projectId) &&
+      (((query.queryKey[0] === 'usage-events' ||
+        query.queryKey[0] === 'usage-gauges') &&
+        query.queryKey[1] === 'videos') ||
+        (query.queryKey[0] === 'usage-events' &&
+          query.queryKey[1] === 'video-gb-hours') ||
+        (query.queryKey[0] === 'usage-gauges' &&
+          query.queryKey[1] === 'storage' &&
+          query.queryKey[2] === 'videos')),
+  })
+}
+
 /** Refetch compute usage charts (executions, GB-hours) for a project. */
 export function refetchProjectComputeUsageQueries(
   queryClient: QueryClient,
@@ -4217,6 +4614,7 @@ export function refetchProjectComputeUsageQueries(
     'gb-hours',
     'function-gb-hours',
     'site-gb-hours',
+    'video-gb-hours',
   ])
 
   return queryClient.refetchQueries({

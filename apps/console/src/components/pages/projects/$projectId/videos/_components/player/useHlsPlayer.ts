@@ -6,6 +6,13 @@ import {
   PLAYBACK_LOAD_FAILED,
   playbackFatalMessage,
 } from '@/lib/videos/embed-player-errors'
+import { eventTime, watchFirstFrame } from '@/lib/videos/first-frame'
+import {
+  readDownlinkMbps,
+  readSavedBandwidth,
+  saveBandwidth,
+  startBandwidth,
+} from '@/lib/videos/start-bandwidth'
 import {
   applyVideoStreamAccess,
   type VideoStreamAccess,
@@ -112,7 +119,12 @@ export type HlsPlayerState = {
   loadStartedAt: number | null
   /** When the stream itself was first requested, after the player library loaded. */
   requestedAt: number | null
+  /**
+   * When the manifest's last byte arrived. Without hls.js the browser loads
+   * the manifest out of sight, so `loadedmetadata` stands in for it.
+   */
   manifestLoadedAt: number | null
+  /** When the first frame was ready to show (see `watchFirstFrame`). */
   firstFrameAt: number | null
 }
 
@@ -256,14 +268,23 @@ export function useHlsPlayer(
 
     let cancelled = false
     let hls: Hls | null = null
-    setState({ ...INITIAL_STATE, loadStartedAt: Date.now() })
+    // Startup is timed on the monotonic clock hls.js and the browser stamp
+    // their events with, and kept as wall-clock times counted from
+    // `loadStartedAt`, so the gaps between milestones stay exact.
+    const loadStartedAt = Date.now()
+    const startedAt = performance.now()
+    const wallClock = (at: number) => loadStartedAt + (at - startedAt)
+    setState({ ...INITIAL_STATE, loadStartedAt })
 
-    const onFirstFrame = () => {
+    const stopWatchingFrame = watchFirstFrame(video, (at) => {
+      setState((prev) => ({ ...prev, firstFrameAt: wallClock(at) }))
+    })
+    const onLoadedMetadata = (event: Event) => {
+      const manifestLoadedAt = wallClock(eventTime(event))
       setState((prev) =>
-        prev.firstFrameAt ? prev : { ...prev, firstFrameAt: Date.now() },
+        prev.manifestLoadedAt == null ? { ...prev, manifestLoadedAt } : prev,
       )
     }
-    video.addEventListener('loadeddata', onFirstFrame)
 
     // Native playback reports no HTTP status. On a failure, ask for the
     // manifest once more to learn whether it was refused (a private video).
@@ -286,15 +307,17 @@ export function useHlsPlayer(
     }
 
     if (sourceType === 'file') {
-      video.src = applyVideoStreamAccess(src, access)
+      video.addEventListener('loadedmetadata', onLoadedMetadata)
       setState((prev) => ({
         ...prev,
         engine: 'native',
-        requestedAt: Date.now(),
+        requestedAt: wallClock(performance.now()),
       }))
+      video.src = applyVideoStreamAccess(src, access)
       pushEvent({ kind: 'info', name: 'LOAD_FILE', detail: src })
       return () => {
-        video.removeEventListener('loadeddata', onFirstFrame)
+        stopWatchingFrame()
+        video.removeEventListener('loadedmetadata', onLoadedMetadata)
         video.removeAttribute('src')
         video.load()
       }
@@ -306,12 +329,13 @@ export function useHlsPlayer(
       if (!HlsClass.isSupported()) {
         if (video.canPlayType('application/vnd.apple.mpegurl')) {
           video.addEventListener('error', onNativeError)
-          video.src = manifestUrl
+          video.addEventListener('loadedmetadata', onLoadedMetadata)
           setState((prev) => ({
             ...prev,
             engine: 'native',
-            requestedAt: Date.now(),
+            requestedAt: wallClock(performance.now()),
           }))
+          video.src = manifestUrl
           pushEvent({
             kind: 'warning',
             name: 'Native HLS',
@@ -327,7 +351,19 @@ export function useHlsPlayer(
         return
       }
 
-      hls = new HlsClass(hlsLoaderConfig(access))
+      hls = new HlsClass({
+        ...hlsLoaderConfig(access),
+        // Open at the quality this viewer can sustain rather than the lowest
+        // rendition: start from the last measured bandwidth, skip the test
+        // fragment on the lowest level, and never pick more pixels than the
+        // player shows. Adaptive bitrate still steps down if the network lags.
+        abrEwmaDefaultEstimate: startBandwidth(
+          readSavedBandwidth(),
+          readDownlinkMbps(),
+        ),
+        testBandwidth: false,
+        capLevelToPlayerSize: true,
+      })
       hlsRef.current = hls
       setState((prev) => ({
         ...prev,
@@ -337,11 +373,18 @@ export function useHlsPlayer(
 
       const E = HlsClass.Events
 
+      hls.on(E.MANIFEST_LOADED, (_event, data) => {
+        // When its last byte arrived, as hls.js timed the request.
+        const end = data.stats.loading.end
+        const manifestLoadedAt = wallClock(end > 0 ? end : performance.now())
+        setState((prev) =>
+          prev.manifestLoadedAt == null ? { ...prev, manifestLoadedAt } : prev,
+        )
+      })
       hls.on(E.MANIFEST_PARSED, (_event, data) => {
         ensurePlaybackAudio(hls)
         setState((prev) => ({
           ...prev,
-          manifestLoadedAt: Date.now(),
           levels: data.levels.map(toLevelInfo),
           audioTracks: data.audioTracks.map(toTrackInfo),
           currentAudioTrack: hls?.audioTrack ?? -1,
@@ -442,15 +485,21 @@ export function useHlsPlayer(
       })
 
       hls.attachMedia(video)
-      setState((prev) => ({ ...prev, requestedAt: Date.now() }))
+      setState((prev) => ({
+        ...prev,
+        requestedAt: wallClock(performance.now()),
+      }))
       hls.loadSource(applyVideoStreamAccess(src, access))
       pushEvent({ kind: 'info', name: 'LOAD_SOURCE', detail: src })
     })
 
     return () => {
       cancelled = true
-      video.removeEventListener('loadeddata', onFirstFrame)
+      stopWatchingFrame()
+      video.removeEventListener('loadedmetadata', onLoadedMetadata)
       video.removeEventListener('error', onNativeError)
+      // Remember what this stream measured, so the next one starts there.
+      if (hls && hls.bandwidthEstimate > 0) saveBandwidth(hls.bandwidthEstimate)
       hls?.destroy()
       hlsRef.current = null
       video.removeAttribute('src')

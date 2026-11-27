@@ -11,6 +11,18 @@ trap 'rm -r "$output"' EXIT
 
 php --ri utopia > /dev/null
 php "$tests/canvas.php" > /dev/null
+# DSN has no PHP left to compare with: its getters (hand-written handlers) against the output
+# they gave through ext-php-rs.
+php "$tests/dsn-getters.php" > "$output/dsn-getters.jsonl"
+diff "$tests/dsn-getters.expected" "$output/dsn-getters.jsonl"
+php -d opcache.enable_cli=1 "$tests/dsn-getters.php" > "$output/dsn-getters.opcache.jsonl"
+diff "$tests/dsn-getters.expected" "$output/dsn-getters.opcache.jsonl"
+# Query likewise: its hand-written getters, constructor and classify(), shared strings and arrays,
+# clones and deep trees, against the output they gave through ext-php-rs.
+php "$tests/query-handlers.php" > "$output/query-handlers.txt"
+diff "$tests/query-handlers.expected" "$output/query-handlers.txt"
+php -d opcache.enable_cli=1 "$tests/query-handlers.php" > "$output/query-handlers.opcache.txt"
+diff "$tests/query-handlers.expected" "$output/query-handlers.opcache.txt"
 vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php packages/image/tests
 
 for library in $libraries; do
@@ -29,6 +41,12 @@ for library in $libraries; do
     diff "$output/$library.php.jsonl" "$output/$library.all.jsonl"
 done
 
+# The query builders when a build yields and another runs on the same thread: no build may see
+# another's overrides.
+echo "== query-coroutines" >&2
+php "$tests/query-coroutines.php" | tail -n 1 | grep -q '"crossed":0}$' ||
+    { echo "query builds crossed between coroutines" >&2; exit 1; }
+
 # A PHP subclass of every class, cached by opcache: what the extension's defaults and constants
 # must survive (opcache frees what it copies into shared memory as PHP's allocator's).
 for with in "" ${libraries:+"$all"}; do
@@ -36,11 +54,92 @@ for with in "" ${libraries:+"$all"}; do
     _APP_EXTENSION_LIBRARIES=$with php -d opcache.enable_cli=1 "$tests/opcache.php"
 done
 
+# utopia.libraries (README, "Using it outside Appwrite"). Unset or empty, the extension registers
+# exactly the classes pinned in libraries.expected (_APP_EXTENSION_LIBRARIES switches the rest on);
+# set, only the libraries it names, whatever _APP_EXTENSION_LIBRARIES says.
+echo "== utopia.libraries" >&2
+gate="$tests/libraries.php"
+every=dsn,domains,emails,image,locale,user-agent,validators,auth,detector,compression,query,balancer,database
+_APP_EXTENSION_LIBRARIES= php "$gate" > "$output/libraries.unset"
+diff "$tests/libraries.expected" "$output/libraries.unset" ||
+    { echo "the default classes changed: update tests/libraries.expected" >&2; exit 1; }
+_APP_EXTENSION_LIBRARIES= php -d utopia.libraries= "$gate" | diff "$tests/libraries.expected" -
+_APP_EXTENSION_LIBRARIES= php -d 'utopia.libraries= , ' "$gate" | diff "$tests/libraries.expected" -
+_APP_EXTENSION_LIBRARIES= php "$gate" ini= > /dev/null
+_APP_EXTENSION_LIBRARIES=$all php "$gate" > "$output/libraries.switched"
+_APP_EXTENSION_LIBRARIES= php -d utopia.libraries=$every "$gate" | diff "$output/libraries.switched" -
+# Edge and DNS, with _APP_EXTENSION_LIBRARIES naming what they leave out.
+_APP_EXTENSION_LIBRARIES=$all php -d utopia.libraries=validators,dsn,user-agent "$gate" \
+    ini=validators,dsn,user-agent \
+    +'Utopia\Validator\Validator' +'Utopia\Validator\Text' +'Utopia\Validator\Domain' +'Utopia\Validator\AnyOf' \
+    +'Utopia\DSN\DSN' +'Utopia\UserAgent\UserAgent' -'Utopia\Domains\Domain' -'Utopia\Emails\Email' \
+    -'Utopia\Auth\Hash' -'Utopia\Auth\Hashes\Argon2' -'Utopia\Image\Canvas' -'Utopia\Image\Font' \
+    -'Utopia\Locale\Locale' -'Utopia\Detector\Detector' -'Utopia\Compression\Compression' -'Utopia\Balancer\Balancer' > /dev/null
+_APP_EXTENSION_LIBRARIES=$all php -d utopia.libraries=validators,dsn,domains "$gate" \
+    +'Utopia\Validator\Text' +'Utopia\DSN\DSN' +'Utopia\Domains\Domain' -'Utopia\Emails\Email' \
+    -'Utopia\UserAgent\UserAgent' -'Utopia\Auth\Hashes\Argon2' -'Utopia\Image\Canvas' -'Utopia\Locale\Locale' \
+    -'Utopia\Detector\Detector' -'Utopia\Compression\Compression' -'Utopia\Balancer\Option' > /dev/null
+# The same from a scanned .ini file, as a service's utopia.ini sets it.
+mkdir "$output/conf.d"
+printf 'utopia.libraries = "validators, dsn, domains"\n' > "$output/conf.d/zz-libraries.ini"
+PHP_INI_SCAN_DIR="${PHP_INI_SCAN_DIR:-$(php -r 'echo PHP_CONFIG_FILE_SCAN_DIR;')}:$output/conf.d" php "$gate" \
+    +'Utopia\Domains\Domain' -'Utopia\UserAgent\UserAgent' > /dev/null
+php -d utopia.libraries=validators,dsn,user-agent --ri utopia | grep -q '^utopia.libraries => validators,dsn,user-agent' ||
+    { echo "php --ri utopia does not show utopia.libraries" >&2; exit 1; }
+# A switchable library named registers without _APP_EXTENSION_LIBRARIES; an old validators group
+# name means all of them; emails needs domains (Email builds a Domain), so it brings it.
+_APP_EXTENSION_LIBRARIES= php -d utopia.libraries=detector "$gate" \
+    +'Utopia\Detector\Detector' -'Utopia\Compression\Compression' -'Utopia\Validator\Validator' > /dev/null
+_APP_EXTENSION_LIBRARIES= php -d utopia.libraries=compression "$gate" \
+    +'Utopia\Compression\Compression' -'Utopia\Detector\Detector' -'Utopia\Balancer\Balancer' > /dev/null
+_APP_EXTENSION_LIBRARIES= php -d utopia.libraries=balancer "$gate" \
+    +'Utopia\Balancer\Balancer' +'Utopia\Balancer\Option' +'Utopia\Balancer\Algorithm\RoundRobin' +'Utopia\Balancer\Group' \
+    -'Utopia\Compression\Compression' -'Utopia\Validator\Validator' > /dev/null
+_APP_EXTENSION_LIBRARIES= php -d utopia.libraries=validators-scalar "$gate" \
+    +'Utopia\Validator\Integer' +'Utopia\Validator\Text' +'Utopia\Validator\URL' +'Utopia\Validator\AnyOf' > /dev/null
+_APP_EXTENSION_LIBRARIES= php -d utopia.libraries=emails "$gate" \
+    +'Utopia\Emails\Email' +'Utopia\Domains\Domain' -'Utopia\Validator\Validator' > /dev/null
+php -d utopia.libraries=emails -r 'new Utopia\Emails\Email("a@example.com");'
+_APP_EXTENSION_LIBRARIES= php -d utopia.libraries=database "$gate" \
+    +'Utopia\Database\Id' +'Utopia\Database\Role' +'Utopia\Database\Permission' +'Utopia\Database\DateTime' \
+    -'Utopia\Database\PermissionType' -'Utopia\Balancer\Balancer' -'Utopia\Validator\Validator' > /dev/null
+_APP_EXTENSION_LIBRARIES= php -d utopia.libraries=query "$gate" \
+    +'Utopia\Query\NativeQuery' +'Utopia\Query\Builder\MySQL' -'Utopia\Validator\Validator' > /dev/null
+# An unknown name: a startup warning naming it, and the rest of the list still applies.
+warnings=$(php -d utopia.libraries=validators,bogus,dsn "$gate" +'Utopia\Validator\Text' +'Utopia\DSN\DSN' -'Utopia\Locale\Locale' 2>&1)
+echo "$warnings" | grep -q 'utopia.libraries: unknown library "bogus" ignored' ||
+    { echo "no warning for an unknown library: $warnings" >&2; exit 1; }
+echo "$warnings" | grep -q '^ok$'
+
 # Classes with no PHP implementation left: their packages' own tests, on the extension.
-for package in user-agent domains emails validators auth; do
+for package in user-agent domains emails validators auth detector compression; do
     echo "== $package (no PHP)" >&2
     vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php "packages/$package/tests"
 done
+# Database's four classes are the extension's by default, but utopia-php/database still ships them in
+# vendor/: its unit tests of them on the extension, and the corpus against the PHP classes, which
+# utopia.libraries without database brings back.
+echo "== database (against vendor/)" >&2
+# shellcheck disable=SC2046
+vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php \
+    $(printf 'vendor/utopia-php/database/tests/unit/%sTest.php ' Id Role Permission DateTime)
+php -d utopia.libraries="$(echo "$every" | sed 's/,database//')" "$tests/database.php" > "$output/database.php.jsonl"
+php "$tests/database.php" > "$output/database.rust.jsonl"
+_APP_EXTENSION_LIBRARIES=$all php "$tests/database.php" > "$output/database.all.jsonl"
+diff "$output/database.php.jsonl" "$output/database.rust.jsonl"
+diff "$output/database.php.jsonl" "$output/database.all.jsonl"
+[ -s "$output/database.rust.jsonl" ] || { echo "database corpus printed nothing" >&2; exit 1; }
+# packages/query/tests/E2E needs MySQL, PostgreSQL, ClickHouse and MongoDB servers.
+echo "== query (no PHP)" >&2
+vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php --exclude-filter '\\E2E\\' packages/query/tests
+
+# Compression likewise: its corpus (malformed, truncated and concatenated frames, every level's
+# bytes, 64 MB inputs, reflection and subclasses) against the output pinned from the PHP classes.
+echo "== compression (pinned PHP output)" >&2
+php "$tests/compression.php" > "$output/compression.jsonl"
+diff "$tests/compression.expected.jsonl" "$output/compression.jsonl"
+php -d opcache.enable_cli=1 "$tests/compression.php" > "$output/compression.opcache.jsonl"
+diff "$tests/compression.expected.jsonl" "$output/compression.opcache.jsonl"
 
 # Locale has no package to test, so its corpus is checked against the output pinned from the PHP
 # class it replaced (utopia-php/locale).

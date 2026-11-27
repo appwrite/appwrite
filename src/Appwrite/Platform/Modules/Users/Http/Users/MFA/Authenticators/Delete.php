@@ -98,6 +98,11 @@ class Delete extends Action
             throw new Exception(Exception::USER_AUTHENTICATOR_NOT_FOUND);
         }
 
+        // MFA has to be disabled first, so the account never reports more protection than it enforces
+        if (TOTP::isLastFactor($user, $authenticator)) {
+            throw new Exception(Exception::USER_AUTHENTICATOR_LAST_FACTOR);
+        }
+
         $dbForProject->deleteDocument('authenticators', $authenticator->getId());
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
