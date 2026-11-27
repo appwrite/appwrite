@@ -14,6 +14,11 @@ import {
   isVideosDocsSlug,
   shouldBlockVideosDocs,
 } from './videos-docs-feature'
+import {
+  isZeroDocsEnabled,
+  isZeroDocsSlug,
+  shouldBlockZeroDocs,
+} from './zero-docs-feature'
 
 /**
  * True when a docs slug must stay hidden for the active console profile.
@@ -24,6 +29,7 @@ export function isFeatureGatedDocsSlugHidden(
     deferPartnersOnServer?: boolean
     deferAnalyticsOnServer?: boolean
     deferVideosOnServer?: boolean
+    deferZeroOnServer?: boolean
   },
 ): boolean {
   if (isPartnersDocsSlug(slug)) {
@@ -38,6 +44,10 @@ export function isFeatureGatedDocsSlugHidden(
   if (isVideosDocsSlug(slug)) {
     if (options?.deferVideosOnServer) return shouldBlockVideosDocs()
     return !isVideosDocsEnabled()
+  }
+  if (isZeroDocsSlug(slug)) {
+    if (options?.deferZeroOnServer) return shouldBlockZeroDocs()
+    return !isZeroDocsEnabled()
   }
   return false
 }

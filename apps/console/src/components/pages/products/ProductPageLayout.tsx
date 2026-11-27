@@ -20,6 +20,42 @@ type ProductPageLayoutProps = {
   content: ProductPageContent
 }
 
+type PageLayoutCopy = ReturnType<typeof useI18n>['catalog']['website']['products']['pageLayout']
+
+/** App Store first, Google Play second, for a product that ships as a mobile app. */
+function ProductStoreButtons({
+  apps,
+  copy,
+}: {
+  apps: NonNullable<ProductPageContent['apps']>
+  copy: PageLayoutCopy
+}) {
+  return (
+    <>
+      <Button variant="brandCta" size="lg" className="h-10 text-[14px]" asChild>
+        <a
+          href={apps.appStore}
+          target="_blank"
+          rel="noopener noreferrer"
+          {...analyticsAttrs('product-app-store')}
+        >
+          {copy.appStore}
+        </a>
+      </Button>
+      <Button variant="outline" size="lg" className="h-10 bg-background/60 text-[14px]" asChild>
+        <a
+          href={apps.googlePlay}
+          target="_blank"
+          rel="noopener noreferrer"
+          {...analyticsAttrs('product-google-play')}
+        >
+          {copy.googlePlay}
+        </a>
+      </Button>
+    </>
+  )
+}
+
 export function ProductPageLayout({ content }: ProductPageLayoutProps) {
   const { catalog } = useI18n()
   const pageLayoutCopy = catalog.website.products.pageLayout
@@ -47,16 +83,20 @@ export function ProductPageLayout({ content }: ProductPageLayoutProps) {
           ) : undefined
         }
       >
-        <Button variant="brandCta" size="lg" className="h-10 text-[14px]" asChild>
-          <Link
-            to="/sign-up"
-            search={{ redirect: '/' }}
-            {...analyticsAttrs('product-start-building')}
-          >
-            {pageLayoutCopy.startBuilding}
-          </Link>
-        </Button>
-        {product.docsPath ? (
+        {content.apps ? (
+          <ProductStoreButtons apps={content.apps} copy={pageLayoutCopy} />
+        ) : (
+          <Button variant="brandCta" size="lg" className="h-10 text-[14px]" asChild>
+            <Link
+              to="/sign-up"
+              search={{ redirect: '/' }}
+              {...analyticsAttrs('product-start-building')}
+            >
+              {pageLayoutCopy.startBuilding}
+            </Link>
+          </Button>
+        )}
+        {content.apps ? null : product.docsPath ? (
           <Button variant="outline" size="lg" className="h-10 bg-background/60 text-[14px]" asChild>
             <a href={product.docsPath} {...analyticsAttrs('product-view-docs')}>
               {pageLayoutCopy.viewDocs}
@@ -82,20 +122,26 @@ export function ProductPageLayout({ content }: ProductPageLayoutProps) {
         title={content.cta.title}
         description={content.cta.description}
       >
-        <Button variant="brandCta" size="lg" className="h-10 text-[14px]" asChild>
-          <Link
-            to="/sign-up"
-            search={{ redirect: '/' }}
-            {...analyticsAttrs('product-start-building')}
-          >
-            {pageLayoutCopy.startBuilding}
-          </Link>
-        </Button>
-        <Button variant="outline" size="lg" className="h-10 bg-background/60 text-[14px]" asChild>
-          <Link to="/pricing" {...analyticsAttrs('product-view-pricing')}>
-            {pageLayoutCopy.viewPricing}
-          </Link>
-        </Button>
+        {content.apps ? (
+          <ProductStoreButtons apps={content.apps} copy={pageLayoutCopy} />
+        ) : (
+          <>
+            <Button variant="brandCta" size="lg" className="h-10 text-[14px]" asChild>
+              <Link
+                to="/sign-up"
+                search={{ redirect: '/' }}
+                {...analyticsAttrs('product-start-building')}
+              >
+                {pageLayoutCopy.startBuilding}
+              </Link>
+            </Button>
+            <Button variant="outline" size="lg" className="h-10 bg-background/60 text-[14px]" asChild>
+              <Link to="/pricing" {...analyticsAttrs('product-view-pricing')}>
+                {pageLayoutCopy.viewPricing}
+              </Link>
+            </Button>
+          </>
+        )}
       </ProductCtaSection>
 
       <ProductExploreSection currentProductId={content.id} />

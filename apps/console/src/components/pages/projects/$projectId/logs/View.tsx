@@ -1,5 +1,11 @@
+import { useCallback, useMemo } from 'react'
 import { RuntimeLogsView } from '@/components/global/shared/RuntimeLogsView'
 import { useT } from '@/lib/i18n/translate'
+import {
+  runtimeLogFiltersFromSearch,
+  runtimeLogsSearchFromFilters,
+  type RuntimeLogFilters,
+} from '@/lib/runtime-log-filters'
 import { Route } from '@/routes/_public/projects.$projectId.logs'
 import { ServiceHeader } from '../shared/ServiceHeader'
 
@@ -7,6 +13,19 @@ import { ServiceHeader } from '../shared/ServiceHeader'
 export function View() {
   const t = useT()
   const { projectId } = Route.useParams()
+  const search = Route.useSearch()
+  const navigate = Route.useNavigate()
+  const filters = useMemo(() => runtimeLogFiltersFromSearch(search), [search])
+
+  const handleFiltersChange = useCallback(
+    (next: RuntimeLogFilters) => {
+      void navigate({
+        search: (prev) => ({ ...prev, ...runtimeLogsSearchFromFilters(next) }),
+        replace: true,
+      })
+    },
+    [navigate],
+  )
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -17,6 +36,8 @@ export function View() {
         <RuntimeLogsView
           projectId={projectId}
           resourceType={null}
+          filters={filters}
+          onFiltersChange={handleFiltersChange}
           insetClassName="px-4 md:px-6"
         />
       </div>

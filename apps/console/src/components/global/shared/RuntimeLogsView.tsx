@@ -1,85 +1,85 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import type { ReactNode } from 'react'
-import {
-  keepPreviousData,
-  useInfiniteQuery,
-  useQuery,
-} from '@tanstack/react-query'
-import type { Models } from '@appwrite.io/console'
-import {
-  AlertCircle,
-  Download,
-  ListCollapse,
-  Loader2,
-  Pause,
-  Play,
-  RefreshCw,
-  ScrollText,
-  Search,
-} from 'lucide-react'
+import type { DateRange } from 'react-day-picker'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
+import { useNavigate } from '@tanstack/react-router'
+import { AlertCircle, Clock, Loader2, ScrollText, Search } from 'lucide-react'
+import { DisplayTimeZoneBadge } from '@/components/global/shared/DisplayTimeZoneBadge'
 import { EmptyState } from '@/components/global/shared/EmptyState'
+import { RuntimeLogDrawer } from '@/components/global/shared/RuntimeLogDrawer'
+import { RuntimeLogResourcePicker } from '@/components/global/shared/RuntimeLogResourcePicker'
 import {
-  RuntimeLogResourcePicker,
-  type RuntimeLogResource,
-} from '@/components/global/shared/RuntimeLogResourcePicker'
-import { RuntimeLogLevelFilter } from '@/components/global/shared/RuntimeLogLevelFilter'
-import { RuntimeLogRow } from '@/components/global/shared/RuntimeLogRow'
+  RUNTIME_LOG_COLUMNS,
+  RuntimeLogRow,
+} from '@/components/global/shared/RuntimeLogRow'
+import {
+  RuntimeLogFilterChips,
+  RuntimeLogsToolbar,
+} from '@/components/global/shared/RuntimeLogsToolbar'
 import { RuntimeLogsVolumeChart } from '@/components/global/shared/RuntimeLogsVolumeChart'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+  RUNTIME_LOGS_TAIL_INTERVAL_MS,
+  useRuntimeLogsFeed,
+} from '@/hooks/use-runtime-logs-feed'
+import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue'
+import { useLocalizedDateFormat } from '@/lib/i18n/use-localized-date-format'
+import { useT } from '@/lib/i18n/translate'
 import {
-  canListRuntimeLogs,
-  fetchRuntimeLogsSince,
-  RUNTIME_LOGS_PAGE_LIMIT,
-  runtimeLogsInfiniteQueryOptions,
+  RUNTIME_LOG_RANGES,
+  runtimeLogSourceKey,
+  runtimeLogSourcesQueryOptions,
   runtimeLogsUsageQueryOptions,
   type RuntimeLogRange,
   type RuntimeLogScope,
-  type RuntimeLogStream,
   type RuntimeLogsFilter,
-  type RuntimeLogWindow,
-} from '@/lib/react-query/hooks'
-import { useLocalizedDateFormat } from '@/lib/i18n/use-localized-date-format'
+} from '@/lib/react-query/hooks/runtime-logs'
 import {
-  parseRuntimeLogLine,
-  stripAnsi,
-  type RuntimeLogLevel,
-} from '@/lib/runtime-log-line'
+  countRuntimeLogLevels,
+  runtimeLogDownloadLine,
+  type RuntimeLogEntry,
+} from '@/lib/runtime-log-entry'
+import {
+  DEFAULT_RUNTIME_LOG_FILTERS,
+  type RuntimeLogFilters,
+} from '@/lib/runtime-log-filters'
+import { useDisplayTimeZone } from '@/lib/timezones'
+import { findMatchingUsageDateRangePreset } from '@/lib/usage/usage-date-range-presets'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
-import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
-/** Live tail polls this often. The logs store has a small pool, so keep it modest. */
-const TAIL_INTERVAL_MS = 5000
+/** Remembers, per browser, whether long lines wrap. */
+const WRAP_STORAGE_KEY = 'runtimeLogs:wrap'
 
-/** Live tail keeps at most this many new lines above the fetched pages. */
-const TAIL_MAX_LINES = 1000
+/**
+ * Level and search filter the loaded lines, so while they match fewer than
+ * this many, older pages load on their own...
+ */
+const FILL_MATCHES = 40
 
-/** Full pages one live tail poll may read before waiting for the next poll. */
-const TAIL_MAX_PAGES_PER_TICK = 5
+/** ...up to this many pages in all; past that, Load older reads on. */
+const FILL_MAX_PAGES = 5
 
-/** Remembers, per browser, whether rows show time, stream and region as columns. */
-const METADATA_STORAGE_KEY = 'runtimeLogs:metadata'
-
-function readShowMetadata(): boolean {
+function readWrap(): boolean {
   try {
-    return window.localStorage.getItem(METADATA_STORAGE_KEY) === 'true'
+    return window.localStorage.getItem(WRAP_STORAGE_KEY) === 'true'
   } catch {
     return false
   }
 }
 
-function writeShowMetadata(value: boolean) {
+function writeWrap(value: boolean) {
   try {
-    window.localStorage.setItem(METADATA_STORAGE_KEY, String(value))
+    window.localStorage.setItem(WRAP_STORAGE_KEY, String(value))
   } catch {
     // Private windows and blocked storage just don't remember the choice
   }
@@ -95,6 +95,12 @@ export interface RuntimeLogsViewProps {
   /** Rendered first in the toolbar, e.g. a deployment picker. */
   toolbarStart?: ReactNode
   /**
+   * The filters, for pages that keep them in their URL. Without them the
+   * view keeps its own, starting from the defaults.
+   */
+  filters?: RuntimeLogFilters
+  onFiltersChange?: (filters: RuntimeLogFilters) => void
+  /**
    * Side padding for the toolbar and the lines. The view itself has none, so
    * the toolbar's bottom border runs edge to edge like other filter bars.
    */
@@ -104,10 +110,9 @@ export interface RuntimeLogsViewProps {
 
 /**
  * Runtime logs for one resource, or for the whole project: what it wrote to
- * stdout and stderr, newest first, with stream and time filters, cursor paging
- * and live tail. JSON and logfmt lines show their level and message first,
- * with their fields beside them; rows expand to show every field and the
- * line's time, stream, region and deployment.
+ * stdout and stderr, newest first, as a table of time, level, resource and
+ * message. Stream, resource and time go to the API; level and search narrow
+ * the loaded lines. A line opens its details in a drawer.
  */
 export function RuntimeLogsView({
   projectId,
@@ -115,55 +120,86 @@ export function RuntimeLogsView({
   resourceId,
   deploymentId,
   toolbarStart,
+  filters: controlledFilters,
+  onFiltersChange,
   insetClassName = 'px-4 sm:px-6',
   className,
 }: RuntimeLogsViewProps) {
   const t = useT()
-  const { formatDateTime } = useLocalizedDateFormat()
+  const navigate = useNavigate()
+  const { intlLocale } = useLocalizedDateFormat()
+  const { timeZone } = useDisplayTimeZone()
   const isProject = resourceType === null
-  const [picked, setPicked] = useState<RuntimeLogResource>({ type: null })
-  const [stream, setStream] = useState<RuntimeLogStream>('all')
-  const [range, setRange] = useState<RuntimeLogRange>('1h')
-  const [zoom, setZoom] = useState<RuntimeLogWindow | undefined>()
-  const [search, setSearch] = useState('')
-  const [levels, setLevels] = useState<ReadonlySet<RuntimeLogLevel>>(new Set())
-  const [showMetadata, setShowMetadata] = useState(false)
-  const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set())
-  const [live, setLive] = useState(false)
-  const [tail, setTail] = useState<Models.RuntimeLog[]>([])
-  const [tailError, setTailError] = useState<string | null>(null)
 
-  const filter: RuntimeLogsFilter = useMemo(
+  const [ownFilters, setOwnFilters] = useState(DEFAULT_RUNTIME_LOG_FILTERS)
+  const filters = controlledFilters ?? ownFilters
+  const filtersRef = useRef(filters)
+  filtersRef.current = filters
+  const updateFilters = useCallback(
+    (patch: Partial<RuntimeLogFilters>) => {
+      const next = { ...filtersRef.current, ...patch }
+      filtersRef.current = next
+      if (onFiltersChange) onFiltersChange(next)
+      else setOwnFilters(next)
+    },
+    [onFiltersChange],
+  )
+
+  // The box filters as you type; the URL follows once typing pauses
+  const [searchDraft, setSearchDraft] = useState(filters.search)
+  const pushedSearch = useRef(filters.search)
+  useEffect(() => {
+    if (filters.search !== pushedSearch.current) {
+      pushedSearch.current = filters.search
+      setSearchDraft(filters.search)
+    }
+  }, [filters.search])
+  const debouncedSearch = useDebouncedValue(searchDraft, 300)
+  useEffect(() => {
+    if (debouncedSearch === filtersRef.current.search) return
+    pushedSearch.current = debouncedSearch
+    updateFilters({ search: debouncedSearch })
+  }, [debouncedSearch, updateFilters])
+
+  const [live, setLive] = useState(false)
+  const [wrap, setWrap] = useState(false)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+
+  // Read after mount, so the server render and first client render agree
+  useEffect(() => {
+    setWrap(readWrap())
+  }, [])
+
+  const apiFilter: RuntimeLogsFilter = useMemo(
     () => ({
       deploymentId,
-      resourceType: isProject ? (picked.type ?? undefined) : undefined,
-      resourceId: isProject ? picked.id : undefined,
-      stream,
-      range,
-      window: zoom,
+      resourceType: isProject
+        ? (filters.resource.type ?? undefined)
+        : undefined,
+      resourceId: isProject ? filters.resource.id : undefined,
+      stream: filters.stream,
+      range: filters.range,
+      window: filters.window,
     }),
-    [deploymentId, isProject, picked, stream, range, zoom],
+    [
+      deploymentId,
+      isProject,
+      filters.resource.type,
+      filters.resource.id,
+      filters.stream,
+      filters.range,
+      filters.window,
+    ],
   )
-  const ready = canListRuntimeLogs(projectId, resourceType, resourceId, filter)
 
-  const {
-    data,
-    error,
-    isLoading,
-    isFetching,
-    isFetchingNextPage,
-    hasNextPage,
-    fetchNextPage,
-    refetch,
-  } = useInfiniteQuery({
-    ...runtimeLogsInfiniteQueryOptions(
-      projectId,
-      resourceType,
-      resourceId,
-      filter,
-    ),
-    placeholderData: keepPreviousData,
+  const feed = useRuntimeLogsFeed({
+    projectId,
+    resourceType,
+    resourceId,
+    filter: apiFilter,
+    live,
   })
+  const { ready, entries } = feed
 
   // Live tail follows the clock, so it polls the chart too
   const usage = useQuery({
@@ -171,185 +207,259 @@ export function RuntimeLogsView({
       projectId,
       resourceType,
       resourceId,
-      filter,
+      apiFilter,
     ),
     placeholderData: keepPreviousData,
-    refetchInterval: live ? TAIL_INTERVAL_MS * 6 : false,
+    refetchInterval: live ? RUNTIME_LOGS_TAIL_INTERVAL_MS * 6 : false,
   })
 
-  const fetched = useMemo(
-    () => data?.pages.flatMap((page) => page.logs) ?? [],
-    [data],
-  )
-
-  // New filters or a refetch start the tail over from the fetched pages.
-  const firstPage = data?.pages[0]
-  useEffect(() => {
-    setTail([])
-    setTailError(null)
-  }, [filter, firstPage])
-
-  const logs = useMemo(() => {
-    if (tail.length === 0) return fetched
-    const seen = new Set(tail.map((log) => log.$id))
-    return [...tail, ...fetched.filter((log) => !seen.has(log.$id))]
-  }, [tail, fetched])
-
-  // Read by the tail loop without restarting it on every new line.
-  const newestRef = useRef<{ timestamp: string; ids: Set<string> } | null>(null)
-  useEffect(() => {
-    const newest = logs[0]
-    if (!newest) {
-      newestRef.current = null
-      return
-    }
-    const ids = new Set(
-      logs
-        .filter((log) => log.timestamp === newest.timestamp)
-        .map((log) => log.$id),
-    )
-    newestRef.current = { timestamp: newest.timestamp, ids }
-  }, [logs])
-
-  useEffect(() => {
-    if (!live || !ready || !projectId) return
-    const startedAt = new Date().toISOString()
-    let cancelled = false
-    let inFlight = false
-
-    const tick = async () => {
-      if (inFlight || document.visibilityState === 'hidden') return
-      inFlight = true
-      try {
-        let cursor = newestRef.current ?? {
-          timestamp: startedAt,
-          ids: new Set<string>(),
-        }
-        // Keep reading full pages so a busy deployment doesn't fall behind.
-        for (let page = 0; page < TAIL_MAX_PAGES_PER_TICK; page++) {
-          const rows = await fetchRuntimeLogsSince(
-            projectId,
-            resourceType,
-            resourceId,
-            filter,
-            cursor.timestamp,
-          )
-          if (cancelled) return
-          const seen = cursor.ids
-          const fresh = rows.filter((row) => !seen.has(row.$id))
-          if (fresh.length === 0) break
-          setTail((current) =>
-            [...[...fresh].reverse(), ...current].slice(0, TAIL_MAX_LINES),
-          )
-          const last = fresh[fresh.length - 1]
-          const ids = new Set(
-            fresh
-              .filter((row) => row.timestamp === last.timestamp)
-              .map((row) => row.$id),
-          )
-          if (last.timestamp === cursor.timestamp) {
-            for (const id of seen) ids.add(id)
-          }
-          cursor = { timestamp: last.timestamp, ids }
-          if (rows.length < RUNTIME_LOGS_PAGE_LIMIT) break
-        }
-        setTailError(null)
-      } catch (e) {
-        if (!cancelled) setTailError(getErrorMessage(e))
-      } finally {
-        inFlight = false
+  // Names for the resources on a project-wide list
+  const sourceIds = useMemo(() => {
+    const functions = new Set<string>()
+    const sites = new Set<string>()
+    let databases = false
+    if (isProject) {
+      for (const { log } of entries) {
+        if (log.resourceType === 'functions') functions.add(log.resourceId)
+        else if (log.resourceType === 'sites') sites.add(log.resourceId)
+        else if (log.resourceType === 'databases') databases = true
       }
     }
-
-    void tick()
-    const interval = setInterval(tick, TAIL_INTERVAL_MS)
-    return () => {
-      cancelled = true
-      clearInterval(interval)
+    return {
+      functions: [...functions].sort(),
+      sites: [...sites].sort(),
+      databases,
     }
-  }, [live, ready, projectId, resourceType, resourceId, filter])
+  }, [entries, isProject])
+  const sourcesQuery = useQuery({
+    ...runtimeLogSourcesQueryOptions(
+      projectId,
+      sourceIds.functions,
+      sourceIds.sites,
+      sourceIds.databases,
+    ),
+    placeholderData: keepPreviousData,
+  })
+  const sources = sourcesQuery.data
 
-  // Read after mount, so the server render and first client render agree
-  useEffect(() => {
-    setShowMetadata(readShowMetadata())
-  }, [])
-
-  const toggleMetadata = () => {
-    setShowMetadata((value) => {
-      writeShowMetadata(!value)
-      return !value
-    })
-  }
-
-  const toggleExpanded = useCallback((id: string) => {
-    setExpanded((current) => {
-      const next = new Set(current)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
-  }, [])
-
-  // Parsed once per line, not on every render or keystroke
-  const parsedCache = useRef(new Map<string, ParsedLog>())
-  const parsed = useMemo(() => {
-    const cache = parsedCache.current
-    const next = new Map<string, ParsedLog>()
-    const rows = logs.map((log) => {
-      const hit = cache.get(log.$id)
-      const row = hit && hit.log === log ? hit : parseLog(log)
-      next.set(log.$id, row)
-      return row
-    })
-    parsedCache.current = next
-    return rows
-  }, [logs])
-
-  const needle = search.trim().toLowerCase()
+  // Level and search narrow the loaded lines
+  const needle = useDeferredValue(searchDraft).trim().toLowerCase()
+  const searched = useMemo(
+    () =>
+      needle
+        ? entries.filter((entry) => entry.searchText.includes(needle))
+        : entries,
+    [entries, needle],
+  )
+  const levelCounts = useMemo(() => countRuntimeLogLevels(searched), [searched])
   const visible = useMemo(
     () =>
-      parsed.filter(
-        (row) =>
-          (levels.size === 0 || levels.has(row.level)) &&
-          (!needle || row.plain.toLowerCase().includes(needle)),
-      ),
-    [parsed, needle, levels],
+      filters.levels.length === 0
+        ? searched
+        : searched.filter((entry) => filters.levels.includes(entry.level)),
+    [searched, filters.levels],
   )
-  const filtering = needle !== '' || levels.size > 0
+  const filtering = needle !== '' || filters.levels.length > 0
 
-  const formatTime = useCallback(
-    (timestamp: string) =>
-      formatDateTime(new Date(timestamp), {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        fractionalSecondDigits: 3,
-        hour12: false,
+  // A narrow filter reads a few older pages before asking for more
+  const { hasNextPage, isFetching, fetchNextPage, pages } = feed
+  useEffect(() => {
+    if (!filtering || !hasNextPage || isFetching) return
+    if (visible.length >= FILL_MATCHES || pages >= FILL_MAX_PAGES) return
+    void fetchNextPage()
+  }, [filtering, hasNextPage, isFetching, fetchNextPage, pages, visible.length])
+
+  // Ranges longer than a day show the date beside the time
+  const withDate =
+    filters.window !== undefined
+      ? Date.parse(filters.window.to) - Date.parse(filters.window.from) >
+        12 * 60 * 60_000
+      : filters.range === '24h'
+
+  const formatters = useMemo(() => {
+    const clock: Intl.DateTimeFormatOptions = {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      fractionalSecondDigits: 3,
+      hour12: false,
+      timeZone,
+    }
+    return {
+      time: new Intl.DateTimeFormat(intlLocale, clock),
+      dateTime: new Intl.DateTimeFormat(intlLocale, {
+        ...clock,
+        month: 'short',
+        day: 'numeric',
       }),
-    [formatDateTime],
-  )
-
-  const formatFullTimestamp = useCallback(
-    (timestamp: string) =>
-      formatDateTime(new Date(timestamp), {
+      full: new Intl.DateTimeFormat(intlLocale, {
+        ...clock,
         year: 'numeric',
         month: 'short',
         day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        fractionalSecondDigits: 3,
-        hour12: false,
+        timeZoneName: 'short',
       }),
-    [formatDateTime],
+    }
+  }, [intlLocale, timeZone])
+
+  const formatTime = useCallback(
+    (timestamp: string) =>
+      (withDate ? formatters.dateTime : formatters.time).format(
+        new Date(timestamp),
+      ),
+    [formatters, withDate],
+  )
+  const formatTimestamp = useCallback(
+    (timestamp: string) => formatters.full.format(new Date(timestamp)),
+    [formatters],
+  )
+
+  // The shared picker shows a rolling range as the window it covers now, and
+  // a window picked on its calendar or dragged on the chart as it is
+  const pickerRange = useMemo<DateRange>(() => {
+    if (filters.window) {
+      return {
+        from: new Date(filters.window.from),
+        to: new Date(filters.window.to),
+      }
+    }
+    const now = Date.now()
+    return {
+      from: new Date(now - RUNTIME_LOG_RANGES[filters.range]),
+      to: new Date(now),
+    }
+  }, [filters.window, filters.range])
+
+  const handleDateRangeChange = (picked: DateRange | undefined) => {
+    if (!picked?.from || !picked.to) return
+    // A rolling preset keeps following the clock; anything else is a window
+    const preset = findMatchingUsageDateRangePreset(picked)
+    if (preset && preset.value in RUNTIME_LOG_RANGES) {
+      updateFilters({
+        range: preset.value as RuntimeLogRange,
+        window: undefined,
+      })
+      return
+    }
+    setLive(false)
+    updateFilters({
+      window: { from: picked.from.toISOString(), to: picked.to.toISOString() },
+    })
+  }
+
+  // The drawer steps through the list as filtered
+  const selectedIndex = selectedId
+    ? visible.findIndex((entry) => entry.log.$id === selectedId)
+    : -1
+  const selected =
+    selectedIndex >= 0
+      ? visible[selectedIndex]
+      : selectedId
+        ? (entries.find((entry) => entry.log.$id === selectedId) ?? null)
+        : null
+  const newer = selectedIndex > 0 ? visible[selectedIndex - 1] : null
+  const older =
+    selectedIndex >= 0 && selectedIndex < visible.length - 1
+      ? visible[selectedIndex + 1]
+      : null
+
+  const listRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!selectedId) return
+    listRef.current
+      ?.querySelector(`[data-log-id="${CSS.escape(selectedId)}"]`)
+      ?.scrollIntoView({ block: 'nearest' })
+  }, [selectedId])
+
+  // New live lines land above; keep a reader's place unless they're at the top
+  const scrollAnchor = useRef<{ first: string | undefined; height: number }>({
+    first: undefined,
+    height: 0,
+  })
+  useLayoutEffect(() => {
+    const list = listRef.current
+    const first = visible[0]?.log.$id
+    if (!list) return
+    const previous = scrollAnchor.current
+    if (
+      live &&
+      previous.first !== undefined &&
+      first !== previous.first &&
+      list.scrollTop > 0
+    ) {
+      list.scrollTop += list.scrollHeight - previous.height
+    }
+    scrollAnchor.current = { first, height: list.scrollHeight }
+  }, [visible, live])
+
+  // Each time the drawer opens from closed it mounts afresh. Radix portals
+  // its overlay and panel apart, so reopening one still animating out would
+  // stack the new overlay over the old panel.
+  const [drawerSession, setDrawerSession] = useState(0)
+  const selectedRef = useRef(selectedId)
+  selectedRef.current = selectedId
+  const openEntry = useCallback((id: string) => {
+    if (selectedRef.current === null) setDrawerSession((session) => session + 1)
+    setSelectedId(id)
+  }, [])
+
+  const showSource = useCallback(
+    (entry: RuntimeLogEntry) => {
+      const { log } = entry
+      setSelectedId(null)
+      updateFilters({
+        resource: {
+          type: log.resourceType as RuntimeLogFilters['resource']['type'],
+          id: log.resourceId,
+          name: sources?.get(
+            runtimeLogSourceKey(log.resourceType, log.resourceId),
+          )?.name,
+        },
+      })
+    },
+    [sources, updateFilters],
+  )
+
+  const openSource = useCallback(
+    (entry: RuntimeLogEntry) => {
+      if (!projectId) return
+      const { log } = entry
+      const search = log.deploymentId ? { deploymentId: log.deploymentId } : {}
+      if (log.resourceType === 'functions') {
+        void navigate({
+          to: '/projects/$projectId/functions/$functionId/runtime-logs',
+          params: { projectId, functionId: log.resourceId },
+          search,
+        })
+      } else if (log.resourceType === 'sites') {
+        void navigate({
+          to: '/projects/$projectId/sites/$siteId/runtime-logs',
+          params: { projectId, siteId: log.resourceId },
+          search,
+        })
+      } else if (log.resourceType === 'databases') {
+        const source = sources?.get(
+          runtimeLogSourceKey(log.resourceType, log.resourceId),
+        )
+        if (source?.engine === 'mysql') {
+          void navigate({
+            to: '/projects/$projectId/databases/mysql/$databaseId',
+            params: { projectId, databaseId: log.resourceId },
+          })
+        } else if (source?.engine === 'postgresql') {
+          void navigate({
+            to: '/projects/$projectId/databases/postgres/$databaseId',
+            params: { projectId, databaseId: log.resourceId },
+          })
+        }
+      }
+    },
+    [navigate, projectId, sources],
   )
 
   const handleDownload = () => {
     const text = visible
-      .map(
-        ({ log, plain }) =>
-          `${log.timestamp} ${log.region} ${log.stream}${isProject ? ` ${log.resourceType}/${log.resourceId}` : ''} ${plain}`,
-      )
+      .map((entry) => runtimeLogDownloadLine(entry, isProject))
       .join('\n')
     const url = URL.createObjectURL(new Blob([text], { type: 'text/plain' }))
     const link = document.createElement('a')
@@ -357,6 +467,11 @@ export function RuntimeLogsView({
     link.download = `runtime-logs-${isProject ? projectId : resourceId}${deploymentId ? `-${deploymentId}` : ''}.log`
     link.click()
     URL.revokeObjectURL(url)
+  }
+
+  const clearLineFilters = () => {
+    setSearchDraft('')
+    updateFilters({ levels: [], search: '' })
   }
 
   const emptyDescription = isProject
@@ -375,17 +490,24 @@ export function RuntimeLogsView({
             "Lines your database writes show up here. Logs may not be collected in this project's region yet.",
           )
 
-  const loadOlder = hasNextPage ? (
+  const loadOlder = feed.hasNextPage ? (
     <Button
       variant="outline"
       size="sm"
-      onClick={() => fetchNextPage()}
-      disabled={isFetchingNextPage}
+      className="h-7 gap-1.5 px-2.5 text-[12px]"
+      onClick={() => feed.fetchNextPage()}
+      disabled={feed.isFetchingNextPage}
     >
-      {isFetchingNextPage && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
+      {feed.isFetchingNextPage && (
+        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+      )}
       {t('Load older')}
     </Button>
   ) : null
+
+  const timeColumn = withDate
+    ? RUNTIME_LOG_COLUMNS.timeWithDate
+    : RUNTIME_LOG_COLUMNS.time
 
   let body: ReactNode
   if (!ready) {
@@ -397,23 +519,59 @@ export function RuntimeLogsView({
         description={t('Pick a deployment to see its logs.')}
       />
     )
-  } else if (isLoading) {
+  } else if (feed.isLoading) {
     body = (
-      <div className="space-y-2 py-3">
-        {Array.from({ length: 12 }).map((_, i) => (
-          <Skeleton key={i} className="h-4 w-full" />
+      <div aria-hidden>
+        {Array.from({ length: 14 }).map((_, i) => (
+          <div
+            key={i}
+            className={cn(
+              'flex h-8 items-center gap-3 overflow-hidden border-b border-border/50',
+              insetClassName,
+            )}
+          >
+            <Skeleton className={cn('h-3.5 shrink-0', timeColumn)} />
+            <Skeleton className="h-[18px] w-[44px] shrink-0 rounded" />
+            {isProject && (
+              <Skeleton className={cn('h-3.5', RUNTIME_LOG_COLUMNS.source)} />
+            )}
+            <Skeleton
+              className="h-3.5 min-w-0 flex-1"
+              style={{ maxWidth: `${45 + ((i * 37) % 50)}%` }}
+            />
+          </div>
         ))}
       </div>
     )
-  } else if (error) {
+  } else if (isHistoryLimit(feed.error)) {
+    body = (
+      <EmptyState
+        icon={Clock}
+        variant="centered"
+        title={t('Older than your plan keeps logs')}
+        description={t(
+          'Your plan keeps logs for a limited time. Pick a more recent range, or upgrade your plan for longer retention.',
+        )}
+        action={
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => updateFilters({ range: '24h', window: undefined })}
+          >
+            {t('Show the last 24 hours')}
+          </Button>
+        }
+      />
+    )
+  } else if (feed.error) {
     body = (
       <EmptyState
         icon={AlertCircle}
         variant="centered"
         title={t('Could not load logs')}
-        description={getErrorMessage(error)}
+        description={getErrorMessage(feed.error)}
         action={
-          <Button variant="outline" size="sm" onClick={() => refetch()}>
+          <Button variant="outline" size="sm" onClick={() => feed.refetch()}>
             {t('Try again')}
           </Button>
         }
@@ -429,7 +587,23 @@ export function RuntimeLogsView({
         description={t(
           'Only the lines loaded so far are searched and filtered. Load older lines or widen the time range to search further back.',
         )}
-        action={loadOlder}
+        action={
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={clearLineFilters}>
+              {t('Clear filters')}
+            </Button>
+            {feed.hasNextPage && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => feed.fetchNextPage()}
+                disabled={feed.isFetchingNextPage}
+              >
+                {t('Load older')}
+              </Button>
+            )}
+          </div>
+        }
       />
     ) : (
       <EmptyState
@@ -441,164 +615,113 @@ export function RuntimeLogsView({
     )
   } else {
     body = (
-      <div
-        role="log"
-        aria-live={live ? 'polite' : 'off'}
-        className="space-y-px py-2"
-      >
-        {visible.map(({ log, line, level, plain }) => (
+      <div role="log" aria-live={live ? 'polite' : 'off'}>
+        {visible.map((entry) => (
           <RuntimeLogRow
-            key={log.$id}
-            log={log}
-            line={line}
-            level={level}
-            plain={plain}
-            projectId={isProject && projectId ? projectId : undefined}
-            expanded={expanded.has(log.$id)}
-            onToggle={toggleExpanded}
-            showMetadata={showMetadata}
+            key={entry.log.$id}
+            entry={entry}
+            showSource={isProject}
+            source={
+              isProject
+                ? sources?.get(
+                    runtimeLogSourceKey(
+                      entry.log.resourceType,
+                      entry.log.resourceId,
+                    ),
+                  )
+                : undefined
+            }
+            selected={entry.log.$id === selectedId}
+            arrived={feed.arrived.has(entry.log.$id)}
+            wrap={wrap}
+            withDate={withDate}
             formatTime={formatTime}
-            formatDateTime={formatFullTimestamp}
+            insetClassName={insetClassName}
+            onOpen={openEntry}
+            onShowSource={isProject ? showSource : undefined}
+            onOpenSource={isProject ? openSource : undefined}
           />
         ))}
-        {loadOlder && (
-          <div className="flex justify-center py-3">{loadOlder}</div>
-        )}
       </div>
     )
   }
 
+  const loaded = entries.length
+  const status =
+    !ready || feed.isLoading || feed.error
+      ? null
+      : filtering
+        ? t('{shown} of {loaded} loaded lines')
+            .replace('{shown}', visible.length.toLocaleString())
+            .replace('{loaded}', loaded.toLocaleString())
+        : loaded === 1
+          ? t('1 line loaded')
+          : t('{count} lines loaded').replace(
+              '{count}',
+              loaded.toLocaleString(),
+            )
+
   return (
     <div className={cn('flex min-h-0 min-w-0 flex-1 flex-col', className)}>
-      <div
-        className={cn(
-          'flex flex-wrap items-center gap-2 border-b border-border py-3',
-          insetClassName,
-        )}
-      >
-        {toolbarStart}
-        {isProject && (
-          <RuntimeLogResourcePicker
-            projectId={projectId}
-            value={picked}
-            onValueChange={setPicked}
-          />
-        )}
-        <Select
-          value={stream}
-          onValueChange={(value) => setStream(value as RuntimeLogStream)}
-        >
-          <SelectTrigger
-            className="h-9 w-[130px] text-[13px]"
-            aria-label={t('Stream')}
-          >
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t('All streams')}</SelectItem>
-            <SelectItem value="stdout">stdout</SelectItem>
-            <SelectItem value="stderr">stderr</SelectItem>
-          </SelectContent>
-        </Select>
-        <RuntimeLogLevelFilter value={levels} onValueChange={setLevels} />
-        <Select
-          value={zoom ? 'custom' : range}
-          onValueChange={(value) => {
-            if (value === 'custom') return
-            setZoom(undefined)
-            setRange(value as RuntimeLogRange)
-          }}
-        >
-          <SelectTrigger
-            className="h-9 w-[150px] text-[13px]"
-            aria-label={t('Time range')}
-          >
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="15m">{t('Last 15 minutes')}</SelectItem>
-            <SelectItem value="1h">{t('Last hour')}</SelectItem>
-            <SelectItem value="6h">{t('Last 6 hours')}</SelectItem>
-            <SelectItem value="24h">{t('Last 24 hours')}</SelectItem>
-            <SelectItem value="retention">{t('All retained')}</SelectItem>
-            {zoom && (
-              <SelectItem value="custom">{t('Selected range')}</SelectItem>
+      <RuntimeLogsToolbar
+        start={
+          <>
+            {toolbarStart}
+            {isProject && (
+              <RuntimeLogResourcePicker
+                projectId={projectId}
+                value={filters.resource}
+                onValueChange={(resource) => updateFilters({ resource })}
+              />
             )}
-          </SelectContent>
-        </Select>
-        <div className="relative min-w-[180px] flex-1">
-          <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder={t('Search loaded lines...')}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="h-9 w-full ps-9 text-[13px]"
-          />
-        </div>
-        <Button
-          variant={live ? 'default' : 'outline'}
-          size="sm"
-          className="h-9"
-          onClick={() => {
-            // Live follows new lines, so it leaves a zoomed window
-            if (!live) setZoom(undefined)
-            setLive((value) => !value)
-          }}
-          disabled={!ready}
-          aria-pressed={live}
-        >
-          {live ? (
-            <Pause className="me-1.5 h-4 w-4" />
-          ) : (
-            <Play className="me-1.5 h-4 w-4" />
-          )}
-          {live ? t('Pause') : t('Live')}
-        </Button>
-        <Button
-          variant={showMetadata ? 'secondary' : 'outline'}
-          size="sm"
-          className="h-9 w-9 p-0"
-          onClick={toggleMetadata}
-          aria-pressed={showMetadata}
-          aria-label={t('Show time, stream and region')}
-          title={t('Show time, stream and region')}
-        >
-          <ListCollapse className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-9 w-9 p-0"
-          onClick={() => {
-            void refetch()
-            void usage.refetch()
-          }}
-          disabled={!ready || isFetching}
-          aria-label={t('Refresh')}
-          title={t('Refresh')}
-        >
-          <RefreshCw className={cn('h-4 w-4', isFetching && 'animate-spin')} />
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-9 w-9 p-0"
-          onClick={handleDownload}
-          disabled={visible.length === 0}
-          aria-label={t('Download logs')}
-          title={t('Download logs')}
-        >
-          <Download className="h-4 w-4" />
-        </Button>
-      </div>
-      {tailError && (
+          </>
+        }
+        search={searchDraft}
+        onSearchChange={setSearchDraft}
+        levels={filters.levels}
+        levelCounts={levelCounts}
+        onLevelsChange={(levels) => updateFilters({ levels })}
+        stream={filters.stream}
+        onStreamChange={(stream) => updateFilters({ stream })}
+        dateRange={pickerRange}
+        presetId={filters.window ? null : filters.range}
+        onDateRangeChange={handleDateRangeChange}
+        live={live}
+        onLiveChange={(next) => {
+          // Live follows new lines, so it leaves a window picked on the chart
+          if (next && filters.window) updateFilters({ window: undefined })
+          setLive(next)
+        }}
+        wrap={wrap}
+        onWrapChange={(next) => {
+          writeWrap(next)
+          setWrap(next)
+        }}
+        ready={ready}
+        refreshing={feed.isFetching && !feed.isFetchingNextPage}
+        onRefresh={() => {
+          void feed.refetch()
+          void usage.refetch()
+        }}
+        canDownload={visible.length > 0}
+        onDownload={handleDownload}
+        insetClassName={insetClassName}
+      />
+      <RuntimeLogFilterChips
+        levels={filters.levels}
+        onLevelsChange={(levels) => updateFilters({ levels })}
+        stream={filters.stream}
+        onStreamChange={(stream) => updateFilters({ stream })}
+        insetClassName={insetClassName}
+      />
+      {feed.tailError && (
         <p
           className={cn(
-            'border-b border-border py-2 text-[12px] text-amber-600 dark:text-amber-400',
+            'border-b border-border bg-amber-500/5 py-2 text-[12px] text-amber-700 dark:text-amber-400',
             insetClassName,
           )}
         >
-          {t('Live tail paused on an error and will retry:')} {tailError}
+          {t('Live tail paused on an error and will retry:')} {feed.tailError}
         </p>
       )}
       {ready && !usage.error && (
@@ -607,39 +730,99 @@ export function RuntimeLogsView({
           interval={usage.data?.interval}
           total={usage.data?.total}
           loading={usage.isLoading}
-          zoomed={!!zoom}
+          zoomed={!!filters.window}
           onZoom={(picked) => {
             setLive(false)
-            setZoom({
-              from: picked.from!.toISOString(),
-              to: picked.to!.toISOString(),
+            updateFilters({
+              window: {
+                from: picked.from!.toISOString(),
+                to: picked.to!.toISOString(),
+              },
             })
           }}
-          onResetZoom={() => setZoom(undefined)}
+          onResetZoom={() => updateFilters({ window: undefined })}
           insetClassName={insetClassName}
         />
       )}
-      <div className={cn('min-h-0 flex-1 overflow-y-auto', insetClassName)}>
+      <div
+        ref={listRef}
+        className="@container/logs relative min-h-0 flex-1 overflow-y-auto overflow-x-hidden"
+      >
+        {ready && !feed.error && (feed.isLoading || visible.length > 0) && (
+          <div
+            className={cn(
+              'sticky top-0 z-10 hidden h-9 items-center gap-3 bg-background text-[12px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)] @[640px]/logs:flex',
+              insetClassName,
+            )}
+            aria-hidden
+          >
+            <span
+              className={cn('flex shrink-0 items-center gap-1.5', timeColumn)}
+            >
+              {t('Time')}
+              <DisplayTimeZoneBadge />
+            </span>
+            <span className={cn('shrink-0', RUNTIME_LOG_COLUMNS.level)}>
+              {t('Level')}
+            </span>
+            {isProject && (
+              <span className={RUNTIME_LOG_COLUMNS.source}>
+                {t('Resource')}
+              </span>
+            )}
+            <span className="min-w-0 flex-1">{t('Message')}</span>
+          </div>
+        )}
         {body}
       </div>
+      {status && (
+        <div
+          className={cn(
+            'flex h-11 shrink-0 items-center justify-between gap-3 border-t border-border text-[12px] text-muted-foreground',
+            insetClassName,
+          )}
+        >
+          <span className="min-w-0 truncate tabular-nums">{status}</span>
+          {loadOlder ??
+            (loaded > 0 && (
+              <span className="shrink-0">
+                {t('Every line in this time range is loaded')}
+              </span>
+            ))}
+        </div>
+      )}
+      <RuntimeLogDrawer
+        key={drawerSession}
+        entry={selected}
+        onOpenChange={(open) => {
+          if (!open) setSelectedId(null)
+        }}
+        showSource={isProject}
+        source={
+          selected && isProject
+            ? sources?.get(
+                runtimeLogSourceKey(
+                  selected.log.resourceType,
+                  selected.log.resourceId,
+                ),
+              )
+            : undefined
+        }
+        formatTimestamp={formatTimestamp}
+        onNewer={newer ? () => setSelectedId(newer.log.$id) : undefined}
+        onOlder={older ? () => setSelectedId(older.log.$id) : undefined}
+        onShowSource={isProject ? showSource : undefined}
+        onOpenSource={isProject ? openSource : undefined}
+      />
     </div>
   )
 }
 
-interface ParsedLog {
-  log: Models.RuntimeLog
-  line: ReturnType<typeof parseRuntimeLogLine>
-  /** The line's own level; otherwise stderr reads as an error, stdout as info. */
-  level: RuntimeLogLevel
-  plain: string
-}
-
-function parseLog(log: Models.RuntimeLog): ParsedLog {
-  const line = parseRuntimeLogLine(log.message)
-  return {
-    log,
-    line,
-    level: line.level ?? (log.stream === 'stderr' ? 'error' : 'info'),
-    plain: stripAnsi(log.message),
-  }
+/** The API's answer to a range older than the plan's log retention. */
+function isHistoryLimit(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    (error as { type?: unknown }).type === 'limit_history_exceeded'
+  )
 }

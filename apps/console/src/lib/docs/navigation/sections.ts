@@ -2761,6 +2761,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
             label: 'Terminal',
             href: '/docs/tooling/command-line/terminal',
           },
+          {
+            label: 'Zero',
+            href: '/docs/tooling/command-line/zero',
+          },
         ],
       },
       {
