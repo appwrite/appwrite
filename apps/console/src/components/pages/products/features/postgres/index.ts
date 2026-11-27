@@ -1,4 +1,5 @@
 import type { ComponentType } from 'react'
+import { PostgresAgentsVisual } from '@/components/pages/products/features/postgres/PostgresAgentsVisual'
 import { PostgresBackupsVisual } from '@/components/pages/products/features/postgres/PostgresBackupsVisual'
 import { PostgresBranchesVisual } from '@/components/pages/products/features/postgres/PostgresBranchesVisual'
 import { PostgresConnectVisual } from '@/components/pages/products/features/postgres/PostgresConnectVisual'
@@ -10,6 +11,7 @@ export const POSTGRES_FEATURE_VISUALS: Record<string, ComponentType> = {
   connections: PostgresConnectVisual,
   pooling: PostgresPoolingVisual,
   branches: PostgresBranchesVisual,
+  agents: PostgresAgentsVisual,
   backups: PostgresBackupsVisual,
   'high-availability': PostgresHighAvailabilityVisual,
   monitoring: PostgresMonitoringVisual,

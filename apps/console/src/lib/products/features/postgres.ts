@@ -45,6 +45,16 @@ export const postgresProductFeatures: ProductFeatureContent[] = [
     brandLight: 'orange',
   },
   {
+    id: 'agents',
+    title: 'Built for coding agents',
+    description:
+      'Connect the Appwrite MCP server and your agent can create a database, install pgvector, branch it to test a migration, and run SQL without leaving the chat. Every change carries the agent\'s reason into your project\'s Activity log, so you can see what it did and why.',
+    docsHref: '/docs/tooling/ai/mcp-servers',
+    docsLabel: 'MCP server docs',
+    extraDocsLinks: [{ href: '/for-agents', label: 'Appwrite for agents' }],
+    brandLight: 'purple',
+  },
+  {
     id: 'backups',
     title: 'Backups off the instance, restores on demand',
     description:

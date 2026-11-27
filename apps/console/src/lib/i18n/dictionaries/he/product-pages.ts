@@ -1298,6 +1298,24 @@ export const heProductPagesDictionary: Record<string, string> = {
   'Segment to paint a frame': 'סגמנט עד לפריים',
   'Picture on screen': 'תמונה על המסך',
   'Climbs the ladder': 'מטפס בסולם',
+  'Built for coding agents':
+    'בנוי לסוכני קוד',
+  'Connect the Appwrite MCP server and your agent can create a database, install pgvector, branch it to test a migration, and run SQL without leaving the chat. Every change carries the agent\'s reason into your project\'s Activity log, so you can see what it did and why.':
+    'חברו את שרת ה-MCP של Appwrite, והסוכן שלכם יכול ליצור מסד נתונים, להתקין pgvector, ליצור Branch כדי לבדוק מיגרציה ולהריץ SQL בלי לצאת מהצ\'אט. כל שינוי נרשם ביומן ה-Activity של הפרויקט עם הסיבה שהסוכן נתן, כך שתוכלו לראות מה הוא עשה ולמה.',
+  'MCP server docs':
+    'תיעוד שרת ה-MCP',
+  'Appwrite for agents':
+    'Appwrite לסוכנים',
+  'Appwrite MCP server':
+    'שרת ה-MCP של Appwrite',
+  'Provisioned':
+    'הוקם',
+  'Reason saved to Activity':
+    'הסיבה נשמרה ב-Activity',
+  'Can AI coding agents create and manage these databases?':
+    'האם סוכני קוד מבוססי AI יכולים ליצור ולנהל את מסדי הנתונים האלה?',
+  'Yes. The Appwrite MCP server exposes the whole PostgreSQL lifecycle as tools, so Claude Code, Cursor, Codex, or any MCP client can create a database, install extensions like pgvector, open a branch with its own expiry, run SQL, and take backups. Writes are marked as changes, so agents that read tool annotations ask before running them, and each one is logged with the agent\'s reason.':
+    'כן. שרת ה-MCP של Appwrite חושף את כל מחזור החיים של PostgreSQL ככלים, כך ש-Claude Code, Cursor, Codex או כל לקוח MCP יכולים ליצור מסד נתונים, להתקין הרחבות כמו pgvector, לפתוח Branch עם תפוגה משלו, להריץ SQL ולגבות. פעולות כתיבה מסומנות כשינויים, כך שסוכנים שקוראים את ההערות של הכלים מבקשים אישור לפני שהם מריצים אותן, וכל שינוי נרשם עם הסיבה שהסוכן נתן.',
 }
 
 

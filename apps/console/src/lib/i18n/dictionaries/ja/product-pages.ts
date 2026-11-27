@@ -1396,4 +1396,22 @@ export const jaProductPagesDictionary: Record<string, string> = {
   'Segment to paint a frame': 'フレーム描画までのセグメント',
   'Picture on screen': '映像を表示中',
   'Climbs the ladder': 'ラダーを上がる',
+  'Built for coding agents':
+    'コーディングエージェントのために',
+  'Connect the Appwrite MCP server and your agent can create a database, install pgvector, branch it to test a migration, and run SQL without leaving the chat. Every change carries the agent\'s reason into your project\'s Activity log, so you can see what it did and why.':
+    'Appwrite MCP サーバーを接続すると、エージェントはチャットから離れずにデータベースの作成、pgvector のインストール、マイグレーションを試すための Branch 作成、SQL の実行ができます。すべての変更にはエージェントの理由が付き、プロジェクトの Activity ログに記録されるので、何をなぜ行ったかを確認できます。',
+  'MCP server docs':
+    'MCP サーバーのドキュメント',
+  'Appwrite for agents':
+    'エージェント向け Appwrite',
+  'Appwrite MCP server':
+    'Appwrite MCP サーバー',
+  'Provisioned':
+    'プロビジョニング済み',
+  'Reason saved to Activity':
+    '理由を Activity に記録',
+  'Can AI coding agents create and manage these databases?':
+    'AI コーディングエージェントはこれらのデータベースを作成・管理できますか？',
+  'Yes. The Appwrite MCP server exposes the whole PostgreSQL lifecycle as tools, so Claude Code, Cursor, Codex, or any MCP client can create a database, install extensions like pgvector, open a branch with its own expiry, run SQL, and take backups. Writes are marked as changes, so agents that read tool annotations ask before running them, and each one is logged with the agent\'s reason.':
+    'はい。Appwrite MCP サーバーは PostgreSQL のライフサイクル全体をツールとして公開しているため、Claude Code、Cursor、Codex など任意の MCP クライアントが、データベースの作成、pgvector などの拡張機能のインストール、有効期限付き Branch の作成、SQL の実行、バックアップの取得を行えます。書き込みは変更としてマークされるため、ツールのアノテーションを読むエージェントは実行前に確認し、各変更はエージェントの理由とともに記録されます。',
 }
