@@ -269,6 +269,12 @@ utopia_async::Runtime::new()?.block_on(async {
 })?;
 ```
 
+### Metrics
+
+A `jetstream::Worker` records the histograms `Utopia\Queue\Server` records, under the same names, buckets and attributes, so Rust and PHP workers on one queue share their series: `messaging.process.wait.duration` and `messaging.process.message.size` when a message is received, and `messaging.process.duration` when it is committed or rejected.
+
+They go to the OpenTelemetry global meter provider as it is when the worker joins. Install an SDK with an exporter before that, or they are not recorded.
+
 ## Pin the clock in tests
 
 Brokers read time and ids from a `Clock`. Replace it to make messages reproducible.
@@ -306,6 +312,8 @@ Development happens in [appwrite/appwrite](https://github.com/appwrite/appwrite)
 
 ```bash
 cargo test -p utopia-queue
+# The JetStream worker against a server, metrics included:
+NATS_URL=nats://127.0.0.1:4222 cargo test -p utopia-queue -- --ignored
 cargo clippy -p utopia-queue --all-targets -- -D warnings
 cargo fmt --all --check
 ```

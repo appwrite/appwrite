@@ -230,6 +230,10 @@ libc = "0.2"
 postcard = { version = "1", default-features = false, features = ["use-std"] }
 # PNG encoding with an explicit zlib level and filter (utopia-image maps
 # Imagick's PNG quality onto them); pure Rust, the PNG codec of the image crate.
+# Metrics through the OpenTelemetry API only: a library records into the global meter, and the
+# application that installs an SDK decides where they go. Without one, every instrument is a no-op.
+opentelemetry = { version = "0.33", default-features = false, features = ["metrics"] }
+opentelemetry_sdk = { version = "0.33", default-features = false, features = ["metrics"] }
 png = "0.18"
 # Safe pin projection for utopia-async's futures (its sleep, timeout and
 # interval wrap the engine's own); already in the tree through tokio.

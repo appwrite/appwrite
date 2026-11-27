@@ -13,7 +13,7 @@ default = ["cluster", "nats"]
 # Redis Cluster connection.
 cluster = ["redis/cluster-async"]
 # NATS JetStream broker.
-nats = ["dep:async-nats", "dep:xxhash-rust", "dep:utopia-nats"]
+nats = ["dep:async-nats", "dep:xxhash-rust", "dep:utopia-nats", "dep:opentelemetry"]
 
 [dependencies]
 async-nats = { workspace = true, optional = true }
@@ -22,6 +22,7 @@ futures-util.workspace = true
 getrandom.workspace = true
 hex.workspace = true
 indexmap.workspace = true
+opentelemetry = { workspace = true, optional = true }
 php-std.workspace = true
 redis.workspace = true
 serde.workspace = true
@@ -34,6 +35,9 @@ utopia-lock.workspace = true
 utopia-nats = { workspace = true, optional = true }
 utopia-validators.workspace = true
 xxhash-rust = { workspace = true, optional = true }
+
+[dev-dependencies]
+opentelemetry_sdk = { workspace = true, features = ["testing"] }
 
 
 [package.metadata.utopia]
