@@ -48,6 +48,12 @@ A failure no retry can fix, such as a payload naming something that does not exi
 worker.reject(delivery, true).await?;
 ```
 
+## Metrics
+
+A worker records the histograms `Utopia\Queue\Server` records, under the same names, buckets and attributes, so Rust and PHP workers on one queue share their series: `messaging.process.wait.duration` and `messaging.process.message.size` when a message is received, and `messaging.process.duration` when it is committed or rejected.
+
+They go to the OpenTelemetry global meter provider as it is when the worker joins. Install an SDK with an exporter before that, or they are not recorded.
+
 ## What stays in PHP
 
 The worker joins the `worker` consumer that `Broker\Nats` provisions, and waits for it if it starts first. It reads the redelivery budget and backoff from that consumer. Dead letters land on the same subjects with the same headers, so PHP's `retry()` and failed counts see them. A message that cannot be decoded, or that reaches the spare delivery `Broker\Nats` provisions, is dead-lettered on arrival.
@@ -62,6 +68,8 @@ Development happens in [appwrite/appwrite](https://github.com/appwrite/appwrite)
 
 ```bash
 cargo test -p utopia-queue
+# The worker against a JetStream server, metrics included:
+NATS_URL=nats://127.0.0.1:4222 cargo test -p utopia-queue -- --ignored
 cargo clippy -p utopia-queue --all-targets -- -D warnings
 cargo fmt --all --check
 ```
