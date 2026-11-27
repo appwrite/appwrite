@@ -49,7 +49,7 @@ final class LogTest extends TestCase
         $row = \json_decode((string) $client->requests[0]->getBody(), true, flags: JSON_THROW_ON_ERROR);
         $this->assertSame('execution', $row['id']);
         $this->assertSame('waiting', $row['status']);
-        $this->assertSame([], $publisher->getEvents('executions'));
+        $this->assertNull($publisher->getEvents('executions'));
     }
 
     public function testScheduledExecutionIsQueuedWhenTheStoreFails(): void
