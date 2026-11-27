@@ -186,8 +186,6 @@ const CAPTIONS = [
     fileId: 'file000000000000000002',
     name: 'English',
     language: 'eng',
-    // Preview SDK types keep the removed field.
-    code: 'eng',
     default: true,
     embedded: false,
     targetDuration: 6,
@@ -204,8 +202,6 @@ const CAPTIONS = [
     fileId: 'file000000000000000003',
     name: 'Hebrew',
     language: 'heb',
-    // Preview SDK types keep the removed field.
-    code: 'heb',
     default: false,
     embedded: false,
     targetDuration: 6,
