@@ -21,7 +21,7 @@ In this quick start you connect a Git repository, turn on reviews for it, and op
 ![Review page before any repository is reviewed, with the Choose repositories button](/images/docs/reviews/empty-state.avif)
 {% /only_light %}
 
-If your project isn't connected to a Git provider yet, click **Add installation** and connect GitHub, GitLab, Gitea, or Bitbucket. On GitHub, this installs the [Appwrite GitHub App](https://github.com/apps/appwrite) on the account or organization you pick.
+If your project isn't connected to a Git provider yet, click **Add installation** and connect GitHub, GitLab, Gitea, Bitbucket, or Origin. On GitHub, this installs the [Appwrite GitHub App](https://github.com/apps/appwrite) on the account or organization you pick.
 
 # Turn on reviews {% #turn-on-reviews %}
 

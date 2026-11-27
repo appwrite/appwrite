@@ -19,7 +19,9 @@ Each plan includes credits every month:
 
 # Extra credits {% #extra-credits %}
 
-Extra credits cost $1 per 100, so a Normal review past the allowance costs $0.50. They're billed with the rest of your usage, up to your organization's [budget cap](/docs/advanced/billing/payments#budget-cap).
+On Start, Pro, and Scale, reviews keep running past the allowance by default. Extra credits cost $1 per 100, so a Normal review past the allowance costs $0.50. They're billed with the rest of your usage, up to your organization's [budget cap](/docs/advanced/billing/payments#budget-cap).
+
+If extra review credits are off for your organization, reviews stop when the included credits are used, and you aren't billed for extra credits. The credits card on the **Review** page says which applies to you.
 
 On Free, reviews stop when the included credits are used, until the next billing cycle or an [upgrade](/pricing).
 

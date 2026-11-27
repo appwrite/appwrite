@@ -857,18 +857,9 @@ export const DOCS_LOCAL_SECTION_NAVS: DocsSectionNavConfig[] = [
             label: 'Track performance',
             href: '/docs/products/reviews/performance',
           },
-        ],
-      },
-      {
-        label: 'Configuration',
-        items: [
           {
             label: 'Configure a repository',
             href: '/docs/products/reviews/configuration',
-          },
-          {
-            label: 'Configuration reference',
-            href: '/docs/products/reviews/reference',
           },
         ],
       },

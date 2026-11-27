@@ -14,7 +14,7 @@ The summary says what the pull request changes. After new commits, the reviewer 
 
 A finding is a problem the reviewer found, posted as an inline comment on the line it concerns. Each finding has a severity: **Critical**, **Major**, **Minor**, or **Info**.
 
-By default, Info findings aren't posted, and one review posts at most 15 inline comments. Change both with `reviews.minSeverity` and `reviews.maxComments` in the [configuration file](/docs/products/reviews/reference).
+By default, Info findings aren't posted, and one review posts at most 15 inline comments. Change both with `reviews.minSeverity` and `reviews.maxComments` in the [configuration file](/docs/products/reviews/configuration#review-settings).
 
 To discuss a finding, reply in its thread. You don't need to [mention the reviewer](/docs/products/reviews/mentions) there.
 
@@ -26,7 +26,7 @@ The verdict is **Approved**, **Changes requested**, or **Commented**. Your repos
 - A pull request with no blocking findings and no open bugs is approved. Set `reviews.approve` to `false` to comment instead.
 - Pull requests from people without write access to the repository, such as pull requests from forks, aren't approved. Their changes could try to talk the model into an approval. Turn on `reviews.approveOutsideContributors` to approve them anyway.
 
-See the [configuration reference](/docs/products/reviews/reference) for every setting.
+See [Configure a repository](/docs/products/reviews/configuration#verdict-settings) for every verdict setting.
 
 # Merge confidence {% #merge-confidence %}
 

@@ -5319,7 +5319,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "products/reviews",
     "title": "Reviews",
-    "description": "Review pull requests with AI using Appwrite Reviews. Turn it on for GitHub, GitLab, Gitea, and Bitbucket repositories and get findings, a verdict, and a merge confidence grade on every pull request.",
+    "description": "Review pull requests with AI using Appwrite Reviews. Turn it on for GitHub, GitLab, Gitea, Bitbucket, and Origin repositories and get findings, a verdict, and a merge confidence grade on every pull request.",
     "excerpt": "Appwrite **Reviews** reviews the pull requests in your Git repositories with AI. Turn it on for a repository, and each pull request gets a review where it was opened: a summary, findings on the lines they concern, a verdict, and a merge confidence grade. Mention the reviewer in a comment to ask about a change, request another review, or teach it how your team works. You turn on reviews and follow them under **Review** in your project. Reviews is available…",
     "breadcrumbs": [
       "products",
@@ -5340,8 +5340,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "products/reviews/configuration",
     "title": "Configure a repository",
-    "description": "Configure Appwrite Reviews for a repository with a file in its root. Choose which branches and files get reviewed, add instructions for the reviewer, and set up the sandbox.",
-    "excerpt": "Every setting is optional. To change one, add a file to the root of the repository. The file is read from each pull request's base branch, so a pull request can't change how it's reviewed. Edits to the file apply once they're merged. If the file has invalid JSON or an invalid setting, the review uses the defaults and says why. The line is optional. It gives your editor autocompletion and a description of every setting. The configuration reference lists…",
+    "description": "Configure Appwrite Reviews for a repository with a file in its root. Choose which branches and files get reviewed, add instructions for the reviewer, set up the sandbox, and see every setting with its default.",
+    "excerpt": "Every setting is optional. To change one, add a file to the root of the repository. The file is read from each pull request's base branch, so a pull request can't change how it's reviewed. Edits to the file apply once they're merged. If the file has invalid JSON or an invalid setting, the review uses the defaults and says why. The line is optional. It gives your editor autocompletion and a description of every setting. Settings lists every setting…",
     "breadcrumbs": [
       "products",
       "Reviews",
@@ -5384,7 +5384,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "products/reviews/mentions",
     "title": "Mention the reviewer",
-    "description": "Mention Appwrite Reviews in a pull request comment to request a new review, ask about a change, or teach it a preference, on GitHub, GitLab, Gitea, and Bitbucket.",
+    "description": "Mention Appwrite Reviews in a pull request comment to request a new review, ask about a change, or teach it a preference, on GitHub, GitLab, Gitea, Bitbucket, and Origin.",
     "excerpt": "Mention the reviewer in a comment on a pull request to talk to it. What it does depends on what you ask. Request a review reviews the whole pull request again, at its latest commit. Use it for a pull request that was open before you turned on reviews, or in a repository where automatic reviews are off. A review you request costs credits like any other review. Ask a question Any other mention gets one answer in the thread:…",
     "breadcrumbs": [
       "products",
@@ -5407,22 +5407,11 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/reviews/quick-start",
     "title": "Start with Reviews",
     "description": "Turn on Appwrite Reviews for a Git repository and get your first AI review on a pull request.",
-    "excerpt": "In this quick start you connect a Git repository, turn on reviews for it, and open a pull request to get your first review. Choose repositories 1. Sign in to Appwrite Cloud and open a project. 2. Open **Review** in the sidebar. 3. Click **Choose repositories**. If your project isn't connected to a Git provider yet, click **Add installation** and connect GitHub, GitLab, Gitea, or Bitbucket. On GitHub, this installs the Appwrite GitHub App on the account or organization you…",
+    "excerpt": "In this quick start you connect a Git repository, turn on reviews for it, and open a pull request to get your first review. Choose repositories 1. Sign in to Appwrite Cloud and open a project. 2. Open **Review** in the sidebar. 3. Click **Choose repositories**. If your project isn't connected to a Git provider yet, click **Add installation** and connect GitHub, GitLab, Gitea, Bitbucket, or Origin. On GitHub, this installs the Appwrite GitHub App on the account or organization…",
     "breadcrumbs": [
       "products",
       "Reviews",
       "Start with Reviews"
-    ]
-  },
-  {
-    "slug": "products/reviews/reference",
-    "title": "Configuration reference",
-    "description": "Every setting of the Appwrite Reviews repository configuration file, with its default value and what it changes.",
-    "excerpt": "Add these settings to a file in the root of the repository. Every setting is optional. See Configure a repository for how the file is read and for examples. Reviews | Setting | Default | Description | |---------|---------|-------------| | | | Review pull requests in this repository. Answers to mentions follow this too. | | | | Review when a pull request is opened or gets new commits. Mentions work either way. | | | | Review draft pull requests…",
-    "breadcrumbs": [
-      "products",
-      "Reviews",
-      "Configuration reference"
     ]
   },
   {

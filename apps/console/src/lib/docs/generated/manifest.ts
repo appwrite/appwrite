@@ -3411,7 +3411,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
   {
     "slug": "products/reviews",
     "title": "Reviews",
-    "description": "Review pull requests with AI using Appwrite Reviews. Turn it on for GitHub, GitLab, Gitea, and Bitbucket repositories and get findings, a verdict, and a merge confidence grade on every pull request.",
+    "description": "Review pull requests with AI using Appwrite Reviews. Turn it on for GitHub, GitLab, Gitea, Bitbucket, and Origin repositories and get findings, a verdict, and a merge confidence grade on every pull request.",
     "layout": "article",
     "readingTimeMinutes": 2
   },
@@ -3425,9 +3425,9 @@ export const DOCS_PAGES: DocsPageMeta[] = [
   {
     "slug": "products/reviews/configuration",
     "title": "Configure a repository",
-    "description": "Configure Appwrite Reviews for a repository with a file in its root. Choose which branches and files get reviewed, add instructions for the reviewer, and set up the sandbox.",
+    "description": "Configure Appwrite Reviews for a repository with a file in its root. Choose which branches and files get reviewed, add instructions for the reviewer, set up the sandbox, and see every setting with its default.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/reviews/functions-and-sites",
@@ -3453,7 +3453,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
   {
     "slug": "products/reviews/mentions",
     "title": "Mention the reviewer",
-    "description": "Mention Appwrite Reviews in a pull request comment to request a new review, ask about a change, or teach it a preference, on GitHub, GitLab, Gitea, and Bitbucket.",
+    "description": "Mention Appwrite Reviews in a pull request comment to request a new review, ask about a change, or teach it a preference, on GitHub, GitLab, Gitea, Bitbucket, and Origin.",
     "layout": "article",
     "readingTimeMinutes": 2
   },
@@ -3468,13 +3468,6 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "slug": "products/reviews/quick-start",
     "title": "Start with Reviews",
     "description": "Turn on Appwrite Reviews for a Git repository and get your first AI review on a pull request.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/reviews/reference",
-    "title": "Configuration reference",
-    "description": "Every setting of the Appwrite Reviews repository configuration file, with its default value and what it changes.",
     "layout": "article",
     "readingTimeMinutes": 2
   },

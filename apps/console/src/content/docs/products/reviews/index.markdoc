@@ -1,7 +1,7 @@
 ---
 layout: article
 title: Reviews
-description: Review pull requests with AI using Appwrite Reviews. Turn it on for GitHub, GitLab, Gitea, and Bitbucket repositories and get findings, a verdict, and a merge confidence grade on every pull request.
+description: Review pull requests with AI using Appwrite Reviews. Turn it on for GitHub, GitLab, Gitea, Bitbucket, and Origin repositories and get findings, a verdict, and a merge confidence grade on every pull request.
 ---
 
 Appwrite **Reviews** reviews the pull requests in your Git repositories with AI. Turn it on for a repository, and each pull request gets a review where it was opened: a summary, findings on the lines they concern, a verdict, and a merge confidence grade. Mention the reviewer in a comment to ask about a change, request another review, or teach it how your team works.
@@ -62,7 +62,7 @@ Preferences the reviewer remembers from pull request conversations.
 
 # Guides {% #guides %}
 
-Work with the reviewer on your pull requests and in the Console.
+Work with the reviewer on your pull requests, in the Console, and in your repository.
 
 {% cards %}
 {% cards_item href="/docs/products/reviews/mentions" title="Mention the reviewer" %}
@@ -74,17 +74,7 @@ Review the pull requests of a function or site, and see the reviews that change 
 {% cards_item href="/docs/products/reviews/performance" title="Track performance" %}
 Approvals, findings per pull request, useful findings, and review time by repository and author.
 {% /cards_item %}
-{% /cards %}
-
-# Configuration {% #configuration %}
-
-Change how a repository is reviewed with a file in the repository.
-
-{% cards %}
 {% cards_item href="/docs/products/reviews/configuration" title="Configure a repository" %}
-Choose which branches and files get reviewed, add instructions, and set up the sandbox.
-{% /cards_item %}
-{% cards_item href="/docs/products/reviews/reference" title="Configuration reference" %}
-Every setting in the configuration file, with its default.
+Choose which branches and files get reviewed, add instructions, set up the sandbox, and see every setting.
 {% /cards_item %}
 {% /cards %}

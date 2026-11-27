@@ -1,7 +1,7 @@
 ---
 layout: article
 title: Mention the reviewer
-description: Mention Appwrite Reviews in a pull request comment to request a new review, ask about a change, or teach it a preference, on GitHub, GitLab, Gitea, and Bitbucket.
+description: Mention Appwrite Reviews in a pull request comment to request a new review, ask about a change, or teach it a preference, on GitHub, GitLab, Gitea, Bitbucket, and Origin.
 ---
 
 Mention the reviewer in a comment on a pull request to talk to it. What it does depends on what you ask.
@@ -36,7 +36,7 @@ The preference becomes a [learning](/docs/products/reviews/learnings), and later
 
 # Who the reviewer answers {% #who-the-reviewer-answers %}
 
-The reviewer only acts on comments from people with access to the repository, such as its owners, members, and collaborators. Mentions inside code blocks and quoted lines are ignored.
+The reviewer only acts on comments from people with access to the repository, such as its owners, members, and collaborators. On Origin, that means people with write or admin permission on the repository. Mentions inside code blocks and quoted lines are ignored.
 
 # Mentions by provider {% #providers %}
 
@@ -48,5 +48,6 @@ How you mention the reviewer depends on your Git provider:
 | GitLab | The account that connected GitLab to Appwrite. Reviews are posted as that account |
 | Gitea | The account that connected Gitea to Appwrite. Reviews are posted as that account |
 | Bitbucket | `@appwrite`, typed as plain text. Reviews are posted as the account that connected Bitbucket |
+| Origin | `@appwrite`, typed as plain text. The Appwrite app posts the reviews |
 
 On GitLab, Gitea, and Bitbucket, connect with a dedicated account if you don't want reviews posted under a teammate's name.
