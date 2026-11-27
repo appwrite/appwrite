@@ -318,8 +318,10 @@ function renderTag(tag: MarkdocTag): string {
       if (!src) return ''
       const title = tag.attributes.title as string | undefined
       // With `autoplay`, the clip plays muted on a loop like an animated image.
+      // BlogMarkdownBody plays it only while it is visible, so the hidden copy
+      // inside `only_dark` or `only_light` never plays.
       const playback = tag.attributes.autoplay
-        ? ` autoplay loop muted playsinline${attr('aria-label', title)}`
+        ? ` data-blog-autoplay preload="metadata" loop muted playsinline${attr('aria-label', title)}`
         : ' controls'
       return `<div class="not-prose my-6 overflow-hidden rounded-xl border border-border"><video src="${escapeHtml(src)}"${playback} class="w-full"${attr('title', title)}></video></div>`
     }
