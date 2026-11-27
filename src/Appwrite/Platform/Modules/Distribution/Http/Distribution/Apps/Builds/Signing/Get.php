@@ -77,8 +77,26 @@ class Get extends Action
             throw new Exception(Exception::USER_UNAUTHORIZED, 'Invalid signing token.');
         }
 
-        $artifact = $authorization->skip(fn () => $dbForProject->getDocument('distributionArtifacts', $buildId));
-        if ($artifact->isEmpty() || $artifact->getAttribute('appId') !== $appId) {
+        $signingIdentity = $authorization->skip(fn () => $this->signingIdentity($dbForProject, $binding));
+
+        Span::add('signing.identity.id', $signingIdentity->getId());
+
+        $response
+            ->addHeader('Cache-Control', 'no-store')
+            ->json(Signing::bundle($signingIdentity));
+    }
+
+    /**
+     * Reads past document permissions only what the redeemed token is bound to: the
+     * guest caller is authenticated by the token alone, so its binding, not the route
+     * params, names the artifact and, through the current sign job, the identity.
+     *
+     * @param array{appId: string, subjectId: string, attempt: int} $binding
+     */
+    private function signingIdentity(Database $dbForProject, array $binding): Document
+    {
+        $artifact = $dbForProject->getDocument('distributionArtifacts', $binding['subjectId']);
+        if ($artifact->isEmpty() || $artifact->getAttribute('appId') !== $binding['appId']) {
             throw new Exception(Exception::DISTRIBUTION_ARTIFACT_NOT_FOUND);
         }
 
@@ -87,15 +105,11 @@ class Get extends Action
             throw new Exception(Exception::USER_UNAUTHORIZED, 'The signing token is not for the current sign job.');
         }
 
-        $signingIdentity = $authorization->skip(fn () => $dbForProject->getDocument('distributionSigningIdentities', (string) ($job['signingIdentityId'] ?? '')));
+        $signingIdentity = $dbForProject->getDocument('distributionSigningIdentities', (string) ($job['signingIdentityId'] ?? ''));
         if ($signingIdentity->isEmpty()) {
             throw new Exception(Exception::DISTRIBUTION_SIGNING_IDENTITY_NOT_FOUND);
         }
 
-        Span::add('signing.identity.id', $signingIdentity->getId());
-
-        $response
-            ->addHeader('Cache-Control', 'no-store')
-            ->json(Signing::bundle($signingIdentity));
+        return $signingIdentity;
     }
 }
