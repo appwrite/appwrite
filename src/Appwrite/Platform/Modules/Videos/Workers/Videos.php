@@ -327,7 +327,6 @@ class Videos extends Action
                 $workspace,
                 $queueForRealtime,
                 $project,
-                $permissions,
                 $telemetry,
                 VideoAction::Timeline->value,
                 $stage
@@ -640,8 +639,7 @@ class Videos extends Action
                 $caption,
                 $captionPath,
                 $queueForRealtime,
-                $project,
-                $permissions
+                $project
             );
             $this->phase($telemetry, VideoAction::Caption->value, 'persist', $phaseStart);
             Span::add('caption.size', (int) $caption->getAttribute('size', 0));
@@ -846,7 +844,6 @@ class Videos extends Action
                 $workspace,
                 $queueForRealtime,
                 $project,
-                $permissions,
                 $telemetry,
                 VideoAction::Encode->value,
                 $stage
@@ -1443,8 +1440,6 @@ class Videos extends Action
 
     /**
      * Write a staged WebVTT file as the caption's single segment and mark ready.
-     *
-     * @param array<string> $permissions
      */
     private function persistCaptionVtt(
         Database $dbForProject,
@@ -1453,8 +1448,7 @@ class Videos extends Action
         Document $caption,
         string $vttPath,
         Realtime $queueForRealtime,
-        Document $project,
-        array $permissions
+        Document $project
     ): Document {
         $dbForProject->deleteDocuments('videosCaptionsSegments', [
             Query::equal('captionInternalId', [$caption->getSequence()]),
@@ -1506,7 +1500,7 @@ class Videos extends Action
                 'videoId' => $caption->getAttribute('videoId', $video->getId()),
                 'captionId' => $caption->getId(),
             ],
-            $permissions
+            $this->currentReadPermissions($dbForProject, $video->getId())
         );
 
         return $caption;
@@ -1521,7 +1515,6 @@ class Videos extends Action
      * returns false so the caller can release `captionsExtracted` and a later
      * job can retry. Tracks already stored are reused instead of inserted again.
      *
-     * @param array<string> $permissions
      * @return bool True when every text track was stored or permanently skipped
      */
     private function extractEmbeddedCaptions(
@@ -1533,7 +1526,6 @@ class Videos extends Action
         Encoder $encoder,
         Realtime $queueForRealtime,
         Document $project,
-        array $permissions,
         Telemetry $telemetry
     ): bool {
         try {
@@ -1667,7 +1659,7 @@ class Videos extends Action
                             'videoId' => $video->getId(),
                             'captionId' => $caption->getId(),
                         ],
-                        $permissions
+                        $this->currentReadPermissions($dbForProject, $video->getId())
                     );
                 }
 
@@ -1678,8 +1670,7 @@ class Videos extends Action
                     $caption,
                     $vttPath,
                     $queueForRealtime,
-                    $project,
-                    $permissions
+                    $project
                 );
                 $registered++;
                 $this->record($extracted, 1, ['result' => 'registered', 'codec' => $codec]);
@@ -1712,7 +1703,7 @@ class Videos extends Action
                                     'videoId' => $video->getId(),
                                     'captionId' => $caption->getId(),
                                 ],
-                                $permissions
+                                $this->currentReadPermissions($dbForProject, $video->getId())
                             );
                         } catch (\Throwable $park) {
                             // The failed extract or registration owns warning.message.
@@ -1751,7 +1742,7 @@ class Videos extends Action
                         'videoId' => $video->getId(),
                         'captionId' => $caption->getId(),
                     ],
-                    $permissions
+                    $this->currentReadPermissions($dbForProject, $video->getId())
                 );
                 Span::add('captions.default.id', $caption->getId());
                 break;
@@ -1898,7 +1889,6 @@ class Videos extends Action
      * A failed extract clears captionsExtracted so a later job can retry.
      *
      * @param array{basePath: string, inDir: string, outDir: string} $workspace
-     * @param array<string> $permissions
      * @return array{0: Document, 1: string, 2: array<string, string>} the video, the path or URL of its source, and the headers a URL is requested with
      */
     private function prepareSource(
@@ -1909,7 +1899,6 @@ class Videos extends Action
         array $workspace,
         Realtime $queueForRealtime,
         Document $project,
-        array $permissions,
         Telemetry $telemetry,
         string $action,
         string &$stage
@@ -1953,7 +1942,7 @@ class Videos extends Action
                 $video,
                 'videos.[videoId].update',
                 ['videoId' => $video->getId()],
-                $permissions
+                $this->currentReadPermissions($dbForProject, $video->getId())
             );
         }
 
@@ -1991,7 +1980,6 @@ class Videos extends Action
                         $this->encoder(headers: $headers),
                         $queueForRealtime,
                         $project,
-                        $permissions,
                         $telemetry
                     );
                 } catch (\Throwable $th) {
