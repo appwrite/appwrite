@@ -12,6 +12,7 @@ use Appwrite\Auth\Validator\PasswordPwned\None as PasswordPwnedNone;
 use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Databases\TransactionState;
 use Appwrite\Deployment\Deployments;
+use Appwrite\Distribution\Stores;
 use Appwrite\Event\Context\Audit as AuditContext;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
@@ -830,6 +831,12 @@ return function (Container $context): void {
             default => throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Unknown _APP_PWNED_PASSWORDS_DSN scheme: ' . $dsn->getScheme()),
         };
     }, ['cache']);
+
+    $context->set('distributionStores', fn () => new Stores(
+        System::getEnv('_APP_DISTRIBUTION_APPLE_ENDPOINT', ''),
+        System::getEnv('_APP_DISTRIBUTION_GOOGLE_ENDPOINT', ''),
+        Http::isProduction(),
+    ), []);
 
     $context->set('dbForProject', function (DatabaseFactory $databaseFactory, Database $dbForPlatform, Document $project, Response $response, Publisher $publisher, Event $queueForEvents, FunctionPublisher $publisherForFunctions, Webhook $queueForWebhooks, Realtime $queueForRealtime, UsageContext $usage, Request $request) {
         if ($project->isEmpty() || $project->getId() === 'console') {

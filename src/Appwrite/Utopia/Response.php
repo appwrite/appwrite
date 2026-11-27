@@ -180,6 +180,8 @@ class Response extends SwooleResponse
     public const MODEL_DISTRIBUTION_CONNECTION_LIST = 'distributionConnectionList';
     public const MODEL_DISTRIBUTION_SIGNING_IDENTITY = 'distributionSigningIdentity';
     public const MODEL_DISTRIBUTION_SIGNING_IDENTITY_LIST = 'distributionSigningIdentityList';
+    public const MODEL_DISTRIBUTION_SIGNING_IDENTITY_DOWNLOAD = 'distributionSigningIdentityDownload';
+    public const MODEL_DISTRIBUTION_SIGNING_IDENTITY_FILE = 'distributionSigningIdentityFile';
     public const MODEL_DISTRIBUTION_BUILD = 'distributionBuild';
     public const MODEL_DISTRIBUTION_BUILD_LIST = 'distributionBuildList';
     public const MODEL_DISTRIBUTION_LOG = 'distributionLog';

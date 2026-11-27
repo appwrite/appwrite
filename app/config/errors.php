@@ -1899,6 +1899,16 @@ return [
         'description' => 'A release with the same version or ID already exists for this app.',
         'code' => 409,
     ],
+    Exception::DISTRIBUTION_CONNECTION_ALREADY_EXISTS => [
+        'name' => Exception::DISTRIBUTION_CONNECTION_ALREADY_EXISTS,
+        'description' => 'Store connection with the same ID already exists. Try again with a different ID.',
+        'code' => 409,
+    ],
+    Exception::DISTRIBUTION_SIGNING_IDENTITY_ALREADY_EXISTS => [
+        'name' => Exception::DISTRIBUTION_SIGNING_IDENTITY_ALREADY_EXISTS,
+        'description' => 'Signing identity with the same ID already exists. Try again with a different ID.',
+        'code' => 409,
+    ],
     Exception::DISTRIBUTION_CONNECTION_IN_USE => [
         'name' => Exception::DISTRIBUTION_CONNECTION_IN_USE,
         'description' => 'The store connection is used by one or more targets. Remove it from those targets before deleting it.',

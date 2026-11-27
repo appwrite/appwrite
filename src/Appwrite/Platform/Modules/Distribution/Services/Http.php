@@ -17,6 +17,20 @@ use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Variables\Get 
 use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Variables\Update as UpdateVariable;
 use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Variables\XList as ListVariables;
 use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\XList as ListApps;
+use Appwrite\Platform\Modules\Distribution\Http\Distribution\Connections\Apple\Create as CreateAppleConnection;
+use Appwrite\Platform\Modules\Distribution\Http\Distribution\Connections\Apple\Update as UpdateAppleConnection;
+use Appwrite\Platform\Modules\Distribution\Http\Distribution\Connections\Delete as DeleteConnection;
+use Appwrite\Platform\Modules\Distribution\Http\Distribution\Connections\Get as GetConnection;
+use Appwrite\Platform\Modules\Distribution\Http\Distribution\Connections\Google\Create as CreateGoogleConnection;
+use Appwrite\Platform\Modules\Distribution\Http\Distribution\Connections\Google\Update as UpdateGoogleConnection;
+use Appwrite\Platform\Modules\Distribution\Http\Distribution\Connections\XList as ListConnections;
+use Appwrite\Platform\Modules\Distribution\Http\Distribution\SigningIdentities\Android\Create as CreateAndroidSigningIdentity;
+use Appwrite\Platform\Modules\Distribution\Http\Distribution\SigningIdentities\Delete as DeleteSigningIdentity;
+use Appwrite\Platform\Modules\Distribution\Http\Distribution\SigningIdentities\Download\Get as GetSigningIdentityDownload;
+use Appwrite\Platform\Modules\Distribution\Http\Distribution\SigningIdentities\Get as GetSigningIdentity;
+use Appwrite\Platform\Modules\Distribution\Http\Distribution\SigningIdentities\Ios\Create as CreateIosSigningIdentity;
+use Appwrite\Platform\Modules\Distribution\Http\Distribution\SigningIdentities\Update as UpdateSigningIdentity;
+use Appwrite\Platform\Modules\Distribution\Http\Distribution\SigningIdentities\XList as ListSigningIdentities;
 use Appwrite\Platform\Modules\Distribution\Http\Init;
 use Utopia\Platform\Service;
 
@@ -45,5 +59,21 @@ class Http extends Service
         $this->addAction(GetVariable::getName(), GetVariable::class);
         $this->addAction(UpdateVariable::getName(), UpdateVariable::class);
         $this->addAction(DeleteVariable::getName(), DeleteVariable::class);
+
+        $this->addAction(CreateAppleConnection::getName(), CreateAppleConnection::class);
+        $this->addAction(UpdateAppleConnection::getName(), UpdateAppleConnection::class);
+        $this->addAction(CreateGoogleConnection::getName(), CreateGoogleConnection::class);
+        $this->addAction(UpdateGoogleConnection::getName(), UpdateGoogleConnection::class);
+        $this->addAction(ListConnections::getName(), ListConnections::class);
+        $this->addAction(GetConnection::getName(), GetConnection::class);
+        $this->addAction(DeleteConnection::getName(), DeleteConnection::class);
+
+        $this->addAction(CreateIosSigningIdentity::getName(), CreateIosSigningIdentity::class);
+        $this->addAction(CreateAndroidSigningIdentity::getName(), CreateAndroidSigningIdentity::class);
+        $this->addAction(ListSigningIdentities::getName(), ListSigningIdentities::class);
+        $this->addAction(GetSigningIdentity::getName(), GetSigningIdentity::class);
+        $this->addAction(UpdateSigningIdentity::getName(), UpdateSigningIdentity::class);
+        $this->addAction(DeleteSigningIdentity::getName(), DeleteSigningIdentity::class);
+        $this->addAction(GetSigningIdentityDownload::getName(), GetSigningIdentityDownload::class);
     }
 }

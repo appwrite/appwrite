@@ -943,6 +943,8 @@ final class FormatTest extends TestCase
             Response::MODEL_DISTRIBUTION_CONNECTION_LIST,
             Response::MODEL_DISTRIBUTION_SIGNING_IDENTITY,
             Response::MODEL_DISTRIBUTION_SIGNING_IDENTITY_LIST,
+            Response::MODEL_DISTRIBUTION_SIGNING_IDENTITY_DOWNLOAD,
+            Response::MODEL_DISTRIBUTION_SIGNING_IDENTITY_FILE,
             Response::MODEL_DISTRIBUTION_BUILD,
             Response::MODEL_DISTRIBUTION_BUILD_LIST,
             Response::MODEL_DISTRIBUTION_LOG,

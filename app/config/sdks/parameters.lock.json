@@ -1972,11 +1972,38 @@
             "documents",
             "transactionId"
         ],
+        "distribution.createAndroidSigningIdentity": [
+            "signingIdentityId",
+            "name",
+            "keystore",
+            "storePassword",
+            "keyAlias",
+            "keyPassword"
+        ],
         "distribution.createApp": [
             "appId",
             "name",
             "framework",
             "enabled"
+        ],
+        "distribution.createAppleConnection": [
+            "connectionId",
+            "name",
+            "keyId",
+            "issuerId",
+            "privateKey"
+        ],
+        "distribution.createGoogleConnection": [
+            "connectionId",
+            "name",
+            "serviceAccount"
+        ],
+        "distribution.createIosSigningIdentity": [
+            "signingIdentityId",
+            "name",
+            "certificate",
+            "password",
+            "profiles"
         ],
         "distribution.createTarget": [
             "appId",
@@ -2006,6 +2033,12 @@
         "distribution.deleteApp": [
             "appId"
         ],
+        "distribution.deleteConnection": [
+            "connectionId"
+        ],
+        "distribution.deleteSigningIdentity": [
+            "signingIdentityId"
+        ],
         "distribution.deleteTarget": [
             "appId",
             "targetId"
@@ -2017,6 +2050,15 @@
         "distribution.getApp": [
             "appId"
         ],
+        "distribution.getConnection": [
+            "connectionId"
+        ],
+        "distribution.getSigningIdentity": [
+            "signingIdentityId"
+        ],
+        "distribution.getSigningIdentityDownload": [
+            "signingIdentityId"
+        ],
         "distribution.getTarget": [
             "appId",
             "targetId"
@@ -2026,6 +2068,14 @@
             "variableId"
         ],
         "distribution.listApps": [
+            "queries",
+            "total"
+        ],
+        "distribution.listConnections": [
+            "queries",
+            "total"
+        ],
+        "distribution.listSigningIdentities": [
             "queries",
             "total"
         ],
@@ -2044,6 +2094,23 @@
             "name",
             "framework",
             "enabled"
+        ],
+        "distribution.updateAppleConnection": [
+            "connectionId",
+            "name",
+            "keyId",
+            "issuerId",
+            "privateKey"
+        ],
+        "distribution.updateGoogleConnection": [
+            "connectionId",
+            "name",
+            "serviceAccount"
+        ],
+        "distribution.updateSigningIdentity": [
+            "signingIdentityId",
+            "name",
+            "rotate"
         ],
         "distribution.updateTarget": [
             "appId",
@@ -6670,11 +6737,38 @@
             "documents",
             "transactionId"
         ],
+        "distribution.createAndroidSigningIdentity": [
+            "signingIdentityId",
+            "name",
+            "keystore",
+            "storePassword",
+            "keyAlias",
+            "keyPassword"
+        ],
         "distribution.createApp": [
             "appId",
             "name",
             "framework",
             "enabled"
+        ],
+        "distribution.createAppleConnection": [
+            "connectionId",
+            "name",
+            "keyId",
+            "issuerId",
+            "privateKey"
+        ],
+        "distribution.createGoogleConnection": [
+            "connectionId",
+            "name",
+            "serviceAccount"
+        ],
+        "distribution.createIosSigningIdentity": [
+            "signingIdentityId",
+            "name",
+            "certificate",
+            "password",
+            "profiles"
         ],
         "distribution.createTarget": [
             "appId",
@@ -6704,6 +6798,12 @@
         "distribution.deleteApp": [
             "appId"
         ],
+        "distribution.deleteConnection": [
+            "connectionId"
+        ],
+        "distribution.deleteSigningIdentity": [
+            "signingIdentityId"
+        ],
         "distribution.deleteTarget": [
             "appId",
             "targetId"
@@ -6715,6 +6815,15 @@
         "distribution.getApp": [
             "appId"
         ],
+        "distribution.getConnection": [
+            "connectionId"
+        ],
+        "distribution.getSigningIdentity": [
+            "signingIdentityId"
+        ],
+        "distribution.getSigningIdentityDownload": [
+            "signingIdentityId"
+        ],
         "distribution.getTarget": [
             "appId",
             "targetId"
@@ -6724,6 +6833,14 @@
             "variableId"
         ],
         "distribution.listApps": [
+            "queries",
+            "total"
+        ],
+        "distribution.listConnections": [
+            "queries",
+            "total"
+        ],
+        "distribution.listSigningIdentities": [
             "queries",
             "total"
         ],
@@ -6742,6 +6859,23 @@
             "name",
             "framework",
             "enabled"
+        ],
+        "distribution.updateAppleConnection": [
+            "connectionId",
+            "name",
+            "keyId",
+            "issuerId",
+            "privateKey"
+        ],
+        "distribution.updateGoogleConnection": [
+            "connectionId",
+            "name",
+            "serviceAccount"
+        ],
+        "distribution.updateSigningIdentity": [
+            "signingIdentityId",
+            "name",
+            "rotate"
         ],
         "distribution.updateTarget": [
             "appId",
