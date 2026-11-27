@@ -353,6 +353,29 @@ class GitHub extends Git
         ];
     }
 
+    /**
+     * How many repositories the installation covers, as its own token lists them.
+     *
+     * @throws Exception
+     */
+    public function getInstallationRepositoryCount(): int
+    {
+        $response = $this->call(self::METHOD_GET, '/installation/repositories', ['Authorization' => "Bearer $this->accessToken"], [
+            'per_page' => 1,
+        ]);
+
+        $responseHeaders = $response['headers'] ?? [];
+        $statusCode = \is_array($responseHeaders) ? ($responseHeaders['status-code'] ?? 0) : 0;
+        $statusCode = \is_int($statusCode) ? $statusCode : 0;
+        $responseBody = $response['body'] ?? [];
+
+        if ($statusCode >= 400 || !\is_array($responseBody) || !\is_int($responseBody['total_count'] ?? null)) {
+            throw new Exception("Failed to count installation repositories: HTTP {$statusCode}", $statusCode);
+        }
+
+        return $responseBody['total_count'];
+    }
+
     public function getInstallationRepository(string $repositoryName): array
     {
         $currentPage = 1;

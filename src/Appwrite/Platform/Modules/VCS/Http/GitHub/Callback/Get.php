@@ -9,8 +9,8 @@ use Appwrite\Platform\Permission as AppwritePermission;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
+use Appwrite\Vcs\GitHubInstallationAccess;
 use Appwrite\Vcs\State;
-use Psr\Http\Client\ClientExceptionInterface;
 use Utopia\Client\Client;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -21,11 +21,9 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Psr7\Header;
-use Utopia\Psr7\Method;
-use Utopia\Psr7\Request\Factory as RequestFactory;
 use Utopia\System\System;
 use Utopia\Validator\Text;
+use Utopia\VCS\Adapter\Git\GitHub;
 
 class Get extends Action
 {
@@ -138,16 +136,25 @@ class Get extends Action
                 return;
             }
 
-            if (!$this->canAccess($clientForOAuth2, $accessToken, $providerInstallationId)) {
-                $this->failure($response, $redirectFailure, 'Your GitHub account does not have access to this installation. Please restart the installation from the Appwrite Console.');
-                return;
-            }
-
             try {
                 $vcs = $vcsFactory->fromInstallation(new Document([
                     'provider' => 'github',
                     'providerInstallationId' => $providerInstallationId,
                 ]));
+                $repositoryCount = $vcs instanceof GitHub ? $vcs->getInstallationRepositoryCount() : 0;
+            } catch (\Throwable) {
+                $this->failure($response, $redirectFailure, 'Failed to read the installation details from GitHub. Please restart the installation from the Appwrite Console.');
+                return;
+            }
+
+            // The installation token reaches every repository the installation covers, so
+            // the authorizing user must administer all of it, not merely see one repository.
+            if (!(new GitHubInstallationAccess($clientForOAuth2, $accessToken))->administers($providerInstallationId, $repositoryCount)) {
+                $this->failure($response, $redirectFailure, 'Only the owner of this GitHub installation\'s account, or an organization owner, can connect it. Please ask them to connect GitHub from the Appwrite Console.');
+                return;
+            }
+
+            try {
                 $owner = $vcs->getOwnerName($providerInstallationId);
                 $personal = $oauth2->getUserSlug($accessToken) === $owner;
             } catch (\Throwable) {
@@ -210,47 +217,6 @@ class Get extends Action
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
             ->redirect($redirectSuccess);
-    }
-
-    /**
-     * Whether the installation is one the authorizing GitHub user can access.
-     */
-    private function canAccess(Client $client, string $accessToken, string $providerInstallationId): bool
-    {
-        $factory = new RequestFactory();
-        $page = 1;
-
-        do {
-            try {
-                $response = $client->sendRequest($factory->query(Method::GET, 'https://api.github.com/user/installations', [
-                    'per_page' => 100,
-                    'page' => $page,
-                ], [
-                    Header::ACCEPT => 'application/vnd.github+json',
-                    Header::AUTHORIZATION => 'Bearer ' . $accessToken,
-                    Header::USER_AGENT => 'Appwrite',
-                ]));
-            } catch (ClientExceptionInterface) {
-                return false;
-            }
-
-            if ($response->getStatusCode() !== 200) {
-                return false;
-            }
-
-            $body = \json_decode((string) $response->getBody(), true);
-            $installations = \is_array($body['installations'] ?? null) ? $body['installations'] : [];
-
-            foreach ($installations as $installation) {
-                if ((string) ($installation['id'] ?? '') === $providerInstallationId) {
-                    return true;
-                }
-            }
-
-            $page++;
-        } while (\count($installations) === 100);
-
-        return false;
     }
 
     /**
