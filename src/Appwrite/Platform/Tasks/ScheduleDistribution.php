@@ -23,8 +23,10 @@ use Utopia\Telemetry\Adapter as Telemetry;
 
 /**
  * Enqueues a reconcile of every in-flight Distribution build and active
- * submission in the region on its row's interval. Builds and submissions are
- * read from `schedules` by one scheduler each, with its own claim.
+ * submission, and a renewal check of every signing identity with an expiry,
+ * in the region on its row's interval. Builds, submissions and signing
+ * identities are read from `schedules` by one scheduler each, with its own
+ * claim.
  */
 class ScheduleDistribution extends Action
 {
@@ -38,6 +40,8 @@ class ScheduleDistribution extends Action
 
     private const string SUBMISSIONS = 'submissions';
 
+    private const string IDENTITIES = 'identities';
+
     public static function getName(): string
     {
         return 'schedule-distribution';
@@ -46,7 +50,7 @@ class ScheduleDistribution extends Action
     public function __construct()
     {
         $this
-            ->desc('Schedule reconciliation of in-flight Distribution builds and submissions')
+            ->desc('Schedule reconciliation of in-flight Distribution builds and submissions, and signing identity renewal')
             ->inject('publisherForDistributionBuilds')
             ->inject('publisherForDistributionSubmissions')
             ->inject('dbForPlatform')
@@ -65,6 +69,7 @@ class ScheduleDistribution extends Action
         $loops = [
             fn () => $this->builds($publisherForDistributionBuilds, $dbForPlatform, $telemetry, $pools),
             fn () => $this->submissions($publisherForDistributionSubmissions, $dbForPlatform, $telemetry, $pools),
+            fn () => $this->identities($publisherForDistributionSubmissions, $dbForPlatform, $telemetry, $pools),
         ];
 
         $group = new WaitGroup();
@@ -109,6 +114,21 @@ class ScheduleDistribution extends Action
             fn (Occurrence $occurrence): bool => $publisherForDistributionSubmissions->enqueue(new DistributionSubmissionMessage(
                 project: $occurrence->payload['project'],
                 action: DistributionSubmissionAction::Reconcile,
+                id: $occurrence->payload['id'],
+            )) !== false,
+        );
+    }
+
+    public function identities(DistributionSubmissionPublisher $publisherForDistributionSubmissions, Database $dbForPlatform, Telemetry $telemetry, Group $pools): void
+    {
+        $this->run(
+            self::IDENTITIES,
+            new Source\DistributionSigningIdentities($dbForPlatform),
+            $telemetry,
+            $pools,
+            fn (Occurrence $occurrence): bool => $publisherForDistributionSubmissions->enqueue(new DistributionSubmissionMessage(
+                project: $occurrence->payload['project'],
+                action: DistributionSubmissionAction::Renew,
                 id: $occurrence->payload['id'],
             )) !== false,
         );

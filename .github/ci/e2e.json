@@ -419,6 +419,7 @@
         "tests/resources/distribution/",
         "src/Appwrite/Schedule/Source/DistributionBuilds.php",
         "src/Appwrite/Schedule/Source/DistributionSubmissions.php",
+        "src/Appwrite/Schedule/Source/DistributionSigningIdentities.php",
         "src/Appwrite/Platform/Tasks/ScheduleDistribution.php",
         "src/Appwrite/Platform/Modules/VCS/Http/Installations/",
         "src/Appwrite/Platform/Modules/VCS/Http/GitHub/Events/",

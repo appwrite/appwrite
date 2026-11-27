@@ -26,6 +26,7 @@ class XList extends Action
     private const array HIDDEN = [
         SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_BUILD,
         SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_SUBMISSION,
+        SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_SIGNING_IDENTITY,
     ];
 
     public static function getName(): string

@@ -30,7 +30,7 @@ class Schedule extends Action
     public function __construct()
     {
         $this
-            ->desc('Run the function, execution, message, alert rule, distribution reconcile, project maintenance and, when self-hosted, resource stats schedulers in one process')
+            ->desc('Run the function, execution, message, alert rule, distribution reconcile and renewal, project maintenance and, when self-hosted, resource stats schedulers in one process')
             ->inject('publisherForFunctions')
             ->inject('publisherForMessaging')
             ->inject('getIsResourceBlocked')
@@ -135,6 +135,7 @@ class Schedule extends Action
         $this->loop(ScheduleAlerts::getName(), fn () => (new ScheduleAlerts())->action($publisherForAlerts, $dbForPlatform, $telemetry, $pools));
         $this->loop(ScheduleDistribution::getName() . ':builds', fn () => (new ScheduleDistribution())->builds($publisherForDistributionBuilds, $dbForPlatform, $telemetry, $pools));
         $this->loop(ScheduleDistribution::getName() . ':submissions', fn () => (new ScheduleDistribution())->submissions($publisherForDistributionSubmissions, $dbForPlatform, $telemetry, $pools));
+        $this->loop(ScheduleDistribution::getName() . ':identities', fn () => (new ScheduleDistribution())->identities($publisherForDistributionSubmissions, $dbForPlatform, $telemetry, $pools));
         foreach ($cycles as [$cohort, $cycle]) {
             $this->loop(ScheduleMaintenance::getName() . ':' . $cohort->value, fn () => (new ScheduleMaintenance())->run(ScheduleMaintenance::loop($cohort, $cycle, $publisherForMaintenance, $telemetry), $cohort, $pools));
         }

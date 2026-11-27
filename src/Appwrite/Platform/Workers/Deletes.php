@@ -609,8 +609,8 @@ class Deletes extends Action
                     return;
                 }
 
-                // Stopped once their artifact, build or submission settles; the next write recreates the row.
-                if (\in_array($resourceType, [SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_BUILD, SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_SUBMISSION], true)) {
+                // Stopped once their artifact, build or submission settles or their signing identity expires; the next write recreates the row.
+                if (\in_array($resourceType, [SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_BUILD, SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_SUBMISSION, SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_SIGNING_IDENTITY], true)) {
                     $dbForPlatform->deleteDocument('schedules', $document->getId());
                     Console::success('Deleting schedule for ' . $resourceType . ' ' . $resourceId);
                     return;

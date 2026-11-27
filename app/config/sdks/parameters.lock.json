@@ -2033,7 +2033,9 @@
             "name",
             "certificate",
             "password",
-            "profiles"
+            "profiles",
+            "connectionId",
+            "identifiers"
         ],
         "distribution.createListing": [
             "appId",
@@ -6973,7 +6975,9 @@
             "name",
             "certificate",
             "password",
-            "profiles"
+            "profiles",
+            "connectionId",
+            "identifiers"
         ],
         "distribution.createListing": [
             "appId",

@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Distribution\Workers;
 
 use Appwrite\Distribution\Listings;
+use Appwrite\Distribution\Provisioning;
 use Appwrite\Distribution\Schedules;
 use Appwrite\Distribution\Stores;
 use Appwrite\Distribution\Submission\Status;
@@ -21,9 +22,13 @@ use Appwrite\Extend\Exception;
 use Appwrite\Usage\Context as UsageContext;
 use Appwrite\Usage\Distribution as DistributionUsage;
 use Appwrite\Utopia\Response\Model\DistributionRelease as ReleaseModel;
+use Appwrite\Utopia\Response\Model\DistributionSigningIdentity as SigningIdentityModel;
 use Appwrite\Utopia\Response\Model\DistributionSubmission as SubmissionModel;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Distribution\Exception as StoreException;
+use Utopia\Distribution\Store;
+use Utopia\Lock\Distributed;
 use Utopia\Lock\Exception\Contention;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
@@ -84,6 +89,12 @@ class Submissions extends Action
         }
 
         $payload = DistributionSubmissionMessage::fromArray($message->getPayload());
+
+        if ($payload->action === DistributionSubmissionAction::Renew) {
+            $this->renew($payload->id, $project, $dbForProject, $dbForPlatform, $distributionStores, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $locks);
+            return;
+        }
+
         Span::add('submission.id', $payload->id);
         Span::add('submission.action', $payload->action->value);
 
@@ -376,5 +387,113 @@ class Submissions extends Action
         $retryAt = $submission->getAttribute('retryAt');
 
         return empty($retryAt) || new \DateTimeImmutable($retryAt) <= new \DateTimeImmutable();
+    }
+
+    /**
+     * Keeps a signing identity's status in step with its expiry and, for a
+     * managed iOS identity, regenerates the profiles about to expire. A
+     * failed renewal is recorded and retried as `Provisioning::interval()`
+     * backs off.
+     */
+    private function renew(
+        string $signingIdentityId,
+        Document $project,
+        Database $dbForProject,
+        Database $dbForPlatform,
+        Stores $distributionStores,
+        Event $queueForEvents,
+        Webhook $queueForWebhooks,
+        FunctionPublisher $publisherForFunctions,
+        Realtime $queueForRealtime,
+        callable $locks,
+    ): void {
+        Span::add('signing_identity.id', $signingIdentityId);
+
+        $schedules = new Schedules($dbForPlatform);
+        $provisioning = new Provisioning($dbForProject);
+        $identity = $dbForProject->getDocument('distributionSigningIdentities', $signingIdentityId);
+        $now = new \DateTimeImmutable();
+        $current = $identity;
+
+        if (!$identity->isEmpty() && Provisioning::interval($identity, $now) === Provisioning::RENEWING_MINUTES) {
+            $current = $this->provision($provisioning, $identity, $dbForProject, $distributionStores, $locks);
+        }
+
+        if ($current->isEmpty()) {
+            $schedules->stop($project, SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_SIGNING_IDENTITY, $signingIdentityId);
+            return;
+        }
+
+        $current = $provisioning->track($current, $now);
+
+        if ($current->getAttribute('status') !== $identity->getAttribute('status') || $current->getAttribute('expiresAt') !== $identity->getAttribute('expiresAt')) {
+            $this->publish($queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $project, 'distributionSigningIdentities.[signingIdentityId].update', [
+                'signingIdentityId' => $current->getId(),
+            ], (new SigningIdentityModel())->payload($current), true);
+        }
+
+        $minutes = Provisioning::interval($current, $now);
+
+        if ($minutes === 0) {
+            $schedules->stop($project, SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_SIGNING_IDENTITY, $signingIdentityId);
+            return;
+        }
+
+        $schedules->write($project, SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_SIGNING_IDENTITY, $current, $minutes);
+    }
+
+    /**
+     * Renews the identity's expiring profiles under its team's lock, against
+     * the identity as it stands once the lock is held: a rotation may have
+     * replaced its profiles meanwhile.
+     */
+    private function provision(Provisioning $provisioning, Document $identity, Database $dbForProject, Stores $distributionStores, callable $locks): Document
+    {
+        try {
+            return $locks(Provisioning::lock((string) $identity->getAttribute('teamId', '')), self::LOCK_TTL, function (Distributed $lock) use ($provisioning, $identity, $dbForProject, $distributionStores): Document {
+                $current = $dbForProject->getDocument('distributionSigningIdentities', $identity->getId());
+
+                if ($current->isEmpty() || Provisioning::interval($current, new \DateTimeImmutable()) !== Provisioning::RENEWING_MINUTES) {
+                    return $current;
+                }
+
+                try {
+                    return $provisioning->renew($this->store($current, $dbForProject, $distributionStores), $lock, $current);
+                } catch (Exception $error) {
+                    Span::add('signing_identity.error', $error->getMessage());
+
+                    return $provisioning->fail($lock, $current, $error->getType());
+                } catch (StoreException $error) {
+                    Span::add('signing_identity.error', $error->getMessage());
+
+                    return $provisioning->fail($lock, $current, Provisioning::failure($error)->getType());
+                }
+            }, self::LOCK_TIMEOUT);
+        } catch (Contention) {
+            Span::add('signing_identity.contended', true);
+        }
+
+        return $dbForProject->getDocument('distributionSigningIdentities', $identity->getId());
+    }
+
+    /**
+     * The Apple store of the identity's connection, which must be the one
+     * the identity was created with.
+     */
+    private function store(Document $identity, Database $dbForProject, Stores $distributionStores): Store\Apple
+    {
+        $connection = $dbForProject->getDocument('distributionConnections', (string) $identity->getAttribute('connectionId', ''));
+
+        if ($connection->isEmpty() || (string) $connection->getSequence() !== (string) $identity->getAttribute('connectionInternalId', '')) {
+            throw new Exception(Exception::DISTRIBUTION_CONNECTION_NOT_FOUND);
+        }
+
+        $store = $distributionStores->connection($connection);
+
+        if (!$store instanceof Store\Apple) {
+            throw new Exception(Exception::DISTRIBUTION_CONNECTION_INVALID, 'A managed iOS signing identity needs an App Store Connect connection.');
+        }
+
+        return $store;
     }
 }

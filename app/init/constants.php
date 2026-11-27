@@ -672,6 +672,7 @@ const SCHEDULE_RESOURCE_TYPE_MONITOR = 'monitor';
 const SCHEDULE_RESOURCE_TYPE_ESCALATION = 'escalation';
 const SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_BUILD = 'distributionBuild';
 const SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_SUBMISSION = 'distributionSubmission';
+const SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_SIGNING_IDENTITY = 'distributionSigningIdentity';
 
 // Monitor types, the kind of check a monitor runs; see `types` in app/config/alerts.php
 const MONITOR_TYPE_USAGE = 'usage';

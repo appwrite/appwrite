@@ -3,6 +3,8 @@
 namespace Appwrite\Platform\Modules\Distribution\Http\Distribution\SigningIdentities\Android;
 
 use Appwrite\Distribution\Platform;
+use Appwrite\Distribution\Provisioning;
+use Appwrite\Distribution\Schedules;
 use Appwrite\Distribution\Signing\Mode;
 use Appwrite\Distribution\Signing\Status;
 use Appwrite\Event\Event;
@@ -82,6 +84,8 @@ class Create extends Action
             ->param('keyPassword', '', new Text(0, 0), 'Password of the upload key. Must equal the keystore password for a PKCS#12 keystore. Leave empty for a managed keystore.', true)
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('dbForPlatform')
+            ->inject('project')
             ->inject('queueForEvents')
             ->callback($this->action(...));
     }
@@ -98,6 +102,8 @@ class Create extends Action
         string $keyPassword,
         Response $response,
         Database $dbForProject,
+        Database $dbForPlatform,
+        Document $project,
         Event $queueForEvents,
     ): void {
         $signingIdentityId = $signingIdentityId === 'unique()' ? Id::unique() : $signingIdentityId;
@@ -140,6 +146,10 @@ class Create extends Action
             throw new Exception(Exception::DISTRIBUTION_SIGNING_IDENTITY_ALREADY_EXISTS);
         } catch (Structure $error) {
             throw new Exception(Exception::DISTRIBUTION_SIGNING_IDENTITY_INVALID, $error->getMessage());
+        }
+
+        if (!empty($signingIdentity->getAttribute('expiresAt'))) {
+            (new Schedules($dbForPlatform))->write($project, SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_SIGNING_IDENTITY, $signingIdentity, Provisioning::ACTIVE_MINUTES);
         }
 
         $queueForEvents->setParam('signingIdentityId', $signingIdentity->getId());
