@@ -34,7 +34,7 @@ If you leave `specification` out when creating a database, it lands on the share
 
 A dedicated database can move to a larger or a smaller specification with `update`, or from the **Specification** section of its settings in the Console. Moving to a smaller tier keeps the storage the database already has, because storage never shrinks. Storage above the new tier's included amount is billed per GB each month at that tier's storage overage rate, and shows on your invoice as additional storage. A dedicated database cannot move back to the shared pool.
 
-Dedicated databases also support point-in-time recovery on [TablesDB](/docs/products/databases/tablesdb/databases#pitr), [DocumentsDB](/docs/products/databases/documentsdb/databases#pitr), and [VectorsDB](/docs/products/databases/vectorsdb/databases#pitr). It is on by default and keeps 7 days of changes.
+Dedicated databases also support point-in-time recovery on [TablesDB](/docs/products/databases/tablesdb/databases#pitr), [DocumentsDB](/docs/products/databases/documentsdb/databases#pitr), and [VectorsDB](/docs/products/databases/vectorsdb/databases#pitr). A database created through the API with a dedicated specification has it on by default, keeping 7 days of changes.
 
 # Native databases {% #native-databases %}
 

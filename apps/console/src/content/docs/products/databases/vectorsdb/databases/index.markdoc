@@ -977,10 +977,14 @@ A dedicated VectorsDB database records its changes continuously, so you can rest
 
 | Parameter | Description |
 | --- | --- |
-| `pitr` | Turns point-in-time recovery on or off. Defaults to `true` on a dedicated database. |
+| `pitr` | Turns point-in-time recovery on or off. Defaults to `true` on `create` with a dedicated specification. |
 | `pitrRetentionDays` | How many days of changes to keep, from 1 to 35 and up to your plan's maximum. Defaults to 7. Recovery points older than this are deleted. |
 
-Pass both on `create` to choose them up front, or on `update` to change them later. A PITR change reloads the database's configuration, so the database keeps serving and is never restarted. In the Console, open the database's **Settings** and select **Point-in-time recovery**.
+Pass both on `create` to choose them up front, or on `update` to change them later. A database created through the API with a dedicated specification and no `pitr` starts with PITR on and 7 days of retention; the Console's create wizard leaves PITR off unless you turn it on.
+
+`update` writes `name` and `enabled` on every call, and `enabled` defaults to `true`, so pass the database's current values alongside the PITR parameters. Leaving `enabled` out turns a disabled database back on.
+
+A PITR change reloads the database's configuration, so the database keeps serving and is never restarted. In the Console, open the database's **Settings** and select **Point-in-time recovery**.
 
 PITR is billed as a share of the specification price. `listSpecifications` returns that share as `pitrRate`.
 
@@ -998,6 +1002,7 @@ const vectorsDB = new sdk.VectorsDB(client);
 const result = await vectorsDB.update({
     databaseId: '<DATABASE_ID>',
     name: '<NAME>',
+    enabled: true,
     pitr: true,
     pitrRetentionDays: 14
 });
@@ -1016,6 +1021,7 @@ vectors_db = VectorsDB(client)
 result = vectors_db.update(
     database_id = '<DATABASE_ID>',
     name = '<NAME>',
+    enabled = True,
     pitr = True,
     pitr_retention_days = 14
 )
@@ -1036,6 +1042,7 @@ $vectorsDB = new VectorsDB($client);
 $result = $vectorsDB->update(
     databaseId: '<DATABASE_ID>',
     name: '<NAME>',
+    enabled: true,
     pitr: true,
     pitrRetentionDays: 14
 );
