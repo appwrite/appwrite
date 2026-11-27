@@ -183,6 +183,9 @@ export const heSitesDictionary: Record<string, string> = {
   'Certificate generation failed': 'הנפקת התעודה נכשלה',
   'A DNS record has the wrong value or name. Open Records to see which one and what to change it to.':
     'לרשומת DNS יש ערך או שם שגויים. פתחו את הרשומות כדי לראות איזו רשומה ולמה לשנות אותה.',
+  Propagating: 'בהפצה',
+  "Some regions don't see your new record yet. Appwrite keeps checking, and you don't need to change anything.":
+    'חלק מהאזורים עדיין לא רואים את הרשומה החדשה. Appwrite ממשיך לבדוק, ואין צורך לשנות דבר.',
   'Waiting for DNS': 'ממתין ל-DNS',
   'Appwrite checks the DNS records every few minutes for 3 days after the domain is added. Use Check now to look again right away.':
     'Appwrite בודק את רשומות ה-DNS כל כמה דקות במשך 3 ימים לאחר הוספת הדומיין. לחצו על "בדוק עכשיו" כדי לבדוק מיד.',
@@ -677,6 +680,21 @@ export const heSitesDictionary: Record<string, string> = {
     'בשלב הבא Appwrite יפיק את תעודת ה-SSL.',
   'Not detected yet': 'עדיין אין רשומה',
   'Not detected': 'אין רשומה',
+  '{n} of {total} regions see your record':
+    '{n} מתוך {total} אזורים רואים את הרשומה שלכם',
+  'Sees your record': 'רואה את הרשומה',
+  'Not there yet': 'עדיין לא רואה את הרשומה',
+  'Lookup failed': 'הבדיקה נכשלה',
+  'lookup failed': 'הבדיקה נכשלה',
+  'sees it': 'רואה אותה',
+  'not visible yet': 'עדיין לא נראית',
+  'still sees {value}': 'עדיין רואה {value}',
+  'DNS is still propagating': 'ה-DNS עדיין בהפצה',
+  '{n} of {total} regions see your new record.':
+    '{n} מתוך {total} אזורים רואים את הרשומה החדשה שלכם.',
+  "This usually finishes within an hour, and Appwrite keeps checking. You don't need to change anything.":
+    'בדרך כלל זה מסתיים תוך שעה, ו-Appwrite ממשיך לבדוק. אין צורך לשנות דבר.',
+  'Checked from {n} regions': 'נבדק מ-{n} אזורים',
   'Tracked pageviews and events are billed as analytics usage, which adds up quickly on a high-traffic site.':
     'צפיות בדפים ואירועים שנמדדים מחויבים כשימוש באנליטיקה, והעלות מצטברת מהר באתר עם תנועה גבוהה.',
   'If your site sets a Content-Security-Policy, in a header or a <meta> tag, add these sources. Otherwise the browser blocks the tracker and no data is recorded.':
