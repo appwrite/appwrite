@@ -689,6 +689,7 @@
         "POST /v1/distribution/events",
         "POST /v1/distribution/signing-identities/android",
         "POST /v1/distribution/signing-identities/ios",
+        "POST /v1/distribution/webhooks/apple/:connectionId/:targetId",
         "POST /v1/documentsdb",
         "POST /v1/documentsdb/:databaseId/collections",
         "POST /v1/documentsdb/:databaseId/collections/:collectionId/documents",

@@ -4,8 +4,10 @@ namespace Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Targets;
 
 use Appwrite\Distribution\Builds;
 use Appwrite\Distribution\Platform;
+use Appwrite\Distribution\Stores;
 use Appwrite\Distribution\Submission\Status as SubmissionStatus;
 use Appwrite\Distribution\Submissions;
+use Appwrite\Distribution\Webhooks;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
@@ -69,6 +71,7 @@ class Delete extends Action
             ->inject('project')
             ->inject('queueForEvents')
             ->inject('deviceForDistribution')
+            ->inject('distributionStores')
             ->callback($this->action(...));
     }
 
@@ -80,6 +83,7 @@ class Delete extends Action
         Document $project,
         Event $queueForEvents,
         Device $deviceForDistribution,
+        Stores $distributionStores,
     ): void {
         $app = $dbForProject->getDocument('distributionApps', $appId);
 
@@ -102,6 +106,8 @@ class Delete extends Action
         }
 
         $this->deleteCache($deviceForDistribution, $project, $target);
+
+        (new Webhooks($dbForProject, $distributionStores))->unregister($target);
 
         $queueForEvents
             ->setParam('appId', $app->getId())

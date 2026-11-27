@@ -41,6 +41,8 @@ use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\ReviewSubmission
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\Seeds\Apps\Create as CreateDistributionAppleSeedApp;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\Seeds\BetaReviews\Create as CreateDistributionAppleSeedBetaReview;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\Seeds\Builds\Create as CreateDistributionAppleSeedBuild;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\Seeds\Deliveries\Create as CreateDistributionAppleSeedDelivery;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\Seeds\Deliveries\XList as ListDistributionAppleSeedDeliveries;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\Seeds\Groups\Create as CreateDistributionAppleSeedGroup;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\Seeds\Keys\Create as CreateDistributionAppleSeedKey;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\Seeds\Reviews\Create as CreateDistributionAppleSeedReview;
@@ -140,6 +142,8 @@ class Http extends Service
         $this->addAction('listDistributionAppleWebhooks', ListDistributionAppleWebhooks::class);
         $this->addAction('deleteDistributionAppleWebhook', DeleteDistributionAppleWebhook::class);
         $this->addAction('createDistributionAppleWebhookPing', CreateDistributionAppleWebhookPing::class);
+        $this->addAction('createDistributionAppleSeedDelivery', CreateDistributionAppleSeedDelivery::class);
+        $this->addAction('listDistributionAppleSeedDeliveries', ListDistributionAppleSeedDeliveries::class);
         $this->addAction('createDistributionAppleSeedUpload', CreateDistributionAppleSeedUpload::class);
         $this->addAction('createDistributionAppleBuildUpload', CreateDistributionAppleBuildUpload::class);
         $this->addAction('getDistributionAppleBuildUpload', GetDistributionAppleBuildUpload::class);

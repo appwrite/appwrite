@@ -454,6 +454,20 @@ abstract class Base extends Action
      */
     protected function post(Cache $cache, Lock $lock, Client $client, array $webhook, string $eventType, array $data): void
     {
+        $this->send($cache, $lock, $client, $webhook, $eventType, ['data' => [
+            'type' => \lcfirst(\str_replace('_', '', \ucwords(\strtolower($eventType), '_'))),
+            'id' => $this->uuid(),
+            'version' => 1,
+        ] + $data]);
+    }
+
+    /**
+     * @param array<string, mixed> $webhook
+     * @param array<string, mixed> $payload
+     * @return array<string, mixed>
+     */
+    protected function send(Cache $cache, Lock $lock, Client $client, array $webhook, string $eventType, array $payload): array
+    {
         $delivery = [
             'id' => $this->uuid(),
             'eventType' => $eventType,
@@ -465,11 +479,7 @@ abstract class Base extends Action
         ];
 
         try {
-            $body = \json_encode(['data' => [
-                'type' => \lcfirst(\str_replace('_', '', \ucwords(\strtolower($eventType), '_'))),
-                'id' => $this->uuid(),
-                'version' => 1,
-            ] + $data], JSON_THROW_ON_ERROR);
+            $body = \json_encode($payload, JSON_THROW_ON_ERROR);
 
             $request = (new Factory())->body(Method::POST, $webhook['url'], $body, ContentType::JSON, [
                 self::SIGNATURE_HEADER => self::SIGNATURE_PREFIX . \hash_hmac('sha256', $body, $webhook['secret']),
@@ -488,12 +498,23 @@ abstract class Base extends Action
         }
 
         $this->locked($lock, self::CACHE_DELIVERIES . $webhook['id'], function () use ($cache, $webhook, $delivery): void {
-            $deliveries = $cache->load(self::CACHE_DELIVERIES . $webhook['id'], self::TTL);
-            $deliveries = \is_array($deliveries) ? $deliveries : [];
+            $deliveries = $this->deliveries($cache, $webhook['id']);
             $deliveries[] = $delivery;
 
             $cache->save(self::CACHE_DELIVERIES . $webhook['id'], $deliveries, '', self::TTL);
         });
+
+        return $delivery;
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    protected function deliveries(Cache $cache, string $webhookId): array
+    {
+        $deliveries = $cache->load(self::CACHE_DELIVERIES . $webhookId, self::TTL);
+
+        return \is_array($deliveries) ? \array_values($deliveries) : [];
     }
 
     protected function uuid(): string

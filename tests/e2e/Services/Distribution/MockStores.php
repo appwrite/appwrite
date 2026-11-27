@@ -5,7 +5,12 @@ namespace Tests\E2E\Services\Distribution;
 use Appwrite\ID;
 use CURLFile;
 use Tests\E2E\Client;
+use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
+use Utopia\Client\Client as HttpClient;
+use Utopia\Distribution\Credential;
+use Utopia\Distribution\JWT;
 use Utopia\Distribution\Signing\Keystore;
+use Utopia\Distribution\Store;
 
 trait MockStores
 {
@@ -172,6 +177,50 @@ trait MockStores
             'state' => $state,
         ]);
         $this->assertSame(201, $seeded['headers']['status-code'], 'Seeding an App Store review requires _APP_ENV=development.');
+    }
+
+    protected function seedAppleUpload(string $appId, string $build, string $state): void
+    {
+        $seeded = $this->client->call(Client::METHOD_POST, '/mock/distribution/apple/seeds/uploads', $this->mockHeaders(), [
+            'appId' => $appId,
+            'build' => $build,
+            'state' => $state,
+        ]);
+        $this->assertSame(201, $seeded['headers']['status-code'], 'Seeding an App Store Connect upload outcome requires _APP_ENV=development.');
+    }
+
+    /**
+     * @param array{keyId: string, issuerId: string, privateKey: string} $key
+     */
+    protected function answerAppleCompliance(array $key, string $buildId): void
+    {
+        $issued = \time() - 60;
+        $token = (new JWT($key['privateKey'], JWT::ES256, $key['keyId']))->encode([
+            'iss' => $key['issuerId'],
+            'iat' => $issued,
+            'exp' => $issued + Store\Apple::TOKEN_LIFETIME,
+            'aud' => Store\Apple::AUDIENCE,
+        ]);
+
+        $answered = $this->client->call(Client::METHOD_PATCH, '/mock/distribution/apple/v1/builds/' . $buildId, [
+            'content-type' => 'application/json',
+            'authorization' => 'Bearer ' . $token,
+        ], [
+            'data' => ['type' => 'builds', 'id' => $buildId, 'attributes' => ['usesNonExemptEncryption' => false]],
+        ]);
+        $this->assertSame(200, $answered['headers']['status-code'], 'Answering export compliance on an App Store Connect build requires _APP_ENV=development.');
+    }
+
+    /**
+     * @param array{keyId: string, issuerId: string, privateKey: string} $key
+     */
+    protected function appleStore(array $key): Store\Apple
+    {
+        return new Store\Apple(
+            new Credential\Apple($key['keyId'], $key['issuerId'], $key['privateKey']),
+            new HttpClient(new CurlAdapter()),
+            $this->client->getEndpoint() . '/mock/distribution/apple',
+        );
     }
 
     /**
