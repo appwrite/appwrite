@@ -50,6 +50,7 @@ return [
         'X-Requested-With',
         'X-Forwarded-For',
         'X-Forwarded-User-Agent',
+        'X-Forwarded-IP',
     ],
     'exposedHeaders' => [
         'X-Appwrite-Session',

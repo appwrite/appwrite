@@ -1,11 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { pageTitle } from '@/lib/utils/page-title'
 import {
-  fetchOrganizationMemberships,
+  organizationMembershipsQueryOptions,
   organizationsQueryOptions,
 } from '@/lib/react-query/hooks'
-
-const MEMBERSHIPS_PER_PAGE = 25
+import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 
 export const Route = createFileRoute(
   '/_public/organizations/$orgId/settings/members',
@@ -17,23 +16,20 @@ export const Route = createFileRoute(
     const { orgId } = params
     const { queryClient } = context
 
-    await queryClient.prefetchQuery(organizationsQueryOptions())
-
-    if (orgId) {
-      await queryClient.fetchQuery({
-        queryKey: [
-          'memberships',
-          'organization',
-          orgId,
-          0,
-          MEMBERSHIPS_PER_PAGE,
-          '',
-        ],
-        queryFn: () =>
-          fetchOrganizationMemberships(orgId, 0, MEMBERSHIPS_PER_PAGE, ''),
-        staleTime: 30 * 1000,
-      })
-    }
+    // The first page OrgOverview shows: the org layout has usually loaded it.
+    await Promise.all([
+      queryClient.prefetchQuery(organizationsQueryOptions()),
+      orgId
+        ? queryClient.ensureQueryData(
+            organizationMembershipsQueryOptions(
+              orgId,
+              0,
+              GRID_DEFAULT_PAGE_SIZE,
+              '',
+            ),
+          )
+        : undefined,
+    ])
   },
   component: MembersPage,
 })

@@ -9,7 +9,8 @@ export type InitGlobeArc = {
   endLat: number
   endLng: number
   arcAlt: number
-  color: string
+  /** One color, or several for a gradient along the arc. */
+  color: string | string[]
 }
 
 export type InitGlobeMarker = {
@@ -46,7 +47,7 @@ function pushArc(
   end: { lat: number; lng: number },
   arcAlt: number,
   colorIndex: number,
-  arcColors: string[],
+  arcColors: Array<string | string[]>,
 ) {
   arcs.push({
     order,
@@ -72,12 +73,20 @@ function buildMarkerVisualWeights(count: number, maxCount: number) {
   }
 }
 
-/** Build globe arcs and country markers from live presence. No data → empty. */
+/**
+ * Build globe arcs and country markers from live presence. No data → empty.
+ * With a `trail` (Init 5's peach, pink and violet), arcs run as light trails:
+ * a gradient along each arc, alternating direction.
+ */
 export function buildInitGlobePresenceData(
   countries: InitCommunityCountry[],
   brandColor = 'rgb(253, 54, 110)',
+  trail?: readonly [string, string, string],
 ): InitGlobePresenceData {
-  const arcColors = buildArcColors(brandColor)
+  const markerColors = buildArcColors(brandColor)
+  const arcColors: Array<string | string[]> = trail
+    ? [[...trail], [...trail].reverse()]
+    : markerColors
   const positions = countries
     .map((country) => {
       const point = toLatLng(country.code)
@@ -100,7 +109,7 @@ export function buildInitGlobePresenceData(
     return {
       lat: position.lat,
       lng: position.lng,
-      color: arcColors[index % arcColors.length],
+      color: markerColors[index % markerColors.length],
       count: position.count,
       pointRadius,
       ringMaxRadius,

@@ -559,6 +559,10 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Search videos by name or ID...': 'חיפוש סרטונים לפי שם או מזהה…',
   'Search rows by ID...': 'חיפוש שורות לפי מזהה…',
   'Search sites...': 'חיפוש אתרים…',
+  'Create a function to protect it with Firewall rules.':
+    'צרו פונקציה כדי להגן עליה בכללי חומת אש.',
+  'Create a site to protect it with Firewall rules.':
+    'צרו אתר כדי להגן עליו בכללי חומת אש.',
   'Search sites by name or ID...': 'חיפוש אתרים לפי שם או מזהה…',
   'Search tables by name or ID...': 'חיפוש טבלאות לפי שם או מזהה…',
   'Search teams...': 'חיפוש צוותים…',
@@ -1109,12 +1113,7 @@ export const heSharedUiDictionary: Record<string, string> = {
     'שרת SMTP מותאם אישית לאימיילים יוצאים',
   Advisor: 'יועץ',
   Firewall: 'חומת אש',
-  'Settings · Firewall': 'הגדרות · חומת אש',
-  'Firewall has moved': 'חומת האש עברה למקום אחר',
-  'Firewall rules now sit next to what they protect: a Firewall tab on each function and site, and one in project settings for the API.':
-    'כללי חומת האש נמצאים עכשיו ליד מה שהם מגינים עליו: לשונית חומת אש בכל פונקציה ובכל אתר, ואחת בהגדרות הפרויקט עבור ה-API.',
-  'Got it': 'הבנתי',
-  'Open API firewall': 'פתיחת חומת האש של ה-API',
+  'Security · Firewall rules': 'אבטחה · כללי חומת אש',
   // Function and site overview cards, filter chips
   '1 rule': 'כלל אחד',
   '{count} rules': '{count} כללים',
@@ -1421,6 +1420,32 @@ export const heSharedUiDictionary: Record<string, string> = {
   'App key copied': 'מפתח האפליקציה הועתק',
   'Load more': 'טעינת עוד',
   'Loading more failed. Try again.': 'טעינת פריטים נוספים נכשלה. נסו שוב.',
+  'Browse Init events': 'עיון באירועי Init',
+  'Switch between past and upcoming Init launch weeks.':
+    'מעבר בין שבועות השקה קודמים ועתידיים של Init.',
+  Past: 'עבר',
+  Upcoming: 'בקרוב',
+  'AUGUST 31 - SEPTEMBER 4': '31 באוגוסט - 4 בספטמבר',
+  'NOVEMBER 30 - DECEMBER 4': '30 בנובמבר - 4 בדצמבר',
+  'Starts in': 'מתחיל בעוד',
+  'Join us on our biggest Init ever. 5 days, 5 new product launches. It will be electric.':
+    'הצטרפו ל-Init הגדול ביותר שלנו אי פעם. 5 ימים, 5 השקות מוצר חדשות. זה הולך להיות מחשמל.',
+  "Init 5 is live. Catch today's reveal and join the launch event on Discord.":
+    'Init 5 באוויר. אל תפספסו את החשיפה של היום והצטרפו לאירוע ההשקה ב-Discord.',
+  'Init 5 is a wrap. Explore every launch from the week.':
+    'Init 5 הסתיים. גלו את כל ההשקות של השבוע.',
+  'Init 5 launch event': 'אירוע ההשקה של Init 5',
+  'Introducing Appwrite Analytics': 'מציגים את Appwrite Analytics',
+  'Introducing Appwrite Videos': 'מציגים את Appwrite Videos',
+  'Introducing Appwrite Zero': 'מציגים את Appwrite Zero',
+  'Introducing Appwrite Monitors & Appwrite Beep':
+    'מציגים את Appwrite Monitors ואת Appwrite Beep',
+  'Introducing Appwrite Reviews': 'מציגים את Appwrite Reviews',
+  'Ask us anything': 'שאלו אותנו הכול',
+  'Bring your questions about every Init 5 launch. The team answers live on r/appwrite.':
+    'הביאו את השאלות שלכם על כל השקה של Init 5. הצוות עונה בשידור חי ב-r/appwrite.',
+  'The team answered your questions about every Init 5 launch on r/appwrite.':
+    'הצוות ענה על השאלות שלכם על כל השקה של Init 5 ב-r/appwrite.',
   Previews: 'תצוגות מקדימות',
   'Early access. Saved in this browser.': 'גישה מוקדמת. נשמר בדפדפן הזה.',
   'Appwrite Analytics': 'Appwrite Analytics',
@@ -1428,12 +1453,10 @@ export const heSharedUiDictionary: Record<string, string> = {
     'מעקב אחרי מבקרים, עמודים וקמפיינים.',
   'Appwrite Videos': 'Appwrite Videos',
   'Transcode, stream, and caption videos.': 'קידוד, הזרמה וכתוביות לסרטונים.',
-  'Project environments': 'סביבות פרויקט',
-  'Switch or clone staging and production.':
-    'מעבר או שכפול בין staging לפרודקשן.',
   'Repository not available': 'ה-repo לא זמין',
-  'This Git installation can no longer reach the repository. It may have been deleted, removed from the installation, or moved to another installation. Connect the repository again to keep deploying.':
-    'התקנת ה-Git הזו כבר לא מגיעה ל-repo. ייתכן שהוא נמחק, הוסר מההתקנה או הועבר להתקנה אחרת. חברו את ה-repo מחדש כדי להמשיך לפרוס.',
+  "This Git installation can no longer reach the repository. If it was removed from the installation's repository access, add it back with Update repository access. If it was deleted or moved, connect it again.":
+    'התקנת ה-Git הזו כבר לא מגיעה ל-repo. אם הוא הוסר מהרשאות הגישה ל-repos של ההתקנה, הוסיפו אותו חזרה דרך עדכון הגישה ל-repos. אם הוא נמחק או הועבר, חברו אותו מחדש.',
+  'Update repository access': 'עדכון הגישה ל-repos',
   // Halloween caution tape
   Caution: 'זהירות',
   'Spooky zone': 'אזור מפחיד',

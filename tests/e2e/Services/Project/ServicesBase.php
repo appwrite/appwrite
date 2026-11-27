@@ -3,6 +3,7 @@
 namespace Tests\E2E\Services\Project;
 
 use Tests\E2E\Client;
+use Utopia\Database\Id;
 
 trait ServicesBase
 {
@@ -99,6 +100,25 @@ trait ServicesBase
 
         $this->assertSame(403, $response['headers']['status-code']);
         $this->assertSame('general_service_disabled', $response['body']['type']);
+
+        // Cleanup
+        $this->updateServiceStatus('teams', true);
+    }
+
+    public function testDisabledTeamsBlocksTeamPhotoRoutes(): void
+    {
+        $this->updateServiceStatus('teams', false);
+
+        $path = '/avatars/teams/' . Id::unique() . '/photo';
+        foreach ([Client::METHOD_GET, Client::METHOD_PUT, Client::METHOD_DELETE] as $method) {
+            $response = $this->client->call($method, $path, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ]);
+
+            $this->assertSame(403, $response['headers']['status-code'], $method . ' ' . $path);
+            $this->assertSame('general_service_disabled', $response['body']['type'], $method . ' ' . $path);
+        }
 
         // Cleanup
         $this->updateServiceStatus('teams', true);

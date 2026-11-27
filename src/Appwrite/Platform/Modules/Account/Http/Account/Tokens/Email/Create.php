@@ -257,7 +257,7 @@ class Create extends Action
             'secret' => $proofForCode->hash($tokenSecret), // One way hash encryption to protect DB leak
             'expire' => $expire,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
-            'ip' => $request->getIP(),
+            'ip' => $request->getClientIP(),
         ]);
 
         $token->setAttribute('$permissions', [

@@ -1,6 +1,14 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { useLocation } from '@tanstack/react-router'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
@@ -20,13 +28,18 @@ import {
 } from '@/lib/layout/horizontal-resize'
 import { cn } from '@/lib/utils'
 import { AgentPanelContent } from './AgentChat'
-import { DocsPreviewContent } from './DocsPreview'
 import {
   useConsoleRightPane,
   type ConsoleRightPaneContent,
 } from './ConsoleRightPaneContext'
 
 export type { ConsoleRightPaneContent }
+
+// The docs reader brings the docs content, its navigation and the Markdoc
+// renderer. It loads when the pane first opens on docs, not with every page.
+const DocsPreviewContent = lazy(() =>
+  import('./DocsPreview').then((m) => ({ default: m.DocsPreviewContent })),
+)
 
 const AUTH_ROUTE_PATHNAMES = new Set([
   '/sign-in',
@@ -169,7 +182,9 @@ export function ConsoleRightPane() {
         />
 
         {displayContent === 'docs' ? (
-          <DocsPreviewContent />
+          <Suspense fallback={null}>
+            <DocsPreviewContent />
+          </Suspense>
         ) : (
           <AgentPanelContent />
         )}

@@ -80,6 +80,18 @@ function parseIdArray(value: unknown): string[] {
   )
 }
 
+/** Push image: API returns `{ bucketId, fileId, url }`; older messages may hold a `bucketId:fileId` string. */
+function parseMessagingPushImage(value: unknown): string {
+  if (typeof value === 'string') return value
+  if (value && typeof value === 'object') {
+    const { bucketId, fileId } = value as Record<string, unknown>
+    if (typeof bucketId === 'string' && typeof fileId === 'string') {
+      return `${bucketId}:${fileId}`
+    }
+  }
+  return ''
+}
+
 /** Email attachments: API may return `bucketId:fileId` strings or `{ bucketId, fileId }` objects. */
 function parseMessagingEmailAttachments(value: unknown): string[] {
   if (value == null) return []
@@ -1500,9 +1512,10 @@ export function View({
                             {t('Selected:')} {pushImage.name}
                           </p>
                         )}
-                        {!pushImage && message.data?.image && (
+                        {!pushImage && parseMessagingPushImage(message.data?.image) && (
                           <p className="mt-1.5 text-[12px] text-muted-foreground">
-                            {t('Current image:')} {message.data.image}
+                            {t('Current image:')}{' '}
+                            {parseMessagingPushImage(message.data?.image)}
                           </p>
                         )}
                       </div>

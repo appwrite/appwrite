@@ -51,7 +51,7 @@ Everything the Console does is available from a [server SDK](/docs/sdks#server) 
 | Step | Call | Notes |
 |------|------|-------|
 | 1. Upload the source | `storage.createFile()` | Any bucket. The file can stay private |
-| 2. Create the video | `videos.create({ bucketId, fileId, permissions })` | Set who can watch with [permissions](/docs/products/videos/permissions). Queues the timeline. Metadata fills in shortly after |
+| 2. Create the video | `videos.create({ videoId, bucketId, fileId, permissions })` | Set who can watch with [permissions](/docs/products/videos/permissions). Queues the timeline. Metadata fills in shortly after |
 | 3. Encode | `videos.createRendition({ videoId, profileId, output })` | Once per profile. Encoding runs in the background |
 | 4. Play | Master manifest URL | Build it from the video ID. See [Outputs](/docs/products/videos/outputs#master-manifest-urls) |
 

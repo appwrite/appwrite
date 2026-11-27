@@ -170,9 +170,15 @@ function marketingProductFooterLink(
 function getExpandedFooterGroups(
   marketing: boolean,
   footerCopy: ReturnType<typeof useI18n>['catalog']['app']['footer'],
-  options: { agent: boolean; isCloud: boolean; analytics: boolean; videos: boolean },
+  options: {
+    agent: boolean
+    isCloud: boolean
+    analytics: boolean
+    videos: boolean
+    zero: boolean
+  },
 ): readonly ExpandedFooterGroup[] {
-  const { agent, isCloud, analytics, videos } = options
+  const { agent, isCloud, analytics, videos, zero } = options
   return [
   {
     title: footerCopy.groups.quickStarts,
@@ -213,6 +219,10 @@ function getExpandedFooterGroups(
       productFooterLink(footerCopy.expanded.products.storage, '/products/storage', marketing, 'storage'),
       productFooterLink(footerCopy.expanded.products.functions, '/products/functions', marketing, 'functions'),
       productFooterLink(footerCopy.expanded.products.messaging, '/products/messaging', marketing, 'messaging'),
+      // Videos stays out until its flag is on, as in the header's Products menu.
+      ...(videos
+        ? [productFooterLink(footerCopy.expanded.products.videos, '/products/videos', marketing, 'videos')]
+        : []),
       productFooterLink(
         footerCopy.expanded.products.realtime,
         '/products/realtime',
@@ -231,6 +241,9 @@ function getExpandedFooterGroups(
               isNew: isProductNavItemNew('agent'),
             } satisfies FooterLink,
           ]
+        : []),
+      ...(zero
+        ? [productFooterLink(footerCopy.expanded.products.zero, '/zero', marketing, 'zero')]
         : []),
       productFooterLink(footerCopy.expanded.products.hosting, '/products/sites', marketing, 'sites'),
       ...(marketing || isCloud
@@ -468,7 +481,13 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
   const expandedFooterGroups = getExpandedFooterGroups(
     localMarketing,
     footerCopy,
-    { agent: features.agent, isCloud, analytics: features.analytics, videos: features.videos },
+    {
+      agent: features.agent,
+      isCloud,
+      analytics: features.analytics,
+      videos: features.videos,
+      zero: features.zero,
+    },
   )
 
   const resourceLinks = [

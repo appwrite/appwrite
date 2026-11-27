@@ -672,17 +672,11 @@ return [
             '$model' => Response::MODEL_ALERT,
             '$resource' => true,
             '$description' => 'This event triggers on any alert event.',
-            'firing' => [
+            'create' => [
                 '$description' => 'This event triggers when a monitor starts firing and opens an alert.',
             ],
-            'resolved' => [
-                '$description' => 'This event triggers when a monitor recovers and its alert resolves.',
-            ],
-            'acknowledged' => [
-                '$description' => 'This event triggers when a member acknowledges a firing alert.',
-            ],
-            'unacknowledged' => [
-                '$description' => 'This event triggers when a firing alert\'s acknowledgement is undone.',
+            'update' => [
+                '$description' => 'This event triggers when an alert resolves, is acknowledged, or its acknowledgement is undone. The alert\'s status and acknowledgedAt tell which.',
             ],
         ],
     ],

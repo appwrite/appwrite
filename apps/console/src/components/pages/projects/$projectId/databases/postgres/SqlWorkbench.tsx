@@ -190,6 +190,21 @@ export function SqlWorkbench({
     setCanRedo(false)
   }, [activeTabId])
 
+  // The SQL formatter loads on first use, so the editor can move on before it
+  // resolves. Apply the result only if the same tab still holds the same SQL.
+  const currentQueryRef = useRef({ tabId: activeTabId, sql })
+  useEffect(() => {
+    currentQueryRef.current = { tabId: activeTabId, sql }
+  }, [activeTabId, sql])
+
+  const formatSql = useCallback(() => {
+    void formatPostgresSql(sql).then((formatted) => {
+      const current = currentQueryRef.current
+      if (current.tabId !== activeTabId || current.sql !== sql) return
+      onSqlChange(formatted)
+    })
+  }, [activeTabId, onSqlChange, sql])
+
   const editorActions = useMemo<PostgresSqlEditorActions>(
     () => ({
       canUndo,
@@ -208,7 +223,7 @@ export function SqlWorkbench({
       undo: () => sqlEditorRef.current?.undo(),
       redo: () => sqlEditorRef.current?.redo(),
       save: () => setSaveDialogOpen(true),
-      format: () => onSqlChange(formatPostgresSql(sql)),
+      format: formatSql,
       run: onRun,
       explain: onExplain,
       analyze: onAnalyze,
@@ -231,16 +246,15 @@ export function SqlWorkbench({
       canSwitchTabs,
       canUndo,
       closeActiveTab,
+      formatSql,
       onCreateTab,
       onAnalyze,
       onExplain,
       onRun,
-      onSqlChange,
       selectNextTab,
       selectPreviousTab,
       selectTab,
       selectTabByIndex,
-      sql,
       tabRefs,
       tabs.length,
     ],
@@ -318,7 +332,7 @@ export function SqlWorkbench({
               isExplaining={isExplaining}
               activePlanMode={activePlanMode}
               onSave={() => setSaveDialogOpen(true)}
-              onFormat={() => onSqlChange(formatPostgresSql(sql))}
+              onFormat={formatSql}
               onRun={onRun}
               onExplain={onExplain}
               onAnalyze={onAnalyze}

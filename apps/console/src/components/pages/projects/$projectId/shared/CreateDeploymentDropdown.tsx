@@ -18,7 +18,9 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { useParams } from '@tanstack/react-router'
 import { useT } from '@/lib/i18n/translate'
+import { useActiveEnvironmentId } from '@/lib/active-environment'
 import { analyticsAttrs } from '@/lib/analytics-actions'
 import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
 
@@ -41,6 +43,9 @@ export function CreateDeploymentDropdown({
   className,
 }: CreateDeploymentDropdownProps) {
   const t = useT()
+  const { projectId } = useParams({ strict: false })
+  // Git installations cannot be connected from inside an environment
+  const environmentId = useActiveEnvironmentId(projectId)
   const trigger = (
     <Button
       variant="brandCta"
@@ -74,16 +79,18 @@ export function CreateDeploymentDropdown({
         )}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-[220px]">
-        <DropdownMenuItem
-          onSelect={() => openDialogAfterOverlayCloses(onSelectGit)}
-          className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
-        >
-          <GitBranch className="h-4 w-4" />
-          <span>Git</span>
-          <span className="ms-auto text-[11px] text-muted-foreground">
-            {t('Recommended')}
-          </span>
-        </DropdownMenuItem>
+        {!environmentId && (
+          <DropdownMenuItem
+            onSelect={() => openDialogAfterOverlayCloses(onSelectGit)}
+            className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
+          >
+            <GitBranch className="h-4 w-4" />
+            <span>Git</span>
+            <span className="ms-auto text-[11px] text-muted-foreground">
+              {t('Recommended')}
+            </span>
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem
           onSelect={() => openDialogAfterOverlayCloses(onSelectCli)}
           className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"

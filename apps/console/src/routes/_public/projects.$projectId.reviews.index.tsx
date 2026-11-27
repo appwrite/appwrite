@@ -4,6 +4,7 @@ import {
   projectQueryOptions,
   reviewRepositoriesQueryOptions,
   reviewsQueryOptions,
+  reviewStatusCountsQueryOptions,
 } from '@/lib/react-query/hooks'
 import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { listSearchSchema, queryParamToMap } from '@/lib/table-filters'
@@ -25,6 +26,10 @@ export const Route = createFileRoute('/_public/projects/$projectId/reviews/')({
     const filters = queryParamToMap(deps.query ?? null)
     const filterQueries =
       filters.size > 0 ? Array.from(filters.values()) : undefined
+    // The status tabs count within every filter but the status one.
+    const otherQueries = Array.from(filters.entries())
+      .filter(([key]) => key.c !== 'status')
+      .map(([, query]) => query)
     // Repositories decide the empty state, so both load before the page.
     await Promise.all([
       queryClient.ensureQueryData(
@@ -36,6 +41,14 @@ export const Route = createFileRoute('/_public/projects/$projectId/reviews/')({
         ),
       ),
       queryClient.ensureQueryData(reviewRepositoriesQueryOptions(projectId)),
+      queryClient
+        .ensureQueryData(
+          reviewStatusCountsQueryOptions(
+            projectId,
+            otherQueries.length > 0 ? otherQueries : undefined,
+          ),
+        )
+        .catch(() => undefined),
     ])
   },
   component: ReviewsIndexPage,

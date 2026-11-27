@@ -289,7 +289,7 @@ Learn more about the CLI buckets commands
 # Permissions {% #permissions %}
 Appwrite uses permissions to control file access.
 For security, only users that are granted permissions can access a file.
-This helps prevent accidental data leaks by forcing you to make more concious decisions around permissions.
+This helps prevent accidental data leaks by forcing you to make more conscious decisions around permissions.
 
 By default, Appwrite doesn't grants permissions to any users when a new bucket is created.
 This means users can't create new files or read, update, and delete existing files.

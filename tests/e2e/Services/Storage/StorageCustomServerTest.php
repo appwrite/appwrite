@@ -432,13 +432,30 @@ final class StorageCustomServerTest extends Scope
 
         [$headers, $filesystem] = $this->getCacheFixture();
         $path = $this->createPreviewFile($headers);
-        foreach (\range(20, 31) as $width) {
-            $preview = $this->client->call(Client::METHOD_GET, $path, $headers, ['width' => $width, 'output' => 'png']);
-            $this->assertSame(200, $preview['headers']['status-code']);
-        }
 
         // The first row's filesystem entry goes before its device purge fails, so it takes a second to tell.
-        $this->assertEventually(fn () => $this->assertGreaterThanOrEqual(2, \count($this->getCacheKeys($filesystem))));
+        // A key's store is picked by its hash, half each way, so a fixed run of sizes can leave fewer than two
+        // on the filesystem (13 runs in 4096 for twelve sizes): add sizes until two have landed there.
+        $width = 20;
+        $this->assertEventually(function () use (&$width, $path, $headers, $filesystem): void {
+            if (\count($this->getCacheKeys($filesystem)) < 2 && $width < 60) {
+                $preview = $this->client->call(Client::METHOD_GET, $path, $headers, ['width' => $width++, 'output' => 'png']);
+                $this->assertSame(200, $preview['headers']['status-code']);
+            }
+            $this->assertGreaterThanOrEqual(2, \count($this->getCacheKeys($filesystem)));
+        }, 240_000, 100);
+
+        // A preview's cache row and file are written in the shutdown hook, after its response, so
+        // the bucket DELETE could list rows before the last ones exist and orphan their files. Nothing
+        // reports a finished hook; the filesystem holding the same keys across two reads does.
+        /** @var list<string>|null $previous the closure updates it by reference */
+        $previous = null;
+        $this->assertEventually(function () use (&$previous, $filesystem): void {
+            $keys = $this->getCacheKeys($filesystem);
+            $settled = $keys === $previous;
+            $previous = $keys;
+            $this->assertTrue($settled, 'the filesystem cache is still being written');
+        }, 30_000, 1000);
 
         $delete = $this->client->call(Client::METHOD_DELETE, \dirname($path), $headers);
         $this->assertSame(204, $delete['headers']['status-code']);
@@ -1749,39 +1766,78 @@ final class StorageCustomServerTest extends Scope
             $this->assertEquals(1, $file['body']['chunksUploaded']);
         }
 
-        $this->withFactory(function ($factory) use ($bucketId, $idleId): void {
-            $dbForProject = $factory->project($factory->platform()->getDocument('projects', $this->getProject()['$id']));
-            $bucket = $dbForProject->getDocument('buckets', $bucketId);
+        $projectId = $this->getProject()['$id'];
+        $pendingKey = 'uploads:pending:' . $projectId;
+        $scannedKey = 'uploads:scanned:' . $projectId;
 
-            $dbForProject->withPreserveDates(true, fn () => $dbForProject->updateDocument('bucket_' . $bucket->getSequence(), $idleId, new Document([
-                '$updatedAt' => DateTime::addSeconds(new \DateTime(), -APP_STORAGE_UPLOAD_RETENTION - 3600),
-            ])));
+        $idle = function (string $fileId) use ($bucketId): void {
+            $this->withFactory(function ($factory) use ($bucketId, $fileId): void {
+                $dbForProject = $factory->project($factory->platform()->getDocument('projects', $this->getProject()['$id']));
+                $bucket = $dbForProject->getDocument('buckets', $bucketId);
+
+                $dbForProject->withPreserveDates(true, fn () => $dbForProject->updateDocument('bucket_' . $bucket->getSequence(), $fileId, new Document([
+                    '$updatedAt' => DateTime::addSeconds(new \DateTime(), -APP_STORAGE_UPLOAD_RETENTION - 3600),
+                ])));
+            });
+        };
+
+        $maintain = function (string $fileId) use ($bucketId): void {
+            $stdout = '';
+            $stderr = '';
+            $code = Console::execute((new Command('docker'))->argument('exec')->argument('appwrite')->argument('maintenance')->argument('--type=trigger'), '', $stdout, $stderr);
+            $this->assertSame(0, $code, "Maintenance command failed with code $code: $stderr ($stdout)");
+
+            $this->assertEventually(function () use ($bucketId, $fileId) {
+                $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId, array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                ], $this->getHeaders()));
+                $this->assertEquals(404, $file['headers']['status-code']);
+            }, 30000, 1000);
+        };
+
+        // The upload tracked its bucket, and with the full scan already claimed only tracked buckets are checked.
+        $this->withRedis(function (\Redis $redis) use ($bucketId, $pendingKey, $scannedKey): void {
+            $this->assertContains($bucketId, $redis->sMembers($pendingKey));
+            $redis->set($scannedKey, '1', ['ex' => APP_STORAGE_UPLOAD_RETENTION]);
         });
-
-        $stdout = '';
-        $stderr = '';
-        $code = Console::execute((new Command('docker'))->argument('exec')->argument('appwrite')->argument('maintenance')->argument('--type=trigger'), '', $stdout, $stderr);
-        $this->assertSame(0, $code, "Maintenance command failed with code $code: $stderr ($stdout)");
-
-        $this->assertEventually(function () use ($bucketId, $idleId) {
-            $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $idleId, array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-            ], $this->getHeaders()));
-            $this->assertEquals(404, $file['headers']['status-code']);
-        }, 30000, 1000);
+        $idle($idleId);
+        $maintain($idleId);
 
         $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $activeId, array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $projectId,
         ], $this->getHeaders()));
         $this->assertEquals(200, $file['headers']['status-code']);
         $this->assertEquals(1, $file['body']['chunksUploaded']);
+        $this->withRedis(fn (\Redis $redis) => $this->assertContains($bucketId, $redis->sMembers($pendingKey), 'a bucket with an upload in progress stays tracked'));
+
+        // A lost hint is caught by the full scan once its claim lapses.
+        $this->withRedis(fn (\Redis $redis) => $redis->del($pendingKey, $scannedKey));
+        $idle($activeId);
+        $maintain($activeId);
 
         // The aborted upload starts over from its first chunk under the same ID.
         $file = $upload($idleId);
         $this->assertEquals(201, $file['headers']['status-code']);
         $this->assertEquals(1, $file['body']['chunksUploaded']);
+    }
+
+    /**
+     * @param callable(\Redis): mixed $callback
+     */
+    private function withRedis(callable $callback): void
+    {
+        $run = function () use ($callback): void {
+            global $register;
+            $register->get('pools')->get('lock')->use($callback);
+        };
+
+        if (Coroutine::getCid() >= 0) {
+            $run();
+        } else {
+            run($run);
+        }
     }
 
     /**

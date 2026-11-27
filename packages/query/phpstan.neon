@@ -3,3 +3,5 @@ parameters:
     paths:
         - src
         - tests
+    scanDirectories:
+        - stubs

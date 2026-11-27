@@ -62,6 +62,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
+import { isOrganizationDomainClaimError } from '@/lib/utils/proxy-domains'
 import { CreateDomainDialog } from './CreateDomain'
 import { DomainContextMenu } from './_components/DomainContextMenu'
 import { useOrganizationDomainsPlanLimit } from './_components/useOrganizationDomainsPlanLimit'
@@ -545,6 +546,9 @@ export function View() {
         params: { orgId: orgId!, domainId },
       })
     } catch (error) {
+      // Another organization holds the domain: the dialog asks for the claim
+      // record and sends the create again.
+      if (isOrganizationDomainClaimError(error)) throw error
       toast.error(getErrorMessage(error))
     } finally {
       setIsCreateDomainSubmitting(false)
@@ -854,6 +858,7 @@ export function View() {
         onOpenChange={setCreateDialogOpen}
         onCreate={handleCreateDomain}
         isLoading={isCreateDomainSubmitting}
+        organizationId={orgId!}
       />
     </div>
   )

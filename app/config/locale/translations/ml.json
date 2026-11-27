@@ -28,7 +28,7 @@
     "emails.invitation.thanks": "നന്ദി,",
     "emails.invitation.buttonText": "{{team}} ലേക്കുള്ള ക്ഷണം സ്വീകരിക്കുക",
     "emails.invitation.signature": "{{project}} ടീം",
-    "locale.country.unknown": "Unknown",
+    "locale.country.unknown": "അജ്ഞാതം",
     "countries.af": "അഫ്ഗാനിസ്ഥാൻ",
     "countries.ao": "അംഗോള",
     "countries.al": "അൽബേനിയ",

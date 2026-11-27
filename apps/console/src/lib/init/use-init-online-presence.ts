@@ -1143,8 +1143,10 @@ export function useInitOnlinePresence(
       ...allOnlineUsers,
       ...mapPresencesToOnlineUsers(hiddenOnlinePresences, activityAllowlist),
     ])
+    // You always see yourself on your own globe while online, even with your
+    // identity hidden: this stays on this page; a hidden identity's presence
+    // row still carries no country for anyone else.
     if (
-      identityVisible &&
       participantStatus === 'online' &&
       localeCountryCode &&
       !communityCountries.some((country) => country.code === localeCountryCode)

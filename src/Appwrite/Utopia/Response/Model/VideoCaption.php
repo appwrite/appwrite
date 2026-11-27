@@ -10,11 +10,17 @@ class VideoCaption extends Model
 {
     /**
      * `embedded` is derived, not stored: extracted tracks are the rows with no
-     * backing storage file.
+     * backing storage file. The language is stored as `code`, and target
+     * duration as a string.
      */
     public function filter(Document $document): Document
     {
-        return $document->setAttribute('embedded', empty($document->getAttribute('fileId', '')));
+        $targetDuration = $document->getAttribute('targetDuration');
+
+        return $document
+            ->setAttribute('embedded', empty($document->getAttribute('fileId', '')))
+            ->setAttribute('language', $document->getAttribute('code', ''))
+            ->setAttribute('targetDuration', \is_numeric($targetDuration) ? (float) $targetDuration : 0.0);
     }
 
     public function __construct()
@@ -63,7 +69,7 @@ class VideoCaption extends Model
                 'example' => 'English',
             ])
             // ISO 639-2 three-letter code, validated against the locale-languages config.
-            ->addRule('code', [
+            ->addRule('language', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Caption ISO 639-2 language code.',
                 'default' => '',
@@ -82,22 +88,30 @@ class VideoCaption extends Model
                 'example' => false,
             ])
             ->addRule('targetDuration', [
-                'type' => self::TYPE_STRING,
+                'type' => self::TYPE_FLOAT,
                 'description' => 'Longest segment duration in seconds.',
-                'default' => '',
-                'example' => '93',
+                'default' => 0,
+                'example' => 93,
             ])
             ->addRule('status', [
-                'type' => self::TYPE_STRING,
+                'type' => self::TYPE_ENUM,
                 'description' => 'Packaging status: one of `pending`, `started`, `ready`, `error` or `aborted`.',
-                'default' => '',
+                'default' => 'pending',
                 'example' => 'ready',
+                'enum' => ['pending', 'started', 'ready', 'error', 'aborted'],
+                'enumSDKName' => 'VideoCaptionStatus',
             ])
             ->addRule('error', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Why the caption failed or was aborted. Empty unless `status` is `error` or `aborted`.',
                 'default' => '',
                 'example' => 'Caption is not a proper .srt file (Invalid timestamp delimiter at line 2)',
+            ])
+            ->addRule('size', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Stored caption size in bytes.',
+                'default' => 0,
+                'example' => 4096,
             ])
         ;
     }

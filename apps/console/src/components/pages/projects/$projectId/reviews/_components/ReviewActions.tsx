@@ -6,37 +6,17 @@ import {
   GitCommitHorizontal,
   Link2,
   Square,
-  type LucideIcon,
 } from 'lucide-react'
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuSeparator,
-  ContextMenuSub,
-  ContextMenuSubContent,
-  ContextMenuSubTrigger,
-  ContextMenuTrigger,
-} from '@/components/ui/context-menu'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import {
-  ContextMenuIcon,
-  MenuItemContent,
-  MenuItemIcon,
-} from '@/components/global/shared/ContextMenuIcon'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
+import { RowActionsDropdown, RowContextMenu, type RowAction } from './RowMenus'
 import type { Review } from '@/lib/appwrite/reviews'
-import { fetchReview } from '@/lib/react-query/hooks'
+import { fetchReview, useReviewInstallation } from '@/lib/react-query/hooks'
 import { useT } from '@/lib/i18n/translate'
+import {
+  getKnownVcsProvider,
+  getProviderReviewUrls,
+  type ProviderReviewUrls,
+} from '@/lib/vcs/providers'
 import {
   buildConsoleUrl,
   copyResourceAsJson,
@@ -45,33 +25,36 @@ import {
   openInNewWindow,
 } from '@/lib/utils/context-menu'
 
-type ReviewLinkFields = Pick<
-  Review,
-  | 'providerRepositoryOwner'
-  | 'providerRepositoryName'
-  | 'providerPullRequestId'
-  | 'providerReviewId'
-  | 'providerCommitHash'
->
-
-/** Where a review lives on GitHub: its repository, pull request and posted review. */
-export function reviewGitHubUrls(review: ReviewLinkFields) {
-  const repository = `https://github.com/${review.providerRepositoryOwner}/${review.providerRepositoryName}`
-  const pullRequest = `${repository}/pull/${review.providerPullRequestId}`
-  return {
-    repository,
-    pullRequest,
-    /** The posted review, or the pull request until one is posted. */
-    review: review.providerReviewId
-      ? `${pullRequest}#pullrequestreview-${review.providerReviewId}`
-      : pullRequest,
-    commit: review.providerCommitHash
-      ? `${repository}/commit/${review.providerCommitHash}`
-      : undefined,
-  }
+/**
+ * Where a review lives on its provider, read from the installation its
+ * repository is connected through, with the provider's name for "Open on"
+ * labels. Null until the installation is loaded, or where no link can be
+ * built.
+ */
+export function useReviewUrls(
+  projectId: string,
+  review: Pick<
+    Review,
+    | 'repositoryId'
+    | 'providerRepositoryOwner'
+    | 'providerRepositoryName'
+    | 'providerPullRequestId'
+    | 'providerReviewId'
+  > | null,
+): { urls: ProviderReviewUrls; label: string } | null {
+  const installation = useReviewInstallation(projectId, review?.repositoryId)
+  const meta = getKnownVcsProvider(installation?.provider)
+  const urls = getProviderReviewUrls({
+    provider: installation?.provider,
+    organizationUrl: (installation as { organizationUrl?: string } | null)
+      ?.organizationUrl,
+    organization: review?.providerRepositoryOwner,
+    repositoryName: review?.providerRepositoryName,
+    pullRequestId: review?.providerPullRequestId,
+    reviewId: review?.providerReviewId,
+  })
+  return urls && meta ? { urls, label: meta.label } : null
 }
-
-type Action = { icon: LucideIcon; label: string; onSelect: () => void }
 
 /**
  * What a review's menus offer, top to bottom: the copy submenu, then links.
@@ -83,9 +66,9 @@ function useReviewActions(projectId: string, review: Review) {
   const href = buildConsoleUrl(
     `/projects/${projectId}/reviews/${encodeURIComponent(review.$id)}`,
   )
-  const urls = reviewGitHubUrls(review)
+  const links = useReviewUrls(projectId, review)
 
-  const copy: Action[] = [
+  const copy: RowAction[] = [
     {
       icon: Copy,
       label: t('Copy ID'),
@@ -116,12 +99,16 @@ function useReviewActions(projectId: string, review: Review) {
     },
   ]
 
-  const links: Action[] = [
-    {
-      icon: ExternalLink,
-      label: t('Open on GitHub'),
-      onSelect: () => openInNewTab(urls.review),
-    },
+  const opens: RowAction[] = [
+    ...(links
+      ? [
+          {
+            icon: ExternalLink,
+            label: t('Open on {provider}').replace('{provider}', links.label),
+            onSelect: () => openInNewTab(links.urls.review),
+          },
+        ]
+      : []),
     {
       icon: ExternalLink,
       label: t('Open in new tab'),
@@ -134,7 +121,7 @@ function useReviewActions(projectId: string, review: Review) {
     },
   ]
 
-  return { copy, links, copyLabel: t('Copy') }
+  return { copy, links: opens }
 }
 
 /** Right-click menu of a review row. */
@@ -147,35 +134,8 @@ export function ReviewContextMenu({
   review: Review
   children: ReactNode
 }) {
-  const { copy, links, copyLabel } = useReviewActions(projectId, review)
-  return (
-    <ContextMenu>
-      <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
-      <ContextMenuContent className="w-56">
-        <ContextMenuSub>
-          <ContextMenuSubTrigger>
-            <ContextMenuIcon icon={Copy} />
-            {copyLabel}
-          </ContextMenuSubTrigger>
-          <ContextMenuSubContent>
-            {copy.map((action) => (
-              <ContextMenuItem key={action.label} onSelect={action.onSelect}>
-                <ContextMenuIcon icon={action.icon} />
-                {action.label}
-              </ContextMenuItem>
-            ))}
-          </ContextMenuSubContent>
-        </ContextMenuSub>
-        <ContextMenuSeparator />
-        {links.map((action) => (
-          <ContextMenuItem key={action.label} onSelect={action.onSelect}>
-            <ContextMenuIcon icon={action.icon} />
-            {action.label}
-          </ContextMenuItem>
-        ))}
-      </ContextMenuContent>
-    </ContextMenu>
-  )
+  const actions = useReviewActions(projectId, review)
+  return <RowContextMenu actions={actions}>{children}</RowContextMenu>
 }
 
 /** The ⋯ menu of a review, on its row and on its page; same items as the right-click menu. */
@@ -190,39 +150,17 @@ export function ReviewActionsMenu({
   trigger?: ReactNode
 }) {
   const t = useT()
-  const { copy, links, copyLabel } = useReviewActions(projectId, review)
+  const actions = useReviewActions(projectId, review)
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        {trigger ?? (
+    <RowActionsDropdown
+      actions={actions}
+      trigger={
+        trigger ?? (
           <RowActionsMenuTrigger
             aria-label={`${t('Actions for')} ${review.providerRepositoryOwner}/${review.providerRepositoryName} #${review.providerPullRequestId}`}
           />
-        )}
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuSub>
-          <DropdownMenuSubTrigger>
-            <MenuItemIcon icon={Copy} />
-            {copyLabel}
-          </DropdownMenuSubTrigger>
-          <DropdownMenuSubContent>
-            {copy.map((action) => (
-              <DropdownMenuItem key={action.label} onClick={action.onSelect}>
-                <MenuItemContent icon={action.icon}>
-                  {action.label}
-                </MenuItemContent>
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuSubContent>
-        </DropdownMenuSub>
-        <DropdownMenuSeparator />
-        {links.map((action) => (
-          <DropdownMenuItem key={action.label} onClick={action.onSelect}>
-            <MenuItemContent icon={action.icon}>{action.label}</MenuItemContent>
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+        )
+      }
+    />
   )
 }

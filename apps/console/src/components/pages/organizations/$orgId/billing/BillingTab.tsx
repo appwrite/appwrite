@@ -18,7 +18,6 @@ import { AddCreditsModal } from './AddCreditsModal'
 import { TaxIdSection } from './TaxIdSection'
 import { BudgetCapSection } from './BudgetCapSection'
 import { BillingAlertsSection } from './BillingAlertsSection'
-import { BudgetMonitors } from './BudgetMonitors'
 import { AvailableCreditsSection } from './AvailableCreditsSection'
 import {
   SettingsCardsList,
@@ -309,18 +308,6 @@ export function BillingTab() {
           />
         ),
       },
-      ...(alertsEnabled
-        ? [
-            {
-              id: 'budget-monitors',
-              search: {
-                title: 'Budget monitors',
-                keywords: ['alerts', 'budget', 'webhook', 'monitors'],
-              },
-              node: <BudgetMonitors orgId={orgId} />,
-            },
-          ]
-        : []),
       {
         id: 'available-credits',
         search: {
