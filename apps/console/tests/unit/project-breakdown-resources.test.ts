@@ -7,7 +7,7 @@ import {
   type BillingProjectResourceItem,
 } from '@/lib/billing/project-breakdown-resources'
 
-const ADDITIONAL_STORAGE = 'dedicatedDbAutoscaledStorage.vectorsdb.s-2vcpu-4gb'
+const AUTOSCALED_STORAGE = 'dedicatedDbAutoscaledStorage.vectorsdb.s-2vcpu-4gb'
 
 function resource(
   resourceId: string,
@@ -27,12 +27,12 @@ function resource(
   }
 }
 
-describe('dedicated database additional storage billing line', () => {
+describe('dedicated database autoscaled storage billing line', () => {
   test('maps the line cloud bills for storage above the tier', () => {
     expect(
-      resolveBillingProjectResourceMapping(ADDITIONAL_STORAGE, null),
+      resolveBillingProjectResourceMapping(AUTOSCALED_STORAGE, null),
     ).toMatchObject({
-      name: 'Dedicated database additional storage (VectorsDB · 2 vCPU · 4 GB)',
+      name: 'Dedicated database autoscaled storage (VectorsDB · 2 vCPU · 4 GB)',
       format: 'bytes',
       category: 'dedicated-databases',
       showOnlyWhenUsed: true,
@@ -41,7 +41,7 @@ describe('dedicated database additional storage billing line', () => {
 
   test('groups it under its specification after storage', () => {
     const { specGroups, ungrouped } = groupDedicatedDbBillingResources([
-      resource(ADDITIONAL_STORAGE, 150_000_000_000, 37.5),
+      resource(AUTOSCALED_STORAGE, 150_000_000_000, 37.5),
       resource('dedicatedDbStorage.vectorsdb.s-2vcpu-4gb', 0, 0),
       resource('dedicatedDbSpecificationCost.vectorsdb.s-2vcpu-4gb', 720, 40),
     ])
@@ -52,7 +52,7 @@ describe('dedicated database additional storage billing line', () => {
     expect(specGroups[0]?.items.map((item) => item.metricLabel)).toEqual([
       'Compute',
       'Storage',
-      'Additional storage',
+      'Autoscaled storage',
     ])
   })
 
@@ -62,9 +62,7 @@ describe('dedicated database additional storage billing line', () => {
         'dedicatedDbAutoscaledStorage',
         'bytes',
       ),
-    ).toBe(
-      'Storage provisioned beyond the tier allowance, such as storage kept after a downgrade.',
-    )
+    ).toBe('Storage autoscaled beyond the tier allowance.')
   })
 
   test.each([

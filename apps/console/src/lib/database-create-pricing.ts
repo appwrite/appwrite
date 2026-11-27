@@ -139,20 +139,3 @@ export const DEDICATED_DB_HA_REPLICA_OPTIONS = [
       'Maximum self-serve replica count for high-traffic production environments.',
   },
 ] as const
-
-/**
- * A tier change keeps the provisioned storage, so a tier that includes less
- * bills the difference at its storage overage rate.
- */
-export function calculateKeptStorageCharge(
-  storageGb: number | null | undefined,
-  specification: Models.DedicatedDatabaseSpecification | undefined,
-): { storageGb: number; monthlyUsd: number } | null {
-  if (storageGb == null || !specification) return null
-  const excessGb = storageGb - specification.includedStorage
-  if (excessGb <= 0) return null
-  return {
-    storageGb,
-    monthlyUsd: excessGb * specification.storageOverageRate,
-  }
-}

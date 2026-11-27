@@ -149,7 +149,7 @@ const DEDICATED_DB_PROJECT_RESOURCES: Record<
     showOnlyWhenUsed: true,
   },
   dedicatedDbAutoscaledStorage: {
-    name: 'Dedicated database additional storage',
+    name: 'Dedicated database autoscaled storage',
     format: 'bytes',
     planKey: 'dedicatedDbAutoscaledStorage',
     category: 'dedicated-databases',
@@ -441,7 +441,7 @@ const DEDICATED_DB_BILLING_METRIC_SHORT_LABELS: Record<
 > = {
   dedicatedDbSpecificationCost: 'Compute',
   dedicatedDbStorage: 'Storage',
-  dedicatedDbAutoscaledStorage: 'Additional storage',
+  dedicatedDbAutoscaledStorage: 'Autoscaled storage',
   dedicatedDbBandwidth: 'Bandwidth',
   dedicatedDbHaReplica: 'HA replicas',
   dedicatedDbReplica: 'Replicas',
@@ -522,7 +522,7 @@ export function getDedicatedDbBillingUsageDescription(
       return 'Additional storage used beyond the tier allowance.'
     }
     if (metricId === 'dedicatedDbAutoscaledStorage') {
-      return 'Storage provisioned beyond the tier allowance, such as storage kept after a downgrade.'
+      return 'Storage autoscaled beyond the tier allowance.'
     }
     if (metricId === 'dedicatedDbBandwidth') {
       return 'Network egress for this database tier.'

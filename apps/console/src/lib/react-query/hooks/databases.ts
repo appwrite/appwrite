@@ -526,13 +526,11 @@ function readProductDatabaseLifecycleStatus(
 function readProductDatabaseBacking(db: Models.Database): {
   pitr: boolean | null
   pitrRetentionDays: number | null
-  storage: number | null
 } {
   return {
     pitr: typeof db.pitr === 'boolean' ? db.pitr : null,
     pitrRetentionDays:
       typeof db.pitrRetentionDays === 'number' ? db.pitrRetentionDays : null,
-    storage: typeof db.storage === 'number' ? db.storage : null,
   }
 }
 

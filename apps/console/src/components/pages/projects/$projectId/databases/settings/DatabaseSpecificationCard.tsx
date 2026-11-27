@@ -31,7 +31,6 @@ import {
 } from '@/lib/database-specs'
 import { dedicatedDatabaseSourceFromRouteKind } from '@/lib/databases/dedicated-database-source'
 import type { DatabaseRouteKind } from '@/lib/database-routes'
-import { calculateKeptStorageCharge } from '@/lib/database-create-pricing'
 import {
   invalidateDatabaseModel,
   refetchProjectDatabaseLists,
@@ -47,7 +46,6 @@ import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 import { coerceTrimmedString } from '@/lib/databases/dedicated-database-status'
-import { formatCurrency } from '@/components/pages/organizations/$orgId/billing/utils'
 import type { ProjectDatabaseDetail } from './types'
 
 const SERVERLESS_SPEC_OPTION =
@@ -96,16 +94,6 @@ export function DatabaseSpecificationCard({
   const apiSpecs = useMemo(
     () =>
       mapDedicatedDatabaseSpecifications(specificationsData?.specifications),
-    [specificationsData?.specifications],
-  )
-  const specificationsBySlug = useMemo(
-    () =>
-      new Map(
-        (specificationsData?.specifications ?? []).map((specification) => [
-          specification.slug,
-          specification,
-        ]),
-      ),
     [specificationsData?.specifications],
   )
 
@@ -306,18 +294,16 @@ export function DatabaseSpecificationCard({
               currentSpecIndex >= 0 && index < currentSpecIndex
             // TablesDB serverless → dedicated: createMigration.
             // Dedicated product DBs: product update({ specification }).
-            const canChange =
+            const canUpgrade =
               canWrite &&
               !locked &&
               !isCurrent &&
-              !isServerlessDatabaseSpecId(spec.id)
-            const keptStorage =
-              isCurrent || locked
-                ? null
-                : calculateKeptStorageCharge(
-                    database.storage,
-                    specificationsBySlug.get(spec.id),
-                  )
+              !isDowngrade &&
+              !isServerlessDatabaseSpecId(spec.id) &&
+              (currentSpecIndex < 0 || index > currentSpecIndex) &&
+              (dbKind === 'tablesdb' ||
+                dbKind === 'documentsdb' ||
+                dbKind === 'vectorsdb')
 
             return (
               <TableRow
@@ -348,18 +334,6 @@ export function DatabaseSpecificationCard({
                       </Badge>
                     ) : null}
                   </span>
-                  {keptStorage ? (
-                    <span className="mt-1 block text-[12px] text-muted-foreground">
-                      {t(
-                        'Storage stays at {storage} GB, billed at {cost} per month above this tier.',
-                      )
-                        .replace('{storage}', String(keptStorage.storageGb))
-                        .replace(
-                          '{cost}',
-                          formatCurrency(keptStorage.monthlyUsd, 'USD'),
-                        )}
-                    </span>
-                  ) : null}
                 </TableCell>
                 <TableCell className="px-4 py-3 text-[13px] text-muted-foreground">
                   {spec.cpu}
@@ -378,7 +352,7 @@ export function DatabaseSpecificationCard({
                   )}
                 </TableCell>
                 <TableCell className="px-6 py-3 text-end">
-                  {canChange ? (
+                  {canUpgrade ? (
                     <Button
                       type="button"
                       variant="outline"
@@ -387,7 +361,7 @@ export function DatabaseSpecificationCard({
                       disabled={upgradeMutation.isPending}
                       onClick={() => upgradeMutation.mutate(spec.id)}
                     >
-                      {isDowngrade ? t('Downgrade') : t('Upgrade')}
+                      {t('Upgrade')}
                     </Button>
                   ) : null}
                 </TableCell>

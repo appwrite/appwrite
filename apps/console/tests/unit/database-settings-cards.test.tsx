@@ -78,12 +78,7 @@ mock.module('@/lib/appwrite/sdk', () => ({
   },
 }))
 
-function specification(
-  slug: string,
-  name: string,
-  price: number,
-  includedStorage: number,
-) {
+function specification(slug: string, name: string, price: number) {
   return {
     slug,
     name,
@@ -95,7 +90,7 @@ function specification(
     cpu: 2000,
     memory: 4096,
     maxConnections: 200,
-    includedStorage,
+    includedStorage: 50,
     includedBandwidth: 0,
     enabled: true,
   }
@@ -121,9 +116,9 @@ mock.module(hooksPath, () => ({
   useDatabaseSpecifications: () => ({
     data: {
       specifications: [
-        specification('s-1vcpu-1gb', 'Starter', 10, 10),
-        specification('s-2vcpu-4gb', 'Standard Plus', 40, 50),
-        specification('s-4vcpu-8gb', 'Pro', 80, 100),
+        specification('s-1vcpu-1gb', 'Starter', 10),
+        specification('s-2vcpu-4gb', 'Standard Plus', 40),
+        specification('s-4vcpu-8gb', 'Pro', 80),
       ],
       pricing: { replicaRate: 0.5, pitrRate: 0.2 },
     },
@@ -271,39 +266,32 @@ describe('DatabasePitrCard', () => {
 })
 
 describe('DatabaseSpecificationCard', () => {
-  function renderCard(dbKind: string, storage: number | null) {
+  function renderCard(dbKind: string) {
     return wrap(
       createElement(DatabaseSpecificationCard, {
         projectId: PROJECT_ID,
         databaseId: DATABASE_ID,
         dbKind,
-        database: {
-          ...database,
-          specification: 's-2vcpu-4gb',
-          storage,
-        },
+        database: { ...database, specification: 's-2vcpu-4gb' },
         canWrite: true,
       }),
     )
   }
 
-  test('offers lower tiers as a downgrade that keeps the storage', async () => {
-    const view = renderCard('vectorsdb', 200)
+  test.each(['tablesdb', 'documentsdb', 'vectorsdb'])(
+    'offers only larger tiers for a dedicated %s database',
+    (dbKind) => {
+      const view = renderCard(dbKind)
 
-    expect(view.getAllByText('Downgrade')).toHaveLength(1)
-    expect(view.getAllByText('Upgrade')).toHaveLength(1)
-    expect(
-      view.getByText(
-        'Storage stays at 200 GB, billed at $47.50 per month above this tier.',
-      ),
-    ).toBeTruthy()
-    expect(
-      view.getByText(
-        'Storage stays at 200 GB, billed at $25.00 per month above this tier.',
-      ),
-    ).toBeTruthy()
+      expect(view.getAllByText('Upgrade')).toHaveLength(1)
+      expect(view.queryByText('Downgrade')).toBeNull()
+    },
+  )
 
-    fireEvent.click(view.getByText('Downgrade'))
+  test('an upgrade keeps a disabled database disabled', async () => {
+    const view = renderCard('vectorsdb')
+
+    fireEvent.click(view.getByText('Upgrade'))
 
     await waitFor(() => expect(calls.length).toBeGreaterThan(0))
     expect(calls[0]).toEqual({
@@ -313,23 +301,8 @@ describe('DatabaseSpecificationCard', () => {
         databaseId: DATABASE_ID,
         name: 'Orders',
         enabled: false,
-        specification: 's-1vcpu-1gb',
+        specification: 's-4vcpu-8gb',
       },
     })
-  })
-
-  test('never offers to move a dedicated database back to serverless', () => {
-    const view = renderCard('tablesdb', 50)
-
-    expect(view.getByText('Serverless')).toBeTruthy()
-    expect(view.getAllByText('Downgrade')).toHaveLength(1)
-    expect(view.getAllByText(/Storage stays at/)).toHaveLength(1)
-  })
-
-  test('shows no storage charge when the database storage is unknown', () => {
-    const view = renderCard('vectorsdb', null)
-
-    expect(view.getAllByText('Downgrade')).toHaveLength(1)
-    expect(view.queryByText(/Storage stays at/)).toBeNull()
   })
 })

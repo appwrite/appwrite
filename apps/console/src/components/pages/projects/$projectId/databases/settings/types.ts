@@ -9,6 +9,4 @@ export type ProjectDatabaseDetail = {
   specification?: string | null
   pitr?: boolean | null
   pitrRetentionDays?: number | null
-  /** Provisioned storage in GB; null when there is no dedicated backing. */
-  storage?: number | null
 }

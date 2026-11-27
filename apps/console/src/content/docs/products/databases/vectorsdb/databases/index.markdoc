@@ -236,7 +236,7 @@ Three parameters on `create` and `update` decide what a database runs on.
 `replicas` and `syncMode` only apply to a dedicated database. Passing either one alongside a serverless specification fails with `database_ha_requires_dedicated`.
 {% /info %}
 
-A change to a smaller `specification` keeps the database's current storage and bills the part above the new tier's included storage at its storage overage rate. Dedicated databases also take the [point-in-time recovery](#pitr) parameters `pitr` and `pitrRetentionDays`.
+Dedicated databases also take the [point-in-time recovery](#pitr) parameters `pitr` and `pitrRetentionDays`.
 
 Use the `listSpecifications` method to read the tiers your organization can select, along with their CPU, memory, connection limit, and price.
 
