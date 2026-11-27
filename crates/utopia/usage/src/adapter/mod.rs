@@ -89,6 +89,26 @@ pub type TimeSeries = IndexMap<String, Series>;
 /// Totals by metric name, in the order the metrics were asked for.
 pub type Totals = IndexMap<String, i64>;
 
+/// One difference between the storage and what [`Adapter::migrate`] leaves,
+/// or work it left unfinished.
+///
+/// PHP: an entry of `inspect()`'s list
+/// (`['table' => ..., 'kind' => ..., 'name' => ..., 'detail' => ...]`).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Finding {
+    /// The table it is on.
+    pub table: String,
+    /// What it is: `table.missing`, `column.missing`, `column.drifted`,
+    /// `index.missing`, `index.drifted`, `index.duplicate`,
+    /// `projection.missing`, `projection.unmaterialized`,
+    /// `mutation.unfinished` or `mutation.failing`.
+    pub kind: String,
+    /// The table, column, index, projection or mutation it names.
+    pub name: String,
+    /// What was found and what was expected.
+    pub detail: String,
+}
+
 /// A storage backend for usage metrics. Implement it to store metrics
 /// elsewhere; the provided methods refuse what a backend does not support.
 ///
@@ -119,6 +139,15 @@ pub trait Adapter: Send + Sync {
     /// PHP: `migrate()`.
     async fn migrate(&self) -> Result<()> {
         self.setup().await
+    }
+
+    /// Reports where the storage differs from what [`Adapter::migrate`]
+    /// leaves, without changing it. An adapter that cannot tell reports
+    /// nothing.
+    ///
+    /// PHP: `inspect()`.
+    async fn inspect(&self) -> Result<Vec<Finding>> {
+        Ok(Vec::new())
     }
 
     /// Appends `metrics` of `kind`, at most `batch_size` per write.

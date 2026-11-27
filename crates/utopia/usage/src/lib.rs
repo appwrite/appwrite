@@ -47,7 +47,7 @@ mod sample;
 mod usage;
 
 pub use accumulator::Accumulator;
-pub use adapter::{Adapter, Entry, Point, Series, Time, TimeSeries, Totals};
+pub use adapter::{Adapter, Entry, Finding, Point, Series, Time, TimeSeries, Totals};
 pub use error::{Error, Message, Result};
 pub use metric::{Kind, Metric, Number};
 pub use sample::{Sample, SampleGap, SampleRange, SampleResult, SampleWatermark};

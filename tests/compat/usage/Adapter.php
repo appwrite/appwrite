@@ -7,6 +7,7 @@ use DateTimeImmutable;
 use DateTimeZone;
 use PDO;
 use ReflectionMethod;
+use ReflectionProperty;
 use Tests\Compat\Adapter as Base;
 use Tests\Compat\Benchmarks;
 use Tests\Compat\Fault;
@@ -238,6 +239,7 @@ final class Adapter implements Base, Benchmarks
 
                 return;
             },
+            'usage.inspect' => fn (array $a, Session $s) => self::usage($a, $s)->inspect(),
             'usage.add_samples' => fn (array $a, Session $s) => self::usage($a, $s)->addSamples(array_map(self::sample(...), $a['samples']), $a['batch_size'] ?? 1000),
             'usage.sample_watermark' => function (array $a, Session $s) {
                 $watermark = self::usage($a, $s)->getSampleWatermark(self::range($a['range']), $a['limit']);
@@ -269,6 +271,25 @@ final class Adapter implements Base, Benchmarks
                 $json = json_decode($body, true);
 
                 return \is_array($json) && \is_array($json['data'] ?? null) ? $json['data'] : $body;
+            },
+            'clickhouse.wait_mutations' => function (array $a, Session $s) {
+                // The PHP test's waits: until no mutation on `table` is left
+                // running, or (`failing`) until one has failed at least once.
+                $adapter = self::ch($a, $s);
+                $failing = (bool) ($a['failing'] ?? false);
+                $sql = 'SELECT count() AS total FROM system.mutations WHERE database = {database:String} AND table = {table:String} AND NOT is_done'
+                    . ($failing ? " AND latest_fail_reason != ''" : '') . ' FORMAT JSON';
+                $params = ['database' => new ReflectionProperty(ClickHouse::class, 'database')->getValue($adapter), 'table' => $a['table']];
+                for ($attempt = 0; $attempt < ($failing ? 50 : 100); $attempt++) {
+                    $json = json_decode((string) new ReflectionMethod(ClickHouse::class, 'query')->invoke($adapter, $sql, $params), true);
+                    $total = \is_array($json) && \is_array($json['data'] ?? null) && \is_array($json['data'][0] ?? null) ? ($json['data'][0]['total'] ?? 0) : 0;
+                    if (((int) (is_numeric($total) ? $total : 0) > 0) === $failing) {
+                        return true;
+                    }
+                    usleep($failing ? 200_000 : 100_000);
+                }
+
+                return false;
             },
             'clickhouse.column_type' => function (array $a, Session $s) {
                 $adapter = new ClickHouse('clickhouse', 'default', '', 8123, false, namespace: 'utopia_usage_coltype');

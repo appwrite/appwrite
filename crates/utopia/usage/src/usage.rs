@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use utopia_query::{Array, Query};
 
-use crate::adapter::{Adapter, Entry, TimeSeries, Totals};
+use crate::adapter::{Adapter, Entry, Finding, TimeSeries, Totals};
 use crate::error::{Error, Result};
 use crate::metric::{Kind, Metric};
 use crate::sample::{Sample, SampleRange, SampleResult, SampleWatermark};
@@ -60,6 +60,14 @@ impl Usage {
     /// PHP: `migrate()`.
     pub async fn migrate(&self) -> Result<()> {
         self.adapter.migrate().await
+    }
+
+    /// Reports where the storage differs from what [`Usage::migrate`]
+    /// leaves, without changing it. Empty when there is nothing to report.
+    ///
+    /// PHP: `inspect()`.
+    pub async fn inspect(&self) -> Result<Vec<Finding>> {
+        self.adapter.inspect().await
     }
 
     /// Appends `metrics` of `kind`, at most `batch_size` per write

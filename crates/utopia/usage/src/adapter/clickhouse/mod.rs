@@ -32,7 +32,7 @@ use utopia_client::{Client, Http, Request};
 use utopia_query::builder::ClickHouse as Builder;
 use utopia_query::{Array, Object, Query, Value};
 
-use super::{Adapter, Entry, TimeSeries, Totals};
+use super::{Adapter, Entry, Finding, TimeSeries, Totals};
 use crate::error::{Error, Message, Result};
 use crate::metric::{Kind, Metric};
 use crate::php;
@@ -732,6 +732,10 @@ impl<A: utopia_client::Adapter + 'static> Adapter for ClickHouse<A> {
 
     async fn migrate(&self) -> Result<()> {
         self.migrate_schema().await
+    }
+
+    async fn inspect(&self) -> Result<Vec<Finding>> {
+        self.inspect_schema().await
     }
 
     async fn add_batch(&self, metrics: &[Entry], kind: Kind, batch_size: i64) -> Result<bool> {

@@ -127,6 +127,14 @@
         "Utopia\\Usage\\Adapter\\ClickHouse::migrate"
       ]
     },
+    "usage.inspect": {
+      "doc": "$usage->inspect(): [{table, kind, name, detail}]",
+      "covers": [
+        "Utopia\\Usage\\Usage::inspect",
+        "Utopia\\Usage\\Adapter::inspect",
+        "Utopia\\Usage\\Adapter\\ClickHouse::inspect"
+      ]
+    },
     "usage.add_batch": {
       "doc": "$usage->addBatch(metrics, type, batch_size)",
       "covers": [
@@ -396,6 +404,12 @@
     },
     "clickhouse.column_type": {
       "doc": "the adapter's private getColumnType(id, type) (ClickHouseColumnTypeTest)"
+    },
+    "clickhouse.wait_mutations": {
+      "doc": "ClickHouseInspectTest's waits: until no mutation on `table` is left running (100 tries, 100 ms apart), or with `failing: true` until one has failed at least once (50 tries, 200 ms apart); whether it got there",
+      "services": [
+        "usage-clickhouse"
+      ]
     },
     "adapter.schema": {
       "doc": "an adapter's schema accessors (Adapter\\SQL): getCollectionName(), get{Event,Gauge}Attributes(), getAttributes(type), getAttributeDocuments(type), get{Event,Gauge}Indexes(), getIndexes(type), getIndexDocuments(type); documents as their arrays",

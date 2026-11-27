@@ -32,6 +32,7 @@ pub const OPS: &[&str] = &[
     "usage.health_check",
     "usage.setup",
     "usage.migrate",
+    "usage.inspect",
     "usage.add_batch",
     "usage.add_samples",
     "usage.sample_watermark",
@@ -66,6 +67,7 @@ pub const OPS: &[&str] = &[
     "clickhouse.stats",
     "clickhouse.query",
     "clickhouse.column_type",
+    "clickhouse.wait_mutations",
     "adapter.schema",
     "metric.new",
     "metric.call",
@@ -985,6 +987,15 @@ pub async fn call(op: &str, a: &Json, session: &mut Session) -> OpResult {
             tri!(usage(session, a)?.migrate().await);
             Outcome::ok(Json::Null)
         }
+        "usage.inspect" => {
+            let findings = tri!(usage(session, a)?.inspect().await);
+            Outcome::ok(Json::Array(
+                findings
+                    .into_iter()
+                    .map(|f| json!({ "table": f.table, "kind": f.kind, "name": f.name, "detail": f.detail }))
+                    .collect(),
+            ))
+        }
         "usage.add_samples" => {
             let list = arg(a, "samples")?.as_array().ok_or_else(|| Fault::new("`samples` must be a list"))?;
             let mut samples = Vec::with_capacity(list.len());
@@ -1071,6 +1082,46 @@ pub async fn call(op: &str, a: &Json, session: &mut Session) -> OpResult {
                 }
                 _ => Outcome::ok(Json::String(body)),
             }
+        }
+        "clickhouse.wait_mutations" => {
+            // The PHP test's waits: until no mutation on `table` is left
+            // running, or (`failing`) until one has failed at least once.
+            let ch = clickhouse(session, a)?;
+            let failing = a.get("failing").and_then(Json::as_bool).unwrap_or(false);
+            let (sql, attempts, pause) = if failing {
+                (
+                    "SELECT count() AS total FROM system.mutations WHERE database = {database:String} AND table = {table:String} AND NOT is_done AND latest_fail_reason != '' FORMAT JSON",
+                    50,
+                    200,
+                )
+            } else {
+                (
+                    "SELECT count() AS total FROM system.mutations WHERE database = {database:String} AND table = {table:String} AND NOT is_done FORMAT JSON",
+                    100,
+                    100,
+                )
+            };
+            let params = vec![
+                ("database".to_owned(), Value::from(ch.config().database.as_str())),
+                ("table".to_owned(), Value::from(string(a, "table")?.as_str())),
+            ];
+            for _ in 0..attempts {
+                let body = tri!(ch.query(sql, &params).await);
+                let total = serde_json::from_str::<Json>(&body)
+                    .ok()
+                    .and_then(|j| j.pointer("/data/0/total").cloned())
+                    .and_then(|t| match t {
+                        Json::Number(n) => n.as_i64(),
+                        Json::String(s) => s.parse().ok(),
+                        _ => None,
+                    })
+                    .unwrap_or(0);
+                if (total > 0) == failing {
+                    return Ok(Outcome::ok(Json::Bool(true)));
+                }
+                utopia_async::sleep(std::time::Duration::from_millis(pause)).await;
+            }
+            Outcome::ok(Json::Bool(false))
         }
         "clickhouse.column_type" => {
             let k = tri!(Kind::parse(a.get("type").and_then(Json::as_str).unwrap_or("event")));

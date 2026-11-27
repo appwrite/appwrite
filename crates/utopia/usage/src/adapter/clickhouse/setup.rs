@@ -6,6 +6,7 @@ use utopia_query::schema::{ClickHouse as Schema, Engine, Schema as _, ViewBody};
 use utopia_query::{Array, Value};
 
 use super::{ClickHouse, decode_rows, decode_total, escape, field};
+use crate::adapter::Finding;
 use crate::error::{Error, Result};
 use crate::metric::{Index, Kind};
 use crate::php;
@@ -865,5 +866,300 @@ impl<A: utopia_client::Adapter> ClickHouse<A> {
         let (columns, select) = self.daily_select(Some(window));
         self.query(&format!("INSERT INTO {daily} ({columns}) {select}"), &bindings).await?;
         Ok(())
+    }
+}
+
+/// A finding of `inspect()`.
+fn finding(table: &str, kind: &str, name: &str, detail: String) -> Finding {
+    Finding { table: table.to_owned(), kind: kind.to_owned(), name: name.to_owned(), detail }
+}
+
+/// `is_string($row[$key] ?? null) ? $row[$key] : ''`.
+fn text_field(row: &Array, key: &str) -> Option<String> {
+    match field(row, key) {
+        Value::Str(s) => Some(String::from_utf8_lossy(s.as_bytes()).into_owned()),
+        _ => None,
+    }
+}
+
+impl<A: utopia_client::Adapter> ClickHouse<A> {
+    /// The read-only counterpart of `migrate()`: what it would add or
+    /// realign, the parts a projection has not been built for, and
+    /// mutations still running. Retention and a projection's definition are
+    /// not compared.
+    ///
+    /// PHP: `inspect()`.
+    pub(super) async fn inspect_schema(&self) -> Result<Vec<Finding>> {
+        self.set_context("inspect()");
+
+        let events = self.events_table();
+        let gauges = self.gauges_table();
+        let daily = self.daily_table();
+        let daily_mv = format!("{}_events_daily_mv", self.table_name());
+        let samples = self.samples_table();
+        let tables = [events.as_str(), gauges.as_str(), daily.as_str(), daily_mv.as_str(), samples.as_str()];
+
+        let live = self.live_tables(&tables).await?;
+        let is_live = |table: &str| live.iter().any(|l| l == table);
+
+        let mut findings = Vec::new();
+        for table in tables {
+            if !is_live(table) {
+                findings.push(finding(table, "table.missing", table, "migrate() creates it".into()));
+            }
+        }
+
+        let event_projections: Vec<&str> = EVENT_PROJECTIONS.iter().map(|(name, _)| *name).collect();
+        let gauge_projections: Vec<&str> =
+            GAUGE_PROJECTIONS.iter().chain(GAUGE_LATEST_PROJECTIONS).map(|(name, _)| *name).collect();
+        if is_live(&events) {
+            findings.extend(self.inspect_dim_columns(&events, Kind::Event).await?);
+            findings.extend(self.inspect_indexes(&events, Kind::Event.indexes()).await?);
+            findings.extend(self.inspect_projections(&events, &event_projections).await?);
+        }
+        if is_live(&gauges) {
+            findings.extend(self.inspect_dim_columns(&gauges, Kind::Gauge).await?);
+            findings.extend(self.inspect_indexes(&gauges, Kind::Gauge.indexes()).await?);
+            findings.extend(self.inspect_projections(&gauges, &gauge_projections).await?);
+        }
+        if is_live(&samples) && !self.column_shapes(&samples).await?.iter().any(|s| s.name == b"ingestId") {
+            findings.push(finding(
+                &samples,
+                "column.missing",
+                "ingestId",
+                "expected String DEFAULT '' CODEC(ZSTD(3))".into(),
+            ));
+        }
+
+        for table in [events.as_str(), gauges.as_str(), daily.as_str(), samples.as_str()] {
+            if is_live(table) {
+                findings.extend(self.inspect_mutations(table).await?);
+            }
+        }
+
+        Ok(findings)
+    }
+
+    /// Which of `tables` exist.
+    ///
+    /// PHP: `getLiveTables()` (private).
+    async fn live_tables(&self, tables: &[&str]) -> Result<Vec<String>> {
+        let mut params = vec![("database".to_owned(), Value::from(self.config.database.as_str()))];
+        let mut placeholders = Vec::with_capacity(tables.len());
+        for (position, table) in tables.iter().enumerate() {
+            params.push((format!("table{position}"), Value::from(*table)));
+            placeholders.push(format!("{{table{position}:String}}"));
+        }
+        let body = self
+            .query(
+                &format!(
+                    "SELECT name FROM system.tables WHERE database = {{database:String}} AND name IN ({}) FORMAT JSON",
+                    placeholders.join(", ")
+                ),
+                &params,
+            )
+            .await?;
+        Ok(decode_rows(&body).iter().filter_map(|row| text_field(row, "name")).collect())
+    }
+
+    /// The dimension columns of `kind` that `table` lacks, or has with
+    /// another type or codec.
+    ///
+    /// PHP: `inspectDimColumns()` (private).
+    async fn inspect_dim_columns(&self, table: &str, kind: Kind) -> Result<Vec<Finding>> {
+        let existing = self.column_shapes(table).await?;
+        let mut findings = Vec::new();
+        for column in kind.columns() {
+            if BASE_KEY_COLUMNS.contains(column) {
+                continue;
+            }
+            let expected = format!("{} {}", column_type(column, kind)?, codec(column)).trim().to_owned();
+            match existing.iter().find(|shape| shape.name == column.as_bytes()) {
+                None => findings.push(finding(table, "column.missing", column, format!("expected {expected}"))),
+                Some(shape) if !has_column_shape(shape, column, kind)? => {
+                    let found =
+                        format!("{} {}", String::from_utf8_lossy(&shape.ty), String::from_utf8_lossy(&shape.codec));
+                    findings.push(finding(
+                        table,
+                        "column.drifted",
+                        column,
+                        format!("is {}, expected {expected}", found.trim()),
+                    ));
+                }
+                Some(_) => {}
+            }
+        }
+        Ok(findings)
+    }
+
+    /// The defined skip indexes `table` lacks or has with another
+    /// expression or type, and the live ones duplicating a defined index
+    /// under another name.
+    ///
+    /// PHP: `inspectIndexes()` (private).
+    async fn inspect_indexes(&self, table: &str, indexes: &[Index]) -> Result<Vec<Finding>> {
+        let live = self.skip_indexes(table).await?;
+        let mut findings = Vec::new();
+        let mut defined: Vec<(&str, &[&str], &str)> = Vec::new();
+        for index in indexes {
+            let kind = index.index_type.unwrap_or("bloom_filter");
+            match defined.iter_mut().find(|(id, _, _)| *id == index.id) {
+                Some(entry) => *entry = (&index.id, &index.attributes, kind),
+                None => defined.push((&index.id, &index.attributes, kind)),
+            }
+            let expected = format!("({}) TYPE {kind}", index.attributes.join(", "));
+            match live.iter().find(|l| l.name == index.id) {
+                None => findings.push(finding(table, "index.missing", &index.id, format!("expected {expected}"))),
+                Some(existing) if !has_index_shape(existing, &index.attributes, kind) => {
+                    let ids: Vec<String> = identifiers(existing.expression.as_bytes())
+                        .iter()
+                        .map(|id| String::from_utf8_lossy(id).into_owned())
+                        .collect();
+                    let found = format!("({}) TYPE {}", ids.join(", "), existing.kind);
+                    findings.push(finding(
+                        table,
+                        "index.drifted",
+                        &index.id,
+                        format!("is {found}, expected {expected}"),
+                    ));
+                }
+                Some(_) => {}
+            }
+        }
+
+        for existing in &live {
+            if defined.iter().any(|(id, _, _)| *id == existing.name) {
+                continue;
+            }
+            if let Some((id, _, _)) =
+                defined.iter().find(|(_, attributes, kind)| has_index_shape(existing, attributes, kind))
+            {
+                findings.push(finding(table, "index.duplicate", &existing.name, format!("duplicates {id}")));
+            }
+        }
+        Ok(findings)
+    }
+
+    /// The projections `table` lacks, and those its parts with rows were
+    /// written without, by partition. A projection added to a table exists
+    /// only in parts written afterwards until it is materialized, and reads
+    /// fall back to the base table for the rest. Parts are listed before
+    /// their projections, and merged-away projection parts are kept, so a
+    /// merge between the two reads is not reported.
+    ///
+    /// PHP: `inspectProjections()` (private).
+    async fn inspect_projections(&self, table: &str, projections: &[&str]) -> Result<Vec<Finding>> {
+        let params = self.table_bindings(table);
+
+        let body = self
+            .query(
+                "SELECT name FROM system.projections WHERE database = {database:String} AND table = {table:String} FORMAT JSON",
+                &params,
+            )
+            .await?;
+        let defined: Vec<Value> = decode_rows(&body).iter().map(|row| field(row, "name").clone()).collect();
+
+        let body = self
+            .query(
+                "SELECT name, partition FROM system.parts WHERE database = {database:String} AND table = {table:String} AND active AND rows > 0 FORMAT JSON",
+                &params,
+            )
+            .await?;
+        let parts = decode_rows(&body);
+
+        let body = self
+            .query(
+                "SELECT parent_name, name FROM system.projection_parts WHERE database = {database:String} AND table = {table:String} FORMAT JSON",
+                &params,
+            )
+            .await?;
+        // (projection, part) pairs that are built.
+        let built: Vec<(String, String)> = decode_rows(&body)
+            .iter()
+            .filter_map(|row| Some((text_field(row, "name")?, text_field(row, "parent_name")?)))
+            .collect();
+
+        let mut findings = Vec::new();
+        for projection in projections {
+            if !defined.iter().any(|name| matches!(name, Value::Str(s) if s.as_bytes() == projection.as_bytes())) {
+                findings.push(finding(
+                    table,
+                    "projection.missing",
+                    projection,
+                    "migrate() adds it; existing parts then need MATERIALIZE PROJECTION".into(),
+                ));
+                continue;
+            }
+
+            let mut lacking = Array::default();
+            for part in &parts {
+                let (Some(name), Some(partition)) = (text_field(part, "name"), text_field(part, "partition")) else {
+                    continue;
+                };
+                if !built.iter().any(|(p, parent)| p == projection && *parent == name) {
+                    let key = ArrayKey::from(partition.as_str());
+                    let count = match lacking.get(&key) {
+                        Some(Value::Int(n)) => *n,
+                        _ => 0,
+                    };
+                    lacking.set(key, Value::Int(count + 1));
+                }
+            }
+            if lacking.is_empty() {
+                continue;
+            }
+
+            php_std::sort::ksort(&mut lacking, php_std::sort::SortFlags::Regular);
+            let partitions: Vec<String> = lacking
+                .iter()
+                .map(|(partition, count)| {
+                    let partition = match partition {
+                        php_std::types::KeyRef::Int(n) => n.to_string(),
+                        php_std::types::KeyRef::Str(s) => String::from_utf8_lossy(s).into_owned(),
+                    };
+                    format!("{partition} ({})", php::to_int(count))
+                })
+                .collect();
+            findings.push(finding(
+                table,
+                "projection.unmaterialized",
+                projection,
+                format!("parts without it, by partition: {}", partitions.join(", ")),
+            ));
+        }
+        Ok(findings)
+    }
+
+    /// The mutations on `table` that have not finished, and why the
+    /// failing ones fail.
+    ///
+    /// PHP: `inspectMutations()` (private).
+    async fn inspect_mutations(&self, table: &str) -> Result<Vec<Finding>> {
+        let body = self
+            .query(
+                "SELECT mutation_id, command, toString(create_time) AS created, parts_to_do, latest_fail_reason FROM system.mutations WHERE database = {database:String} AND table = {table:String} AND NOT is_done ORDER BY create_time FORMAT JSON",
+                &self.table_bindings(table),
+            )
+            .await?;
+
+        let mut findings = Vec::new();
+        for row in decode_rows(&body) {
+            let id = text_field(&row, "mutation_id").unwrap_or_default();
+            let command = text_field(&row, "command").unwrap_or_default();
+            let created = text_field(&row, "created").unwrap_or_default();
+            let reason = text_field(&row, "latest_fail_reason").unwrap_or_default();
+            let parts_to_do = match field(&row, "parts_to_do") {
+                Value::Null => 0,
+                v => php::to_int(v),
+            };
+
+            let detail = format!("{command}, created {created}, {parts_to_do} parts to do");
+            findings.push(if reason.is_empty() {
+                finding(table, "mutation.unfinished", &id, detail)
+            } else {
+                finding(table, "mutation.failing", &id, format!("{detail}: {reason}"))
+            });
+        }
+        Ok(findings)
     }
 }
