@@ -63,6 +63,7 @@ import { openCreateOrganizationFlow } from '@/lib/open-create-organization-flow'
 import { useT } from '@/lib/i18n/translate'
 import { useIsZeroAccount } from '@/hooks/use-zero-account'
 import { ClaimToUnlock } from '@/components/global/shared/ClaimToUnlock'
+import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue'
 import {
   INITIAL_LOADER_SHELL_GATE,
   resetInitialLoaderShellGate,
@@ -408,7 +409,9 @@ export function ProjectSelector({
       placeholderData: keepPreviousData,
     })
 
-  const projectSearchActive = Boolean(projectSearch.trim())
+  // Search the API once typing pauses, not on every keystroke.
+  const debouncedProjectSearch = useDebouncedValue(projectSearch.trim(), 300)
+  const projectSearchActive = Boolean(debouncedProjectSearch)
   const listExcludePinnedIds = projectSearchActive ? undefined : pinnedIds
 
   const { data: switcherProjectScopeData } = useQuery(
@@ -426,7 +429,7 @@ export function ProjectSelector({
   } = useProjectsForTeamInfinite(
     resolvedTeam?.$id,
     projectsPageSize,
-    projectSearch,
+    debouncedProjectSearch,
     listExcludePinnedIds,
     switcherProjectScope,
   )

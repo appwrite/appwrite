@@ -3,7 +3,8 @@ import {
   MARKETING_PAGE_ROUTE_STATIC_DATA,
   marketingRouteLifetime,
 } from '@/lib/marketing/route-static-data'
-import { getHomePageHead, View } from '@/components/pages/home/View'
+import { getHomePageHead } from '@/components/pages/home/head'
+import { View } from '@/components/pages/home/View'
 import { prefetchVisitorCountry } from '@/lib/react-query/hooks/locale'
 
 export const Route = createFileRoute('/_marketing/home')({

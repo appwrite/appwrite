@@ -17,10 +17,6 @@ import {
   useQueryClient,
 } from '@tanstack/react-query'
 import { sdk } from '@/lib/appwrite/sdk'
-import {
-  getProjectPrefs,
-  updateProjectPrefs,
-} from '@/lib/appwrite/project-prefs'
 import type { ProjectPrefs } from '@/lib/project-prefs-keys'
 import { DEFAULT_STALE_TIME } from './constants'
 
@@ -35,9 +31,9 @@ function projectPrefsQueryOptions(
   return queryOptions({
     queryKey: projectPrefsQueryKey(projectId),
     queryFn: () =>
-      getProjectPrefs(
-        sdk.forProject(projectId!, region, { environment: null }).client,
-      ),
+      sdk
+        .forProject(projectId!, region, { environment: null })
+        .project.getPrefs<ProjectPrefs>(),
     enabled: !!projectId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
@@ -87,10 +83,9 @@ export function useUpdateProjectPrefs(
         throw new Error('Project ID is required')
       }
 
-      return await updateProjectPrefs(
-        sdk.forProject(projectId, region, { environment: null }).client,
-        prefs,
-      )
+      return await sdk
+        .forProject(projectId, region, { environment: null })
+        .project.updatePrefs<ProjectPrefs>({ prefs })
     },
     onSuccess: (prefs) => {
       queryClient.setQueryData(projectPrefsQueryKey(projectId), prefs)

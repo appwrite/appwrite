@@ -166,11 +166,44 @@ export function getOrganizationLimits(
   return Object.keys(result).length > 0 ? result : null
 }
 
+/**
+ * Organization-level alerting caps the console has no selection UI for, by
+ * how each reads. Console SDK releases before them do not type them.
+ */
+export const ALERTING_RESOURCE_LABELS = {
+  probes: 'Synthetic checks',
+  escalations: 'Escalations',
+} as const
+
+type AlertingResourceType = keyof typeof ALERTING_RESOURCE_LABELS
+
+/** Over-limit alerting resources; each blocks the change until enough are deleted. */
+export function getAlertingViolations(
+  limits: PlanChangeLimits | null | undefined,
+): Array<{ label: string; resource: PlanChangeResourceCompliance }> {
+  const alerting = limits as
+    | Partial<Record<AlertingResourceType, PlanChangeResourceCompliance>>
+    | null
+    | undefined
+  const violations: Array<{
+    label: string
+    resource: PlanChangeResourceCompliance
+  }> = []
+  for (const [type, label] of Object.entries(ALERTING_RESOURCE_LABELS)) {
+    const resource = alerting?.[type as AlertingResourceType]
+    if (resource && isOverLimit(resource)) violations.push({ label, resource })
+  }
+  return violations
+}
+
 /** Over-limit organization resources, for surfacing the server's hints. */
 export function getOrganizationViolations(
   limits: PlanChangeLimits | null | undefined,
 ): PlanChangeResourceCompliance[] {
-  return getOrganizationResources(limits).filter(isOverLimit)
+  return [
+    ...getOrganizationResources(limits).filter(isOverLimit),
+    ...getAlertingViolations(limits).map(({ resource }) => resource),
+  ]
 }
 
 export function getNonCompliantProjectIds(

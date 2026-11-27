@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\Manifest;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Videos\Base as VideosAction;
 use Appwrite\Utopia\Database\Documents\User;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Video\Dash;
 use Utopia\Database\Database;
@@ -166,7 +167,7 @@ abstract class Base extends VideosAction
         string $output,
         Response $response,
         Database $dbForProject,
-        Document $project,
+        Request $request,
         User $user,
         Authorization $authorization
     ): void {
@@ -225,7 +226,8 @@ abstract class Base extends VideosAction
                     'track' => $trackId,
                     'uri' => $this->withProject(
                         $baseUri . '/renditions/' . $rendition->getId() . '/streams/' . ($stream['id'] ?? 0) . '/playlist.m3u8',
-                        $project
+                        $request,
+                        $video
                     ),
                 ];
             }
@@ -264,7 +266,8 @@ abstract class Base extends VideosAction
                     'audio' => $hasAudioGroup ? 'group_audio' : null,
                     'uri' => $this->withProject(
                         $baseUri . '/renditions/' . $rendition->getId() . '/streams/' . ($stream['id'] ?? 0) . '/playlist.m3u8',
-                        $project
+                        $request,
+                        $video
                     ),
                 ];
             }
@@ -283,7 +286,8 @@ abstract class Base extends VideosAction
                 'default' => $caption->getAttribute('default', false) ? 'YES' : 'NO',
                 'uri' => $this->withProject(
                     $this->baseUri($video, $captionOutput) . '/captions/' . $caption->getId() . '/manifest',
-                    $project
+                    $request,
+                    $video
                 ),
             ];
         }
@@ -305,7 +309,7 @@ abstract class Base extends VideosAction
         string $output,
         Response $response,
         Database $dbForProject,
-        Document $project,
+        Request $request,
         User $user,
         Authorization $authorization
     ): void {
@@ -345,7 +349,7 @@ abstract class Base extends VideosAction
 
                 foreach ($segments as $segment) {
                     // Relative to <BaseURL>, which is what the MPD resolves against.
-                    $uri = $this->withProject($segment->getId(), $project);
+                    $uri = $this->withProject($segment->getId(), $request, $video);
 
                     if ((int) $segment->getAttribute('isInit', 0) === 1) {
                         $init = $uri;
@@ -424,19 +428,24 @@ abstract class Base extends VideosAction
             throw new Exception(Exception::VIDEO_RENDITION_NOT_FOUND);
         }
 
+        $adaptations = Dash::group($entries);
+        // AdaptationSet@id is an unsignedInt unique within the Period, so caption
+        // sets continue after the media sets.
+        $adaptationId = \count($adaptations);
         $captionEntries = [];
 
         foreach ($captions as $caption) {
             $captionEntries[] = [
+                'adaptationId' => $adaptationId++,
                 'id' => $caption->getId(),
                 'name' => $caption->getAttribute('code', ''),
-                'baseUrl' => $this->withProject($baseUri . '/captions/' . $caption->getId() . '/manifest', $project),
+                'baseUrl' => $this->withProject($baseUri . '/captions/' . $caption->getId() . '/manifest', $request, $video),
             ];
         }
 
         $manifest = $this->renderView('dash', [
             'mpd' => $mpd,
-            'renditions' => Dash::group($entries),
+            'renditions' => $adaptations,
             'captions' => $captionEntries,
         ]);
 
@@ -456,7 +465,7 @@ abstract class Base extends VideosAction
         string $output,
         Response $response,
         Database $dbForProject,
-        Document $project,
+        Request $request,
         User $user,
         Authorization $authorization
     ): void {
@@ -495,13 +504,13 @@ abstract class Base extends VideosAction
 
         foreach ($segments as $segment) {
             if ((int) $segment->getAttribute('isInit', 0) === 1) {
-                $map = $this->withProject($baseUri . $segment->getId(), $project);
+                $map = $this->withProject($baseUri . $segment->getId(), $request, $video);
                 continue;
             }
 
             $entries[] = [
                 'duration' => $segment->getAttribute('duration', 0),
-                'url' => $this->withProject($baseUri . $segment->getId(), $project),
+                'url' => $this->withProject($baseUri . $segment->getId(), $request, $video),
             ];
         }
 

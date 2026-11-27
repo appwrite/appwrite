@@ -36,7 +36,7 @@ export function LiveBannerBar({ liveBanner }: LiveBannerBarProps) {
                 ? { target: '_blank', rel: 'noopener noreferrer' }
                 : {})}
             >
-              {t('Watch')}
+              {t(liveBanner.actionLabel ?? 'Watch')}
               <ChevronRight className="size-3.5" />
             </a>
           </Button>

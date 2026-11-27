@@ -8,6 +8,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
+use Utopia\Database\Query;
 
 final class MonitorsCustomServerTest extends Scope
 {
@@ -40,7 +41,7 @@ final class MonitorsCustomServerTest extends Scope
         /**
          * Test for FAILURE
          */
-        $update = $this->client->call(Client::METHOD_PUT, '/monitors/usage/' . $monitorId, $read, ['name' => 'Renamed']);
+        $update = $this->client->call(Client::METHOD_PATCH, '/monitors/usage/' . $monitorId, $read, ['name' => 'Renamed']);
         $this->assertSame(401, $update['headers']['status-code']);
 
         $none = [
@@ -74,7 +75,7 @@ final class MonitorsCustomServerTest extends Scope
         $this->assertSame(404, $monitor['headers']['status-code']);
         $this->assertSame('monitor_not_found', $monitor['body']['type']);
 
-        $update = $this->client->call(Client::METHOD_PUT, '/monitors/usage/' . $monitorId, $headers, ['name' => 'Taken']);
+        $update = $this->client->call(Client::METHOD_PATCH, '/monitors/usage/' . $monitorId, $headers, ['name' => 'Taken']);
         $this->assertSame(404, $update['headers']['status-code']);
 
         $deleted = $this->client->call(Client::METHOD_DELETE, '/monitors/' . $monitorId, $headers);
@@ -86,5 +87,45 @@ final class MonitorsCustomServerTest extends Scope
 
         $this->assertSame(200, $this->getMonitor($monitorId)['headers']['status-code']);
         $this->assertSame($created['body']['name'], $this->getMonitor($monitorId)['body']['name']);
+
+        /**
+         * Test for SUCCESS
+         */
+        // Monitor IDs are chosen per project: the other project can take the same one for its own monitor.
+        $twin = $this->client->call(Client::METHOD_POST, '/monitors/usage', $headers, [
+            'monitorId' => $monitorId,
+            'name' => 'Twin ' . $monitorId,
+            'rules' => [Query::greaterThan('network.outbound', 1000000)->toString()],
+        ]);
+        $this->assertSame(201, $twin['headers']['status-code']);
+        $this->assertSame($monitorId, $twin['body']['$id']);
+        $this->assertSame($other['$id'], $twin['body']['projectId']);
+
+        $theirs = $this->client->call(Client::METHOD_GET, '/monitors/' . $monitorId, $headers);
+        $this->assertSame(200, $theirs['headers']['status-code']);
+        $this->assertSame('Twin ' . $monitorId, $theirs['body']['name']);
+        $this->assertSame($created['body']['name'], $this->getMonitor($monitorId)['body']['name']);
+
+        $list = $this->client->call(Client::METHOD_GET, '/monitors', $headers, [
+            'queries' => [Query::equal('$id', [$monitorId])->toString()],
+        ]);
+        $this->assertSame(1, $list['body']['total']);
+        $this->assertSame('Twin ' . $monitorId, $list['body']['monitors'][0]['name']);
+
+        // Updating one leaves the other project's monitor of the same ID as it was.
+        $renamed = $this->client->call(Client::METHOD_PATCH, '/monitors/usage/' . $monitorId, $headers, ['name' => 'Renamed twin']);
+        $this->assertSame(200, $renamed['headers']['status-code']);
+        $this->assertSame($monitorId, $renamed['body']['$id']);
+        $this->assertSame('Renamed twin', $this->client->call(Client::METHOD_GET, '/monitors/' . $monitorId, $headers)['body']['name']);
+        $this->assertSame($created['body']['name'], $this->getMonitor($monitorId)['body']['name']);
+
+        // Deleting one leaves the other.
+        $deleted = $this->client->call(Client::METHOD_DELETE, '/monitors/' . $monitorId, $headers);
+        $this->assertSame(204, $deleted['headers']['status-code']);
+        $this->assertSame(404, $this->client->call(Client::METHOD_GET, '/monitors/' . $monitorId, $headers)['headers']['status-code']);
+        $mine = $this->getMonitor($monitorId);
+        $this->assertSame(200, $mine['headers']['status-code']);
+        $this->assertSame($monitorId, $mine['body']['$id']);
+        $this->assertSame($created['body']['name'], $mine['body']['name']);
     }
 }

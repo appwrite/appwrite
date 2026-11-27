@@ -6,6 +6,7 @@ namespace Tests\Unit\Utopia;
 
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Parameter;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Request\Filter;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -14,6 +15,7 @@ use Swoole\Http\Request as SwooleRequest;
 use Tests\Unit\Utopia\Request\Filters\First;
 use Tests\Unit\Utopia\Request\Filters\Second;
 use Tests\Unit\Utopia\Request\Filters\ThrowingFilter;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Http\Route;
 
 final class RequestTest extends TestCase
@@ -100,6 +102,61 @@ final class RequestTest extends TestCase
         } finally {
             putenv($previous === false ? '_APP_TRUSTED_PROXIES' : '_APP_TRUSTED_PROXIES=' . $previous);
         }
+    }
+
+    #[DataProvider('forwardedIPCases')]
+    public function testGetClientIPHonorsForwardedIPFromKey(string $forwardedIP, string $expected): void
+    {
+        $request = $this->requestWithForwardedIP($forwardedIP, User::ROLE_KEYS);
+
+        $this->assertSame($expected, $request->getClientIP());
+        $this->assertSame('203.0.113.10', $request->getIP());
+    }
+
+    public function testGetClientIPIgnoresForwardedIPWithoutKey(): void
+    {
+        $request = $this->requestWithForwardedIP('198.51.100.7', User::ROLE_USERS);
+
+        $this->assertSame('203.0.113.10', $request->getClientIP());
+    }
+
+    public function testGetClientIPIgnoresForwardedIPBeforeAuthorization(): void
+    {
+        $swoole = new SwooleRequest();
+        $swoole->server = ['remote_addr' => '203.0.113.10'];
+        $swoole->header = ['x-forwarded-ip' => '198.51.100.7'];
+        $request = new Request($swoole);
+
+        $this->assertSame('203.0.113.10', $request->getClientIP());
+    }
+
+    /**
+     * @return \Iterator<string, array{0: string, 1: string}>
+     */
+    public static function forwardedIPCases(): \Iterator
+    {
+        yield 'IPv4' => ['198.51.100.7', '198.51.100.7'];
+        yield 'IPv6' => ['2001:db8::7', '2001:db8::7'];
+        yield 'surrounding whitespace' => [' 198.51.100.7 ', '198.51.100.7'];
+        yield 'not an address uses connection' => ['not-an-ip', '203.0.113.10'];
+        yield 'list of addresses uses connection' => ['198.51.100.7, 198.51.100.8', '203.0.113.10'];
+        yield 'empty uses connection' => ['', '203.0.113.10'];
+    }
+
+    private function requestWithForwardedIP(string $forwardedIP, string $role): Request
+    {
+        $swoole = new SwooleRequest();
+        $swoole->server = ['remote_addr' => '203.0.113.10'];
+        $swoole->header = ['x-forwarded-ip' => $forwardedIP];
+
+        $authorization = new Authorization();
+        $authorization->addRole($role);
+
+        $request = new Request($swoole);
+        $request->setAuthorization($authorization);
+        $request->setUser(new User());
+
+        return $request;
     }
 
     /**
@@ -662,5 +719,83 @@ final class RequestTest extends TestCase
         $route->label('cache.negotiate', ['output' => ['avif' => 'image/avif', 'webp' => 'image/webp']]);
 
         return $route;
+    }
+
+    /**
+     * @return \Iterator<string, array{array<string, mixed>, array<string, string>, array<string, mixed>, string}>
+     */
+    public static function projectCases(): \Iterator
+    {
+        yield 'body is never read' => [['project' => 'body'], [], [], ''];
+        yield 'body does not override the header' => [['project' => 'body'], ['x-appwrite-project' => 'header'], [], 'header'];
+        yield 'header' => [[], ['x-appwrite-project' => 'header'], [], 'header'];
+        yield 'GitLab webhook project object' => [['project' => ['id' => 89442539]], [], [], ''];
+        yield 'GitLab webhook project object with the header' => [['project' => ['id' => 1]], ['x-appwrite-project' => 'header'], [], 'header'];
+        yield 'query on a POST' => [[], [], ['project' => 'query'], 'query'];
+        yield 'query over the header' => [[], ['x-appwrite-project' => 'header'], ['project' => 'query'], 'query'];
+        yield 'empty query falls back to the header' => [[], ['x-appwrite-project' => 'header'], ['project' => ''], 'header'];
+        yield 'query array' => [[], [], ['project' => ['x']], ''];
+        yield 'query array falls back to the header' => [[], ['x-appwrite-project' => 'header'], ['project' => ['x']], 'header'];
+        yield 'nothing' => [[], [], [], ''];
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     * @param array<string, string> $headers
+     * @param array<string, mixed> $query
+     */
+    #[DataProvider('projectCases')]
+    public function testGetProject(array $payload, array $headers, array $query, string $expected): void
+    {
+        $request = $this->post($payload, $headers, $query);
+
+        $this->assertSame($expected, $request->getProject());
+    }
+
+    /**
+     * @return \Iterator<string, array{array<string, mixed>, array<string, string>, array<string, mixed>, string}>
+     */
+    public static function modeCases(): \Iterator
+    {
+        yield 'body is never read' => [['mode' => 'admin'], [], [], APP_MODE_DEFAULT];
+        yield 'header' => [[], ['x-appwrite-mode' => 'admin'], [], 'admin'];
+        yield 'non-string body with the header' => [['mode' => ['admin']], ['x-appwrite-mode' => 'admin'], [], 'admin'];
+        yield 'query' => [[], [], ['mode' => 'admin'], 'admin'];
+        yield 'query array falls back to the header' => [[], ['x-appwrite-mode' => 'admin'], ['mode' => ['x']], 'admin'];
+        yield 'query over the header' => [[], ['x-appwrite-mode' => 'default'], ['mode' => 'admin'], 'admin'];
+        yield 'empty query falls back to the header' => [[], ['x-appwrite-mode' => 'admin'], ['mode' => ''], 'admin'];
+        yield 'nothing' => [[], [], [], APP_MODE_DEFAULT];
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     * @param array<string, string> $headers
+     * @param array<string, mixed> $query
+     */
+    #[DataProvider('modeCases')]
+    public function testGetMode(array $payload, array $headers, array $query, string $expected): void
+    {
+        $request = $this->post($payload, $headers, $query);
+
+        $this->assertSame($expected, $request->getMode());
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     * @param array<string, string> $headers
+     * @param array<string, mixed> $query
+     */
+    private function post(array $payload, array $headers, array $query): Request
+    {
+        $request = new Request(new SwooleRequest());
+        $request->setMethod(Request::METHOD_POST);
+        $request->setPayload($payload);
+        $request->setQueryString($query);
+
+        foreach ($headers as $name => $value) {
+            $request->setHeader($name, $value);
+        }
+
+        return $request;
     }
 }

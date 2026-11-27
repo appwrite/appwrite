@@ -36,7 +36,7 @@ import {
 import type { ComparisonTable, PlanId } from '@/lib/pricing/types'
 import { useStartPlanVisibility } from '@/hooks/use-start-plan-visibility'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { withAnalyticsComparison } from '@/lib/pricing/analytics'
+import { withFlaggedComparison } from '@/lib/pricing/flags'
 import { BELOW_APP_HEADER_STICKY_TOP_CLASS } from '@/lib/layout/app-header-height'
 import { cn } from '@/lib/utils'
 
@@ -176,9 +176,9 @@ export function ComparePlansSection() {
   const { features } = useConsoleProfile()
   const columns = getPricingPlanColumns(showStartPlan)
   const tables = useMemo(() => {
-    const visible = withAnalyticsComparison(comparisonTables, features.analytics)
+    const visible = withFlaggedComparison(comparisonTables, features)
     return showStartPlan ? withStartComparisonValues(visible) : visible
-  }, [showStartPlan, features.analytics])
+  }, [showStartPlan, features])
 
   return (
     <section

@@ -236,6 +236,9 @@ final class SitesConsoleClientTest extends Scope
         $this->assertSame(200, $response['headers']['status-code']);
         $this->assertSame($claimerId, $response['body']['teamId']);
 
+        // The claim revokes the previous owner's keys, so the fixture needs a key from the new owner
+        self::$project['apiKey'] = $this->getNewKey($this->getProjectKeyScopes());
+
         foreach ($files as $fileId) {
             $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/screenshots/files/' . $fileId, $console);
             $this->assertSame(200, $file['headers']['status-code']);

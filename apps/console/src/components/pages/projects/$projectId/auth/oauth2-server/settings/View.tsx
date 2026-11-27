@@ -109,13 +109,8 @@ const SECTION_FIELDS: Record<
   OAuth2ServerSection,
   ReadonlyArray<keyof OAuth2ServerFormState>
 > = {
-  status: ['enabled'],
-  integration: [
-    'authorizationUrl',
-    'scopes',
-    'defaultScopes',
-    'authorizationDetailsTypes',
-  ],
+  status: ['enabled', 'authorizationUrl'],
+  integration: ['scopes', 'defaultScopes', 'authorizationDetailsTypes'],
   tokens: [
     'accessToken',
     'refreshToken',
@@ -627,6 +622,8 @@ export function View({ projectId }: OAuth2ServerViewProps) {
   const [pendingSection, setPendingSection] =
     useState<OAuth2ServerSection | null>(null)
   const savedSectionRef = useRef<OAuth2ServerSection | null>(null)
+  // null follows the saved state (on when a verification URL is set).
+  const [deviceFlowSwitch, setDeviceFlowSwitch] = useState<boolean | null>(null)
 
   const serverState = useMemo(
     () => (projectData ? formStateFromProject(projectData) : null),
@@ -643,6 +640,7 @@ export function View({ projectId }: OAuth2ServerViewProps) {
     syncedStateRef.current = serverState
     const savedSection = savedSectionRef.current
     savedSectionRef.current = null
+    if (savedSection === 'device') setDeviceFlowSwitch(null)
     setForm((previous) => {
       // After a card is saved only its fields are synced from the server, so
       // unsaved edits in the other cards survive the project refetch.
@@ -730,8 +728,14 @@ export function View({ projectId }: OAuth2ServerViewProps) {
 
   const mergedScopes = mergeOAuth2Scopes(form.scopes)
   const optionalScopes = optionalOAuth2Scopes(form.scopes)
-  const requiresAuthorizationUrl = form.enabled && !form.authorizationUrl.trim()
+  const missingAuthorizationUrl = !form.authorizationUrl.trim()
+  // Every save sends the authorization URL; only the status card changes
+  // `enabled`, so the other cards are checked against the saved state.
+  const requiresAuthorizationUrl = (section: OAuth2ServerSection) =>
+    missingAuthorizationUrl &&
+    (section === 'status' ? form.enabled : serverState.enabled)
   const deviceFlowEnabled = serverState.verificationUrl.trim() !== ''
+  const deviceFlowOn = deviceFlowSwitch ?? deviceFlowEnabled
   const selectedUserCodeFormat =
     OAUTH2_SERVER_USER_CODE_FORMAT_OPTIONS.find(
       (option) => option.value === form.userCodeFormat,
@@ -746,7 +750,7 @@ export function View({ projectId }: OAuth2ServerViewProps) {
 
   /** Validation mirrors the API so users get the message before the request. */
   const validateSection = (section: OAuth2ServerSection): string | null => {
-    if (requiresAuthorizationUrl) {
+    if (requiresAuthorizationUrl(section)) {
       return t('Authorization URL is required when the server is enabled.')
     }
     switch (section) {
@@ -775,6 +779,9 @@ export function View({ projectId }: OAuth2ServerViewProps) {
           : t('Token lifetimes must be between 1 minute and 1 year.')
       }
       case 'device': {
+        if (deviceFlowOn && !form.verificationUrl.trim()) {
+          return t('Verification URL is required when device flow is on.')
+        }
         if (
           form.userCodeLength != null &&
           (!Number.isInteger(form.userCodeLength) ||
@@ -816,7 +823,7 @@ export function View({ projectId }: OAuth2ServerViewProps) {
     const error = validateSection(section)
     if (error) {
       toast.error(error)
-      if (requiresAuthorizationUrl) {
+      if (requiresAuthorizationUrl(section)) {
         document.getElementById('oauth2-authorization-url')?.focus()
       }
       return
@@ -831,9 +838,10 @@ export function View({ projectId }: OAuth2ServerViewProps) {
   const noEditPermissionTooltip = !canEdit
     ? t("You don't have permission to update OAuth2 server settings.")
     : undefined
-  const missingAuthorizationUrlTooltip = requiresAuthorizationUrl
-    ? t('Authorization URL is required when the server is enabled.')
-    : undefined
+  const missingAuthorizationUrlTooltip = (section: OAuth2ServerSection) =>
+    requiresAuthorizationUrl(section)
+      ? t('Authorization URL is required when the server is enabled.')
+      : undefined
 
   // One save at a time: every request carries the whole configuration, so a
   // second request built from the older server state would overwrite the first.
@@ -843,11 +851,11 @@ export function View({ projectId }: OAuth2ServerViewProps) {
       disabled={
         !canEdit ||
         !isDirty(section) ||
-        requiresAuthorizationUrl ||
+        requiresAuthorizationUrl(section) ||
         updateMutation.isPending
       }
       disabledTooltip={
-        noEditPermissionTooltip ?? missingAuthorizationUrlTooltip
+        noEditPermissionTooltip ?? missingAuthorizationUrlTooltip(section)
       }
       onClick={() => handleUpdate(section)}
     />
@@ -868,16 +876,7 @@ export function View({ projectId }: OAuth2ServerViewProps) {
             {serverState.enabled ? t('Active') : t('Inactive')}
           </Badge>
         }
-        footer={
-          <SectionUpdateButton
-            pending={updateMutation.isPending && pendingSection === 'status'}
-            disabled={
-              !canEdit || !isDirty('status') || updateMutation.isPending
-            }
-            disabledTooltip={noEditPermissionTooltip}
-            onClick={() => handleUpdate('status')}
-          />
-        }
+        footer={sectionFooter('status')}
       >
         <div className="flex items-center justify-between gap-4">
           <Label htmlFor="oauth2-server-enabled" className="text-[13px]">
@@ -890,22 +889,8 @@ export function View({ projectId }: OAuth2ServerViewProps) {
             onCheckedChange={(enabled) => patch({ enabled })}
           />
         </div>
-        {requiresAuthorizationUrl ? (
-          <p className="text-[12px] text-muted-foreground">
-            {t('Set an authorization URL below, then click Update.')}
-          </p>
-        ) : null}
-      </SettingsSection>
-
-      {form.enabled ? (
-        <>
-          <SettingsSection
-            title={t('Integration')}
-            description={t(
-              'Point your consent screen at the authorization URL and choose which scopes clients can request.',
-            )}
-            footer={sectionFooter('integration')}
-          >
+        {form.enabled ? (
+          <>
             <div className="space-y-2">
               <FieldHint
                 label={t('Authorization URL')}
@@ -924,7 +909,17 @@ export function View({ projectId }: OAuth2ServerViewProps) {
                 className="h-9 font-mono text-[13px]"
               />
             </div>
+          </>
+        ) : null}
+      </SettingsSection>
 
+      {form.enabled ? (
+        <>
+          <SettingsSection
+            title={t('Integration')}
+            description={t('Choose which scopes clients can request.')}
+            footer={sectionFooter('integration')}
+          >
             <div className="space-y-2">
               <FieldHint
                 label={t('Scopes')}
@@ -1116,98 +1111,122 @@ export function View({ projectId }: OAuth2ServerViewProps) {
             }
             footer={sectionFooter('device')}
           >
-            <div className="space-y-2">
-              <FieldHint
-                label={t('Verification URL')}
-                hint={t(
-                  'Page in your app where users enter the code shown on the device. Leave empty to keep the device authorization grant off.',
-                )}
-              />
-              <Input
-                id="oauth2-verification-url"
-                value={form.verificationUrl}
+            <div className="flex items-center justify-between gap-4">
+              <Label htmlFor="oauth2-device-flow" className="text-[13px]">
+                {t('Enable device flow')}
+              </Label>
+              <Switch
+                id="oauth2-device-flow"
+                checked={deviceFlowOn}
                 disabled={!canEdit}
-                placeholder="https://example.com/device"
-                onChange={(event) =>
-                  patch({ verificationUrl: event.target.value })
-                }
-                className="h-9 font-mono text-[13px]"
+                onCheckedChange={(on) => {
+                  setDeviceFlowSwitch(on)
+                  patch({
+                    verificationUrl: on ? serverState.verificationUrl : '',
+                  })
+                }}
               />
             </div>
+            {deviceFlowOn ? (
+              <>
+                <div className="space-y-2">
+                  <FieldHint
+                    label={t('Verification URL')}
+                    hint={t(
+                      'Page in your app where users enter the code shown on the device.',
+                    )}
+                  />
+                  <Input
+                    id="oauth2-verification-url"
+                    value={form.verificationUrl}
+                    disabled={!canEdit}
+                    placeholder="https://example.com/device"
+                    onChange={(event) =>
+                      patch({ verificationUrl: event.target.value })
+                    }
+                    className="h-9 font-mono text-[13px]"
+                  />
+                </div>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label
-                  htmlFor="oauth2-user-code-format"
-                  className="text-[13px] font-medium text-foreground"
-                >
-                  {t('User code format')}
-                </Label>
-                <Select
-                  value={form.userCodeFormat}
-                  onValueChange={(next) =>
-                    patch({
-                      userCodeFormat: normalizeOAuth2UserCodeFormat(next),
-                    })
-                  }
-                  disabled={!canEdit}
-                >
-                  <SelectTrigger
-                    id="oauth2-user-code-format"
-                    className="h-9 text-[13px]"
-                  >
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {OAUTH2_SERVER_USER_CODE_FORMAT_OPTIONS.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {t(option.label)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-[12px] text-muted-foreground">
-                  {t(selectedUserCodeFormat.hint)}
-                </p>
-              </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="oauth2-user-code-format"
+                      className="text-[13px] font-medium text-foreground"
+                    >
+                      {t('User code format')}
+                    </Label>
+                    <Select
+                      value={form.userCodeFormat}
+                      onValueChange={(next) =>
+                        patch({
+                          userCodeFormat: normalizeOAuth2UserCodeFormat(next),
+                        })
+                      }
+                      disabled={!canEdit}
+                    >
+                      <SelectTrigger
+                        id="oauth2-user-code-format"
+                        className="h-9 text-[13px]"
+                      >
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {OAUTH2_SERVER_USER_CODE_FORMAT_OPTIONS.map(
+                          (option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {t(option.label)}
+                            </SelectItem>
+                          ),
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-[12px] text-muted-foreground">
+                      {t(selectedUserCodeFormat.hint)}
+                    </p>
+                  </div>
 
-              <div className="space-y-2">
-                <Label
-                  htmlFor="oauth2-user-code-length"
-                  className="text-[13px] font-medium text-foreground"
-                >
-                  {t('User code length')}
-                </Label>
-                <Input
-                  id="oauth2-user-code-length"
-                  type="number"
-                  min={OAUTH2_SERVER_USER_CODE_MIN_LENGTH}
-                  max={OAUTH2_SERVER_USER_CODE_MAX_LENGTH}
-                  value={form.userCodeLength ?? ''}
-                  placeholder="8"
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="oauth2-user-code-length"
+                      className="text-[13px] font-medium text-foreground"
+                    >
+                      {t('User code length')}
+                    </Label>
+                    <Input
+                      id="oauth2-user-code-length"
+                      type="number"
+                      min={OAUTH2_SERVER_USER_CODE_MIN_LENGTH}
+                      max={OAUTH2_SERVER_USER_CODE_MAX_LENGTH}
+                      value={form.userCodeLength ?? ''}
+                      placeholder="8"
+                      disabled={!canEdit}
+                      onChange={(event) => {
+                        const next = event.target.value.trim()
+                        patch({
+                          userCodeLength: next === '' ? null : Number(next),
+                        })
+                      }}
+                      className="h-9 font-mono text-[13px] tabular-nums"
+                    />
+                    <p className="text-[12px] text-muted-foreground">
+                      {t(
+                        '6 to 12 characters, excluding the separator. Default: 8 when empty.',
+                      )}
+                    </p>
+                  </div>
+                </div>
+
+                <DurationField
+                  id="oauth2-device-code-duration"
+                  label={t('Device code lifetime')}
+                  hint={t('1 to 30 minutes. Default: 10 minutes when empty.')}
+                  placeholder="10"
                   disabled={!canEdit}
-                  onChange={(event) => {
-                    const next = event.target.value.trim()
-                    patch({ userCodeLength: next === '' ? null : Number(next) })
-                  }}
-                  className="h-9 font-mono text-[13px] tabular-nums"
+                  {...durationProps('deviceCode')}
                 />
-                <p className="text-[12px] text-muted-foreground">
-                  {t(
-                    '6 to 12 characters, excluding the separator. Default: 8 when empty.',
-                  )}
-                </p>
-              </div>
-            </div>
-
-            <DurationField
-              id="oauth2-device-code-duration"
-              label={t('Device code lifetime')}
-              hint={t('1 to 30 minutes. Default: 10 minutes when empty.')}
-              placeholder="10"
-              disabled={!canEdit}
-              {...durationProps('deviceCode')}
-            />
+              </>
+            ) : null}
           </SettingsSection>
 
           <SettingsSection

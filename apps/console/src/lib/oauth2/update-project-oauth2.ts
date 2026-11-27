@@ -34,6 +34,7 @@ const OAUTH2_UPDATE_BY_PROVIDER: Partial<
   [ProjectOAuthProviderId.Bitbucket]: (p, b) => p.updateOAuth2Bitbucket(b),
   [ProjectOAuthProviderId.Bitly]: (p, b) => p.updateOAuth2Bitly(b),
   [ProjectOAuthProviderId.Box]: (p, b) => p.updateOAuth2Box(b),
+  [ProjectOAuthProviderId.Clerk]: (p, b) => p.updateOAuth2Clerk(b),
   [ProjectOAuthProviderId.Cloudflare]: (p, b) => p.updateOAuth2Cloudflare(b),
   [ProjectOAuthProviderId.Dailymotion]: (p, b) => p.updateOAuth2Dailymotion(b),
   [ProjectOAuthProviderId.Discord]: (p, b) => p.updateOAuth2Discord(b),
@@ -73,6 +74,7 @@ const OAUTH2_UPDATE_BY_PROVIDER: Partial<
   [ProjectOAuthProviderId.Spotify]: (p, b) => p.updateOAuth2Spotify(b),
   [ProjectOAuthProviderId.Strava]: (p, b) => p.updateOAuth2Strava(b),
   [ProjectOAuthProviderId.Stripe]: (p, b) => p.updateOAuth2Stripe(b),
+  [ProjectOAuthProviderId.Supabase]: (p, b) => p.updateOAuth2Supabase(b),
   [ProjectOAuthProviderId.Tiktok]: (p, b) => p.updateOAuth2TikTok(b),
   [ProjectOAuthProviderId.Tradeshift]: (p, b) => p.updateOAuth2Tradeshift(b),
   [ProjectOAuthProviderId.TradeshiftBox]: (p, b) =>

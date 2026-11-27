@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Utopia\Span;
 
+use Random\Engine\Xoshiro256StarStar;
+use Random\Randomizer;
 use Throwable;
 use Utopia\Span\Exporter\Exporter;
 use Utopia\Span\Storage\Storage;
@@ -17,6 +19,10 @@ class Span
      */
     private static array $exporters = [];
 
+    private static ?Randomizer $randomizer = null;
+
+    private static int|false $randomizerPid = false;
+
     /**
      * @var array<string, string|int|float|bool|null>
      */
@@ -26,8 +32,8 @@ class Span
 
     public function __construct(private readonly string $action = 'unknown')
     {
-        $this->attributes['span.trace_id'] = bin2hex(random_bytes(16));
-        $this->attributes['span.id'] = bin2hex(random_bytes(8));
+        $this->attributes['span.trace_id'] = bin2hex($this->randomBytes(16));
+        $this->attributes['span.id'] = bin2hex($this->randomBytes(8));
         $this->attributes['span.started_at'] = microtime(true);
     }
 
@@ -249,5 +255,25 @@ class Span
         if (self::$storage instanceof \Utopia\Span\Storage\Storage) {
             self::$storage->set(null);
         }
+    }
+
+    /**
+     * Random bytes for trace and span ids.
+     *
+     * A userspace generator, seeded from the OS once per process: random_bytes() costs a
+     * getrandom() syscall on every call. The generator is re-seeded when the process id
+     * changes, so forked workers never continue their parent's stream.
+     *
+     * @param int<1, max> $length
+     */
+    private function randomBytes(int $length): string
+    {
+        $pid = getmypid();
+        if (!self::$randomizer instanceof Randomizer || self::$randomizerPid !== $pid) {
+            self::$randomizer = new Randomizer(new Xoshiro256StarStar(random_bytes(32)));
+            self::$randomizerPid = $pid;
+        }
+
+        return self::$randomizer->getBytes($length);
     }
 }

@@ -191,6 +191,41 @@ final class BatchTest extends Scope
         $this->assertEquals('Tester 1', $response['body'][2]['data']['accountCreate']['name']);
     }
 
+    /**
+     * Results follow the order of the operations, whichever finishes first: a database-backed
+     * operation ahead of a quick one used to come back second, as a JSON object.
+     */
+    public function testArrayBatchedResultsKeepTheirOrder()
+    {
+        $projectId = $this->getProject()['$id'];
+        $graphQLPayload = [
+            [
+                'query' => 'mutation CreateAccount($userId: String!, $email: String!, $password: String!, $name: String) {
+                    accountCreate(userId: $userId, email: $email, password: $password, name: $name) {
+                        name
+                    }
+                }',
+                'variables' => [
+                    'userId' => Id::unique(),
+                    'email' => 'tester' . \uniqid() . '@example.com',
+                    'password' => 'password',
+                    'name' => 'Ordered',
+                ]
+            ],
+            ['query' => 'query { localeListContinents { total continents { code } } }'],
+        ];
+        $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), $graphQLPayload);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertTrue(\array_is_list($response['body']), 'A batch answers with a JSON array');
+        $this->assertSame([0, 1], \array_keys($response['body']));
+        $this->assertSame('Ordered', $response['body'][0]['data']['accountCreate']['name']);
+        $this->assertSame(7, $response['body'][1]['data']['localeListContinents']['total']);
+    }
+
     public function testArrayBatchedMixedOfSameType()
     {
         $projectId = $this->getProject()['$id'];

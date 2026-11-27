@@ -59,6 +59,17 @@ class Get extends Base
         return 'getOAuth2Redirect';
     }
 
+    /**
+     * Runs once the sign-in is stored, before anything is sent to the browser. $user is the account that signed
+     * in, whether the flow ends with a session or with a token to trade for one. Nothing happens here: a flow that
+     * lands on a route of its own overrides this to act on who signed in, as it overrides getOAuth2CallbackPath()
+     * and getOAuth2Provider(). An exception stops the flow where it is: the person is not sent on, and what the
+     * sign-in stored stays.
+     */
+    protected function afterSignIn(Document $user): void
+    {
+    }
+
     public function __construct()
     {
         $this
@@ -140,27 +151,19 @@ class Get extends Base
         Bus $bus,
     ): void {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-        $port = $request->getPort();
-        $callbackBase = $protocol . '://' . $request->getHostname();
-        // An empty port means the host named none, so the scheme's default applies
-        if ($port !== '' && $port !== ($protocol === 'https' ? '443' : '80')) {
-            $callbackBase .= ':' . $port;
-        }
-
-        $callback = $callbackBase . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
+        $callback = $this->getOAuth2Callback($provider, $project, $request);
         $defaultState = ['success' => $project->getAttribute('url', ''), 'failure' => ''];
         $appId = $project->getAttribute('oAuthProviders', [])[$provider . 'Appid'] ?? '';
         $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
         $providerEnabled = $project->getAttribute('oAuthProviders', [])[$provider . 'Enabled'] ?? false;
 
-        $oAuthProviders = Config::getParam('oAuthProviders') ?? [];
-        $className = $oAuthProviders[$provider]['class'] ?? null;
+        $definition = $this->getOAuth2Provider($provider);
+        $className = $definition['class'] ?? null;
         if ($className === null || !\class_exists($className)) {
             throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
         }
 
-        $providers = Config::getParam('oAuthProviders') ?? [];
-        $providerName = $providers[$provider]['name'] ?? '';
+        $providerName = $definition['name'] ?? '';
 
         /** @var OAuth2 $oauth2 */
         $oauth2 = new $className($clientForOAuth2, $appId, $appSecret, $callback);
@@ -721,7 +724,7 @@ class Get extends Base
                 'secret' => $proofForTokenOAuth2->hash($secret), // One way hash encryption to protect DB leak
                 'expire' => $expire,
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
-                'ip' => $request->getIP(),
+                'ip' => $request->getClientIP(),
             ]);
 
             // If the `token` param is not set, we persist the session in a cookie
@@ -729,7 +732,7 @@ class Get extends Base
             $detector = new Detector($request->getUserAgent('UNKNOWN'));
             $secret = $proofForToken->generate();
 
-            $geoRecord = $geo->get($request->getIP());
+            $geoRecord = $geo->get($request->getClientIP());
             $session = new Document(array_merge([
                 '$id' => Id::unique(),
                 '$permissions' => [
@@ -749,7 +752,7 @@ class Get extends Base
                 'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int)$accessTokenExpiry),
                 'secret' => $proofForToken->hash($secret), // One way hash encryption to protect DB leak
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
-                'ip' => $request->getIP(),
+                'ip' => $request->getClientIP(),
                 'factors' => [TYPE::EMAIL, 'oauth2'], // include a special oauth2 factor to bypass MFA checks
                 'countryCode' => \strtolower($geoRecord->getCountryCode()),
                 'continentCode' => $geoRecord->getContinentCode() === '--' ? null : $geoRecord->getContinentCode(),
@@ -878,6 +881,8 @@ class Get extends Base
             $bus->dispatch(new EmailVerified(user: $user->getArrayCopy(), project: $project->getArrayCopy()));
         }
 
+        $this->afterSignIn($user);
+
         if ($state['token']) {
             $token = $created;
 
@@ -887,11 +892,19 @@ class Get extends Base
                 ->setParam('tokenId', $token->getId())
             ;
 
-            // Wrap secret in a JWT that also carries the provider name
+            // The account can hold several identities with this provider, so the token names the one that signed in
+            $identity = $dbForProject->findOne('identities', [
+                Query::equal('userInternalId', [$user->getSequence()]),
+                Query::equal('provider', [$provider]),
+                Query::equal('providerUid', [$oauth2ID]),
+            ]);
+
+            // Wrap secret in a JWT that also carries the provider name and the identity
             $jwtEncoder = new JWT(EncryptionKey::current(), 'HS256', 60, 0);
             $query['secret'] = $jwtEncoder->encode([
                 'secret' => $secret,
                 'provider' => $provider,
+                'identity' => $identity->getId(),
             ]);
             $query['userId'] = $user->getId();
         } else {
