@@ -137,6 +137,7 @@ final class SubmissionsTest extends TestCase
             'identifier' => self::PACKAGE,
             'versionName' => '1.2.0',
             'versionCode' => 88,
+            'signed' => true,
         ]);
         $this->release = $this->database->seed('distributionReleases', [
             '$id' => 'release',
@@ -254,7 +255,7 @@ final class SubmissionsTest extends TestCase
         $this->assertStep('released', 'reviewing', $submission);
         $this->assertSame('IN_REVIEW', $submission->getAttribute('storeStatus'));
 
-        $this->assertSame(['app', 'latestVersionCode', 'upload', 'processed', 'release', 'state'], $this->store->calls);
+        $this->assertSame(['latestVersionCode', 'app', 'latestVersionCode', 'upload', 'processed', 'release', 'state'], $this->store->calls);
         $this->assertSame([['write', $submission->getId(), 2], ['write', $submission->getId(), 15]], $this->schedules->calls->getArrayCopy());
     }
 
@@ -299,6 +300,74 @@ final class SubmissionsTest extends TestCase
         $this->assertNull($validated->getAttribute('step'));
         $this->assertSame([['stop', $submission->getId(), 0]], $this->schedules->calls->getArrayCopy());
         $this->assertSame('attention', $this->stored('distributionReleases', 'release')->getAttribute('status'));
+    }
+
+    /**
+     * @return \Iterator<string, array{array<string, mixed>, array<string, mixed>, int, string}>
+     */
+    public static function failedChecks(): \Iterator
+    {
+        yield 'version the store already has' => [[], [], 88, 'Build 88 is not higher than 88'];
+        yield 'unsigned artifact without a signing identity' => [['signed' => false], [], 0, 'The target has no signing identity.'];
+        yield 'target SDK below the Play requirement' => [['manifest' => ['targetSdk' => 34]], [], 0, 'Google Play requires API level 35'];
+        yield 'connection the store rejected' => [[], ['connectionId' => 'invalid-connection'], 0, 'The store rejected the credentials of the connection.'];
+    }
+
+    /**
+     * @param array<string, mixed> $artifact
+     * @param array<string, mixed> $target
+     */
+    #[DataProvider('failedChecks')]
+    public function testValidateFailsOnACheckError(array $artifact, array $target, int $latest, string $message): void
+    {
+        $this->database->seed('distributionConnections', ['$id' => 'invalid-connection', 'provider' => 'google', 'status' => 'invalid', 'error' => 'invalid_grant']);
+        $this->store->latest = $latest;
+        $submission = $this->submission();
+
+        $validated = $this->submissions()->validate(
+            $submission,
+            new Document([...$this->target->getArrayCopy(), ...$target]),
+            new Document([...$this->artifact->getArrayCopy(), ...$artifact]),
+        );
+
+        $this->assertSame('failed', $validated->getAttribute('status'));
+        $this->assertSame(Exception::DISTRIBUTION_CHECK_FAILED, $validated->getAttribute('errorCode'));
+        $this->assertStringContainsString($message, (string) $validated->getAttribute('errorMessage'));
+        $this->assertNull($validated->getAttribute('step'));
+        $this->assertSame('attention', $this->stored('distributionReleases', 'release')->getAttribute('status'));
+    }
+
+    public function testValidateRefusesATrackOfAnotherStore(): void
+    {
+        $submission = $this->submission(['track' => 'testflight']);
+
+        try {
+            $this->submissions()->validate($submission, $this->target, $this->artifact);
+            $this->fail('A track of another store must be refused.');
+        } catch (Exception $exception) {
+            $this->assertSame(Exception::DISTRIBUTION_TRACK_INVALID, $exception->getType());
+        }
+
+        $this->assertSame([], $this->store->calls);
+    }
+
+    public function testValidateWarningsDoNotFailTheSubmission(): void
+    {
+        $this->database->seed('distributionSigningIdentities', [
+            '$id' => 'expiring',
+            'platform' => 'android',
+            'status' => 'expiring',
+            'identifiers' => [],
+        ]);
+        $submission = $this->submission();
+
+        $validated = $this->submissions()->validate(
+            $submission,
+            new Document([...$this->target->getArrayCopy(), 'signingIdentityId' => 'expiring']),
+            new Document([...$this->artifact->getArrayCopy(), 'signed' => false]),
+        );
+
+        $this->assertStep('validated', 'validating', $validated);
     }
 
     /**

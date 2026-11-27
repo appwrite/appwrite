@@ -8,6 +8,7 @@ use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Artifacts\Down
 use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Artifacts\Get as GetArtifact;
 use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Artifacts\XList as ListArtifacts;
 use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Builds\Signing\Get as GetBuildSigning;
+use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Checks\Create as CreateCheck;
 use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Create as CreateApp;
 use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Delete as DeleteApp;
 use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Get as GetApp;
@@ -113,5 +114,7 @@ class Http extends Service
         $this->addAction(GetSubmission::getName(), GetSubmission::class);
         $this->addAction(UpdateSubmission::getName(), UpdateSubmission::class);
         $this->addAction(UpdateSubmissionStatus::getName(), UpdateSubmissionStatus::class);
+
+        $this->addAction(CreateCheck::getName(), CreateCheck::class);
     }
 }
