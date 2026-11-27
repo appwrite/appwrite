@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Submissions;
 
 use Appwrite\Abuse\Limit;
+use Appwrite\Distribution\Platform;
 use Appwrite\Distribution\Schedules;
 use Appwrite\Distribution\Stores;
 use Appwrite\Distribution\Submissions;
@@ -21,6 +22,7 @@ use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
 use Utopia\System\System;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 
 class Create extends Action
@@ -50,7 +52,7 @@ class Create extends Action
                 group: 'submissions',
                 name: 'createSubmission',
                 description: <<<EOT
-                Submit a ready artifact of a release to a store track through the target's store connection. The submission runs in the background: its status moves from waiting through upload and review to published. Sending the same key again returns the existing submission instead of creating a second one.
+                Submit a ready artifact of a release to a store track through the target's store connection. The submission runs in the background: its status moves from waiting through upload and review to published. Sending the same key again returns the existing submission instead of creating a second one. Pass a rollout below 1 to start a Google Play staged rollout at that fraction of users, and raise it later with updateSubmission.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
@@ -69,6 +71,7 @@ class Create extends Action
             ->param('track', '', new Text(64, 0), 'Store track to submit to. Leave empty to use the target default. iOS accepts testflight, testflight-external and production; Android accepts internal, alpha, beta and production.', true)
             ->param('automatic', true, new Boolean(), 'Whether the release goes live automatically after the store approves it. When false, publish it with updateSubmissionStatus.', true)
             ->param('key', '', new Text(128, 0), 'Idempotency key. A second request with the same key returns the existing submission. Defaults to the target ID, track and version code joined by colons. Max length: 128 chars.', true)
+            ->param('rollout', 1.0, new Range(0, 1, Range::TYPE_FLOAT), 'Fraction of users that receive the release, greater than 0 and at most 1. Defaults to 1, a full rollout. Apple accepts only 1, because its phased release percentages are fixed.', true)
             ->inject('response')
             ->inject('project')
             ->inject('dbForProject')
@@ -88,6 +91,7 @@ class Create extends Action
         string $track,
         bool $automatic,
         string $key,
+        float $rollout,
         Response $response,
         Document $project,
         Database $dbForProject,
@@ -119,6 +123,8 @@ class Create extends Action
         $track = $track ?: (string) $target->getAttribute('track', '');
         $submissions->accept($app, $target, $artifact, $track);
 
+        Submissions::assertRollout(Stores::provider(Platform::from((string) $target->getAttribute('platform', ''))), $rollout);
+
         $key = $key ?: Submissions::key($target, $artifact, $track);
         $existing = $submissions->existing($app, $key);
 
@@ -130,7 +136,7 @@ class Create extends Action
 
         $submissions->assertVersion($app, $target, $artifact, $track);
 
-        $submission = $submissions->create($app, $release, $target, $artifact, $track, $automatic, $key);
+        $submission = $submissions->create($app, $release, $target, $artifact, $track, $automatic, $key, $rollout);
 
         if ($submission === null) {
             $queueForEvents->reset();

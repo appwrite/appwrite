@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Distribution;
 
 use Appwrite\Distribution\Checks;
+use Appwrite\Distribution\Provider;
 use Appwrite\Distribution\Stores;
 use Appwrite\Distribution\Submission\Checkpoint;
 use Appwrite\Distribution\Submission\Step;
@@ -182,6 +183,65 @@ final class SubmissionsTest extends TestCase
         $this->assertSame($submission->getId(), $events[0]['id']);
 
         $this->assertSame('active', $this->stored('distributionReleases', 'release')->getAttribute('status'));
+    }
+
+    public function testCreateStoresTheRequestedRollout(): void
+    {
+        $submission = $this->submissions()->create($this->app, $this->release, $this->target, $this->artifact, 'production', true, 'key-1', 0.2);
+        $this->assertInstanceOf(Document::class, $submission);
+
+        $this->assertEqualsWithDelta(0.2, $submission->getAttribute('rollout'), PHP_FLOAT_EPSILON);
+        $this->assertEqualsWithDelta(0.2, $this->stored('distributionSubmissions', $submission->getId())->getAttribute('rollout'), PHP_FLOAT_EPSILON);
+    }
+
+    public function testCreateDefaultsToAFullRollout(): void
+    {
+        $submission = $this->submissions()->create($this->app, $this->release, $this->target, $this->artifact, 'production', true, 'key-1');
+        $this->assertInstanceOf(Document::class, $submission);
+
+        $this->assertEqualsWithDelta(1.0, $submission->getAttribute('rollout'), PHP_FLOAT_EPSILON);
+    }
+
+    /**
+     * @return \Iterator<string, array{string, float}>
+     */
+    public static function rollouts(): \Iterator
+    {
+        yield 'google staged' => ['google', 0.2];
+        yield 'google full' => ['google', 1.0];
+        yield 'apple full' => ['apple', 1.0];
+    }
+
+    #[DataProvider('rollouts')]
+    public function testAssertRolloutPasses(string $provider, float $rollout): void
+    {
+        $this->expectNotToPerformAssertions();
+
+        Submissions::assertRollout(Provider::from($provider), $rollout);
+    }
+
+    /**
+     * @return \Iterator<string, array{string, float, string}>
+     */
+    public static function refusedRollouts(): \Iterator
+    {
+        yield 'zero' => ['google', 0.0, 'Param "rollout" must be greater than 0 and at most 1.'];
+        yield 'negative' => ['google', -0.5, 'Param "rollout" must be greater than 0 and at most 1.'];
+        yield 'above one' => ['google', 1.5, 'Param "rollout" must be greater than 0 and at most 1.'];
+        yield 'not a number' => ['google', NAN, 'Param "rollout" must be greater than 0 and at most 1.'];
+        yield 'apple staged' => ['apple', 0.5, 'Apple accepts only a rollout of 1, because its phased release percentages are fixed.'];
+    }
+
+    #[DataProvider('refusedRollouts')]
+    public function testAssertRolloutRefuses(string $provider, float $rollout, string $message): void
+    {
+        try {
+            Submissions::assertRollout(Provider::from($provider), $rollout);
+            $this->fail('The rollout was accepted.');
+        } catch (Exception $error) {
+            $this->assertSame(Exception::GENERAL_ARGUMENT_INVALID, $error->getType());
+            $this->assertSame($message, $error->getMessage());
+        }
     }
 
     public function testCreateReportsADuplicateKey(): void
@@ -1114,6 +1174,138 @@ final class SubmissionsTest extends TestCase
     /**
      * @return \Iterator<string, array{array<string, mixed>}>
      */
+    public static function promotions(): \Iterator
+    {
+        yield 'released on another track' => [['step' => 'released', 'status' => 'reviewing']];
+        yield 'settled on another track' => [['step' => 'settled', 'status' => 'published']];
+        yield 'version code stored as a string' => [['step' => 'settled', 'status' => 'published', 'external' => ['packageName' => self::PACKAGE, 'versionCode' => '88', 'committed' => true]]];
+        yield 'released then rejected' => [['step' => 'settled', 'status' => 'rejected']];
+        yield 'released then failed' => [['step' => 'released', 'status' => 'failed']];
+    }
+
+    /**
+     * @param array<string, mixed> $prior
+     */
+    #[DataProvider('promotions')]
+    public function testPromotionOpensAnEditWithoutUploading(array $prior): void
+    {
+        $this->store->latest = 88;
+        $this->prior($prior);
+        $submission = $this->claimed($this->submission(['status' => 'validating', 'step' => 'located', 'track' => 'production']));
+
+        $result = $this->submissions()->upload($submission, $this->artifact, $this->connection);
+
+        $this->assertSame($this->store->promoted, $result);
+        $this->assertSame(['promote'], $this->store->calls);
+        $this->assertSame([['identifier' => self::PACKAGE, 'build' => '88']], $this->store->promotions);
+        $this->assertTrue(Submissions::isPromotion($this->database, $this->connection, $this->artifact));
+    }
+
+    /**
+     * @return \Iterator<string, array{array<string, mixed>, string}>
+     */
+    public static function refusedPromotions(): \Iterator
+    {
+        yield 'no prior submission' => [[], ''];
+        yield 'failed before release' => [['step' => 'located', 'status' => 'failed', 'external' => ['packageName' => self::PACKAGE, 'editId' => self::EDIT, 'versionCode' => 88]], 'artifact'];
+        yield 'canceled before release' => [['step' => 'uploaded', 'status' => 'canceled', 'external' => ['packageName' => self::PACKAGE, 'editId' => self::EDIT, 'versionCode' => 88]], 'artifact'];
+        yield 'another version code' => [['step' => 'settled', 'status' => 'published', 'external' => ['packageName' => self::PACKAGE, 'versionCode' => 87, 'committed' => true]], 'artifact'];
+        yield 'another package' => [['step' => 'settled', 'status' => 'published', 'external' => ['packageName' => 'io.example.other', 'versionCode' => 88, 'committed' => true]], 'artifact'];
+        yield 'another artifact with the same version code' => [['step' => 'settled', 'status' => 'published'], 'rebuilt'];
+    }
+
+    /**
+     * @param array<string, mixed> $prior
+     */
+    #[DataProvider('refusedPromotions')]
+    public function testUploadRefusesAVersionNotReleasedFromThisArtifact(array $prior, string $artifactId): void
+    {
+        $this->store->latest = 88;
+
+        if ($artifactId !== '') {
+            $this->prior($prior, $artifactId);
+        }
+
+        $submission = $this->claimed($this->submission(['status' => 'validating', 'step' => 'located', 'track' => 'production']));
+
+        $refused = null;
+
+        try {
+            $this->submissions()->upload($submission, $this->artifact, $this->connection);
+        } catch (Exception $exception) {
+            $refused = $exception;
+        }
+
+        $this->assertInstanceOf(Exception::class, $refused);
+        $this->assertSame(Exception::DISTRIBUTION_VERSION_INVALID, $refused->getType());
+        $this->assertSame(['latestVersionCode'], $this->store->calls);
+        $this->assertSame([], $this->store->promotions);
+        $this->assertFalse(Submissions::isPromotion($this->database, $this->connection, $this->artifact));
+    }
+
+    public function testPromotionIgnoresTheSubmissionItself(): void
+    {
+        $this->prior(['step' => 'settled', 'status' => 'published']);
+
+        $this->assertFalse(Submissions::isPromotion($this->database, $this->connection, $this->artifact, 'prior'));
+        $this->assertFalse(Submissions::isPromotion($this->database, $this->connection, new Document(), 'submission'));
+    }
+
+    public function testAppleNeverPromotes(): void
+    {
+        $this->prior(['step' => 'settled', 'status' => 'published']);
+        $apple = new Document(['$id' => 'apple', '$sequence' => '30', 'provider' => 'apple']);
+
+        $this->assertFalse(Submissions::isPromotion($this->database, $apple, $this->artifact));
+    }
+
+    public function testPromotionIsReleasedThroughItsOwnEdit(): void
+    {
+        $this->prior(['step' => 'settled', 'status' => 'published']);
+        $submission = $this->claimed($this->submission(['status' => 'validating', 'step' => 'located', 'track' => 'production']));
+
+        $recorded = $this->recorded($submission);
+        $processed = $this->submissions()->process($recorded, $this->connection);
+        $released = $this->submissions()->release($processed, $this->release, $this->target, $this->artifact, $this->connection);
+
+        $this->assertSame(['promote', 'processed', 'release'], $this->store->calls);
+        $this->assertSame('released', $released->getAttribute('step'));
+        $this->assertSame([...$this->store->promoted, 'track' => 'production', 'committed' => true], $released->getAttribute('external'));
+        $this->assertSame('88', $this->store->release?->build);
+    }
+
+    public function testExpiredPromotionEditIsPromotedAgain(): void
+    {
+        $this->prior(['step' => 'settled', 'status' => 'published']);
+        $this->store->failures['release'] = new NotFound('Edit expired', [new Issue('editExpired', 'This edit has expired.')]);
+        $submission = $this->claimed($this->submission(['status' => 'validating', 'step' => 'located', 'track' => 'production']));
+        $submissions = $this->submissions();
+
+        $processed = $submissions->process($this->recorded($submission, $submissions), $this->connection);
+
+        try {
+            $submissions->release($processed, $this->release, $this->target, $this->artifact, $this->connection);
+            $this->fail('The release should fail.');
+        } catch (NotFound $expired) {
+            $failed = $submissions->fail($processed, $expired);
+        }
+
+        $this->assertSame('located', $failed->getAttribute('step'));
+        $this->assertArrayNotHasKey('editId', $failed->getAttribute('external'));
+
+        unset($this->store->failures['release']);
+        $this->store->calls = [];
+        $this->store->promoted = [...$this->store->promoted, 'editId' => 'edit-again'];
+
+        $result = $submissions->upload($this->claimed($this->stored('distributionSubmissions', $submission->getId())), $this->artifact, $this->connection);
+
+        $this->assertSame(['promote'], $this->store->calls);
+        $this->assertSame('edit-again', $result['editId'] ?? null);
+    }
+
+    /**
+     * @return \Iterator<string, array{array<string, mixed>}>
+     */
     public static function resumes(): \Iterator
     {
         yield 'open edit' => [['editId' => self::EDIT]];
@@ -1504,6 +1696,56 @@ final class SubmissionsTest extends TestCase
         $this->assertSame($expected, $this->schedules->calls->getArrayCopy());
     }
 
+    /**
+     * @return \Iterator<string, array{State, string}>
+     */
+    public static function unpublishedStates(): \Iterator
+    {
+        yield 'pending' => [new State(State::STATUS_PENDING, 'RELEASE_LIFECYCLE_STATE_NOT_SENT_FOR_REVIEW'), 'pending'];
+        yield 'reviewing' => [new State(State::STATUS_REVIEWING, 'RELEASE_LIFECYCLE_STATE_IN_REVIEW'), 'reviewing'];
+        yield 'approved' => [new State(State::STATUS_APPROVED, 'RELEASE_LIFECYCLE_STATE_APPROVED_NOT_PUBLISHED'), 'approved'];
+    }
+
+    #[DataProvider('unpublishedStates')]
+    public function testReconcileKeepsTheRequestedRolloutUntilTheStorePublishes(State $state, string $status): void
+    {
+        $this->store->state = $state;
+        $submission = $this->submission(['status' => 'processing', 'step' => 'released', 'track' => 'production', 'rollout' => 0.2]);
+
+        $reconciled = $this->submissions()->reconcile($submission, $this->release, $this->connection);
+
+        $this->assertStep('released', $status, $reconciled);
+        $this->assertEqualsWithDelta(0.2, $reconciled->getAttribute('rollout'), PHP_FLOAT_EPSILON);
+        $this->assertEqualsWithDelta(0.2, $this->stored('distributionSubmissions', $submission->getId())->getAttribute('rollout'), PHP_FLOAT_EPSILON);
+    }
+
+    public function testReconcileTakesTheRolloutOfAPublishedRelease(): void
+    {
+        $submissions = $this->submissions();
+        $submission = $this->submission(['status' => 'approved', 'step' => 'released', 'track' => 'production', 'rollout' => 0.2]);
+        $observed = [];
+
+        foreach ([0.2, 0.5, 1.0] as $fraction) {
+            $this->store->state = new State(State::STATUS_PUBLISHED, 'RELEASE_LIFECYCLE_STATE_PUBLISHED', $fraction);
+            $submission = $submissions->reconcile($submission, $this->release, $this->connection);
+            $observed[] = [$submission->getAttribute('rollout'), $submission->getAttribute('step')];
+        }
+
+        $this->assertSame([[0.2, 'released'], [0.5, 'released'], [1.0, 'settled']], $observed);
+        $this->assertSame('published', $submission->getAttribute('status'));
+    }
+
+    public function testReconcileTakesTheRolloutOfAHaltedRelease(): void
+    {
+        $this->store->state = new State(State::STATUS_HALTED, 'RELEASE_LIFECYCLE_STATE_PUBLISHED', 0.3);
+        $submission = $this->submission(['status' => 'published', 'step' => 'released', 'track' => 'production', 'rollout' => 0.2]);
+
+        $reconciled = $this->submissions()->reconcile($submission, $this->release, $this->connection);
+
+        $this->assertStep('released', 'halted', $reconciled);
+        $this->assertEqualsWithDelta(0.3, $reconciled->getAttribute('rollout'), PHP_FLOAT_EPSILON);
+    }
+
     public function testReconcileResetsTheRetryLadder(): void
     {
         $submission = $this->submission(['status' => 'reviewing', 'step' => 'released', 'attempt' => 3, 'retryAt' => $this->at(-1)]);
@@ -1730,7 +1972,7 @@ final class SubmissionsTest extends TestCase
     {
         $this->store->state = new State(State::STATUS_PUBLISHED, 'RELEASE_LIFECYCLE_STATE_PUBLISHED');
         $external = ['editId' => self::EDIT, 'committed' => true];
-        $submission = $this->submission(['track' => 'production', 'automatic' => true, 'status' => 'approved', 'step' => 'released', 'external' => $external]);
+        $submission = $this->submission(['track' => 'production', 'rollout' => 1.0, 'automatic' => true, 'status' => 'approved', 'step' => 'released', 'external' => $external]);
 
         $controlled = $this->submissions()->control($submission, $this->connection, 'published');
 
@@ -1739,6 +1981,150 @@ final class SubmissionsTest extends TestCase
         $this->assertStep('settled', 'published', $controlled);
         $this->assertEmpty($controlled->getAttribute('errorCode'));
         $this->assertNotEmpty($controlled->getAttribute('publishedAt'));
+    }
+
+    public function testPublishingAnApprovedStagedGoogleSubmissionKeepsItsFraction(): void
+    {
+        $this->store->state = new State(State::STATUS_PUBLISHED, 'RELEASE_LIFECYCLE_STATE_PUBLISHED', 0.2);
+        $external = ['editId' => self::EDIT, 'committed' => true];
+        $submission = $this->submission(['track' => 'production', 'rollout' => 0.2, 'status' => 'approved', 'step' => 'released', 'external' => $external]);
+
+        $controlled = $this->submissions()->control($submission, $this->connection, 'published');
+
+        $this->assertSame(['rollout', 'state'], $this->store->calls);
+        $this->assertSame([['external' => $external, 'track' => 'production', 'fraction' => 0.2]], $this->store->rollouts);
+        $this->assertStep('released', 'published', $controlled);
+        $this->assertEqualsWithDelta(0.2, $controlled->getAttribute('rollout'), PHP_FLOAT_EPSILON);
+    }
+
+    public function testControlWithARolloutChangesTheFraction(): void
+    {
+        $this->store->state = new State(State::STATUS_PUBLISHED, 'RELEASE_LIFECYCLE_STATE_PUBLISHED', 0.5);
+        $external = ['editId' => self::EDIT, 'committed' => true];
+        $submission = $this->submission(['track' => 'production', 'rollout' => 0.4, 'status' => 'published', 'step' => 'released', 'external' => $external]);
+
+        $controlled = $this->submissions()->control($submission, $this->connection, 'published', 0.5);
+
+        $this->assertSame(['rollout', 'state'], $this->store->calls);
+        $this->assertSame([['external' => $external, 'track' => 'production', 'fraction' => 0.5]], $this->store->rollouts);
+        $this->assertStep('released', 'published', $controlled);
+        $this->assertEqualsWithDelta(0.5, $controlled->getAttribute('rollout'), PHP_FLOAT_EPSILON);
+        $this->assertSame($external, $controlled->getAttribute('external'));
+    }
+
+    /**
+     * @return \Iterator<string, array{string, float, float}>
+     */
+    public static function skippedRollouts(): \Iterator
+    {
+        yield 'halted' => ['halted', 0.4, 0.5];
+        yield 'approved' => ['approved', 0.4, 0.5];
+        yield 'the same fraction' => ['published', 0.4, 0.4];
+        yield 'a lower fraction' => ['published', 0.4, 0.3];
+    }
+
+    #[DataProvider('skippedRollouts')]
+    public function testControlWithARolloutIsSkippedUnlessItRaisesAPublishedRollout(string $status, float $stored, float $rollout): void
+    {
+        $external = ['editId' => self::EDIT, 'committed' => true];
+        $submission = $this->submission(['track' => 'production', 'rollout' => $stored, 'status' => $status, 'step' => 'released', 'external' => [...$external, 'control' => ['status' => 'published', 'rollout' => $rollout, 'attempt' => 1]], 'retryAt' => $this->at(60)]);
+
+        $controlled = $this->submissions()->control($submission, $this->connection, 'published', $rollout);
+
+        $this->assertSame([], $this->store->calls, 'A skipped rollout never reaches the store, so a halted rollout is not resumed.');
+        $this->assertStep('released', $status, $controlled);
+        $this->assertEqualsWithDelta($stored, $controlled->getAttribute('rollout'), PHP_FLOAT_EPSILON);
+        $this->assertSame($external, $controlled->getAttribute('external'), 'The pending control is cleared.');
+        $this->assertNull($controlled->getAttribute('retryAt'));
+    }
+
+    /**
+     * @return \Iterator<string, array{string, float}>
+     */
+    public static function staleReplays(): \Iterator
+    {
+        yield 'halted since it was deferred' => ['halted', 0.2];
+        yield 'raised past it since it was deferred' => ['published', 0.6];
+    }
+
+    #[DataProvider('staleReplays')]
+    public function testReplayedRolloutIsSkippedOnceItNoLongerRaisesAPublishedRollout(string $status, float $stored): void
+    {
+        $this->store->state = new State(State::STATUS_PUBLISHED, 'RELEASE_LIFECYCLE_STATE_PUBLISHED', 0.6);
+        $submission = $this->submission(['track' => 'production', 'rollout' => $stored, 'status' => $status, 'step' => 'released', 'external' => ['control' => ['status' => 'published', 'rollout' => 0.5, 'attempt' => 2]]]);
+
+        $reconciled = $this->submissions()->reconcile($submission, $this->release, $this->connection);
+
+        $this->assertSame([], $this->store->calls);
+        $this->assertSame([], $this->store->rollouts);
+        $this->assertStep('released', $status, $reconciled);
+        $this->assertSame([], $reconciled->getAttribute('external'));
+    }
+
+    /**
+     * @return \Iterator<string, array{array<string, mixed>, float}>
+     */
+    public static function rolloutChanges(): \Iterator
+    {
+        yield 'raised' => [['provider' => 'google', 'status' => 'published', 'rollout' => 0.2], 0.5];
+        yield 'to everyone' => [['provider' => 'google', 'status' => 'published', 'rollout' => 0.2], 1.0];
+        yield 'unchanged' => [['provider' => 'google', 'status' => 'published', 'rollout' => 0.2], 0.2];
+        yield 'raise pending' => [['provider' => 'google', 'status' => 'published', 'rollout' => 0.2, 'external' => ['control' => ['status' => 'published', 'rollout' => 0.4, 'attempt' => 0]]], 0.5];
+    }
+
+    /**
+     * @param array<string, mixed> $attributes
+     */
+    #[DataProvider('rolloutChanges')]
+    public function testAssertRolloutChangePasses(array $attributes, float $rollout): void
+    {
+        $this->expectNotToPerformAssertions();
+
+        Submissions::assertRolloutChange(new Document(['$id' => 'submission', ...$attributes]), $rollout);
+    }
+
+    /**
+     * @return \Iterator<string, array{array<string, mixed>, float, string}>
+     */
+    public static function refusedRolloutChanges(): \Iterator
+    {
+        $released = "Submission 'submission' was already released to the store, so its rollout can change only while it is a published Google Play staged rollout.";
+
+        yield 'halted' => [['provider' => 'google', 'status' => 'halted', 'rollout' => 0.2], 0.5, "Submission 'submission' is halted. Resume it with updateSubmissionStatus before changing its rollout."];
+        yield 'halt pending' => [['provider' => 'google', 'status' => 'published', 'rollout' => 0.2, 'external' => ['control' => ['status' => 'halted', 'rollout' => null, 'attempt' => 0]]], 0.5, "A halt is pending for submission 'submission'. Wait for it before changing its rollout."];
+        yield 'lowered' => [['provider' => 'google', 'status' => 'published', 'rollout' => 0.5], 0.2, "Google Play cannot lower the rollout of submission 'submission'. Halt it with updateSubmissionStatus instead."];
+        yield 'rolled out' => [['provider' => 'google', 'status' => 'published', 'rollout' => 1.0], 1.0, $released];
+        yield 'approved' => [['provider' => 'google', 'status' => 'approved', 'rollout' => 0.2], 0.5, $released];
+        yield 'rejected' => [['provider' => 'google', 'status' => 'rejected', 'rollout' => 0.2], 0.5, $released];
+        yield 'apple' => [['provider' => 'apple', 'status' => 'published', 'rollout' => 0.2], 1.0, $released];
+    }
+
+    /**
+     * @param array<string, mixed> $attributes
+     */
+    #[DataProvider('refusedRolloutChanges')]
+    public function testAssertRolloutChangeRefuses(array $attributes, float $rollout, string $message): void
+    {
+        try {
+            Submissions::assertRolloutChange(new Document(['$id' => 'submission', ...$attributes]), $rollout);
+            $this->fail('The rollout change was accepted.');
+        } catch (Exception $error) {
+            $this->assertSame(Exception::DISTRIBUTION_SUBMISSION_TRANSITION_INVALID, $error->getType());
+            $this->assertSame($message, $error->getMessage());
+        }
+    }
+
+    public function testControlRollingOutToEveryoneSettles(): void
+    {
+        $this->store->state = new State(State::STATUS_PUBLISHED, 'RELEASE_LIFECYCLE_STATE_PUBLISHED');
+        $submission = $this->submission(['track' => 'production', 'rollout' => 0.5, 'status' => 'published', 'step' => 'released']);
+
+        $controlled = $this->submissions()->control($submission, $this->connection, 'published', 1.0);
+
+        $this->assertEqualsWithDelta(1.0, $this->store->rollouts[0]['fraction'], PHP_FLOAT_EPSILON);
+        $this->assertStep('settled', 'published', $controlled);
+        $this->assertEqualsWithDelta(1.0, $controlled->getAttribute('rollout'), PHP_FLOAT_EPSILON);
+        $this->assertSame([['stop', $submission->getId(), 0]], $this->schedules->calls->getArrayCopy());
     }
 
     public function testCancelingAReleasedAppleTestFlightBuildIsReportedAndDropped(): void
@@ -1847,7 +2233,7 @@ final class SubmissionsTest extends TestCase
         $this->assertStep('released', 'published', $controlled);
         $this->assertSame(Exception::DISTRIBUTION_STORE_UNAVAILABLE, $controlled->getAttribute('errorCode'));
         $this->assertSame(0, $controlled->getAttribute('attempt'), 'A control retry never spends the submission\'s own retry budget.');
-        $this->assertSame(['editId' => self::EDIT, 'committed' => true, 'control' => ['status' => 'halted', 'attempt' => 3]], $controlled->getAttribute('external'));
+        $this->assertSame(['editId' => self::EDIT, 'committed' => true, 'control' => ['status' => 'halted', 'rollout' => null, 'attempt' => 3]], $controlled->getAttribute('external'));
         $this->assertEqualsWithDelta(\strtotime($this->at(900)), \strtotime((string) $controlled->getAttribute('retryAt')), 5);
         $this->assertNull($this->publisher->getEvents(self::QUEUE), 'The retry waits for the schedule instead of the queue.');
         $this->assertSame(['halt'], $this->store->calls);
@@ -1891,7 +2277,7 @@ final class SubmissionsTest extends TestCase
 
         $deferred = $submissions->control($submission, $this->connection, 'halted');
 
-        $this->assertSame(['control' => ['status' => 'halted', 'attempt' => 1]], $deferred->getAttribute('external'));
+        $this->assertSame(['control' => ['status' => 'halted', 'rollout' => null, 'attempt' => 1]], $deferred->getAttribute('external'));
         $this->assertEqualsWithDelta(\strtotime($this->at(60)), \strtotime((string) $deferred->getAttribute('retryAt')), 5);
         $this->assertSame(['halt'], $this->store->calls);
 
@@ -1917,7 +2303,7 @@ final class SubmissionsTest extends TestCase
         $deferred = $submissions->control($submission, $this->connection, 'halted');
 
         $this->assertStep('released', 'published', $deferred);
-        $this->assertSame(['control' => ['status' => 'halted', 'attempt' => 0]], $deferred->getAttribute('external'));
+        $this->assertSame(['control' => ['status' => 'halted', 'rollout' => null, 'attempt' => 0]], $deferred->getAttribute('external'));
         $this->assertNull($deferred->getAttribute('retryAt'), 'Contention is not a store failure, so the next tick replays it.');
         $this->assertSame([], $this->store->calls);
 
@@ -1927,6 +2313,68 @@ final class SubmissionsTest extends TestCase
         $this->assertStep('released', 'halted', $reconciled);
         $this->assertSame([], $reconciled->getAttribute('external'));
         $this->assertSame(['halt', 'state'], $this->store->calls);
+    }
+
+    public function testContendedRolloutIsReplayedOnceTheStoreIsFree(): void
+    {
+        $this->sibling(['editId' => self::EDIT]);
+        $this->store->state = new State(State::STATUS_PUBLISHED, 'RELEASE_LIFECYCLE_STATE_PUBLISHED', 0.5);
+        $submission = $this->submission(['status' => 'published', 'step' => 'released', 'track' => 'production', 'rollout' => 0.2]);
+        $submissions = $this->submissions();
+
+        $deferred = $submissions->control($submission, $this->connection, 'published', 0.5);
+
+        $this->assertSame(['control' => ['status' => 'published', 'rollout' => 0.5, 'attempt' => 0]], $deferred->getAttribute('external'));
+        $this->assertEqualsWithDelta(0.2, $deferred->getAttribute('rollout'), PHP_FLOAT_EPSILON);
+        $this->assertSame([], $this->store->calls);
+
+        $this->database->updateDocument('distributionSubmissions', 'sibling', new Document(['external' => ['editId' => self::EDIT, 'committed' => true]]));
+        $reconciled = $submissions->reconcile($this->stored('distributionSubmissions', $submission->getId()), $this->release, $this->connection);
+
+        $this->assertSame(['rollout', 'state'], $this->store->calls);
+        $this->assertEqualsWithDelta(0.5, $this->store->rollouts[0]['fraction'], PHP_FLOAT_EPSILON);
+        $this->assertStep('released', 'published', $reconciled);
+        $this->assertEqualsWithDelta(0.5, $reconciled->getAttribute('rollout'), PHP_FLOAT_EPSILON);
+        $this->assertSame([], $reconciled->getAttribute('external'));
+    }
+
+    public function testRateLimitedRolloutIsReplayedByTheNextReconcile(): void
+    {
+        $this->store->failures['rollout'] = new RateLimited('Slow down');
+        $this->store->state = new State(State::STATUS_PUBLISHED, 'RELEASE_LIFECYCLE_STATE_PUBLISHED', 0.5);
+        $submission = $this->submission(['status' => 'published', 'step' => 'released', 'track' => 'production', 'rollout' => 0.2]);
+        $submissions = $this->submissions();
+
+        $deferred = $submissions->control($submission, $this->connection, 'published', 0.5);
+
+        $this->assertSame(['control' => ['status' => 'published', 'rollout' => 0.5, 'attempt' => 1]], $deferred->getAttribute('external'));
+
+        unset($this->store->failures['rollout']);
+        $reconciled = $submissions->reconcile($this->stored('distributionSubmissions', $submission->getId()), $this->release, $this->connection);
+
+        $this->assertSame([0.5, 0.5], \array_column($this->store->rollouts, 'fraction'));
+        $this->assertEqualsWithDelta(0.5, $reconciled->getAttribute('rollout'), PHP_FLOAT_EPSILON);
+        $this->assertSame([], $reconciled->getAttribute('external'));
+    }
+
+    /**
+     * @return \Iterator<string, array{float, int}>
+     */
+    public static function retriedRollouts(): \Iterator
+    {
+        yield 'the same rollout keeps counting' => [0.4, 4];
+        yield 'a new rollout starts over' => [0.5, 1];
+    }
+
+    #[DataProvider('retriedRollouts')]
+    public function testRolloutRetryCountsAttemptsPerFraction(float $rollout, int $attempt): void
+    {
+        $this->store->failures['rollout'] = new Unavailable('Down');
+        $submission = $this->submission(['status' => 'published', 'step' => 'released', 'track' => 'production', 'rollout' => 0.2, 'external' => ['control' => ['status' => 'published', 'rollout' => 0.4, 'attempt' => 3]]]);
+
+        $controlled = $this->submissions()->control($submission, $this->connection, 'published', $rollout);
+
+        $this->assertSame(['control' => ['status' => 'published', 'rollout' => $rollout, 'attempt' => $attempt]], $controlled->getAttribute('external'));
     }
 
     public function testNewerControlReplacesThePendingOne(): void
@@ -1939,6 +2387,75 @@ final class SubmissionsTest extends TestCase
         $this->assertStep('settled', 'published', $controlled);
         $this->assertSame([], $controlled->getAttribute('external'));
         $this->assertSame(['rollout', 'state'], $this->store->calls);
+    }
+
+    /**
+     * @return \Iterator<string, array{bool}>
+     */
+    public static function packages(): \Iterator
+    {
+        yield 'busy package' => [true];
+        yield 'free package' => [false];
+    }
+
+    #[DataProvider('packages')]
+    public function testPendingHaltWinsOverARaise(bool $busy): void
+    {
+        if ($busy) {
+            $this->sibling(['editId' => self::EDIT]);
+        }
+
+        $this->store->state = new State(State::STATUS_PUBLISHED, 'RELEASE_LIFECYCLE_STATE_PUBLISHED', 0.5);
+        $control = ['status' => 'halted', 'rollout' => null, 'attempt' => 0];
+        $submission = $this->submission(['status' => 'published', 'step' => 'released', 'track' => 'production', 'rollout' => 0.2, 'external' => ['control' => $control]]);
+
+        $controlled = $this->submissions()->control($submission, $this->connection, 'published', 0.5);
+
+        $this->assertSame([], $this->store->calls, 'A raise never reaches the store while a halt is pending.');
+        $this->assertSame([], $this->store->rollouts);
+        $this->assertStep('released', 'published', $controlled);
+        $this->assertEqualsWithDelta(0.2, $controlled->getAttribute('rollout'), PHP_FLOAT_EPSILON);
+        $this->assertSame(['control' => $control], $this->stored('distributionSubmissions', $submission->getId())->getAttribute('external'), 'The pending halt is kept.');
+    }
+
+    public function testPendingHaltKeptOverARaiseIsReplayedOnceTheStoreIsFree(): void
+    {
+        $this->sibling(['editId' => self::EDIT]);
+        $this->store->state = new State(State::STATUS_HALTED, 'RELEASE_LIFECYCLE_STATE_PUBLISHED', 0.2);
+        $submission = $this->submission(['status' => 'published', 'step' => 'released', 'track' => 'production', 'rollout' => 0.2]);
+        $submissions = $this->submissions();
+
+        $halted = $submissions->control($submission, $this->connection, 'halted');
+        $raised = $submissions->control($halted, $this->connection, 'published', 0.5);
+
+        $this->assertSame(['control' => ['status' => 'halted', 'rollout' => null, 'attempt' => 0]], $raised->getAttribute('external'));
+
+        $this->database->updateDocument('distributionSubmissions', 'sibling', new Document(['external' => ['editId' => self::EDIT, 'committed' => true]]));
+        $reconciled = $submissions->reconcile($this->stored('distributionSubmissions', $submission->getId()), $this->release, $this->connection);
+
+        $this->assertSame(['halt', 'state'], $this->store->calls);
+        $this->assertSame([], $this->store->rollouts);
+        $this->assertStep('released', 'halted', $reconciled);
+        $this->assertEqualsWithDelta(0.2, $reconciled->getAttribute('rollout'), PHP_FLOAT_EPSILON);
+        $this->assertSame([], $reconciled->getAttribute('external'));
+    }
+
+    #[DataProvider('packages')]
+    public function testHaltReplacesAPendingRaise(bool $busy): void
+    {
+        if ($busy) {
+            $this->sibling(['editId' => self::EDIT]);
+        }
+
+        $this->store->state = new State(State::STATUS_HALTED, 'RELEASE_LIFECYCLE_STATE_PUBLISHED', 0.2);
+        $submission = $this->submission(['status' => 'published', 'step' => 'released', 'track' => 'production', 'rollout' => 0.2, 'external' => ['control' => ['status' => 'published', 'rollout' => 0.5, 'attempt' => 2]]]);
+
+        $controlled = $this->submissions()->control($submission, $this->connection, 'halted');
+
+        $this->assertSame([], $this->store->rollouts, 'The replaced raise never reaches the store.');
+        $this->assertSame($busy ? [] : ['halt', 'state'], $this->store->calls);
+        $this->assertStep('released', $busy ? 'published' : 'halted', $controlled);
+        $this->assertSame($busy ? ['control' => ['status' => 'halted', 'rollout' => null, 'attempt' => 0]] : [], $controlled->getAttribute('external'));
     }
 
     public function testControlRetriesStopAfterTheLastAttempt(): void
@@ -2152,6 +2669,31 @@ final class SubmissionsTest extends TestCase
             'connectionInternalId' => $this->stored('distributionConnections', $connectionId)->getSequence(),
         ]);
         $this->submission(['$id' => 'sibling', 'key' => 'sibling', 'targetId' => 'other-target', 'targetInternalId' => $other->getSequence(), 'status' => 'uploading', 'external' => $external]);
+    }
+
+    /**
+     * Seeds a submission of version code 88 from the artifact, or from an artifact named rebuilt
+     * that has the same version code.
+     *
+     * @param array<string, mixed> $attributes
+     */
+    private function prior(array $attributes, string $artifactId = 'artifact'): void
+    {
+        $artifact = match ($artifactId) {
+            'artifact' => $this->artifact,
+            'rebuilt' => $this->database->seed('distributionArtifacts', [...$this->artifact->getArrayCopy(), '$id' => 'rebuilt', '$sequence' => '99']),
+            default => throw new \LogicException("Unknown artifact {$artifactId}"),
+        };
+
+        $this->submission([
+            '$id' => 'prior',
+            'key' => 'prior',
+            'artifactId' => $artifact->getId(),
+            'artifactInternalId' => $artifact->getSequence(),
+            'track' => 'internal',
+            'external' => ['packageName' => self::PACKAGE, 'editId' => self::EDIT, 'versionCode' => 88, 'committed' => true],
+            ...$attributes,
+        ]);
     }
 
     private function operate(string $operation, Submissions $submissions, Document $submission, Document $connection): Document

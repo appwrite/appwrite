@@ -28,6 +28,9 @@ final class StoreTest extends TestCase
         yield 'upload with progress' => ['upload', static function (Store $store): void {
             $store->upload(self::upload(), ['parts' => [1]], new Checkpoints());
         }];
+        yield 'promote' => ['promote', static function (Store $store): void {
+            $store->promote('io.example.app', '42');
+        }];
         yield 'processed' => ['processed', static function (Store $store): void {
             $store->processed(['id' => 'upload']);
         }];

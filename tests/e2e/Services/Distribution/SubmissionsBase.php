@@ -3,7 +3,6 @@
 namespace Tests\E2E\Services\Distribution;
 
 use Appwrite\ID;
-use Tests\E2E\Client;
 use Utopia\Database\Query;
 
 trait SubmissionsBase
@@ -62,6 +61,12 @@ trait SubmissionsBase
         $app = $this->createSubmission(ID::unique(), $valid);
         $this->assertSame(404, $app['headers']['status-code']);
         $this->assertSame('distribution_app_not_found', $app['body']['type']);
+
+        foreach ([0, 1.5, 'x'] as $rollout) {
+            $refused = $this->createSubmission($appId, [...$valid, 'rollout' => $rollout]);
+            $this->assertSame(400, $refused['headers']['status-code'], 'rollout ' . \json_encode($rollout));
+            $this->assertSame('general_argument_invalid', $refused['body']['type'], 'rollout ' . \json_encode($rollout));
+        }
 
         $listed = $this->listSubmissions($appId);
         $this->assertSame(200, $listed['headers']['status-code']);
@@ -136,6 +141,12 @@ trait SubmissionsBase
         $invalid = $this->updateSubmission($app['body']['$id'], ID::unique(), ['automatic' => 'sometimes']);
         $this->assertSame(400, $invalid['headers']['status-code']);
         $this->assertSame('general_argument_invalid', $invalid['body']['type']);
+
+        foreach ([1.5, -0.5, 'x'] as $rollout) {
+            $refused = $this->updateSubmission($app['body']['$id'], ID::unique(), ['rollout' => $rollout]);
+            $this->assertSame(400, $refused['headers']['status-code'], 'rollout ' . \json_encode($rollout));
+            $this->assertSame('general_argument_invalid', $refused['body']['type'], 'rollout ' . \json_encode($rollout));
+        }
     }
 
     public function testUpdateSubmissionStatus(): void
@@ -155,25 +166,5 @@ trait SubmissionsBase
             $this->assertSame(400, $invalid['headers']['status-code'], $status);
             $this->assertSame('general_argument_invalid', $invalid['body']['type'], $status);
         }
-    }
-
-    /**
-     * @param list<string> $queries
-     * @return array<string, mixed>
-     */
-    protected function listSubmissions(string $appId, array $queries = []): array
-    {
-        return $this->client->call(Client::METHOD_GET, '/distribution/apps/' . $appId . '/submissions', $this->headers(), [
-            'queries' => $queries,
-        ]);
-    }
-
-    /**
-     * @param array<string, mixed> $params
-     * @return array<string, mixed>
-     */
-    protected function updateSubmission(string $appId, string $submissionId, array $params): array
-    {
-        return $this->client->call(Client::METHOD_PATCH, '/distribution/apps/' . $appId . '/submissions/' . $submissionId, $this->headers(), $params);
     }
 }

@@ -106,6 +106,94 @@ trait SigningBase
         $this->assertSame('distribution_signing_identity_already_exists', $duplicate['body']['type']);
     }
 
+    public function testCreateManagedAndroidSigningIdentity(): void
+    {
+        $signingIdentityId = ID::unique();
+
+        $created = $this->client->call(Client::METHOD_POST, '/distribution/signing-identities/android', $this->headers(), [
+            'signingIdentityId' => $signingIdentityId,
+            'name' => 'Managed ' . \uniqid(),
+        ]);
+
+        /**
+         * Test for SUCCESS
+         */
+        $this->assertSame(201, $created['headers']['status-code']);
+        $this->assertSame($signingIdentityId, $created['body']['$id']);
+        $this->assertSame('android', $created['body']['platform']);
+        $this->assertSame('managed', $created['body']['mode']);
+        $this->assertSame('active', $created['body']['status']);
+        $this->assertSame(64, \strlen($created['body']['fingerprint']));
+        $this->assertTrue(\ctype_xdigit($created['body']['fingerprint']));
+        $this->assertGreaterThan(\strtotime('2033-10-22T00:00:00Z'), \strtotime($created['body']['expiresAt']));
+        $this->assertSame('', $created['body']['connectionId']);
+        $this->assertArrayNotHasKey('secret', $created['body']);
+
+        $download = $this->client->call(Client::METHOD_GET, '/distribution/signing-identities/' . $signingIdentityId . '/download', $this->headers());
+
+        $this->assertSame(200, $download['headers']['status-code']);
+        $this->assertCount(1, $download['body']['files']);
+        $this->assertSame('keystore.p12', $download['body']['files'][0]['name']);
+        $this->assertSame(self::ALIAS, $download['body']['alias']);
+
+        $passwords = $download['body']['passwords'];
+        $this->assertNotSame('', $passwords['storePassword']);
+        $this->assertSame($passwords['storePassword'], $passwords['keyPassword']);
+
+        $keystore = Keystore::fromPkcs12((string) \base64_decode($download['body']['files'][0]['content'], true), $passwords['storePassword'], self::ALIAS);
+
+        $this->assertSame($created['body']['fingerprint'], $keystore->certificate->fingerprint());
+        $this->assertSame(\strtotime($created['body']['expiresAt']), $keystore->certificate->expiresAt()->getTimestamp());
+
+        $aliased = $this->createAndroidSigningIdentity([
+            'keystore' => '',
+            'storePassword' => '',
+            'keyAlias' => 'release',
+            'keyPassword' => '',
+        ]);
+
+        $this->assertSame(201, $aliased['headers']['status-code']);
+        $this->assertSame('managed', $aliased['body']['mode']);
+
+        $aliasedDownload = $this->client->call(Client::METHOD_GET, '/distribution/signing-identities/' . $aliased['body']['$id'] . '/download', $this->headers());
+
+        $this->assertSame(200, $aliasedDownload['headers']['status-code']);
+        $this->assertSame('release', $aliasedDownload['body']['alias']);
+
+        $aliasedKeystore = Keystore::fromPkcs12((string) \base64_decode($aliasedDownload['body']['files'][0]['content'], true), $aliasedDownload['body']['passwords']['storePassword'], 'release');
+
+        $this->assertSame($aliased['body']['fingerprint'], $aliasedKeystore->certificate->fingerprint());
+
+        /**
+         * Test for FAILURE
+         */
+        $failures = [
+            'both passwords' => ['storePassword' => 'password', 'keyPassword' => 'password'],
+            'store password' => ['storePassword' => 'password', 'keyPassword' => ''],
+            'key password' => ['storePassword' => '', 'keyPassword' => 'password'],
+        ];
+
+        foreach ($failures as $case => $params) {
+            $failed = $this->createAndroidSigningIdentity(['keystore' => ''] + $params);
+
+            $this->assertSame(400, $failed['headers']['status-code'], $case);
+            $this->assertSame('distribution_signing_identity_invalid', $failed['body']['type'], $case);
+        }
+
+        $unaliased = $this->createAndroidSigningIdentity(['keyAlias' => '']);
+
+        $this->assertSame(400, $unaliased['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $unaliased['body']['type']);
+
+        $duplicate = $this->client->call(Client::METHOD_POST, '/distribution/signing-identities/android', $this->headers(), [
+            'signingIdentityId' => $signingIdentityId,
+            'name' => 'Managed ' . \uniqid(),
+        ]);
+
+        $this->assertSame(409, $duplicate['headers']['status-code']);
+        $this->assertSame('distribution_signing_identity_already_exists', $duplicate['body']['type']);
+    }
+
     public function testCreateIosSigningIdentity(): void
     {
         $identity = $this->identity();

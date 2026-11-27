@@ -229,6 +229,26 @@ trait DistributionBase
     }
 
     /**
+     * @param list<string> $queries
+     * @return array<string, mixed>
+     */
+    protected function listSubmissions(string $appId, array $queries = []): array
+    {
+        return $this->client->call(Client::METHOD_GET, '/distribution/apps/' . $appId . '/submissions', $this->headers(), [
+            'queries' => $queries,
+        ]);
+    }
+
+    /**
+     * @param array<string, mixed> $params
+     * @return array<string, mixed>
+     */
+    protected function updateSubmission(string $appId, string $submissionId, array $params): array
+    {
+        return $this->client->call(Client::METHOD_PATCH, '/distribution/apps/' . $appId . '/submissions/' . $submissionId, $this->headers(), $params);
+    }
+
+    /**
      * @return array<string, mixed>
      */
     protected function awaitSubmission(string $appId, string $submissionId, string $status, int $timeoutMs = 240_000): array
@@ -248,5 +268,24 @@ trait DistributionBase
         }, $timeoutMs, 2000);
 
         return $submission;
+    }
+
+    /**
+     * Passes once every read for the whole window equals the expected value, and fails at the first that does not.
+     * A read that throws is retried.
+     */
+    protected function assertStays(callable $read, mixed $expected, string $message, int $windowMs): void
+    {
+        $until = \microtime(true) + $windowMs / 1000;
+
+        $this->assertEventually(function () use ($read, $expected, $message, $until): void {
+            $actual = $read();
+
+            if ($actual !== $expected) {
+                throw new Critical($message . ': expected ' . \json_encode($expected) . ', got ' . \json_encode($actual));
+            }
+
+            $this->assertGreaterThanOrEqual($until, \microtime(true), 'The window has not passed yet.');
+        }, $windowMs + 60_000, 5000);
     }
 }

@@ -34,6 +34,8 @@ final class TriggersCustomServerTest extends Scope
 
     private const string TAGS = 'refs/tags/';
 
+    private const float FRACTION = 0.5;
+
     public function testTriggerBuildsFromPush(): void
     {
         $repository = $this->prepareRepository();
@@ -518,6 +520,105 @@ final class TriggersCustomServerTest extends Scope
         $this->assertSame($uploads, $this->googleUploads($identifier)['completed'], 'Nothing reaches the store.');
     }
 
+    public function testTriggerEndToEnd(): void
+    {
+        $serviceAccount = $this->seedGoogleServiceAccount();
+        $connection = $this->createGoogleConnection(['serviceAccount' => $serviceAccount]);
+        $this->assertSame(201, $connection['headers']['status-code'], \json_encode($connection['body']));
+
+        $identity = $this->client->call(Client::METHOD_POST, '/distribution/signing-identities/android', $this->headers(), [
+            'signingIdentityId' => ID::unique(),
+            'name' => 'Managed ' . \uniqid(),
+        ]);
+        $this->assertSame(201, $identity['headers']['status-code'], \json_encode($identity['body']));
+        $this->assertSame('managed', $identity['body']['mode']);
+        $this->assertNotEmpty($identity['body']['fingerprint']);
+
+        $repository = $this->prepareRepository();
+        $identifier = 'io.appwrite.trigger' . \uniqid();
+        $linked = $this->linkApp($repository, ['framework' => 'android'], [
+            'identifier' => $identifier,
+            'connectionId' => $connection['body']['$id'],
+            'signingIdentityId' => $identity['body']['$id'],
+            'track' => 'internal',
+            'automatic' => true,
+        ]);
+        $appId = $linked['appId'];
+        $this->seedGoogleApplication($identifier, $serviceAccount['client_email']);
+        $before = $this->googleUploads($identifier);
+
+        $this->pushGiteaCommit($repository['name'], 'lib/main.dart', "void main() {}\n", 'Release it');
+
+        /**
+         * Test for SUCCESS
+         */
+        $build = $this->awaitBuild($appId, $this->awaitVcsBuilds($appId, 1)[0]['$id'], ['ready']);
+        $artifact = $this->client->call(Client::METHOD_GET, '/distribution/apps/' . $appId . '/artifacts/' . $build['artifactId'], $this->headers());
+        $this->assertSame(200, $artifact['headers']['status-code']);
+        $this->assertTrue($artifact['body']['signed']);
+        $this->assertSame($identity['body']['fingerprint'], $artifact['body']['fingerprint'], 'The unsigned bundle is signed with the managed upload key.');
+
+        $submissions = [];
+        $this->assertEventually(function () use ($appId, $build, &$submissions): void {
+            $listed = $this->listSubmissions($appId, [Query::equal('artifactId', [$build['artifactId']])->toString()]);
+            $this->assertSame(200, $listed['headers']['status-code']);
+            $this->assertSame(1, $listed['body']['total']);
+            $submissions = $listed['body']['submissions'];
+        }, self::DELIVERY, 2000);
+
+        $internal = $this->awaitSubmission($appId, $submissions[0]['$id'], 'published');
+        $this->assertSame('internal', $internal['track']);
+        $this->assertSame('settled', $internal['step']);
+        $uploaded = $this->googleUploads($identifier);
+        $this->assertSame($before['completed'] + 1, $uploaded['completed'], 'The internal submission uploads the bundle.');
+
+        $promoted = $this->createSubmission($appId, [
+            'releaseId' => $internal['releaseId'],
+            'targetId' => $linked['targetId'],
+            'artifactId' => $build['artifactId'],
+            'track' => 'production',
+            'rollout' => self::FRACTION,
+        ]);
+        $this->assertSame(201, $promoted['headers']['status-code'], \json_encode($promoted['body']));
+        $promotionId = $promoted['body']['$id'];
+
+        $production = $this->awaitSubmission($appId, $promotionId, 'published');
+        $this->assertSame('production', $production['track']);
+        $this->assertSame(self::FRACTION, (float) $production['rollout']);
+        $this->assertSame('released', $production['step']);
+        $this->assertSame($uploaded, $this->googleUploads($identifier), 'The promotion to production repeats no upload.');
+
+        $full = $this->updateSubmission($appId, $promotionId, ['rollout' => 1]);
+        $this->assertSame(200, $full['headers']['status-code'], \json_encode($full['body']));
+
+        $this->assertEventually(function () use ($appId, $promotionId): void {
+            $submission = $this->getSubmission($appId, $promotionId)['body'];
+            $this->assertSame('published', $submission['status']);
+            $this->assertEqualsWithDelta(1.0, (float) $submission['rollout'], PHP_FLOAT_EPSILON);
+            $this->assertSame('settled', $submission['step']);
+        }, self::DELIVERY * 2, 2000);
+
+        /**
+         * Test for FAILURE
+         */
+        $again = $this->createSubmission($appId, [
+            'releaseId' => $internal['releaseId'],
+            'targetId' => $linked['targetId'],
+            'artifactId' => $build['artifactId'],
+            'track' => 'production',
+            'key' => 'e2e-' . \uniqid(),
+        ]);
+        $this->assertSame(400, $again['headers']['status-code']);
+        $this->assertSame('distribution_version_invalid', $again['body']['type']);
+
+        $rolledOut = $this->updateSubmission($appId, $promotionId, ['rollout' => self::FRACTION]);
+        $this->assertSame(409, $rolledOut['headers']['status-code']);
+        $this->assertSame('distribution_submission_transition_invalid', $rolledOut['body']['type']);
+
+        $this->assertSame(2, $this->listSubmissions($appId)['body']['total']);
+        $this->assertSame($uploaded, $this->googleUploads($identifier));
+    }
+
     /**
      * @return array<string, mixed> The Gitea repository
      */
@@ -630,17 +731,6 @@ final class TriggersCustomServerTest extends Scope
     private function getTarget(string $appId, string $targetId): array
     {
         return $this->client->call(Client::METHOD_GET, '/distribution/apps/' . $appId . '/targets/' . $targetId, $this->headers());
-    }
-
-    /**
-     * @param list<string> $queries
-     * @return array<string, mixed>
-     */
-    private function listSubmissions(string $appId, array $queries = []): array
-    {
-        return $this->client->call(Client::METHOD_GET, '/distribution/apps/' . $appId . '/submissions', $this->headers(), [
-            'queries' => $queries,
-        ]);
     }
 
     /**

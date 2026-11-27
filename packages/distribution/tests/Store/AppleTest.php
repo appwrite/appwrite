@@ -423,6 +423,20 @@ final class AppleTest extends TestCase
         $this->store(new Transport($this->page(200, '{"links":{}}')))->app(self::IDENTIFIER);
     }
 
+    public function testPromoteIsUnsupported(): void
+    {
+        $transport = new Transport();
+
+        try {
+            $this->store($transport)->promote(self::IDENTIFIER, '42');
+            $this->fail('promote should throw');
+        } catch (Invalid $invalid) {
+            $this->assertSame('promote is not supported by apple', $invalid->getMessage());
+        }
+
+        $this->assertSame([], $transport->requests());
+    }
+
     private function store(Transport $transport): Frozen
     {
         return new Frozen($this->credential(), $transport, self::NOW, self::ENDPOINT . '/');

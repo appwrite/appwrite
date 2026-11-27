@@ -662,6 +662,75 @@ final class GoogleOperationsTest extends TestCase
         $this->store(new Transport())->release($this->release(), ['packageName' => self::PACKAGE, 'versionCode' => 88]);
     }
 
+    public function testPromoteOpensAnEditForTheVersionCode(): void
+    {
+        $transport = new Transport(
+            Transport::fixture('Google/token'),
+            Transport::fixture('Google/edit'),
+        );
+
+        $external = $this->store($transport)->promote(self::PACKAGE, '88');
+
+        $this->assertSame(['packageName' => self::PACKAGE, 'editId' => self::EDIT, 'expiryTimeSeconds' => self::EXPIRY, 'versionCode' => 88], $external);
+
+        $requests = $transport->requests();
+        $this->assertSame(['POST', 'POST'], $this->methods($requests));
+        $this->assertSame([self::TOKEN, self::EDITS], $this->uris($requests));
+    }
+
+    public function testPromotedEditIsReleasedWithOneCommit(): void
+    {
+        $transport = new Transport(
+            Transport::fixture('Google/token'),
+            Transport::fixture('Google/edit'),
+            Transport::fixture('Google/tracks'),
+            Transport::fixture('Google/track'),
+            Transport::fixture('Google/commit'),
+        );
+        $store = $this->store($transport);
+
+        $external = $store->release($this->release(), $store->promote(self::PACKAGE, '88'));
+
+        $this->assertSame(['packageName' => self::PACKAGE, 'editId' => self::EDIT, 'expiryTimeSeconds' => self::EXPIRY, 'versionCode' => 88, 'track' => 'production', 'committed' => true], $external);
+
+        $requests = $transport->requests();
+        $this->assertSame(['POST', 'POST', 'GET', 'PUT', 'POST'], $this->methods($requests));
+        $this->assertSame(
+            [self::TOKEN, self::EDITS, self::EDITS . '/' . self::EDIT . '/tracks', self::EDITS . '/' . self::EDIT . '/tracks/production', self::COMMIT],
+            $this->uris($requests),
+        );
+        $this->assertSame(
+            '{"track":"production","releases":[{"versionCodes":["88"],"status":"completed","releaseNotes":[{"language":"en-US","text":"Bug fixes"},{"language":"de-DE","text":"Fehlerbehebungen"}]}]}',
+            (string) $requests[3]->getBody(),
+        );
+    }
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function unpromotable(): iterable
+    {
+        yield 'empty' => [''];
+        yield 'name' => ['1.2.0'];
+        yield 'negative' => ['-88'];
+        yield 'letters' => ['eighty'];
+    }
+
+    #[DataProvider('unpromotable')]
+    public function testPromoteRefusesAVersionCodeThatIsNotAnInteger(string $build): void
+    {
+        $transport = new Transport();
+
+        try {
+            $this->store($transport)->promote(self::PACKAGE, $build);
+            $this->fail('promote should throw');
+        } catch (Invalid $invalid) {
+            $this->assertSame("Google Play version code \"{$build}\" must be a whole number", $invalid->getMessage());
+        }
+
+        $this->assertSame([], $transport->requests());
+    }
+
     /**
      * @return iterable<string, array{string, string, bool, string|null}>
      */
