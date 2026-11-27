@@ -58,6 +58,11 @@ final class ScriptedStore extends Store
 
     public ?Release $release = null;
 
+    /**
+     * @var list<array{external: array<string, mixed>, track: string, fraction: float}>
+     */
+    public array $rollouts = [];
+
     public function __construct()
     {
         parent::__construct(new Transport(), 'https://store.test');
@@ -138,6 +143,7 @@ final class ScriptedStore extends Store
     #[\Override]
     public function rollout(array $external, string $track, float $fraction): void
     {
+        $this->rollouts[] = ['external' => $external, 'track' => $track, 'fraction' => $fraction];
         $this->call('rollout');
     }
 

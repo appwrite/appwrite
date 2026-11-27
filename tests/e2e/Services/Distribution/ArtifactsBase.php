@@ -14,6 +14,12 @@ trait ArtifactsBase
 
     private const string IDENTIFIER = 'io.appwrite.distribution.fixture';
 
+    private const string IPA = __DIR__ . '/../../../resources/distribution/io.appwrite.distribution.ios.ipa';
+
+    private const string BUNDLE_ID = 'io.appwrite.distribution.ios';
+
+    private const string TEAM = 'ABCDE12345';
+
     private const string ALIAS = 'upload';
 
     private const int CHUNK = 5 * 1024 * 1024;
@@ -452,6 +458,54 @@ trait ArtifactsBase
         $unchanged = $this->downloadArtifact($appId, $inspected['$id']);
         $this->assertSame(200, $unchanged['headers']['status-code']);
         $this->assertSame($signedBundle, $unchanged['body']);
+    }
+
+    public function testCreateArtifactSignedIpa(): void
+    {
+        $app = $this->createApp(['framework' => 'ios']);
+        $this->assertSame(201, $app['headers']['status-code']);
+        $appId = $app['body']['$id'];
+        $target = $this->createTarget($appId, ['platform' => 'ios', 'identifier' => self::BUNDLE_ID]);
+        $this->assertSame(201, $target['headers']['status-code']);
+        $ipa = \file_get_contents(self::IPA);
+        $this->assertIsString($ipa);
+
+        /**
+         * Test for SUCCESS
+         */
+        $created = $this->uploadArtifact($appId, $ipa, 'app.ipa')[0];
+        $this->assertSame(202, $created['headers']['status-code']);
+        $this->assertSame('ipa', $created['body']['type']);
+
+        $artifact = $this->awaitArtifact($appId, $created['body']['$id']);
+        $this->assertSame('ready', $artifact['status'], $artifact['errorCode'] . ' ' . $artifact['errorMessage']);
+        $this->assertSame('', $artifact['errorCode']);
+        $this->assertSame('ipa', $artifact['type']);
+        $this->assertSame('ios', $artifact['platform']);
+        $this->assertSame($target['body']['$id'], $artifact['targetId']);
+        $this->assertSame(self::BUNDLE_ID, $artifact['identifier']);
+        $this->assertSame('1.0.0', $artifact['versionName']);
+        $this->assertSame('1', $artifact['buildNumber']);
+        $this->assertTrue($artifact['signed']);
+        $this->assertSame(64, \strlen($artifact['fingerprint']));
+        $this->assertSame(\hash('sha256', $ipa), $artifact['digest']);
+        $this->assertSame(\strlen($ipa), $artifact['size']);
+        $this->assertSame(self::TEAM, $artifact['manifest']['teamId']);
+        $this->assertSame('2046-01-01T00:00:00Z', $artifact['manifest']['profileExpiresAt']);
+
+        /**
+         * Test for FAILURE
+         */
+        $other = $this->createApp(['framework' => 'ios']);
+        $this->assertSame(201, $other['headers']['status-code']);
+        $otherId = $other['body']['$id'];
+        $unknown = $this->uploadArtifact($otherId, $ipa, 'app.ipa')[0];
+        $this->assertSame(202, $unknown['headers']['status-code']);
+
+        $unmatched = $this->awaitArtifact($otherId, $unknown['body']['$id']);
+        $this->assertSame('invalid', $unmatched['status']);
+        $this->assertSame('artifact_identifier_unknown', $unmatched['errorCode']);
+        $this->assertSame('', $unmatched['targetId']);
     }
 
     public function testInspectRefusesArtifacts(): void

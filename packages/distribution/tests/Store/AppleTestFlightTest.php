@@ -35,6 +35,8 @@ final class AppleTestFlightTest extends TestCase
 
     private const string GROUP_EXTERNAL = '1a2b3c4d-0000-4000-8000-000000000602';
 
+    private const string FIELDS_ENCRYPTION = '?fields%5Bbuilds%5D=usesNonExemptEncryption';
+
     private const int NOW = 1_795_000_000;
 
     private const string ENDPOINT = 'https://store.test/apple';
@@ -63,6 +65,7 @@ final class AppleTestFlightTest extends TestCase
     public function testInternalReleaseDeclaresEncryptionWritesNotesAndAddsGroups(): void
     {
         $transport = new Transport(
+            $this->reply('build-undeclared'),
             $this->reply('beta-build'),
             $this->reply('beta-localizations'),
             $this->reply('beta-localization'),
@@ -79,7 +82,8 @@ final class AppleTestFlightTest extends TestCase
 
         $this->assertSame(self::EXTERNAL + ['track' => Release::TRACK_TESTFLIGHT], $external);
 
-        [$encryption, $list, $update, $create, $groups] = $this->sequence($transport, [
+        [, $encryption, $list, $update, $create, $groups] = $this->sequence($transport, [
+            ['GET', '/v1/builds/' . self::BUILD_ID . self::FIELDS_ENCRYPTION],
             ['PATCH', '/v1/builds/' . self::BUILD_ID],
             ['GET', '/v1/builds/' . self::BUILD_ID . '/betaBuildLocalizations?limit=200'],
             ['PATCH', '/v1/betaBuildLocalizations/5d4c3b2a-0000-4000-8000-000000000201'],
@@ -131,7 +135,7 @@ final class AppleTestFlightTest extends TestCase
 
     public function testEncryptionTrueIsDeclaredAsGiven(): void
     {
-        $transport = new Transport($this->reply('beta-build'));
+        $transport = new Transport($this->reply('build-undeclared'), $this->reply('beta-build'));
 
         $this->store($transport)->release($this->release(Release::TRACK_TESTFLIGHT, encryption: true), self::EXTERNAL);
 
@@ -141,7 +145,20 @@ final class AppleTestFlightTest extends TestCase
                 'id' => self::BUILD_ID,
                 'attributes' => ['usesNonExemptEncryption' => true],
             ],
-        ], $this->body($this->sequence($transport, [['PATCH', '/v1/builds/' . self::BUILD_ID]])[0]));
+        ], $this->body($this->sequence($transport, [
+            ['GET', '/v1/builds/' . self::BUILD_ID . self::FIELDS_ENCRYPTION],
+            ['PATCH', '/v1/builds/' . self::BUILD_ID],
+        ])[1]));
+    }
+
+    public function testBuildThatAlreadyAnsweredIsNotDeclaredAgain(): void
+    {
+        $transport = new Transport($this->reply('beta-build'));
+
+        $external = $this->store($transport)->release($this->release(Release::TRACK_TESTFLIGHT, encryption: false), self::EXTERNAL);
+
+        $this->assertSame(self::EXTERNAL + ['track' => Release::TRACK_TESTFLIGHT], $external);
+        $this->sequence($transport, [['GET', '/v1/builds/' . self::BUILD_ID . self::FIELDS_ENCRYPTION]]);
     }
 
     public function testNotesForNewBuildAreAllCreated(): void

@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Submissi
 
 use Appwrite\Abuse\Limit;
 use Appwrite\Distribution\Artifact\Status as ArtifactStatus;
+use Appwrite\Distribution\Checks;
 use Appwrite\Distribution\Platform;
 use Appwrite\Distribution\Schedules;
 use Appwrite\Distribution\Stores;
@@ -124,7 +125,7 @@ class Create extends Action
         $this->assertConnection($dbForProject, $target, $platform);
 
         $track = $track ?: (string) $target->getAttribute('track', '');
-        $this->assertTrack($distributionStores, $track, $platform);
+        $this->assertTrack($distributionStores, $target, $track, $platform);
 
         $version = $this->getVersion($artifact, $platform);
         $key = $key ?: "{$target->getId()}:{$track}:" . ($version ?: $artifact->getId());
@@ -207,7 +208,7 @@ class Create extends Action
         }
     }
 
-    private function assertTrack(Stores $distributionStores, string $track, Platform $platform): void
+    private function assertTrack(Stores $distributionStores, Document $target, string $track, Platform $platform): void
     {
         $tracks = $distributionStores->tracks(Stores::provider($platform));
 
@@ -217,6 +218,12 @@ class Create extends Action
 
         if (!\in_array($track, $tracks, true)) {
             throw new Exception(Exception::DISTRIBUTION_TRACK_INVALID, "Track '{$track}' is not a valid track for {$platform->value}. Use one of: " . \implode(', ', $tracks) . '.');
+        }
+
+        $configuration = $target->getAttribute('configuration', []);
+
+        if (Stores::isMissingGroups($track, \is_array($configuration) ? $configuration : [])) {
+            throw new Exception(Exception::DISTRIBUTION_TRACK_INVALID, Checks::GROUPS_REQUIRED);
         }
     }
 

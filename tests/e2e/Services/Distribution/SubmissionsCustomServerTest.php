@@ -300,6 +300,10 @@ final class SubmissionsCustomServerTest extends Scope
         $this->assertSame(200, $uploading['headers']['status-code']);
         $this->assertSame('uploading', $uploading['body']['status']);
 
+        foreach (['checkpoint', 'claim', 'control'] as $key) {
+            $this->assertArrayNotHasKey($key, $uploading['body']['external'], "An uploading submission exposes external.{$key}.");
+        }
+
         /**
          * Test for SUCCESS
          */

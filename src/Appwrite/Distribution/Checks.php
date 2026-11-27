@@ -31,6 +31,8 @@ readonly class Checks
 
     private const int SIGNING_EXPIRY_WARNING = 604800;
 
+    public const string GROUPS_REQUIRED = 'The testflight-external track needs at least one external beta group. Set configuration.betaGroups on the target to App Store Connect beta group IDs, separated by commas.';
+
     private const string WILDCARD = '*';
 
     private const string WILDCARD_SUFFIX = '.*';
@@ -47,7 +49,7 @@ readonly class Checks
     public function run(Document $app, Document $target, string $track, ?Document $artifact = null, bool $store = true): array
     {
         $platform = (string) $target->getAttribute('platform', '');
-        $this->track($platform, $track);
+        $this->track($target, $track);
 
         $connection = $this->connectionOf($target);
         $issues = $this->connection($connection, $platform);
@@ -70,12 +72,19 @@ readonly class Checks
         ];
     }
 
-    private function track(string $platform, string $track): void
+    private function track(Document $target, string $track): void
     {
+        $platform = (string) $target->getAttribute('platform', '');
         $tracks = Platform::tryFrom($platform) === null ? [] : $this->stores->tracks(Stores::provider(Platform::from($platform)));
 
         if (!\in_array($track, $tracks, true)) {
             throw new Exception(Exception::DISTRIBUTION_TRACK_INVALID, "Track '{$track}' is not a valid track for {$platform}. Use one of: " . \implode(', ', $tracks) . '.');
+        }
+
+        $configuration = $target->getAttribute('configuration', []);
+
+        if (Stores::isMissingGroups($track, \is_array($configuration) ? $configuration : [])) {
+            throw new Exception(Exception::DISTRIBUTION_TRACK_INVALID, self::GROUPS_REQUIRED);
         }
     }
 

@@ -397,6 +397,81 @@ trait TargetsBase
         $this->assertSame('distribution_app_not_found', $missing['body']['type']);
     }
 
+    public function testCreateTargetAppleConfigurationRefusals(): void
+    {
+        $app = $this->createApp(['framework' => 'flutter']);
+        $this->assertSame(201, $app['headers']['status-code']);
+        $appId = $app['body']['$id'];
+        $configuration = ['betaGroups' => 'group-1, group-2', 'usesNonExemptEncryption' => 'false'];
+
+        /**
+         * Test for FAILURE
+         */
+        $ungrouped = $this->createTarget($appId, ['platform' => 'ios', 'track' => 'testflight-external']);
+        $this->assertSame(400, $ungrouped['headers']['status-code']);
+        $this->assertSame('distribution_track_invalid', $ungrouped['body']['type']);
+
+        $blank = $this->createTarget($appId, ['platform' => 'ios', 'track' => 'testflight-external', 'configuration' => ['betaGroups' => ' , ']]);
+        $this->assertSame(400, $blank['headers']['status-code']);
+        $this->assertSame('distribution_track_invalid', $blank['body']['type']);
+
+        $encryption = $this->createTarget($appId, ['platform' => 'ios', 'configuration' => ['usesNonExemptEncryption' => 'true']]);
+        $this->assertSame(400, $encryption['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $encryption['body']['type']);
+
+        foreach (['betaGroups' => 'group-1', 'usesNonExemptEncryption' => 'false'] as $key => $value) {
+            $android = $this->createTarget($appId, ['platform' => 'android', 'configuration' => [$key => $value]]);
+            $this->assertSame(400, $android['headers']['status-code'], 'android ' . $key);
+            $this->assertSame('general_argument_invalid', $android['body']['type'], 'android ' . $key);
+        }
+
+        $this->assertSame(0, $this->listTargets($appId)['body']['total']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $created = $this->createTarget($appId, ['platform' => 'ios', 'track' => 'testflight-external', 'configuration' => $configuration]);
+        $this->assertSame(201, $created['headers']['status-code']);
+        $this->assertSame('testflight-external', $created['body']['track']);
+        $this->assertSame($configuration, $created['body']['configuration']);
+        $targetId = $created['body']['$id'];
+
+        $fetched = $this->getTarget($appId, $targetId);
+        $this->assertSame(200, $fetched['headers']['status-code']);
+        $this->assertSame($configuration, $fetched['body']['configuration']);
+
+        /**
+         * Test for FAILURE
+         */
+        $dropped = $this->updateTarget($appId, $targetId, ['configuration' => ['usesNonExemptEncryption' => 'false']]);
+        $this->assertSame(400, $dropped['headers']['status-code']);
+        $this->assertSame('distribution_track_invalid', $dropped['body']['type']);
+
+        $declared = $this->updateTarget($appId, $targetId, ['configuration' => [...$configuration, 'usesNonExemptEncryption' => 'true']]);
+        $this->assertSame(400, $declared['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $declared['body']['type']);
+
+        $unchanged = $this->getTarget($appId, $targetId);
+        $this->assertSame('testflight-external', $unchanged['body']['track']);
+        $this->assertSame($configuration, $unchanged['body']['configuration']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $internal = $this->updateTarget($appId, $targetId, ['track' => 'testflight', 'configuration' => []]);
+        $this->assertSame(200, $internal['headers']['status-code']);
+        $this->assertSame('testflight', $internal['body']['track']);
+        $this->assertSame([], $internal['body']['configuration']);
+
+        /**
+         * Test for FAILURE
+         */
+        $external = $this->updateTarget($appId, $targetId, ['track' => 'testflight-external']);
+        $this->assertSame(400, $external['headers']['status-code']);
+        $this->assertSame('distribution_track_invalid', $external['body']['type']);
+        $this->assertSame('testflight', $this->getTarget($appId, $targetId)['body']['track']);
+    }
+
     /**
      * @return array<string, mixed>
      */

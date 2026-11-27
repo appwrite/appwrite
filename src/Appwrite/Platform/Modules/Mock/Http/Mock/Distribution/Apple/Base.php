@@ -1069,7 +1069,7 @@ abstract class Base extends Action
             return ['id' => $stored['id'], 'internalBuildState' => $state, 'externalBuildState' => $internalOnly ? 'NOT_APPLICABLE' : $state];
         }
 
-        $compliance = ($attributes['usesNonExemptEncryption'] ?? null) === true ? 'MISSING_EXPORT_COMPLIANCE' : null;
+        $compliance = ($attributes['usesNonExemptEncryption'] ?? null) === false ? null : 'MISSING_EXPORT_COMPLIANCE';
 
         return [
             'id' => $stored['id'],

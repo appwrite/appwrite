@@ -92,6 +92,8 @@ class Apple extends Store
 
     private const string FIELDS_BUILD = 'version,processingState,usesNonExemptEncryption,buildAudienceType,expired';
 
+    private const string ATTRIBUTE_ENCRYPTION = 'usesNonExemptEncryption';
+
     private const string INCLUDE_BUILD = 'build';
 
     private const string PLATFORM_IOS = 'IOS';
@@ -579,13 +581,7 @@ class Apple extends Store
         $buildId = $this->buildId($external);
 
         if ($release->encryption !== null) {
-            $this->request(Method::PATCH, self::PATH_BUILDS . '/' . rawurlencode($buildId), body: [
-                'data' => [
-                    'type' => self::TYPE_BUILDS,
-                    'id' => $buildId,
-                    'attributes' => ['usesNonExemptEncryption' => $release->encryption],
-                ],
-            ]);
+            $this->encryption($buildId, $release->encryption);
         }
 
         if ($release->notes !== []) {
@@ -658,6 +654,26 @@ class Apple extends Store
         }
 
         return $buildId;
+    }
+
+    private function encryption(string $buildId, bool $encryption): void
+    {
+        $build = $this->resource($this->request(Method::GET, self::PATH_BUILDS . '/' . rawurlencode($buildId), [
+            'fields' => [self::TYPE_BUILDS => self::ATTRIBUTE_ENCRYPTION],
+        ]));
+        $attributes = $build['attributes'] ?? null;
+
+        if (\is_array($attributes) && \is_bool($attributes[self::ATTRIBUTE_ENCRYPTION] ?? null)) {
+            return;
+        }
+
+        $this->request(Method::PATCH, self::PATH_BUILDS . '/' . rawurlencode($buildId), body: [
+            'data' => [
+                'type' => self::TYPE_BUILDS,
+                'id' => $buildId,
+                'attributes' => [self::ATTRIBUTE_ENCRYPTION => $encryption],
+            ],
+        ]);
     }
 
     /**
@@ -1531,6 +1547,10 @@ class Apple extends Store
 
         if ($editable) {
             $this->appStoreReleaseType($version, $release->automatic ? self::RELEASE_AFTER_APPROVAL : self::RELEASE_MANUAL);
+
+            if ($release->encryption !== null) {
+                $this->encryption($buildId, $release->encryption);
+            }
 
             if ($this->relationship($version, self::RELATIONSHIP_BUILD) !== $buildId) {
                 $this->appStoreBuild($versionId, $buildId);

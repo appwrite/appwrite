@@ -28,6 +28,7 @@ use Utopia\Distribution\Exception\RateLimited;
 use Utopia\Distribution\Exception\Unauthorized;
 use Utopia\Distribution\Exception\Unavailable;
 use Utopia\Distribution\Issue;
+use Utopia\Distribution\Release;
 use Utopia\Distribution\State;
 use Utopia\Lock\Exception\Contention;
 use Utopia\Storage\Device;
@@ -49,6 +50,12 @@ readonly class Submissions
 
     public const string ERROR_REJECTED = 'store_rejected';
 
+    public const string RELEASED_ON_APPROVAL = 'The submission was created with automatic set to true, so Apple makes it available as soon as it is approved and it cannot be published by hand. Only a submission created with automatic set to false waits to be published.';
+
+    public const string ERROR_COMPLIANCE = 'MISSING_EXPORT_COMPLIANCE';
+
+    public const string COMPLIANCE_MISSING = 'The build is missing export compliance information. Answer it in App Store Connect, or set configuration.usesNonExemptEncryption to false on the target when the app uses no non-exempt encryption. The submission is sent for review once the build has an answer.';
+
     private const array BACKOFF = [60, 300, 900, 3600];
 
     private const int BACKOFF_LIMIT = 86400;
@@ -69,7 +76,13 @@ readonly class Submissions
 
     private const string ISSUE_IN_REVIEW = 'CHANGES_ALREADY_IN_REVIEW';
 
+    private const string ISSUE_ATTRIBUTE_REQUIRED = 'ENTITY_ERROR.ATTRIBUTE.REQUIRED';
+
+    private const string FIELD_ENCRYPTION = '/data/attributes/usesNonExemptEncryption';
+
     private const string STATE_ABSENT = 'NOT_FOUND';
+
+    private const string STATE_UNSUBMITTED = 'PREPARE_FOR_SUBMISSION';
 
     private const array ISSUES_CREDENTIAL = ['invalid_grant', 'UNAUTHENTICATED', 'authError', 'NOT_AUTHORIZED'];
 
@@ -87,7 +100,7 @@ readonly class Submissions
         'DEVELOPER_REJECTED' => Status::Canceled,
         'REPLACED_WITH_NEW_VERSION' => Status::Canceled,
         'PROCESSING_EXCEPTION' => Status::Failed,
-        'EXPIRED' => Status::Failed,
+        'EXPIRED' => Status::Canceled,
     ];
 
     private const array RELEASED = [Step::Released->value, Step::Settled->value];
@@ -105,6 +118,13 @@ readonly class Submissions
     public static function isActive(string $status, float $rollout): bool
     {
         return \in_array($status, self::ACTIVE, true) || ($status === Status::Published->value && $rollout < 1.0);
+    }
+
+    public static function isReleasedOnApproval(Document $submission): bool
+    {
+        return $submission->getAttribute('provider') === Provider::Apple->value
+            && $submission->getAttribute('status') === Status::Approved->value
+            && $submission->getAttribute('automatic', true) !== false;
     }
 
     public static function lock(string $projectInternalId, string $submissionId): string
@@ -351,7 +371,9 @@ readonly class Submissions
         $store = $this->stores->connection($connection);
         $external = $this->external($submission);
 
-        if ($this->isRetried($submission) && $this->isShown($store->state($external, (string) $submission->getAttribute('track', '')))) {
+        $provider = Provider::tryFrom((string) $submission->getAttribute('provider', ''));
+
+        if ($provider === Provider::Google && $this->isRetried($submission) && $this->isShown($store->state($external, (string) $submission->getAttribute('track', '')))) {
             return $this->committed($submission);
         }
 
@@ -359,7 +381,9 @@ readonly class Submissions
 
         return $this->advance($submission, Step::Released, [
             'external' => $external,
-            'submittedAt' => DateTime::now(),
+            'submittedAt' => $submission->getAttribute('submittedAt') ?? DateTime::now(),
+            'errorCode' => null,
+            'errorMessage' => null,
         ]);
     }
 
@@ -420,6 +444,7 @@ readonly class Submissions
             $error instanceof NotFound && \in_array(self::ISSUE_EDIT_COMMITTED, $codes, true) && $submission->getAttribute('step') === Step::Processed->value => $this->committed($submission),
             $error instanceof NotFound && Stores::isReupload($error) => $this->reupload($submission, $error),
             $error instanceof Conflict && \in_array(self::ISSUE_IN_REVIEW, $codes, true) => $this->review($submission, $error),
+            $error instanceof StoreException && self::isUnanswered($error) && self::isAt($submission, Step::Processed) => $this->unanswered($submission),
             $error instanceof StoreException && !$error instanceof RateLimited && !$error instanceof Unavailable => $this->terminate($submission, $codes[0] ?? self::ERROR_REJECTED, $error->getMessage()),
             default => $this->retry($submission, $error),
         };
@@ -431,6 +456,15 @@ readonly class Submissions
         $store = $this->stores->connection($connection);
         $external = $this->external($submission);
         $track = (string) $submission->getAttribute('track', '');
+
+        if ($requested === Status::Published && self::isReleasedOnApproval($submission)) {
+            return $this->update($submission, [
+                'errorCode' => Exception::DISTRIBUTION_SUBMISSION_TRANSITION_INVALID,
+                'errorMessage' => self::RELEASED_ON_APPROVAL,
+                'external' => $this->withoutControl($submission),
+                'retryAt' => null,
+            ]);
+        }
 
         try {
             if ($requested === Status::Canceled) {
@@ -460,6 +494,10 @@ readonly class Submissions
      */
     private function observe(Document $submission, Document $release, Document $connection, array $changes = []): Document
     {
+        if (!$this->isObservable($submission)) {
+            return $this->update($submission, $changes);
+        }
+
         $state = $this->stores->connection($connection)->state($this->external($submission), (string) $submission->getAttribute('track', ''));
         $submission = $this->apply($submission, $state, $changes);
         $this->derive($submission, $release);
@@ -589,7 +627,14 @@ readonly class Submissions
 
     private function isShown(State $state): bool
     {
-        return $state->status !== State::STATUS_PROCESSING && $state->raw !== self::STATE_ABSENT;
+        return $state->status !== State::STATUS_PROCESSING && !\in_array($state->raw, [self::STATE_ABSENT, self::STATE_UNSUBMITTED], true);
+    }
+
+    private function isObservable(Document $submission): bool
+    {
+        return Provider::tryFrom((string) $submission->getAttribute('provider', '')) !== Provider::Apple
+            || $submission->getAttribute('track') !== Release::TRACK_PRODUCTION
+            || !empty($this->external($submission)['versionId']);
     }
 
     private function committed(Document $submission): Document
@@ -609,6 +654,27 @@ readonly class Submissions
             'step' => Step::Located->value,
             'external' => $external,
         ]);
+    }
+
+    private static function isUnanswered(StoreException $error): bool
+    {
+        return \array_any(
+            $error->getIssues(),
+            static fn (Issue $issue): bool => $issue->code === self::ISSUE_ATTRIBUTE_REQUIRED && $issue->field === self::FIELD_ENCRYPTION,
+        );
+    }
+
+    private function unanswered(Document $submission): Document
+    {
+        $submission = $this->transition($submission, Status::Pending, [
+            'errorCode' => self::ERROR_COMPLIANCE,
+            'errorMessage' => self::COMPLIANCE_MISSING,
+            'attempt' => 0,
+            'retryAt' => null,
+        ]);
+        $this->derive($submission);
+
+        return $submission;
     }
 
     private function review(Document $submission, \Throwable $error): Document

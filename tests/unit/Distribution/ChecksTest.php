@@ -259,9 +259,36 @@ final class ChecksTest extends TestCase
     #[DataProvider('tracks')]
     public function testProviderTrackPasses(string $platform, string $track): void
     {
-        $check = $this->checks->run($this->app, $this->target(['platform' => $platform]), $track);
+        $check = $this->checks->run($this->app, $this->target(['platform' => $platform, 'configuration' => ['betaGroups' => 'group-1']]), $track);
 
         $this->assertTrue($check['ready'], \json_encode($check['issues']) ?: '');
+    }
+
+    /**
+     * @return iterable<string, array{array<string, mixed>}>
+     */
+    public static function groupless(): iterable
+    {
+        yield 'no configuration' => [[]];
+        yield 'no betaGroups' => [['configuration' => ['scheme' => 'App']]];
+        yield 'only separators' => [['configuration' => ['betaGroups' => ' , ']]];
+    }
+
+    /**
+     * @param array<string, mixed> $attributes
+     */
+    #[DataProvider('groupless')]
+    public function testExternalTestFlightWithoutGroupsIsRefusedBeforeAnyStoreCall(array $attributes): void
+    {
+        try {
+            $this->checks->run($this->app, $this->target(['platform' => Platform::Ios->value, ...$attributes]), 'testflight-external');
+            $this->fail('An external TestFlight track without beta groups must be refused.');
+        } catch (Exception $exception) {
+            $this->assertSame(Exception::DISTRIBUTION_TRACK_INVALID, $exception->getType());
+            $this->assertSame(Checks::GROUPS_REQUIRED, $exception->getMessage());
+        }
+
+        $this->assertSame([], $this->store->calls);
     }
 
     /**

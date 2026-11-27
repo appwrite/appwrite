@@ -104,11 +104,12 @@ trait MockStores
 
     /**
      * @param array<string, mixed> $params
+     * @param array{keyId: string, issuerId: string, privateKey: string}|null $key
      * @return array<string, mixed>
      */
-    protected function createAppleConnection(array $params = []): array
+    protected function createAppleConnection(array $params = [], ?array $key = null): array
     {
-        $key = $this->seedAppleKey();
+        $key ??= $this->seedAppleKey();
 
         return $this->client->call(Client::METHOD_POST, '/distribution/connections/apple', $this->headers(), \array_merge([
             'connectionId' => ID::unique(),
@@ -127,6 +128,50 @@ trait MockStores
             'tracks' => \array_map(fn (string $track): array => ['track' => $track, 'releases' => []], ['production', 'beta', 'alpha', 'internal']),
         ]);
         $this->assertSame(201, $seeded['headers']['status-code'], 'Seeding a Google Play application requires _APP_ENV=development.');
+    }
+
+    protected function seedAppleApp(string $issuerId, string $bundleId): string
+    {
+        $seeded = $this->client->call(Client::METHOD_POST, '/mock/distribution/apple/seeds/apps', $this->mockHeaders(), [
+            'issuerId' => $issuerId,
+            'bundleId' => $bundleId,
+            'name' => 'App ' . \uniqid(),
+        ]);
+        $this->assertSame(201, $seeded['headers']['status-code'], 'Seeding an App Store Connect app requires _APP_ENV=development.');
+
+        return $seeded['body']['data']['id'];
+    }
+
+    protected function seedAppleGroup(string $appId, bool $internal = false): string
+    {
+        $seeded = $this->client->call(Client::METHOD_POST, '/mock/distribution/apple/seeds/groups', $this->mockHeaders(), [
+            'appId' => $appId,
+            'name' => 'Testers ' . \uniqid(),
+            'internal' => $internal,
+        ]);
+        $this->assertSame(201, $seeded['headers']['status-code'], 'Seeding an App Store Connect beta group requires _APP_ENV=development.');
+
+        return $seeded['body']['data']['id'];
+    }
+
+    protected function seedAppleBetaReview(string $appId, string $build, string $state): void
+    {
+        $seeded = $this->client->call(Client::METHOD_POST, '/mock/distribution/apple/seeds/beta-reviews', $this->mockHeaders(), [
+            'appId' => $appId,
+            'build' => $build,
+            'state' => $state,
+        ]);
+        $this->assertContains($seeded['headers']['status-code'], [201, 202], 'Seeding an App Store Connect beta review requires _APP_ENV=development.');
+    }
+
+    protected function seedAppleReview(string $appId, string $version, string $state): void
+    {
+        $seeded = $this->client->call(Client::METHOD_POST, '/mock/distribution/apple/seeds/reviews', $this->mockHeaders(), [
+            'appId' => $appId,
+            'version' => $version,
+            'state' => $state,
+        ]);
+        $this->assertSame(201, $seeded['headers']['status-code'], 'Seeding an App Store review requires _APP_ENV=development.');
     }
 
     /**
@@ -222,6 +267,58 @@ trait MockStores
             'identifier' => $identifier,
             'size' => (int) \filesize($path),
             'signedSize' => (int) $ready['size'],
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $target
+     * @return array{appId: string, targetId: string, artifactId: string, releaseId: string, identifier: string, storeAppId: string, connectionId: string, key: array{keyId: string, issuerId: string, privateKey: string}}
+     */
+    protected function prepareAppleRelease(array $target = []): array
+    {
+        $identifier = 'io.appwrite.distribution.ios';
+        $path = __DIR__ . '/../../../resources/distribution/' . $identifier . '.ipa';
+        $this->assertFileExists($path);
+
+        $key = $this->seedAppleKey();
+        $storeAppId = $this->seedAppleApp($key['issuerId'], $identifier);
+        $connection = $this->createAppleConnection([], $key);
+        $this->assertSame(201, $connection['headers']['status-code']);
+
+        $app = $this->createApp(['framework' => 'ios']);
+        $this->assertSame(201, $app['headers']['status-code']);
+        $appId = $app['body']['$id'];
+
+        $created = $this->createTarget($appId, \array_merge([
+            'platform' => 'ios',
+            'identifier' => $identifier,
+            'connectionId' => $connection['body']['$id'],
+            'track' => 'testflight',
+        ], $target));
+        $this->assertSame(201, $created['headers']['status-code']);
+
+        $artifact = $this->uploadBundle($appId, $path);
+        $this->assertSame(202, $artifact['headers']['status-code']);
+        $ready = $this->awaitBundle($appId, $artifact['body']['$id']);
+        $this->assertSame('ready', $ready['status'], 'Artifact ' . $ready['$id'] . ' is ' . $ready['status'] . ': ' . $ready['errorCode'] . ' ' . $ready['errorMessage']);
+        $this->assertSame('ipa', $ready['type']);
+        $this->assertTrue($ready['signed']);
+        $this->assertSame($identifier, $ready['identifier']);
+        $this->assertSame('1', $ready['buildNumber']);
+        $this->assertSame('1.0.0', $ready['versionName']);
+
+        $release = $this->createRelease($appId);
+        $this->assertSame(201, $release['headers']['status-code']);
+
+        return [
+            'appId' => $appId,
+            'targetId' => $created['body']['$id'],
+            'artifactId' => $ready['$id'],
+            'releaseId' => $release['body']['$id'],
+            'identifier' => $identifier,
+            'storeAppId' => $storeAppId,
+            'connectionId' => $connection['body']['$id'],
+            'key' => $key,
         ];
     }
 

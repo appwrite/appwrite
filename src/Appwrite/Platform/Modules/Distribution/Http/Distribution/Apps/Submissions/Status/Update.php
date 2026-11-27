@@ -19,6 +19,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
+use Utopia\Distribution\Release;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
@@ -42,6 +43,11 @@ class Update extends Action
     private const array RELEASED = [
         Step::Released->value,
         Step::Settled->value,
+    ];
+
+    private const array TESTFLIGHT = [
+        Release::TRACK_TESTFLIGHT,
+        Release::TRACK_TESTFLIGHT_EXTERNAL,
     ];
 
     public static function getName(): string
@@ -118,8 +124,16 @@ class Update extends Action
             throw new Exception(Exception::DISTRIBUTION_SUBMISSION_TRANSITION_INVALID, "Submission '{$submission->getId()}' cannot change from '{$current->value}' to '{$requested->value}'.");
         }
 
+        if ($requested === Status::Published && Submissions::isReleasedOnApproval($submission)) {
+            throw new Exception(Exception::DISTRIBUTION_SUBMISSION_TRANSITION_INVALID, "Submission '{$submission->getId()}' cannot change from '{$current->value}' to '{$requested->value}'. " . Submissions::RELEASED_ON_APPROVAL);
+        }
+
         if ($requested === Status::Canceled && $this->isReleasedToGoogle($submission)) {
             throw new Exception(Exception::DISTRIBUTION_SUBMISSION_TRANSITION_INVALID, "Submission '{$submission->getId()}' was already sent to Google Play, which cannot withdraw a release once it is sent.");
+        }
+
+        if ($requested === Status::Canceled && $this->isReleasedToTestFlight($submission)) {
+            throw new Exception(Exception::DISTRIBUTION_SUBMISSION_TRANSITION_INVALID, "Submission '{$submission->getId()}' was already sent to TestFlight, where a build cannot be withdrawn from beta review.");
         }
 
         $queued = $publisherForDistributionSubmissions->enqueue(new DistributionSubmissionMessage(
@@ -156,6 +170,13 @@ class Update extends Action
     private function isReleasedToGoogle(Document $submission): bool
     {
         return $submission->getAttribute('provider') === Provider::Google->value
+            && \in_array($submission->getAttribute('step'), self::RELEASED, true);
+    }
+
+    private function isReleasedToTestFlight(Document $submission): bool
+    {
+        return $submission->getAttribute('provider') === Provider::Apple->value
+            && \in_array($submission->getAttribute('track'), self::TESTFLIGHT, true)
             && \in_array($submission->getAttribute('step'), self::RELEASED, true);
     }
 }
