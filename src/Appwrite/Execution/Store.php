@@ -247,14 +247,23 @@ class Store
             return;
         }
 
-        $rows = [];
-        $first = true;
+        $first = [];
+        $later = [];
         foreach ($executions as $execution) {
-            $rows[] = $this->snapshot($projectId, $execution, false);
-            $first = $first && \in_array($execution->getAttribute('status', ''), self::FIRST_STATUSES, true);
+            $row = $this->snapshot($projectId, $execution, false);
+            if (\in_array($execution->getAttribute('status', ''), self::FIRST_STATUSES, true)) {
+                $first[] = $row;
+            } else {
+                $later[] = $row;
+            }
         }
 
-        $this->insert($rows, buffered: !$first);
+        if ($first !== []) {
+            $this->insert($first, buffered: false);
+        }
+        if ($later !== []) {
+            $this->insert($later);
+        }
     }
 
     public function delete(string $projectId, Document $execution): void
