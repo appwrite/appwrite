@@ -41,6 +41,9 @@ New databases get PostgreSQL 19 with no extra step:
 
 1. In your project, go to **Databases** and click **Create database**.
 2. Under **Choose database type**, select **PostgreSQL** from the **Native databases** group.
+
+![PostgreSQL selected under Native databases in the Create database flow](/images/blog/announcing-postgresql-19/create-database.avif)
+
 3. Under **Specifications**, pick a tier, then review the summary and click **Create database**.
 
 Once the database reports `ready`, connect with `psql` or the SQL editor in the Console and confirm the version:
@@ -48,6 +51,8 @@ Once the database reports `ready`, connect with `psql` or the SQL editor in the 
 ```sql
 SHOW server_version;
 ```
+
+![The SQL editor returning 19.0 for SHOW server_version](/images/blog/announcing-postgresql-19/server-version.avif)
 
 # Upgrade an existing database to PostgreSQL 19
 
@@ -57,9 +62,16 @@ Databases created on PostgreSQL 17 or 18 upgrade in place. The database keeps ru
 
 1. Open the database and go to **Settings** > **General**.
 2. In the **Version** card, click **Upgrade** next to **PostgreSQL 19**.
+
+![The Version card showing PostgreSQL 18 as current and an Upgrade button next to PostgreSQL 19](/images/blog/announcing-postgresql-19/version-card.avif)
+
 3. Read the notes in the dialog and click **Upgrade** to confirm.
 
+![The Upgrade to PostgreSQL 19 confirmation dialog](/images/blog/announcing-postgresql-19/upgrade-dialog.avif)
+
 The database moves to the `upgrading` state, the Console shows the upgrade in the database header, and the status returns to `ready` once the cutover is done.
+
+![The database header showing that the database is upgrading](/images/blog/announcing-postgresql-19/upgrading.avif)
 
 ## Upgrade with a Server SDK
 
