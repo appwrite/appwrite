@@ -80,7 +80,7 @@ impl Storage for Memory {
     }
 }
 
-utopia_async::task_local! {
+tokio::task_local! {
     static CURRENT: RefCell<Option<Span>>;
 }
 
@@ -95,7 +95,7 @@ utopia_async::task_local! {
 /// ```
 /// use utopia_span::{Span, Storage, Task};
 ///
-/// # utopia_async::Builder::current_thread().build().unwrap().block_on(async {
+/// # tokio::runtime::Builder::new_current_thread().build().unwrap().block_on(async {
 /// let storage = Task::new();
 /// storage.set(Some(Span::new("ignored")));
 /// assert!(storage.get().is_none()); // outside a scope
