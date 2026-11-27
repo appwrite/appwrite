@@ -112,6 +112,10 @@ lzma-rust2 = { version = "0.22", default-features = false, features = ["std", "e
 # The extension's allocator: musl's, on the Alpine image, is slow. `local_dynamic_tls` is what a
 # library PHP loads with dlopen needs there.
 mimalloc = { version = "0.1.52", default-features = false, features = ["local_dynamic_tls"] }
+# Metrics through the OpenTelemetry API only: a library records into the global meter, and the
+# application that installs an SDK decides where they go. Without one, every instrument is a no-op.
+opentelemetry = { version = "0.33", default-features = false, features = ["metrics"] }
+opentelemetry_sdk = { version = "0.33", default-features = false, features = ["metrics"] }
 png = "0.18"
 rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
 thiserror = "2"

@@ -18,8 +18,10 @@ tokio = { workspace = true, features = ["macros"] }
 utopia-dsn.workspace = true
 xxhash-rust.workspace = true
 futures-util.workspace = true
+opentelemetry.workspace = true
 
 [dev-dependencies]
+opentelemetry_sdk = { workspace = true, features = ["testing"] }
 tokio = { workspace = true, features = ["rt-multi-thread"] }
 
 [package.metadata.utopia]
