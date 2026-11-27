@@ -6,6 +6,7 @@ import {
 } from '../analytics-docs-feature'
 import { isMonitorsDocsEnabled, isMonitorsDocsHref } from '../monitors-docs-feature'
 import { isVideosDocsEnabled, isVideosDocsHref } from '../videos-docs-feature'
+import { isZeroDocsEnabled, isZeroDocsHref } from '../zero-docs-feature'
 import { DOCS_GLOBAL_NAV } from './global'
 import { DOCS_PARTNERS_GLOBAL_NAV } from './partners'
 
@@ -66,6 +67,9 @@ export function getDocsGlobalNav(audience: DocsAudience): DocsNavTree {
   }
   if (!isMonitorsDocsEnabled()) {
     navigation = withoutHref(navigation, isMonitorsDocsHref)
+  }
+  if (!isZeroDocsEnabled()) {
+    navigation = withoutHref(navigation, isZeroDocsHref)
   }
   return navigation
 }

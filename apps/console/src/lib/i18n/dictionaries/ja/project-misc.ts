@@ -4668,4 +4668,71 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'signed in': '人がサインイン中',
   'Signed in now': '現在サインイン中',
   'and {count} more': 'ほか {count} 人',
+  // Runtime logs
+  '1 line': '1 行',
+  '1 line loaded': '1 行を読み込み済み',
+  'All levels': 'すべてのレベル',
+  'All resources': 'すべてのリソース',
+  'All sites': 'すべてのサイト',
+  'All streams': 'すべてのストリーム',
+  'Copy line': '行をコピー',
+  'Could not copy to the clipboard': 'クリップボードにコピーできませんでした',
+  'Could not load logs': 'ログを読み込めませんでした',
+  Debug: 'デバッグ',
+  'Details for log line': 'ログ行の詳細',
+  'Drag across the bars to zoom in':
+    'バーをドラッグすると、その範囲を拡大できます',
+  'Every line in this time range is loaded':
+    'この時間範囲の行はすべて読み込み済みです',
+  Fields: 'フィールド',
+  'ID copied': 'ID をコピーしました',
+  'JSON copied': 'JSON をコピーしました',
+  'Last 15 minutes': '過去 15 分',
+  'Line copied': '行をコピーしました',
+  "Lines your database writes show up here. Logs may not be collected in this project's region yet.":
+    'データベースが出力した行がここに表示されます。このプロジェクトのリージョンでは、まだログが収集されていない可能性があります。',
+  "Lines your function writes to stdout and stderr show up here. Logs may not be collected in this project's region yet.":
+    '関数が stdout と stderr に出力した行がここに表示されます。このプロジェクトのリージョンでは、まだログが収集されていない可能性があります。',
+  "Lines your functions, sites and databases write to stdout and stderr show up here. Logs may not be collected in this project's region yet.":
+    '関数、サイト、データベースが stdout と stderr に出力した行がここに表示されます。このプロジェクトのリージョンでは、まだログが収集されていない可能性があります。',
+  "Lines your site writes to stdout and stderr show up here. Logs may not be collected in this project's region yet.":
+    'サイトが stdout と stderr に出力した行がここに表示されます。このプロジェクトのリージョンでは、まだログが収集されていない可能性があります。',
+  'Live tail paused on an error and will retry:':
+    'ライブ表示はエラーで一時停止しました。自動で再試行します:',
+  'Load older': '古い行を読み込む',
+  'Log ID': 'ログ ID',
+  'Log line': 'ログ行',
+  'Log volume': 'ログ量',
+  'Message copied': 'メッセージをコピーしました',
+  'Newer line': '新しい行',
+  'No deployment selected': 'デプロイが選択されていません',
+  'No lines in this time range': 'この時間範囲に行はありません',
+  'No logs': 'ログはありません',
+  'No matching lines': '一致する行はありません',
+  'No resources found': 'リソースが見つかりません',
+  'Older line': '古い行',
+  'Only the lines loaded so far are searched and filtered. Load older lines or widen the time range to search further back.':
+    '検索と絞り込みの対象は、読み込み済みの行だけです。さらに過去を検索するには、古い行を読み込むか、時間範囲を広げてください。',
+  'Only this resource': 'このリソースのみ',
+  'Open function': '関数を開く',
+  'Open site': 'サイトを開く',
+  'Pick a deployment to see its logs.':
+    'ログを表示するデプロイを選択してください。',
+  'Reset zoom': 'ズームをリセット',
+  'Search logs': 'ログを検索',
+  'Search resources': 'リソースを検索',
+  'The line names no level, so stderr counts as an error.':
+    'この行にはレベルがないため、stderr はエラーとして扱われます。',
+  'The line names no level, so stdout counts as info.':
+    'この行にはレベルがないため、stdout は情報として扱われます。',
+  'Wrap lines': '行を折り返す',
+  'is any of': 'が次のいずれか',
+  '{count} lines': '{count} 行',
+  '{count} lines loaded': '{count} 行を読み込み済み',
+  '{count} on stderr': 'stderr に {count} 行',
+  '{shown} of {loaded} loaded lines': '読み込み済み {loaded} 行中 {shown} 行',
+  'Older than your plan keeps logs': 'プランのログ保持期間より前の範囲です',
+  'Your plan keeps logs for a limited time. Pick a more recent range, or upgrade your plan for longer retention.':
+    'ご利用のプランでは、ログを一定期間だけ保持します。より新しい範囲を選択するか、プランをアップグレードして保持期間を延ばしてください。',
+  'Show the last 24 hours': '過去 24 時間を表示',
 }

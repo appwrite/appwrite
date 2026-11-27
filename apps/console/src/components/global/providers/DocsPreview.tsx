@@ -39,6 +39,7 @@ import { isAgentDocsSlug } from '@/lib/docs/agent-docs-feature'
 import { isAnalyticsDocsSlug } from '@/lib/docs/analytics-docs-feature'
 import { isVideosDocsSlug } from '@/lib/docs/videos-docs-feature'
 import { isMonitorsDocsSlug } from '@/lib/docs/monitors-docs-feature'
+import { isZeroDocsSlug } from '@/lib/docs/zero-docs-feature'
 import {
   isDomainsDocsEnabled,
   isDomainsDocsSlug,
@@ -76,6 +77,7 @@ export function DocsPreviewContent() {
   const analyticsDocsEnabled = features.analytics
   const videosDocsEnabled = features.videos
   const monitorsDocsEnabled = features.alerts
+  const zeroDocsEnabled = features.zero
 
   const showMenu =
     slug !== null &&
@@ -88,7 +90,8 @@ export function DocsPreviewContent() {
     (!isAgentDocsSlug(slug) || agentDocsEnabled) &&
     (!isAnalyticsDocsSlug(slug) || analyticsDocsEnabled) &&
     (!isVideosDocsSlug(slug) || videosDocsEnabled) &&
-    (!isMonitorsDocsSlug(slug) || monitorsDocsEnabled)
+    (!isMonitorsDocsSlug(slug) || monitorsDocsEnabled) &&
+    (!isZeroDocsSlug(slug) || zeroDocsEnabled)
 
   const { data: page, isLoading, isError } = useQuery({
     queryKey: ['docs', 'page', slug],
@@ -105,6 +108,7 @@ export function DocsPreviewContent() {
       (!isAnalyticsDocsSlug(slug!) || analyticsDocsEnabled) &&
       (!isVideosDocsSlug(slug!) || videosDocsEnabled) &&
       (!isMonitorsDocsSlug(slug!) || monitorsDocsEnabled) &&
+      (!isZeroDocsSlug(slug!) || zeroDocsEnabled) &&
       isClientQueryEnabled,
     staleTime: 5 * 60 * 1000,
     retry: false,
@@ -144,6 +148,10 @@ export function DocsPreviewContent() {
         openDocsPreview('', { view: 'article' })
         return
       }
+      if (isZeroDocsSlug(nextSlug) && !zeroDocsEnabled) {
+        openDocsPreview('', { view: 'article' })
+        return
+      }
       const resolvedView = resolveDocsPreviewView(nextSlug, nextView)
       if (nextSlug === slug && resolvedView === view) return
       openDocsPreview(nextSlug, { view: nextView })
@@ -158,6 +166,7 @@ export function DocsPreviewContent() {
       partnersDocsEnabled,
       slug,
       videosDocsEnabled,
+      zeroDocsEnabled,
       view,
     ],
   )
@@ -191,6 +200,9 @@ export function DocsPreviewContent() {
     if (!monitorsDocsEnabled && isMonitorsDocsSlug(slug)) {
       openDocsPreview('', { view: 'article' })
     }
+    if (!zeroDocsEnabled && isZeroDocsSlug(slug)) {
+      openDocsPreview('', { view: 'article' })
+    }
   }, [
     agentDocsEnabled,
     analyticsDocsEnabled,
@@ -202,6 +214,7 @@ export function DocsPreviewContent() {
     partnersDocsEnabled,
     slug,
     videosDocsEnabled,
+    zeroDocsEnabled,
   ])
 
   const handleOpenInNewTab = useCallback(() => {
@@ -279,6 +292,9 @@ export function DocsPreviewContent() {
   }
 
   if (!monitorsDocsEnabled && isMonitorsDocsSlug(slug)) {
+    return null
+  }
+  if (!zeroDocsEnabled && isZeroDocsSlug(slug)) {
     return null
   }
 

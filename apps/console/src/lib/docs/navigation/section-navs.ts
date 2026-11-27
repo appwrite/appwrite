@@ -2,6 +2,7 @@ import { isAgentDocsEnabled, isAgentDocsHref } from '../agent-docs-feature'
 import { isAnalyticsDocsEnabled } from '../analytics-docs-feature'
 import { isMonitorsDocsEnabled } from '../monitors-docs-feature'
 import { isVideosDocsEnabled } from '../videos-docs-feature'
+import { isZeroDocsEnabled, isZeroDocsHref } from '../zero-docs-feature'
 import type { DocsNavGroup, DocsNavTree } from '../types'
 import { DOCS_LOCAL_SECTION_NAVS } from './local-sections'
 import { DOCS_SECTION_NAVS, type DocsSectionNavConfig } from './sections'
@@ -58,6 +59,17 @@ export function getAllDocsSectionNavs(): DocsSectionNavConfig[] {
   }
   if (!isMonitorsDocsEnabled()) {
     configs = configs.filter((config) => config.prefix !== 'products/monitors')
+  }
+
+  if (!isZeroDocsEnabled()) {
+    configs = configs.map((config) =>
+      config.prefix === 'tooling/command-line'
+        ? {
+            ...config,
+            navigation: withoutHref(config.navigation, isZeroDocsHref),
+          }
+        : config,
+    )
   }
 
   return configs

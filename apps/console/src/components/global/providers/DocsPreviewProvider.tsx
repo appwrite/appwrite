@@ -25,6 +25,7 @@ import {
   isVideosDocsEnabled,
   isVideosDocsSlug,
 } from '@/lib/docs/videos-docs-feature'
+import { isZeroDocsEnabled, isZeroDocsSlug } from '@/lib/docs/zero-docs-feature'
 import {
   isMonitorsDocsEnabled,
   isMonitorsDocsSlug,
@@ -90,6 +91,7 @@ export function DocsPreviewProvider({ children }: { children: ReactNode }) {
       if (isAnalyticsDocsSlug(nextSlug) && !isAnalyticsDocsEnabled()) return
       if (isVideosDocsSlug(nextSlug) && !isVideosDocsEnabled()) return
       if (isMonitorsDocsSlug(nextSlug) && !isMonitorsDocsEnabled()) return
+      if (isZeroDocsSlug(nextSlug) && !isZeroDocsEnabled()) return
       showDocs()
       setSlug(nextSlug)
       setView(resolveDocsPreviewView(nextSlug, options?.view))
