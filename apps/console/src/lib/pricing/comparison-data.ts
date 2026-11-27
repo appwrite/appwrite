@@ -704,6 +704,13 @@ export const comparisonTables: ComparisonTable[] = [
                     enterprise: true
                 },
                 {
+                    title: 'Console SSO',
+                    free: '-',
+                    pro: { text: '$350 per organization / month', href: '/docs/advanced/security/sso' },
+                    enterprise: 'Custom',
+                    info: 'An add-on that lets your organization\'s members sign in to the Appwrite Console through your company\'s identity provider.'
+                },
+                {
                     title: 'SOC-2, HIPAA, and BAA',
                     free: '-',
                     pro: 'Add-on',

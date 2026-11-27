@@ -215,6 +215,7 @@ export const startComparisonOverrides: Record<string, ComparisonCell> = {
   'Code review credits': '500 / month',
   'Firewall rules': '15 per project',
   'Organization roles': '-',
+  'Console SSO': '-',
   'SOC-2, HIPAA, and BAA': '-',
 }
 
