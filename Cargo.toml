@@ -34,7 +34,7 @@ utopia-emails = { path = "crates/utopia/emails" }
 utopia-dsn = { path = "crates/utopia/dsn" }
 utopia-image = { path = "crates/utopia/image", default-features = false }
 utopia-locale = { path = "crates/utopia/locale" }
-utopia-async = { path = "crates/utopia/async" }
+utopia-async = { path = "crates/utopia/async", version = "0.1.0" }
 utopia-query = { path = "crates/utopia/query" }
 utopia-user-agent = { path = "crates/utopia/user-agent" }
 utopia-validators = { path = "crates/utopia/validators" }
