@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Projects\Http\Projects\Team;
 use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Projects\Http\Projects\Action;
+use Appwrite\Platform\Modules\Projects\Move;
 use Appwrite\Screenshots\Access;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -12,14 +13,13 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
-use Utopia\Database\Document;
-use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
 
 class Update extends Action
 {
     use HTTP;
+    use Move;
 
     public static function getName()
     {
@@ -81,43 +81,10 @@ class Update extends Action
 
         $permissions = $this->getPermissions($teamId, $projectId);
 
-        $project = $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
-            'teamId' => $teamId,
-            'teamInternalId' => $team->getSequence(),
-            '$permissions' => $permissions,
-        ]));
-        $dbForPlatform->purgeCachedDocument('projects', $project->getId());
+        // All or nothing: a failure part-way leaves the project and its VCS records with the organization they were in
+        $project = $dbForPlatform->withTransaction(fn () => $this->moveProject($dbForPlatform, $project, $team, $permissions));
 
-        $queueForRealtime
-            ->setProject($project)
-            ->setEvent('projects.[projectId].update.team')
-            ->setParam('projectId', $project->getId())
-            ->setPayload([
-                '$id' => $project->getId(),
-                'teamId' => $teamId,
-            ])
-            ->trigger();
-
-        $installations = $dbForPlatform->find('installations', [
-            Query::equal('projectInternalId', [$project->getSequence()]),
-        ]);
-        foreach ($installations as $installation) {
-            $dbForPlatform->updateDocument('installations', $installation->getId(), new Document(['$permissions' => $permissions]));
-        }
-
-        $repositories = $dbForPlatform->find('repositories', [
-            Query::equal('projectInternalId', [$project->getSequence()]),
-        ]);
-        foreach ($repositories as $repository) {
-            $dbForPlatform->updateDocument('repositories', $repository->getId(), new Document(['$permissions' => $permissions]));
-        }
-
-        $vcsComments = $dbForPlatform->find('vcsComments', [
-            Query::equal('projectInternalId', [$project->getSequence()]),
-        ]);
-        foreach ($vcsComments as $vcsComment) {
-            $dbForPlatform->updateDocument('vcsComments', $vcsComment->getId(), new Document(['$permissions' => $permissions]));
-        }
+        $this->announceMove($dbForPlatform, $project, $team, $queueForRealtime);
 
         (new Access($dbForPlatform))->grant($getProjectDB($project), $project);
 

@@ -241,7 +241,8 @@ class Base extends Action
             'suggestion' => $finding->getAttribute('suggestion') ?: null,
             'status' => $finding->getAttribute('status', 'posted'),
             'dropReason' => $finding->getAttribute('dropReason') ?: null,
-            'providerCommentId' => $commentId === '' || $commentId === null ? null : (int) $commentId,
+            // A number on GitHub, as the service has always read it, and a string on Origin.
+            'providerCommentId' => $commentId === '' || $commentId === null ? null : (\ctype_digit($commentId) ? (int) $commentId : $commentId),
             'createdAt' => $finding->getCreatedAt(),
         ];
     }

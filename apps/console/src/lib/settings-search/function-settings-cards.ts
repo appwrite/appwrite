@@ -18,6 +18,11 @@ export const FUNCTION_SETTINGS_CARD_INDEX: SettingsCardIndexEntry[] = [
   },
   {
     sectionId: 'general',
+    title: 'Preview domain',
+    keywords: ['preview', 'domain', 'branch', 'custom', 'enterprise'],
+  },
+  {
+    sectionId: 'general',
     title: 'Delete function',
     keywords: ['delete', 'remove', 'destroy', 'danger'],
   },

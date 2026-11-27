@@ -62,12 +62,12 @@ describe('firewallTabPath', () => {
     ).toBe('/projects/project_1/sites/site_1/firewall')
   })
 
-  test('opens project settings for the API or an incomplete selection', () => {
+  test('opens the project Firewall page for the API or an incomplete selection', () => {
     expect(firewallTabPath('project_1', { resourceType: 'api' })).toBe(
-      '/projects/project_1/settings/firewall',
+      '/projects/project_1/firewall',
     )
     expect(firewallTabPath('project_1', { resourceType: 'sites' })).toBe(
-      '/projects/project_1/settings/firewall',
+      '/projects/project_1/firewall',
     )
   })
 })

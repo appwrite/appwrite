@@ -8,6 +8,7 @@ import { VideoInspectorProvider } from '@/components/pages/projects/$projectId/v
 import {
   getVideoEncodingStatus,
   useProjectVideo,
+  usePublicHlsPlayback,
   useVideoRenditions,
 } from '@/lib/react-query/hooks/videos'
 import {
@@ -16,7 +17,8 @@ import {
   videoEmbedErrorFromUnknown,
   type VideoEmbedError,
 } from '@/lib/videos/embed-player-errors'
-import { parseEmbedStartParam } from '@/lib/videos/embed-start-time'
+import { parseEmbedPlayerOptions } from '@/lib/videos/embed-player-options'
+import { useLongWait } from '@/hooks/use-long-wait'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
@@ -49,12 +51,11 @@ function EmbedErrorScreen({ error }: { error: VideoEmbedError }) {
 
 export function View({ videoId, initialData }: EmbedViewProps) {
   const t = useT()
-  const search = useSearch({ strict: false }) as {
+  const search = useSearch({ strict: false }) as Record<string, unknown> & {
     project?: string
-    start?: number | string
   }
   const projectId = search.project?.trim() ?? ''
-  const initialStartSeconds = parseEmbedStartParam(search.start)
+  const options = parseEmbedPlayerOptions(search)
 
   const {
     data: videoFromHook,
@@ -69,10 +70,6 @@ export function View({ videoId, initialData }: EmbedViewProps) {
     isFetched: renditionsFetched,
   } = useVideoRenditions(projectId || null, videoId)
 
-  const video = videoFromHook ?? initialData?.video
-  const renditions =
-    renditionsFromHook?.renditions ?? initialData?.renditions ?? []
-
   const loadError = useMemo(() => {
     if (!projectId) return VIDEO_EMBED_MISSING_PROJECT
     const err = videoError ?? renditionsError
@@ -80,26 +77,47 @@ export function View({ videoId, initialData }: EmbedViewProps) {
     return null
   }, [projectId, videoError, renditionsError])
 
+  // Guests may play a public video but not read its document or renditions.
+  // When those are refused, start from the public HLS playlist instead.
+  const refused = loadError?.kind === 'unauthorized'
+  const { data: publicPlayback, isLoading: publicPlaybackLoading } =
+    usePublicHlsPlayback(projectId || null, videoId, refused)
+
+  const video = videoFromHook ?? initialData?.video ?? publicPlayback?.video
+  const renditions =
+    renditionsFromHook?.renditions ??
+    initialData?.renditions ??
+    publicPlayback?.renditions ??
+    []
+
+  const loading =
+    Boolean(projectId) &&
+    ((((!video && videoLoading) ||
+      (!renditionsFromHook && renditionsLoading)) &&
+      !initialData?.video) ||
+      (refused && publicPlaybackLoading))
+  // A quick load stays a black frame; the spinner is for a slow one.
+  const loadingLong = useLongWait(loading)
+
   if (!projectId) {
     return <EmbedErrorScreen error={VIDEO_EMBED_MISSING_PROJECT} />
   }
 
-  const stillLoading =
-    (!video && videoLoading) || (!renditionsFromHook && renditionsLoading)
-
-  if (stillLoading && !initialData?.video) {
+  if (loading) {
     return (
       <div
         className="flex h-[100dvh] w-full items-center justify-center bg-black"
         aria-busy
         aria-label={t('Loading video')}
       >
-        <Loader2 className="size-8 animate-spin text-white/60" />
+        {loadingLong ? (
+          <Loader2 className="size-8 animate-spin text-white/60" />
+        ) : null}
       </div>
     )
   }
 
-  if (loadError && videoFetched && renditionsFetched) {
+  if (loadError && videoFetched && renditionsFetched && !publicPlayback) {
     if (loadError.kind === 'unauthorized') return <EmbedUnauthorized />
     return <EmbedErrorScreen error={loadError} />
   }
@@ -130,7 +148,14 @@ export function View({ videoId, initialData }: EmbedViewProps) {
           video={video}
           renditions={renditions}
           layout="embed"
-          initialStartSeconds={initialStartSeconds}
+          initialStartSeconds={options.start}
+          autoPlay={options.autoplay}
+          muted={options.muted}
+          loop={options.loop}
+          controls={options.controls}
+          accentColor={options.color}
+          // Members can read the timeline; visitors only get the stream.
+          seekPreviews={Boolean(videoFromHook)}
         />
       </div>
     </VideoInspectorProvider>

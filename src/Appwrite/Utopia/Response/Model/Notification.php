@@ -4,6 +4,7 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
+use Utopia\Database\Document;
 
 class Notification extends Model
 {
@@ -37,7 +38,7 @@ class Notification extends Model
             ])
             ->addRule('type', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Notification type: info, warning, error.',
+                'description' => 'Notification type: info, warning, error. A monitor alert\'s notification takes its severity, which can also be critical.',
                 'default' => 'info',
                 'example' => 'info',
             ])
@@ -78,6 +79,30 @@ class Notification extends Model
                 'example' => '5e5bb8c16897e',
                 'required' => false,
             ])
+            ->addRule('teamId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Organization the notification pertains to. Empty when the notification is not about an organization.',
+                'default' => '',
+                'example' => '5e5bb8c16897e',
+            ])
+            ->addRule('subjectType', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Kind of thing the notification is about, such as alerts. Empty when it is about nothing that changes.',
+                'default' => '',
+                'example' => 'alerts',
+            ])
+            ->addRule('subjectId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'ID of the thing the notification is about. Each later change to it updates this notification. Empty when subjectType is empty.',
+                'default' => '',
+                'example' => '5e5bb8c16897e',
+            ])
+            ->addRule('status', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Where the subject stands: firing, acknowledged or resolved for an alert. Empty when subjectType is empty.',
+                'default' => '',
+                'example' => 'firing',
+            ])
             ->addRule('title', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Notification title.',
@@ -112,6 +137,18 @@ class Notification extends Model
                 'required' => false,
             ])
         ;
+    }
+
+    /**
+     * Notifications stored before a notification could name its organization or subject have none.
+     */
+    public function filter(Document $document): Document
+    {
+        foreach (['teamId', 'subjectType', 'subjectId', 'status'] as $key) {
+            $document->setAttribute($key, (string) $document->getAttribute($key, ''));
+        }
+
+        return $document;
     }
 
     public function getName(): string

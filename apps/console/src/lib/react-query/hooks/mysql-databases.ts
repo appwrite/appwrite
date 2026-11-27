@@ -1007,6 +1007,17 @@ export async function updateMysqlDatabaseMaintenance(
   })
 }
 
+export async function createMysqlDatabaseUpgrade(
+  projectId: string,
+  databaseId: string,
+  targetVersion: string,
+) {
+  return sdk.forProject(projectId).mysql.createUpgrade({
+    databaseId,
+    targetVersion,
+  })
+}
+
 export async function deleteMysqlDatabase(
   projectId: string,
   databaseId: string,
@@ -1051,6 +1062,29 @@ export function useUpdateMysqlDatabase(
           database,
         )
       }
+    },
+  })
+}
+
+export function useCreateMysqlDatabaseUpgrade(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (targetVersion: string) => {
+      requireOperationalDatabase(queryClient, projectId!, databaseId!)
+      return createMysqlDatabaseUpgrade(projectId!, databaseId!, targetVersion)
+    },
+    onSuccess: async (database) => {
+      if (!projectId || !databaseId) return
+      // The response carries `upgrading`, so the status banner shows at once;
+      // realtime moves it back to `ready` when the cutover finishes.
+      queryClient.setQueryData(
+        mysqlDatabaseQueryOptions(projectId, databaseId).queryKey,
+        database,
+      )
+      await refetchProjectDatabaseLists(queryClient, projectId)
     },
   })
 }

@@ -1,5 +1,11 @@
 import { memo, useMemo, type ReactNode } from 'react'
-import { Area, AreaChart, ResponsiveContainer, Tooltip } from 'recharts'
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+} from 'recharts'
 import { useParams } from '@tanstack/react-router'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
@@ -91,8 +97,9 @@ function getOverviewChartAxisFormat(metric: MetricType): UsageChartAxisFormat {
 }
 
 /** Soft greyscale placeholder - visible on the real chart canvas. */
-const SKELETON_CHART_STROKE = 'hsl(var(--muted-foreground) / 0.4)'
-const SKELETON_CHART_FILL = 'hsl(var(--muted-foreground))'
+const SKELETON_CHART_STROKE = 'var(--muted-foreground)'
+const SKELETON_CHART_STROKE_OPACITY = 0.4
+const SKELETON_CHART_FILL = 'var(--muted-foreground)'
 const SKELETON_CHART_FILL_TOP_OPACITY = 0.14
 const SKELETON_CHART_FILL_BOTTOM_OPACITY = 0.02
 const SKELETON_WAVE = [
@@ -434,6 +441,11 @@ export const RequestsChart = memo(function RequestsChart({
                   minHeight={OVERVIEW_CHART_HEIGHT}
                 >
                   <AreaChart data={activeChartData} margin={USAGE_CHART_MARGIN}>
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="var(--border)"
+                      vertical={false}
+                    />
                     <defs>
                       {isSkeleton ? (
                         <linearGradient
@@ -532,6 +544,7 @@ export const RequestsChart = memo(function RequestsChart({
                         type="monotone"
                         dataKey="total"
                         stroke={SKELETON_CHART_STROKE}
+                        strokeOpacity={SKELETON_CHART_STROKE_OPACITY}
                         strokeWidth={2}
                         fill={`url(#${skeletonGradientId})`}
                         dot={false}

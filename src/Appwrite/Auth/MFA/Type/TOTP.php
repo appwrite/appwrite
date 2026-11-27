@@ -24,4 +24,18 @@ class TOTP extends Type
 
         return null;
     }
+
+    /**
+     * Whether the authenticator is the user's last verified second factor while MFA is on.
+     * Removing it would leave the account reporting MFA as enabled with nothing to enforce.
+     */
+    public static function isLastFactor(Document $user, Document $authenticator): bool
+    {
+        if (!$user->getAttribute('mfa', false) || !$authenticator->getAttribute('verified', false)) {
+            return false;
+        }
+
+        return !$user->getAttribute('emailVerification', false)
+            && !$user->getAttribute('phoneVerification', false);
+    }
 }

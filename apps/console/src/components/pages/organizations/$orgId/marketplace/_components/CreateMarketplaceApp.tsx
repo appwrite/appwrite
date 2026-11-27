@@ -97,14 +97,14 @@ export function CreateMarketplaceApp({
           <div className="px-6 pb-4 pt-0 space-y-4">
             <div className="space-y-2">
               <div className="flex items-center gap-1.5">
-                <Label htmlFor="marketplace-app-team">{t('Team')}</Label>
+                <Label htmlFor="marketplace-app-team">{t('Organization')}</Label>
                 <TooltipProvider delayDuration={300}>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button
                         type="button"
                         aria-label={t(
-                          'The app is created in your current team. Switch teams to create it in another team.',
+                          'The app is created in your current organization. Switch organizations to create it in another one.',
                         )}
                         className="text-muted-foreground hover:text-foreground"
                       >
@@ -116,7 +116,7 @@ export function CreateMarketplaceApp({
                       className="max-w-64 text-[12px] text-pretty"
                     >
                       {t(
-                        'The app is created in your current team. Switch teams to create it in another team.',
+                        'The app is created in your current organization. Switch organizations to create it in another one.',
                       )}
                     </TooltipContent>
                   </Tooltip>
