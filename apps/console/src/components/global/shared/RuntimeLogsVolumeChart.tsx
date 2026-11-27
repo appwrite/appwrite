@@ -6,6 +6,7 @@ import {
   CartesianGrid,
   ResponsiveContainer,
   Tooltip,
+  usePlotArea,
 } from 'recharts'
 import { ZoomOut } from 'lucide-react'
 import {
@@ -205,16 +206,36 @@ export function RuntimeLogsVolumeChart({
                 left={brushLeft}
                 right={brushRight}
               />
+              {max === 0 && (
+                <PlotMessage>{t('No lines in this time range')}</PlotMessage>
+              )}
             </BarChart>
           </ResponsiveContainer>
-          {max === 0 && (
-            <p className="pointer-events-none absolute inset-0 flex items-center justify-center text-[12px] text-muted-foreground">
-              {t('No lines in this time range')}
-            </p>
-          )}
         </div>
       )}
     </section>
+  )
+}
+
+/**
+ * A note centered on the plot itself, clear of the axes' labels, as the
+ * chart box's own center sits low and to one side.
+ */
+function PlotMessage({ children }: { children: string }) {
+  const plot = usePlotArea()
+  if (!plot) return null
+  return (
+    <text
+      x={plot.x + plot.width / 2}
+      y={plot.y + plot.height / 2}
+      textAnchor="middle"
+      dominantBaseline="central"
+      fill="var(--muted-foreground)"
+      fontSize={12}
+      pointerEvents="none"
+    >
+      {children}
+    </text>
   )
 }
 
