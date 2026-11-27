@@ -24,19 +24,19 @@ publish = true
 [workspace.dependencies]
 # The version is what a published crate asks crates.io for; this checkout uses the path.
 php-std = { package = "utopia-php-std", path = "crates/utopia/php-std", version = "0.1.0" }
-utopia-auth = { path = "crates/utopia/auth" }
-utopia-balancer = { path = "crates/utopia/balancer" }
-utopia-compression = { path = "crates/utopia/compression" }
-utopia-database = { path = "crates/utopia/database" }
-utopia-detector = { path = "crates/utopia/detector" }
-utopia-domains = { path = "crates/utopia/domains" }
-utopia-emails = { path = "crates/utopia/emails" }
-utopia-dsn = { path = "crates/utopia/dsn" }
-utopia-image = { path = "crates/utopia/image", default-features = false }
-utopia-locale = { path = "crates/utopia/locale" }
-utopia-query = { path = "crates/utopia/query" }
-utopia-user-agent = { path = "crates/utopia/user-agent" }
-utopia-validators = { path = "crates/utopia/validators" }
+utopia-auth = { path = "crates/utopia/auth", version = "0.1.0" }
+utopia-balancer = { path = "crates/utopia/balancer", version = "0.1.0" }
+utopia-compression = { path = "crates/utopia/compression", version = "0.1.0" }
+utopia-database = { path = "crates/utopia/database", version = "0.1.0" }
+utopia-detector = { path = "crates/utopia/detector", version = "0.1.0" }
+utopia-domains = { path = "crates/utopia/domains", version = "0.1.0" }
+utopia-emails = { path = "crates/utopia/emails", version = "0.1.0" }
+utopia-dsn = { path = "crates/utopia/dsn", version = "0.1.0" }
+utopia-image = { path = "crates/utopia/image", version = "0.1.0", default-features = false }
+utopia-locale = { path = "crates/utopia/locale", version = "0.1.0" }
+utopia-query = { path = "crates/utopia/query", version = "0.1.0" }
+utopia-user-agent = { path = "crates/utopia/user-agent", version = "0.1.0" }
+utopia-validators = { path = "crates/utopia/validators", version = "0.1.0" }
 
 # 0.16.5: #[php(sensitive(...))] (extphprs/ext-php-rs#840), which `Utopia\DSN\DSN` needs to keep
 # credentials out of exception traces, and the clone of a PHP subclass (extphprs/ext-php-rs#838).
