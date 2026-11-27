@@ -20,14 +20,17 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import type {
-  DnsRecord,
-  HttpMethod,
-  MonitorSeverity,
-  ParsedMonitor,
-  ProbeMonitorInput,
-  ProbeType,
-  SmtpTlsMode,
+import {
+  DEFAULT_PROBE_CONDITION,
+  buildProbeRules,
+  parseProbeRules,
+  type DnsRecord,
+  type HttpMethod,
+  type MonitorSeverity,
+  type ParsedMonitor,
+  type ProbeMonitorInput,
+  type ProbeType,
+  type SmtpTlsMode,
 } from '@/lib/appwrite/monitors'
 import {
   DNS_RECORDS,
@@ -54,7 +57,10 @@ import {
   type Recipients,
 } from './RuleFields'
 
-/** Probe monitor form state; headers and status codes are kept as typed. */
+/**
+ * Probe monitor form state; headers and status codes are kept as typed. The
+ * status codes, certificate warning and DNS answer are saved as `rules`.
+ */
 export type ProbeForm = {
   type: ProbeType
   name: string
@@ -73,6 +79,11 @@ export type ProbeForm = {
   host: string
   port: number
   tlsMode: SmtpTlsMode
+  /**
+   * Rules set through the API that the fields above cannot show, kept until a
+   * field they cover changes; null when the fields describe the rules.
+   */
+  customRules: string[] | null
   interval: number
   timeout: number
   cooldown: number
@@ -93,15 +104,16 @@ export function emptyProbeForm(type: ProbeType): ProbeForm {
     method: 'GET',
     headers: '',
     body: '',
-    statusCodes: '',
-    certificateDays: 14,
+    statusCodes: DEFAULT_PROBE_CONDITION.statusCodes.join(', '),
+    certificateDays: DEFAULT_PROBE_CONDITION.certificateDays,
     domain: '',
     record: 'A',
     resolver: '',
-    answer: '',
+    answer: DEFAULT_PROBE_CONDITION.answer,
     host: '',
     port: type === 'smtp' ? 587 : 443,
-    tlsMode: '',
+    tlsMode: 'auto',
+    customRules: null,
     interval: 60,
     timeout: 10,
     cooldown: 3600,
@@ -115,22 +127,27 @@ export function emptyProbeForm(type: ProbeType): ProbeForm {
 export function probeFormFromMonitor(
   monitor: ParsedMonitor & { type: ProbeType },
 ): ProbeForm {
+  const rules = monitor.rules ?? []
+  const condition = parseProbeRules(monitor.type, rules)
+  const { statusCodes, certificateDays, answer } =
+    condition ?? DEFAULT_PROBE_CONDITION
   return {
     ...emptyProbeForm(monitor.type),
     name: monitor.name,
     url: monitor.url,
-    method: (monitor.method || 'GET') as HttpMethod,
+    method: monitor.method || 'GET',
     headers: formatHeaders(monitor.headers),
     body: monitor.body,
-    statusCodes: (monitor.statusCodes ?? []).join(', '),
-    certificateDays: monitor.certificateDays,
+    statusCodes: statusCodes.join(', '),
+    certificateDays,
     domain: monitor.domain,
-    record: (monitor.record || 'A') as DnsRecord,
+    record: monitor.record || 'A',
     resolver: monitor.resolver,
-    answer: monitor.answer,
+    answer,
     host: monitor.host,
     port: monitor.port,
-    tlsMode: monitor.tlsMode as SmtpTlsMode,
+    tlsMode: monitor.tlsMode || 'auto',
+    customRules: condition ? null : rules,
     interval: monitor.interval,
     timeout: monitor.timeout,
     cooldown: monitor.cooldown,
@@ -149,6 +166,25 @@ export function suggestedProbeName(form: ProbeForm): string {
     domain: form.domain.trim(),
     host: form.host.trim(),
   })
+}
+
+/**
+ * The rules the form saves. Rules set through the API are kept as they are
+ * while the fields still hold the defaults they were read as.
+ */
+function probeRules(form: ProbeForm): string[] {
+  const rules = buildProbeRules(form.type, {
+    statusCodes: parseStatusCodes(form.statusCodes) ?? [],
+    certificateDays: form.certificateDays,
+    answer: form.answer.trim(),
+  })
+  if (
+    form.customRules &&
+    rules.join() === buildProbeRules(form.type, DEFAULT_PROBE_CONDITION).join()
+  ) {
+    return form.customRules
+  }
+  return rules
 }
 
 /** API input for a form: its type, and only the fields that type takes. */
@@ -172,8 +208,7 @@ export function probeInputFromForm(form: ProbeForm): ProbeMonitorInput {
           method: form.method,
           headers: parseHeaders(form.headers) ?? {},
           body: BODILESS_METHODS.includes(form.method) ? '' : form.body,
-          statusCodes: parseStatusCodes(form.statusCodes) ?? [],
-          certificateDays: form.certificateDays,
+          rules: probeRules(form),
         },
       }
     case 'dns':
@@ -184,7 +219,7 @@ export function probeInputFromForm(form: ProbeForm): ProbeMonitorInput {
           domain: form.domain.trim(),
           record: form.record,
           resolver: form.resolver.trim(),
-          answer: form.answer.trim(),
+          rules: probeRules(form),
         },
       }
     case 'tcp':
@@ -588,11 +623,9 @@ export function ProbeFields({
               <HostFields form={form} onChange={onChange} disabled={disabled} />
               <Field id="probe-tls-mode" label={t('TLS')}>
                 <Select
-                  value={form.tlsMode || 'port'}
+                  value={form.tlsMode}
                   onValueChange={(next) =>
-                    onChange({
-                      tlsMode: (next === 'port' ? '' : next) as SmtpTlsMode,
-                    })
+                    onChange({ tlsMode: next as SmtpTlsMode })
                   }
                   disabled={disabled}
                 >
@@ -600,12 +633,8 @@ export function ProbeFields({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {/* Radix selects take no empty value, so the derived mode is `port`. */}
                     {TLS_MODES.map((mode) => (
-                      <SelectItem
-                        key={mode.value || 'port'}
-                        value={mode.value || 'port'}
-                      >
+                      <SelectItem key={mode.value} value={mode.value}>
                         {t(mode.label)}
                       </SelectItem>
                     ))}

@@ -4342,6 +4342,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Server refused the session': 'השרת דחה את הסשן',
   'Target is in a denied network': 'היעד נמצא ברשת חסומה',
   'Timed out': 'הזמן הקצוב פג',
+  'A rule matched': 'אחד הכללים התקיים',
   '30 seconds': '30 שניות',
   '1 minute': 'דקה',
   '5 seconds': '5 שניות',

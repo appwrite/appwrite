@@ -4429,6 +4429,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Server refused the session': 'サーバーがセッションを拒否しました',
   'Target is in a denied network': '対象が拒否されたネットワーク内にあります',
   'Timed out': 'タイムアウトしました',
+  'A rule matched': 'ルールに一致しました',
   '30 seconds': '30 秒',
   '1 minute': '1 分',
   '5 seconds': '5 秒',

@@ -11,15 +11,17 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query'
-import { ID, Query } from '@appwrite.io/console'
+import {
+  ID,
+  Query,
+  type MonitorMethod,
+  type MonitorRecord,
+  type MonitorSeverity,
+  type MonitorTlsMode,
+} from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
-  createEscalation,
-  deleteEscalation,
-  listEscalations,
-  listOrganizationMonitors,
   parseMonitor,
-  updateEscalation,
   type Alert,
   type AlertMetric,
   type AlertResourceType,
@@ -37,6 +39,26 @@ import { nextCursorAfter } from './cursor'
 
 /** The API caps a page at 100; the tabs list them all client-side like webhooks. */
 const PAGE_LIMIT = 100
+
+/**
+ * The SDK types its enums as TypeScript enums, which a string literal does not
+ * assign to; the console's unions hold the same strings.
+ */
+function withSdkEnums<
+  T extends {
+    method?: string
+    record?: string
+    tlsMode?: string
+    severity?: string
+  },
+>(params: T) {
+  return params as Omit<T, 'method' | 'record' | 'tlsMode' | 'severity'> & {
+    method?: MonitorMethod
+    record?: MonitorRecord
+    tlsMode?: MonitorTlsMode
+    severity?: MonitorSeverity
+  }
+}
 
 export async function fetchMonitors(projectId: string) {
   if (!projectId) {
@@ -242,25 +264,35 @@ export function useCreateMonitor(projectId: string | null | undefined) {
       const monitorId = ID.unique()
       if (!('params' in input)) {
         return parseMonitor(
-          await monitors.createUsageMonitor({ monitorId, ...input }),
+          await monitors.createUsageMonitor(
+            withSdkEnums({ monitorId, ...input }),
+          ),
         )
       }
       switch (input.type) {
         case 'http':
           return parseMonitor(
-            await monitors.createHttpMonitor({ monitorId, ...input.params }),
+            await monitors.createHttpMonitor(
+              withSdkEnums({ monitorId, ...input.params }),
+            ),
           )
         case 'dns':
           return parseMonitor(
-            await monitors.createDnsMonitor({ monitorId, ...input.params }),
+            await monitors.createDnsMonitor(
+              withSdkEnums({ monitorId, ...input.params }),
+            ),
           )
         case 'tcp':
           return parseMonitor(
-            await monitors.createTcpMonitor({ monitorId, ...input.params }),
+            await monitors.createTcpMonitor(
+              withSdkEnums({ monitorId, ...input.params }),
+            ),
           )
         case 'smtp':
           return parseMonitor(
-            await monitors.createSmtpMonitor({ monitorId, ...input.params }),
+            await monitors.createSmtpMonitor(
+              withSdkEnums({ monitorId, ...input.params }),
+            ),
           )
       }
     },
@@ -294,7 +326,7 @@ export function useUpdateMonitor(projectId: string | null | undefined) {
     }) => {
       if (!projectId) throw new Error('Project ID is required')
       const monitors = sdk.forProject(projectId).monitors
-      const params = { monitorId, ...changes }
+      const params = withSdkEnums({ monitorId, ...changes })
       const updated =
         type === 'http'
           ? monitors.updateHttpMonitor(params)
@@ -375,7 +407,7 @@ export function organizationBudgetMonitorsQueryOptions(
   return queryOptions({
     queryKey: ['monitors', 'organization', organizationId, 'budget'],
     queryFn: async () => {
-      const response = await listOrganizationMonitors(sdk.forConsole.client, {
+      const response = await sdk.forConsole.organizations.listMonitors({
         organizationId: organizationId!,
         queries: [Query.equal('type', ['budget']), Query.limit(25)],
       })
@@ -397,7 +429,7 @@ export function organizationProbeCountQueryOptions(
   return queryOptions({
     queryKey: ['monitors', 'organization', organizationId, 'probes'],
     queryFn: async () => {
-      const response = await listOrganizationMonitors(sdk.forConsole.client, {
+      const response = await sdk.forConsole.organizations.listMonitors({
         organizationId: organizationId!,
         queries: [
           Query.equal(
@@ -415,9 +447,9 @@ export function organizationProbeCountQueryOptions(
   })
 }
 
-function organizationClient(organizationId: string | null | undefined) {
+function organization(organizationId: string | null | undefined) {
   if (!organizationId) throw new Error('Organization ID is required')
-  return sdk.forConsole.organization(organizationId).client
+  return sdk.forConsole.organization(organizationId)
 }
 
 async function collectPages<T extends { $id: string }>(
@@ -443,10 +475,10 @@ export function escalationsQueryOptions(
     queryKey: ['escalations', organizationId],
     queryFn: () =>
       collectPages(async (queries) => {
-        const response = await listEscalations(
-          organizationClient(organizationId),
-          { queries: [Query.orderAsc('name'), ...queries], total: false },
-        )
+        const response = await organization(organizationId).listEscalations({
+          queries: [Query.orderAsc('name'), ...queries],
+          total: false,
+        })
         return response.escalations
       }),
     enabled: !!organizationId,
@@ -467,7 +499,7 @@ export function useCreateEscalation(organizationId: string | null | undefined) {
 
   return useMutation({
     mutationFn: (input: EscalationInput) =>
-      createEscalation(organizationClient(organizationId), {
+      organization(organizationId).createEscalation({
         escalationId: ID.unique(),
         ...input,
       }),
@@ -491,11 +523,10 @@ export function useUpdateEscalation(organizationId: string | null | undefined) {
       escalationId: string
       changes: Partial<EscalationInput>
     }) =>
-      updateEscalation(
-        organizationClient(organizationId),
+      organization(organizationId).updateEscalation({
         escalationId,
-        changes,
-      ),
+        ...changes,
+      }),
     onSuccess: async () => {
       await queryClient.refetchQueries({
         queryKey: ['escalations', organizationId],
@@ -510,7 +541,7 @@ export function useDeleteEscalation(organizationId: string | null | undefined) {
 
   return useMutation({
     mutationFn: (escalationId: string) =>
-      deleteEscalation(organizationClient(organizationId), escalationId),
+      organization(organizationId).deleteEscalation({ escalationId }),
     onSuccess: async () => {
       await queryClient.refetchQueries({
         queryKey: ['escalations', organizationId],
