@@ -15,6 +15,10 @@ export const ALTERNATIVE_IDS = [
   'posthog',
   'plausible',
   'mux',
+  'coderabbit',
+  'copilot',
+  'bugbot',
+  'greptile',
 ] as const satisfies readonly AlternativeId[]
 
 /** Month the competitor facts on these pages were last checked against public sources. */
@@ -187,6 +191,63 @@ export const ALTERNATIVE_REGISTRY: Record<AlternativeId, AlternativeMeta> = {
     tone: 'pink',
     secondaryTone: 'mint',
     focusProduct: 'videos',
+  },
+  // AI code review: these four wait for the Appwrite Reviews launch.
+  coderabbit: {
+    id: 'coderabbit',
+    name: 'CodeRabbit',
+    category: 'AI code review',
+    metaTitle: 'Appwrite Reviews vs CodeRabbit: AI code review from the platform that ships your code',
+    metaDescription:
+      'Compare Appwrite Reviews and CodeRabbit. AI review on every pull request from the Appwrite project that deploys your Sites and Functions, watches production with Monitors, and pages your phone with Beep, billed in credits instead of seats.',
+    summary: 'Reviews from the platform that ships your code.',
+    tone: 'mint',
+    secondaryTone: 'purple',
+    focusProduct: 'reviews',
+    launchesWith: 'reviews',
+    verifiedOn: 'November 2026',
+  },
+  copilot: {
+    id: 'copilot',
+    name: 'GitHub Copilot',
+    category: 'AI coding assistant',
+    metaTitle: 'Appwrite Reviews vs GitHub Copilot code review: a reviewer for every Git provider',
+    metaDescription:
+      'Compare Appwrite Reviews and GitHub Copilot code review. Reviews on GitHub, GitLab, and Bitbucket that answer your replies and learn your rules, from the Appwrite project that deploys, hosts, and monitors your app.',
+    summary: 'Reviews on every Git provider, next to your deploys.',
+    tone: 'purple',
+    secondaryTone: 'mint',
+    focusProduct: 'reviews',
+    launchesWith: 'reviews',
+    verifiedOn: 'November 2026',
+  },
+  bugbot: {
+    id: 'bugbot',
+    name: 'Cursor Bugbot',
+    category: 'AI code review in Cursor',
+    metaTitle: 'Appwrite Reviews vs Cursor Bugbot: code review next to a production backend',
+    metaDescription:
+      'Compare Appwrite Reviews and Cursor Bugbot. AI review on every pull request from the open-source platform that hosts your customer-facing app, with auth, databases, functions, monitors, and on-call pushes in the same project.',
+    summary: 'Review, host, and monitor customer-facing apps.',
+    tone: 'mint',
+    secondaryTone: 'pink',
+    focusProduct: 'reviews',
+    launchesWith: 'reviews',
+    verifiedOn: 'November 2026',
+  },
+  greptile: {
+    id: 'greptile',
+    name: 'Greptile',
+    category: 'AI code review',
+    metaTitle: 'Appwrite Reviews vs Greptile: AI code review from your deploy platform',
+    metaDescription:
+      'Compare Appwrite Reviews and Greptile. Verified findings, a merge grade, and learnings on every pull request, from the same Appwrite project that deploys, hosts, and monitors your app, with one bill.',
+    summary: 'Review in the same project that runs the app.',
+    tone: 'orange',
+    secondaryTone: 'mint',
+    focusProduct: 'reviews',
+    launchesWith: 'reviews',
+    verifiedOn: 'November 2026',
   },
 }
 

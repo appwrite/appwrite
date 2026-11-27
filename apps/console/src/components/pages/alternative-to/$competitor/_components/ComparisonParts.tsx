@@ -15,6 +15,7 @@ import { ProductToneBackdrop } from '@/components/pages/products/_components/Pro
 import { useRevealOnScroll } from '@/components/pages/products/_components/useRevealOnScroll'
 import { Button } from '@/components/ui/button'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { isAlternativeReleased } from '@/lib/alternatives/availability'
 import { getAlternativeContent } from '@/lib/alternatives/content'
 import {
   ALTERNATIVE_IDS,
@@ -209,8 +210,10 @@ export function ComparisonHeading({
       {eyebrow ? <ComparisonEyebrow className="mb-4">{t(eyebrow)}</ComparisonEyebrow> : null}
       <h2
         className={cn(
-          'font-aeonik-pro text-balance font-normal leading-[1.02] tracking-tight text-foreground',
+          'font-aeonik-pro text-balance font-normal tracking-tight text-foreground',
           size === 'lg' ? 'text-[28px] sm:text-[36px] lg:text-[44px]' : 'text-[24px] sm:text-[28px] lg:text-[32px]',
+          // After the sizes: tailwind-merge drops a line height that comes before a font size.
+          'leading-[1.02]',
         )}
       >
         {t(title)}
@@ -519,7 +522,7 @@ export function ComparisonTableSection({
             size="md"
           />
           <p className="mt-6 text-[12px] leading-5 text-muted-foreground">
-            {t(`Checked against public pricing and documentation in ${ALTERNATIVES_VERIFIED_ON}.`)}
+            {t(`Checked against public pricing and documentation in ${meta.verifiedOn ?? ALTERNATIVES_VERIFIED_ON}.`)}
           </p>
         </div>
         <div className="-mx-4 min-w-0 overflow-x-auto px-4 sm:mx-0 sm:overflow-visible sm:px-0">
@@ -637,7 +640,8 @@ export function OtherComparisons({ current }: { current: AlternativeId }) {
     (id) =>
       id !== current &&
       (features.analytics || ALTERNATIVE_REGISTRY[id].focusProduct !== 'analytics') &&
-      (features.videos || ALTERNATIVE_REGISTRY[id].focusProduct !== 'videos'),
+      (features.videos || ALTERNATIVE_REGISTRY[id].focusProduct !== 'videos') &&
+      isAlternativeReleased(id, features),
   )
   return (
     <ComparisonSection bordered={false}>

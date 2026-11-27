@@ -267,7 +267,7 @@ $platforms = [
             [
                 'key' => 'agent-skills',
                 'name' => 'AgentSkills',
-                'version' => '0.7.0',
+                'version' => '0.8.0',
                 'url' => 'https://github.com/appwrite/skills',
                 'enabled' => true,
                 'beta' => false,
@@ -287,7 +287,7 @@ $platforms = [
             [
                 'key' => 'cursor-plugin',
                 'name' => 'CursorPlugin',
-                'version' => '0.2.0',
+                'version' => '0.4.0',
                 'url' => 'https://github.com/appwrite/cursor-plugin',
                 'enabled' => true,
                 'beta' => false,
@@ -307,7 +307,7 @@ $platforms = [
             [
                 'key' => 'claude-plugin',
                 'name' => 'ClaudePlugin',
-                'version' => '0.1.0',
+                'version' => '0.4.0',
                 'url' => 'https://github.com/appwrite/claude-plugin',
                 'enabled' => true,
                 'beta' => false,
@@ -327,7 +327,7 @@ $platforms = [
             [
                 'key' => 'codex-plugin',
                 'name' => 'CodexPlugin',
-                'version' => '0.1.1',
+                'version' => '0.4.0',
                 'url' => 'https://github.com/appwrite/codex-plugin',
                 'enabled' => true,
                 'beta' => false,

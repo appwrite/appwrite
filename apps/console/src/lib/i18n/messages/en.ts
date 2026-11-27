@@ -150,7 +150,10 @@ export const enCatalog = {
           domains: 'Domains',
           network: 'Network',
           analytics: 'Analytics',
+          monitors: 'Monitors',
+          beep: 'Beep',
           firewall: 'Firewall',
+          reviews: 'Reviews',
           mcp1: 'MCP1',
         },
         learn: {
@@ -199,6 +202,10 @@ export const enCatalog = {
           vsPostHog: 'Appwrite vs. PostHog', // pragma: allowlist secret
           vsPlausible: 'Appwrite vs. Plausible', // pragma: allowlist secret
           vsMux: 'Appwrite vs. Mux', // pragma: allowlist secret
+          vsCodeRabbit: 'Appwrite vs. CodeRabbit', // pragma: allowlist secret
+          vsCopilot: 'Appwrite vs. GitHub Copilot', // pragma: allowlist secret
+          vsBugbot: 'Appwrite vs. Cursor Bugbot', // pragma: allowlist secret
+          vsGreptile: 'Appwrite vs. Greptile', // pragma: allowlist secret
           nextjsHosting: 'Next.js hosting',
           reactHosting: 'React hosting',
           vueHosting: 'Vue.js hosting',
@@ -385,6 +392,8 @@ export const enCatalog = {
         startBuilding: 'Start building',
         viewDocs: 'View docs',
         viewPricing: 'View pricing',
+        appStore: 'Download on the App Store',
+        googlePlay: 'Get it on Google Play',
       },
       productNames: {
         auth: 'Auth',
@@ -397,7 +406,10 @@ export const enCatalog = {
         realtime: 'Realtime',
         sites: 'Sites',
         analytics: 'Analytics',
+        monitors: 'Monitors',
+        beep: 'Beep',
         firewall: 'Firewall',
+        reviews: 'Reviews',
       },
       explore: {
         title: 'Explore Appwrite', // pragma: allowlist secret
@@ -432,8 +444,11 @@ export const enCatalog = {
           domainsName: 'Domains',
           domainsTagline: 'Search, buy, transfer, and manage domains.',
           analyticsTagline: 'Cookieless analytics built into your Sites and Auth.',
+          monitorsTagline: 'Alerts on usage thresholds and failing endpoints.',
+          beepTagline: 'Alerts and usage from every project, on your phone.',
           firewallName: 'Firewall',
           firewallTagline: 'Project rules to deny, rate limit, and redirect traffic.',
+          reviewsTagline: 'AI code review on every pull request, next to your deploys.',
           advisorName: 'Advisor',
           advisorTagline: 'Security and performance insights.',
         },

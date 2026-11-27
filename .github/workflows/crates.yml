@@ -27,6 +27,9 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      id-token: write # crates.io trusted publishing exchanges the OIDC token for a short-lived one
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -62,16 +65,18 @@ jobs:
       - name: Install build dependencies
         run: sudo apt-get update && sudo apt-get install --yes --no-install-recommends libheif-dev
 
+      # Each crate names this workflow as its trusted publisher. A new crate's first version
+      # cannot: crates.io only lets a crate that exists be given one, so publish that version
+      # by hand and add the publisher before tagging the next.
+      - uses: rust-lang/crates-io-auth-action@3268eb413133e2960fa4ae0e963ca76380c54cd9 # v1.0.6
+        id: crates-io
+
       # A run after a publish that succeeded skips to packaging instead of failing on "already
       # exists", so the mirror step still runs. The crate is packaged again either way: the
       # publish leaves no .crate behind, and packaging the same commit gives the same files.
-      #
-      # The token is for a crate's first version: crates.io only lets a crate that exists be
-      # given a trusted publisher. Once the fourteen are published, each can name this
-      # workflow as its trusted publisher and the secret can go.
-      - name: Publish to crates.io # zizmor: ignore[use-trusted-publishing] a crate's first version cannot use it
+      - name: Publish to crates.io
         env:
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+          CARGO_REGISTRY_TOKEN: ${{ steps.crates-io.outputs.token }}
           PACKAGE: ${{ steps.crate.outputs.package }}
           VERSION: ${{ steps.crate.outputs.version }}
         run: |
