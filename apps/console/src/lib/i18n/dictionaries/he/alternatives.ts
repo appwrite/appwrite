@@ -572,8 +572,8 @@ export const heAlternativesDictionary: Record<string, string> = {
   'Plus, billed yearly ($99 monthly)': 'Plus, בחיוב שנתי ($99 בחיוב חודשי)',
   'Point-in-time recovery window': 'חלון שחזור לנקודת זמן',
   'Policies written in SQL': 'מדיניות שנכתבת ב-SQL',
-  'PostgreSQL 18 (17 available)': 'PostgreSQL 18 (גם 17 זמין)',
-  'PostgreSQL 18 on dedicated compute': 'PostgreSQL 18 על מחשוב ייעודי',
+  'PostgreSQL 19 (17 and 18 available)': 'PostgreSQL 19 (גם 17 ו-18 זמינים)',
+  'PostgreSQL 19 on dedicated compute': 'PostgreSQL 19 על מחשוב ייעודי',
   'PostgreSQL extensions': 'הרחבות PostgreSQL',
   'Postgres changes, broadcast, presence': 'שינויי Postgres, שידור, נוכחות',
   'Postgres development platform': 'פלטפורמת פיתוח Postgres',
@@ -813,14 +813,14 @@ export const heAlternativesDictionary: Record<string, string> = {
     'כן. Appwrite מכסה את אותם תחומים כמו Firebase (אימות, מסדי נתונים, אחסון, פונקציות, הודעות, Realtime ואירוח) ומוסיפה אירוח עצמי, טבלאות רלציוניות, PostgreSQL מנוהל ופונקציות ביותר מ-13 סביבות ריצה. היא קוד פתוח, כך שה-backend שלכם אף פעם לא כבול לספק אחד.',
   'Yes. Appwrite runs anywhere Docker runs with a single install command, and the self-hosted version uses the same APIs, SDKs, and Console as Appwrite Cloud. Moving between them only changes the endpoint.':
     'כן. Appwrite רצה בכל מקום ש-Docker רץ בו עם פקודת התקנה אחת, וגרסת האירוח העצמי משתמשת באותם APIs, SDKs וקונסולה כמו Appwrite Cloud. מעבר ביניהן משנה רק את ה-Endpoint.',
-  'Yes. Appwrite runs managed PostgreSQL 18 (or 17) on dedicated compute with connection pooling, up to five HA replicas, point-in-time recovery, and up to 50 extensions including pgvector and PostGIS. Connect with psql or any driver. If you prefer SDKs with built-in permissions, use TablesDB, DocumentsDB, or VectorsDB.':
-    'כן. Appwrite מריצה PostgreSQL 18 (או 17) מנוהל על מחשוב ייעודי עם connection pooling, עד חמש רפליקות HA, שחזור לנקודת זמן ועד 50 הרחבות, כולל pgvector ו-PostGIS. התחברו עם psql או כל דרייבר. אם אתם מעדיפים SDKs עם הרשאות מובנות, השתמשו ב-TablesDB, DocumentsDB או VectorsDB.',
+  'Yes. Appwrite runs managed PostgreSQL 19 (or 18 or 17) on dedicated compute with connection pooling, up to five HA replicas, point-in-time recovery, and up to 50 extensions including pgvector and PostGIS. Connect with psql or any driver. If you prefer SDKs with built-in permissions, use TablesDB, DocumentsDB, or VectorsDB.':
+    'כן. Appwrite מריצה PostgreSQL 19 (או 18 או 17) מנוהל על מחשוב ייעודי עם connection pooling, עד חמש רפליקות HA, שחזור לנקודת זמן ועד 50 הרחבות, כולל pgvector ו-PostGIS. התחברו עם psql או כל דרייבר. אם אתם מעדיפים SDKs עם הרשאות מובנות, השתמשו ב-TablesDB, DocumentsDB או VectorsDB.',
   'Yes. Auth is part of every self-hosted Appwrite install, with the same APIs, SDKs, providers, and security policies as Appwrite Cloud. Switching between them only changes the endpoint.':
     'כן. אימות הוא חלק מכל התקנת Appwrite באירוח עצמי, עם אותם APIs, SDKs, ספקים ומדיניות אבטחה כמו ב-Appwrite Cloud. מעבר ביניהם משנה רק את ה-Endpoint.',
   'Yes. Files are private by default. Grant read access to any user, a specific user, a team, or a team role, and create file tokens with an optional expiry to share a single file without a session.':
     'כן. קבצים פרטיים כברירת מחדל. הענקו הרשאת קריאה לכל משתמש, למשתמש מסוים, לצוות או לתפקיד בצוות, וצרו טוקני קבצים עם תפוגה אופציונלית כדי לשתף קובץ בודד בלי סשן.',
-  'Yes. It is the PostgreSQL engine (18 by default, 17 available) over the standard wire protocol. Use psql, pgAdmin, Prisma, Drizzle, or any driver, install up to 50 extensions like pgvector and PostGIS, and move data in or out with pg_dump and pg_restore.':
-    'כן. זה מנוע PostgreSQL (גרסה 18 כברירת מחדל, 17 זמינה) על גבי ה-wire protocol הסטנדרטי. השתמשו ב-psql, pgAdmin, Prisma, Drizzle או כל דרייבר, התקינו עד 50 הרחבות כמו pgvector ו-PostGIS, והעבירו נתונים פנימה או החוצה עם pg_dump ו-pg_restore.',
+  'Yes. It is the PostgreSQL engine (19 by default, 17 and 18 available) over the standard wire protocol. Use psql, pgAdmin, Prisma, Drizzle, or any driver, install up to 50 extensions like pgvector and PostGIS, and move data in or out with pg_dump and pg_restore.':
+    'כן. זה מנוע PostgreSQL (גרסה 19 כברירת מחדל, 17 ו-18 זמינות) על גבי ה-wire protocol הסטנדרטי. השתמשו ב-psql, pgAdmin, Prisma, Drizzle או כל דרייבר, התקינו עד 50 הרחבות כמו pgvector ו-PostGIS, והעבירו נתונים פנימה או החוצה עם pg_dump ו-pg_restore.',
   'Yes. Next.js runs in containers on Sites with SSR, API routes, middleware, and server actions, and standalone output is supported for smaller builds and faster cold starts. Sites also has presets for Nuxt, SvelteKit, Astro, Remix, TanStack Start, Angular, Analog, and more.':
     'כן. Next.js רץ בקונטיינרים ב-Appwrite Sites עם SSR, API routes, middleware ו-server actions, ופלט standalone נתמך ל-Builds קטנים יותר ו-cold starts מהירים יותר. ל-Appwrite Sites יש גם פריסטים ל-Nuxt, SvelteKit, Astro, Remix, TanStack Start, Angular, Analog ועוד.',
   'Yes. On Pro you set an organization-wide budget cap. Appwrite emails your team as usage approaches it and stops automatic scaling once you reach it, so a traffic spike or a runaway loop cannot turn into a surprise invoice.':
@@ -1699,7 +1699,7 @@ export const heAlternativesDictionary: Record<string, string> = {
   'Start free, add managed PostgreSQL or MySQL on Pro, and keep auth, files, and functions in the same project.':
     'התחילו בחינם, הוסיפו PostgreSQL או MySQL מנוהלים ב-Pro, ושמרו את האימות, הקבצים והפונקציות באותו פרויקט.',
   'PostgreSQL and MySQL through Vitess': 'PostgreSQL ו-MySQL דרך Vitess',
-  'PostgreSQL 18, in beta': 'PostgreSQL 18, בבטא',
+  'PostgreSQL 19, in beta': 'PostgreSQL 19, בבטא',
   'Managed MySQL': 'MySQL מנוהל',
   'In beta': 'בבטא',
   'Vitess, with horizontal sharding': 'Vitess, עם sharding אופקי',

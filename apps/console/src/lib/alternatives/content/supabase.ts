@@ -44,7 +44,7 @@ export const supabaseAlternativeContent: AlternativeContent = {
         },
         {
           label: 'Managed PostgreSQL',
-          appwrite: { value: true, note: 'PostgreSQL 18 on dedicated compute' },
+          appwrite: { value: true, note: 'PostgreSQL 19 on dedicated compute' },
           competitor: true,
         },
         {
@@ -185,7 +185,7 @@ export const supabaseAlternativeContent: AlternativeContent = {
     {
       question: 'Does Appwrite support PostgreSQL?',
       answer:
-        'Yes. Appwrite runs managed PostgreSQL 18 (or 17) on dedicated compute with connection pooling, up to five HA replicas, point-in-time recovery, and up to 50 extensions including pgvector and PostGIS. Connect with psql or any driver. If you prefer SDKs with built-in permissions, use TablesDB, DocumentsDB, or VectorsDB.',
+        'Yes. Appwrite runs managed PostgreSQL 19 (or 18 or 17) on dedicated compute with connection pooling, up to five HA replicas, point-in-time recovery, and up to 50 extensions including pgvector and PostGIS. Connect with psql or any driver. If you prefer SDKs with built-in permissions, use TablesDB, DocumentsDB, or VectorsDB.',
       links: [
         { label: 'Managed PostgreSQL', href: '/products/postgres' },
         { label: 'PostgreSQL docs', href: '/docs/products/databases/postgresql' },
