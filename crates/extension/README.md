@@ -152,8 +152,9 @@ package removed whole so it is never installed here.
 ## Utopia\Detector
 
 Over `crates/utopia/detector`, always registered: every class of `packages/detector` (the
-`Detector` and `Detection` bases, the `Framework`, `Packager`, `Rendering` and `Runtime` detectors,
-`Strategy`, and the 15 frameworks, 3 packagers, 2 renderings and 11 runtimes). The PHP sources were
+`Detector` and `Detection` bases, the `Framework`, `Mobile`, `Packager`, `Rendering` and `Runtime`
+detectors, `Strategy`, and the 15 frameworks, 4 mobile toolchains, 3 packagers, 2 renderings and 11
+runtimes). The PHP sources were
 removed once it ran in every Cloud region (2026-11-23); their signatures are in
 `packages/detector/stubs/`, one file per class, for PHPStan and editors.
 
@@ -164,11 +165,14 @@ framework ranking counts), `instanceof`, `==`, `clone`, `serialize()` and `var_d
 PHP. Each leaf answers from the crate's struct of the same name. `detect()` follows the PHP method
 step by step: a native option answers from the crate, any other (a PHP subclass, or a PHP class
 extending a base) has its own `getName()`, `getFiles()`, `getPackages()`, `getLanguages()`,
-`getFileExtensions()` and `setPackager()` called as PHP calls them, as many times and in the same
-order; a subclass overriding `Framework::dependencies()` or `Strategy::getValue()` is called too.
-The ranking (most matches, then fewest parents, then Astro yielding to the runner-up), the
-`package.json` / `pubspec.yaml` parsing (`json_decode`, then `yaml_parse`, through `php-std`) and
-the static fallback are the crate's, shared with the service slices. `Invalid strategy: x` and
+`getFileExtensions()`, `getPlugins()`, `getPlatforms()` and `setPackager()` called as PHP calls
+them, as many times and in the same order; a subclass overriding `Framework::dependencies()`,
+`Mobile::dependencies()`, `Mobile::statements()`, `Mobile::declares()` or `Strategy::getValue()` is
+called too.
+The ranking (most matches, then fewest parents, then Astro yielding to the runner-up), the mobile
+choice (the matching option covering the most platforms, the first added on a tie), the
+`package.json` / `pubspec.yaml` parsing (`json_decode`, then `yaml_parse`, through `php-std`), the
+Gradle statements and the static fallback are the crate's, shared with the service slices. `Invalid strategy: x` and
 `Invalid input type 'x'` are thrown as PHP's `\Exception` and `\InvalidArgumentException`, with the
 argument's bytes.
 

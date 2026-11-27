@@ -1,24 +1,27 @@
-//! `Utopia\Detector\Detection` and its bases and leaves: the frameworks, packagers, renderings
-//! and runtimes, each answering from the crate's struct of the same name. A leaf's methods are
+//! `Utopia\Detector\Detection` and its bases and leaves: the frameworks, packagers, renderings,
+//! runtimes and mobile toolchains, each answering from the crate's struct of the same name. A leaf's methods are
 //! shared handlers that find the leaf from the class declaring the executing method, which a PHP
 //! subclass inherits unchanged.
 
 use ext_php_rs::types::Zval;
 use ext_php_rs::zend::{ClassEntry, ExecuteData};
+use utopia_detector::mobile::{
+    Android as MobileAndroid, Flutter as MobileFlutter, Ios, ReactNative as MobileReactNative,
+};
 use utopia_detector::{
-    Adapter, Analog, Angular, Astro, Bun, Cpp, Dart, Deno, Dotnet, Flutter, Framework, Jaspr, Java, Lynx, NextJs, Node,
-    Npm, Nuxt, Packager, Php, Pnpm, Python, React, ReactNative, Remix, Ruby, Runtime, Ssr, Svelte, SvelteKit, Swift,
-    TanStackStart, Vue, Yarn,
+    Adapter, Analog, Angular, Astro, Bun, Cpp, Dart, Deno, Dotnet, Flutter, Framework, Jaspr, Java, Lynx, Mobile,
+    NextJs, Node, Npm, Nuxt, Packager, Php, Platform, Pnpm, Python, React, ReactNative, Remix, Ruby, Runtime, Ssr,
+    Svelte, SvelteKit, Swift, TanStackStart, Vue, Yarn,
 };
 
 use std::sync::OnceLock;
 
 use super::{
     Class, DETECTION, DETECTION_NAME, FALLBACK_FILE, FRAMEWORK_DETECTION, FRAMEWORK_DETECTION_NAME,
-    FRAMEWORK_DETECTION_PACKAGER, FRAMEWORKS, Frozen, JS, Method, PACKAGER_DETECTION, PACKAGER_DETECTION_NAME,
-    PACKAGERS, Param, RENDERING_DETECTION, RENDERING_DETECTION_NAME, RUNTIME_DETECTION, RUNTIME_DETECTION_NAME,
-    RUNTIME_DETECTION_PACKAGER, RUNTIMES, Ty, abstract_method, arity, guard, index_of, method, nothing, peek, read,
-    return_this, str_value, strings_, with_str, write,
+    FRAMEWORK_DETECTION_PACKAGER, FRAMEWORKS, Frozen, JS, MOBILE_DETECTION, MOBILE_DETECTION_NAME, MOBILES, Method,
+    PACKAGER_DETECTION, PACKAGER_DETECTION_NAME, PACKAGERS, Param, RENDERING_DETECTION, RENDERING_DETECTION_NAME,
+    RUNTIME_DETECTION, RUNTIME_DETECTION_NAME, RUNTIME_DETECTION_PACKAGER, RUNTIMES, Ty, abstract_method, arity, guard,
+    index_of, method, nothing, peek, read, return_this, str_value, strings_, with_str, write,
 };
 use crate::classes::engine::{self, Declared, MAY_BE_NULL, MAY_BE_STRING, PropertyType};
 use crate::classes::leaf::{FunctionHandler, this};
@@ -114,6 +117,44 @@ pub static RUNTIMES_TABLE: [(&str, &dyn Runtime); 11] = [
     ("Utopia\\Detector\\Detection\\Runtime\\Swift", &Swift),
 ];
 
+/// A method a mobile toolchain declares.
+#[derive(Clone, Copy)]
+pub(super) enum MobileMethod {
+    Name,
+    Platforms,
+    Files,
+    Extensions,
+    Packages,
+    Plugins,
+}
+
+/// A mobile toolchain: its class, the crate's toolchain and the methods its class declares.
+pub type MobileLeaf = (&'static str, &'static dyn Mobile, &'static [MobileMethod]);
+
+/// The mobile toolchains.
+pub static MOBILES_TABLE: [MobileLeaf; 4] = [
+    (
+        "Utopia\\Detector\\Detection\\Mobile\\Android",
+        &MobileAndroid,
+        &[MobileMethod::Name, MobileMethod::Platforms, MobileMethod::Plugins],
+    ),
+    (
+        "Utopia\\Detector\\Detection\\Mobile\\Flutter",
+        &MobileFlutter,
+        &[MobileMethod::Name, MobileMethod::Platforms, MobileMethod::Packages],
+    ),
+    (
+        "Utopia\\Detector\\Detection\\Mobile\\Ios",
+        &Ios,
+        &[MobileMethod::Name, MobileMethod::Platforms, MobileMethod::Files, MobileMethod::Extensions],
+    ),
+    (
+        "Utopia\\Detector\\Detection\\Mobile\\ReactNative",
+        &MobileReactNative,
+        &[MobileMethod::Name, MobileMethod::Platforms, MobileMethod::Packages],
+    ),
+];
+
 /// The crate's framework for the class `ce`, if it is one of the native frameworks.
 pub fn framework_of(ce: *const ClassEntry) -> Option<&'static dyn Framework> {
     let index = index_of(ce)?.checked_sub(FRAMEWORKS)?;
@@ -132,6 +173,12 @@ pub fn runtime_of(ce: *const ClassEntry) -> Option<&'static dyn Runtime> {
     RUNTIMES_TABLE.get(index).map(|leaf| leaf.1)
 }
 
+/// The crate's mobile toolchain for the class `ce`, if it is one of the native ones.
+pub fn mobile_of(ce: *const ClassEntry) -> Option<&'static dyn Mobile> {
+    let index = index_of(ce)?.checked_sub(MOBILES)?;
+    MOBILES_TABLE.get(index).map(|leaf| leaf.1)
+}
+
 // The classes ---------------------------------------------------------------------------
 
 /// `abstract class Detection {}`.
@@ -139,8 +186,8 @@ pub fn detection() -> Class {
     Class { name: DETECTION_NAME, parent: None, is_abstract: true, methods: Vec::new(), declare: nothing }
 }
 
-/// The abstract bases: `Detection\Framework`, `Framework\JS`, `Detection\Packager`,
-/// `Detection\Rendering` and `Detection\Runtime`.
+/// The abstract bases: `Detection\Framework`, `Framework\JS`, `Detection\Mobile`,
+/// `Detection\Packager`, `Detection\Rendering` and `Detection\Runtime`.
 pub fn bases() -> Vec<Class> {
     vec![
         Class {
@@ -170,6 +217,24 @@ pub fn bases() -> Vec<Class> {
                 method("getFiles", empty_list, &[], Ty::Array),
             ],
             declare: nothing,
+        },
+        Class {
+            name: MOBILE_DETECTION_NAME,
+            parent: Some(DETECTION),
+            is_abstract: true,
+            methods: vec![
+                abstract_method("getName", &[], Ty::Str),
+                abstract_method("getPlatforms", &[], Ty::Array),
+                method("getFiles", empty_list, &[], Ty::Array),
+                method("getFileExtensions", empty_list, &[], Ty::Array),
+                method("getPackages", empty_list, &[], Ty::Array),
+                method("getPlugins", empty_list, &[], Ty::Array),
+            ],
+            declare: |class| {
+                for (name, platform) in [("PLATFORM_ANDROID", Platform::Android), ("PLATFORM_IOS", Platform::Ios)] {
+                    engine::declare_constant(class, name, engine::interned(platform.as_str().as_bytes()), 0);
+                }
+            },
         },
         Class {
             name: PACKAGER_DETECTION_NAME,
@@ -227,7 +292,7 @@ fn declare_packager(class: &mut ClassEntry, property: &'static engine::Property)
     engine::declare_property(class, property, PropertyType::Mask(MAY_BE_STRING), BODY, Some(engine::interned(b"")));
 }
 
-/// The frameworks, packagers, `SSR`, `XStatic` and runtimes, in that order.
+/// The frameworks, packagers, `SSR`, `XStatic`, runtimes and mobile toolchains, in that order.
 pub fn leaves() -> Vec<Class> {
     let mut classes = Vec::new();
     for (f, (name, parent, _, methods)) in FRAMEWORKS_TABLE.iter().enumerate() {
@@ -289,7 +354,27 @@ pub fn leaves() -> Vec<Class> {
             declare: nothing,
         });
     }
+    for (m, (name, _, methods)) in MOBILES_TABLE.iter().enumerate() {
+        classes.push(Class {
+            name,
+            parent: Some(MOBILE_DETECTION),
+            is_abstract: false,
+            methods: methods.iter().map(|method| mobile_method(*method, m)).collect(),
+            declare: nothing,
+        });
+    }
     classes
+}
+
+fn mobile_method(m: MobileMethod, leaf: usize) -> Method {
+    match m {
+        MobileMethod::Name => method("getName", MOBILE_NAME[leaf], &[], Ty::Str),
+        MobileMethod::Platforms => method("getPlatforms", MOBILE_PLATFORMS[leaf], &[], Ty::Array),
+        MobileMethod::Files => method("getFiles", MOBILE_FILES[leaf], &[], Ty::Array),
+        MobileMethod::Extensions => method("getFileExtensions", MOBILE_EXTENSIONS[leaf], &[], Ty::Array),
+        MobileMethod::Packages => method("getPackages", MOBILE_PACKAGES[leaf], &[], Ty::Array),
+        MobileMethod::Plugins => method("getPlugins", MOBILE_PLUGINS[leaf], &[], Ty::Array),
+    }
 }
 
 fn framework_method(m: M, f: usize) -> Method {
@@ -351,9 +436,19 @@ struct PackagerData {
     files: Frozen,
 }
 
+struct MobileData {
+    name: Frozen,
+    platforms: Frozen,
+    files: Frozen,
+    extensions: Frozen,
+    packages: Frozen,
+    plugins: Frozen,
+}
+
 static FRAMEWORK_DATA: OnceLock<Vec<FrameworkData>> = OnceLock::new();
 static RUNTIME_DATA: OnceLock<Vec<RuntimeData>> = OnceLock::new();
 static PACKAGER_DATA: OnceLock<Vec<PackagerData>> = OnceLock::new();
+static MOBILE_DATA: OnceLock<Vec<MobileData>> = OnceLock::new();
 /// `SSR::FRAMEWORK_FILES`, each list frozen.
 static SSR_DATA: OnceLock<Vec<(&'static str, Frozen)>> = OnceLock::new();
 
@@ -401,6 +496,23 @@ pub fn freeze() {
             })
             .collect()
     });
+    MOBILE_DATA.get_or_init(|| {
+        MOBILES_TABLE
+            .iter()
+            .map(|(_, mobile, _)| {
+                let mobile = *mobile;
+                let platforms: Vec<&str> = mobile.platforms().iter().map(Platform::as_str).collect();
+                MobileData {
+                    name: Frozen::string(mobile.name()),
+                    platforms: Frozen::list(&platforms),
+                    files: Frozen::list(mobile.files()),
+                    extensions: Frozen::list(mobile.file_extensions()),
+                    packages: Frozen::list(mobile.packages()),
+                    plugins: Frozen::list(mobile.plugins()),
+                }
+            })
+            .collect()
+    });
     SSR_DATA.get_or_init(|| {
         Ssr::FRAMEWORK_FILES.iter().map(|(framework, files)| (*framework, Frozen::list(files))).collect()
     });
@@ -429,6 +541,12 @@ const RUNTIME_COMMANDS: [FunctionHandler; 11] = per_leaf!(runtime_commands; 0 1 
 const RUNTIME_EXTENSIONS: [FunctionHandler; 11] = per_leaf!(runtime_extensions; 0 1 2 3 4 5 6 7 8 9 10);
 const RUNTIME_FILES: [FunctionHandler; 11] = per_leaf!(runtime_files; 0 1 2 3 4 5 6 7 8 9 10);
 const RUNTIME_ENTRYPOINT: [FunctionHandler; 11] = per_leaf!(runtime_entrypoint; 0 1 2 3 4 5 6 7 8 9 10);
+const MOBILE_NAME: [FunctionHandler; 4] = per_leaf!(mobile_name; 0 1 2 3);
+const MOBILE_PLATFORMS: [FunctionHandler; 4] = per_leaf!(mobile_platforms; 0 1 2 3);
+const MOBILE_FILES: [FunctionHandler; 4] = per_leaf!(mobile_files; 0 1 2 3);
+const MOBILE_EXTENSIONS: [FunctionHandler; 4] = per_leaf!(mobile_extensions; 0 1 2 3);
+const MOBILE_PACKAGES: [FunctionHandler; 4] = per_leaf!(mobile_packages; 0 1 2 3);
+const MOBILE_PLUGINS: [FunctionHandler; 4] = per_leaf!(mobile_plugins; 0 1 2 3);
 
 #[inline(always)]
 fn framework_data(f: usize) -> Option<&'static FrameworkData> {
@@ -438,6 +556,11 @@ fn framework_data(f: usize) -> Option<&'static FrameworkData> {
 #[inline(always)]
 fn runtime_data(r: usize) -> Option<&'static RuntimeData> {
     RUNTIME_DATA.get()?.get(r)
+}
+
+#[inline(always)]
+fn mobile_data(m: usize) -> Option<&'static MobileData> {
+    MOBILE_DATA.get()?.get(m)
 }
 
 #[inline(always)]
@@ -683,4 +806,36 @@ extern "C" fn runtime_entrypoint<const R: usize>(_: &mut ExecuteData, retval: &m
     if let Some(data) = runtime_data(R) {
         data.entrypoint.set(retval);
     }
+}
+
+/// The leaf `L`'s `field`, returned.
+#[inline(always)]
+fn mobile_return<const L: usize>(retval: &mut Zval, field: fn(&MobileData) -> &Frozen) {
+    if let Some(data) = mobile_data(L) {
+        field(data).set(retval);
+    }
+}
+
+extern "C" fn mobile_name<const L: usize>(_: &mut ExecuteData, retval: &mut Zval) {
+    mobile_return::<L>(retval, |data| &data.name);
+}
+
+extern "C" fn mobile_platforms<const L: usize>(_: &mut ExecuteData, retval: &mut Zval) {
+    mobile_return::<L>(retval, |data| &data.platforms);
+}
+
+extern "C" fn mobile_files<const L: usize>(_: &mut ExecuteData, retval: &mut Zval) {
+    mobile_return::<L>(retval, |data| &data.files);
+}
+
+extern "C" fn mobile_extensions<const L: usize>(_: &mut ExecuteData, retval: &mut Zval) {
+    mobile_return::<L>(retval, |data| &data.extensions);
+}
+
+extern "C" fn mobile_packages<const L: usize>(_: &mut ExecuteData, retval: &mut Zval) {
+    mobile_return::<L>(retval, |data| &data.packages);
+}
+
+extern "C" fn mobile_plugins<const L: usize>(_: &mut ExecuteData, retval: &mut Zval) {
+    mobile_return::<L>(retval, |data| &data.plugins);
 }

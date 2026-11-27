@@ -1,6 +1,7 @@
 //! Detection of what a project is from what it contains: its package
-//! manager, its language runtime, its web framework, and whether a build is
-//! served by a server or as static files.
+//! manager, its language runtime, its web framework, whether a build is
+//! served by a server or as static files, and which mobile toolchain builds
+//! its apps.
 //!
 //! Each question has a detector fed with inputs (file names, language names
 //! or manifest contents) and options to choose from:
@@ -11,7 +12,10 @@
 //! - [`FrameworkDetector`] with [`Framework`]s ([`NextJs`], [`Nuxt`],
 //!   [`SvelteKit`], [`Astro`], [`Flutter`] and ten more), scored on files and
 //!   [`dependencies`];
-//! - [`RenderingDetector`] with [`Rendering`]s ([`Ssr`], [`Static`]).
+//! - [`RenderingDetector`] with [`Rendering`]s ([`Ssr`], [`Static`]);
+//! - [`MobileDetector`] with [`Mobile`]s ([`mobile::Flutter`],
+//!   [`mobile::ReactNative`], [`mobile::Android`], [`mobile::Ios`]), the
+//!   matching one covering the most [`Platform`]s winning.
 //!
 //! Options are traits, so a project can add its own. Runtime and framework
 //! detections come back as [`Detected`], which carries the detector's
@@ -68,6 +72,11 @@
 //! | `setPackager()` on a runtime or framework | the `packager` argument of [`Runtime::commands`], [`Framework::install_command`], [`Framework::build_command`]; [`Detected`] passes the detector's |
 //! | `Detector\Rendering`, `Detection\Rendering` | [`RenderingDetector`], [`Rendering`] ([`Rendered`] from `detect`) |
 //! | `Detection\Rendering\SSR`, `XStatic` | [`Ssr`], [`Static`] |
+//! | `Detector\Mobile`, `Detection\Mobile` | [`MobileDetector`], [`Mobile`] |
+//! | `Mobile::INPUT_FILE`, `INPUT_PACKAGES`, `INPUT_GRADLE` | [`mobile::Input`] |
+//! | `Mobile::dependencies()`, `statements()`, `declares()` | [`mobile::dependencies`], [`mobile::statements`], [`mobile::declares`] |
+//! | `Detection\Mobile::PLATFORM_ANDROID`, `PLATFORM_IOS` | [`Platform`] |
+//! | `Detection\Mobile\Android`, `Flutter`, `Ios`, `ReactNative` | [`mobile::Android`], [`mobile::Flutter`], [`mobile::Ios`], [`mobile::ReactNative`] |
 //! | `\InvalidArgumentException`, `\Exception` | [`Error::InvalidArgument`], [`Error::Exception`] |
 //!
 //! PHP passes file names as byte strings; here they are `String`s, so a name
@@ -77,6 +86,7 @@
 
 mod error;
 mod framework;
+pub mod mobile;
 mod packager;
 mod rendering;
 mod runtime;
@@ -86,6 +96,7 @@ pub use framework::{
     Adapter, Analog, Angular, Astro, Flutter, Framework, FrameworkDetector, Input, Jaspr, Lynx, NextJs, Nuxt, React,
     ReactNative, Remix, Score, Svelte, SvelteKit, TanStackStart, Vue, best, dependencies, matches,
 };
+pub use mobile::{Mobile, MobileDetector, Platform};
 pub use packager::{Npm, Packager, PackagerDetector, Pnpm, Yarn};
 pub use rendering::{Rendered, Rendering, RenderingDetector, Ssr, Static, html_fallback};
 pub use runtime::{

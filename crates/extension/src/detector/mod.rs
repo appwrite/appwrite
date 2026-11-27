@@ -1,7 +1,7 @@
 //! `Utopia\Detector` over [`utopia_detector`], registered when `_APP_EXTENSION_LIBRARIES` names
-//! `detector`: every class of `packages/detector` (the `Detector` and `Detection` bases, the four
-//! detectors, `Strategy`, and the frameworks, packagers, renderings and runtimes), so none of the
-//! package's PHP classes loads.
+//! `detector`: every class of `packages/detector` (the `Detector` and `Detection` bases, the five
+//! detectors, `Strategy`, and the frameworks, packagers, renderings, runtimes and mobile
+//! toolchains), so none of the package's PHP classes loads.
 //!
 //! Built by hand like the validators ([`crate::classes`]): no Rust object behind them, their state
 //! in the PHP classes' own typed properties (`$options`, `$inputs`, `$packager`, `$framework`,
@@ -9,10 +9,11 @@
 //! so `get_parent_class()`, `instanceof`, `==`, `var_dump()`, `clone` and PHP subclasses behave
 //! as with the PHP classes.
 //!
-//! The data of each framework, packager, rendering and runtime is the crate's. `detect()` asks an
+//! The data of each framework, packager, rendering, runtime and mobile toolchain is the crate's. `detect()` asks an
 //! option of a native class the crate directly, and calls the methods of any other option (a PHP
 //! subclass, or a PHP class extending a base) as PHP does, so their overrides count; the ranking
-//! of frameworks, manifest parsing and the static fallback are the crate's either way.
+//! of frameworks, manifest parsing, Gradle statements and the static fallback are the crate's
+//! either way.
 
 mod detections;
 mod detectors;
@@ -37,26 +38,31 @@ const DETECTION: usize = 0;
 const DETECTOR: usize = 1;
 const FRAMEWORK_DETECTION: usize = 2;
 const JS: usize = 3;
-const PACKAGER_DETECTION: usize = 4;
-const RENDERING_DETECTION: usize = 5;
-const RUNTIME_DETECTION: usize = 6;
-const STRATEGY: usize = 7;
-const FRAMEWORK: usize = 8;
-// 9: `Detector\Packager`, which nothing refers to by index.
-const RENDERING: usize = 10;
-const RUNTIME: usize = 11;
+const MOBILE_DETECTION: usize = 4;
+const PACKAGER_DETECTION: usize = 5;
+const RENDERING_DETECTION: usize = 6;
+const RUNTIME_DETECTION: usize = 7;
+const STRATEGY: usize = 8;
+const FRAMEWORK: usize = 9;
+const MOBILE: usize = 10;
+// 11: `Detector\Packager`, which nothing refers to by index.
+const RENDERING: usize = 12;
+const RUNTIME: usize = 13;
 /// The first of the frameworks ([`detections::FRAMEWORKS_TABLE`]).
-const FRAMEWORKS: usize = 12;
+const FRAMEWORKS: usize = 14;
 /// The first of the packagers ([`detections::PACKAGERS_TABLE`]).
 const PACKAGERS: usize = FRAMEWORKS + detections::FRAMEWORKS_TABLE.len();
 const SSR: usize = PACKAGERS + detections::PACKAGERS_TABLE.len();
 const XSTATIC: usize = SSR + 1;
 /// The first of the runtimes ([`detections::RUNTIMES_TABLE`]).
 const RUNTIMES: usize = XSTATIC + 1;
-const COUNT: usize = RUNTIMES + detections::RUNTIMES_TABLE.len();
+/// The first of the mobile toolchains ([`detections::MOBILES_TABLE`]).
+const MOBILES: usize = RUNTIMES + detections::RUNTIMES_TABLE.len();
+const COUNT: usize = MOBILES + detections::MOBILES_TABLE.len();
 
 const DETECTION_NAME: &str = "Utopia\\Detector\\Detection";
 const FRAMEWORK_DETECTION_NAME: &str = "Utopia\\Detector\\Detection\\Framework";
+const MOBILE_DETECTION_NAME: &str = "Utopia\\Detector\\Detection\\Mobile";
 const PACKAGER_DETECTION_NAME: &str = "Utopia\\Detector\\Detection\\Packager";
 const RENDERING_DETECTION_NAME: &str = "Utopia\\Detector\\Detection\\Rendering";
 const RUNTIME_DETECTION_NAME: &str = "Utopia\\Detector\\Detection\\Runtime";
@@ -142,6 +148,7 @@ static OPTIONS: Property = Property::new("options");
 static INPUTS: Property = Property::new("inputs");
 static FRAMEWORK_OPTIONS: Property = Property::new("options");
 static FRAMEWORK_PACKAGER: Property = Property::new("packager");
+static MOBILE_OPTIONS: Property = Property::new("options");
 static PACKAGER_OPTIONS: Property = Property::new("options");
 static RENDERING_FRAMEWORK: Property = Property::new("framework");
 static RENDERING_OPTIONS: Property = Property::new("options");
@@ -159,6 +166,8 @@ static GET_FILES: Callee = Callee::new("getFiles");
 static GET_PACKAGES: Callee = Callee::new("getPackages");
 static GET_LANGUAGES: Callee = Callee::new("getLanguages");
 static GET_FILE_EXTENSIONS: Callee = Callee::new("getFileExtensions");
+static GET_PLUGINS: Callee = Callee::new("getPlugins");
+static GET_PLATFORMS: Callee = Callee::new("getPlatforms");
 static SET_PACKAGER: Callee = Callee::new("setPackager");
 static GET_VALUE: Callee = Callee::new("getValue");
 
@@ -169,6 +178,7 @@ enum Ty {
     None,
     Str,
     NullableStr,
+    Bool,
     Array,
     /// `self`, which PHP declares as the class's name.
     This,
@@ -183,6 +193,7 @@ impl Ty {
             Ty::None => (DataType::Void, false),
             Ty::Str => (DataType::String, false),
             Ty::NullableStr => (DataType::String, true),
+            Ty::Bool => (DataType::Bool, false),
             Ty::Array => (DataType::Array, false),
             Ty::This => (DataType::object(own), false),
             Ty::Class(name) => (DataType::object(name), false),
@@ -314,9 +325,17 @@ pub fn register() -> ext_php_rs::error::Result<()> {
         content_key: Frozen::string("content"),
     });
     detections::freeze();
-    for callee in
-        [&GET_NAME, &GET_FILES, &GET_PACKAGES, &GET_LANGUAGES, &GET_FILE_EXTENSIONS, &SET_PACKAGER, &GET_VALUE]
-    {
+    for callee in [
+        &GET_NAME,
+        &GET_FILES,
+        &GET_PACKAGES,
+        &GET_LANGUAGES,
+        &GET_FILE_EXTENSIONS,
+        &GET_PLUGINS,
+        &GET_PLATFORMS,
+        &SET_PACKAGER,
+        &GET_VALUE,
+    ] {
         callee.intern();
     }
     let mut classes = vec![detections::detection(), detectors::detector()];

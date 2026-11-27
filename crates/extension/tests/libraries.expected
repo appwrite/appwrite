@@ -38,6 +38,11 @@ Utopia\Detector\Detection\Framework\Svelte
 Utopia\Detector\Detection\Framework\SvelteKit
 Utopia\Detector\Detection\Framework\TanStackStart
 Utopia\Detector\Detection\Framework\Vue
+Utopia\Detector\Detection\Mobile
+Utopia\Detector\Detection\Mobile\Android
+Utopia\Detector\Detection\Mobile\Flutter
+Utopia\Detector\Detection\Mobile\Ios
+Utopia\Detector\Detection\Mobile\ReactNative
 Utopia\Detector\Detection\Packager
 Utopia\Detector\Detection\Packager\NPM
 Utopia\Detector\Detection\Packager\PNPM
@@ -59,6 +64,7 @@ Utopia\Detector\Detection\Runtime\Ruby
 Utopia\Detector\Detection\Runtime\Swift
 Utopia\Detector\Detector
 Utopia\Detector\Detector\Framework
+Utopia\Detector\Detector\Mobile
 Utopia\Detector\Detector\Packager
 Utopia\Detector\Detector\Rendering
 Utopia\Detector\Detector\Runtime
