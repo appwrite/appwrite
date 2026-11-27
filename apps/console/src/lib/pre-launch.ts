@@ -1,4 +1,5 @@
 import { getRuntimeConfig } from '@/lib/runtime-config'
+import { markdownTwinPage } from '@/lib/seo/markdown-twins'
 
 const LEGACY_PRE_LAUNCH_DEBUG_STORAGE_KEY = 'debug:preLaunch'
 const LEGACY_PRE_LAUNCH_COOKIE_NAME = 'debug_pre_launch'
@@ -26,6 +27,7 @@ const AUTH_ALLOWED_PATHS = new Set([
   '/sign-up',
   '/sign-out',
   '/recovery',
+  '/sso',
   '/reset',
   '/mfa',
   '/verify-email',
@@ -106,6 +108,10 @@ export function isPreLaunchHeavyContentPath(
     '/robots.txt',
   ])
   if (heavyExact.has(normalized)) return true
+  // Markdown twins of marketing pages (`/company.md`) carry the same content as
+  // the page, so they are locked with it. Reusing the list the twin middleware
+  // serves from covers a twin added later without another entry here.
+  if (markdownTwinPage(normalized) !== null) return true
   if (normalized === '/sitemap.xml' || normalized.startsWith('/sitemap/')) {
     return true
   }
@@ -160,7 +166,7 @@ export const PRE_LAUNCH_BOOT_SCRIPT = `(function(){
     // Keep legal pages crawlable for OAuth/app-store reviewers; mirrors LEGAL_ALLOWED_PATHS.
     if (path === '/privacy' || path === '/terms' || path === '/cookies') return;
     var auth = {
-      '/sign-in': 1, '/sign-up': 1, '/sign-out': 1, '/recovery': 1, '/reset': 1,
+      '/sign-in': 1, '/sign-up': 1, '/sign-out': 1, '/recovery': 1, '/sso': 1, '/reset': 1,
       '/mfa': 1, '/verify-email': 1, '/auth/magic-url': 1,
       '/auth/oauth2/success': 1, '/auth/oauth2/failure': 1
     };

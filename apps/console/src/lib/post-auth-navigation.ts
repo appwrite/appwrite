@@ -9,6 +9,7 @@ import {
   prefetchOrganizationOverviewData,
   resolveAndPrefetchDefaultOrganization,
 } from '@/lib/organization-overview-prefetch'
+import { isSSORequiredError } from '@/lib/sso-required'
 import { isHttpNotFoundError } from '@/lib/utils/error-formatting'
 import { EDUCATION_JOIN_PATH } from '@/lib/education/paths'
 import {
@@ -44,6 +45,7 @@ const AUTH_PAGE_PATHS = [
   '/sign-in',
   '/sign-up',
   '/recovery',
+  '/sso',
   '/reset',
   '/mfa',
   '/verify-email',
@@ -142,6 +144,9 @@ async function prefetchOrganizationOverviewSafe(
   try {
     await prefetchOrganizationOverviewData(queryClient, orgId)
   } catch (error) {
+    // An organization that requires single sign-on refuses a session from
+    // another sign-in: opening it sends the person to /sso with this path.
+    if (isSSORequiredError(error)) return
     if (!isHttpNotFoundError(error)) throw error
   }
 }

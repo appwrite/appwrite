@@ -4,10 +4,13 @@ import { ContactSalesLink } from '@/components/global/shared/ContactSalesLink'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
 import { useT } from '@/lib/i18n/translate'
+import type { PricingFlag } from './flags'
 
 export type FaqItem = {
   question: string
   answer: ReactNode
+  /** Shown only while this Console feature flag is on. */
+  flag?: PricingFlag
 }
 
 const linkClassName =
@@ -124,6 +127,18 @@ export const pricingFaqItems: readonly FaqItem[] = [
         .
       </>
     ),
+  },
+  {
+    question: 'How much does an Appwrite Zero project cost?',
+    flag: 'zero',
+    answer:
+      'Nothing. A Zero project needs no signup and runs on Free plan limits for one hour, and you can extend it by an hour up to three times. Claim it within 24 hours after it stops to keep it: it then joins your organization and is billed on your plan like any other project. Projects nobody claims are deleted.',
+  },
+  {
+    question: 'How are code review credits counted?',
+    flag: 'reviews',
+    answer:
+      'Each completed review uses credits by its strength: 10 for basic, 50 for normal, and 500 for expert. Failed reviews and answers to review comments are free. Free includes 100 credits a month and Pro 2,000. On Pro, extra credits cost $1 per 100; on Free, reviews stop once the month\'s credits are used.',
   },
   {
     question: 'I have a Free plan account. How do I upgrade to a paid plan?',

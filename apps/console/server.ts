@@ -112,6 +112,7 @@ import {
   buildMcpServerCard,
   serializeDiscoveryJson,
 } from './src/lib/seo/agent-discovery.ts'
+import { applyFrameDenyHeaders } from './src/lib/security/frame-headers.ts'
 import {
   CHANGE_PASSWORD_WELL_KNOWN_PATH,
   HTTP_STATUS_RELIABILITY_WELL_KNOWN_PATH,
@@ -215,6 +216,8 @@ function htmlResponse(
   const responseHeaders = new Headers(headers)
   // Runtime config injection changes the body length.
   responseHeaders.delete('content-length')
+  // Auth screens refuse to render inside another site's frame (clickjacking).
+  applyFrameDenyHeaders(responseHeaders, new URL(req.url).pathname)
 
   return withSeoIndexingHeaders(
     req,

@@ -1,17 +1,19 @@
 import { useCallback, useMemo } from 'react'
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { useQuery } from '@tanstack/react-query'
+import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 import { z } from 'zod'
 import {
   bucketsQueryOptions,
   databasesQueryOptions,
   dedicatedDatabasesQueryOptions,
   monitorsQueryOptions,
-  useMonitors,
+  organizationProbeCountQueryOptions,
+  usageMonitorCountQueryOptions,
   useOrganizationPlan,
   useOrganizationScopes,
   useProject,
 } from '@/lib/react-query/hooks'
-import { getBillingPlanResourceLimit } from '@/lib/billing/project-breakdown-resources'
+import { monitorCaps } from '@/lib/alerts/plan-limits'
 import { Monitors } from '@/components/pages/projects/$projectId/monitors/Monitors'
 import type { RuleForm } from '@/components/pages/projects/$projectId/monitors/RuleFields'
 import { canWriteMonitors } from '@/lib/console-access-checks'
@@ -40,6 +42,16 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute('/_public/projects/$projectId/monitors/')({
   validateSearch: searchSchema,
+  // Alert emails and older links open a monitor with `?monitor=`; it has its own page now.
+  beforeLoad: ({ params, search }) => {
+    if (search.monitor) {
+      throw redirect({
+        to: '/projects/$projectId/monitors/$monitorId',
+        params: { projectId: params.projectId, monitorId: search.monitor },
+        replace: true,
+      })
+    }
+  },
   head: () => ({ meta: [{ title: pageTitle('Monitors') }] }),
   loader: async ({ params, context }) => {
     if (typeof window === 'undefined') return
@@ -76,11 +88,18 @@ function MonitorsPage() {
   const { features } = useConsoleProfile()
   const { access } = useOrganizationScopes(project?.teamId)
   const canWrite = canWriteMonitors(access, features)
-  // A plan that caps monitors per project refuses the next one; 0 is no cap.
+  // Usage monitors count against the project's `monitors` cap and synthetic
+  // checks against the organization's `probes` cap; 0 or missing is no cap.
+  // Creating stays open while either type can still be added.
   const { plan } = useOrganizationPlan(project?.teamId)
-  const { total } = useMonitors(projectId)
-  const monitorsLimit = getBillingPlanResourceLimit(plan, 'monitors') ?? 0
-  const isAtPlanLimit = monitorsLimit > 0 && total >= monitorsLimit
+  const { data: usageCount } = useQuery(
+    usageMonitorCountQueryOptions(projectId),
+  )
+  const { data: probeCount } = useQuery({
+    ...organizationProbeCountQueryOptions(project?.teamId),
+    enabled: features.billing && !!project?.teamId,
+  })
+  const isAtPlanLimit = monitorCaps(plan, usageCount, probeCount).allAtLimit
 
   const prefill = useMemo((): Partial<RuleForm> | undefined => {
     if (!search.metric || !(search.metric in METRICS)) return undefined
@@ -125,8 +144,6 @@ function MonitorsPage() {
       projectId={projectId}
       prefill={prefill}
       onPrefillConsumed={clearSearch}
-      openMonitorId={search.monitor}
-      onOpenMonitorConsumed={clearSearch}
       createDisabled={!canWrite || isAtPlanLimit}
       createDisabledTooltip={
         !canWrite

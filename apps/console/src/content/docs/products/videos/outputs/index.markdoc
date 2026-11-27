@@ -81,11 +81,11 @@ Players follow these links on their own. You only need the URLs below when you d
 
 | Resource | SDK method |
 |----------|------------|
-| Media playlist for one rendition stream (HLS) | `getStreamManifest({ videoId, renditionId, streamId })` |
-| Media playlist for one rendition stream (CMAF HLS) | `getCmafStreamManifest({ videoId, renditionId, streamId })` |
+| Media playlist for one rendition stream (HLS) | `getStreamManifest({ videoId, renditionId, streamIndex })` |
+| Media playlist for one rendition stream (CMAF HLS) | `getCmafStreamManifest({ videoId, renditionId, streamIndex })` |
 | Caption manifest for an output | `getCaptionManifest({ videoId, captionId, output })` |
 
-`streamId` is the position of a track inside the rendition, starting at `0`. HLS segments are served as `video/mp2t`, and DASH and CMAF segments as `video/iso.segment`.
+`streamIndex` is the position of a track inside the rendition, starting at `0`. HLS segments are served as `video/mp2t`, and DASH and CMAF segments as `video/iso.segment`.
 
 # Pick a manifest at runtime {% #pick-a-manifest-at-runtime %}
 

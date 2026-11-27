@@ -7,10 +7,7 @@ import type { DatabaseBreakdownResourceMap } from '@/lib/usage/resolve-database-
 import type { StorageBreakdownResourceMap } from '@/lib/usage/resolve-storage-breakdown-resources'
 import type { UsageBreakdownItem } from '@/lib/usage/requests-breakdowns'
 import { UsageTimeSeriesChartCard } from './UsageTimeSeriesChartCard'
-import {
-  UsageMetricCardFooter,
-  UsageMetricCardShell,
-} from './UsageMetricCard'
+import { UsageMetricCardFooter, UsageMetricCardShell } from './UsageMetricCard'
 import { UsageResourceBreakdownCard } from './UsageResourceBreakdownCard'
 
 const STORAGE_USAGE_ERROR = {
@@ -75,10 +72,11 @@ export function StorageMetricBentoCard({
     <UsageMetricCardShell>
       <div
         className={cn(
-          'grid grid-cols-1 items-stretch divide-y divide-border lg:grid-cols-3 lg:divide-x lg:divide-y-0',
+          'grid grid-cols-1 items-stretch divide-y divide-border lg:divide-y-0',
+          showBreakdown && 'lg:grid-cols-3 lg:divide-x',
         )}
       >
-        <div className="lg:col-span-2">
+        <div className={cn(showBreakdown && 'lg:col-span-2')}>
           <UsageTimeSeriesChartCard
             embedded
             title={title}

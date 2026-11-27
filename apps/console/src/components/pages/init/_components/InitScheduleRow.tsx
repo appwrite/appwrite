@@ -29,11 +29,14 @@ export function InitScheduleRow({
   item,
   isRecapMode = false,
   inlineWhenWide = false,
+  newTab = false,
 }: {
   event: LaunchEvent
   item: LaunchEventScheduleItem
   isRecapMode?: boolean
   inlineWhenWide?: boolean
+  /** Open the session in a new tab even when it is on this site (day cards). */
+  newTab?: boolean
 }) {
   const t = useT()
   const meta = INIT_SCHEDULE_PLATFORM_META[item.platform]
@@ -49,7 +52,7 @@ export function InitScheduleRow({
       ? { href: INIT_YOUTUBE_CHANNEL_HREF, external: true }
       : null)
   const actionLabel = item.platform === 'youtube' ? 'Watch' : 'Join event'
-  const actionExternal = resolvedAction?.external ?? false
+  const actionExternal = (resolvedAction?.external ?? false) || newTab
   const showLive = !isRecapMode && item.isLive
   const showStartingSoon = !isRecapMode && item.isStartingSoon
   const badge = (
@@ -121,7 +124,9 @@ export function InitScheduleRow({
     !inlineWhenWide && resolvedAction ? (
       <a
         href={resolvedAction.href}
-        {...(actionExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+        {...(actionExternal
+          ? { target: '_blank', rel: 'noopener noreferrer' }
+          : {})}
         className="flex min-w-0 flex-1 items-start gap-4"
       >
         {badge}
@@ -143,8 +148,7 @@ export function InitScheduleRow({
         inlineWhenWide
           ? 'flex flex-wrap items-center gap-x-4 gap-y-2 sm:flex-nowrap sm:gap-4'
           : 'flex items-start gap-4',
-        showLive &&
-          'bg-[color-mix(in_srgb,var(--brand-cta)_5%,transparent)]',
+        showLive && 'bg-[color-mix(in_srgb,var(--brand-cta)_5%,transparent)]',
         showStartingSoon &&
           !showLive &&
           'bg-[color-mix(in_srgb,var(--brand-cta)_3%,transparent)]',
@@ -174,7 +178,9 @@ export function InitScheduleRow({
             ) : null}
             <a
               href={resolvedAction.href}
-              {...(actionExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+              {...(actionExternal
+                ? { target: '_blank', rel: 'noopener noreferrer' }
+                : {})}
               className="flex shrink-0 items-center gap-1 text-[12px] text-muted-foreground transition-colors group-hover:text-foreground hover:text-foreground"
             >
               {t(actionLabel)}

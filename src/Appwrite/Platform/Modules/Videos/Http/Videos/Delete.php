@@ -7,6 +7,7 @@ use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Videos\Base;
+use Appwrite\Platform\Modules\Videos\SegmentCache;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -15,6 +16,7 @@ use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
+use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
@@ -48,8 +50,6 @@ class Delete extends Base
                 namespace: 'videos',
                 group: 'videos',
                 name: 'delete',
-                // Hidden until videos is generally available; preview SDK builds show it.
-                hide: System::getEnv('_APP_SDK_PREVIEW', 'disabled') !== 'enabled',
                 description: '/docs/references/videos/delete-video.md',
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [
@@ -65,8 +65,10 @@ class Delete extends Base
             ->inject('dbForProject')
             ->inject('user')
             ->inject('authorization')
+            ->inject('project')
             ->inject('queueForEvents')
             ->inject('publisherForDeletes')
+            ->inject('purgeVideoSegmentCache')
             ->callback($this->action(...));
     }
 
@@ -76,8 +78,10 @@ class Delete extends Base
         Database $dbForProject,
         User $user,
         Authorization $authorization,
+        Document $project,
         Event $queueForEvents,
-        DeletePublisher $publisherForDeletes
+        DeletePublisher $publisherForDeletes,
+        SegmentCache $segmentCache
     ): void {
         $video = $this->getAuthorizedVideo($dbForProject, $authorization, $user, $videoId);
         // ACL before the in-progress gate — otherwise a session with only read
@@ -122,8 +126,9 @@ class Delete extends Base
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove video from DB');
         }
 
-        // The pre-merge controller built this event but never triggered it, so the
-        // cascade never ran and renditions/captions/segments were orphaned.
+        // The row is already gone, so a later retry of this request cannot
+        // enqueue the cascade. Queue it before the purge: a Fastly error must
+        // not leave renditions, captions and files behind.
         // DELETE_TYPE_DOCUMENT is correct: the deletes worker dispatches on the
         // document's collection, which is `videos`.
         $publisherForDeletes->enqueue(new DeleteMessage(
@@ -135,6 +140,8 @@ class Delete extends Base
         $queueForEvents
             ->setParam('videoId', $video->getId())
             ->setPayload($response->output($video, Response::MODEL_VIDEO));
+
+        $segmentCache->purge($project->getId(), $video->getId());
 
         $response->noContent();
     }

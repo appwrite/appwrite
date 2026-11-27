@@ -12,24 +12,32 @@ use Utopia\VCS\Adapter\Git\Bitbucket;
 final class BitbucketTest extends Base
 {
     protected static string $accessToken = '';
+    #[\Override]
     protected static string $owner = '';
     // Bitbucket names an empty repository's first branch 'master'
+    #[\Override]
     protected static string $defaultBranch = 'master';
 
+    #[\Override]
     protected static bool $supportsInstallationRepository = false;
+    #[\Override]
     protected static bool $supportsRepositoryLanguages = false;
 
     // Bitbucket has no repository to resolve an owner from; getOwnerName()
     // reports the account the token belongs to
+    #[\Override]
     protected static bool $resolvesOwnerFromRepositoryId = false;
 
     // Workspaces have no personal-vs-team distinction to report as 'kind'
+    #[\Override]
     protected static bool $reportsNamespaceKinds = false;
 
     // Accounts are looked up by uuid, not by handle
+    #[\Override]
     protected static bool $supportsUserLookup = false;
 
     // Bitbucket Cloud can't reach a local test catcher
+    #[\Override]
     protected static bool $supportsWebhookDelivery = false;
 
     protected function anonymousCloneUrl(string $repositoryName): string

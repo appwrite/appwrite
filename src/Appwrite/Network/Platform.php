@@ -115,7 +115,17 @@ class Platform
         return self::$names[$scheme] ?? '';
     }
 
-    public static function getHostnames(array $platforms): array
+    /**
+     * The hostnames the platforms trust: each web platform's hostname and, unless `$appIds` is
+     * false, each native platform's app ID (an Android package, an Apple bundle ID, a Windows or
+     * Linux app ID). Origins trust app IDs, as some native clients send one as their origin's host.
+     * Redirect URLs must not: read as a DNS name, an app ID such as com.acme.app is a public
+     * domain anyone may register, and a redirect carries OAuth2, magic-URL and recovery secrets.
+     * Native apps receive redirects on their custom schemes instead, see getSchemes().
+     *
+     * @return array<string>
+     */
+    public static function getHostnames(array $platforms, bool $appIds = true): array
     {
         $hostnames = [];
         foreach ($platforms as $platform) {
@@ -146,7 +156,7 @@ class Platform
                 case 'apple-tvos':
                 case 'react-native-ios':
                 case self::TYPE_APPLE:
-                    if (!empty($key)) {
+                    if ($appIds && !empty($key)) {
                         $hostnames[] = $key;
                     }
                     break;

@@ -608,6 +608,7 @@ const RESOURCE_TYPE_REPORTS = 'reports';
 const RESOURCE_TYPE_VIDEOS = 'videos';
 const RESOURCE_TYPE_REVIEWS = 'reviews';
 const RESOURCE_TYPE_MONITORS = 'monitors';
+const RESOURCE_TYPE_ALERTS = 'alerts';
 const RESOURCE_TYPE_DISTRIBUTION_APPS = 'distributionApps';
 
 // Insight types — engine-specific so the CTA action can reference the right public API.
@@ -668,6 +669,7 @@ const SCHEDULE_RESOURCE_TYPE_EXECUTION = 'execution';
 const SCHEDULE_RESOURCE_TYPE_FUNCTION = 'function';
 const SCHEDULE_RESOURCE_TYPE_MESSAGE = 'message';
 const SCHEDULE_RESOURCE_TYPE_MONITOR = 'monitor';
+const SCHEDULE_RESOURCE_TYPE_ESCALATION = 'escalation';
 const SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_BUILD = 'distributionBuild';
 const SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_SUBMISSION = 'distributionSubmission';
 
