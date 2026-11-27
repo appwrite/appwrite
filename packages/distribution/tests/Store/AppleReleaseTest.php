@@ -256,6 +256,99 @@ final class AppleReleaseTest extends TestCase
         ], $this->body($transport->requests()[2]));
     }
 
+    public function testReleaseDeclaresExportComplianceBeforeAttachingTheBuild(): void
+    {
+        $transport = new Transport(
+            $this->reply('app-store-versions-empty'),
+            $this->reply('app-store-versions-empty'),
+            $this->reply('app-store-version-created', 201),
+            $this->reply('build-undeclared'),
+            $this->reply('beta-build'),
+            $this->page(204, ''),
+            $this->reply('review-submissions-empty'),
+            $this->reply('review-submission', 201),
+            $this->reply('review-submission-item', 201),
+            $this->reply('review-submission-submitted'),
+        );
+
+        $this->store($transport)->release($this->release(encryption: false), self::EXTERNAL);
+
+        $this->assertSame([
+            'GET /v1/apps/' . self::APP_ID . '/appStoreVersions',
+            'GET /v1/apps/' . self::APP_ID . '/appStoreVersions',
+            'POST /v1/appStoreVersions',
+            'GET /v1/builds/' . self::BUILD_ID,
+            'PATCH /v1/builds/' . self::BUILD_ID,
+            'PATCH /v1/appStoreVersions/' . self::VERSION_ID . '/relationships/build',
+            'GET /v1/reviewSubmissions',
+            'POST /v1/reviewSubmissions',
+            'POST /v1/reviewSubmissionItems',
+            'PATCH /v1/reviewSubmissions/' . self::SUBMISSION_ID,
+        ], $this->calls($transport));
+        $this->assertSame([
+            'data' => ['type' => 'builds', 'id' => self::BUILD_ID, 'attributes' => ['usesNonExemptEncryption' => false]],
+        ], $this->body($transport->requests()[4]));
+        $this->assertSame(['fields' => ['builds' => 'usesNonExemptEncryption']], $this->query($transport->requests()[3]));
+    }
+
+    public function testReleaseOfABuildThatAlreadyAnsweredDoesNotDeclareAgain(): void
+    {
+        $transport = new Transport(
+            $this->reply('app-store-versions-empty'),
+            $this->reply('app-store-versions-empty'),
+            $this->reply('app-store-version-created', 201),
+            $this->reply('beta-build'),
+            $this->page(204, ''),
+            $this->reply('review-submissions-empty'),
+            $this->reply('review-submission', 201),
+            $this->reply('review-submission-item', 201),
+            $this->reply('review-submission-submitted'),
+        );
+
+        $this->store($transport)->release($this->release(encryption: false), self::EXTERNAL);
+
+        $this->assertSame([
+            'GET /v1/apps/' . self::APP_ID . '/appStoreVersions',
+            'GET /v1/apps/' . self::APP_ID . '/appStoreVersions',
+            'POST /v1/appStoreVersions',
+            'GET /v1/builds/' . self::BUILD_ID,
+            'PATCH /v1/appStoreVersions/' . self::VERSION_ID . '/relationships/build',
+            'GET /v1/reviewSubmissions',
+            'POST /v1/reviewSubmissions',
+            'POST /v1/reviewSubmissionItems',
+            'PATCH /v1/reviewSubmissions/' . self::SUBMISSION_ID,
+        ], $this->calls($transport));
+    }
+
+    public function testReleaseWithoutExportComplianceLeavesTheBuildAlone(): void
+    {
+        $transport = new Transport(
+            $this->reply('app-store-versions-empty'),
+            $this->reply('app-store-versions-empty'),
+            $this->reply('app-store-version-created', 201),
+            $this->page(204, ''),
+            $this->reply('review-submissions-empty'),
+            $this->reply('review-submission', 201),
+            $this->reply('review-submission-item', 201),
+            $this->reply('review-submission-submitted'),
+        );
+
+        $this->store($transport)->release($this->release(), self::EXTERNAL);
+
+        $this->assertNotContains('PATCH /v1/builds/' . self::BUILD_ID, $this->calls($transport));
+        $this->assertCount(8, $transport->requests());
+    }
+
+    public function testReleaseRetriedInReviewDoesNotDeclareExportCompliance(): void
+    {
+        $transport = new Transport($this->reply('app-store-versions-submitted'), $this->reply('review-submissions-ours'));
+
+        $external = $this->store($transport)->release($this->release(encryption: false), self::EXTERNAL);
+
+        $this->assertSame(self::SUBMISSION_ID, $external['reviewSubmissionId']);
+        $this->assertSame(['GET /v1/apps/' . self::APP_ID . '/appStoreVersions', 'GET /v1/reviewSubmissions'], $this->calls($transport));
+    }
+
     public function testReleaseWithOurSubmissionInProgressIsIdempotent(): void
     {
         $transport = new Transport($this->reply('app-store-versions-submitted'), $this->reply('review-submissions-ours'));
@@ -629,9 +722,9 @@ final class AppleReleaseTest extends TestCase
     /**
      * @param array<string, string> $notes
      */
-    private function release(float $fraction = 1.0, bool $automatic = true, array $notes = []): Release
+    private function release(float $fraction = 1.0, bool $automatic = true, array $notes = [], ?bool $encryption = null): Release
     {
-        return new Release(self::IDENTIFIER, Release::TRACK_PRODUCTION, '1.4.0', '42', $fraction, $notes, $automatic);
+        return new Release(self::IDENTIFIER, Release::TRACK_PRODUCTION, '1.4.0', '42', $fraction, $notes, $automatic, encryption: $encryption);
     }
 
     private function version(string $state, ?string $phase, ?int $day): ResponseInterface

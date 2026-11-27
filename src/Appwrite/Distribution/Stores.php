@@ -24,6 +24,17 @@ use Utopia\Storage\Device;
 
 readonly class Stores
 {
+    public const string CONFIGURATION_GROUPS = 'betaGroups';
+
+    public const string CONFIGURATION_ENCRYPTION = 'usesNonExemptEncryption';
+
+    public const string ENCRYPTION_EXEMPT = 'false';
+
+    public const array CONFIGURATION_APPLE = [
+        self::CONFIGURATION_GROUPS,
+        self::CONFIGURATION_ENCRYPTION,
+    ];
+
     private const int CONNECT_TIMEOUT = 5;
 
     private const int REQUEST_TIMEOUT = 30;
@@ -68,6 +79,33 @@ readonly class Stores
         $email = \is_array($account) && \is_string($account['email'] ?? null) ? $account['email'] : '';
 
         return $email !== '' ? $email : "{$connection->getSequence()}:{$connection->getId()}";
+    }
+
+    /**
+     * @param array<array-key, mixed> $configuration
+     *
+     * @return list<string>
+     */
+    public static function groups(array $configuration): array
+    {
+        $groups = $configuration[self::CONFIGURATION_GROUPS] ?? '';
+
+        if (!\is_string($groups)) {
+            return [];
+        }
+
+        return \array_values(\array_unique(\array_filter(
+            \array_map(\trim(...), \explode(',', $groups)),
+            static fn (string $group): bool => $group !== '',
+        )));
+    }
+
+    /**
+     * @param array<array-key, mixed> $configuration
+     */
+    public static function isMissingGroups(string $track, array $configuration): bool
+    {
+        return $track === Release::TRACK_TESTFLIGHT_EXTERNAL && self::groups($configuration) === [];
     }
 
     public static function isReupload(NotFound $exception): bool
@@ -151,6 +189,8 @@ readonly class Stores
                 fraction: (float) $submission->getAttribute('rollout', 1.0),
                 notes: $this->notes($release),
                 automatic: (bool) $submission->getAttribute('automatic', true),
+                groups: self::groups($this->configuration($target)),
+                encryption: $this->encryption($target),
             );
         } catch (Invalid $invalid) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $invalid->getMessage(), previous: $invalid);
@@ -215,6 +255,21 @@ readonly class Stores
         }
 
         return $project;
+    }
+
+    /**
+     * @return array<array-key, mixed>
+     */
+    private function configuration(Document $target): array
+    {
+        $configuration = $target->getAttribute('configuration', []);
+
+        return \is_array($configuration) ? $configuration : [];
+    }
+
+    private function encryption(Document $target): ?bool
+    {
+        return \array_key_exists(self::CONFIGURATION_ENCRYPTION, $this->configuration($target)) ? false : null;
     }
 
     private function version(Document $artifact, string $fallback): string

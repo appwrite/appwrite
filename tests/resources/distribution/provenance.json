@@ -111,5 +111,24 @@
             "versionCode": 1,
             "command": "docker run --rm --network none -v \"$PWD/out:/mnt/code\" -e DISTRIBUTION_IDENTIFIER=io.appwrite.distribution.e2e15 -e DISTRIBUTION_VERSION_CODE=1 appwrite/distribution-fixture:dev"
         }
+    ],
+    "ipas": [
+        {
+            "file": "io.appwrite.distribution.ios.ipa",
+            "sha256": "e79b9a3e1666923675e9247f4aabf633fa4f2d44f5a7184dfcc46a71c1ae2015",
+            "size": 7832,
+            "identifier": "io.appwrite.distribution.ios",
+            "versionName": "1.0.0",
+            "versionCode": 1,
+            "team": "ABCDE12345",
+            "expires": "2046-01-01T00:00:00Z",
+            "image": {
+                "tag": "appwrite/distribution-tools:test",
+                "build": "docker build --target test -t appwrite/distribution-tools:test https://github.com/appwrite/distribution-runner.git#8030402016ad3ccbb996a8b229939518a02ed5e9:images/tools",
+                "commit": "8030402016ad3ccbb996a8b229939518a02ed5e9",
+                "platform": "linux/arm64"
+            },
+            "command": "docker run --rm --network none -v \"$PWD/out:/out\" appwrite/distribution-tools:test python3 -I /usr/local/distribution/test/mint-ipa.py --identifier io.appwrite.distribution.ios --version-name 1.0.0 --version-code 1 --team ABCDE12345 --expires 2046-01-01T00:00:00Z --out /out/io.appwrite.distribution.ios.ipa"
+        }
     ]
 }

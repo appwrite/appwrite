@@ -2,8 +2,10 @@
 
 namespace Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Targets;
 
+use Appwrite\Distribution\Checks;
 use Appwrite\Distribution\Platform;
 use Appwrite\Distribution\Provider;
+use Appwrite\Distribution\Stores;
 use Appwrite\Distribution\VersionStrategy;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
@@ -43,6 +45,8 @@ class Create extends Action
         'flutter',
         'node',
         'java',
+        Stores::CONFIGURATION_GROUPS,
+        Stores::CONFIGURATION_ENCRYPTION,
     ];
 
     public static function getName(): string
@@ -137,8 +141,8 @@ class Create extends Action
 
         $connection = $this->getConnection($dbForProject, $connectionId, $platform);
         $signingIdentity = $this->getSigningIdentity($dbForProject, $signingIdentityId, $platform);
-        $this->assertTrack($track, $platform);
-        $configuration = $this->parseConfiguration($configuration);
+        $configuration = $this->parseConfiguration($configuration, $platform);
+        $this->assertTrack($track, $platform, $configuration);
 
         $targetId = $targetId === 'unique()' ? Id::unique() : $targetId;
 
@@ -220,7 +224,10 @@ class Create extends Action
         return $signingIdentity;
     }
 
-    private function assertTrack(string $track, string $platform): void
+    /**
+     * @param array<string, string> $configuration
+     */
+    private function assertTrack(string $track, string $platform, array $configuration): void
     {
         if ($track === '' || $platform !== Platform::Ios->value) {
             return;
@@ -231,13 +238,17 @@ class Create extends Action
         if (!\in_array($track, $tracks, true)) {
             throw new Exception(Exception::DISTRIBUTION_TRACK_INVALID, "Track '{$track}' is not an App Store track. Use one of: " . \implode(', ', $tracks) . '.');
         }
+
+        if (Stores::isMissingGroups($track, $configuration)) {
+            throw new Exception(Exception::DISTRIBUTION_TRACK_INVALID, Checks::GROUPS_REQUIRED);
+        }
     }
 
     /**
      * @param array<array-key, mixed>|string $configuration
      * @return array<string, string>
      */
-    private function parseConfiguration(array|string $configuration): array
+    private function parseConfiguration(array|string $configuration, string $platform): array
     {
         if (\is_string($configuration)) {
             $configuration = \json_decode($configuration, true);
@@ -254,6 +265,14 @@ class Create extends Action
 
             if (!\is_string($value)) {
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, "Configuration value of '{$key}' must be a string.");
+            }
+
+            if ($platform !== Platform::Ios->value && \in_array($key, Stores::CONFIGURATION_APPLE, true)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, "Configuration key '{$key}' applies only to iOS targets.");
+            }
+
+            if ($key === Stores::CONFIGURATION_ENCRYPTION && $value !== Stores::ENCRYPTION_EXEMPT) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, "Configuration value of '{$key}' must be '" . Stores::ENCRYPTION_EXEMPT . "'. Builds that use non-exempt encryption need their export compliance documented in App Store Connect.");
             }
         }
 

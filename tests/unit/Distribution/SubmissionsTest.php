@@ -19,6 +19,7 @@ use Tests\Unit\Distribution\Fakes\SubmissionDatabase;
 use Tests\Unit\Event\MockPublisher;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Distribution\Exception as StoreException;
 use Utopia\Distribution\Exception\Conflict;
 use Utopia\Distribution\Exception\Invalid;
 use Utopia\Distribution\Exception\NotFound;
@@ -787,6 +788,7 @@ final class SubmissionsTest extends TestCase
         yield 'retry of a draft the store already shows' => [['attempt' => 2], new State(State::STATUS_PENDING, 'RELEASE_LIFECYCLE_STATE_DRAFT'), ['state'], true];
         yield 'retry the store does not show' => [['attempt' => 1], $absent, ['state', 'release'], false];
         yield 'retry while the store is still processing' => [['attempt' => 1], new State(State::STATUS_PROCESSING, 'PROCESSING'), ['state', 'release'], false];
+        yield 'retry of an App Store version not yet submitted' => [['attempt' => 1], new State(State::STATUS_PENDING, 'PREPARE_FOR_SUBMISSION'), ['state', 'release'], false];
     }
 
     /**
@@ -807,6 +809,132 @@ final class SubmissionsTest extends TestCase
         $this->assertSame(0, $released->getAttribute('attempt'));
         $this->assertNotEmpty($released->getAttribute('submittedAt'));
         $this->assertSame($recorded ? null : 'internal', $this->store->release?->track);
+    }
+
+    /**
+     * @return \Iterator<string, array{string, array<string, mixed>}>
+     */
+    public static function appleReleaseRetries(): \Iterator
+    {
+        yield 'testflight' => ['testflight', ['appId' => 'store-app', 'buildId' => 'build-1']];
+        yield 'external testflight' => ['testflight-external', ['appId' => 'store-app', 'buildId' => 'build-1']];
+        yield 'production without a version' => ['production', ['appId' => 'store-app', 'buildId' => 'build-1']];
+        yield 'production with a version' => ['production', ['appId' => 'store-app', 'buildId' => 'build-1', 'versionId' => 'version-1']];
+    }
+
+    /**
+     * @param array<string, mixed> $external
+     */
+    #[DataProvider('appleReleaseRetries')]
+    public function testAppleReleaseRetryCallsTheStoreReleaseAgain(string $track, array $external): void
+    {
+        $this->store->state = new State(State::STATUS_REVIEWING, 'WAITING_FOR_REVIEW');
+        $target = new Document([...$this->target->getArrayCopy(), 'platform' => 'ios', 'configuration' => ['betaGroups' => 'group-1']]);
+        $artifact = new Document(['platform' => 'ios', 'identifier' => self::PACKAGE, 'versionName' => '1.2.0', 'buildNumber' => '88']);
+        $submission = $this->submission(['platform' => 'ios', 'provider' => 'apple', 'track' => $track, 'status' => 'processing', 'step' => 'processed', 'attempt' => 1, 'external' => $external]);
+
+        $released = $this->submissions()->release($submission, $this->release, $target, $artifact, $this->connection);
+
+        $this->assertSame(['release'], $this->store->calls);
+        $this->assertSame($track, $this->store->release?->track);
+        $this->assertStep('released', 'processing', $released);
+        $this->assertSame($track, $released->getAttribute('external')['track']);
+    }
+
+    public function testAppleReleaseRetryKeepsTheFirstSubmittedAt(): void
+    {
+        $submittedAt = '2026-01-02T03:04:05.000+00:00';
+        $target = new Document([...$this->target->getArrayCopy(), 'platform' => 'ios']);
+        $artifact = new Document(['platform' => 'ios', 'identifier' => self::PACKAGE, 'versionName' => '1.2.0', 'buildNumber' => '88']);
+        $submission = $this->submission(['platform' => 'ios', 'provider' => 'apple', 'track' => 'production', 'status' => 'pending', 'step' => 'processed', 'submittedAt' => $submittedAt, 'external' => ['appId' => 'store-app', 'buildId' => 'build-1']]);
+
+        $released = $this->submissions()->release($submission, $this->release, $target, $artifact, $this->connection);
+
+        $this->assertStep('released', 'pending', $released);
+        $this->assertSame($submittedAt, $released->getAttribute('submittedAt'));
+    }
+
+    /**
+     * @return \Iterator<string, array{StoreException}>
+     */
+    public static function unansweredCompliance(): \Iterator
+    {
+        $required = new Issue('ENTITY_ERROR.ATTRIBUTE.REQUIRED', "You must provide a value for the attribute 'usesNonExemptEncryption' with this request", '/data/attributes/usesNonExemptEncryption');
+
+        yield 'review item refused' => [new Invalid('App Store Connect returned 409 ENTITY_ERROR.ATTRIBUTE.REQUIRED', [$required])];
+        yield 'submit for review refused' => [new Conflict('App Store Connect returned 409 STATE_ERROR', [new Issue('STATE_ERROR', 'Submit for review errors found.'), $required])];
+    }
+
+    #[DataProvider('unansweredCompliance')]
+    public function testAppleReleaseWithoutExportComplianceWaitsForAnAnswer(StoreException $refused): void
+    {
+        $target = new Document([...$this->target->getArrayCopy(), 'platform' => 'ios']);
+        $artifact = new Document(['platform' => 'ios', 'identifier' => self::PACKAGE, 'versionName' => '1.2.0', 'buildNumber' => '88']);
+        $submission = $this->submission(['platform' => 'ios', 'provider' => 'apple', 'track' => 'production', 'status' => 'processing', 'step' => 'processed', 'attempt' => 2, 'external' => ['appId' => 'store-app', 'buildId' => 'build-1']]);
+        $this->store->failures['release'] = $refused;
+
+        try {
+            $this->submissions()->release($submission, $this->release, $target, $artifact, $this->connection);
+            $this->fail('The store must refuse a release without an export compliance answer.');
+        } catch (StoreException $error) {
+            $waiting = $this->submissions()->fail($submission, $error);
+        }
+
+        $this->assertStep('processed', 'pending', $waiting);
+        $this->assertSame(Submissions::ERROR_COMPLIANCE, $waiting->getAttribute('errorCode'));
+        $this->assertSame(Submissions::COMPLIANCE_MISSING, $waiting->getAttribute('errorMessage'));
+        $this->assertSame(0, $waiting->getAttribute('attempt'));
+        $this->assertNull($waiting->getAttribute('retryAt'));
+        $this->assertSame(15, Submissions::interval((string) $waiting->getAttribute('status'), 1.0));
+
+        unset($this->store->failures['release']);
+
+        $released = $this->submissions()->release($waiting, $this->release, $target, $artifact, $this->connection);
+
+        $this->assertSame(['release', 'release'], $this->store->calls);
+        $this->assertStep('released', 'pending', $released);
+        $this->assertNull($released->getAttribute('errorCode'));
+        $this->assertNull($released->getAttribute('errorMessage'));
+        $this->assertNotEmpty($released->getAttribute('submittedAt'));
+    }
+
+    public function testRequiredAttributeOtherThanExportComplianceStillFails(): void
+    {
+        $submission = $this->submission(['platform' => 'ios', 'provider' => 'apple', 'track' => 'production', 'status' => 'processing', 'step' => 'processed', 'external' => ['appId' => 'store-app', 'buildId' => 'build-1']]);
+
+        $failed = $this->submissions()->fail($submission, new Invalid('App Store Connect returned 409', [new Issue('ENTITY_ERROR.ATTRIBUTE.REQUIRED', 'A copyright is required', '/data/attributes/copyright')]));
+
+        $this->assertSame('failed', $failed->getAttribute('status'));
+        $this->assertSame('ENTITY_ERROR.ATTRIBUTE.REQUIRED', $failed->getAttribute('errorCode'));
+    }
+
+    /**
+     * @return \Iterator<string, array{string, array<string, mixed>, list<string>}>
+     */
+    public static function unversionedAppleOperations(): \Iterator
+    {
+        yield 'reconcile' => ['reconcile', [], []];
+        yield 'settle' => ['settle', [], []];
+        yield 'control' => ['control', [], ['halt']];
+        yield 'replayed control' => ['reconcile', ['control' => ['status' => 'halted', 'attempt' => 1]], ['halt']];
+    }
+
+    /**
+     * @param array<string, mixed> $pending
+     * @param list<string> $calls
+     */
+    #[DataProvider('unversionedAppleOperations')]
+    public function testAppleProductionWithoutAVersionIsNotObserved(string $operation, array $pending, array $calls): void
+    {
+        $this->store->failures['state'] = new Invalid('The release has no App Store version');
+        $submission = $this->submission(['platform' => 'ios', 'provider' => 'apple', 'track' => 'production', 'status' => 'processing', 'step' => 'released', 'external' => ['appId' => 'store-app', 'buildId' => 'build-1', 'track' => 'production', ...$pending]]);
+
+        $observed = $this->operate($operation, $this->submissions(), $submission, $this->connection);
+
+        $this->assertSame($calls, $this->store->calls);
+        $this->assertStep('released', 'processing', $observed);
+        $this->assertSame(['appId' => 'store-app', 'buildId' => 'build-1', 'track' => 'production'], $observed->getAttribute('external'));
+        $this->assertEmpty($observed->getAttribute('errorCode'));
     }
 
     public function testUploadOfACanceledSubmissionIsNotRecorded(): void
@@ -929,7 +1057,7 @@ final class SubmissionsTest extends TestCase
         yield 'withdrawn by the developer' => [$processing, new State(State::STATUS_REJECTED, 'DEVELOPER_REJECTED', issues: [new Issue('DEVELOPER_REJECTED', 'Withdrawn')]), 'canceled', 'settled', 'active', 0];
         yield 'replaced by a newer version' => [$processing, new State(State::STATUS_REJECTED, 'REPLACED_WITH_NEW_VERSION'), 'canceled', 'settled', 'active', 0];
         yield 'processing exception' => [$processing, new State(State::STATUS_REJECTED, 'PROCESSING_EXCEPTION'), 'failed', 'settled', 'attention', 0];
-        yield 'expired build' => [$processing, new State(State::STATUS_REJECTED, 'EXPIRED'), 'failed', 'settled', 'attention', 0];
+        yield 'expired build' => [$processing, new State(State::STATUS_REJECTED, 'EXPIRED'), 'canceled', 'settled', 'active', 0];
     }
 
     /**
@@ -1097,6 +1225,143 @@ final class SubmissionsTest extends TestCase
 
         $this->assertSame($calls, $this->store->calls);
         $this->assertSame($status, $controlled->getAttribute('status'));
+    }
+
+    /**
+     * @return \Iterator<string, array{array<string, mixed>}>
+     */
+    public static function manualAppleReleases(): \Iterator
+    {
+        yield 'without a phased release' => [['appId' => 'store-app', 'track' => 'production', 'versionId' => 'version-1', 'reviewSubmissionId' => 'review-1']];
+        yield 'with an inactive phased release' => [['appId' => 'store-app', 'track' => 'production', 'versionId' => 'version-1', 'reviewSubmissionId' => 'review-1', 'phasedReleaseId' => 'phased-1']];
+    }
+
+    /**
+     * @param array<string, mixed> $external
+     */
+    #[DataProvider('manualAppleReleases')]
+    public function testPublishingAManualAppleReleaseRollsOutToEveryone(array $external): void
+    {
+        $this->store->state = new State(State::STATUS_PUBLISHED, 'READY_FOR_DISTRIBUTION');
+        $submission = $this->submission(['platform' => 'ios', 'provider' => 'apple', 'track' => 'production', 'automatic' => false, 'status' => 'approved', 'step' => 'released', 'external' => $external]);
+
+        $controlled = $this->submissions()->control($submission, $this->connection, 'published');
+
+        $this->assertSame(['rollout', 'state'], $this->store->calls);
+        $this->assertSame([['external' => $external, 'track' => 'production', 'fraction' => 1.0]], $this->store->rollouts);
+        $this->assertStep('settled', 'published', $controlled);
+        $this->assertEqualsWithDelta(1.0, $controlled->getAttribute('rollout'), PHP_FLOAT_EPSILON);
+        $this->assertNotEmpty($controlled->getAttribute('publishedAt'));
+    }
+
+    /**
+     * @return \Iterator<string, array{array<string, mixed>, bool}>
+     */
+    public static function automaticSubmissions(): \Iterator
+    {
+        yield 'approved and automatic' => [['provider' => 'apple', 'status' => 'approved', 'automatic' => true], true];
+        yield 'approved and manual' => [['provider' => 'apple', 'status' => 'approved', 'automatic' => false], false];
+        yield 'halted and automatic' => [['provider' => 'apple', 'status' => 'halted', 'automatic' => true, 'rollout' => 0.2], false];
+        yield 'staged and automatic' => [['provider' => 'apple', 'status' => 'published', 'automatic' => true, 'rollout' => 0.2], false];
+        yield 'reviewing and automatic' => [['provider' => 'apple', 'status' => 'reviewing', 'automatic' => true], false];
+        yield 'google approved and automatic' => [['provider' => 'google', 'status' => 'approved', 'automatic' => true], false];
+    }
+
+    /**
+     * @param array<string, mixed> $attributes
+     */
+    #[DataProvider('automaticSubmissions')]
+    public function testIsReleasedOnApproval(array $attributes, bool $automatic): void
+    {
+        $this->assertSame($automatic, Submissions::isReleasedOnApproval(new Document($attributes)));
+    }
+
+    public function testPublishingAnAutomaticApprovedAppleSubmissionIsRefused(): void
+    {
+        $external = ['appId' => 'store-app', 'track' => 'production', 'versionId' => 'version-1', 'reviewSubmissionId' => 'review-1'];
+        $submission = $this->submission(['platform' => 'ios', 'provider' => 'apple', 'track' => 'production', 'automatic' => true, 'status' => 'approved', 'step' => 'released', 'external' => $external]);
+
+        $controlled = $this->submissions()->control($submission, $this->connection, 'published');
+
+        $this->assertSame([], $this->store->calls);
+        $this->assertStep('released', 'approved', $controlled);
+        $this->assertSame(Exception::DISTRIBUTION_SUBMISSION_TRANSITION_INVALID, $controlled->getAttribute('errorCode'));
+        $this->assertSame(Submissions::RELEASED_ON_APPROVAL, $controlled->getAttribute('errorMessage'));
+        $this->assertSame($external, $controlled->getAttribute('external'));
+        $this->assertEmpty($controlled->getAttribute('publishedAt'));
+    }
+
+    public function testQueuedPublishOfAnAutomaticApprovedAppleSubmissionIsDropped(): void
+    {
+        $external = ['appId' => 'store-app', 'track' => 'production', 'versionId' => 'version-1', 'reviewSubmissionId' => 'review-1'];
+        $submission = $this->submission(['platform' => 'ios', 'provider' => 'apple', 'track' => 'production', 'automatic' => true, 'status' => 'approved', 'step' => 'released', 'external' => [...$external, 'control' => ['status' => 'published', 'attempt' => 1]]]);
+
+        $reconciled = $this->submissions()->reconcile($submission, $this->release, $this->connection);
+
+        $this->assertSame([], $this->store->calls);
+        $this->assertStep('released', 'approved', $reconciled);
+        $this->assertSame(Exception::DISTRIBUTION_SUBMISSION_TRANSITION_INVALID, $reconciled->getAttribute('errorCode'));
+        $this->assertSame(Submissions::RELEASED_ON_APPROVAL, $reconciled->getAttribute('errorMessage'));
+        $this->assertSame($external, $reconciled->getAttribute('external'));
+        $this->assertNull($reconciled->getAttribute('retryAt'));
+    }
+
+    public function testPublishingAnAutomaticApprovedGoogleSubmissionRollsOut(): void
+    {
+        $this->store->state = new State(State::STATUS_PUBLISHED, 'RELEASE_LIFECYCLE_STATE_PUBLISHED');
+        $external = ['editId' => self::EDIT, 'committed' => true];
+        $submission = $this->submission(['track' => 'production', 'automatic' => true, 'status' => 'approved', 'step' => 'released', 'external' => $external]);
+
+        $controlled = $this->submissions()->control($submission, $this->connection, 'published');
+
+        $this->assertSame(['rollout', 'state'], $this->store->calls);
+        $this->assertSame([['external' => $external, 'track' => 'production', 'fraction' => 1.0]], $this->store->rollouts);
+        $this->assertStep('settled', 'published', $controlled);
+        $this->assertEmpty($controlled->getAttribute('errorCode'));
+        $this->assertNotEmpty($controlled->getAttribute('publishedAt'));
+    }
+
+    public function testCancelingAReleasedAppleTestFlightBuildIsReportedAndDropped(): void
+    {
+        $this->store->failures['withdraw'] = new Invalid('A beta review cannot be withdrawn');
+        $submission = $this->submission([
+            'platform' => 'ios',
+            'provider' => 'apple',
+            'track' => 'testflight-external',
+            'status' => 'reviewing',
+            'step' => 'released',
+            'external' => ['buildId' => 'build-1', 'track' => 'testflight-external', 'betaReviewSubmissionId' => 'beta-1', 'control' => ['status' => 'canceled', 'attempt' => 1]],
+        ]);
+
+        $controlled = $this->submissions()->control($submission, $this->connection, 'canceled');
+
+        $this->assertSame(['withdraw'], $this->store->calls);
+        $this->assertStep('released', 'reviewing', $controlled);
+        $this->assertSame(Exception::DISTRIBUTION_SUBMISSION_TRANSITION_INVALID, $controlled->getAttribute('errorCode'));
+        $this->assertSame('A beta review cannot be withdrawn', $controlled->getAttribute('errorMessage'));
+        $this->assertArrayNotHasKey('control', $controlled->getAttribute('external'));
+        $this->assertSame('beta-1', $controlled->getAttribute('external')['betaReviewSubmissionId']);
+        $this->assertNull($controlled->getAttribute('retryAt'));
+    }
+
+    public function testCancelingAnAppleReviewWithdrawsIt(): void
+    {
+        $this->store->state = new State(State::STATUS_REJECTED, 'DEVELOPER_REJECTED', issues: [new Issue('DEVELOPER_REJECTED', 'The version was removed from review')]);
+        $submission = $this->submission([
+            'platform' => 'ios',
+            'provider' => 'apple',
+            'track' => 'production',
+            'status' => 'reviewing',
+            'step' => 'released',
+            'external' => ['appId' => 'store-app', 'track' => 'production', 'versionId' => 'version-1', 'reviewSubmissionId' => 'review-1'],
+        ]);
+
+        $controlled = $this->submissions()->control($submission, $this->connection, 'canceled');
+
+        $this->assertSame(['withdraw', 'state'], $this->store->calls);
+        $this->assertStep('settled', 'canceled', $controlled);
+        $this->assertSame('DEVELOPER_REJECTED', $controlled->getAttribute('storeStatus'));
+        $this->assertSame('active', $this->stored('distributionReleases', 'release')->getAttribute('status'));
     }
 
     public function testControlTheStoreCannotPerformIsReported(): void

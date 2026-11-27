@@ -111,6 +111,13 @@ class Create extends Base
             return;
         }
 
+        $build = $this->build($cache, $version[self::INTERNAL]['buildId']);
+
+        if ($build !== null && ($build['attributes']['usesNonExemptEncryption'] ?? null) === null) {
+            $this->versionConflict($response, self::CODE_ATTRIBUTE_REQUIRED, 'The provided entity is missing a required attribute', "You must provide a value for the attribute 'usesNonExemptEncryption' with this request", '/data/attributes/usesNonExemptEncryption');
+            return;
+        }
+
         $item = [
             'id' => $this->uuid(),
             'attributes' => ['state' => self::VERSION_SUBMISSION_READY_FOR_REVIEW],

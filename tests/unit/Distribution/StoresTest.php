@@ -352,6 +352,109 @@ final class StoresTest extends TestCase
     }
 
     /**
+     * @return \Iterator<string, array{array<string, mixed>, list<string>}>
+     */
+    public static function betaGroups(): \Iterator
+    {
+        yield 'no key' => [[], []];
+        yield 'empty' => [['betaGroups' => ''], []];
+        yield 'only separators and spaces' => [['betaGroups' => ' , ,'], []];
+        yield 'one group' => [['betaGroups' => 'group-1'], ['group-1']];
+        yield 'spaces around groups' => [['betaGroups' => ' group-1 ,  group-2 '], ['group-1', 'group-2']];
+        yield 'duplicates' => [['betaGroups' => 'group-1,group-2,group-1'], ['group-1', 'group-2']];
+        yield 'trailing comma' => [['betaGroups' => 'group-1,group-2,'], ['group-1', 'group-2']];
+        yield 'not a string' => [['betaGroups' => ['group-1']], []];
+    }
+
+    /**
+     * @param array<string, mixed> $configuration
+     * @param list<string> $groups
+     */
+    #[DataProvider('betaGroups')]
+    public function testGroupsParsesTheCommaSeparatedConfiguration(array $configuration, array $groups): void
+    {
+        $this->assertSame($groups, Stores::groups($configuration));
+    }
+
+    /**
+     * @return \Iterator<string, array{string, array<string, mixed>, bool}>
+     */
+    public static function missingGroups(): \Iterator
+    {
+        yield 'external without groups' => ['testflight-external', [], true];
+        yield 'external with blank groups' => ['testflight-external', ['betaGroups' => ' , '], true];
+        yield 'external with a group' => ['testflight-external', ['betaGroups' => 'group-1'], false];
+        yield 'internal without groups' => ['testflight', [], false];
+        yield 'production without groups' => ['production', [], false];
+    }
+
+    /**
+     * @param array<string, mixed> $configuration
+     */
+    #[DataProvider('missingGroups')]
+    public function testIsMissingGroupsOnlyForExternalTestFlight(string $track, array $configuration, bool $missing): void
+    {
+        $this->assertSame($missing, Stores::isMissingGroups($track, $configuration));
+    }
+
+    /**
+     * @return \Iterator<string, array{mixed, ?bool}>
+     */
+    public static function encryptions(): \Iterator
+    {
+        yield 'declared exempt' => [['usesNonExemptEncryption' => 'false', 'betaGroups' => 'group-1'], false];
+        yield 'not declared' => [['betaGroups' => 'group-1'], null];
+        yield 'no configuration' => [[], null];
+        yield 'malformed configuration' => ['{', null];
+    }
+
+    #[DataProvider('encryptions')]
+    public function testReleaseMapsTheExportComplianceConfiguration(mixed $configuration, ?bool $encryption): void
+    {
+        $stores = new Stores(production: false, client: new Transport());
+
+        $release = $stores->release(
+            new Document(['provider' => 'apple', 'track' => 'production']),
+            new Document(['version' => '1.2.0']),
+            new Document(['identifier' => 'io.example.app', 'configuration' => $configuration]),
+            new Document(['platform' => 'ios', 'buildNumber' => '88']),
+        );
+
+        $this->assertSame($encryption, $release->encryption);
+    }
+
+    public function testAppleReleaseCarriesTheGroupsAndExportCompliance(): void
+    {
+        $stores = new Stores(production: false, client: new Transport());
+
+        $release = $stores->release(
+            new Document(['provider' => 'apple', 'track' => 'testflight-external']),
+            new Document(['version' => '1.2.0']),
+            new Document(['identifier' => 'io.example.app', 'configuration' => ['betaGroups' => 'group-2, group-1,group-2', 'usesNonExemptEncryption' => 'false']]),
+            new Document(['platform' => 'ios', 'versionName' => '1.2.0', 'buildNumber' => '88']),
+        );
+
+        $this->assertSame('testflight-external', $release->track);
+        $this->assertSame(['group-2', 'group-1'], $release->groups);
+        $this->assertFalse($release->encryption);
+    }
+
+    public function testReleaseWithoutConfigurationHasNoGroupsOrExportCompliance(): void
+    {
+        $stores = new Stores(production: false, client: new Transport());
+
+        $release = $stores->release(
+            new Document(['provider' => 'apple', 'track' => 'testflight']),
+            new Document(['version' => '1.2.0']),
+            new Document(['identifier' => 'io.example.app']),
+            new Document(['platform' => 'ios', 'buildNumber' => '88']),
+        );
+
+        $this->assertSame([], $release->groups);
+        $this->assertNull($release->encryption);
+    }
+
+    /**
      * @return \Iterator<string, array{string, string}>
      */
     public static function foreignTracks(): \Iterator

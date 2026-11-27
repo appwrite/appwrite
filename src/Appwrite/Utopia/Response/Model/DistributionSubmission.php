@@ -8,9 +8,22 @@ use Appwrite\Distribution\Submission\Status;
 use Appwrite\Distribution\Submission\Step;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
+use Utopia\Database\Document;
 
 class DistributionSubmission extends Model
 {
+    private const array EXTERNAL = [
+        'editId',
+        'versionCode',
+        'appId',
+        'buildUploadId',
+        'buildId',
+        'versionId',
+        'reviewSubmissionId',
+        'betaReviewSubmissionId',
+        'phasedReleaseId',
+    ];
+
     public function __construct()
     {
         $this
@@ -112,7 +125,7 @@ class DistributionSubmission extends Model
             ])
             ->addRule('external', [
                 'type' => self::TYPE_JSON,
-                'description' => 'Store identifiers of the submission, such as the Google edit ID or the Apple build and review submission IDs.',
+                'description' => 'Store identifiers of the submission: the Google edit ID and version code, or the Apple app, build upload, build, version, review submission, beta review submission and phased release IDs.',
                 'default' => [],
                 'example' => ['editId' => '01234567890123456789'],
             ])
@@ -168,6 +181,17 @@ class DistributionSubmission extends Model
                 'default' => '',
                 'example' => '',
             ]);
+    }
+
+    public function filter(Document $document): Document
+    {
+        if (!$document->isSet('external')) {
+            return $document;
+        }
+
+        $external = $document->getAttribute('external');
+
+        return $document->setAttribute('external', \is_array($external) ? \array_intersect_key($external, \array_flip(self::EXTERNAL)) : []);
     }
 
     public function getName(): string
