@@ -82,6 +82,10 @@ The recipient opens the link in the Appwrite Console. If they aren't signed in, 
 
 The project moves into the selected organization and opens there. If the recipient doesn't own an organization yet, they can create one from the same page with **Create a free organization**.
 
+{% feature_gate anyOf="zero" %}
+[Appwrite Zero](/docs/zero#claim) projects use a transfer link for claiming as well. The link stays valid until the claim deadline, at which point unclaimed projects are deleted.
+{% /feature_gate %}
+
 ## How transfer links behave {% #link-rules %}
 
 - **Single use.** A claimed link can't be used again.

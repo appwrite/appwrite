@@ -223,7 +223,9 @@ export function getBlogPostMeta(slug: string): BlogPostMeta | null {
 }
 
 export async function getBlogMarkdownExport(slug: string): Promise<string | null> {
-  if (!getBlogPostMeta(slug)) return null
+  const meta = getBlogPostMeta(slug)
+  if (!meta) return null
+  if (meta.draft && !isFeatureEnabled('blogDrafts')) return null
   const raw = await loadRawPost(slug)
   return raw ? markdocToMarkdown(raw) : null
 }

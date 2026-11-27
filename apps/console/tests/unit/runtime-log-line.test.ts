@@ -5,6 +5,7 @@ import {
   normalizeLevel,
   parseRuntimeLogLine,
   stripAnsi,
+  summarizeRuntimeLogMessage,
 } from '@/lib/runtime-log-line'
 
 describe('runtime log line', () => {
@@ -146,6 +147,90 @@ describe('runtime log line', () => {
       })
       expect(parseRuntimeLogLine('e: not a level').level).toBeNull()
     })
+
+    test('leaves the level word out of the message', () => {
+      expect(parseRuntimeLogLine('[warn] disk almost full').message).toBe(
+        'disk almost full',
+      )
+      expect(parseRuntimeLogLine('ERROR could not connect').message).toBe(
+        'could not connect',
+      )
+      // A line that is only a level keeps it as its message
+      expect(parseRuntimeLogLine('ERROR').message).toBe('ERROR')
+    })
+
+    test('reads prose as prose, not as a level', () => {
+      expect(parseRuntimeLogLine('Alert sent to the on-call team').level).toBe(
+        null,
+      )
+      expect(parseRuntimeLogLine('Trace id 42 started').level).toBeNull()
+      // A bracketed status code is part of the message
+      const line = parseRuntimeLogLine('[200] /docs/getting-started 12ms')
+      expect(line.level).toBeNull()
+      expect(line.message).toBe('[200] /docs/getting-started 12ms')
+    })
+
+    test('reads the level after a PostgreSQL timestamp and pid', () => {
+      const line = parseRuntimeLogLine(
+        '2026-11-27 16:46:23.447 UTC [727] ERROR:  duplicate key value violates unique constraint "orders_pkey"',
+      )
+      expect(line.level).toBe('error')
+      expect(line.message).toBe(
+        'duplicate key value violates unique constraint "orders_pkey"',
+      )
+      expect(
+        parseRuntimeLogLine(
+          '2026-11-27 16:46:23.447 UTC [727] LOG:  checkpoint complete',
+        ),
+      ).toMatchObject({ level: 'info', message: 'checkpoint complete' })
+      expect(
+        parseRuntimeLogLine(
+          '2026-11-27 16:46:23.447 UTC [727] WARNING:  there is no transaction in progress',
+        ).level,
+      ).toBe('warn')
+    })
+
+    test('reads the level after a MySQL timestamp and thread', () => {
+      const line = parseRuntimeLogLine(
+        '2026-11-27T10:00:00.123456Z 0 [Warning] [MY-010068] [Server] CA certificate ca.pem is self signed.',
+      )
+      expect(line.level).toBe('warn')
+      expect(line.message).toBe(
+        '[MY-010068] [Server] CA certificate ca.pem is self signed.',
+      )
+    })
+
+    test('drops a leading timestamp even without a level', () => {
+      const line = parseRuntimeLogLine(
+        '[2026-11-27 10:00:00] queue drained in 12ms',
+      )
+      expect(line.level).toBeNull()
+      expect(line.message).toBe('queue drained in 12ms')
+    })
+
+    test("keeps the logger of Python's default format", () => {
+      const line = parseRuntimeLogLine('WARNING:root:retrying in 5s')
+      expect(line.level).toBe('warn')
+      expect(line.message).toBe('WARNING:root:retrying in 5s')
+    })
+
+    test('reads tracebacks and Next.js marks', () => {
+      expect(
+        parseRuntimeLogLine(
+          'Traceback (most recent call last):\n  File "main.py", line 1',
+        ).level,
+      ).toBe('error')
+      expect(
+        parseRuntimeLogLine(' ⚠ Image with src "/hero.png" is missing "sizes"')
+          .level,
+      ).toBe('warn')
+    })
+
+    test('aligns indented lines', () => {
+      expect(parseRuntimeLogLine(' GET /pricing 200 in 34ms').message).toBe(
+        'GET /pricing 200 in 34ms',
+      )
+    })
   })
 
   test('normalizes level names and numbers', () => {
@@ -193,5 +278,22 @@ describe('formatRawLog', () => {
   test('returns anything else unchanged', () => {
     expect(formatRawLog('plain text')).toBe('plain text')
     expect(formatRawLog('{not json}')).toBe('{not json}')
+  })
+})
+
+describe('summarizeRuntimeLogMessage', () => {
+  test('keeps one line as it is and cuts the rest', () => {
+    expect(summarizeRuntimeLogMessage('listening')).toBe('listening')
+    expect(
+      summarizeRuntimeLogMessage('Error: boom\n    at main (index.js:1:1)'),
+    ).toBe('Error: boom …')
+  })
+
+  test('names a Python traceback by its exception', () => {
+    expect(
+      summarizeRuntimeLogMessage(
+        'Traceback (most recent call last):\n  File "main.py", line 42, in main\n    send(user)\nTimeoutError: SMTP connection timed out\n',
+      ),
+    ).toBe('TimeoutError: SMTP connection timed out')
   })
 })

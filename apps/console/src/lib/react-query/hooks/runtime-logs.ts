@@ -13,6 +13,9 @@ import {
   type RuntimeLogUsageBucket,
 } from '@/lib/runtime-log-usage'
 import { nextCursorAfter } from './cursor'
+import { fetchProjectDedicatedDatabases } from './databases'
+import { fetchProjectFunctionsByIds } from './functions'
+import { fetchProjectSitesByIds } from './sites'
 
 export type RuntimeLogResourceType = 'functions' | 'sites' | 'databases'
 
@@ -21,14 +24,16 @@ export type RuntimeLogScope = RuntimeLogResourceType | null
 
 export type RuntimeLogStream = 'all' | 'stdout' | 'stderr'
 
-/** Look-back windows offered in the viewer. `retention` sends no lower bound. */
+/**
+ * Rolling look-back windows, as the shared date range picker's presets name
+ * them. Every plan keeps a day of logs; older windows are picked by date.
+ */
 export const RUNTIME_LOG_RANGES = {
   '15m': 15 * 60 * 1000,
   '1h': 60 * 60 * 1000,
   '6h': 6 * 60 * 60 * 1000,
   '24h': 24 * 60 * 60 * 1000,
-  retention: null,
-} as const satisfies Record<string, number | null>
+} as const satisfies Record<string, number>
 
 export type RuntimeLogRange = keyof typeof RUNTIME_LOG_RANGES
 
@@ -85,8 +90,10 @@ function timeBounds(filter: RuntimeLogsFilter): {
       to: new Date(filter.window.to),
     }
   }
-  const span = RUNTIME_LOG_RANGES[filter.range]
-  return { from: span === null ? null : new Date(Date.now() - span), to: null }
+  return {
+    from: new Date(Date.now() - RUNTIME_LOG_RANGES[filter.range]),
+    to: null,
+  }
 }
 
 function rangeQuery(filter: RuntimeLogsFilter): string[] {
@@ -232,6 +239,98 @@ interface RuntimeLogUsage {
   interval: string
   linesTotal: number
   buckets: RuntimeLogUsageBucket[]
+}
+
+/** The resource that wrote a line on a project-wide list, by name. */
+export interface RuntimeLogSource {
+  type: RuntimeLogResourceType
+  id: string
+  name: string
+  /** Functions only: `node-22`, `python-3.12`... */
+  runtime?: string
+  /** Sites only: `nextjs`, `astro`... */
+  framework?: string
+  /** Databases only: `postgresql` or `mysql` for native engines. */
+  engine?: string
+  /** Databases only: set when a TablesDB, DocumentsDB or VectorsDB runs on it. */
+  api?: string
+}
+
+/** Sources keyed `<type>:<id>`. */
+export type RuntimeLogSources = ReadonlyMap<string, RuntimeLogSource>
+
+export function runtimeLogSourceKey(type: string, id: string): string {
+  return `${type}:${id}`
+}
+
+/**
+ * Names the functions and sites that wrote the loaded lines (one list call
+ * each, by ID), and the project's dedicated databases, whose lines carry the
+ * compute ID. A resource that fails to load is left unnamed, not an error.
+ */
+export function runtimeLogSourcesQueryOptions(
+  projectId: string | null | undefined,
+  functionIds: readonly string[],
+  siteIds: readonly string[],
+  withDatabases: boolean,
+) {
+  return queryOptions({
+    queryKey: [
+      'runtime-log-sources',
+      projectId,
+      functionIds,
+      siteIds,
+      withDatabases,
+    ],
+    queryFn: async (): Promise<RuntimeLogSources> => {
+      const [functions, sites, databases] = await Promise.all([
+        fetchProjectFunctionsByIds(projectId!, [...functionIds]).catch(() => ({
+          functions: [],
+        })),
+        fetchProjectSitesByIds(projectId!, [...siteIds]).catch(() => ({
+          sites: [],
+        })),
+        withDatabases
+          ? fetchProjectDedicatedDatabases(projectId!).catch(() => ({
+              databases: [],
+            }))
+          : { databases: [] },
+      ])
+      const sources = new Map<string, RuntimeLogSource>()
+      for (const fn of functions.functions) {
+        sources.set(runtimeLogSourceKey('functions', fn.$id), {
+          type: 'functions',
+          id: fn.$id,
+          name: fn.name,
+          runtime: fn.runtime,
+        })
+      }
+      for (const site of sites.sites) {
+        sources.set(runtimeLogSourceKey('sites', site.$id), {
+          type: 'sites',
+          id: site.$id,
+          name: site.name,
+          framework: site.framework,
+        })
+      }
+      for (const database of databases.databases) {
+        sources.set(runtimeLogSourceKey('databases', database.$id), {
+          type: 'databases',
+          id: database.$id,
+          name: database.name,
+          engine: database.engine ?? undefined,
+          api: database.api ?? undefined,
+        })
+      }
+      return sources
+    },
+    enabled:
+      !!projectId &&
+      (functionIds.length > 0 || siteIds.length > 0 || withDatabases),
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+    refetchOnWindowFocus: false,
+  })
 }
 
 /** Like the list, a project-wide count leaves out the resource. */

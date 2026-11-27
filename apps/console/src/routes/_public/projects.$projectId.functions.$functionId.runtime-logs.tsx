@@ -6,9 +6,11 @@ import {
   projectFunctionQueryOptions,
 } from '@/lib/react-query/hooks'
 import { isCloudProfile, isFeatureEnabled } from '@/lib/console-profiles'
+import { runtimeLogsSearchSchema } from '@/lib/runtime-log-filters'
 import { pageTitle } from '@/lib/utils/page-title'
 
-const searchSchema = z.object({
+// The deployment and the viewer's filters live in the URL
+const searchSchema = runtimeLogsSearchSchema.extend({
   deploymentId: z.string().optional().catch(undefined),
 })
 

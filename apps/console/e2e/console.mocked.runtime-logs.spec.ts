@@ -481,6 +481,13 @@ async function mockAppwriteApi(page: Page) {
   })
 }
 
+/** Picks a stream in the Filters menu, then closes it. */
+async function pickStream(page: Page, stream: string) {
+  await page.getByRole('button', { name: 'Filters' }).click()
+  await page.getByRole('menuitemradio', { name: stream }).click()
+  await page.keyboard.press('Escape')
+}
+
 async function expectRuntimeLogs(page: Page) {
   const logs = page.getByRole('log')
 
@@ -489,18 +496,18 @@ async function expectRuntimeLogs(page: Page) {
   await expect(logs).toContainText(STDERR)
   await expect(logs).not.toContainText(OTHER_DEPLOYMENT)
 
-  // The stream filter goes to the API
-  await page.getByRole('combobox', { name: 'Stream' }).click()
-  await page.getByRole('option', { name: 'stderr' }).click()
+  // The stream filter goes to the API, and shows as a chip
+  await pickStream(page, 'stderr')
   await expect(logs).toContainText(STDERR)
   await expect(logs).not.toContainText(STDOUT)
+  await expect(page).toHaveURL(/stream=stderr/)
 
-  await page.getByRole('combobox', { name: 'Stream' }).click()
-  await page.getByRole('option', { name: 'All streams' }).click()
+  await page.getByRole('button', { name: 'Remove filter' }).click()
   await expect(logs).toContainText(STDOUT)
+  await expect(page).not.toHaveURL(/stream=/)
 
   // Search narrows the loaded lines
-  await page.getByPlaceholder('Search loaded lines...').fill('port')
+  await page.getByPlaceholder('Search logs...').fill('port')
   await expect(logs).toContainText(STDOUT)
   await expect(logs).not.toContainText(STDERR)
 }
@@ -520,7 +527,7 @@ test.describe('runtime logs', () => {
     await expectRuntimeLogs(page)
 
     // Another deployment from the picker
-    await page.getByPlaceholder('Search loaded lines...').fill('')
+    await page.getByPlaceholder('Search logs...').fill('')
     const picker = page.getByRole('combobox', { name: 'Deployment' })
     // Deployments without a commit message are named by how they were made
     await expect(picker).toContainText('Manual deployment')
@@ -548,7 +555,7 @@ test.describe('runtime logs', () => {
     const logs = page.getByRole('log')
     await expect(logs).toContainText('request completed', { timeout: 30_000 })
 
-    // Message first, then fields; no raw JSON and no metadata columns
+    // Time, level, then message and fields; no raw JSON, no stream
     const info = logs.getByRole('button', { name: /request completed/ })
     await expect(info).toContainText('INFO')
     await expect(info).toContainText('path=/checkout')
@@ -558,31 +565,32 @@ test.describe('runtime logs', () => {
       logs.getByRole('button', { name: /cache miss/ }),
     ).toContainText('key=cart:42')
 
-    // Expanding shows every field, nested ones by path, and the metadata
-    const error = logs.getByRole('button', { name: /payment failed/ })
-    await error.click()
-    await expect(error).toHaveAttribute('aria-expanded', 'true')
-    await expect(logs).toContainText('err.stack')
-    await expect(logs).toContainText('at charge (')
-    await expect(logs).toContainText(ACTIVE)
+    // A line opens its details: every field, nested ones by path, and
+    // where it ran
+    await logs.getByRole('button', { name: /payment failed/ }).click()
+    const details = page.getByRole('dialog', { name: 'Log line' })
+    await expect(details).toContainText('err.stack')
+    await expect(details).toContainText('at charge (')
+    await expect(details).toContainText(ACTIVE)
+    await expect(details).toContainText('stderr')
+    await expect(details).toContainText('tor', { ignoreCase: true })
     // ...and the whole entry as logged, indented
-    await expect(logs).toContainText('"msg": "payment failed"')
+    await expect(details).toContainText('"msg": "payment failed"')
+    // The arrows step to the neighbouring lines
+    await details.getByRole('button', { name: 'Newer line' }).click()
+    await expect(details).toContainText('slow query')
+    await page.keyboard.press('ArrowDown')
+    await expect(details).toContainText('payment failed')
+    await page.keyboard.press('Escape')
+    await expect(details).toHaveCount(0)
 
     // The level filter narrows the loaded lines to the checked levels
-    await page.getByRole('button', { name: 'Level', exact: true }).click()
+    await page.getByRole('button', { name: 'Filters' }).click()
     const level = (name: string) =>
-      page.getByRole('menuitemcheckbox', { name, exact: true })
+      page.getByRole('menuitemcheckbox', { name: new RegExp(`^${name}`) })
     await level('Info').click()
     await level('Debug').click()
     await expect(level('All levels')).not.toBeChecked()
-    // The open menu hides the page from the accessibility tree
-    await expect(
-      page.getByRole('button', {
-        name: 'Level',
-        exact: true,
-        includeHidden: true,
-      }),
-    ).toHaveText('Error, Warning')
     await expect(logs).toContainText('slow query')
     await expect(logs).toContainText('payment failed')
     await expect(logs).toContainText(STDERR)
@@ -597,16 +605,22 @@ test.describe('runtime logs', () => {
     await expect(logs).toContainText('cache miss')
     await expect(logs).not.toContainText('slow query')
     await expect(logs).not.toContainText('request completed')
-
-    // Time, stream and region as columns on request
-    await level('All levels').click()
-    await expect(level('Warning')).toBeChecked()
     await page.keyboard.press('Escape')
-    await page
-      .getByRole('button', { name: 'Show time, stream and region' })
-      .click()
-    await expect(info).toContainText('stdout')
-    await expect(info).toContainText('tor')
+
+    // The chip names the levels; removing it shows every line again
+    await expect(page.getByText('Error, Debug')).toBeVisible()
+    await expect(page).toHaveURL(/level=debug%2Cerror|level=debug,error/)
+    await page.getByRole('button', { name: 'Remove filter' }).click()
+    await expect(logs).toContainText('request completed')
+
+    // Long lines wrap on request, remembered per browser
+    const wrap = page.getByRole('button', { name: 'Wrap lines' })
+    await wrap.click()
+    await expect(wrap).toHaveAttribute('aria-pressed', 'true')
+    await page.reload({ waitUntil: 'domcontentloaded' })
+    await expect(
+      page.getByRole('button', { name: 'Wrap lines' }),
+    ).toHaveAttribute('aria-pressed', 'true', { timeout: 30_000 })
   })
 
   test('the volume chart counts lines and zooms into a dragged window', async ({
@@ -621,9 +635,11 @@ test.describe('runtime logs', () => {
     )
 
     const chart = page.getByRole('region', { name: 'Log volume' })
-    // Six lines from the active deployment in the last hour
+    // Six lines from the active deployment in the last hour, as the shared
+    // date picker names it
     await expect(chart).toContainText('6 lines', { timeout: 30_000 })
     await expect(page.getByRole('log')).toContainText(STDOUT)
+    await expect(page.getByRole('button', { name: 'Last hour' })).toBeVisible()
 
     // Drag across the first part of the hour, long before any line
     const surface = chart.locator('.recharts-wrapper')
@@ -636,16 +652,16 @@ test.describe('runtime logs', () => {
     await page.mouse.move(box.x + box.width * 0.3, y, { steps: 8 })
     await page.mouse.up()
 
-    await expect(
-      page.getByRole('combobox', { name: 'Time range' }),
-    ).toContainText('Selected range')
+    // The dragged window replaces the range in the date picker, and stays in
+    // the URL
+    const lastHour = page.getByRole('button', { name: 'Last hour' })
+    await expect(lastHour).toHaveCount(0)
+    await expect(page).toHaveURL(/from=.*to=/)
     await expect(chart).toContainText('0 lines')
     await expect(page.getByText('No logs', { exact: true })).toBeVisible()
 
     await chart.getByRole('button', { name: 'Reset zoom' }).click()
-    await expect(
-      page.getByRole('combobox', { name: 'Time range' }),
-    ).toContainText('Last hour')
+    await expect(lastHour).toBeVisible()
     await expect(page.getByRole('log')).toContainText(STDOUT)
     await expect(chart.getByRole('button', { name: 'Reset zoom' })).toHaveCount(
       0,
@@ -740,17 +756,53 @@ test.describe('runtime logs', () => {
     await page.getByRole('option', { name: 'All resources' }).click()
     await expect(logs).toContainText(FUNCTION_LINE)
 
-    // A row links to its resource's own runtime logs, on that deployment
-    await logs
-      .getByRole('link', { name: `function/${FUNCTION.$id}` })
-      .first()
-      .click()
+    // Rows name their resource, not its ID
+    const row = logs.getByRole('button', { name: new RegExp(FUNCTION_LINE) })
+    await expect(row).toContainText(FUNCTION.name)
+    await expect(row).not.toContainText(FUNCTION.$id)
+
+    // A line's details narrow the list to its resource...
+    await row.click()
+    const details = page.getByRole('dialog', { name: 'Log line' })
+    await details.getByRole('button', { name: 'Only this resource' }).click()
+    await expect(page).toHaveURL(
+      new RegExp(`resource=functions(%3A|:)${FUNCTION.$id}`),
+    )
+    await expect(logs).toContainText(FUNCTION_LINE)
+    await expect(logs).not.toContainText(SITE_LINE)
+
+    // ...or open its own runtime logs, on that deployment
+    await logs.getByRole('button', { name: new RegExp(FUNCTION_LINE) }).click()
+    await details.getByRole('button', { name: 'Open' }).click()
     await expect(page).toHaveURL(
       new RegExp(
         `/functions/${FUNCTION.$id}/runtime-logs\\?deploymentId=${ACTIVE}`,
       ),
       { timeout: 30_000 },
     )
+  })
+
+  test('the project Logs page keeps its filters in the URL', async ({
+    page,
+  }) => {
+    await enableRuntimeLogs(page)
+    await mockAppwriteApi(page)
+
+    await page.goto(`/projects/${PROJECT.$id}/logs?stream=stderr&q=rendered`, {
+      waitUntil: 'domcontentloaded',
+    })
+    const logs = page.getByRole('log')
+    await expect(logs).toContainText(SITE_LINE, { timeout: 30_000 })
+    await expect(logs).not.toContainText(FUNCTION_LINE)
+    await expect(page.getByPlaceholder('Search logs...')).toHaveValue(
+      'rendered',
+    )
+    await expect(page.getByText('Filtered by')).toBeVisible()
+
+    // Clearing the search drops it from the URL
+    await page.getByPlaceholder('Search logs...').fill('')
+    await expect(page).not.toHaveURL(/q=/)
+    await expect(page).toHaveURL(/stream=stderr/)
   })
 
   test('the tab stays hidden while the flag is off', async ({ page }) => {
