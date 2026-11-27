@@ -8,6 +8,7 @@ use Appwrite\Distribution\Build\Runner;
 use Appwrite\Distribution\Build\Stage;
 use Appwrite\Distribution\Build\Status as BuildStatus;
 use Appwrite\Distribution\Lease\Status as LeaseStatus;
+use Appwrite\Distribution\Runner\Platform as RunnerPlatform;
 use Appwrite\Event\Message\DistributionBuild as DistributionBuildMessage;
 use Appwrite\Event\Message\DistributionBuildAction;
 use Appwrite\Event\Publisher\DistributionBuild as DistributionBuildPublisher;
@@ -33,6 +34,7 @@ use Utopia\Database\Exception\Limit;
 use Utopia\Database\Query;
 use Utopia\DSN\DSN;
 use Utopia\Psr7\Stream;
+use Utopia\Span\Span;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\DeviceType;
@@ -50,6 +52,13 @@ readonly class Builds
     public const string STAGE_INSPECT = 'inspect';
     public const string STAGE_SIGN = Stage::Sign->value;
     public const string STAGE_BUILD = Stage::Build->value;
+
+    /**
+     * The prefix of every orchestrator job id. Runner lease ids are bare hex, so a build-plane event never names a lease.
+     */
+    public const string JOB = 'dist-';
+
+    private const string BUNDLE = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-';
 
     public const string ERROR_ARTIFACT_MALFORMED = 'artifact_malformed';
     public const string ERROR_ARTIFACT_INVALID = 'artifact_invalid';
@@ -76,6 +85,7 @@ readonly class Builds
     public const string ERROR_BUILD_SOURCE_FAILED = 'build_source_failed';
     public const string ERROR_RUNNER_UNAVAILABLE = 'distribution_runner_unavailable';
     public const string ERROR_VARIABLE_INVALID = 'variable_invalid';
+    public const string ERROR_RUNNER_LOST = 'runner_lost';
 
     public const int MAX_ATTEMPTS = 3;
 
@@ -178,6 +188,7 @@ readonly class Builds
         self::ERROR_BUILD_SOURCE_FAILED => 'The source could not be downloaded from the repository. Check that the Git installation still has access, then start a new build.',
         self::ERROR_RUNNER_UNAVAILABLE => 'No macOS runner is available to build for iOS. Register a runner, then start a new build.',
         self::ERROR_VARIABLE_INVALID => 'A variable key is not a valid environment variable name. Update or delete the variable, then start a new build.',
+        self::ERROR_RUNNER_LOST => 'A macOS runner failed every attempt to build. Check that your macOS runners are online and healthy, then start a new build.',
     ];
 
     public function __construct(
@@ -547,6 +558,14 @@ readonly class Builds
                     Query::equal('buildId', [$subject->getId()]),
                     Query::notEqual('status', LeaseStatus::Released->value),
                 ]));
+                $this->dbForProject->updateDocuments('distributionArtifacts', new Document([
+                    'status' => ArtifactStatus::Invalid->value,
+                    'errorCode' => self::ERROR_BUILD_FAILED,
+                    'errorMessage' => self::message(self::ERROR_BUILD_FAILED),
+                ]), [
+                    Query::equal('$id', [Leases::artifact($jobId)]),
+                    Query::equal('status', [ArtifactStatus::Uploading->value, ArtifactStatus::Processing->value]),
+                ]);
             } elseif ($stage !== '') {
                 try {
                     ($stage === self::STAGE_BUILD ? $this->jobs : $this->signingJobs)->delete($jobId);
@@ -562,11 +581,57 @@ readonly class Builds
     }
 
     /**
+     * What a runner that just claimed the lease needs to build its attempt, or null when the
+     * lease is no longer the build's current attempt and should be released. Claiming moves
+     * a waiting build to processing.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function claim(Document $lease, #[\SensitiveParameter] string $token): ?array
+    {
+        $build = $this->dbForProject->getDocument('distributionBuilds', (string) $lease->getAttribute('buildId', ''));
+        if (
+            $build->isEmpty()
+            || !\in_array($build->getAttribute('status'), self::ACTIVE, true)
+            || $build->getAttribute('stage') !== self::STAGE_BUILD
+            || $build->getAttribute('jobId') !== $lease->getId()
+            || (int) $build->getAttribute('attempt', 1) !== (int) $lease->getAttribute('attempt', 1)
+        ) {
+            return null;
+        }
+
+        $app = $this->dbForProject->getDocument('distributionApps', (string) $build->getAttribute('appId', ''));
+        $target = $this->dbForProject->getDocument('distributionTargets', (string) $build->getAttribute('targetId', ''));
+        if ($app->isEmpty() || $target->isEmpty()) {
+            return null;
+        }
+
+        $signingIdentity = $this->dbForProject->getDocument('distributionSigningIdentities', (string) $target->getAttribute('signingIdentityId', ''));
+        if ($signingIdentity->isEmpty() || $signingIdentity->getAttribute('platform') !== Platform::Ios->value) {
+            return null;
+        }
+
+        $variables = $this->variables($app);
+        $timeout = (int) $build->getAttribute('timeout', 0) ?: $this->timeout($target);
+
+        $this->dbForProject->updateDocuments('distributionBuilds', new Document([
+            'status' => BuildStatus::Processing->value,
+        ]), [
+            Query::equal('$id', [$build->getId()]),
+            Query::equal('status', [BuildStatus::Waiting->value]),
+        ]);
+
+        Span::add('signing_identity.decrypt', $signingIdentity->getId());
+
+        return static::assignment($this->project, $app, $target, $build, $lease, $signingIdentity, $variables, $token, $timeout);
+    }
+
+    /**
      * Lowercase and 45 characters, which every orchestrator backend accepts as a job and pod name.
      */
     public static function id(Document $project, Document $subject, string $stage, int $attempt = 1): string
     {
-        return 'dist-' . \substr(\hash('sha256', "{$project->getSequence()}:{$subject->getId()}:{$stage}:{$attempt}"), 0, 40);
+        return self::JOB . \substr(\hash('sha256', "{$project->getSequence()}:{$subject->getId()}:{$stage}:{$attempt}"), 0, 40);
     }
 
     public static function lock(string $projectInternalId, string $subjectId): string
@@ -678,11 +743,61 @@ readonly class Builds
     }
 
     /**
-     * iOS builds run on macOS runners, which do not exist yet.
+     * Queues the attempt for a macOS runner with the labels of the target. The
+     * build stays `waiting` until a runner claims the lease. The build names the lease
+     * before the lease row exists, so a runner can never claim a lease its build does not
+     * name yet; a row lost between the two writes is queued again when the build reconciles.
      */
     protected function lease(Document $build): Document
     {
-        return $this->fail($build, self::ERROR_RUNNER_UNAVAILABLE);
+        $app = $this->dbForProject->getDocument('distributionApps', (string) $build->getAttribute('appId', ''));
+        $target = $this->dbForProject->getDocument('distributionTargets', (string) $build->getAttribute('targetId', ''));
+        if ($app->isEmpty() || $target->isEmpty()) {
+            return $this->fail($build, self::ERROR_BUILD_FAILED);
+        }
+
+        $labels = Leases::labels($target);
+        if (!(new Runners($this->dbForPlatform))->isAvailable(RunnerPlatform::Macos, $labels, \time())) {
+            return $this->fail($build, self::ERROR_RUNNER_UNAVAILABLE);
+        }
+
+        foreach (\array_keys($this->variables($app)) as $key) {
+            if (!VariableKey::isEnvVarName((string) $key)) {
+                return $this->fail($build, self::ERROR_VARIABLE_INVALID, 'Variable key ' . \json_encode((string) $key) . ' is not a valid environment variable name. Update or delete this variable, then start a new build.');
+            }
+        }
+
+        $identifier = (string) $target->getAttribute('identifier', '');
+        $signingIdentityId = (string) $target->getAttribute('signingIdentityId', '');
+        $signingIdentity = $signingIdentityId === '' ? new Document() : $this->dbForProject->getDocument('distributionSigningIdentities', $signingIdentityId);
+        $profile = ($signingIdentity->getAttribute('secret') ?? [])['profiles'][$identifier] ?? '';
+        if ($signingIdentity->isEmpty()
+            || $signingIdentity->getAttribute('platform') !== Platform::Ios->value
+            || !\is_string($profile)
+            || $profile === '') {
+            return $this->fail($build, self::ERROR_BUILD_INVALID, $signingIdentityId === ''
+                ? "The target has no signing identity. Set an iOS signing identity with an App Store profile for {$identifier} on the target, then start a new build."
+                : "Signing identity '{$signingIdentityId}' is not an iOS signing identity with an App Store profile for {$identifier}. Add the profile or choose another signing identity, then start a new build.");
+        }
+
+        if ((string) $build->getAttribute('versionName', '') === '') {
+            return $this->fail($build, self::ERROR_BUILD_INVALID, "iOS builds need a version name until the runner agent supports keeping the project's version; set versionName on the build.");
+        }
+
+        $jobId = Leases::id($this->project, $build, (int) $build->getAttribute('attempt', 1));
+        if ($build->getAttribute('jobId', '') !== $jobId) {
+            $build = $this->dbForProject->updateDocument('distributionBuilds', $build->getId(), new Document([
+                'stage' => self::STAGE_BUILD,
+                'jobId' => $jobId,
+                'runner' => Runner::Pool->value,
+                'dispatchedAt' => DateTime::now(),
+            ]));
+            (new Schedules($this->dbForPlatform))->write($this->project, SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_BUILD, $build, 1);
+        }
+
+        (new Leases($this->dbForPlatform))->queue($this->project, $build, $labels, static::api());
+
+        return $build;
     }
 
     /**
@@ -753,6 +868,14 @@ readonly class Builds
     protected function timeout(Document $target): int
     {
         return (int) $target->getAttribute('timeout', 0) ?: (int) System::getEnv('_APP_DISTRIBUTION_BUILD_TIMEOUT', (string) self::BUILD_TIMEOUT);
+    }
+
+    /**
+     * The public endpoint a runner calls back on, unlike the internal one of build jobs.
+     */
+    protected static function api(): string
+    {
+        return (System::getEnv('_APP_OPTIONS_FORCE_HTTPS', '') === 'disabled' ? 'http' : 'https') . '://' . System::getEnv('_APP_DOMAIN', 'localhost') . '/v1';
     }
 
     /**
@@ -848,6 +971,82 @@ readonly class Builds
                 events: [CallbackEvent::Start, CallbackEvent::Log, CallbackEvent::Exit, CallbackEvent::Complete, CallbackEvent::Artifact],
                 key: self::secret(self::STAGE_BUILD),
             ),
+        ];
+    }
+
+    /**
+     * The lease a runner agent builds from. Unlike a build-plane job, a runner is trusted with
+     * the signing identity, so the lease carries it. The version name is sent as stored.
+     *
+     * @param array<string, string> $variables
+     * @return array<string, mixed>
+     */
+    protected static function assignment(Document $project, Document $app, Document $target, Document $build, Document $lease, Document $signingIdentity, array $variables, #[\SensitiveParameter] string $token, int $timeout): array
+    {
+        $framework = (string) $app->getAttribute('framework', '');
+        $defaults = Config::getParam('distribution')['frameworks'][$framework][Platform::Ios->value] ?? [];
+        $configuration = $target->getAttribute('configuration');
+        $configuration = \is_array($configuration) ? $configuration : [];
+        $scheme = $configuration['scheme'] ?? null;
+        $secret = $signingIdentity->getAttribute('secret', []);
+        $secret = \is_array($secret) ? $secret : [];
+        $profiles = \is_array($secret['profiles'] ?? null) ? $secret['profiles'] : [];
+
+        return [
+            'leaseId' => $lease->getId(),
+            'token' => $token,
+            'expiresAt' => DateTime::formatTz((string) $lease->getAttribute('expiresAt', '') ?: DateTime::now()),
+            'endpoint' => (string) $lease->getAttribute('endpoint', ''),
+            'query' => static::query($project),
+            'buildId' => $build->getId(),
+            'attempt' => (int) $build->getAttribute('attempt', 1),
+            'timeout' => $timeout,
+            'platform' => Platform::Ios->value,
+            'framework' => $framework,
+            'source' => [
+                'rootDirectory' => (string) $build->getAttribute('providerRootDirectory', '') ?: '.',
+                'commit' => (string) $build->getAttribute('providerCommitHash', ''),
+            ],
+            'environment' => \array_map('strval', \array_replace($variables, [
+                'DISTRIBUTION_IDENTIFIER' => (string) $target->getAttribute('identifier', ''),
+                'DISTRIBUTION_CONFIGURATION' => \json_encode($configuration ?: new \stdClass(), JSON_THROW_ON_ERROR),
+                ...(\is_string($scheme) && $scheme !== '' ? ['DISTRIBUTION_SCHEME' => $scheme] : []),
+                'APPWRITE_VCS_REPOSITORY_ID' => (string) $app->getAttribute('providerRepositoryId', ''),
+                'APPWRITE_VCS_REPOSITORY_NAME' => (string) $build->getAttribute('providerRepositoryName', ''),
+                'APPWRITE_VCS_REPOSITORY_OWNER' => (string) $build->getAttribute('providerRepositoryOwner', ''),
+                'APPWRITE_VCS_REPOSITORY_URL' => (string) $build->getAttribute('providerRepositoryUrl', ''),
+                'APPWRITE_VCS_REPOSITORY_BRANCH' => (string) $build->getAttribute('providerBranch', ''),
+                'APPWRITE_VCS_REPOSITORY_BRANCH_URL' => (string) $build->getAttribute('providerBranchUrl', ''),
+                'APPWRITE_VCS_COMMIT_HASH' => (string) $build->getAttribute('providerCommitHash', ''),
+                'APPWRITE_VCS_COMMIT_MESSAGE' => (string) $build->getAttribute('providerCommitMessage', ''),
+                'APPWRITE_VCS_COMMIT_URL' => (string) $build->getAttribute('providerCommitUrl', ''),
+                'APPWRITE_VCS_COMMIT_AUTHOR_NAME' => (string) $build->getAttribute('providerCommitAuthor', ''),
+                'APPWRITE_VCS_COMMIT_AUTHOR_URL' => (string) $build->getAttribute('providerCommitAuthorUrl', ''),
+                'APPWRITE_VCS_ROOT_DIRECTORY' => (string) $build->getAttribute('providerRootDirectory', ''),
+                'CI' => 'true',
+            ])),
+            'commands' => [
+                'install' => (string) $target->getAttribute('installCommand', '') ?: ($defaults['install'] ?? ''),
+                'build' => (string) $target->getAttribute('buildCommand', '') ?: ($defaults['build'] ?? ''),
+            ],
+            'signing' => [
+                'certificate' => (string) ($secret['certificate'] ?? ''),
+                'password' => (string) ($secret['password'] ?? ''),
+                'profiles' => \array_filter(
+                    $profiles,
+                    fn (mixed $profile, int|string $identifier): bool => \is_string($profile)
+                        && \is_string($identifier)
+                        && $identifier !== ''
+                        && !\str_starts_with($identifier, '.')
+                        && \strspn($identifier, self::BUNDLE) === \strlen($identifier),
+                    ARRAY_FILTER_USE_BOTH,
+                ),
+                'teamId' => (string) $signingIdentity->getAttribute('teamId', ''),
+            ],
+            'version' => [
+                'name' => (string) $build->getAttribute('versionName', ''),
+                'code' => (int) $build->getAttribute('buildNumber', 0),
+            ],
         ];
     }
 

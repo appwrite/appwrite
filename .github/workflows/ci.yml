@@ -981,6 +981,13 @@ jobs:
           docker build --target test -t appwrite/distribution-tools:test "${RUNNER}:images/tools"
           docker build -t appwrite/distribution-fixture:test "${RUNNER}:images/fixture"
 
+      - name: Generate Distribution runner secret
+        if: matrix.service.name == 'Distribution'
+        run: |
+          SECRET=$(openssl rand -hex 32)
+          echo "::add-mask::$SECRET"
+          echo "_APP_DISTRIBUTION_RUNNER_SECRET=$SECRET" >> "$GITHUB_ENV"
+
       - name: Load and Start Appwrite
         timeout-minutes: 5
         env:

@@ -10,8 +10,13 @@ use Appwrite\Distribution\Build\Runner;
 use Appwrite\Distribution\Build\Stage;
 use Appwrite\Distribution\Build\Status as BuildStatus;
 use Appwrite\Distribution\Builds as DistributionBuilds;
+use Appwrite\Distribution\Lease\Result as LeaseResult;
+use Appwrite\Distribution\Lease\Status as LeaseStatus;
+use Appwrite\Distribution\Leases;
 use Appwrite\Distribution\Logs;
 use Appwrite\Distribution\Platform;
+use Appwrite\Distribution\Runner\Platform as RunnerPlatform;
+use Appwrite\Distribution\Runners;
 use Appwrite\Distribution\Schedules;
 use Appwrite\Distribution\Signing;
 use Appwrite\Distribution\Stores;
@@ -54,6 +59,8 @@ use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Id;
 use Utopia\Database\Query;
+use Utopia\Distribution\Exception\Invalid;
+use Utopia\Distribution\Signing\Profile;
 use Utopia\Queue\Message;
 use Utopia\Span\Span;
 use Utopia\Storage\Device;
@@ -1236,6 +1243,10 @@ class Builds extends Action
         UsagePublisher $publisherForUsage,
         DistributionSubmissions $submissions,
     ): Document {
+        if ($build->getAttribute('runner') === Runner::Pool->value && $event->status === self::ARTIFACT_FAILED) {
+            return $build;
+        }
+
         $conclude = fn (Document $build, string $code): Document => $this->conclude($dbForProject, $project, $build, false, $code, $dbForPlatform, $distributionBuilds, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage, $submissions);
 
         $failed = $event->status === self::ARTIFACT_FAILED;
@@ -1244,6 +1255,10 @@ class Builds extends Action
         }
 
         if (!$failed) {
+            if ($build->getAttribute('runner') === Runner::Pool->value && $event->artifactId === self::RESULT) {
+                $this->recordResult($dbForProject, $project, $build, $event, $dbForPlatform, $distributionBuilds, $deviceForDistribution, $schedules, $signing, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage, $submissions);
+            }
+
             return \in_array($event->artifactId, self::OUTPUTS, true)
                 ? $this->built($dbForProject, $project, $build, $dbForPlatform, $distributionBuilds, $deviceForDistribution, $schedules, $signing, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage, $submissions)
                 : $build;
@@ -1284,6 +1299,10 @@ class Builds extends Action
         UsagePublisher $publisherForUsage,
         DistributionSubmissions $submissions,
     ): Document {
+        if ($build->getAttribute('runner') === Runner::Pool->value && $exit->exitCode !== 0) {
+            return $this->leaseExit($dbForProject, $project, $build, $exit, $dbForPlatform, $distributionBuilds, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage, $submissions);
+        }
+
         Span::add('job.exit', $exit->exitCode);
 
         $duration = $exit->durationSeconds !== null && $exit->durationSeconds > 0 ? (int) \round($exit->durationSeconds) : DistributionBuilds::runtime($build);
@@ -1524,6 +1543,10 @@ class Builds extends Action
         UsagePublisher $publisherForUsage,
         DistributionSubmissions $submissions,
     ): Document {
+        if ($build->getAttribute('runner') === Runner::Pool->value) {
+            return $this->leased($dbForProject, $project, $build, $dbForPlatform, $distributionBuilds, $deviceForDistribution, $schedules, $signing, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage, $submissions);
+        }
+
         $conclude = fn (Document $build, bool $success, string $code = ''): Document => $this->conclude($dbForProject, $project, $build, $success, $code, $dbForPlatform, $distributionBuilds, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage, $submissions);
 
         $build = $dbForProject->getDocument('distributionBuilds', $build->getId());
@@ -1745,6 +1768,14 @@ class Builds extends Action
                     }
                 }
 
+                if ($build->getAttribute('runner') === Runner::Pool->value) {
+                    try {
+                        $distributionBuilds->cancel($build);
+                    } catch (\Throwable) {
+                        // A lease left behind is harmless: claims and extensions refuse it once its build is terminal.
+                    }
+                }
+
                 if ($gone || $expired) {
                     $deviceForDistribution->deletePath(DistributionBuilds::output($id));
                     $schedules->stop($project, SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_BUILD, $id);
@@ -1754,6 +1785,8 @@ class Builds extends Action
             }
 
             if ($build->getAttribute('runner') === Runner::Pool->value) {
+                $this->reconcileLease($build, $project, $dbForProject, $dbForPlatform, $distributionBuilds, $deviceForDistribution, $schedules, $signing, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage, $submissions);
+
                 return;
             }
 
@@ -2103,8 +2136,12 @@ class Builds extends Action
         $signingIdentity = $signingIdentityId === '' ? new Document() : $dbForProject->getDocument('distributionSigningIdentities', $signingIdentityId);
         if (!$signingIdentity->isEmpty()) {
             Span::add('signing_identity.decrypt', $signingIdentity->getId());
-            $bundle = Signing::bundle($signingIdentity);
-            \array_push($secrets, $bundle['storePassword'], $bundle['keyPassword']);
+            if ($signingIdentity->getAttribute('platform') === Platform::Ios->value) {
+                $secrets[] = (string) (($signingIdentity->getAttribute('secret') ?? [])['password'] ?? '');
+            } else {
+                $bundle = Signing::bundle($signingIdentity);
+                \array_push($secrets, $bundle['storePassword'], $bundle['keyPassword']);
+            }
         }
 
         return $secrets;
@@ -2258,5 +2295,303 @@ class Builds extends Action
         ]);
 
         return $dbForProject->getDocument('distributionArtifacts', $artifact->getId());
+    }
+
+    /**
+     * The runner, trusted per RFC §9.1, vouches for the IPA's digest, which is
+     * checked for format and the upload's size, not hashed. Its `result` reaches
+     * the uploaded IPA only once it matches the target, the build and the signing
+     * identity. Anything else fails the build and its IPA. A result that arrives
+     * before the upload completed is dropped: the agent uploads before it reports.
+     */
+    private function recordResult(
+        Database $dbForProject,
+        Document $project,
+        Document $build,
+        JobArtifact $event,
+        Database $dbForPlatform,
+        DistributionBuilds $distributionBuilds,
+        Device $deviceForDistribution,
+        Schedules $schedules,
+        Signing $signing,
+        VcsFactory $vcsFactory,
+        InstallationTokens $installationTokens,
+        Realtime $queueForRealtime,
+        Event $queueForEvents,
+        Webhook $queueForWebhooks,
+        FunctionPublisher $publisherForFunctions,
+        Context $usage,
+        UsagePublisher $publisherForUsage,
+        DistributionSubmissions $submissions,
+    ): Document {
+        $artifact = $dbForProject->getDocument('distributionArtifacts', Leases::artifact((string) $build->getAttribute('jobId', '')));
+        if ($artifact->isEmpty()
+            || $artifact->getAttribute('status') !== Status::Processing->value
+            || (int) $artifact->getAttribute('chunksUploaded', 0) < (int) $artifact->getAttribute('chunksTotal', 1)) {
+            return $build;
+        }
+
+        $target = $dbForProject->getDocument('distributionTargets', (string) $build->getAttribute('targetId', ''));
+        $signingIdentityId = (string) $target->getAttribute('signingIdentityId', '');
+        $signingIdentity = $signingIdentityId === '' ? new Document() : $dbForProject->getDocument('distributionSigningIdentities', $signingIdentityId);
+        Span::add('signing_identity.decrypt', $signingIdentityId);
+
+        try {
+            $result = LeaseResult::parse($event->content, $target, $build, $signingIdentity);
+            if ($result->size !== (int) $artifact->getAttribute('size', 0)) {
+                throw new \UnexpectedValueException('The build result size differs from the uploaded file.');
+            }
+
+            $profile = ($signingIdentity->getAttribute('secret') ?? [])['profiles'][$result->identifier] ?? '';
+            $envelope = \is_string($profile) ? \base64_decode($profile, true) : false;
+            if ($envelope === false || $envelope === '') {
+                throw new \UnexpectedValueException('The signing identity has no profile for the target.');
+            }
+
+            $artifact = $this->apply($dbForProject, $artifact, [
+                'digest' => $result->digest,
+                'identifier' => $result->identifier,
+                'versionName' => $result->versionName,
+                'versionCode' => null,
+                'buildNumber' => $result->buildNumber,
+                'signed' => $result->signed,
+                'fingerprint' => (string) $signingIdentity->getAttribute('fingerprint', ''),
+                'manifest' => [
+                    'minSdk' => null,
+                    'targetSdk' => null,
+                    'entitlements' => $result->entitlements,
+                    'profileExpiresAt' => Profile::parse($envelope)->expiresAt->format(\DateTimeInterface::ATOM),
+                    'teamId' => $result->teamId,
+                ],
+            ]);
+        } catch (\UnexpectedValueException|Invalid|Structure $error) {
+            Span::add('build.result.error', $error->getMessage());
+
+            $this->finalize($dbForProject, $project, $artifact, false, DistributionBuilds::ERROR_BUILD_OUTPUT_INVALID, $deviceForDistribution, $schedules, $signing, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage);
+            $build = $this->conclude($dbForProject, $project, $build, false, DistributionBuilds::ERROR_BUILD_OUTPUT_INVALID, $dbForPlatform, $distributionBuilds, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage, $submissions);
+            $distributionBuilds->cancel($build);
+
+            return $build;
+        }
+
+        return $dbForProject->updateDocument('distributionBuilds', $build->getId(), new Document([
+            'toolchain' => [
+                ...($build->getAttribute('toolchain') ?? []),
+                ...$result->toolchain,
+            ],
+        ]));
+    }
+
+    /**
+     * The join of a leased build: a clean exit, the complete event and an IPA
+     * whose result was recorded. The exit and the complete event join in either
+     * order, but the result only once the upload completed, which the agent
+     * finishes before it reports. Every handler and reconcile call it again.
+     * Only this join makes a lease's IPA ready, so a ready one with an active
+     * build is a join that stopped before the build's terminal write.
+     */
+    private function leased(
+        Database $dbForProject,
+        Document $project,
+        Document $build,
+        Database $dbForPlatform,
+        DistributionBuilds $distributionBuilds,
+        Device $deviceForDistribution,
+        Schedules $schedules,
+        Signing $signing,
+        VcsFactory $vcsFactory,
+        InstallationTokens $installationTokens,
+        Realtime $queueForRealtime,
+        Event $queueForEvents,
+        Webhook $queueForWebhooks,
+        FunctionPublisher $publisherForFunctions,
+        Context $usage,
+        UsagePublisher $publisherForUsage,
+        DistributionSubmissions $submissions,
+    ): Document {
+        $build = $dbForProject->getDocument('distributionBuilds', $build->getId());
+        if ($build->isEmpty()
+            || !\in_array($build->getAttribute('status'), DistributionBuilds::ACTIVE, true)
+            || $build->getAttribute('stage') !== DistributionBuilds::STAGE_BUILD
+            || $build->getAttribute('duration') === null
+            || empty($build->getAttribute('endedAt'))) {
+            return $build;
+        }
+
+        $artifact = $dbForProject->getDocument('distributionArtifacts', Leases::artifact((string) $build->getAttribute('jobId', '')));
+        $ready = $artifact->getAttribute('status') === Status::Ready->value;
+        if (!$ready && ($artifact->isEmpty()
+            || $artifact->getAttribute('status') !== Status::Processing->value
+            || (int) $artifact->getAttribute('chunksUploaded', 0) < (int) $artifact->getAttribute('chunksTotal', 1)
+            || (string) $artifact->getAttribute('digest', '') === '')) {
+            return $build;
+        }
+
+        if (!$ready) {
+            $dbForProject->updateDocument('distributionBuilds', $build->getId(), new Document([
+                'artifactId' => $artifact->getId(),
+                'artifactInternalId' => (string) $artifact->getSequence(),
+                ...((string) $build->getAttribute('versionName', '') === '' ? ['versionName' => (string) $artifact->getAttribute('versionName', '')] : []),
+            ]));
+
+            $this->dispatchUpdate($queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $project, $artifact, self::ARTIFACT_CREATE);
+            $this->finalize($dbForProject, $project, $artifact, true, '', $deviceForDistribution, $schedules, $signing, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage);
+        }
+
+        $build = $this->conclude($dbForProject, $project, $build, true, '', $dbForPlatform, $distributionBuilds, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage, $submissions);
+        $distributionBuilds->cancel($build);
+
+        return $build;
+    }
+
+    /**
+     * A failed exit of a runner. A reason that is the runner's rather than the
+     * build's releases the lease, which frees the runner's slot before the next
+     * reconcile, and queues the attempt again, until the attempts are spent.
+     */
+    private function leaseExit(
+        Database $dbForProject,
+        Document $project,
+        Document $build,
+        JobExit $exit,
+        Database $dbForPlatform,
+        DistributionBuilds $distributionBuilds,
+        VcsFactory $vcsFactory,
+        InstallationTokens $installationTokens,
+        Realtime $queueForRealtime,
+        Event $queueForEvents,
+        Webhook $queueForWebhooks,
+        FunctionPublisher $publisherForFunctions,
+        Context $usage,
+        UsagePublisher $publisherForUsage,
+        DistributionSubmissions $submissions,
+    ): Document {
+        Span::add('job.exit', $exit->exitCode);
+        Span::add('job.exit.reason', (string) $exit->reason);
+
+        $duration = $exit->durationSeconds !== null && $exit->durationSeconds > 0 ? (int) \round($exit->durationSeconds) : DistributionBuilds::runtime($build);
+        $code = Leases::error($exit->reason, $exit->exitCode);
+
+        if ($code === null && (int) $build->getAttribute('attempt', 1) < DistributionBuilds::MAX_ATTEMPTS) {
+            $leases = new Leases($dbForPlatform);
+            $lease = $dbForPlatform->getAuthorization()->skip(fn (): Document => $leases->current($project, $build));
+            if (!$lease->isEmpty()) {
+                $dbForPlatform->getAuthorization()->skip(fn () => $leases->release($lease));
+            }
+
+            return $this->retry($dbForProject, $project, $build, $duration, $usage, $publisherForUsage);
+        }
+
+        $build = $this->stamp($dbForProject, $build, ['duration' => $duration]);
+        $build = $this->conclude($dbForProject, $project, $build, false, $code ?? DistributionBuilds::ERROR_RUNNER_LOST, $dbForPlatform, $distributionBuilds, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage, $submissions);
+        $distributionBuilds->cancel($build);
+
+        return $build;
+    }
+
+    /**
+     * A leased build has no job to ask, so its lease says what the runner did:
+     * released or expired is a runner gone, queued for long with no runner that
+     * has the labels is none coming (D-1). After a clean exit, an expired lease
+     * is lost only GRACE after the build ended, so a backlog of its last events
+     * still joins.
+     */
+    private function reconcileLease(
+        Document $build,
+        Document $project,
+        Database $dbForProject,
+        Database $dbForPlatform,
+        DistributionBuilds $distributionBuilds,
+        Device $deviceForDistribution,
+        Schedules $schedules,
+        Signing $signing,
+        VcsFactory $vcsFactory,
+        InstallationTokens $installationTokens,
+        Realtime $queueForRealtime,
+        Event $queueForEvents,
+        Webhook $queueForWebhooks,
+        FunctionPublisher $publisherForFunctions,
+        Context $usage,
+        UsagePublisher $publisherForUsage,
+        DistributionSubmissions $submissions,
+    ): void {
+        $fail = function (Document $build, string $code) use ($project, $dbForProject, $dbForPlatform, $distributionBuilds, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage, $submissions): void {
+            $build = $this->conclude($dbForProject, $project, $build, false, $code, $dbForPlatform, $distributionBuilds, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage, $submissions);
+            $distributionBuilds->cancel($build);
+        };
+        $requeue = function (Document $build) use ($fail, $project, $dbForProject, $dbForPlatform, $distributionBuilds, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage, $submissions): void {
+            if ((int) $build->getAttribute('attempt', 1) >= DistributionBuilds::MAX_ATTEMPTS) {
+                $fail($build, DistributionBuilds::ERROR_RUNNER_LOST);
+
+                return;
+            }
+
+            $this->redispatch($build, $dbForProject, $project, $dbForPlatform, $distributionBuilds, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage, $submissions);
+        };
+
+        if (!empty($build->getAttribute('redispatchAt'))) {
+            $requeue($build);
+
+            return;
+        }
+
+        $lease = (new Leases($dbForPlatform))->current($project, $build);
+        $status = (string) $lease->getAttribute('status', '');
+        $now = \time();
+        Span::add('lease.status', $lease->isEmpty() ? 'missing' : $status);
+
+        if ($lease->isEmpty()) {
+            $this->submit($dbForProject, $project, $build, $dbForPlatform, $distributionBuilds, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage, $submissions);
+
+            return;
+        }
+
+        if ($status === LeaseStatus::Released->value) {
+            $requeue($build);
+
+            return;
+        }
+
+        if ($status === LeaseStatus::Queued->value) {
+            if (Leases::isStale($lease, $now) && !(new Runners($dbForPlatform))->isAvailable(RunnerPlatform::Macos, $lease->getAttribute('labels', []), $now)) {
+                $fail($build, DistributionBuilds::ERROR_RUNNER_UNAVAILABLE);
+            }
+
+            return;
+        }
+
+        $expired = Leases::isExpired($lease, $now);
+
+        if ($build->getAttribute('duration') !== null) {
+            $ended = (string) ($build->getAttribute('endedAt') ?? '') ?: (string) $lease->getAttribute('expiresAt', '');
+            $lost = $expired && $this->elapsed($ended, self::GRACE);
+
+            try {
+                $build = $this->leased($dbForProject, $project, $build, $dbForPlatform, $distributionBuilds, $deviceForDistribution, $schedules, $signing, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage, $submissions);
+            } catch (\Throwable $error) {
+                if (!$lost) {
+                    throw $error;
+                }
+
+                Span::add('build.join.error', $error->getMessage());
+            }
+
+            if ($lost && \in_array($build->getAttribute('status'), DistributionBuilds::ACTIVE, true)) {
+                $fail($build, DistributionBuilds::ERROR_BUILD_LOST);
+            }
+
+            return;
+        }
+
+        if ($expired) {
+            $requeue($build);
+
+            return;
+        }
+
+        $startedAt = (string) ($build->getAttribute('startedAt') ?? '');
+        if ($startedAt !== '' && $this->elapsed($startedAt, (int) $build->getAttribute('timeout', 0) + DistributionBuilds::SETUP + self::GRACE)) {
+            $fail($build, DistributionBuilds::ERROR_BUILD_TIMEOUT);
+        }
     }
 }

@@ -41,7 +41,11 @@ final class TriggersCustomServerTest extends Scope
         $repository = $this->prepareRepository();
         $linked = $this->linkApp($repository);
         $appId = $linked['appId'];
-        $ios = $this->createTarget($appId, ['platform' => 'ios', 'identifier' => 'io.appwrite.trigger' . \uniqid()]);
+        $ios = $this->createTarget($appId, [
+            'platform' => 'ios',
+            'identifier' => 'io.appwrite.trigger' . \uniqid(),
+            'configuration' => ['xcode' => 'unavailable-' . \uniqid()],
+        ]);
         $this->assertSame(201, $ios['headers']['status-code'], \json_encode($ios['body']));
 
         $head = $this->pushGiteaCommit($repository['name'], 'lib/main.dart', "void main() {}\n", 'Add entrypoint');

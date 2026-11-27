@@ -82,6 +82,7 @@ final class BuildsCustomServerTest extends Scope
         $prepared = $this->prepareBuild(target: [
             'platform' => 'ios',
             'track' => 'testflight',
+            'configuration' => ['xcode' => 'unavailable-' . \uniqid()],
         ]);
         $appId = $prepared['appId'];
 

@@ -87,6 +87,7 @@ class Create extends Action
             || $verified === null
             || Builds::stale($event->time->getTimestamp(), \time())
             || ($meta['projectId'] ?? '') !== $project->getId()
+            || !\str_starts_with((string) ($event->data['jobId'] ?? ''), Builds::JOB)
         ) {
             $response->noContent();
             return;
