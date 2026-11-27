@@ -8,6 +8,7 @@ use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
 use Utopia\Telemetry\Histogram;
 use Utopia\Telemetry\UpDownCounter;
+use Utopia\Validator\Assoc;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Validator;
@@ -715,6 +716,7 @@ class Http
     protected function getArguments(Hook $hook, array $values, array $requestParams, ?Route $route = null): array
     {
         $arguments = [];
+        /** @var array<string, mixed> $param */
         foreach ($hook->getParams() as $key => $param) { // Get value from route or request object
             $requestKey = $key;
             if (!\array_key_exists($key, $requestParams) && !empty($param['aliases'])) {
@@ -763,6 +765,7 @@ class Http
                 }
 
                 if ($paramExists) {
+                    $value = $this->toAssoc($param, $value);
                     $this->validate($key, $param, $value);
                     $value = $this->coerce($param, $value);
                 }
@@ -911,6 +914,27 @@ class Http
         if (!$validator->isValid($value)) {
             throw new Exception('Invalid `' . $key . '` param: ' . $validator->getDescription(), 400);
         }
+    }
+
+    /**
+     * The request keeps an empty JSON object as `stdClass` so routes can tell `{}`
+     * from `[]`, but an `Assoc` param is a PHP array, where both are `[]`.
+     *
+     * @param  array<string, mixed>  $param
+     */
+    private function toAssoc(array $param, mixed $value): mixed
+    {
+        if (!$value instanceof \stdClass) {
+            return $value;
+        }
+
+        $validator = $this->resolveValidator($param);
+
+        while ($validator instanceof Nullable) {
+            $validator = $validator->getValidator();
+        }
+
+        return $validator instanceof Assoc ? (array) $value : $value;
     }
 
     /**

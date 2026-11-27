@@ -11,10 +11,15 @@ import {
   useQueryClient,
   queryOptions,
 } from '@tanstack/react-query'
+import { useSyncExternalStore } from 'react'
 import { Query } from '@appwrite.io/console'
 import { VCSDetectionType } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
+import {
+  isFeatureEnabled,
+  subscribeToProfileChange,
+} from '@/lib/console-profiles'
 import {
   DEFAULT_STALE_TIME,
   LONG_STALE_TIME,
@@ -57,6 +62,53 @@ export async function fetchVcsInstallations(
 }
 
 /**
+ * GitHub installations the organization's other projects connected that this
+ * project doesn't have yet, so they can be reused without GitHub's install flow.
+ */
+export async function fetchReusableVcsInstallations(
+  projectId: string,
+): Promise<Models.Installation[]> {
+  const projectSdk = sdk.forProject(projectId)
+  try {
+    const [shared, own] = await Promise.all([
+      projectSdk.vcs.listInstallations({
+        shared: true,
+        queries: [Query.limit(100)],
+      }),
+      projectSdk.vcs.listInstallations({ queries: [Query.limit(100)] }),
+    ])
+    // Only GitHub installations are shared. One account can be installed from several
+    // projects under different IDs, so accounts are matched by name.
+    const account = (i: Models.Installation) => i.organization.toLowerCase()
+    const linked = new Set(
+      own.installations.filter((i) => i.provider === 'github').map(account),
+    )
+    // Only organization installations are offered for reuse.
+    // A reinstalled app leaves the old row behind with a dead ID. GitHub IDs only grow, so
+    // the highest one per account is the live installation.
+    const latest = new Map<string, Models.Installation>()
+    for (const i of shared.installations) {
+      if ((i as { personal?: boolean }).personal || linked.has(account(i))) {
+        continue
+      }
+      const kept = latest.get(account(i))
+      if (
+        !kept ||
+        Number(i.providerInstallationId) > Number(kept.providerInstallationId)
+      ) {
+        latest.set(account(i), i)
+      }
+    }
+    return [...latest.values()].sort((a, b) =>
+      account(a).localeCompare(account(b)),
+    )
+  } catch {
+    // Servers without installation reuse reject the shared param
+    return []
+  }
+}
+
+/**
  * Query function to fetch repository details
  */
 export async function fetchRepository(
@@ -92,6 +144,18 @@ export async function fetchInstallation(
   return await projectSdk.vcs.getInstallation(installationId)
 }
 
+export function installationQueryOptions(
+  projectId: string | null | undefined,
+  installationId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['vcs', 'installation', projectId, installationId],
+    queryFn: () => fetchInstallation(projectId!, installationId!),
+    enabled: !!projectId && !!installationId,
+    staleTime: DEFAULT_STALE_TIME,
+  })
+}
+
 /**
  * Hook to fetch installation details (includes `provider`).
  */
@@ -99,12 +163,7 @@ export function useInstallation(
   projectId: string | null | undefined,
   installationId: string | null | undefined,
 ) {
-  return useQuery({
-    queryKey: ['vcs', 'installation', projectId, installationId],
-    queryFn: () => fetchInstallation(projectId!, installationId!),
-    enabled: !!projectId && !!installationId,
-    staleTime: DEFAULT_STALE_TIME,
-  })
+  return useQuery(installationQueryOptions(projectId, installationId))
 }
 
 /**
@@ -415,6 +474,46 @@ export function useVcsInstallations(
 }
 
 /**
+ * Hook for the GitHub installations this project can reuse from the
+ * organization's other projects. Empty while the reuse experiment is off.
+ */
+export function useReusableVcsInstallations(
+  projectId: string | null | undefined,
+) {
+  const enabled = useSyncExternalStore(
+    subscribeToProfileChange,
+    () => isFeatureEnabled('gitInstallationReuse'),
+    () => false,
+  )
+  return useQuery({
+    queryKey: ['vcs', 'installations', projectId, 'reusable', enabled],
+    queryFn: () => fetchReusableVcsInstallations(projectId!),
+    enabled: !!projectId && enabled,
+    staleTime: DEFAULT_STALE_TIME,
+  })
+}
+
+/**
+ * Hook to connect another project's installation to this project.
+ */
+export function useReuseVcsInstallation(projectId: string | null | undefined) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (installationId: string) => {
+      return await sdk
+        .forProject(projectId!)
+        .vcs.createInstallation({ installationId })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['vcs', 'installations', projectId],
+      })
+    },
+  })
+}
+
+/**
  * Hook to delete a VCS installation
  */
 export function useDeleteVcsInstallation(projectId: string | null | undefined) {
@@ -478,7 +577,17 @@ export function useRepository(
   installationId: string | null | undefined,
   providerRepositoryId: string | null | undefined,
 ) {
-  return useQuery({
+  return useQuery(
+    repositoryQueryOptions(projectId, installationId, providerRepositoryId),
+  )
+}
+
+export function repositoryQueryOptions(
+  projectId: string | null | undefined,
+  installationId: string | null | undefined,
+  providerRepositoryId: string | null | undefined,
+) {
+  return queryOptions({
     queryKey: [
       'vcs',
       'repository',

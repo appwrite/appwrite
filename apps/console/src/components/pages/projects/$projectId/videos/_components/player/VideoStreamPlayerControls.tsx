@@ -1,3 +1,4 @@
+import * as DropdownMenuPrimitive from '@radix-ui/react-dropdown-menu'
 import {
   createContext,
   useCallback,
@@ -5,6 +6,8 @@ import {
   useEffect,
   useRef,
   useState,
+  type ComponentProps,
+  type CSSProperties,
   type KeyboardEvent,
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
@@ -13,63 +16,49 @@ import {
 import {
   Activity,
   ALargeSmall,
+  AudioLines,
   Captions,
+  Check,
+  ChevronLeft,
+  ChevronRight,
   Film,
   Gauge,
-  Loader2,
+  Keyboard,
   Maximize,
   Minimize,
-  MoreHorizontal,
   Pause,
+  PictureInPicture2,
   Play,
   RefreshCw,
-  SkipBack,
-  SkipForward,
+  RotateCcw,
+  Settings,
+  SlidersHorizontal,
   SquareArrowOutUpRight,
   Volume1,
   Volume2,
   VolumeX,
+  type LucideIcon,
 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import {
-  MenuItemContent,
-  MenuItemIcon,
-} from '@/components/global/shared/ContextMenuIcon'
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import type { VideoTimelineCue } from '@/lib/react-query/hooks/videos'
 import { findTimelineCueAtTime } from '@/lib/videos/timeline-cues'
+import type { PlaybackOutput } from '@/lib/videos/playback-output'
+import { usePageDirection } from '@/lib/layout/page-direction'
 import { cn } from '@/lib/utils'
 import {
   formatBitrate,
-  formatPlaybackTime,
   formatPlayerClock,
   formatQuality,
-  formatResolution,
-  getQualityTier,
 } from '@/lib/utils/video-format'
 import { useT } from '@/lib/i18n/translate'
 import type { StreamPlayerState } from './useStreamPlayer'
@@ -80,138 +69,127 @@ import {
   type VideoSubtitleSize,
 } from '@/lib/videos/player-subtitle-display'
 
+export type { PlaybackOutput }
+
+/** Feedback over the picture for an action taken from the keyboard. */
+export type PlayerFlash = 'play' | 'pause' | 'back' | 'forward'
+
 const AUTO_LEVEL = '-1'
 const SUBTITLES_OFF = '-1'
+const PLAYBACK_RATES = [0.5, 0.75, 1, 1.25, 1.5, 2] as const
+/** Arrow keys seek this far; J and L twice as far. */
+const SEEK_STEP_SECONDS = 5
+const VOLUME_STEP = 0.05
+/** `,` and `.` step this far while paused: one frame at 30 fps. */
+const FRAME_STEP_SECONDS = 1 / 30
 
-/** `2160p [4K UHD] 17.63 Mbps`; bitrate is omitted in compact triggers. */
-function QualityLabel({
-  width,
-  height,
-  bitrate,
-}: {
-  width: number
-  height: number
-  bitrate?: number
-}) {
-  if (!width || !height) return <>{formatBitrate(bitrate)}</>
-  return (
-    <span
-      className="flex min-w-0 items-center gap-1.5"
-      title={formatResolution(width, height)}
-    >
-      <span className="font-medium tabular-nums">
-        {formatQuality(width, height)}
-      </span>
-      <span className="shrink-0 rounded-sm border border-current/25 px-1 text-[10px] leading-4 opacity-80">
-        {getQualityTier(width, height)}
-      </span>
-      {bitrate ? (
-        <span className="truncate tabular-nums text-muted-foreground">
-          {formatBitrate(bitrate)}
-        </span>
-      ) : null}
-    </span>
-  )
+/**
+ * Round icon button on the picture. Sizes follow the player's width (the
+ * controls are a container), so a small embed gets small controls.
+ */
+const CONTROL_BUTTON_CLASS =
+  'relative inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full text-white/90 outline-none transition-[background-color,color,transform] duration-150 ease-out hover:bg-white/12 hover:text-white active:scale-[0.94] focus-visible:ring-2 focus-visible:ring-white/70 disabled:pointer-events-none disabled:opacity-40 @md:size-9 @3xl:size-10 @7xl:size-11 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:drop-shadow-[0_1px_2px_rgb(0_0_0/0.35)] @md:[&_svg]:size-[18px] @3xl:[&_svg]:size-5 @7xl:[&_svg]:size-[22px]'
+
+const TOOLTIP_CLASS =
+  'flex items-center gap-1.5 rounded-md border border-white/10 bg-neutral-950/85 px-2 py-1 text-[12px] font-medium text-white shadow-lg backdrop-blur-md'
+
+const KBD_CLASS =
+  'rounded-[4px] border border-white/15 bg-white/10 px-1 font-sans text-[10px] font-medium leading-[14px] text-white/70'
+
+/** Glass panel for the settings menu. */
+const PANEL_CLASS =
+  'z-[150] w-[15.5rem] max-w-[calc(100vw-1rem)] rounded-xl border-white/10 bg-neutral-950/80 p-1 text-white shadow-[0_24px_60px_-12px_rgb(0_0_0/0.65)] backdrop-blur-2xl backdrop-saturate-150 supports-[backdrop-filter]:bg-neutral-950/65'
+
+const MENU_ROW_CLASS =
+  'flex min-h-9 w-full cursor-pointer select-none items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-[13px] text-white/90 outline-none transition-colors duration-100 data-[highlighted]:bg-white/10 data-[highlighted]:text-white data-[disabled]:cursor-default data-[disabled]:opacity-40'
+
+/**
+ * The scrim fades from the bottom edge up past the controls, eased so it has
+ * no visible top edge on a bright picture.
+ */
+const SCRIM_CLASS =
+  'pointer-events-none absolute inset-x-0 -top-14 bottom-0 bg-[linear-gradient(to_top,rgb(0_0_0/0.74)_0%,rgb(0_0_0/0.5)_30%,rgb(0_0_0/0.2)_62%,transparent_100%)] @3xl:-top-24'
+
+const SEEK_THUMB_PX = 14
+const PREVIEW_WIDTH_PX = 176
+/** Half the width of the time-only preview, enough for `h:mm:ss`. */
+const PREVIEW_PILL_HALF_PX = 30
+const PREVIEW_EDGE_PX = 4
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value))
 }
 
-/** True when the controls overlay the video (full screen). */
-const OverlayContext = createContext(false)
-
-/** Ghost icon control on the video overlay. */
-const OVERLAY_ICON_CLASS =
-  "h-14 w-14 shrink-0 border-0 bg-transparent text-white/90 shadow-none hover:bg-white/15 hover:text-white [&_svg:not([class*='text-'])]:text-white/90"
-
-const OVERLAY_GLYPH_CLASS = 'h-6 w-6'
-const OVERLAY_PLAY_GLYPH_CLASS = 'h-7 w-7'
-
-/** Bottom scrim; opaque at the edge, fades out toward the video. Safe-area padding sits on this layer so the shade reaches the player bottom. */
-const OVERLAY_SCRIM_CLASS =
-  'relative w-full shrink-0 bg-gradient-to-t from-black via-black/55 to-transparent pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-12 sm:pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:pt-16'
-
-/** Glass chip for selects and menus on the video overlay. */
-const OVERLAY_CHIP_CLASS =
-  "border-white/15 bg-black/30 text-white/90 shadow-sm backdrop-blur-md hover:bg-black/50 hover:text-white dark:border-white/15 dark:bg-black/30 dark:text-white/90 dark:hover:bg-black/50 dark:hover:text-white [&_svg:not([class*='text-'])]:text-white/70"
-
-/** Glass surface for popovers opened from the overlay controls. */
-const OVERLAY_SURFACE_CLASS =
-  'border-white/15 bg-black/50 text-white shadow-2xl backdrop-blur-xl supports-[backdrop-filter]:bg-black/40'
-
-/** Glass surface plus item states for menus and selects. */
-const OVERLAY_MENU_CLASS = cn(
-  OVERLAY_SURFACE_CLASS,
-  '[&_[data-highlighted]]:bg-white/10 [&_[data-highlighted]]:text-white [&_[role=menuitem][data-state=open]]:bg-white/10 [&_[role=menuitem][data-state=open]]:text-white [&_[role=separator]]:bg-white/15 [&_.text-muted-foreground]:text-white/60',
-)
-
-/** Glass tooltip; the solid arrow is dropped since it cannot blur. */
-const OVERLAY_TOOLTIP_CLASS = cn(OVERLAY_SURFACE_CLASS, 'border')
-const OVERLAY_TOOLTIP_OFFSET = 8
-
-/** Submenus mount inside menu content; default overflow clips them. */
-const PLAYER_MORE_MENU_CONTENT_CLASS = 'max-h-none overflow-visible'
-
-/** Open toward the video when the ⋯ menu is anchored on the bottom-right. */
-const playerMoreSubMenuContentClass = (overlay: boolean) =>
-  cn('relative z-[160]', overlay && OVERLAY_MENU_CLASS)
-
-function ControlsSeparator() {
-  const overlay = useContext(OverlayContext)
-  if (overlay) return null
-  return (
-    <div
-      className="mx-1 hidden size-1 shrink-0 rounded-full bg-muted-foreground/40 sm:block"
-      aria-hidden
-    />
-  )
-}
-const SCRUB_PREVIEW_WIDTH_PX = 160
-/** Keeps the arrow clear of the popover's rounded corners. */
-const SCRUB_ARROW_INSET_PX = 10
 function seekFractionFromClientX(clientX: number, trackRect: DOMRect): number {
   if (trackRect.width <= 0) return 0
-  return Math.min(1, Math.max(0, (clientX - trackRect.left) / trackRect.width))
+  return clamp((clientX - trackRect.left) / trackRect.width, 0, 1)
 }
-
-/** Playhead center along the track (fraction 0–1). */
-function seekThumbCenterX(fraction: number, trackWidth: number): number {
-  return fraction * trackWidth
-}
-
-const SEEK_THUMB_PX = 20
 
 /** Keep the scrub thumb inside the track (no half-dot hanging past the edges). */
-function clampSeekThumbCenterX(
-  fraction: number,
-  trackWidth: number,
-  thumbPx: number = SEEK_THUMB_PX,
-): number {
+function clampSeekThumbCenterX(fraction: number, trackWidth: number): number {
   if (trackWidth <= 0) return 0
-  const half = thumbPx / 2
-  const raw = seekThumbCenterX(fraction, trackWidth)
-  return Math.min(trackWidth - half, Math.max(half, raw))
+  const half = SEEK_THUMB_PX / 2
+  return clamp(fraction * trackWidth, half, trackWidth - half)
 }
 
-function clampScrubPopoverLeft(
-  markerX: number,
-  trackWidth: number,
-  popoverWidth: number,
-): number {
-  const half = popoverWidth / 2
-  const edgePad = 4
-  return Math.min(
-    trackWidth - half - edgePad,
-    Math.max(half + edgePad, markerX),
+/** End of the buffered range that holds the playhead. */
+function bufferedEnd(video: HTMLVideoElement): number {
+  const { buffered, currentTime } = video
+  for (let index = 0; index < buffered.length; index++) {
+    if (
+      buffered.start(index) <= currentTime + 0.5 &&
+      buffered.end(index) >= currentTime
+    ) {
+      return buffered.end(index)
+    }
+  }
+  return 0
+}
+
+/** `HD` and `4K` next to a quality, as players label them. */
+function qualityBadge(width: number, height: number): string | null {
+  const edge = Math.min(width, height)
+  if (edge >= 2160) return '4K'
+  if (edge >= 720) return 'HD'
+  return null
+}
+
+function formatRate(rate: number) {
+  return `${rate}×`
+}
+
+/**
+ * A shortcut is left to the focused element when it would type, move a
+ * slider or press a button, and to any open menu.
+ */
+function shortcutAllowedFrom(target: EventTarget | null, key: string) {
+  if (!(target instanceof Element)) return true
+  if (
+    target.closest(
+      'input, textarea, select, [contenteditable=""], [contenteditable="true"], [role="menu"], [role="listbox"], [role="combobox"]',
+    )
+  ) {
+    return false
+  }
+  if (
+    (key === ' ' || key === 'Enter') &&
+    target.closest(
+      'button, a, [role="button"], [role="tab"], [role="switch"], [role="checkbox"]',
+    )
+  ) {
+    return false
+  }
+  const navigates =
+    key.startsWith('Arrow') ||
+    key === 'Home' ||
+    key === 'End' ||
+    key === 'PageUp' ||
+    key === 'PageDown'
+  return !(
+    navigates &&
+    target.closest('[role="slider"], [role="tablist"], [role="radiogroup"]')
   )
 }
-
-type ScrubPreview = {
-  time: number
-  x: number
-  cue: VideoTimelineCue
-}
-
-import type { PlaybackOutput } from '@/lib/videos/playback-output'
-
-export type { PlaybackOutput }
 
 type OutputOption = {
   id: PlaybackOutput
@@ -227,61 +205,72 @@ type VideoStreamPlayerControlsProps = {
   playerState: StreamPlayerState
   onSelectLevel: (index: number) => void
   onSelectSubtitleTrack: (index: number) => void
+  onSelectAudioTrack: (id: number) => void
   subtitleSize: VideoSubtitleSize
   onSelectSubtitleSize: (size: VideoSubtitleSize) => void
   onReload: () => void
   hasNewRenditions: boolean
-  isLoading?: boolean
   scrubCues?: VideoTimelineCue[]
-  /** Browser fullscreen. The control chrome is always the on-video overlay. */
+  /** Browser fullscreen. */
   fullscreen: boolean
   onToggleFullscreen: () => void
   onOpenInspector?: () => void
   /** Fullscreen element; overlays must portal into it to stay visible. */
   portalContainer?: HTMLElement
-  /** Embed player: stream format, quality, subtitles, and inspector live under ⋯ only. */
-  menuOnlyAdvanced?: boolean
+  /**
+   * Where keyboard shortcuts listen: the whole page on the player page, or
+   * only while focus is inside the player.
+   */
+  shortcuts?: 'page' | 'player'
+  /** Audio-only sources have no picture to float. */
+  pictureInPicture?: boolean
+  /** The settings menu opened or closed; controls stay up while it is open. */
+  onMenuOpenChange?: (open: boolean) => void
+  /** A keyboard shortcut ran; `flash` is the feedback to show, if any. */
+  onShortcut?: (flash: PlayerFlash | null) => void
+  /** Played progress and volume color; white when unset. */
+  accentColor?: string
   className?: string
 }
 
 const PortalContainerContext = createContext<HTMLElement | undefined>(undefined)
 
-function IconControl({
+function ControlTooltip({
   label,
-  onClick,
+  shortcut,
+  disabled = false,
   children,
 }: {
   label: string
-  onClick: () => void
+  shortcut?: string
+  disabled?: boolean
   children: ReactNode
 }) {
   const portalContainer = useContext(PortalContainerContext)
-  const overlay = useContext(OverlayContext)
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Button
-          type="button"
-          variant={overlay ? 'ghost' : 'outline'}
-          size="icon"
-          className={cn(
-            overlay ? OVERLAY_ICON_CLASS : 'h-12 w-12 shrink-0',
-          )}
-          onClick={onClick}
-          aria-label={label}
-        >
-          {children}
-        </Button>
-      </TooltipTrigger>
+    <Tooltip open={disabled ? false : undefined}>
+      <TooltipTrigger asChild>{children}</TooltipTrigger>
       <TooltipContent
-        className={cn('text-[12px]', overlay && OVERLAY_TOOLTIP_CLASS)}
-        arrow={!overlay}
-        sideOffset={overlay ? OVERLAY_TOOLTIP_OFFSET : undefined}
+        side="top"
+        sideOffset={10}
+        arrow={false}
         container={portalContainer}
+        className={TOOLTIP_CLASS}
       >
         {label}
+        {shortcut ? <kbd className={KBD_CLASS}>{shortcut}</kbd> : null}
       </TooltipContent>
     </Tooltip>
+  )
+}
+
+function ControlButton({ className, ...props }: ComponentProps<'button'>) {
+  return (
+    <button
+      type="button"
+      className={cn(CONTROL_BUTTON_CLASS, className)}
+      {...props}
+    />
   )
 }
 
@@ -293,7 +282,6 @@ function VolumeControl({
   loadStartedAt: number | null | undefined
 }) {
   const t = useT()
-  const overlay = useContext(OverlayContext)
   const [muted, setMuted] = useState(false)
   const [volume, setVolume] = useState(1)
 
@@ -311,104 +299,890 @@ function VolumeControl({
 
   const silent = muted || volume === 0
   const Icon = silent ? VolumeX : volume < 0.5 ? Volume1 : Volume2
+  const label = silent ? t('Unmute') : t('Mute')
 
   return (
-    <div className="flex shrink-0 items-center gap-2">
-      <IconControl
-        label={silent ? t('Unmute') : t('Mute')}
-        onClick={() => {
-          const video = videoRef.current
-          if (!video) return
-          if (silent) {
-            video.muted = false
-            if (video.volume === 0) video.volume = 1
-          } else {
-            video.muted = true
-          }
-        }}
-      >
-        <Icon className={OVERLAY_GLYPH_CLASS} />
-      </IconControl>
-      <Slider
-        className={cn(
-          'hidden w-32 shrink-0 @sm:flex',
-          overlay &&
-            '[&_[data-slot=slider-range]]:bg-white [&_[data-slot=slider-thumb]]:size-[18px] [&_[data-slot=slider-thumb]]:border-white/40 [&_[data-slot=slider-track]]:h-2 [&_[data-slot=slider-track]]:bg-white/25',
-        )}
-        min={0}
-        max={1}
-        step={0.05}
-        value={[silent ? 0 : volume]}
-        aria-label={t('Volume')}
-        onValueChange={([next]) => {
-          const video = videoRef.current
-          if (!video || next == null) return
-          video.volume = next
-          video.muted = next === 0
-        }}
-      />
+    <div className="group/volume flex shrink-0 items-center">
+      <ControlTooltip label={label} shortcut="M">
+        <ControlButton
+          aria-label={label}
+          onClick={() => {
+            const video = videoRef.current
+            if (!video) return
+            if (silent) {
+              video.muted = false
+              if (video.volume === 0) video.volume = 1
+            } else {
+              video.muted = true
+            }
+          }}
+        >
+          <Icon />
+        </ControlButton>
+      </ControlTooltip>
+      {/* Opens beside the button on hover or focus, the way players keep the bar quiet. */}
+      <div className="hidden w-0 overflow-hidden opacity-0 transition-[width,opacity] duration-200 ease-out group-focus-within/volume:w-[5.5rem] group-focus-within/volume:opacity-100 group-hover/volume:w-[5.5rem] group-hover/volume:opacity-100 @md:block">
+        <div className="w-[5.5rem] px-2.5">
+          <Slider
+            className="h-6 [&_[data-slot=slider-range]]:bg-[var(--player-accent,#ffffff)] [&_[data-slot=slider-thumb]]:size-3 [&_[data-slot=slider-thumb]]:border-0 [&_[data-slot=slider-thumb]]:bg-white [&_[data-slot=slider-thumb]]:shadow-[0_1px_3px_rgb(0_0_0/0.45)] [&_[data-slot=slider-thumb]]:hover:ring-0 [&_[data-slot=slider-thumb]:focus-visible]:ring-2 [&_[data-slot=slider-thumb]:focus-visible]:ring-white/50 [&_[data-slot=slider-track]]:h-[3px] [&_[data-slot=slider-track]]:bg-white/25"
+            min={0}
+            max={1}
+            step={0.05}
+            value={[silent ? 0 : volume]}
+            aria-label={t('Volume')}
+            onValueChange={([next]) => {
+              const video = videoRef.current
+              if (!video || next == null) return
+              video.volume = next
+              video.muted = next === 0
+            }}
+          />
+        </div>
+      </div>
     </div>
   )
 }
 
-function PlaybackFormatSelect({
-  value,
-  options,
-  onChange,
-  open,
-  onOpenChange,
+/**
+ * Thin progress line that thickens under the pointer, with the buffered
+ * range behind the playhead and the time (or a timeline frame) at the pointer.
+ */
+function SeekBar({
+  duration,
+  time,
+  buffered,
+  cues,
+  onScrub,
+  onCommit,
 }: {
-  value: PlaybackOutput
-  options: OutputOption[]
-  onChange: (output: PlaybackOutput) => void
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  duration: number
+  time: number
+  buffered: number
+  cues?: VideoTimelineCue[]
+  /** While dragging, the time under the pointer; null once released. */
+  onScrub: (time: number | null) => void
+  onCommit: (time: number) => void
 }) {
   const t = useT()
-  const portalContainer = useContext(PortalContainerContext)
-  const overlay = useContext(OverlayContext)
+  const trackRef = useRef<HTMLDivElement | null>(null)
+  const draggingRef = useRef(false)
+  const lastScrubRef = useRef(0)
+  const [dragging, setDragging] = useState(false)
+  const [width, setWidth] = useState(0)
+  const [hoverTime, setHoverTime] = useState<number | null>(null)
+  const ready = duration > 0
+
+  useEffect(() => {
+    const el = trackRef.current
+    if (!el) return
+    // Layout width, not the on-screen box: a dialog opening with a zoom
+    // measures smaller mid-animation, and a transform never fires a resize,
+    // so the playhead would stop short of the end for good.
+    const update = () => setWidth(el.offsetWidth)
+    update()
+    const observer = new ResizeObserver(update)
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
+  const fractionOf = (value: number) =>
+    ready ? clamp(value / duration, 0, 1) : 0
+  const timeAt = (clientX: number) => {
+    const el = trackRef.current
+    if (!el || !ready) return 0
+    return (
+      seekFractionFromClientX(clientX, el.getBoundingClientRect()) * duration
+    )
+  }
+
+  const scrubTo = (next: number) => {
+    lastScrubRef.current = next
+    setHoverTime(next)
+    onScrub(next)
+  }
+
+  const release = (commit: number | null) => {
+    draggingRef.current = false
+    setDragging(false)
+    onScrub(null)
+    if (commit != null) onCommit(commit)
+  }
+
+  const onKeyDown = (event: KeyboardEvent) => {
+    if (!ready) return
+    let next: number
+    switch (event.key) {
+      case 'ArrowLeft':
+      case 'ArrowDown':
+        next = time - SEEK_STEP_SECONDS
+        break
+      case 'ArrowRight':
+      case 'ArrowUp':
+        next = time + SEEK_STEP_SECONDS
+        break
+      case 'PageDown':
+        next = time - duration / 10
+        break
+      case 'PageUp':
+        next = time + duration / 10
+        break
+      case 'Home':
+        next = 0
+        break
+      case 'End':
+        next = duration
+        break
+      default:
+        return
+    }
+    event.preventDefault()
+    onCommit(clamp(next, 0, duration))
+  }
+
+  const played = fractionOf(time)
+  const playheadX = width > 0 ? clampSeekThumbCenterX(played, width) : 0
+  const previewCue =
+    hoverTime != null && cues?.length
+      ? findTimelineCueAtTime(cues, hoverTime)
+      : undefined
+  const previewHalf = previewCue ? PREVIEW_WIDTH_PX / 2 : PREVIEW_PILL_HALF_PX
+  const previewX = hoverTime != null ? fractionOf(hoverTime) * width : 0
+  const previewLeft =
+    width > previewHalf * 2
+      ? clamp(
+          previewX,
+          previewHalf + PREVIEW_EDGE_PX,
+          width - previewHalf - PREVIEW_EDGE_PX,
+        )
+      : width / 2
 
   return (
-    <Select
-      value={value}
-      onValueChange={(next) => onChange(next as PlaybackOutput)}
-      open={open}
-      onOpenChange={onOpenChange}
+    <div
+      ref={trackRef}
+      dir="ltr"
+      role="slider"
+      tabIndex={ready ? 0 : -1}
+      aria-label={t('Seek')}
+      aria-valuemin={0}
+      aria-valuemax={ready ? duration : 0}
+      aria-valuenow={time}
+      aria-valuetext={`${formatPlayerClock(time)} / ${formatPlayerClock(duration)}`}
+      aria-disabled={!ready}
+      data-dragging={dragging || undefined}
+      className={cn(
+        'group/seek relative flex h-5 w-full touch-none select-none items-center outline-none @3xl:h-6',
+        ready ? 'cursor-pointer' : 'cursor-default opacity-50',
+      )}
+      onKeyDown={onKeyDown}
+      onPointerDown={(event) => {
+        if (!ready || event.button !== 0) return
+        draggingRef.current = true
+        setDragging(true)
+        event.currentTarget.setPointerCapture(event.pointerId)
+        scrubTo(timeAt(event.clientX))
+      }}
+      onPointerMove={(event) => {
+        if (!ready) return
+        if (draggingRef.current) {
+          scrubTo(timeAt(event.clientX))
+        } else if (event.pointerType === 'mouse') {
+          setHoverTime(timeAt(event.clientX))
+        }
+      }}
+      onPointerUp={(event) => {
+        if (!draggingRef.current) return
+        event.currentTarget.releasePointerCapture(event.pointerId)
+        release(timeAt(event.clientX))
+        if (event.pointerType !== 'mouse') setHoverTime(null)
+      }}
+      onPointerCancel={() => {
+        if (!draggingRef.current) return
+        release(lastScrubRef.current)
+        setHoverTime(null)
+      }}
+      onPointerLeave={() => {
+        if (!draggingRef.current) setHoverTime(null)
+      }}
     >
-      <SelectTrigger
-        size="sm"
-        className={cn(
-          'h-8 w-[9.5rem] shrink-0 text-[12px]',
-          overlay && OVERLAY_CHIP_CLASS,
-        )}
-        aria-label={t('Stream format')}
+      <div className="relative h-[3px] w-full overflow-hidden rounded-full bg-white/20 transition-[height] duration-150 ease-out group-hover/seek:h-[5px] group-focus-visible/seek:h-[5px] group-data-[dragging]/seek:h-[5px]">
+        <div
+          aria-hidden
+          className="absolute inset-y-0 left-0 bg-white/30 transition-[width] duration-300 ease-out"
+          style={{ width: `${fractionOf(buffered) * 100}%` }}
+        />
+        {hoverTime != null && !dragging ? (
+          <div
+            aria-hidden
+            className="absolute inset-y-0 left-0 bg-white/25"
+            style={{ width: previewX }}
+          />
+        ) : null}
+        <div
+          aria-hidden
+          className="absolute inset-y-0 left-0 bg-[var(--player-accent,#ffffff)]"
+          style={{ width: `${played * 100}%` }}
+        />
+      </div>
+
+      {ready ? (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute top-1/2 size-3.5 -translate-x-1/2 -translate-y-1/2 scale-0 rounded-full bg-[var(--player-accent,#ffffff)] shadow-[0_1px_4px_rgb(0_0_0/0.5)] transition-transform duration-150 ease-out group-hover/seek:scale-100 group-focus-visible/seek:scale-100 group-focus-visible/seek:ring-4 group-focus-visible/seek:ring-white/25 group-data-[dragging]/seek:scale-110"
+          style={{ left: playheadX }}
+        />
+      ) : null}
+
+      {hoverTime != null && ready ? (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute bottom-full z-30 mb-2 flex -translate-x-1/2 flex-col items-center gap-1.5"
+          style={{ left: previewLeft }}
+        >
+          {previewCue ? (
+            <div
+              className="overflow-hidden rounded-lg bg-black shadow-[0_16px_40px_-12px_rgb(0_0_0/0.7)] ring-1 ring-white/20"
+              style={{ width: PREVIEW_WIDTH_PX }}
+            >
+              <TimelineSpriteThumb cue={previewCue} width={PREVIEW_WIDTH_PX} />
+            </div>
+          ) : null}
+          <span className="rounded-md bg-neutral-950/85 px-1.5 py-0.5 text-[12px] font-semibold tabular-nums text-white ring-1 ring-white/10 backdrop-blur-md">
+            {formatPlayerClock(hoverTime)}
+          </span>
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
+type SettingsView =
+  | 'main'
+  | 'quality'
+  | 'speed'
+  | 'subtitles'
+  | 'size'
+  | 'audio'
+  | 'format'
+  | 'shortcuts'
+
+/** What the keyboard does, listed under Keyboard shortcuts. */
+const SHORTCUTS: Array<{ keys: string[]; label: string }> = [
+  { keys: ['Space', 'K'], label: 'Play or pause' },
+  { keys: ['←', '→'], label: 'Seek 5 seconds' },
+  { keys: ['J', 'L'], label: 'Seek 10 seconds' },
+  { keys: [',', '.'], label: 'Step one frame' },
+  { keys: ['↑', '↓'], label: 'Change volume' },
+  { keys: ['M'], label: 'Mute or unmute' },
+  { keys: ['<', '>'], label: 'Change playback speed' },
+  { keys: ['C'], label: 'Turn subtitles on or off' },
+  { keys: ['F'], label: 'Full screen' },
+  { keys: ['I'], label: 'Picture in picture' },
+  { keys: ['0-9'], label: 'Jump to 0% to 90%' },
+  { keys: ['Home', 'End'], label: 'Go to start or end' },
+  { keys: ['?'], label: 'Keyboard shortcuts' },
+]
+
+function SettingsRow({
+  view,
+  icon: Icon,
+  label,
+  value,
+  onOpen,
+}: {
+  view: SettingsView
+  icon: LucideIcon
+  label: string
+  value?: ReactNode
+  onOpen: (view: SettingsView) => void
+}) {
+  return (
+    <DropdownMenuPrimitive.Item
+      data-settings-row={view}
+      className={MENU_ROW_CLASS}
+      onSelect={(event) => {
+        event.preventDefault()
+        onOpen(view)
+      }}
+    >
+      <Icon className="size-4 shrink-0 text-white/60" aria-hidden />
+      <span className="min-w-0 flex-1 truncate">{label}</span>
+      {value != null ? (
+        // Isolated, so `2160p` or `1.5×` keep their order in a right-to-left menu.
+        <bdi className="max-w-[45%] shrink-0 truncate text-[12px] text-white/50">
+          {value}
+        </bdi>
+      ) : null}
+      <ChevronRight className="size-4 shrink-0 text-white/35" aria-hidden />
+    </DropdownMenuPrimitive.Item>
+  )
+}
+
+function SettingsOption({
+  value,
+  label,
+  badge,
+  detail,
+  description,
+  disabled,
+}: {
+  value: string
+  label: ReactNode
+  badge?: string | null
+  detail?: string
+  description?: string
+  disabled?: boolean
+}) {
+  return (
+    <DropdownMenuPrimitive.RadioItem
+      value={value}
+      disabled={disabled}
+      className={MENU_ROW_CLASS}
+    >
+      <span className="flex size-4 shrink-0 items-center justify-center">
+        <DropdownMenuPrimitive.ItemIndicator>
+          <Check className="size-4 text-white" strokeWidth={2.25} aria-hidden />
+        </DropdownMenuPrimitive.ItemIndicator>
+      </span>
+      <span className="flex min-w-0 flex-1 flex-col">
+        <span className="flex min-w-0 items-center gap-1.5">
+          <bdi className="truncate">{label}</bdi>
+          {badge ? (
+            <span className="rounded-[3px] bg-white/15 px-1 text-[9px] font-semibold leading-[14px] tracking-wide text-white/85">
+              {badge}
+            </span>
+          ) : null}
+        </span>
+        {description ? (
+          <span className="text-[11px] leading-4 text-white/45">
+            {description}
+          </span>
+        ) : null}
+      </span>
+      {detail ? (
+        <bdi className="shrink-0 text-[12px] tabular-nums text-white/45">
+          {detail}
+        </bdi>
+      ) : null}
+    </DropdownMenuPrimitive.RadioItem>
+  )
+}
+
+function SettingsMenu({
+  open,
+  onOpenChange,
+  view,
+  onViewChange,
+  showShortcuts,
+  output,
+  outputOptions,
+  onOutputChange,
+  playerState,
+  onSelectLevel,
+  onSelectSubtitleTrack,
+  onSelectAudioTrack,
+  subtitleSize,
+  onSelectSubtitleSize,
+  playbackRate,
+  onSelectPlaybackRate,
+  onReload,
+  hasNewRenditions,
+  onOpenInspector,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  /** The list showing; the player opens straight to shortcuts on `?`. */
+  view: SettingsView
+  onViewChange: (view: SettingsView) => void
+  /** A keyboard is likely, so the shortcut list is worth a row. */
+  showShortcuts: boolean
+  output: PlaybackOutput
+  outputOptions: OutputOption[]
+  onOutputChange: (output: PlaybackOutput) => void
+  playerState: StreamPlayerState
+  onSelectLevel: (index: number) => void
+  onSelectSubtitleTrack: (index: number) => void
+  onSelectAudioTrack: (id: number) => void
+  subtitleSize: VideoSubtitleSize
+  onSelectSubtitleSize: (size: VideoSubtitleSize) => void
+  playbackRate: number
+  onSelectPlaybackRate: (rate: number) => void
+  onReload: () => void
+  hasNewRenditions: boolean
+  onOpenInspector?: () => void
+}) {
+  const t = useT()
+  const direction = usePageDirection()
+  const portalContainer = useContext(PortalContainerContext)
+  const contentRef = useRef<HTMLDivElement | null>(null)
+  // The list a step back came from, so focus lands on its row again.
+  const [cameFrom, setCameFrom] = useState<SettingsView | null>(null)
+
+  const show = (next: SettingsView) => {
+    setCameFrom(next === 'main' ? view : null)
+    onViewChange(next)
+  }
+
+  // Keyboard focus follows the view: the chosen option in a list, and the
+  // row it came from on the way back.
+  useEffect(() => {
+    if (!open) return
+    const content = contentRef.current
+    if (!content) return
+    const frame = requestAnimationFrame(() => {
+      const target =
+        view === 'main'
+          ? cameFrom
+            ? content.querySelector<HTMLElement>(
+                `[data-settings-row="${cameFrom}"]`,
+              )
+            : null
+          : (content.querySelector<HTMLElement>(
+              '[role="menuitemradio"][aria-checked="true"]',
+            ) ?? content.querySelector<HTMLElement>('[role^="menuitem"]'))
+      target?.focus()
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [open, view, cameFrom])
+
+  const levels = [...playerState.levels].sort(
+    (a, b) => b.height - a.height || b.bitrate - a.bitrate,
+  )
+  const showQuality =
+    (playerState.engine === 'shaka' || playerState.engine === 'hls.js') &&
+    levels.length > 0
+  const currentLevelValue =
+    playerState.stats && !playerState.stats.autoLevelEnabled
+      ? String(playerState.stats.currentLevel)
+      : AUTO_LEVEL
+  const currentLevel =
+    currentLevelValue === AUTO_LEVEL
+      ? undefined
+      : playerState.levels.find(
+          (level) => String(level.index) === currentLevelValue,
+        )
+  const autoLevel =
+    playerState.stats?.autoLevelEnabled && playerState.stats.currentLevel >= 0
+      ? playerState.levels[playerState.stats.currentLevel]
+      : undefined
+  const autoLevelLabel =
+    autoLevel?.width && autoLevel.height
+      ? formatQuality(autoLevel.width, autoLevel.height)
+      : null
+  const qualityValue: ReactNode = currentLevel ? (
+    formatQuality(currentLevel.width, currentLevel.height)
+  ) : autoLevelLabel ? (
+    <>
+      {t('Auto')} · <bdi>{autoLevelLabel}</bdi>
+    </>
+  ) : (
+    t('Auto')
+  )
+
+  const subtitleTracks = playerState.subtitleTracks
+  const currentSubtitle = subtitleTracks.find(
+    (track) => track.id === playerState.currentSubtitleTrack,
+  )
+  const audioTracks = playerState.audioTracks
+  const currentAudio = audioTracks.find(
+    (track) => track.id === playerState.currentAudioTrack,
+  )
+  // `HD` or `4K` on the gear for what is playing now, as players mark it.
+  const playingLevel = currentLevel ?? autoLevel
+  const playingBadge =
+    playingLevel?.width && playingLevel.height
+      ? qualityBadge(playingLevel.width, playingLevel.height)
+      : null
+  const formatLabel =
+    outputOptions.find((option) => option.id === output)?.label ?? output
+
+  const header = (title: string) => (
+    <>
+      <DropdownMenuPrimitive.Item
+        className={cn(MENU_ROW_CLASS, 'gap-2 font-semibold text-white')}
+        onSelect={(event) => {
+          event.preventDefault()
+          show('main')
+        }}
       >
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent
-        container={portalContainer}
-        className={cn(overlay && OVERLAY_MENU_CLASS)}
-      >
-        {options.map((option) => (
-          <SelectItem
-            key={option.id}
-            value={option.id}
-            disabled={Boolean(option.disabledReason)}
-            className="text-[12px]"
+        <ChevronLeft className="size-4 shrink-0 text-white/60" aria-hidden />
+        <span className="sr-only">{t('Back')}</span>
+        <span className="min-w-0 truncate">{title}</span>
+      </DropdownMenuPrimitive.Item>
+      <DropdownMenuPrimitive.Separator className="mx-1.5 my-1 h-px bg-white/10" />
+    </>
+  )
+
+  let body: ReactNode
+  switch (view) {
+    case 'quality':
+      body = (
+        <>
+          {header(t('Quality'))}
+          <DropdownMenuPrimitive.RadioGroup
+            value={currentLevelValue}
+            onValueChange={(value) => onSelectLevel(Number(value))}
           >
-            <span className="flex flex-col">
-              <span>{option.label}</span>
-              {option.disabledReason ? (
-                <span className="text-[11px] text-muted-foreground">
-                  {option.disabledReason}
+            <SettingsOption
+              value={AUTO_LEVEL}
+              label={t('Auto')}
+              detail={autoLevelLabel ?? undefined}
+            />
+            {levels.map((level) => (
+              <SettingsOption
+                key={level.index}
+                value={String(level.index)}
+                label={
+                  level.width && level.height
+                    ? formatQuality(level.width, level.height)
+                    : formatBitrate(level.bitrate)
+                }
+                badge={
+                  level.width && level.height
+                    ? qualityBadge(level.width, level.height)
+                    : null
+                }
+                detail={
+                  level.width && level.height && level.bitrate
+                    ? formatBitrate(level.bitrate)
+                    : undefined
+                }
+              />
+            ))}
+          </DropdownMenuPrimitive.RadioGroup>
+        </>
+      )
+      break
+    case 'speed':
+      body = (
+        <>
+          {header(t('Playback speed'))}
+          <DropdownMenuPrimitive.RadioGroup
+            value={String(playbackRate)}
+            onValueChange={(value) => onSelectPlaybackRate(Number(value))}
+          >
+            {PLAYBACK_RATES.map((rate) => (
+              <SettingsOption
+                key={rate}
+                value={String(rate)}
+                label={formatRate(rate)}
+              />
+            ))}
+          </DropdownMenuPrimitive.RadioGroup>
+        </>
+      )
+      break
+    case 'subtitles':
+      body = (
+        <>
+          {header(t('Subtitles'))}
+          <DropdownMenuPrimitive.RadioGroup
+            value={String(playerState.currentSubtitleTrack)}
+            onValueChange={(value) => onSelectSubtitleTrack(Number(value))}
+          >
+            <SettingsOption value={SUBTITLES_OFF} label={t('Off')} />
+            {subtitleTracks.map((track) => (
+              <SettingsOption
+                key={track.id}
+                value={String(track.id)}
+                label={track.name}
+                detail={track.lang || undefined}
+              />
+            ))}
+          </DropdownMenuPrimitive.RadioGroup>
+        </>
+      )
+      break
+    case 'size':
+      body = (
+        <>
+          {header(t('Subtitle size'))}
+          <DropdownMenuPrimitive.RadioGroup
+            value={subtitleSize}
+            onValueChange={(value) =>
+              onSelectSubtitleSize(value as VideoSubtitleSize)
+            }
+          >
+            {VIDEO_SUBTITLE_SIZES.map((size) => (
+              <SettingsOption
+                key={size}
+                value={size}
+                label={t(videoSubtitleSizeLabelKey(size))}
+              />
+            ))}
+          </DropdownMenuPrimitive.RadioGroup>
+        </>
+      )
+      break
+    case 'audio':
+      body = (
+        <>
+          {header(t('Audio'))}
+          <DropdownMenuPrimitive.RadioGroup
+            value={String(playerState.currentAudioTrack)}
+            onValueChange={(value) => onSelectAudioTrack(Number(value))}
+          >
+            {audioTracks.map((track) => (
+              <SettingsOption
+                key={track.id}
+                value={String(track.id)}
+                label={track.name}
+                detail={track.lang || undefined}
+              />
+            ))}
+          </DropdownMenuPrimitive.RadioGroup>
+        </>
+      )
+      break
+    case 'shortcuts':
+      body = (
+        <>
+          {header(t('Keyboard shortcuts'))}
+          <div className="max-h-[min(22rem,55dvh)] overflow-y-auto px-1 pb-1">
+            {SHORTCUTS.map((shortcut) => (
+              <div
+                key={shortcut.label}
+                className="flex min-h-8 items-center justify-between gap-3 px-1.5 text-[12px] text-white/75"
+              >
+                <span className="min-w-0">{t(shortcut.label)}</span>
+                <span dir="ltr" className="flex shrink-0 items-center gap-1">
+                  {shortcut.keys.map((key) => (
+                    <kbd
+                      key={key}
+                      className="min-w-5 rounded-[5px] border border-white/15 bg-white/10 px-1.5 text-center font-sans text-[11px] font-medium leading-5 text-white/85"
+                    >
+                      {key}
+                    </kbd>
+                  ))}
+                </span>
+              </div>
+            ))}
+          </div>
+        </>
+      )
+      break
+    case 'format':
+      body = (
+        <>
+          {header(t('Stream format'))}
+          <DropdownMenuPrimitive.RadioGroup
+            value={output}
+            onValueChange={(next) => onOutputChange(next as PlaybackOutput)}
+          >
+            {outputOptions.map((option) => (
+              <SettingsOption
+                key={option.id}
+                value={option.id}
+                label={option.label}
+                disabled={Boolean(option.disabledReason)}
+                description={option.disabledReason}
+              />
+            ))}
+          </DropdownMenuPrimitive.RadioGroup>
+        </>
+      )
+      break
+    default:
+      body = (
+        <>
+          {showQuality ? (
+            <SettingsRow
+              view="quality"
+              icon={SlidersHorizontal}
+              label={t('Quality')}
+              value={qualityValue}
+              onOpen={show}
+            />
+          ) : null}
+          <SettingsRow
+            view="speed"
+            icon={Gauge}
+            label={t('Playback speed')}
+            value={formatRate(playbackRate)}
+            onOpen={show}
+          />
+          {subtitleTracks.length > 0 ? (
+            <>
+              <SettingsRow
+                view="subtitles"
+                icon={Captions}
+                label={t('Subtitles')}
+                value={currentSubtitle?.name ?? t('Off')}
+                onOpen={show}
+              />
+              <SettingsRow
+                view="size"
+                icon={ALargeSmall}
+                label={t('Subtitle size')}
+                value={t(videoSubtitleSizeLabelKey(subtitleSize))}
+                onOpen={show}
+              />
+            </>
+          ) : null}
+          {audioTracks.length > 1 ? (
+            <SettingsRow
+              view="audio"
+              icon={AudioLines}
+              label={t('Audio')}
+              value={currentAudio?.name}
+              onOpen={show}
+            />
+          ) : null}
+          <DropdownMenuPrimitive.Separator className="mx-1.5 my-1 h-px bg-white/10" />
+          {showShortcuts ? (
+            <SettingsRow
+              view="shortcuts"
+              icon={Keyboard}
+              label={t('Keyboard shortcuts')}
+              onOpen={show}
+            />
+          ) : null}
+          <SettingsRow
+            view="format"
+            icon={Film}
+            label={t('Stream format')}
+            value={formatLabel}
+            onOpen={show}
+          />
+          {onOpenInspector ? (
+            <DropdownMenuPrimitive.Item
+              className={MENU_ROW_CLASS}
+              onSelect={onOpenInspector}
+            >
+              <Activity className="size-4 shrink-0 text-white/60" aria-hidden />
+              <span className="min-w-0 flex-1 truncate">{t('Inspector')}</span>
+              <SquareArrowOutUpRight
+                className="size-3.5 shrink-0 text-white/40"
+                aria-hidden
+              />
+            </DropdownMenuPrimitive.Item>
+          ) : null}
+          <DropdownMenuPrimitive.Item
+            className={MENU_ROW_CLASS}
+            onSelect={onReload}
+          >
+            <RefreshCw className="size-4 shrink-0 text-white/60" aria-hidden />
+            <span className="flex min-w-0 flex-1 flex-col">
+              <span className="truncate">{t('Reload stream')}</span>
+              {hasNewRenditions ? (
+                <span className="text-[11px] leading-4 text-white/50">
+                  {t('New renditions are ready.')}
                 </span>
               ) : null}
             </span>
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+            {hasNewRenditions ? (
+              <span
+                aria-hidden
+                className="size-1.5 shrink-0 rounded-full bg-[var(--brand-cta)]"
+              />
+            ) : null}
+          </DropdownMenuPrimitive.Item>
+        </>
+      )
+  }
+
+  const back = direction === 'rtl' ? 'ArrowRight' : 'ArrowLeft'
+
+  return (
+    <DropdownMenu
+      modal={false}
+      open={open}
+      onOpenChange={(next) => {
+        if (next) {
+          onViewChange('main')
+          setCameFrom(null)
+        }
+        onOpenChange(next)
+      }}
+    >
+      <ControlTooltip label={t('Settings')} disabled={open}>
+        <DropdownMenuTrigger asChild>
+          <ControlButton aria-label={t('Settings')}>
+            <Settings
+              className={cn(
+                'transition-transform duration-300 ease-out',
+                open && 'rotate-[30deg]',
+              )}
+            />
+            {playingBadge ? (
+              <span
+                aria-hidden
+                className="pointer-events-none absolute -end-0.5 top-0.5 rounded-[3px] bg-white px-[3px] text-[8px] font-bold leading-[11px] tracking-wide text-neutral-950 shadow-sm @3xl:top-1"
+              >
+                {playingBadge}
+              </span>
+            ) : null}
+            {hasNewRenditions ? (
+              <span
+                aria-hidden
+                className="absolute start-1.5 top-1.5 size-1.5 rounded-full bg-[var(--brand-cta)] ring-2 ring-black/30"
+              />
+            ) : null}
+          </ControlButton>
+        </DropdownMenuTrigger>
+      </ControlTooltip>
+      <DropdownMenuContent
+        ref={contentRef}
+        side="top"
+        align="end"
+        sideOffset={12}
+        collisionPadding={8}
+        container={portalContainer}
+        className={cn(PANEL_CLASS, view === 'shortcuts' && 'w-[18.5rem]')}
+        onKeyDown={(event) => {
+          if (view !== 'main' && event.key === back) {
+            event.preventDefault()
+            show('main')
+          }
+        }}
+      >
+        <div
+          key={view}
+          className={cn(
+            view !== 'main'
+              ? 'animate-in fade-in-0 slide-in-from-right-2 duration-200 rtl:slide-in-from-left-2'
+              : cameFrom
+                ? 'animate-in fade-in-0 slide-in-from-left-2 duration-200 rtl:slide-in-from-right-2'
+                : undefined,
+          )}
+        >
+          {body}
+        </div>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
+}
+
+/** Picture in picture where the browser offers it. */
+function usePictureInPicture(videoRef: RefObject<HTMLVideoElement | null>) {
+  const [supported, setSupported] = useState(false)
+  const [active, setActive] = useState(false)
+
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+    setSupported(
+      document.pictureInPictureEnabled === true &&
+        !video.disablePictureInPicture,
+    )
+    const onEnter = () => setActive(true)
+    const onLeave = () => setActive(false)
+    video.addEventListener('enterpictureinpicture', onEnter)
+    video.addEventListener('leavepictureinpicture', onLeave)
+    return () => {
+      video.removeEventListener('enterpictureinpicture', onEnter)
+      video.removeEventListener('leavepictureinpicture', onLeave)
+    }
+  }, [videoRef])
+
+  const toggle = () => {
+    if (document.pictureInPictureElement) {
+      void document.exitPictureInPicture().catch(() => {})
+      return
+    }
+    void videoRef.current?.requestPictureInPicture().catch(() => {})
+  }
+
+  return { supported, active, toggle }
 }
 
 export function VideoStreamPlayerControls({
@@ -419,92 +1193,62 @@ export function VideoStreamPlayerControls({
   playerState,
   onSelectLevel,
   onSelectSubtitleTrack,
+  onSelectAudioTrack,
   subtitleSize,
   onSelectSubtitleSize,
   onReload,
   hasNewRenditions,
-  isLoading = false,
   scrubCues,
   fullscreen,
   onToggleFullscreen,
   onOpenInspector,
   portalContainer,
-  menuOnlyAdvanced = false,
+  shortcuts = 'player',
+  pictureInPicture = true,
+  onMenuOpenChange,
+  onShortcut,
+  accentColor,
   className,
 }: VideoStreamPlayerControlsProps) {
   const t = useT()
-  // Same on-video chrome in the console and on the embed player page.
-  const overlay = true
-  const seekTrackRef = useRef<HTMLDivElement | null>(null)
-  const seekDraggingRef = useRef(false)
-  const [trackWidth, setTrackWidth] = useState(0)
+  const rootRef = useRef<HTMLDivElement | null>(null)
   const [playing, setPlaying] = useState(false)
+  const [ended, setEnded] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
-  const [seeking, setSeeking] = useState(false)
-  const [seekValue, setSeekValue] = useState(0)
-  const [scrubPreview, setScrubPreview] = useState<ScrubPreview | null>(null)
-  // Overlay controls re-enable pointer events, so Radix no longer closes one menu when another opens.
-  const [openMenu, setOpenMenu] = useState<
-    'format' | 'quality' | 'subtitles' | 'more' | null
-  >(null)
-  const menuState = (menu: NonNullable<typeof openMenu>) => ({
-    open: openMenu === menu,
-    onOpenChange: (open: boolean) =>
-      setOpenMenu((current) =>
-        open ? menu : current === menu ? null : current,
-      ),
-  })
-
-  const hasScrubCues = (scrubCues?.length ?? 0) > 0
+  const [buffered, setBuffered] = useState(0)
+  const [scrubTime, setScrubTime] = useState<number | null>(null)
+  const [playbackRate, setPlaybackRate] = useState(1)
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [settingsView, setSettingsView] = useState<SettingsView>('main')
+  // The clock counts down when someone asks for the time left.
+  const [showRemaining, setShowRemaining] = useState(false)
+  // Pointer devices usually come with a keyboard; touch screens do not.
+  const [showShortcuts, setShowShortcuts] = useState(false)
+  const pip = usePictureInPicture(videoRef)
+  const pipAvailable = pip.supported && pictureInPicture
 
   useEffect(() => {
-    const el = seekTrackRef.current
-    if (!el) return
-    const update = () => setTrackWidth(el.getBoundingClientRect().width)
-    update()
-    const observer = new ResizeObserver(update)
-    observer.observe(el)
-    return () => observer.disconnect()
+    setShowShortcuts(
+      window.matchMedia?.('(hover: hover) and (pointer: fine)').matches ??
+        false,
+    )
   }, [])
 
-  const resolveScrubPreview = useCallback(
-    (clientX: number): ScrubPreview | null => {
-      if (!hasScrubCues || !scrubCues) return null
-      const track = seekTrackRef.current
-      if (!track || !(duration > 0)) return null
-
-      const rect = track.getBoundingClientRect()
-      if (rect.width <= 0) return null
-
-      const fraction = seekFractionFromClientX(clientX, rect)
-      const time = fraction * duration
-      const cue = findTimelineCueAtTime(scrubCues, time)
-      if (!cue) return null
-
-      const x = seekThumbCenterX(fraction, rect.width)
-      return { time, x, cue }
-    },
-    [duration, hasScrubCues, scrubCues],
-  )
-
-  const syncFromVideo = useCallback(() => {
+  const sync = useCallback(() => {
     const video = videoRef.current
     if (!video) return
     setPlaying(!video.paused && !video.ended)
-    if (!seeking) {
-      setCurrentTime(video.currentTime)
-      setSeekValue(video.currentTime)
-    }
-    if (Number.isFinite(video.duration)) {
-      setDuration(video.duration)
-    }
-  }, [videoRef, seeking])
+    setEnded(video.ended)
+    setCurrentTime(video.currentTime)
+    if (Number.isFinite(video.duration)) setDuration(video.duration)
+    setBuffered(bufferedEnd(video))
+    setPlaybackRate(video.playbackRate)
+  }, [videoRef])
 
   useEffect(() => {
     const video = videoRef.current
     if (!video) return
-
     const events = [
       'play',
       'pause',
@@ -512,151 +1256,214 @@ export function VideoStreamPlayerControls({
       'loadedmetadata',
       'durationchange',
       'ended',
+      'progress',
+      'seeked',
+      'ratechange',
+      'emptied',
     ] as const
-
-    for (const event of events) {
-      video.addEventListener(event, syncFromVideo)
-    }
-    syncFromVideo()
-
+    for (const event of events) video.addEventListener(event, sync)
+    sync()
     return () => {
-      for (const event of events) {
-        video.removeEventListener(event, syncFromVideo)
-      }
+      for (const event of events) video.removeEventListener(event, sync)
     }
-  }, [videoRef, syncFromVideo, playerState.loadStartedAt])
+  }, [videoRef, sync, playerState.loadStartedAt])
 
-  const togglePlay = () => {
-    const video = videoRef.current
-    if (!video) return
-    if (video.paused) void video.play()
-    else video.pause()
-  }
-
-  const goToStart = () => {
-    const video = videoRef.current
-    if (!video) return
-    video.currentTime = 0
-    syncFromVideo()
-  }
-
-  const goToEnd = () => {
-    const video = videoRef.current
-    if (!video || !Number.isFinite(video.duration)) return
-    video.currentTime = video.duration
-    syncFromVideo()
-  }
-
-  const seekFromClientX = useCallback(
-    (clientX: number) => {
-      const track = seekTrackRef.current
-      if (!track || !(duration > 0)) return
-      const rect = track.getBoundingClientRect()
-      const fraction = seekFractionFromClientX(clientX, rect)
-      const time = fraction * duration
-      setSeeking(true)
-      setSeekValue(time)
-      if (hasScrubCues && scrubCues) {
-        const cue = findTimelineCueAtTime(scrubCues, time)
-        if (cue) {
-          setScrubPreview({
-            time,
-            x: seekThumbCenterX(fraction, rect.width),
-            cue,
-          })
-          return
-        }
-      }
-      if (!seekDraggingRef.current) return
-      setScrubPreview(null)
+  const seekTo = useCallback(
+    (time: number) => {
+      const video = videoRef.current
+      if (!video || !Number.isFinite(video.duration)) return
+      video.currentTime = clamp(time, 0, video.duration)
+      sync()
     },
-    [duration, hasScrubCues, scrubCues],
+    [videoRef, sync],
   )
 
-  const updateScrubPreviewFromClientX = (clientX: number) => {
-    if (seekDraggingRef.current) return
-    setScrubPreview(resolveScrubPreview(clientX))
-  }
-
-  const commitSeek = () => {
+  const togglePlay = useCallback(() => {
     const video = videoRef.current
-    if (video && Number.isFinite(seekValue)) {
-      video.currentTime = seekValue
-    }
-    setSeeking(false)
-    seekDraggingRef.current = false
-    setScrubPreview(null)
-    syncFromVideo()
+    if (!video) return
+    if (video.paused || video.ended) void video.play().catch(() => {})
+    else video.pause()
+  }, [videoRef])
+
+  const selectPlaybackRate = (rate: number) => {
+    const video = videoRef.current
+    if (!video) return
+    // A reload resets the rate to the default one, so set both.
+    video.defaultPlaybackRate = rate
+    video.playbackRate = rate
   }
 
-  const showQuality =
-    (playerState.engine === 'shaka' || playerState.engine === 'hls.js') &&
-    playerState.levels.length > 0
+  const subtitleTracks = playerState.subtitleTracks
+  const captionsOn = playerState.currentSubtitleTrack >= 0
+  const lastSubtitleTrackRef = useRef<number | null>(null)
+  useEffect(() => {
+    if (captionsOn)
+      lastSubtitleTrackRef.current = playerState.currentSubtitleTrack
+  }, [captionsOn, playerState.currentSubtitleTrack])
 
-  const currentLevelValue =
-    playerState.stats && !playerState.stats.autoLevelEnabled
-      ? String(playerState.stats.currentLevel)
-      : AUTO_LEVEL
-
-  const autoActiveLevel =
-    playerState.stats?.autoLevelEnabled && playerState.stats.currentLevel >= 0
-      ? playerState.levels[playerState.stats.currentLevel]
-      : undefined
-  const autoActiveLevelLabel =
-    autoActiveLevel?.width && autoActiveLevel.height
-      ? formatQuality(autoActiveLevel.width, autoActiveLevel.height)
-      : null
-  const currentLevel =
-    currentLevelValue === AUTO_LEVEL
-      ? undefined
-      : playerState.levels[Number(currentLevelValue)]
-
-  const displayPlayheadTime = seeking ? seekValue : currentTime
-  const playedFraction =
-    duration > 0 ? Math.min(1, Math.max(0, displayPlayheadTime / duration)) : 0
-
-  const playheadX =
-    trackWidth > 0
-      ? clampSeekThumbCenterX(playedFraction, trackWidth)
-      : 0
-
-  const scrubHoverActive =
-    scrubPreview != null &&
-    !seeking &&
-    Math.abs(scrubPreview.x - playheadX) > 1.5
-
-  const scrubPopoverLeft =
-    scrubPreview && trackWidth > 0
-      ? clampScrubPopoverLeft(
-          scrubPreview.x,
-          trackWidth,
-          SCRUB_PREVIEW_WIDTH_PX,
-        )
-      : 0
-
-  const onSeekKeyDown = (event: KeyboardEvent) => {
-    if (!(duration > 0)) return
-    const step = Math.max(0.5, duration / 100)
-    let next = displayPlayheadTime
-    if (event.key === 'ArrowLeft' || event.key === 'ArrowDown') {
-      next = Math.max(0, displayPlayheadTime - step)
-    } else if (event.key === 'ArrowRight' || event.key === 'ArrowUp') {
-      next = Math.min(duration, displayPlayheadTime + step)
-    } else if (event.key === 'Home') {
-      next = 0
-    } else if (event.key === 'End') {
-      next = duration
-    } else {
+  const toggleCaptions = useCallback(() => {
+    if (subtitleTracks.length === 0) return
+    if (captionsOn) {
+      onSelectSubtitleTrack(-1)
       return
     }
-    event.preventDefault()
-    setSeeking(true)
-    setSeekValue(next)
-    const video = videoRef.current
-    if (video) video.currentTime = next
-    setSeeking(false)
-    syncFromVideo()
+    const last = lastSubtitleTrackRef.current
+    const track =
+      subtitleTracks.find((item) => item.id === last) ??
+      subtitleTracks.find((item) => item.default) ??
+      subtitleTracks[0]
+    onSelectSubtitleTrack(track.id)
+  }, [captionsOn, onSelectSubtitleTrack, subtitleTracks])
+
+  // Shortcuts read the latest state through a ref, so the listener stays put.
+  const shortcutActionsRef = useRef<{
+    togglePlay: () => void
+    seekTo: (time: number) => void
+    toggleCaptions: () => void
+    onToggleFullscreen: () => void
+    onShortcut?: (flash: PlayerFlash | null) => void
+    togglePictureInPicture?: () => void
+    openShortcuts: () => void
+  }>({
+    togglePlay,
+    seekTo,
+    toggleCaptions,
+    onToggleFullscreen,
+    onShortcut,
+    openShortcuts: () => {},
+  })
+  shortcutActionsRef.current = {
+    togglePlay,
+    seekTo,
+    toggleCaptions,
+    onToggleFullscreen,
+    onShortcut,
+    togglePictureInPicture: pipAvailable ? pip.toggle : undefined,
+    openShortcuts: () => {
+      setSettingsView('shortcuts')
+      setSettingsOpen(true)
+      onMenuOpenChange?.(true)
+    },
   }
+
+  useEffect(() => {
+    const target: Document | HTMLElement | null =
+      shortcuts === 'page'
+        ? document
+        : (rootRef.current?.closest<HTMLElement>('[data-video-player]') ?? null)
+    if (!target) return
+
+    const onKeyDown = (event: Event) => {
+      const keyEvent = event as globalThis.KeyboardEvent
+      if (
+        keyEvent.defaultPrevented ||
+        keyEvent.altKey ||
+        keyEvent.ctrlKey ||
+        keyEvent.metaKey
+      ) {
+        return
+      }
+      const video = videoRef.current
+      if (!video) return
+      const key =
+        keyEvent.key.length === 1 ? keyEvent.key.toLowerCase() : keyEvent.key
+      if (!shortcutAllowedFrom(keyEvent.target, keyEvent.key)) return
+      const actions = shortcutActionsRef.current
+      const position = video.currentTime
+      let flash: PlayerFlash | null = null
+
+      switch (key) {
+        case ' ':
+        case 'k':
+          flash = video.paused || video.ended ? 'play' : 'pause'
+          actions.togglePlay()
+          break
+        case 'ArrowLeft':
+          actions.seekTo(position - SEEK_STEP_SECONDS)
+          flash = 'back'
+          break
+        case 'ArrowRight':
+          actions.seekTo(position + SEEK_STEP_SECONDS)
+          flash = 'forward'
+          break
+        case 'j':
+          actions.seekTo(position - SEEK_STEP_SECONDS * 2)
+          flash = 'back'
+          break
+        case 'l':
+          actions.seekTo(position + SEEK_STEP_SECONDS * 2)
+          flash = 'forward'
+          break
+        case 'ArrowUp':
+          video.muted = false
+          video.volume = clamp(video.volume + VOLUME_STEP, 0, 1)
+          break
+        case 'ArrowDown':
+          video.volume = clamp(video.volume - VOLUME_STEP, 0, 1)
+          break
+        case 'm':
+          video.muted = !video.muted
+          if (!video.muted && video.volume === 0) video.volume = 1
+          break
+        case 'f':
+          actions.onToggleFullscreen()
+          break
+        case 'c':
+          actions.toggleCaptions()
+          break
+        case ',':
+        case '.':
+          // Frame steps only make sense on a still picture.
+          if (!video.paused) return
+          actions.seekTo(
+            position + (key === ',' ? -FRAME_STEP_SECONDS : FRAME_STEP_SECONDS),
+          )
+          break
+        case '<':
+        case '>': {
+          const index = PLAYBACK_RATES.findIndex(
+            (rate) => rate >= video.playbackRate,
+          )
+          const current = index < 0 ? PLAYBACK_RATES.length - 1 : index
+          const next =
+            PLAYBACK_RATES[
+              clamp(
+                current + (key === '<' ? -1 : 1),
+                0,
+                PLAYBACK_RATES.length - 1,
+              )
+            ]
+          video.defaultPlaybackRate = next
+          video.playbackRate = next
+          break
+        }
+        case 'i':
+          if (!actions.togglePictureInPicture) return
+          actions.togglePictureInPicture()
+          break
+        case '?':
+          actions.openShortcuts()
+          break
+        case 'Home':
+          actions.seekTo(0)
+          break
+        case 'End':
+          actions.seekTo(video.duration)
+          break
+        default:
+          if (key.length === 1 && key >= '0' && key <= '9') {
+            actions.seekTo((video.duration * Number(key)) / 10)
+            break
+          }
+          return
+      }
+      keyEvent.preventDefault()
+      actions.onShortcut?.(flash)
+    }
+
+    target.addEventListener('keydown', onKeyDown)
+    return () => target.removeEventListener('keydown', onKeyDown)
+  }, [shortcuts, videoRef])
 
   const onControlsPointerDownCapture = (event: ReactPointerEvent) => {
     const active = document.activeElement
@@ -669,666 +1476,143 @@ export function VideoStreamPlayerControls({
     }
   }
 
-  const seekSlider = (
-            <div
-              ref={seekTrackRef}
-              role="slider"
-              tabIndex={duration > 0 ? 0 : -1}
-              aria-label={t('Seek')}
-              aria-valuemin={0}
-              aria-valuemax={duration > 0 ? duration : 0}
-              aria-valuenow={displayPlayheadTime}
-              aria-disabled={!(duration > 0)}
-              className={cn(
-                'group/seek relative z-0 h-8 w-full touch-none select-none overflow-visible sm:h-9',
-                duration > 0
-                  ? 'cursor-pointer'
-                  : 'cursor-not-allowed opacity-40',
-              )}
-              onKeyDown={onSeekKeyDown}
-              onPointerDown={(event) => {
-                if (!(duration > 0)) return
-                seekDraggingRef.current = true
-                event.currentTarget.setPointerCapture(event.pointerId)
-                seekFromClientX(event.clientX)
-              }}
-              onPointerMove={(event) => {
-                if (seekDraggingRef.current) {
-                  seekFromClientX(event.clientX)
-                  return
-                }
-                if (hasScrubCues) {
-                  updateScrubPreviewFromClientX(event.clientX)
-                }
-              }}
-              onPointerUp={(event) => {
-                if (!seekDraggingRef.current) return
-                event.currentTarget.releasePointerCapture(event.pointerId)
-                commitSeek()
-              }}
-              onPointerCancel={() => {
-                if (!seekDraggingRef.current) return
-                commitSeek()
-              }}
-              onPointerLeave={() => {
-                if (!seekDraggingRef.current) setScrubPreview(null)
-              }}
-            >
-              <div
-                aria-hidden
-                className={cn(
-                  'pointer-events-none absolute inset-x-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full transition-[height] duration-150 group-hover/seek:h-2.5 group-focus-within/seek:h-2.5',
-                  overlay ? 'bg-white/30' : 'bg-border',
-                )}
-              />
-              <div
-                aria-hidden
-                className={cn(
-                  'pointer-events-none absolute left-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full transition-[height] duration-150 group-hover/seek:h-2.5 group-focus-within/seek:h-2.5',
-                  overlay ? 'bg-white' : 'bg-primary',
-                )}
-                style={{ width: `${playedFraction * 100}%` }}
-              />
-
-              {scrubHoverActive && scrubPreview ? (
-                <div
-                  aria-hidden
-                  className="pointer-events-none absolute top-1/2 z-10 h-4 w-px -translate-x-1/2 -translate-y-1/2 bg-foreground/45"
-                  style={{ left: scrubPreview.x }}
-                />
-              ) : null}
-
-              {duration > 0 ? (
-                <div
-                  aria-hidden
-                  className="pointer-events-none absolute top-1/2 z-20 -translate-x-1/2 -translate-y-1/2"
-                  style={{ left: playheadX }}
-                >
-                  <div
-                    className={cn(
-                      'size-5 rounded-full border shadow-sm transition-transform duration-150 group-hover/seek:scale-110 group-focus-within/seek:scale-110',
-                      overlay
-                        ? 'border-white/50 bg-white shadow-black/40'
-                        : 'border-primary/30 bg-primary',
-                    )}
-                  />
-                </div>
-              ) : null}
-
-              {scrubPreview ? (
-                <div
-                  className="pointer-events-none absolute bottom-full z-30 mb-2 w-0"
-                  style={{ left: scrubPopoverLeft }}
-                >
-                  <div
-                    className="absolute bottom-0 left-0 -translate-x-1/2"
-                    style={{ width: SCRUB_PREVIEW_WIDTH_PX }}
-                  >
-                    <div
-                      className={cn(
-                        'overflow-hidden rounded-md border border-border bg-popover shadow-md',
-                        overlay &&
-                          `${OVERLAY_SURFACE_CLASS} [&_p]:text-white/80`,
-                      )}
-                    >
-                      <TimelineSpriteThumb
-                        cue={scrubPreview.cue}
-                        width={SCRUB_PREVIEW_WIDTH_PX}
-                      />
-                      <p className="px-2 py-1 text-center text-[11px] tabular-nums text-muted-foreground">
-                        {formatPlaybackTime(scrubPreview.time)}
-                      </p>
-                    </div>
-                    <div
-                      className={cn(
-                        'size-2 -translate-x-1/2 -translate-y-1/2 rotate-45 border-b border-r border-border bg-popover',
-                        overlay && 'hidden',
-                      )}
-                      style={{
-                        marginLeft: Math.min(
-                          SCRUB_PREVIEW_WIDTH_PX - SCRUB_ARROW_INSET_PX,
-                          Math.max(
-                            SCRUB_ARROW_INSET_PX,
-                            SCRUB_PREVIEW_WIDTH_PX / 2 +
-                              scrubPreview.x -
-                              scrubPopoverLeft,
-                          ),
-                        ),
-                      }}
-                    />
-                  </div>
-                </div>
-              ) : null}
-            </div>
-  )
-
-  const controlsBody = (
-    <div className="space-y-2">
-      {seekSlider}
-      <div className="flex h-14 flex-nowrap items-center gap-x-1 sm:gap-x-2">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    type="button"
-                    variant={overlay ? 'ghost' : 'secondary'}
-                    size="icon"
-                    className={cn(
-                      overlay
-                        ? cn(OVERLAY_ICON_CLASS, 'hover:bg-white/20')
-                        : 'h-12 w-12 shrink-0',
-                    )}
-                    onClick={togglePlay}
-                    aria-label={playing ? t('Pause') : t('Play')}
-                  >
-                    {isLoading ? (
-                      <Loader2
-                        className={cn(
-                          'h-6 w-6 animate-spin',
-                          overlay
-                            ? 'text-white/70'
-                            : 'text-muted-foreground',
-                        )}
-                      />
-                    ) : playing ? (
-                      <Pause className={OVERLAY_PLAY_GLYPH_CLASS} />
-                    ) : (
-                      <Play className={cn(OVERLAY_PLAY_GLYPH_CLASS, 'fill-current')} />
-                    )}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent
-                  className={cn(
-                    'text-[12px]',
-                    overlay && OVERLAY_TOOLTIP_CLASS,
-                  )}
-                  arrow={!overlay}
-                  sideOffset={overlay ? OVERLAY_TOOLTIP_OFFSET : undefined}
-                  container={portalContainer}
-                >
-                  {playing ? t('Pause') : t('Play')}
-                </TooltipContent>
-              </Tooltip>
-
-              <IconControl label={t('Go to start')} onClick={goToStart}>
-                <SkipBack className={OVERLAY_GLYPH_CLASS} />
-              </IconControl>
-              <IconControl label={t('Go to end')} onClick={goToEnd}>
-                <SkipForward className={OVERLAY_GLYPH_CLASS} />
-              </IconControl>
-
-              <ControlsSeparator />
-
-              <VolumeControl
-                videoRef={videoRef}
-                loadStartedAt={playerState.loadStartedAt}
-              />
-
-              <ControlsSeparator />
-
-              <span
-                className={cn(
-                  'w-[12rem] shrink-0 px-1.5 text-[16px] font-medium tabular-nums tracking-tight',
-                  overlay
-                    ? 'text-white/95 [text-shadow:0_1px_2px_rgb(0_0_0/0.5)]'
-                    : 'text-foreground',
-                )}
-              >
-                {formatPlayerClock(displayPlayheadTime)}
-                <span
-                  className={
-                    overlay ? 'text-white/55' : 'text-muted-foreground'
-                  }
-                >
-                  {' / '}
-                </span>
-                <span
-                  className={
-                    overlay ? 'text-white/75' : 'text-muted-foreground'
-                  }
-                >
-                  {duration > 0 ? formatPlayerClock(duration) : '--:--'}
-                </span>
-              </span>
-
-              <div
-                className={cn(
-                  'items-center gap-2',
-                  menuOnlyAdvanced ? 'hidden' : 'hidden @5xl:flex',
-                )}
-              >
-                <ControlsSeparator />
-
-                <PlaybackFormatSelect
-                  value={output}
-                  options={outputOptions}
-                  onChange={onOutputChange}
-                  {...menuState('format')}
-                />
-
-                <Select
-                    value={showQuality ? currentLevelValue : AUTO_LEVEL}
-                    onValueChange={(value) => onSelectLevel(Number(value))}
-                    disabled={!showQuality}
-                    {...menuState('quality')}
-                  >
-                    <SelectTrigger
-                      size="sm"
-                      className={cn(
-                        'h-8 w-44 shrink-0 overflow-hidden text-[12px]',
-                        overlay && OVERLAY_CHIP_CLASS,
-                      )}
-                      aria-label={t('Quality')}
-                    >
-                      <SelectValue>
-                        {currentLevel ? (
-                          <QualityLabel
-                            width={currentLevel.width}
-                            height={currentLevel.height}
-                          />
-                        ) : (
-                          <>
-                            {t('Auto quality')}
-                            {autoActiveLevelLabel ? (
-                              <span className="text-muted-foreground">
-                                {' · '}
-                                {autoActiveLevelLabel}
-                              </span>
-                            ) : null}
-                          </>
-                        )}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent
-                      container={portalContainer}
-                      className={cn(overlay && OVERLAY_MENU_CLASS)}
-                    >
-                      <SelectItem value={AUTO_LEVEL} className="text-[12px]">
-                        {t('Auto quality')}
-                        {autoActiveLevelLabel ? (
-                          <span className="text-muted-foreground">
-                            {' · '}
-                            {autoActiveLevelLabel}
-                          </span>
-                        ) : null}
-                      </SelectItem>
-                      {playerState.levels.map((level) => (
-                        <SelectItem
-                          key={level.index}
-                          value={String(level.index)}
-                          className="text-[12px]"
-                        >
-                          <QualityLabel
-                            width={level.width}
-                            height={level.height}
-                            bitrate={level.bitrate}
-                          />
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                <Select
-                    value={
-                      playerState.subtitleTracks.length > 0
-                        ? String(playerState.currentSubtitleTrack)
-                        : SUBTITLES_OFF
-                    }
-                    onValueChange={(value) =>
-                      onSelectSubtitleTrack(Number(value))
-                    }
-                    disabled={playerState.subtitleTracks.length === 0}
-                    {...menuState('subtitles')}
-                  >
-                    <SelectTrigger
-                      size="sm"
-                      className={cn(
-                        'h-8 w-40 shrink-0 overflow-hidden text-[12px]',
-                        overlay && OVERLAY_CHIP_CLASS,
-                      )}
-                      aria-label={t('Subtitles')}
-                    >
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent
-                      container={portalContainer}
-                      className={cn(overlay && OVERLAY_MENU_CLASS)}
-                    >
-                      <SelectItem value={SUBTITLES_OFF} className="text-[12px]">
-                        {t('Subtitles off')}
-                      </SelectItem>
-                      {playerState.subtitleTracks.map((track) => (
-                        <SelectItem
-                          key={track.id}
-                          value={String(track.id)}
-                          className="text-[12px]"
-                        >
-                          {track.name}
-                          {track.lang ? ` (${track.lang})` : ''}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                {onOpenInspector ? (
-                  <>
-                    <ControlsSeparator />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className={cn(
-                        'h-8 shrink-0 gap-1.5 text-[12px]',
-                        overlay && OVERLAY_CHIP_CLASS,
-                      )}
-                      onClick={onOpenInspector}
-                    >
-                      <Activity className="h-3.5 w-3.5" />
-                      {t('Inspector')}
-                      <SquareArrowOutUpRight className="h-3 w-3 text-muted-foreground" />
-                    </Button>
-                  </>
-                ) : null}
-              </div>
-
-              <div className="ms-auto flex shrink-0 items-center gap-0.5 sm:gap-1">
-                <ControlsSeparator />
-                <div
-                  className={cn(
-                    menuOnlyAdvanced ? 'hidden' : 'hidden @5xl:flex',
-                  )}
-                >
-                  <IconControl label={t('Reload stream')} onClick={onReload}>
-                    <RefreshCw className={OVERLAY_GLYPH_CLASS} />
-                  </IconControl>
-                </div>
-                <DropdownMenu modal={false} {...menuState('more')}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          type="button"
-                          variant={overlay ? 'ghost' : 'outline'}
-                          size="icon"
-                          className={cn(
-                            'relative shrink-0',
-                            menuOnlyAdvanced ? 'flex' : '@5xl:hidden',
-                            overlay
-                              ? OVERLAY_ICON_CLASS
-                              : 'h-12 w-12',
-                          )}
-                          aria-label={t('More options')}
-                        >
-                          <MoreHorizontal className={OVERLAY_GLYPH_CLASS} />
-                          {hasNewRenditions ? (
-                            <span
-                              aria-hidden
-                              className="absolute end-1 top-1 size-1.5 rounded-full bg-primary"
-                            />
-                          ) : null}
-                        </Button>
-                      </DropdownMenuTrigger>
-                    </TooltipTrigger>
-                    <TooltipContent
-                      className={cn(
-                        'text-[12px]',
-                        overlay && OVERLAY_TOOLTIP_CLASS,
-                      )}
-                      arrow={!overlay}
-                      sideOffset={
-                        overlay ? OVERLAY_TOOLTIP_OFFSET : undefined
-                      }
-                      container={portalContainer}
-                    >
-                      {t('More options')}
-                    </TooltipContent>
-                  </Tooltip>
-                  <DropdownMenuContent
-                    align="end"
-                    side="top"
-                    container={portalContainer}
-                    className={cn(
-                      'relative z-[150] min-w-[13rem]',
-                      PLAYER_MORE_MENU_CONTENT_CLASS,
-                      overlay && OVERLAY_MENU_CLASS,
-                    )}
-                  >
-                    <DropdownMenuSub>
-                      <DropdownMenuSubTrigger className="text-[13px]">
-                        <MenuItemIcon icon={Film} />
-                        <span className="min-w-0 flex-1">
-                          {t('Stream format')}
-                        </span>
-                        <span className="text-[12px] text-muted-foreground">
-                          {outputOptions.find((option) => option.id === output)
-                            ?.label ?? output}
-                        </span>
-                      </DropdownMenuSubTrigger>
-                      <DropdownMenuSubContent
-                        className={playerMoreSubMenuContentClass(overlay)}
-                      >
-                        <DropdownMenuRadioGroup
-                          value={output}
-                          onValueChange={(next) =>
-                            onOutputChange(next as PlaybackOutput)
-                          }
-                        >
-                          {outputOptions.map((option) => (
-                            <DropdownMenuRadioItem
-                              key={option.id}
-                              value={option.id}
-                              disabled={Boolean(option.disabledReason)}
-                              className="text-[13px]"
-                            >
-                              <span className="flex flex-col">
-                                <span>{option.label}</span>
-                                {option.disabledReason ? (
-                                  <span className="text-[11px] text-muted-foreground">
-                                    {option.disabledReason}
-                                  </span>
-                                ) : null}
-                              </span>
-                            </DropdownMenuRadioItem>
-                          ))}
-                        </DropdownMenuRadioGroup>
-                      </DropdownMenuSubContent>
-                    </DropdownMenuSub>
-
-                    {showQuality ? (
-                      <DropdownMenuSub>
-                        <DropdownMenuSubTrigger className="text-[13px]">
-                          <MenuItemIcon icon={Gauge} />
-                          <span className="min-w-0 flex-1">{t('Quality')}</span>
-                          <span className="text-[12px] text-muted-foreground">
-                            {currentLevel ? (
-                              <QualityLabel
-                                width={currentLevel.width}
-                                height={currentLevel.height}
-                              />
-                            ) : (
-                              (autoActiveLevelLabel ?? t('Auto quality'))
-                            )}
-                          </span>
-                        </DropdownMenuSubTrigger>
-                        <DropdownMenuSubContent
-                          className={playerMoreSubMenuContentClass(overlay)}
-                        >
-                          <DropdownMenuRadioGroup
-                            value={currentLevelValue}
-                            onValueChange={(value) =>
-                              onSelectLevel(Number(value))
-                            }
-                          >
-                            <DropdownMenuRadioItem
-                              value={AUTO_LEVEL}
-                              className="text-[13px]"
-                            >
-                              {t('Auto quality')}
-                              {autoActiveLevelLabel ? (
-                                <span className="text-muted-foreground">
-                                  {' · '}
-                                  {autoActiveLevelLabel}
-                                </span>
-                              ) : null}
-                            </DropdownMenuRadioItem>
-                            {playerState.levels.map((level) => (
-                              <DropdownMenuRadioItem
-                                key={level.index}
-                                value={String(level.index)}
-                                className="text-[13px]"
-                              >
-                                <QualityLabel
-                                  width={level.width}
-                                  height={level.height}
-                                  bitrate={level.bitrate}
-                                />
-                              </DropdownMenuRadioItem>
-                            ))}
-                          </DropdownMenuRadioGroup>
-                        </DropdownMenuSubContent>
-                      </DropdownMenuSub>
-                    ) : null}
-
-                    {playerState.subtitleTracks.length > 0 ? (
-                      <DropdownMenuSub>
-                        <DropdownMenuSubTrigger className="text-[13px]">
-                          <MenuItemIcon icon={Captions} />
-                          <span className="min-w-0 flex-1">
-                            {t('Subtitles')}
-                          </span>
-                        </DropdownMenuSubTrigger>
-                        <DropdownMenuSubContent
-                          className={playerMoreSubMenuContentClass(overlay)}
-                        >
-                          <DropdownMenuRadioGroup
-                            value={String(playerState.currentSubtitleTrack)}
-                            onValueChange={(value) =>
-                              onSelectSubtitleTrack(Number(value))
-                            }
-                          >
-                            <DropdownMenuRadioItem
-                              value={SUBTITLES_OFF}
-                              className="text-[13px]"
-                            >
-                              {t('Subtitles off')}
-                            </DropdownMenuRadioItem>
-                            {playerState.subtitleTracks.map((track) => (
-                              <DropdownMenuRadioItem
-                                key={track.id}
-                                value={String(track.id)}
-                                className="text-[13px]"
-                              >
-                                {track.name}
-                                {track.lang ? ` (${track.lang})` : ''}
-                              </DropdownMenuRadioItem>
-                            ))}
-                          </DropdownMenuRadioGroup>
-                        </DropdownMenuSubContent>
-                      </DropdownMenuSub>
-                    ) : null}
-
-                    <DropdownMenuSub>
-                      <DropdownMenuSubTrigger className="text-[13px]">
-                        <MenuItemIcon icon={ALargeSmall} />
-                        <span className="min-w-0 flex-1">
-                          {t('Subtitle size')}
-                        </span>
-                        <span className="text-[12px] text-muted-foreground">
-                          {t(videoSubtitleSizeLabelKey(subtitleSize))}
-                        </span>
-                      </DropdownMenuSubTrigger>
-                      <DropdownMenuSubContent
-                        className={playerMoreSubMenuContentClass(overlay)}
-                      >
-                        <DropdownMenuRadioGroup
-                          value={subtitleSize}
-                          onValueChange={(value) =>
-                            onSelectSubtitleSize(value as VideoSubtitleSize)
-                          }
-                        >
-                          {VIDEO_SUBTITLE_SIZES.map((size) => (
-                            <DropdownMenuRadioItem
-                              key={size}
-                              value={size}
-                              className="text-[13px]"
-                            >
-                              {t(videoSubtitleSizeLabelKey(size))}
-                            </DropdownMenuRadioItem>
-                          ))}
-                        </DropdownMenuRadioGroup>
-                      </DropdownMenuSubContent>
-                    </DropdownMenuSub>
-
-                    <DropdownMenuSeparator />
-
-                    {onOpenInspector ? (
-                      <DropdownMenuItem
-                        className="text-[13px]"
-                        onSelect={onOpenInspector}
-                      >
-                        <MenuItemContent icon={Activity}>
-                          {t('Inspector')}
-                        </MenuItemContent>
-                        <SquareArrowOutUpRight className="h-3 w-3 text-muted-foreground" />
-                      </DropdownMenuItem>
-                    ) : null}
-                    <DropdownMenuItem
-                      className="text-[13px]"
-                      onSelect={onReload}
-                    >
-                      <MenuItemIcon icon={RefreshCw} />
-                      <span className="flex min-w-0 flex-1 flex-col">
-                        <span>{t('Reload stream')}</span>
-                        {hasNewRenditions ? (
-                          <span className="text-[11px] text-muted-foreground">
-                            {t('New renditions are ready.')}
-                          </span>
-                        ) : null}
-                      </span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-                <IconControl
-                  label={fullscreen ? t('Exit full screen') : t('Full screen')}
-                  onClick={onToggleFullscreen}
-                >
-                  {fullscreen ? (
-                    <Minimize className={OVERLAY_GLYPH_CLASS} />
-                  ) : (
-                    <Maximize className={OVERLAY_GLYPH_CLASS} />
-                  )}
-                </IconControl>
-              </div>
-            </div>
-    </div>
-  )
+  const displayTime = scrubTime ?? currentTime
+  const playLabel = ended ? t('Replay') : playing ? t('Pause') : t('Play')
+  const pipLabel = pip.active
+    ? t('Exit picture in picture')
+    : t('Picture in picture')
+  const fullscreenLabel = fullscreen ? t('Exit full screen') : t('Full screen')
+  const timeLabel = showRemaining
+    ? t('Show elapsed time')
+    : t('Show remaining time')
 
   return (
     <PortalContainerContext.Provider value={portalContainer}>
-      <OverlayContext.Provider value={overlay}>
-        {overlay ? (
-          <div className={OVERLAY_SCRIM_CLASS}>
-            <div
-              className={cn(
-                '@container group/controls relative mx-auto w-full max-w-7xl px-4 sm:px-6',
-                className,
-              )}
-              onPointerDownCapture={onControlsPointerDownCapture}
-            >
-              {controlsBody}
+      <div
+        ref={rootRef}
+        className={cn('@container relative w-full', className)}
+        style={{ '--player-accent': accentColor ?? '#ffffff' } as CSSProperties}
+        onPointerDownCapture={onControlsPointerDownCapture}
+      >
+        <div aria-hidden className={SCRIM_CLASS} />
+        <div className="relative px-2 pb-[max(0.25rem,env(safe-area-inset-bottom))] @md:px-3 @md:pb-[max(0.5rem,env(safe-area-inset-bottom))] @3xl:px-4 @3xl:pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+          <div className="px-1 @3xl:px-1.5">
+            <SeekBar
+              duration={duration}
+              time={displayTime}
+              buffered={buffered}
+              cues={scrubCues}
+              onScrub={setScrubTime}
+              onCommit={seekTo}
+            />
+          </div>
+
+          <div className="flex items-center gap-0.5 @3xl:gap-1">
+            <ControlTooltip label={playLabel} shortcut="K">
+              <ControlButton aria-label={playLabel} onClick={togglePlay}>
+                {ended ? (
+                  <RotateCcw />
+                ) : playing ? (
+                  <Pause className="fill-current" />
+                ) : (
+                  <Play className="translate-x-px fill-current" />
+                )}
+              </ControlButton>
+            </ControlTooltip>
+
+            <VolumeControl
+              videoRef={videoRef}
+              loadStartedAt={playerState.loadStartedAt}
+            />
+
+            <ControlTooltip label={timeLabel}>
+              <button
+                type="button"
+                aria-label={timeLabel}
+                aria-pressed={showRemaining}
+                onClick={() => setShowRemaining((current) => !current)}
+                dir="ltr"
+                className="flex shrink-0 cursor-pointer items-baseline gap-1 rounded-md px-1.5 py-1 text-[12px] font-medium tabular-nums tracking-[0.01em] text-white outline-none transition-colors [text-shadow:0_1px_2px_rgb(0_0_0/0.35)] hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-white/70 @md:text-[13px] @3xl:px-2 @3xl:text-[14px]"
+              >
+                <span>
+                  {showRemaining && duration > 0
+                    ? `-${formatPlayerClock(Math.max(0, duration - displayTime))}`
+                    : formatPlayerClock(displayTime)}
+                </span>
+                <span className="text-white/40">/</span>
+                <span className="text-white/65">
+                  {duration > 0 ? formatPlayerClock(duration) : '--:--'}
+                </span>
+              </button>
+            </ControlTooltip>
+
+            <div className="ms-auto flex shrink-0 items-center gap-0.5 @3xl:gap-1">
+              {subtitleTracks.length > 0 ? (
+                <ControlTooltip label={t('Subtitles')} shortcut="C">
+                  <ControlButton
+                    aria-label={t('Subtitles')}
+                    aria-pressed={captionsOn}
+                    onClick={toggleCaptions}
+                    className={cn(
+                      'after:absolute after:bottom-1 after:left-1/2 after:h-0.5 after:w-3.5 after:-translate-x-1/2 after:rounded-full after:bg-white after:transition-transform after:duration-200 @3xl:after:bottom-1.5',
+                      captionsOn ? 'after:scale-x-100' : 'after:scale-x-0',
+                    )}
+                  >
+                    <Captions />
+                  </ControlButton>
+                </ControlTooltip>
+              ) : null}
+
+              <SettingsMenu
+                open={settingsOpen}
+                onOpenChange={(open) => {
+                  setSettingsOpen(open)
+                  onMenuOpenChange?.(open)
+                }}
+                view={settingsView}
+                onViewChange={setSettingsView}
+                showShortcuts={showShortcuts}
+                onSelectAudioTrack={onSelectAudioTrack}
+                output={output}
+                outputOptions={outputOptions}
+                onOutputChange={onOutputChange}
+                playerState={playerState}
+                onSelectLevel={onSelectLevel}
+                onSelectSubtitleTrack={onSelectSubtitleTrack}
+                subtitleSize={subtitleSize}
+                onSelectSubtitleSize={onSelectSubtitleSize}
+                playbackRate={playbackRate}
+                onSelectPlaybackRate={selectPlaybackRate}
+                onReload={onReload}
+                hasNewRenditions={hasNewRenditions}
+                onOpenInspector={onOpenInspector}
+              />
+
+              {pipAvailable ? (
+                <ControlTooltip label={pipLabel} shortcut="I">
+                  <ControlButton
+                    aria-label={pipLabel}
+                    aria-pressed={pip.active}
+                    onClick={pip.toggle}
+                    className="hidden @md:inline-flex"
+                  >
+                    <PictureInPicture2 />
+                  </ControlButton>
+                </ControlTooltip>
+              ) : null}
+
+              <ControlTooltip label={fullscreenLabel} shortcut="F">
+                <ControlButton
+                  aria-label={fullscreenLabel}
+                  onClick={onToggleFullscreen}
+                >
+                  {fullscreen ? <Minimize /> : <Maximize />}
+                </ControlButton>
+              </ControlTooltip>
             </div>
           </div>
-        ) : (
-          <div
-            className={cn(
-              '@container group/controls relative w-full shrink-0 px-3 sm:px-4',
-              className,
-            )}
-            onPointerDownCapture={onControlsPointerDownCapture}
-          >
-            {controlsBody}
-          </div>
-        )}
-      </OverlayContext.Provider>
+        </div>
+      </div>
     </PortalContainerContext.Provider>
   )
 }

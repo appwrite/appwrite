@@ -33,6 +33,7 @@ import {
   Smartphone,
   Tablet,
   Monitor,
+  KeyRound,
 } from 'lucide-react'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
@@ -262,6 +263,7 @@ export function AccountSessions({
       discord: 'Discord',
       twitch: 'Twitch',
       spotify: 'Spotify',
+      sso: t('Single sign-on'),
     }
     return nameMap[provider.toLowerCase()] || provider
   }
@@ -405,7 +407,9 @@ export function AccountSessions({
                                 variant="info"
                                 className="text-[10px] shrink-0 gap-1.5 font-medium"
                               >
-                                {providerIcon ? (
+                                {session.provider === 'sso' ? (
+                                  <KeyRound className="h-3 w-3 opacity-70" />
+                                ) : providerIcon ? (
                                   <img
                                     src={`/icons/${providerIcon}`}
                                     alt={session.provider}

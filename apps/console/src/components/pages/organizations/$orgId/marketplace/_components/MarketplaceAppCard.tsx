@@ -25,7 +25,11 @@ export function MarketplaceAppCard({ app, onClick }: MarketplaceAppCardProps) {
       icon={logoUrl ? undefined : CategoryIcon}
       customIcon={
         logoUrl ? (
-          <MarketplaceAppLogo src={logoUrl} monochrome={app.isOfficial} />
+          <MarketplaceAppLogo
+            src={logoUrl}
+            alt={app.name}
+            monochrome={app.isOfficial}
+          />
         ) : undefined
       }
       iconColor={logoUrl ? 'bg-transparent p-0' : undefined}

@@ -7,6 +7,8 @@
  */
 
 import { useState, useEffect, useMemo, useRef } from 'react'
+import { useActiveEnvironmentId } from '@/lib/active-environment'
+import { EnvironmentGitNotice } from '@/components/global/shared/EnvironmentGitNotice'
 import { useParams, useNavigate, Link } from '@tanstack/react-router'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -343,6 +345,7 @@ export function CreateFunctionView() {
   const { vcsProviders } = useConsoleVariables()
   const vcsOAuthProviders = getVisibleVcsOAuthProviders(vcsProviders)
   const { projectId } = useParams({ strict: false })
+  const environmentId = useActiveEnvironmentId(projectId)
   const navigate = useNavigate()
   const { installations, updateFormData } = useFunctionWizard()
   const { project } = useProject(projectId)
@@ -618,7 +621,9 @@ export function CreateFunctionView() {
     >
       <div className="grid items-stretch gap-12 lg:grid-cols-5">
         <CreateWizardLeftColumn title={t('Connect Git repository')}>
-          {!hasInstallations ? (
+          {environmentId ? (
+            <EnvironmentGitNotice />
+          ) : !hasInstallations ? (
             <div className="rounded-lg border border-border bg-card/50 p-6 text-center">
               <div className="mb-3 flex justify-center">
                 <AuthFlowHeaderIcon icon={GitIcon} />

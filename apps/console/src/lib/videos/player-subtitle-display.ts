@@ -17,11 +17,8 @@ const SUBTITLE_SIZE_CSS: Record<VideoSubtitleSize, string> = {
 /** Lift native cues when controls sit below the video (not overlaid). */
 export const VIDEO_SUBTITLE_INSET_CONSOLE_PX = 12
 
-/** Gap between the interactive controls and the cue line in overlay mode. */
-export const VIDEO_SUBTITLE_INSET_OVERLAY_GAP_PX = 4
-
-/** Overlay controls include top gradient padding; cues can sit closer to the seek bar. */
-export const VIDEO_SUBTITLE_OVERLAY_GRADIENT_PAD_PX = 24
+/** Gap between the top of the overlay controls and the cue line. */
+export const VIDEO_SUBTITLE_INSET_OVERLAY_GAP_PX = 6
 
 export function parseVideoSubtitleSize(
   value: unknown,

@@ -13,6 +13,9 @@ class Alerts extends Base
         'resourceId',
         'metric',
         'resolvedAt',
+        'severity',
+        'acknowledgedAt',
+        'escalationId',
         'search',
     ];
 

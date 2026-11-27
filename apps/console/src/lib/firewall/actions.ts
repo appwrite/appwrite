@@ -23,6 +23,133 @@ export const CHALLENGE_TTL_MIN = 900
 export const CHALLENGE_TTL_MAX = 86400
 export const CHALLENGE_TTL_DEFAULT = 1800
 
+/** How a challenge rule tests visitors. */
+export const FIREWALL_CHALLENGE_TYPES = [
+  { value: 'compute', label: 'Compute' },
+  { value: 'password', label: 'Password' },
+] as const
+
+export type FirewallChallengeType =
+  (typeof FIREWALL_CHALLENGE_TYPES)[number]['value']
+
+/** Password challenge length bounds, in bytes like the API counts them. */
+export const CHALLENGE_PASSWORD_MIN_LENGTH = 8
+export const CHALLENGE_PASSWORD_MAX_LENGTH = 256
+
+/**
+ * Whether a password challenge's password can be sent. Empty passes only when
+ * it is not required: updating a rule that already has a password keeps it.
+ */
+export function isChallengePasswordValid(
+  password: string,
+  required: boolean,
+): boolean {
+  if (password === '') return !required
+  const length = new TextEncoder().encode(password).length
+  return (
+    length >= CHALLENGE_PASSWORD_MIN_LENGTH &&
+    length <= CHALLENGE_PASSWORD_MAX_LENGTH
+  )
+}
+
+/** Wrong guesses one visitor may make per window, password challenges only. */
+export const CHALLENGE_ATTEMPTS_MIN = 1
+export const CHALLENGE_ATTEMPTS_MAX = 100
+export const CHALLENGE_ATTEMPTS_DEFAULT = 10
+
+/** Window the wrong guesses are counted over, in seconds (1 minute to 24 hours). */
+export const CHALLENGE_ATTEMPTS_INTERVAL_MIN = 60
+export const CHALLENGE_ATTEMPTS_INTERVAL_MAX = 86400
+export const CHALLENGE_ATTEMPTS_INTERVAL_DEFAULT = 300
+
+export type ChallengeRuleInput = {
+  challengeType?: string
+  difficulty?: number
+  ttl?: number
+  password?: string
+  attempts?: number
+  attemptsInterval?: number
+}
+
+/**
+ * Whether a challenge form can be sent: the ranges the API checks, plus a
+ * password when one is required (creating a password rule, or switching a
+ * compute rule to password). Password rules apply to sites and functions only.
+ */
+export function isChallengeRuleInputValid(
+  input: ChallengeRuleInput & {
+    resourceType: string
+    passwordRequired: boolean
+  },
+): boolean {
+  const ttl = input.ttl ?? CHALLENGE_TTL_DEFAULT
+  if (ttl < CHALLENGE_TTL_MIN || ttl > CHALLENGE_TTL_MAX) return false
+  if (input.challengeType !== 'password') {
+    const difficulty = input.difficulty ?? CHALLENGE_DIFFICULTY_DEFAULT
+    return (
+      difficulty >= CHALLENGE_DIFFICULTY_MIN &&
+      difficulty <= CHALLENGE_DIFFICULTY_MAX
+    )
+  }
+  const attempts = input.attempts ?? CHALLENGE_ATTEMPTS_DEFAULT
+  const attemptsInterval =
+    input.attemptsInterval ?? CHALLENGE_ATTEMPTS_INTERVAL_DEFAULT
+  return (
+    input.resourceType !== 'api' &&
+    isChallengePasswordValid(input.password ?? '', input.passwordRequired) &&
+    Number.isInteger(attempts) &&
+    attempts >= CHALLENGE_ATTEMPTS_MIN &&
+    attempts <= CHALLENGE_ATTEMPTS_MAX &&
+    Number.isInteger(attemptsInterval) &&
+    attemptsInterval >= CHALLENGE_ATTEMPTS_INTERVAL_MIN &&
+    attemptsInterval <= CHALLENGE_ATTEMPTS_INTERVAL_MAX
+  )
+}
+
+/**
+ * Challenge fields for createChallengeRule / updateChallengeRule, built in one
+ * place. Password rules carry no difficulty, and an empty password is left out
+ * so an update keeps the stored one. Compute rules never carry the password
+ * fields: the API rejects them.
+ */
+export function challengeRuleFields(input: ChallengeRuleInput) {
+  if (input.challengeType === 'password') {
+    return {
+      challengeType: input.challengeType,
+      ttl: input.ttl,
+      password: input.password || undefined,
+      attempts: input.attempts ?? CHALLENGE_ATTEMPTS_DEFAULT,
+      attemptsInterval:
+        input.attemptsInterval ?? CHALLENGE_ATTEMPTS_INTERVAL_DEFAULT,
+    }
+  }
+  // challengeType is optional; omit to let the API apply its default.
+  return {
+    challengeType: input.challengeType?.trim() || undefined,
+    difficulty: input.difficulty,
+    ttl: input.ttl,
+  }
+}
+
+/**
+ * A password rule's guess limit for the rule list, like "10 guesses / 5 min".
+ */
+export function formatChallengeAttempts(
+  attempts: number,
+  attemptsInterval: number,
+  t: (text: string) => string,
+): string {
+  const window =
+    attemptsInterval % 3600 === 0
+      ? t('{count} h').replace('{count}', String(attemptsInterval / 3600))
+      : attemptsInterval % 60 === 0
+        ? t('{count} min').replace('{count}', String(attemptsInterval / 60))
+        : t('{count} sec').replace('{count}', String(attemptsInterval))
+  return t(attempts === 1 ? '1 guess / {window}' : '{count} guesses / {window}')
+    .replace('{count}', String(attempts))
+    .replace('{window}', window)
+}
+
 /** Keys a rate-limit rule can be bucketed by. */
 export const FIREWALL_RATE_LIMIT_KEYS = [
   { value: 'ip', label: 'IP address' },
@@ -226,36 +353,57 @@ export function getRuleChallenge(rule: FirewallRule): {
   challengeType: string
   difficulty: number
   ttl: number
+  attempts: number
+  attemptsInterval: number
 } | null {
+  const config = readRuleConfig(rule)
+  // Rules keep their settings under config; the challenge type is `type` there.
+  const fromRule = (key: string): unknown =>
+    isChallengeRule(rule)
+      ? (rule as unknown as Record<string, unknown>)[key]
+      : undefined
+  const challengeType = [
+    fromRule('challengeType'),
+    config?.challengeType,
+    config?.type,
+  ].find((value): value is string => typeof value === 'string' && value !== '')
+  const attempts =
+    toFiniteNumber(fromRule('attempts')) ??
+    toFiniteNumber(config?.attempts) ??
+    CHALLENGE_ATTEMPTS_DEFAULT
+  const attemptsInterval =
+    toFiniteNumber(fromRule('attemptsInterval')) ??
+    toFiniteNumber(config?.attemptsInterval) ??
+    CHALLENGE_ATTEMPTS_INTERVAL_DEFAULT
+
   if (!isChallengeRule(rule)) {
-    const config = readRuleConfig(rule)
     if (!config) return null
     const difficulty = toFiniteNumber(config.difficulty)
     const ttl = toFiniteNumber(config.ttl)
-    if (difficulty == null || ttl == null) return null
+    if (ttl == null || (difficulty == null && challengeType !== 'password')) {
+      return null
+    }
     return {
-      challengeType:
-        typeof config.challengeType === 'string' ? config.challengeType : '',
-      difficulty,
+      challengeType: challengeType ?? '',
+      difficulty: difficulty ?? CHALLENGE_DIFFICULTY_DEFAULT,
       ttl,
+      attempts,
+      attemptsInterval,
     }
   }
 
-  const config = readRuleConfig(rule)
-  const difficulty =
-    typeof rule.difficulty === 'number'
-      ? rule.difficulty
-      : (toFiniteNumber(config?.difficulty) ?? CHALLENGE_DIFFICULTY_DEFAULT)
-  const ttl =
-    typeof rule.ttl === 'number'
-      ? rule.ttl
-      : (toFiniteNumber(config?.ttl) ?? CHALLENGE_TTL_DEFAULT)
-
   return {
-    challengeType:
-      typeof rule.challengeType === 'string' ? rule.challengeType : '',
-    difficulty,
-    ttl,
+    challengeType: challengeType ?? '',
+    difficulty:
+      toFiniteNumber(fromRule('difficulty')) ??
+      toFiniteNumber(config?.difficulty) ??
+      CHALLENGE_DIFFICULTY_DEFAULT,
+    ttl:
+      toFiniteNumber(fromRule('ttl')) ??
+      toFiniteNumber(config?.ttl) ??
+      CHALLENGE_TTL_DEFAULT,
+    attempts,
+    attemptsInterval,
   }
 }
 

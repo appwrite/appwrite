@@ -19,6 +19,10 @@ class Redirect extends Origin
             return 'Invalid URI.';
         }
 
+        if ($this->insecure) {
+            return 'Invalid URI. This server only redirects to https URLs, except for localhost. Use https://' . $this->host . ' instead.';
+        }
+
         return 'Invalid URI. Register your new client ' . $host . ' as a new '
             . $platform . ' platform on your project console dashboard';
     }

@@ -88,6 +88,7 @@ export function cimdDocumentToApp(
     userId: '',
     installationScopes: [],
     installationRedirectUrl: '',
+    installs: 0,
     secrets: [],
   }
 }

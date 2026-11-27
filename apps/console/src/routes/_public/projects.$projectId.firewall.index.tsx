@@ -1,22 +1,31 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
+import { View } from '@/components/pages/projects/$projectId/firewall/View'
+import { prefetchFirewallTabData } from '@/lib/react-query/hooks'
 import {
   firewallTabPath,
-  resolveFirewallListSearch,
+  parseFirewallListSearch,
 } from '@/lib/firewall/conditions'
 
-/**
- * Firewall rules live in a Firewall tab on each function and site, and in
- * project settings for the API. Keep old links working by opening the tab
- * for the scope they name.
- */
 export const Route = createFileRoute('/_public/projects/$projectId/firewall/')({
   beforeLoad: ({ params, search }) => {
-    throw redirect({
-      to: firewallTabPath(
-        params.projectId,
-        resolveFirewallListSearch(search as Record<string, unknown>),
-      ),
-      replace: true,
+    // Old links name a function or site in the search: open its Firewall tab.
+    const selection = parseFirewallListSearch(search as Record<string, unknown>)
+    if (selection && selection.resourceType !== 'api') {
+      throw redirect({
+        to: firewallTabPath(params.projectId, selection),
+        replace: true,
+      })
+    }
+  },
+  loader: async ({ params, context }) => {
+    if (typeof window === 'undefined') return
+    await prefetchFirewallTabData(context.queryClient, params.projectId, {
+      resourceType: 'api',
     })
   },
+  component: FirewallApiPage,
 })
+
+function FirewallApiPage() {
+  return <View tab="api" />
+}
