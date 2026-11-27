@@ -9,7 +9,8 @@ import type { Client, Models } from '@appwrite.io/console'
 
 export type BudgetUpdate = {
   organizationId: string
-  budget?: number
+  /** null removes the cap; 0 is a $0 cap. */
+  budget?: number | null
   alerts?: number[]
   /** Organization roles emailed when a budget alert fires. */
   notify?: string[]

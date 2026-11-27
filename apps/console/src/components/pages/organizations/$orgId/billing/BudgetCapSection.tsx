@@ -46,16 +46,13 @@ export function BudgetCapSection({ orgId }: BudgetCapSectionProps) {
   // Initialize from organization
   useEffect(() => {
     if (organization?.billingBudget !== undefined) {
-      setBudget(
-        organization.billingBudget && organization.billingBudget > 0
-          ? organization.billingBudget.toString()
-          : '',
-      )
+      setBudget(organization.billingBudget?.toString() ?? '')
       setHasChanges(false)
     }
   }, [organization?.billingBudget])
 
-  const enabled = (organization?.billingBudget || 0) > 0
+  // Only null is unlimited: the API enforces a budget of 0 as a $0 cap.
+  const enabled = organization?.billingBudget != null
   const budgetLimitReached = isBudgetLimitReached(organization)
   const isLoading =
     (orgLoading && !organization) || (planLoading && !plan)
@@ -66,7 +63,7 @@ export function BudgetCapSection({ orgId }: BudgetCapSectionProps) {
   const handleToggle = async (checked: boolean) => {
     if (!orgId) return
 
-    const newBudget = checked ? (budget ? parseFloat(budget) : 100) : 0
+    const newBudget = checked ? (budget ? parseFloat(budget) : 100) : null
 
     try {
       await updateBudgetMutation.mutateAsync({
@@ -74,7 +71,7 @@ export function BudgetCapSection({ orgId }: BudgetCapSectionProps) {
         budget: newBudget,
         alerts: organization?.budgetAlerts || [],
       })
-      setBudget(newBudget > 0 ? newBudget.toString() : '')
+      setBudget(newBudget?.toString() ?? '')
       setHasChanges(false)
       toast.success(checked ? t('Budget cap enabled') : t('Budget cap disabled'))
     } catch (error) {
