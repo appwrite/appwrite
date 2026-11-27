@@ -156,7 +156,7 @@ export const neonAlternativeContent: AlternativeContent = {
     {
       question: 'Is Appwrite PostgreSQL real Postgres?',
       answer:
-        'Yes. It is the PostgreSQL engine (18 by default, 17 available) over the standard wire protocol. Use psql, pgAdmin, Prisma, Drizzle, or any driver, install up to 50 extensions like pgvector and PostGIS, and move data in or out with pg_dump and pg_restore.',
+        'Yes. It is the PostgreSQL engine (19 by default, 17 and 18 available) over the standard wire protocol. Use psql, pgAdmin, Prisma, Drizzle, or any driver, install up to 50 extensions like pgvector and PostGIS, and move data in or out with pg_dump and pg_restore.',
       links: [{ label: 'PostgreSQL docs', href: '/docs/products/databases/postgresql' }],
     },
     {
