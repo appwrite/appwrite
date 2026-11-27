@@ -1,6 +1,6 @@
 [package]
 name = "utopia-detector"
-description = "Detects a project's packager, runtime, framework and rendering from its file names, languages and manifests."
+description = "Detects a project's packager, runtime, framework, rendering and mobile toolchain from its file names, languages, manifests and Gradle scripts."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

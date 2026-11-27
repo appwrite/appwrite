@@ -1,5 +1,8 @@
 <?php
 
+// Registered by the utopia PHP extension (crates/extension in appwrite/appwrite). This file only
+// declares the class for static analysis and editors; it is never loaded.
+
 namespace Utopia\Detector\Detection\Mobile;
 
 use Utopia\Detector\Detection\Mobile;
@@ -8,7 +11,6 @@ class Android extends Mobile
 {
     public function getName(): string
     {
-        return 'android';
     }
 
     /**
@@ -16,7 +18,6 @@ class Android extends Mobile
      */
     public function getPlatforms(): array
     {
-        return [self::PLATFORM_ANDROID];
     }
 
     /**
@@ -24,6 +25,5 @@ class Android extends Mobile
      */
     public function getPlugins(): array
     {
-        return ['com.android.application'];
     }
 }

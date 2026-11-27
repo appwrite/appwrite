@@ -1,26 +1,28 @@
-//! `Utopia\Detector\Detector`, `Detector\Strategy` and the four detectors. `detect()` follows the
+//! `Utopia\Detector\Detector`, `Detector\Strategy` and the five detectors. `detect()` follows the
 //! PHP method step by step: the inputs as `$this->inputs` holds them, each option asked for its
-//! name, files, packages, languages or extensions (the crate's answer for a native option, the
-//! option's own method otherwise), the crate's ranking, manifest parsing and static fallback, and
-//! `setPackager()` on the option it returns.
+//! name, files, packages, languages, extensions, plugins or platforms (the crate's answer for a native option, the
+//! option's own method otherwise), the crate's ranking, manifest parsing, Gradle statements and
+//! static fallback, and `setPackager()` on the option it returns.
 
 use std::borrow::Cow;
 
 use ext_php_rs::types::{ZendObject, Zval};
 use ext_php_rs::zend::{ClassEntry, ExecuteData};
 use php_std::path::pathinfo_extension;
-use utopia_detector::{Framework, Score, Strategy};
+use utopia_detector::mobile::{self, Signals, intersects};
+use utopia_detector::{Framework, Mobile, Score, Strategy};
 
-use super::detections::{framework_of, packager_of, runtime_of, ssr_files_of};
+use super::detections::{framework_of, mobile_of, packager_of, runtime_of, ssr_files_of};
 use super::{
     Class, DETECTION, DETECTION_NAME, DETECTOR, FALLBACK_FILE, FRAMEWORK, FRAMEWORK_DETECTION,
     FRAMEWORK_DETECTION_NAME, FRAMEWORK_DETECTION_PACKAGER, FRAMEWORK_OPTIONS, FRAMEWORK_PACKAGER, Frozen,
-    GET_FILE_EXTENSIONS, GET_FILES, GET_LANGUAGES, GET_NAME, GET_PACKAGES, GET_VALUE, INPUTS, OPTIONS,
-    PACKAGER_DETECTION_NAME, PACKAGER_OPTIONS, Param, RENDERING, RENDERING_DETECTION_NAME, RENDERING_FRAMEWORK,
-    RENDERING_OPTIONS, RUNTIME, RUNTIME_DETECTION, RUNTIME_DETECTION_NAME, RUNTIME_DETECTION_PACKAGER, RUNTIME_OPTIONS,
-    RUNTIME_PACKAGER, RUNTIME_STRATEGY, SET_PACKAGER, SSR, STRATEGY, STRATEGY_NAME, STRATEGY_VALUE, Ty, XSTATIC,
-    abstract_method, add_ref, append, arity, class, guard, guard_engine, list, method, protected_method, read,
-    return_this, str_value, strings, strings_, throw, with_str, write,
+    GET_FILE_EXTENSIONS, GET_FILES, GET_LANGUAGES, GET_NAME, GET_PACKAGES, GET_PLATFORMS, GET_PLUGINS, GET_VALUE,
+    INPUTS, MOBILE, MOBILE_DETECTION_NAME, MOBILE_OPTIONS, OPTIONS, PACKAGER_DETECTION_NAME, PACKAGER_OPTIONS, Param,
+    RENDERING, RENDERING_DETECTION_NAME, RENDERING_FRAMEWORK, RENDERING_OPTIONS, RUNTIME, RUNTIME_DETECTION,
+    RUNTIME_DETECTION_NAME, RUNTIME_DETECTION_PACKAGER, RUNTIME_OPTIONS, RUNTIME_PACKAGER, RUNTIME_STRATEGY,
+    SET_PACKAGER, SSR, STRATEGY, STRATEGY_NAME, STRATEGY_VALUE, Ty, XSTATIC, abstract_method, add_ref, append, arity,
+    class, guard, guard_engine, list, method, protected_method, read, return_this, str_value, strings, strings_, throw,
+    with_str, write,
 };
 use crate::classes::engine::{
     self, Declared, Key, MAY_BE_ARRAY, MAY_BE_STRING, PropertyType, call_method, call_own_method, dimension,
@@ -57,7 +59,7 @@ pub fn detector() -> Class {
     }
 }
 
-/// `Strategy`, then the four detectors.
+/// `Strategy`, then the five detectors.
 pub fn classes() -> Vec<Class> {
     vec![
         Class {
@@ -105,6 +107,40 @@ pub fn classes() -> Vec<Class> {
                 );
                 declare_array(class, &FRAMEWORK_OPTIONS);
                 declare_string(class, &FRAMEWORK_PACKAGER, Some(b"pnpm"));
+                engine::inherited_properties_last(class, &["inputs"]);
+            },
+        },
+        Class {
+            name: "Utopia\\Detector\\Detector\\Mobile",
+            parent: Some(DETECTOR),
+            is_abstract: false,
+            methods: vec![
+                method("addInput", mobile_add_input, INPUT, Ty::This),
+                method("detect", mobile_detect, &[], Ty::NullableClass(MOBILE_DETECTION_NAME)),
+                protected_method("dependencies", mobile_dependencies, &[("manifest", Ty::Str, None)], Ty::Array),
+                protected_method("statements", mobile_statements, &[("script", Ty::Str, None)], Ty::Array),
+                protected_method(
+                    "declares",
+                    mobile_declares,
+                    &[("plugins", Ty::Array, None), ("statements", Ty::Array, None)],
+                    Ty::Bool,
+                ),
+            ],
+            declare: |class| {
+                for input in mobile::Input::ALL {
+                    let name = format!("INPUT_{}", input.as_str().to_ascii_uppercase());
+                    engine::declare_constant(class, &name, engine::interned(input.as_str().as_bytes()), 0);
+                }
+                let inputs = mobile::Input::ALL.map(|input| input.as_str());
+                engine::declare_private_constant(class, "INPUTS", engine::string_list(&inputs), 0);
+                engine::declare_private_constant(class, "QUOTES", engine::string_list(&mobile::QUOTES), 0);
+                engine::declare_private_constant(
+                    class,
+                    "LINE_COMMENTS",
+                    engine::string_list(&mobile::LINE_COMMENTS),
+                    0,
+                );
+                declare_array(class, &MOBILE_OPTIONS);
                 engine::inherited_properties_last(class, &["inputs"]);
             },
         },
@@ -175,11 +211,11 @@ fn declare_string(class: &mut ClassEntry, property: &'static engine::Property, d
 extern "C" fn construct(_: &mut ExecuteData, _: &mut Zval) {}
 
 /// `addInput(string $content, string $type = '')`: `$this->inputs[] = ['type' => $type,
-/// 'content' => $content]`, then `return $this`. A `Framework` (`check`) first refuses a type
-/// other than `file` and `packages` with an `\InvalidArgumentException`. The arguments go into
+/// 'content' => $content]`, then `return $this`. A `Framework` or a `Mobile` (`valid`) first
+/// refuses a type it does not read with an `\InvalidArgumentException`. The arguments go into
 /// the new array where they lie, with a reference added, as PHP's literal takes them.
 #[inline(always)]
-fn add_input_to(ex: &mut ExecuteData, retval: &mut Zval, check: bool) {
+fn add_input_to(ex: &mut ExecuteData, retval: &mut Zval, valid: Option<fn(&str) -> bool>) {
     if !arity(ex, 1, 2) {
         return;
     }
@@ -203,9 +239,9 @@ fn add_input_to(ex: &mut ExecuteData, retval: &mut Zval, check: bool) {
         }
         None => &strings.empty.0,
     };
-    if check {
+    if let Some(valid) = valid {
         let bytes = kind.zend_str().map_or(&[][..], |s| s.as_bytes());
-        if !std::str::from_utf8(bytes).is_ok_and(|kind| utopia_detector::Input::new(kind).is_ok()) {
+        if !std::str::from_utf8(bytes).is_ok_and(valid) {
             throw("InvalidArgumentException", &[b"Invalid input type '".as_slice(), bytes, b"'"].concat());
             return;
         }
@@ -239,7 +275,7 @@ fn add_input_to(ex: &mut ExecuteData, retval: &mut Zval, check: bool) {
 
 /// `Detector::addInput(string $content, string $type = ''): self`.
 extern "C" fn add_input(ex: &mut ExecuteData, retval: &mut Zval) {
-    guard(|| add_input_to(ex, retval, false));
+    guard(|| add_input_to(ex, retval, None));
 }
 
 /// `Detector::addOption(Detection $option): self`.
@@ -305,7 +341,7 @@ extern "C" fn framework_construct(ex: &mut ExecuteData, _: &mut Zval) {
 /// `Framework::addInput()`: a type other than `file` and `packages` is an
 /// `\InvalidArgumentException`.
 extern "C" fn framework_add_input(ex: &mut ExecuteData, retval: &mut Zval) {
-    guard(|| add_input_to(ex, retval, true));
+    guard(|| add_input_to(ex, retval, Some(|kind| utopia_detector::Input::new(kind).is_ok())));
 }
 
 /// `Rendering::__construct(string $framework)`.
@@ -454,18 +490,18 @@ fn among<T: AsRef<[u8]>>(inputs: &[T], bytes: &[u8]) -> bool {
 
 // Framework -----------------------------------------------------------------------------
 
-/// Whether `this`'s class overrides `dependencies()`, which `detect()` calls through `$this`.
-fn overrides_dependencies(this: &ZendObject) -> bool {
+/// Whether `this`'s class overrides `name()`, declared by the class at `declared_in`, which
+/// `detect()` calls through `$this`.
+fn overrides(this: &ZendObject, name: &str, declared_in: usize) -> bool {
     // SAFETY: the class and its function table live as long as the object.
     unsafe {
-        let name = "dependencies";
         let function = ext_php_rs::ffi::zend_hash_str_find_ptr_lc(
             &raw const (*this.ce).function_table,
             name.as_ptr().cast(),
             name.len(),
         )
         .cast::<ext_php_rs::ffi::zend_function>();
-        function.as_ref().is_some_and(|f| !std::ptr::eq(f.common.scope, class(FRAMEWORK)))
+        function.as_ref().is_some_and(|f| !std::ptr::eq(f.common.scope, class(declared_in)))
     }
 }
 
@@ -508,7 +544,7 @@ fn detect_framework(this: &mut ZendObject) -> Option<Zval> {
             manifest_inputs.push(*input);
         }
     }
-    let overridden = overrides_dependencies(this);
+    let overridden = overrides(this, "dependencies", FRAMEWORK);
     let mut manifests = Vec::with_capacity(manifest_inputs.len());
     for input in manifest_inputs {
         manifests.push(if overridden {
@@ -586,6 +622,161 @@ fn detect_framework(this: &mut ZendObject) -> Option<Zval> {
         }
     }
     None
+}
+
+// Mobile --------------------------------------------------------------------------------
+
+/// `Mobile::addInput()`: a type other than `file`, `packages` and `gradle` is an
+/// `\InvalidArgumentException`.
+extern "C" fn mobile_add_input(ex: &mut ExecuteData, retval: &mut Zval) {
+    guard(|| add_input_to(ex, retval, Some(|kind| mobile::Input::new(kind).is_ok())));
+}
+
+/// `Mobile::dependencies(string $manifest): array`.
+extern "C" fn mobile_dependencies(ex: &mut ExecuteData, retval: &mut Zval) {
+    guard(|| {
+        if !arity(ex, 1, 1) {
+            return;
+        }
+        let Some(arg) = engine::arg(ex, 0) else { return };
+        let Some(names) = with_str(ex, 1, arg, mobile::dependencies) else { return };
+        *retval = list(names.iter().map(Vec::as_slice));
+    });
+}
+
+/// `Mobile::statements(string $script): array`.
+extern "C" fn mobile_statements(ex: &mut ExecuteData, retval: &mut Zval) {
+    guard(|| {
+        if !arity(ex, 1, 1) {
+            return;
+        }
+        let Some(arg) = engine::arg(ex, 0) else { return };
+        if let Some(statements) = with_str(ex, 1, arg, |script| list(mobile::statements(script))) {
+            *retval = statements;
+        }
+    });
+}
+
+/// `Mobile::declares(array $plugins, array $statements): bool`: each value as `(string)` makes it.
+extern "C" fn mobile_declares(ex: &mut ExecuteData, retval: &mut Zval) {
+    guard(|| {
+        if !arity(ex, 2, 2) {
+            return;
+        }
+        let Some(plugins) = engine::arg(ex, 0).and_then(|arg| engine::array_arg(ex, 1, arg.dereference())) else {
+            return;
+        };
+        let Some(statements) = engine::arg(ex, 1).and_then(|arg| engine::array_arg(ex, 2, arg.dereference())) else {
+            return;
+        };
+        let Some(plugins) = strings(&plugins) else { return };
+        let Some(statements) = strings(&statements) else { return };
+        retval.set_bool(mobile::declares(plugins.iter().map(Vec::as_slice), &statements));
+    });
+}
+
+extern "C" fn mobile_detect(ex: &mut ExecuteData, retval: &mut Zval) {
+    guard_engine(|| {
+        let Some(this) = this(ex) else { return };
+        if let Some(found) = detect_mobile(this) {
+            *retval = found;
+        }
+    });
+}
+
+/// `$input['type']` as the input kind a `Mobile` reads, if it is one.
+fn mobile_kind(input: &Zval) -> Option<Option<mobile::Input>> {
+    let kind = match field(input, &strings_().type_key) {
+        Some(kind) => kind.shallow_clone(),
+        None => dimension(input, "type")?,
+    };
+    Some(kind.zend_str().and_then(|s| s.as_str().ok()).and_then(|kind| mobile::Input::new(kind).ok()))
+}
+
+/// `Mobile::detect()`: of the matching options, the first with the most platforms, or `None`
+/// (`null`, or an exception pending).
+fn detect_mobile(this: &mut ZendObject) -> Option<Zval> {
+    let inputs = read(this, DETECTOR, &INPUTS)?;
+    let own_dependencies = overrides(this, "dependencies", MOBILE);
+    let own_statements = overrides(this, "statements", MOBILE);
+    let own_declares = overrides(this, "declares", MOBILE);
+    let mut signals = Signals::default();
+    for input in values_of(&inputs) {
+        match mobile_kind(input)? {
+            Some(mobile::Input::File) => signals.add_file(&content(input)?),
+            Some(mobile::Input::Packages) if own_dependencies => {
+                let manifest = content_value(input)?;
+                signals.dependencies.extend(strings(&call_own_method(this, "dependencies", &[&manifest])?)?);
+            }
+            Some(mobile::Input::Gradle) if own_statements => {
+                let script = content_value(input)?;
+                signals.statements.extend(strings(&call_own_method(this, "statements", &[&script])?)?);
+            }
+            Some(kind) => signals.add(&content(input)?, kind),
+            None => {}
+        }
+    }
+
+    let statements = own_declares.then(|| list(signals.statements.iter().map(Vec::as_slice)));
+    let options = read(this, DETECTOR, &OPTIONS)?;
+    let mut detection: Option<(&Zval, Option<&'static dyn Mobile>)> = None;
+    for option in values_of(&options) {
+        let native = class_of(option).and_then(|ce| mobile_of(ce));
+        let matched = match (native, &statements) {
+            (Some(mobile), None) => signals.matches(mobile),
+            _ => mobile_matches(this, option, native, &signals, statements.as_ref())?,
+        };
+        if !matched {
+            continue;
+        }
+        let wins = match detection {
+            None => true,
+            Some((current, current_native)) => platforms(option, native)? > platforms(current, current_native)?,
+        };
+        if wins {
+            detection = Some((option, native));
+        }
+    }
+    detection.map(|(option, _)| option.shallow_clone())
+}
+
+/// `$matches` for an option asked through PHP (a PHP option, or any option when `declares()` is
+/// overridden, its `$statements` then given): its files, extensions, packages and plugins, each
+/// asked only when the ones before did not match.
+fn mobile_matches(
+    this: &mut ZendObject,
+    option: &Zval,
+    native: Option<&'static dyn Mobile>,
+    signals: &Signals,
+    statements: Option<&Zval>,
+) -> Option<bool> {
+    let asked = |method: &engine::Callee, answer: fn(&'static dyn Mobile) -> &'static [&'static str]| match native {
+        Some(mobile) => Some(answer(mobile).iter().map(|value| value.as_bytes().to_vec()).collect::<Vec<_>>()),
+        None => called_strings(option, method, &[]),
+    };
+    if intersects(&asked(&GET_FILES, |mobile| mobile.files())?, &signals.files)
+        || intersects(&asked(&GET_FILE_EXTENSIONS, |mobile| mobile.file_extensions())?, &signals.extensions)
+        || intersects(&asked(&GET_PACKAGES, |mobile| mobile.packages())?, &signals.dependencies)
+    {
+        return Some(true);
+    }
+    let Some(statements) = statements else {
+        let plugins = asked(&GET_PLUGINS, |mobile| mobile.plugins())?;
+        return Some(mobile::declares(plugins.iter().map(Vec::as_slice), &signals.statements));
+    };
+    let plugins = match native {
+        Some(mobile) => list(mobile.plugins().iter().map(|plugin| plugin.as_bytes())),
+        None => call_method(option, &GET_PLUGINS, &[])?,
+    };
+    Some(engine::truthy(&call_own_method(this, "declares", &[&plugins, statements])?))
+}
+
+/// `count($option->getPlatforms())`.
+fn platforms(option: &Zval, native: Option<&'static dyn Mobile>) -> Option<usize> {
+    match native {
+        Some(mobile) => Some(mobile.platforms().len()),
+        None => Some(call_method(option, &GET_PLATFORMS, &[])?.array().map_or(0, |platforms| platforms.len())),
+    }
 }
 
 // Packager ------------------------------------------------------------------------------

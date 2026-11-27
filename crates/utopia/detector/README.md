@@ -2,7 +2,7 @@
 
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://discord.gg/GSeTUeA)
 
-Detects a project's packager, runtime, framework and rendering from its file names, languages and manifests.
+Detects a project's packager, runtime, framework, rendering and mobile toolchain from its file names, languages, manifests and Gradle scripts.
 
 This library is maintained by the [Appwrite team](https://appwrite.io).
 
@@ -13,7 +13,7 @@ This library is maintained by the [Appwrite team](https://appwrite.io).
 utopia-detector = { git = "https://github.com/appwrite/appwrite" }
 ```
 
-Before a project can be built, something has to work out what it is: which package manager it uses, which runtime runs it, which framework builds it, and whether the build is served by a server or as files. Each of these is a detector: add the options it may choose from and the inputs you have (file names, languages, a manifest), then call `detect`. This guide covers the common tasks.
+Before a project can be built, something has to work out what it is: which package manager it uses, which runtime runs it, which framework builds it, whether the build is served by a server or as files, and which mobile toolchain builds its apps. Each of these is a detector: add the options it may choose from and the inputs you have (file names, languages, a manifest), then call `detect`. This guide covers the common tasks.
 
 ## Find the package manager
 
@@ -102,6 +102,25 @@ detector.add_option(Ssr::new()).add_option(Static::new());
 detector.add_input("index.html").add_input("_nuxt/entry.js");
 let rendering = detector.detect();
 assert_eq!((rendering.name(), rendering.fallback_file()), ("static", Some("index.html")));
+```
+
+## Find a mobile project's toolchain
+
+A `MobileDetector` reads file paths (an Xcode project or workspace, a `Podfile`), the runtime `dependencies` of a `package.json` or `pubspec.yaml`, and Gradle scripts or version catalogs that quote the `com.android.application` plugin id outside comments. A Flutter or React Native project embeds native Android and iOS projects, so of the matching options the one covering the most platforms wins; a tie keeps the option added first.
+
+```rust
+use utopia_detector::MobileDetector;
+use utopia_detector::mobile::{Android, Flutter, Input, Ios, ReactNative};
+
+let mut detector = MobileDetector::new();
+detector.add_option(Android).add_option(Ios).add_option(Flutter).add_option(ReactNative);
+detector.add_input("ios/Runner.xcodeproj", Input::File);
+detector.add_input(r#"{"dependencies": {"react-native": "0.88.1"}, "devDependencies": {"jest": "^30.0.0"}}"#, Input::Packages);
+detector.add_input("plugins {\n    id(\"com.android.application\")\n}\n", Input::Gradle);
+
+let mobile = detector.detect().expect("a mobile project");
+assert_eq!(mobile.name(), "react-native");
+assert_eq!(mobile.platforms().iter().map(|p| p.as_str()).collect::<Vec<_>>(), ["android", "ios"]);
 ```
 
 ## Contributing

@@ -1,5 +1,8 @@
 <?php
 
+// Registered by the utopia PHP extension (crates/extension in appwrite/appwrite). This file only
+// declares the class for static analysis and editors; it is never loaded.
+
 namespace Utopia\Detector\Detection;
 
 use Utopia\Detector\Detection;
@@ -22,7 +25,6 @@ abstract class Mobile extends Detection
      */
     public function getFiles(): array
     {
-        return [];
     }
 
     /**
@@ -30,7 +32,6 @@ abstract class Mobile extends Detection
      */
     public function getFileExtensions(): array
     {
-        return [];
     }
 
     /**
@@ -38,7 +39,6 @@ abstract class Mobile extends Detection
      */
     public function getPackages(): array
     {
-        return [];
     }
 
     /**
@@ -46,6 +46,5 @@ abstract class Mobile extends Detection
      */
     public function getPlugins(): array
     {
-        return [];
     }
 }

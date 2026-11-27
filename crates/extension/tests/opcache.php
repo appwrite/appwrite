@@ -774,6 +774,11 @@ if (class_exists(\Utopia\Detector\Detection\Framework\JS::class)) {
     {
     }
 }
+if (class_exists(\Utopia\Detector\Detection\Mobile::class)) {
+    abstract class ExtendsUtopiaDetectorDetectionMobile extends \Utopia\Detector\Detection\Mobile
+    {
+    }
+}
 if (class_exists(\Utopia\Detector\Detection\Packager::class)) {
     abstract class ExtendsUtopiaDetectorDetectionPackager extends \Utopia\Detector\Detection\Packager
     {
@@ -796,6 +801,11 @@ if (class_exists(\Utopia\Detector\Detector\Strategy::class)) {
 }
 if (class_exists(\Utopia\Detector\Detector\Framework::class)) {
     class ExtendsUtopiaDetectorDetectorFramework extends \Utopia\Detector\Detector\Framework
+    {
+    }
+}
+if (class_exists(\Utopia\Detector\Detector\Mobile::class)) {
+    class ExtendsUtopiaDetectorDetectorMobile extends \Utopia\Detector\Detector\Mobile
     {
     }
 }
@@ -970,6 +980,26 @@ if (class_exists(\Utopia\Detector\Detection\Runtime\Swift::class)) {
     }
 }
 
+if (class_exists(\Utopia\Detector\Detection\Mobile\Android::class)) {
+    class ExtendsUtopiaDetectorDetectionMobileAndroid extends \Utopia\Detector\Detection\Mobile\Android
+    {
+    }
+}
+if (class_exists(\Utopia\Detector\Detection\Mobile\Flutter::class)) {
+    class ExtendsUtopiaDetectorDetectionMobileFlutter extends \Utopia\Detector\Detection\Mobile\Flutter
+    {
+    }
+}
+if (class_exists(\Utopia\Detector\Detection\Mobile\Ios::class)) {
+    class ExtendsUtopiaDetectorDetectionMobileIos extends \Utopia\Detector\Detection\Mobile\Ios
+    {
+    }
+}
+if (class_exists(\Utopia\Detector\Detection\Mobile\ReactNative::class)) {
+    class ExtendsUtopiaDetectorDetectionMobileReactNative extends \Utopia\Detector\Detection\Mobile\ReactNative
+    {
+    }
+}
 if (class_exists(\Utopia\Compression\Compression::class)) {
     abstract class ExtendsUtopiaCompressionCompression extends \Utopia\Compression\Compression
     {
