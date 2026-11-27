@@ -12,6 +12,7 @@ import {
 import { RenditionsEmptyState } from '../../_components/RenditionsEmptyState'
 import { SpreadsheetBulkActionsBar } from '../../_components/SpreadsheetBulkActionsBar'
 import { VideoPage } from '../../_components/VideoPage'
+import { GpuRenditionsUpsell } from '../../_components/GpuRenditionsUpsell'
 import { useVideoDetailActions } from '../../_components/video-detail-actions'
 import { ConfirmActionDialog } from '@/components/global/shared/ConfirmActionDialog'
 import { EmptyState } from '@/components/global/shared/EmptyState'
@@ -387,6 +388,10 @@ export function View({ initialData }: ViewProps = {}) {
           onSortColumn={handleSortColumn}
         />
       )}
+      <GpuRenditionsUpsell
+        projectId={projectId}
+        className="mx-4 my-3 shrink-0 sm:mx-6"
+      />
 
       <ConfirmActionDialog
         open={!!deleting}

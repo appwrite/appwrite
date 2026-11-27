@@ -6,13 +6,12 @@ class VideoCaptions extends Base
 {
     public const ALLOWED_ATTRIBUTES = [
         'name',
-        'code',
+        'language',
         'default',
         'status',
         'size',
         'bucketId',
         'fileId',
-        'targetDuration',
     ];
 
     /**
@@ -21,6 +20,6 @@ class VideoCaptions extends Base
      */
     public function __construct()
     {
-        parent::__construct('videosCaptions', self::ALLOWED_ATTRIBUTES);
+        parent::__construct('videosCaptions', self::ALLOWED_ATTRIBUTES, ['language' => 'code']);
     }
 }

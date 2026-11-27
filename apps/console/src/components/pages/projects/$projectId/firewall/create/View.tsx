@@ -20,8 +20,10 @@ import { ConditionsBuilder } from '../_components/ConditionsBuilder'
 import { PriorityHint } from '../_components/PriorityHint'
 import { RuleImpactPreview } from '../_components/RuleImpactPreview'
 import { RuleSchedule } from '../_components/RuleSchedule'
+import { PasswordChallengeFields } from '../_components/PasswordChallengeFields'
 import { useCreateFirewallRule } from '@/lib/react-query/hooks'
 import {
+  type FirewallChallengeType,
   type FirewallCreatableAction,
   type FirewallRateLimitKey,
   type FirewallRateLimitStrategy,
@@ -37,6 +39,10 @@ import {
   CHALLENGE_TTL_MIN,
   CHALLENGE_TTL_MAX,
   CHALLENGE_TTL_DEFAULT,
+  CHALLENGE_ATTEMPTS_DEFAULT,
+  CHALLENGE_ATTEMPTS_INTERVAL_DEFAULT,
+  FIREWALL_CHALLENGE_TYPES,
+  isChallengeRuleInputValid,
 } from '@/lib/firewall/actions'
 import {
   areFirewallConditionsComplete,
@@ -83,8 +89,12 @@ const DEFAULT_FORM = {
   rateLimitKey: FIREWALL_RATE_LIMIT_KEY_DEFAULT as FirewallRateLimitKey,
   strategy: FIREWALL_RATE_LIMIT_STRATEGY_DEFAULT as FirewallRateLimitStrategy,
   maxBucketSize: 50,
+  challengeType: 'compute' as FirewallChallengeType,
   difficulty: CHALLENGE_DIFFICULTY_DEFAULT,
   ttl: CHALLENGE_TTL_DEFAULT,
+  password: '',
+  attempts: CHALLENGE_ATTEMPTS_DEFAULT,
+  attemptsInterval: CHALLENGE_ATTEMPTS_INTERVAL_DEFAULT,
   location: '/',
   statusCode: 302,
 }
@@ -104,6 +114,8 @@ export function View() {
     resourceId: initialResourceId,
   }) ?? { resourceType: 'api' }
   const resourceId = scope.resourceType === 'api' ? undefined : scope.resourceId
+  // Password challenges apply to sites and functions only.
+  const passwordUnavailable = scope.resourceType === 'api'
   const createMutation = useCreateFirewallRule(projectId)
   const [ruleId, setRuleId] = useState<string | undefined>()
   const [form, setForm] = useState(DEFAULT_FORM)
@@ -125,10 +137,11 @@ export function View() {
           (form.maxBucketSize >= MAX_BUCKET_SIZE_MIN &&
             form.maxBucketSize <= MAX_BUCKET_SIZE_MAX)))) &&
     (form.action !== WafRuleAction.Challenge ||
-      (form.difficulty >= CHALLENGE_DIFFICULTY_MIN &&
-        form.difficulty <= CHALLENGE_DIFFICULTY_MAX &&
-        form.ttl >= CHALLENGE_TTL_MIN &&
-        form.ttl <= CHALLENGE_TTL_MAX)) &&
+      isChallengeRuleInputValid({
+        ...form,
+        resourceType: scope.resourceType,
+        passwordRequired: true,
+      })) &&
     (form.action !== WafRuleAction.Redirect ||
       (form.location.trim().length > 0 && form.statusCode > 0)) &&
     isScheduleDraftComplete(schedule)
@@ -155,8 +168,12 @@ export function View() {
         key: form.rateLimitKey,
         strategy: form.strategy,
         maxBucketSize: form.maxBucketSize,
+        challengeType: form.challengeType,
         difficulty: form.difficulty,
         ttl: form.ttl,
+        password: form.password,
+        attempts: form.attempts,
+        attemptsInterval: form.attemptsInterval,
         location: form.location.trim(),
         statusCode: form.statusCode,
         schedule: schedulePayload(schedule),
@@ -266,21 +283,70 @@ export function View() {
       </div>
     ) : form.action === WafRuleAction.Challenge ? (
       <div className="grid gap-3 sm:grid-cols-2">
-        <div className="space-y-1.5">
-          <Label htmlFor="firewall-difficulty" className="text-[12px]">
-            {t('Difficulty')}
+        <div className="space-y-1.5 sm:col-span-2">
+          <Label htmlFor="firewall-challenge-type" className="text-[12px]">
+            {t('Challenge type')}
           </Label>
-          <NumberInput
-            id="firewall-difficulty"
-            min={CHALLENGE_DIFFICULTY_MIN}
-            max={CHALLENGE_DIFFICULTY_MAX}
-            value={form.difficulty}
-            onValueChange={(difficulty) => setForm({ ...form, difficulty })}
-          />
-          <p className="text-[12px] text-muted-foreground">
-            {t('1 (easiest) to 5 (hardest).')}
-          </p>
+          <Select
+            value={form.challengeType}
+            onValueChange={(value) =>
+              setForm({
+                ...form,
+                challengeType: value as FirewallChallengeType,
+              })
+            }
+          >
+            <SelectTrigger id="firewall-challenge-type" className="h-9 w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {FIREWALL_CHALLENGE_TYPES.map((type) => (
+                <SelectItem
+                  key={type.value}
+                  value={type.value}
+                  disabled={type.value === 'password' && passwordUnavailable}
+                >
+                  {t(type.label)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {passwordUnavailable ? (
+            <p className="text-[12px] text-muted-foreground">
+              {t('Password challenges apply to sites and functions only.')}
+            </p>
+          ) : null}
         </div>
+        {form.challengeType === 'password' ? (
+          <PasswordChallengeFields
+            idPrefix="firewall"
+            password={form.password}
+            onPasswordChange={(password) => setForm({ ...form, password })}
+            hasStoredPassword={false}
+            attempts={form.attempts}
+            onAttemptsChange={(attempts) => setForm({ ...form, attempts })}
+            attemptsInterval={form.attemptsInterval}
+            onAttemptsIntervalChange={(attemptsInterval) =>
+              setForm({ ...form, attemptsInterval })
+            }
+          />
+        ) : (
+          <div className="space-y-1.5">
+            <Label htmlFor="firewall-difficulty" className="text-[12px]">
+              {t('Difficulty')}
+            </Label>
+            <NumberInput
+              id="firewall-difficulty"
+              min={CHALLENGE_DIFFICULTY_MIN}
+              max={CHALLENGE_DIFFICULTY_MAX}
+              value={form.difficulty}
+              onValueChange={(difficulty) => setForm({ ...form, difficulty })}
+            />
+            <p className="text-[12px] text-muted-foreground">
+              {t('1 (easiest) to 5 (hardest).')}
+            </p>
+          </div>
+        )}
         <div className="space-y-1.5">
           <Label htmlFor="firewall-ttl" className="text-[12px]">
             {t('TTL (seconds)')}

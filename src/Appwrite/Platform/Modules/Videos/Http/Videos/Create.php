@@ -12,10 +12,12 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
+use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
 use Utopia\Abuse\Adapter\TimeLimit;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Id;
 use Utopia\Database\Permission;
 use Utopia\Database\PermissionType;
@@ -55,8 +57,6 @@ class Create extends Base
                 namespace: 'videos',
                 group: 'videos',
                 name: 'create',
-                // Hidden until videos is generally available; preview SDK builds show it.
-                hide: System::getEnv('_APP_SDK_PREVIEW', 'disabled') !== 'enabled',
                 description: '/docs/references/videos/create-video.md',
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [
@@ -66,6 +66,7 @@ class Create extends Base
                     )
                 ]
             ))
+            ->param('videoId', '', new CustomId(), 'Video ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
             ->param('bucketId', '', new UID(), 'Storage bucket unique ID holding the source file.')
             ->param('fileId', '', new UID(), 'Source file unique ID.')
             ->param('name', '', new Text(2048), 'Video name. Defaults to the source file name. Max length: 2048 chars.', true)
@@ -82,6 +83,7 @@ class Create extends Base
     }
 
     public function action(
+        string $videoId,
         string $bucketId,
         string $fileId,
         string $name,
@@ -182,19 +184,25 @@ class Create extends Base
             throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED);
         }
 
-        $video = $authorization->skip(fn () => $dbForProject->createDocument('videos', new Document([
-            '$id' => Id::unique(),
-            '$permissions' => $permissions,
-            'bucketId' => $file->getAttribute('bucketId', $bucketId),
-            'bucketInternalId' => $file->getAttribute('bucketInternalId', ''),
-            'fileId' => $file->getId(),
-            'fileInternalId' => $file->getSequence(),
-            'name' => $name,
-            'size' => $file->getAttribute('sizeOriginal', 0),
-            'captionsExtracted' => false,
-            'timelineStatus' => self::STATUS_PENDING,
-            'search' => \implode(' ', [$file->getId(), $name]),
-        ])));
+        $videoId = $videoId === 'unique()' ? Id::unique() : $videoId;
+
+        try {
+            $video = $authorization->skip(fn () => $dbForProject->createDocument('videos', new Document([
+                '$id' => $videoId,
+                '$permissions' => $permissions,
+                'bucketId' => $file->getAttribute('bucketId', $bucketId),
+                'bucketInternalId' => $file->getAttribute('bucketInternalId', ''),
+                'fileId' => $file->getId(),
+                'fileInternalId' => $file->getSequence(),
+                'name' => $name,
+                'size' => $file->getAttribute('sizeOriginal', 0),
+                'captionsExtracted' => false,
+                'timelineStatus' => self::STATUS_PENDING,
+                'search' => \implode(' ', [$file->getId(), $name]),
+            ])));
+        } catch (DuplicateException) {
+            throw new Exception(Exception::VIDEO_ALREADY_EXISTS);
+        }
 
         $queueForEvents->setParam('videoId', $video->getId());
 

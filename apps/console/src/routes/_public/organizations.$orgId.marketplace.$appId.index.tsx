@@ -1,5 +1,6 @@
 import { View } from '@/components/pages/organizations/$orgId/marketplace/$appId/View'
 import { createFileRoute } from '@tanstack/react-router'
+import { AppwriteException } from '@appwrite.io/console'
 import { pageTitle } from '@/lib/utils/page-title'
 import { organizationAppQueryOptions } from '@/lib/react-query/hooks'
 
@@ -22,9 +23,17 @@ export const Route = createFileRoute(
 
     // The public detail page is reachable for every app, own-org apps and
     // unlabeled ones included — no redirect to settings here.
-    const app = await queryClient.fetchQuery(organizationAppQueryOptions(appId))
+    // A missing app renders the page's not-found state, not the route error.
+    const app = await queryClient
+      .fetchQuery(organizationAppQueryOptions(appId))
+      .catch((error: unknown) => {
+        if (error instanceof AppwriteException && error.code === 404) {
+          return undefined
+        }
+        throw error
+      })
 
-    return { app }
+    return app ? { app } : undefined
   },
   component: MarketplaceCatalogAppPage,
 })

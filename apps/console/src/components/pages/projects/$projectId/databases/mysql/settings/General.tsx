@@ -6,6 +6,7 @@ import { MysqlDatabaseDangerZoneCard } from '../_components/MysqlDatabaseDangerZ
 import {
   MysqlDatabaseDetailsCard,
   MysqlDatabaseNameCard,
+  MysqlDatabaseVersionCard,
 } from '../_components/MysqlDatabaseGeneralSettings'
 import { useMysqlDatabaseSettingsPage } from './useMysqlDatabaseSettingsPage'
 import { MysqlSettingsLoading } from './MysqlSettingsLoading'
@@ -41,6 +42,14 @@ export function View() {
         keywords: ['id', 'created', 'updated', 'status', 'paused', 'version'],
       },
       node: <MysqlDatabaseDetailsCard {...cardProps} />,
+    },
+    {
+      id: 'version',
+      search: {
+        title: 'Version',
+        keywords: ['version', 'upgrade', 'engine', 'mysql', '8.4'],
+      },
+      node: <MysqlDatabaseVersionCard {...cardProps} />,
     },
     {
       id: 'delete',

@@ -1,8 +1,33 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import {
+  MutationCache,
+  QueryCache,
+  QueryClient,
+  QueryClientProvider,
+} from '@tanstack/react-query'
 import { registerActiveEnvironmentChange } from '@/lib/active-environment'
+import {
+  isSSORequiredError,
+  redirectToRequiredSSO,
+  refusalConcernsPage,
+} from '@/lib/sso-required'
 
 export function getContext() {
+  // An organization that requires single sign-on refuses its members until they
+  // sign in through it: send them there when the organization (or project) they
+  // are on refuses. Refusals for other organizations are handled where they are
+  // asked, e.g. picking the default organization or the organization switcher.
+  const onError = (error: unknown, queryKey?: readonly unknown[]) => {
+    if (typeof window === 'undefined' || !isSSORequiredError(error)) return
+    if (refusalConcernsPage(window.location.pathname, queryKey)) {
+      redirectToRequiredSSO()
+    }
+  }
+
   const queryClient = new QueryClient({
+    queryCache: new QueryCache({
+      onError: (error, query) => onError(error, query.queryKey),
+    }),
+    mutationCache: new MutationCache({ onError: (error) => onError(error) }),
     defaultOptions: {
       queries: {
         // Disable automatic refetching on window focus to reduce CPU usage
