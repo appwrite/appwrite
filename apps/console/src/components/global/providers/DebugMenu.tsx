@@ -1793,6 +1793,14 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 { category: 'Products' },
               ),
               createProfileFeatureFlagItem(
+                'Sandboxes',
+                'Show the Sandboxes product (live workspaces with a terminal and file browser) in projects. Cloud only.',
+                'sandboxes',
+                profileId,
+                features.sandboxes,
+                { category: 'Products' },
+              ),
+              createProfileFeatureFlagItem(
                 'Appwrite push',
                 'Show the Appwrite push provider in messaging (create wizard and QoS/expiry settings).',
                 'appwritePush',
@@ -2163,6 +2171,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     features.zero,
     features.alerts,
     features.reviews,
+    features.sandboxes,
     features.appwritePush,
     features.runtimeLogs,
     features.nativeDbsMongo,

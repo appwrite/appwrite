@@ -47,6 +47,7 @@ import {
   Users,
   Folder,
   Zap,
+  SquareTerminal,
   MessageSquare,
   Settings,
   BarChart3,
@@ -139,6 +140,7 @@ interface SidebarCopy {
     functions: string
     messaging: string
     videos: string
+    sandboxes: string
     reviews: string
     sites: string
     distribution: string
@@ -230,6 +232,12 @@ const getNavItems = (projectId: string, sidebarCopy: SidebarCopy) => {
           label: sidebarCopy.items.functions,
           icon: Zap,
           path: `/projects/${projectId}/functions`,
+        },
+        {
+          id: 'sandboxes',
+          label: sidebarCopy.items.sandboxes,
+          icon: SquareTerminal,
+          path: `/projects/${projectId}/sandboxes`,
         },
         {
           id: 'messaging',
@@ -422,6 +430,11 @@ export function ConsoleSidebar({
           if (item.id === 'videos')
             return (
               features.videos && canSeeProjectNavItem(access, features, item.id)
+            )
+          if (item.id === 'sandboxes')
+            return (
+              features.sandboxes &&
+              canSeeProjectNavItem(access, features, item.id)
             )
           if (item.id === 'reviews')
             return (

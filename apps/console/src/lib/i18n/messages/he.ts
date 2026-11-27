@@ -18,7 +18,8 @@ export const heCatalog: EnCatalog = {
         solutionAgencies: 'סוכנויות',
         solutionAgenciesDescription: 'אותו stack בכל פרויקט לקוח.',
         solutionInnovationTeams: 'צוותי חדשנות',
-        solutionInnovationTeamsDescription: 'פיילוט ב-Cloud, ו-Enterprise אם הוא נשאר.',
+        solutionInnovationTeamsDescription:
+          'פיילוט ב-Cloud, ו-Enterprise אם הוא נשאר.',
         solutionEnterpriseDescription: 'מגבלות, תמיכה ופריסה בהתאמה.',
         enterprise: 'אנטרפרייז',
         customers: 'לקוחות',
@@ -249,6 +250,7 @@ export const heCatalog: EnCatalog = {
         functions: 'פונקציות',
         messaging: 'הודעות',
         videos: 'סרטונים',
+        sandboxes: 'Sandboxes',
         reviews: 'סקירת קוד',
         sites: 'אתרים',
         distribution: 'הפצה',
@@ -376,8 +378,7 @@ export const heCatalog: EnCatalog = {
           'שליחת אימייל, SMS והתראות Push דרך שירות הודעות אחוד.',
         firewallDescription:
           'הגנה על אפליקציות עם כללי תעבורה, בקרות ניצול לרעה ואבטחת קצה לכל פרויקט.',
-        realtimeDescription:
-          'הרשמה ותגובה לאירועים ברחבי הפרויקט בזמן אמת.',
+        realtimeDescription: 'הרשמה ותגובה לאירועים ברחבי הפרויקט בזמן אמת.',
         firewallNewLabel: 'חדש',
       },
     },
@@ -422,7 +423,8 @@ export const heCatalog: EnCatalog = {
         items: {
           ...enCatalog.website.products.navigation.items,
           authTagline: 'אימייל, OAuth, SMS, אימות דו-שלבי, צוותים וסשנים.',
-          databasesTagline: 'PostgreSQL מנוהל, TablesDB, DocumentsDB, VectorsDB, MySQL.',
+          databasesTagline:
+            'PostgreSQL מנוהל, TablesDB, DocumentsDB, VectorsDB, MySQL.',
           postgresTagline: 'PostgreSQL מנוהל עם pooling, רפליקות ו-PITR.',
           storageTagline: 'העלאה, עיבוד והגשה של קבצים דרך CDN.',
           functionsTagline: 'APIs, משימות Cron ומטפלי אירועים בקנה מידה רחב.',
@@ -464,16 +466,14 @@ export const heCatalog: EnCatalog = {
         mcpDescription:
           'חיבור סוכני AI לפרויקט, ל-APIs ולדוקומנטציה של Appwrite דרך שרת MCP מרוחק אחד.', // pragma: allowlist secret
         terraformTitle: 'Terraform',
-        terraformDescription:
-          'ניהול תשתיות Appwrite כקוד עם הספק הרשמי.', // pragma: allowlist secret
+        terraformDescription: 'ניהול תשתיות Appwrite כקוד עם הספק הרשמי.', // pragma: allowlist secret
         agentSkillsTitle: 'Agent Skills',
         agentSkillsDescription:
           'ספקו לסוכני AI ידע מדויק ל-SDK על שירותי Appwrite וה-APIs.', // pragma: allowlist secret
         sdksTitle: 'SDKs',
         sdksDescriptionPrefix:
           'SDKs לצד לקוח וצד שרת לפלטפורמות שהצוות שלכם כבר משתמש בהן.',
-        sdksDescriptionSuffix:
-          'SDKs רשמיים זמינים בסביבות Client ו-Server.',
+        sdksDescriptionSuffix: 'SDKs רשמיים זמינים בסביבות Client ו-Server.',
         cliTitle: 'CLI',
         cliDescription:
           'פריסה של משאבים, ניהול פרויקטים ויצירת SDKs מוקלדים ישירות מהטרמינל.',

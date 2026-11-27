@@ -73,6 +73,12 @@ export type ConsoleProfileFeatures = {
    */
   reviews: boolean
   /**
+   * Internal only, switched on from the debug menu. Sandboxes product (live
+   * workspaces you run commands, files, processes and terminals in) via the
+   * Cloud-only `sandboxes` service.
+   */
+  sandboxes: boolean
+  /**
    * Organization settings → Single sign-on (Cloud only, owners). Owners verify
    * domains with a DNS record and connect identity providers, so people on
    * those domains sign in with single sign-on. Also single sign-on for the
@@ -152,6 +158,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   gitInstallationReuse: 'Git installation reuse',
   alertCtas: 'Alert CTAs',
   reviews: 'Review',
+  sandboxes: 'Sandboxes',
   sso: 'Single sign-on',
   alerts: 'Alerts',
   multiRegion: 'Multi-region',
@@ -210,6 +217,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       gitInstallationReuse: false,
       alertCtas: false,
       reviews: false,
+      sandboxes: false,
       sso: true,
       alerts: false,
       multiRegion: true,
@@ -258,6 +266,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       gitInstallationReuse: false,
       alertCtas: false,
       reviews: false,
+      sandboxes: false,
       sso: false,
       alerts: false,
       multiRegion: false,

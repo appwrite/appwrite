@@ -18,8 +18,10 @@ export const jaCatalog: EnCatalog = {
         solutionAgencies: 'エージェンシー',
         solutionAgenciesDescription: 'クライアント案件ごとに同じスタック。',
         solutionInnovationTeams: 'イノベーションチーム',
-        solutionInnovationTeamsDescription: 'Cloudでパイロットし、残すならEnterprise。',
-        solutionEnterpriseDescription: '上限、サポート、デプロイを要件に合わせる。',
+        solutionInnovationTeamsDescription:
+          'Cloudでパイロットし、残すならEnterprise。',
+        solutionEnterpriseDescription:
+          '上限、サポート、デプロイを要件に合わせる。',
         enterprise: 'Enterprise',
         customers: '導入事例',
         blog: 'ブログ',
@@ -250,6 +252,7 @@ export const jaCatalog: EnCatalog = {
         functions: 'Functions',
         messaging: 'メッセージング',
         videos: '動画',
+        sandboxes: 'サンドボックス',
         reviews: 'コードレビュー',
         sites: 'サイト',
         distribution: 'Distribution',
@@ -318,19 +321,20 @@ export const jaCatalog: EnCatalog = {
       startProject: 'プロジェクトを開始',
       viewDocs: 'ドキュメントを見る',
       mcpIncluded: 'MCP 同梱',
-      toolsHeading: 'お気に入りのフレームワーク、言語、エージェント向けに最適化',
+      toolsHeading:
+        'お気に入りのフレームワーク、言語、エージェント向けに最適化',
       productsHeadingLineOne: '必要なサービスをすべて',
       productsHeadingLineTwo: '一つのプラットフォームに',
       productsDescription:
         '最初のプロトタイプから本番スケールまで、統一感のあるモジュラープロダクトで構築できます。',
-      securityHeading: 'アーキテクチャのすべてのレイヤーに組み込まれたセキュリティ',
+      securityHeading:
+        'アーキテクチャのすべてのレイヤーに組み込まれたセキュリティ',
       securityDescription:
         'セキュリティファーストのアプローチにより、Appwrite はプロダクトとユーザーをデフォルトで安全に保ち、厳格なポリシーへの準拠を容易にします。', // pragma: allowlist secret
       securityItems: {
         ...enCatalog.website.home.securityItems,
         ddosTitle: 'DDoS 保護',
-        ddosDescription:
-          '分散型サービス拒否攻撃を自動的に検出し、軽減します。',
+        ddosDescription: '分散型サービス拒否攻撃を自動的に検出し、軽減します。',
         encryptionTitle: '暗号化',
         encryptionDescription:
           '保存時および転送時の機密ワークロード向けに、組み込みのデータ暗号化を提供します。',
@@ -411,7 +415,8 @@ export const jaCatalog: EnCatalog = {
         ...enCatalog.website.products.navigation,
         triggerLabel: 'プロダクト',
         desktopTitle: 'プラットフォームプロダクト',
-        desktopSubtitle: '一つの Backend プラットフォームで構築、デプロイ、スケール',
+        desktopSubtitle:
+          '一つの Backend プラットフォームで構築、デプロイ、スケール',
         newLabel: '新着',
         categories: {
           ...enCatalog.website.products.navigation.categories,
@@ -423,8 +428,10 @@ export const jaCatalog: EnCatalog = {
         items: {
           ...enCatalog.website.products.navigation.items,
           authTagline: 'メール、OAuth、SMS、MFA、チーム、セッション。',
-          databasesTagline: 'マネージド PostgreSQL、TablesDB、DocumentsDB、VectorsDB、MySQL。',
-          postgresTagline: 'プーリング、レプリカ、PITR に対応したマネージド PostgreSQL。',
+          databasesTagline:
+            'マネージド PostgreSQL、TablesDB、DocumentsDB、VectorsDB、MySQL。',
+          postgresTagline:
+            'プーリング、レプリカ、PITR に対応したマネージド PostgreSQL。',
           storageTagline: 'CDN でファイルをアップロード、変換、配信。',
           functionsTagline: '大規模な API、Cron ジョブ、イベントハンドラー。',
           messagingTagline: 'トピックとターゲットでメール、SMS、プッシュ。',
@@ -439,7 +446,8 @@ export const jaCatalog: EnCatalog = {
           domainsTagline: 'ドメインの検索、購入、移管、管理。',
           analyticsTagline: 'Sites と Auth に組み込まれた、Cookie 不要の分析。',
           firewallName: 'Firewall',
-          firewallTagline: 'プロジェクトルールで拒否、レート制限、リダイレクト。',
+          firewallTagline:
+            'プロジェクトルールで拒否、レート制限、リダイレクト。',
           advisorName: 'Advisor',
           advisorTagline: 'セキュリティとパフォーマンスのインサイト。',
         },
@@ -450,7 +458,8 @@ export const jaCatalog: EnCatalog = {
         headingDescription:
           'API ファースト設計。同じプロジェクトでコンソール、Realtime、SDK、CLI、Terraform、MCP、エージェントスキルを利用できます。',
         developerExperienceTitle: '開発者とエージェントの体験',
-        developerExperienceFallbackCaption: 'TypeScript での典型的なインテグレーション。',
+        developerExperienceFallbackCaption:
+          'TypeScript での典型的なインテグレーション。',
         everythingApiTitle: 'すべてが API',
         everythingApiDescription:
           'すべてのサービス向け REST、GraphQL、SDK。コンソール専用ワークフローに依存せず自動化と統合が可能。',
