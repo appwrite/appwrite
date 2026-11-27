@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { Outlet, useLocation } from '@tanstack/react-router'
+import { Outlet, useMatch } from '@tanstack/react-router'
 import { useInfiniteQuery } from '@tanstack/react-query'
 import {
   alertsInfiniteQueryOptions,
@@ -11,10 +11,11 @@ import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
 /** What the project watches and what that raised, as two tabs. */
 export function MonitorsLayout({ projectId }: { projectId: string }) {
   const t = useT()
-  const location = useLocation()
-  const activeTab = location.pathname.replace(/\/$/, '').endsWith('/alerts')
-    ? 'alerts'
-    : 'monitors'
+  const alerts = useMatch({
+    from: '/_public/projects/$projectId/monitors/alerts',
+    shouldThrow: false,
+  })
+  const activeTab = alerts ? 'alerts' : 'monitors'
 
   const { monitors } = useMonitors(projectId)
   // An acknowledged alert has someone on it, so it leaves the count while it keeps firing.

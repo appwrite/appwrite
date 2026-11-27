@@ -51,7 +51,7 @@ class Update extends Base
                 ]
             ))
             ->param('alertId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getMaxUidLength()), 'Alert ID.', false, ['dbForPlatform'])
-            ->param('acknowledged', false, new Boolean(), 'Whether the alert is acknowledged. False undoes an acknowledgement.')
+            ->param('acknowledged', false, new Boolean(), 'Whether the alert is acknowledged. False undoes an acknowledgement.', example: true)
             ->inject('response')
             ->inject('project')
             ->inject('user')
@@ -77,7 +77,7 @@ class Update extends Base
         $change = Acknowledgements::change($alert, $updated);
         if ($change !== null) {
             $queueForEvents
-                ->setEvent('monitors.[monitorId].alerts.[alertId].' . $change->value)
+                ->setEvent('monitors.[monitorId].alerts.[alertId].' . $change->event())
                 ->setParam('monitorId', (string) $updated->getAttribute('monitorId'))
                 ->setParam('alertId', $updated->getId());
         }

@@ -21,7 +21,6 @@ use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Query\Method as QueryMethod;
-use Utopia\System\System;
 use Utopia\Validator\Boolean;
 
 class XList extends Base
@@ -47,8 +46,6 @@ class XList extends Base
                 namespace: 'videos',
                 group: 'captions',
                 name: 'listCaptions',
-                // Hidden until videos is generally available; preview SDK builds show it.
-                hide: System::getEnv('_APP_SDK_PREVIEW', 'disabled') !== 'enabled',
                 description: '/docs/references/videos/list-captions.md',
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [
@@ -84,6 +81,8 @@ class XList extends Base
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
+
+        $this->toStoredAttributes($queries);
 
         $queries[] = Query::equal('videoInternalId', [$video->getSequence()]);
 
@@ -127,5 +126,25 @@ class XList extends Base
             'captions' => $captions,
             'total' => $total,
         ]), Response::MODEL_VIDEO_CAPTION_LIST);
+    }
+
+    /**
+     * The API calls the caption language `language`; the column is `code`.
+     * Logical queries hold their children in their values.
+     *
+     * @param array<Query> $queries
+     */
+    private function toStoredAttributes(array $queries): void
+    {
+        foreach ($queries as $query) {
+            if (\in_array($query->getMethod(), [QueryMethod::And, QueryMethod::Or], true)) {
+                $this->toStoredAttributes($query->getValues());
+                continue;
+            }
+
+            if ($query->getAttribute() === 'language') {
+                $query->setAttribute('code');
+            }
+        }
     }
 }

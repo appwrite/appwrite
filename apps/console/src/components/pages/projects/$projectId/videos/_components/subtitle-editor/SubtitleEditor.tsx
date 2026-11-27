@@ -190,7 +190,7 @@ export function SubtitleEditor({
 
   const [draft, setDraft] = useState<SubtitleTrackDraft>(() => ({
     name: subtitle?.name ?? '',
-    code: subtitle?.code ?? '',
+    code: subtitle?.language ?? '',
     isDefault: subtitle?.default ?? false,
     bucketId: subtitle?.bucketId || '',
   }))
@@ -206,7 +206,7 @@ export function SubtitleEditor({
   const trackDirty =
     !!subtitle &&
     (draft.name.trim() !== subtitle.name ||
-      draft.code !== subtitle.code ||
+      draft.code !== subtitle.language ||
       draft.isDefault !== subtitle.default)
   const dirty = history.dirty || trackDirty || (isCreate && cues.length > 0)
   const dirtyRef = useRef(dirty)

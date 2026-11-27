@@ -19,6 +19,10 @@ class Console implements Message
         protected ?string $messageId = null,
         protected ?string $projectId = null,
         protected ?string $projectInternalId = null,
+        protected ?string $teamId = null,
+        protected string $subjectType = '',
+        protected string $subjectId = '',
+        protected string $status = '',
     ) {
     }
 
@@ -66,6 +70,38 @@ class Console implements Message
     public function getProjectInternalId(): ?string
     {
         return $this->projectInternalId;
+    }
+
+    /**
+     * The organization the notification is about.
+     */
+    public function getTeamId(): ?string
+    {
+        return $this->teamId;
+    }
+
+    /**
+     * The kind of thing the notification is about, such as `alerts`, or empty when it is about nothing that changes.
+     */
+    public function getSubjectType(): string
+    {
+        return $this->subjectType;
+    }
+
+    /**
+     * The ID of the thing the notification is about. A recipient keeps one notification per subject.
+     */
+    public function getSubjectId(): string
+    {
+        return $this->subjectId;
+    }
+
+    /**
+     * Where the subject stands, such as `firing` or `resolved`.
+     */
+    public function getStatus(): string
+    {
+        return $this->status;
     }
 
     public function setOrigin(?string $origin): self

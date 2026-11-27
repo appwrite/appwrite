@@ -29,6 +29,7 @@ import {
   formatDatabaseServiceLabel,
   getDatabaseServiceLucideIcon,
 } from '@/lib/databases/database-service-icons'
+import { VIDEOS_PRODUCT_ICON } from '@/lib/videos/product-icon'
 
 const USAGE_SERVICE_ICON_MAP: Record<string, LucideIcon> = {
   [ProjectServiceId.Account]: User,
@@ -50,6 +51,7 @@ const USAGE_SERVICE_ICON_MAP: Record<string, LucideIcon> = {
   [ProjectServiceId.Oauth2]: KeyRound,
   tokens: Key,
   realtime: Radio,
+  videos: VIDEOS_PRODUCT_ICON,
 }
 
 const USAGE_SERVICE_LABEL_MAP: Record<string, string> = {
@@ -72,6 +74,7 @@ const USAGE_SERVICE_LABEL_MAP: Record<string, string> = {
   [ProjectServiceId.Oauth2]: 'OAuth2',
   tokens: 'Tokens',
   realtime: 'Realtime',
+  videos: 'Videos',
 }
 
 function normalizeUsageServiceKey(value: string): string {
@@ -108,6 +111,7 @@ const USAGE_RESOURCE_TYPE_ICON_MAP: Record<string, LucideIcon> = {
   database: Database,
   dedicateddatabase: Database,
   dedicateddatabases: Database,
+  video: VIDEOS_PRODUCT_ICON,
 }
 
 /** Leading icon for usage breakdown rows grouped by resource type. */

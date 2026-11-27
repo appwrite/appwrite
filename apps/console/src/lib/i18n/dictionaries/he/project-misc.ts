@@ -184,6 +184,63 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Ship a build to production and tune environments.':
     'שלחו בנייה לייצור וכווננו סביבות.',
   'View site': 'צפייה באתר',
+  // Onboarding: Init 5 products (Videos, Analytics, Monitors, Code review)
+  'Upload video once and stream it everywhere, with adaptive renditions and captions.':
+    'העלו סרטון פעם אחת והזרימו אותו לכל מקום, עם גרסאות קידוד מותאמות וכתוביות.',
+  'Upload a video':
+    'העלאת סרטון',
+  'Add a video file; Appwrite transcodes it into streaming renditions.':
+    'הוסיפו קובץ וידאו, ו-Appwrite יקודד אותו לגרסאות סטרימינג.',
+  'Upload video':
+    'העלאת סרטון',
+  'Manage videos':
+    'ניהול סרטונים',
+  'Attach captions in any language so every viewer can follow along.':
+    'צרפו כתוביות בכל שפה כדי שכל צופה יוכל לעקוב.',
+  'Open videos':
+    'פתיחת סרטונים',
+  'Play it in your app':
+    'ניגון באפליקציה שלכם',
+  'Point your player at the HLS or DASH manifest to start streaming.':
+    'כוונו את הנגן שלכם ל-manifest של HLS או DASH כדי להתחיל בסטרימינג.',
+  'Set up playback':
+    'הגדרת ניגון',
+  'See who visits your sites and apps, where they come from, and what they do.':
+    'ראו מי מבקר באתרים ובאפליקציות שלכם, מאיפה הם מגיעים ומה הם עושים.',
+  'Add a property':
+    'הוספת נכס',
+  'Track a website, mobile app, or AI agent as its own property.':
+    'עקבו אחרי אתר, אפליקציית מובייל או סוכן AI כנכס נפרד.',
+  'Add property':
+    'הוספת נכס',
+  'Manage properties':
+    'ניהול נכסים',
+  'Record your first visit':
+    'תיעוד הביקור הראשון',
+  'Turn on analytics for a site, or send page views and events from your app.':
+    'הפעילו אנליטיקה לאתר, או שלחו צפיות בדפים ואירועים מהאפליקציה שלכם.',
+  'Start tracking':
+    'התחלת מעקב',
+  'View traffic':
+    'צפייה בתנועה',
+  'Watch your endpoints and usage, and get alerted the moment something needs you.':
+    'עקבו אחרי ה-Endpoints והשימוש שלכם, וקבלו התראה ברגע שמשהו דורש את תשומת לבכם.',
+  'Create a monitor':
+    'יצירת מוניטור',
+  'Check an endpoint, a domain, or a usage limit on a schedule.':
+    'בדקו Endpoint, דומיין או מגבלת שימוש לפי לוח זמנים.',
+  'Manage monitors':
+    'ניהול מוניטורים',
+  'Get an AI review on every pull request, with findings that learn from your team.':
+    'קבלו סקירת AI לכל Pull request, עם ממצאים שלומדים מהצוות שלכם.',
+  'Turn on code review':
+    'הפעלת סקירת קוד',
+  'Add a repository, and its next pull request gets a review.':
+    'הוסיפו repo, וה-Pull request הבא שלו יקבל סקירה.',
+  'Manage repositories':
+    'ניהול Repos',
+  'Observe':
+    'ניטור',
   Build: 'בנייה',
   Deploy: 'פריסה',
 
@@ -561,6 +618,22 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'החלונות מיושרים לפי התנהגות אנושית. מאפשר פרצים קצרים שנצברו, ומתמלא מחדש לקצב מתמשך.',
   'Redirect location': 'יעד הפניה',
   'Status code': 'קוד סטטוס',
+  'Wrong guesses allowed': 'ניחושים שגויים מותרים',
+  '1 to 100 per visitor network.': '1 עד 100 לכל רשת של מבקר.',
+  'Counted over (seconds)': 'חלון ספירה (שניות)',
+  '60 (1 minute) to 86400 (24 hours).': '60 (דקה) עד 86400 (24 שעות).',
+  '{count} guesses / {window}': '{count} ניחושים / {window}',
+  '1 guess / {window}': 'ניחוש אחד / {window}',
+  '{count} min': '{count} דק׳',
+  '{count} h': '{count} שע׳',
+  '{count} sec': '{count} שנ׳',
+  'Challenge type': 'סוג אתגר',
+  'Password challenges apply to sites and functions only.':
+    'אתגרי סיסמה חלים על אתרים ופונקציות בלבד.',
+  'Use 8 to 256 bytes. Some characters, like emoji or non-Latin letters, take more than one byte.':
+    'השתמשו ב-8 עד 256 בתים. תווים מסוימים, כמו אימוג׳י או אותיות שאינן לטיניות, תופסים יותר מבית אחד.',
+  'Visitors must enter this password before they can continue.':
+    'מבקרים חייבים להזין את הסיסמה הזו לפני שיוכלו להמשיך.',
   'Match requests when all conditions are true.':
     'התאימו בקשות כאשר כל התנאים מתקיימים.',
   'Add condition': 'הוספת תנאי',
@@ -1192,7 +1265,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Active screens': 'מסכים פעילים',
   'No one is using the app right now.': 'אף אחד לא משתמש באפליקציה כרגע.',
   'Users by country': 'משתמשים לפי מדינה',
-  'Visitors and app users, pages and screens, sources, locations, and bots, plus any custom events you track.': 'מבקרים ומשתמשי אפליקציה, דפים ומסכים, מקורות, מיקומים ובוטים, וגם כל אירוע מותאם שאתם עוקבים אחריו.',
+  'Visitors and app users, pages and screens, sources, locations, and bots, plus any custom events you track.':
+    'מבקרים ומשתמשי אפליקציה, דפים ומסכים, מקורות, מיקומים ובוטים, וגם כל אירוע מותאם שאתם עוקבים אחריו.',
   'What visitors are browsing with': 'באיזה כלים המבקרים גולשים',
   'What your users are on': 'במה המשתמשים שלך משתמשים',
   'Active users': 'משתמשים פעילים',
@@ -2053,6 +2127,13 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'SMS messages': 'הודעות SMS', // pragma: allowlist secret
   'Events sent': 'אירועים שנשלחו',
   'Events failed': 'אירועים שנכשלו',
+  'Streaming bandwidth': 'רוחב פס של סטרימינג',
+  'Renditions encoded': 'גרסאות קידוד שקודדו',
+  'Failed renditions': 'גרסאות קידוד שנכשלו',
+  'Encoding GB-hours': 'GB-hours של קידוד',
+  'Video storage': 'אחסון סרטונים',
+  Endpoints: 'נקודות קצה',
+  'Video ID': 'מזהה סרטון',
   Webhooks: 'Webhooks',
   'Function executions': 'הרצות פונקציות',
   'Site executions': 'הרצות אתרים',
@@ -2179,6 +2260,11 @@ export const heProjectMiscDictionary: Record<string, string> = {
     "זמן חישוב של פונקציות במהלך התקופה שנבחרה, נמדד בג'יגה-בייט-שעות (GBH). זיכרון שהוקצה לפונקציות כפול משך ההרצה והבנייה.",
   'Site compute time during the selected period, measured in gigabyte-hours (GBH). Memory allocated to sites multiplied by request handling and build duration.':
     "זמן חישוב של אתרים במהלך התקופה שנבחרה, נמדד בג'יגה-בייט-שעות (GBH). זיכרון שהוקצה לאתרים כפול משך הטיפול בבקשות והבנייה.",
+  'Video encoding GB-hours': 'GB-hours של קידוד וידאו',
+  'Video encoding compute during the selected period, measured in gigabyte-hours (GBH). Encoder memory multiplied by encode duration. Included in GB-hours.':
+    "זמן חישוב של קידוד וידאו במהלך התקופה שנבחרה, נמדד בג'יגה-בייט-שעות (GBH). זיכרון המקודד כפול משך הקידוד. נכלל ב-GB-hours.",
+  'Storage used by video renditions, captions, and thumbnail timelines. Counts toward your plan storage limit.':
+    'אחסון שמשמש גרסאות קידוד של וידאו, כתוביות וצירי תמונות ממוזערות. נספר במגבלת האחסון של התוכנית.',
   'Top storage buckets': 'באקטי האחסון המובילים',
   'Top buckets by origin images': 'באקטים מובילים לפי תמונות מקור',
   'Top executed functions': 'הפונקציות המורצות ביותר',
@@ -3340,6 +3426,94 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'תוסף Premium Geo DB יוסר בסוף מחזור החיוב הנוכחי',
   'Unable to verify Premium Geo DB addon status. Please retry.':
     'לא ניתן לאמת את סטטוס תוסף Premium Geo DB. נסו שוב.',
+  "With this add-on, your app's users sign in through their company's identity provider. Each team in this project can verify domains, connect identity providers and turn on Require SSO.":
+    'עם התוסף הזה, משתמשי האפליקציה שלכם מתחברים דרך ספק הזהויות של החברה שלהם. כל צוות בפרויקט יכול לאמת דומיינים, לחבר ספקי זהויות ולהפעיל חיוב SSO.',
+  'Starts next cycle': 'מתחיל במחזור הבא',
+  'The add-on starts with your next billing cycle. Single sign-on can be set up from then.':
+    'התוסף מתחיל במחזור החיוב הבא שלכם. מאז אפשר יהיה להגדיר התחברות יחידה (SSO).',
+  '{price}/month, prorated for the current billing cycle.':
+    '{price}/חודש, בחיוב יחסי למחזור החיוב הנוכחי.',
+  'Billed monthly, prorated for the current billing cycle.':
+    'חיוב חודשי, יחסי למחזור החיוב הנוכחי.',
+  'This add-on is not available on your current plan. Upgrade your plan to enable it.':
+    'התוסף הזה אינו זמין בתוכנית הנוכחית שלכם. שדרגו את התוכנית כדי להפעיל אותו.',
+  'This add-on is not available on your current plan.':
+    'התוסף הזה אינו זמין בתוכנית הנוכחית שלכם.',
+  'The add-on will be removed at the end of your current billing cycle.':
+    'התוסף יוסר בסוף מחזור החיוב הנוכחי שלכם.',
+  "This environment has the add-on of its project. Change it in the project's settings.":
+    'לסביבה הזו יש את התוסף של הפרויקט שלה. שנו אותו בהגדרות הפרויקט.',
+  "You don't have permission to manage this project's add-ons.":
+    'אין לכם הרשאה לנהל את התוספים של הפרויקט הזה.',
+  "Couldn't load the add-on's status.": 'לא הצלחנו לטעון את סטטוס התוסף.',
+  'Keep add-on': 'שמירת התוסף',
+  'Disable add-on': 'השבתת התוסף',
+  'Enable the Single sign-on add-on': 'הפעלת תוסף ההתחברות היחידה (SSO)',
+  'Disable the Single sign-on add-on': 'השבתת תוסף ההתחברות היחידה (SSO)',
+  'Single sign-on add-on has been enabled': 'תוסף ההתחברות היחידה (SSO) הופעל',
+  'Single sign-on add-on has been re-enabled':
+    'תוסף ההתחברות היחידה (SSO) הופעל מחדש',
+  'Single sign-on add-on is already active for this project':
+    'תוסף ההתחברות היחידה (SSO) כבר פעיל בפרויקט זה',
+  'Single sign-on add-on will be removed at the end of your current billing cycle':
+    'תוסף ההתחברות היחידה (SSO) יוסר בסוף מחזור החיוב הנוכחי',
+  "Are you sure you want to disable the Single sign-on add-on? It stays active until the end of your current billing cycle and is not renewed. Then nobody signs in to your app through the identity providers of this project's teams, and the teams can no longer verify domains, connect identity providers or turn on Require SSO.":
+    'האם אתם בטוחים שברצונכם להשבית את תוסף ההתחברות היחידה (SSO)? הוא יישאר פעיל עד סוף מחזור החיוב הנוכחי ולא יחודש. אחר כך אף אחד לא יתחבר לאפליקציה שלכם דרך ספקי הזהויות של הצוותים בפרויקט, והצוותים לא יוכלו עוד לאמת דומיינים, לחבר ספקי זהויות או להפעיל חיוב SSO.',
+  'Sign in to Appwrite with your company login':
+    'התחברות ל-Appwrite עם חשבון החברה שלכם',
+  'People on your verified domains sign in to the Console through your identity provider, and join this organization with the roles you choose.':
+    'אנשים בדומיינים המאומתים שלכם מתחברים לקונסולה דרך ספק הזהויות שלכם, ומצטרפים לארגון הזה עם התפקידים שתבחרו.',
+  'Teammates join on their first sign-in':
+    'חברי הצוות מצטרפים בהתחברות הראשונה',
+  'No invites to send. Anyone on your domains gets in with the roles you set.':
+    'אין צורך לשלוח הזמנות. כל מי שבדומיינים שלכם נכנס עם התפקידים שהגדרתם.',
+  'Make it the only way in':
+    'הפכו אותה לדרך היחידה להיכנס',
+  'Require SSO, so people on your domains reach the organization only through your identity provider. Owners always keep access.':
+    'הפעילו חיוב SSO, כך שאנשים בדומיינים שלכם יגיעו לארגון רק דרך ספק הזהויות שלכם. לבעלים תמיד נשארת גישה.',
+  'Bring your identity provider':
+    'הביאו את ספק הזהויות שלכם',
+  'Okta, Microsoft Entra ID, Google Workspace, Keycloak, or anything that speaks OpenID Connect.':
+    'Okta,‏ Microsoft Entra ID,‏ Google Workspace,‏ Keycloak, או כל ספק שתומך ב-OpenID Connect.',
+  'Let your customers sign in with their company login':
+    'תנו ללקוחות שלכם להתחבר עם חשבון החברה שלהם',
+  "Users on a team's verified domains sign in to your app through that team's identity provider, and join the team with its roles.":
+    'משתמשים בדומיינים המאומתים של צוות מתחברים לאפליקציה שלכם דרך ספק הזהויות של אותו צוות, ומצטרפים לצוות עם התפקידים שלו.',
+  'An identity provider for each customer':
+    'ספק זהויות לכל לקוח',
+  'Give every customer a team with its own domains and its own identity provider.':
+    'תנו לכל לקוח צוות עם דומיינים משלו וספק זהויות משלו.',
+  'Users join on their first sign-in':
+    'משתמשים מצטרפים בהתחברות הראשונה',
+  'No invites to send. They land in the team with the roles you chose.':
+    'אין צורך לשלוח הזמנות. הם מגיעים לצוות עם התפקידים שבחרתם.',
+  'Require SSO, team by team':
+    'חיוב SSO, צוות אחר צוות',
+  "Members on a team's domains get its roles only after signing in through its identity provider.":
+    'חברים בדומיינים של צוות מקבלים את התפקידים שלו רק אחרי התחברות דרך ספק הזהויות שלו.',
+  'One add-on covers every team in this project, in each of its environments.':
+    'תוסף אחד מכסה את כל הצוותים בפרויקט הזה, בכל אחת מהסביבות שלו.',
+  'Prorated for the current billing cycle.':
+    'מחושב יחסית למחזור החיוב הנוכחי.',
+  'Your company': 'החברה שלכם',
+  'Your customer': 'הלקוח שלכם',
+  "With this add-on, people on your organization's verified domains sign in to the Console through its identity providers.":
+    'עם התוסף הזה, אנשים בדומיינים המאומתים של הארגון שלכם מתחברים לקונסולה דרך ספקי הזהויות שלו.',
+  'This add-on is available on {plans}. Upgrade your plan to enable it.':
+    'התוסף הזה זמין בתוכניות {plans}. שדרגו את התוכנית כדי להפעיל אותו.',
+  "You don't have permission to manage this organization's add-ons.":
+    'אין לכם הרשאה לנהל את התוספים של הארגון הזה.',
+  'Single sign-on add-on is already active for this organization':
+    'תוסף ההתחברות היחידה (SSO) כבר פעיל בארגון זה',
+  'Set it up for each team on its Single sign-on tab, under Auth.':
+    'מגדירים אותה לכל צוות בלשונית ההתחברות היחידה (SSO) שלו, תחת אימות.',
+  'Go to teams': 'מעבר לצוותים',
+  "Until the add-on is active, nobody signs in through the identity providers of this project's teams and Require SSO has no effect. You can still delete domains and identity providers, and turn Require SSO off.":
+    'עד שהתוסף יהיה פעיל, אף אחד לא מתחבר דרך ספקי הזהויות של הצוותים בפרויקט וחיוב SSO לא חל. עדיין אפשר למחוק דומיינים וספקי זהויות, ולכבות את חיוב ה-SSO.',
+  "Single sign-on in a project needs the Single sign-on add-on. Enable it in the project's settings.":
+    'התחברות יחידה (SSO) בפרויקט דורשת את תוסף ההתחברות היחידה (SSO). הפעילו אותו בהגדרות הפרויקט.',
+  'Are you sure you want to disable the Single sign-on add-on? It stays active until the end of your current billing cycle and is not renewed. Then single sign-on for the organization stops, and people who can only sign in through your identity providers can no longer sign in.':
+    'האם אתם בטוחים שברצונכם להשבית את תוסף ההתחברות היחידה (SSO)? הוא יישאר פעיל עד סוף מחזור החיוב הנוכחי ולא יחודש. אחר כך ההתחברות היחידה (SSO) של הארגון תיפסק, ואנשים שיכולים להתחבר רק דרך ספקי הזהויות שלכם לא יוכלו עוד להתחבר.',
   'Payment could not be authorized. Please try enabling the addon again.':
     'לא ניתן היה לאשר את התשלום. נסו להפעיל את התוסף שוב.',
   'Add a payment method to your organization before enabling this addon.':
@@ -3922,6 +4096,15 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Let your team know someone is on it. It keeps firing until its monitor recovers.':
     'כך הצוות יודע שמישהו מטפל בזה. ההתראה תמשיך לפעול עד שהמוניטור יחזור לשגרה.',
   'Nobody has acknowledged this alert': 'אף אחד עדיין לא אישר טיפול בהתראה הזו',
+  Acknowledged: 'בטיפול',
+  'Alert acknowledged': 'אישרתם טיפול בהתראה',
+  "Your team sees that you're on it. It keeps firing until its monitor recovers.":
+    'הצוות רואה שאתם מטפלים בזה. ההתראה תמשיך לפעול עד שהמוניטור יחזור לשגרה.',
+  'This alert has already resolved': 'ההתראה הזו כבר נסגרה',
+  'Only a firing alert can be acknowledged.':
+    'אפשר לאשר טיפול רק בהתראה פעילה.',
+  "Your role can't change alerts. Ask an owner or a developer.":
+    'התפקיד שלכם לא מאפשר לשנות התראות. פנו לבעלים או למפתח.',
   "You don't have permission to manage monitors.":
     'אין לכם הרשאה לנהל מוניטורים.',
   'between two alerts from this monitor.': 'בין שתי התראות מהמוניטור הזה.',
@@ -4216,6 +4399,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Server refused the session': 'השרת דחה את הסשן',
   'Target is in a denied network': 'היעד נמצא ברשת חסומה',
   'Timed out': 'הזמן הקצוב פג',
+  'A rule matched': 'אחד הכללים התקיים',
   '30 seconds': '30 שניות',
   '1 minute': 'דקה',
   '5 seconds': '5 שניות',
@@ -4237,9 +4421,160 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'The note is removed from the chart for everyone.':
     'ההערה תוסר מהגרף עבור כולם.',
   'Former member': 'חבר לשעבר',
+  Notes: 'הערות',
+  Escalations: 'הסלמות',
+  Escalation: 'הסלמה',
+  Escalating: 'בהסלמה',
+  'Alert when the value is': 'להתריע כשהערך',
+  'Counted over': 'נספר לאורך',
+  'Undo acknowledgement': 'ביטול האישור',
+  'Someone needs to act now, even at night.':
+    'מישהו צריך לפעול עכשיו, גם בלילה.',
+  'The push plays a siren through silent mode and Do Not Disturb.':
+    'ההתראה משמיעה צפירה גם במצב שקט ובמצב נא לא להפריע.',
+  'Every level is emailed, shown in the console and pushed to phones, with the level in the title. Webhooks and functions receive it with the alert events. A critical push rings only on phones that allowed critical alerts.':
+    'כל רמה נשלחת באימייל, מוצגת בקונסול ונשלחת כהתראה לטלפונים, עם הרמה בכותרת. Webhooks ופונקציות מקבלים אותה עם אירועי ההתראה. התראה קריטית מצלצלת רק בטלפונים שאישרו התראות קריטיות.',
+  'Notify roles once': 'להודיע לתפקידים פעם אחת',
+  'Select an escalation.': 'יש לבחור הסלמה.',
+  'Each step of the escalation is notified in turn until someone acknowledges the alert.':
+    'כל שלב בהסלמה מקבל התראה בתורו, עד שמישהו מאשר את ההתראה.',
+  'Create an escalation': 'יצירת הסלמה',
+  'Manage escalations': 'ניהול הסלמה',
+  'Could not load escalations.': 'לא ניתן היה לטעון את ההסלמה.',
+  'Your organization has no escalations yet.': 'לארגון שלך עדיין אין הסלמה.',
+  'Select an escalation': 'בחירת הסלמה',
+  'repeats {count}×': 'חוזרת {count}×',
+  'Acknowledging stops the escalation. It keeps firing until its monitor recovers.':
+    'אישור עוצר את ההסלמה. ההתראה ממשיכה לפעול עד שהמוניטור מתאושש.',
+  'No step notified yet': 'עדיין לא נשלחה התראה לאף שלב',
+  'Step {step} of {total}': 'שלב {step} מתוך {total}',
+  Notified: 'נשלח',
+  'Step {step}': 'שלב {step}',
+  'round {round}': 'סבב {round}',
+  'Stopped, acknowledged': 'נעצרה, אושרה',
+  'Stopped, resolved': 'נעצרה, נפתרה',
+  'All steps notified': 'כל השלבים קיבלו התראה',
+  'Escalation has been deleted': 'ההסלמה נמחקה',
+  'Monitors use this escalation. Move them to another escalation or to roles first.':
+    'מוניטורים משתמשים בהסלמה הזו. יש להעביר אותם קודם להסלמה אחרת או לתפקידים.',
+  'Failed to delete escalation': 'מחיקת ההסלמה נכשלה',
+  'Notify your team step by step until someone acknowledges the alert. Pick an escalation on any monitor.':
+    'להודיע לצוות שלב אחר שלב עד שמישהו מאשר את ההתראה. ניתן לבחור הסלמה בכל מוניטור.',
+  'No escalations yet.': 'עדיין אין הסלמה.',
+  'Delete escalation': 'מחיקת הסלמה',
+  'Add members': 'הוספת חברים',
+  'Enter a name.': 'יש להזין שם.',
+  'Each step needs a role or a member.': 'כל שלב צריך תפקיד או חבר.',
+  'Escalation has been updated': 'ההסלמה עודכנה',
+  'Escalation has been created': 'ההסלמה נוצרה',
+  'Failed to update escalation': 'עדכון ההסלמה נכשל',
+  'Failed to create escalation': 'יצירת ההסלמה נכשלה',
+  'Edit escalation': 'עריכת הסלמה',
+  'Create escalation': 'יצירת הסלמה',
+  'Steps are notified in turn until someone acknowledges the alert.':
+    'השלבים מקבלים התראה בתורם, עד שמישהו מאשר את ההתראה.',
+  'On-call': 'תורנות',
+  'Remove step {step}': 'הסרת שלב {step}',
+  'Seconds to wait': 'שניות המתנה',
+  'seconds after the alert fires': 'שניות אחרי שההתראה מופעלת',
+  'seconds after the previous step': 'שניות אחרי השלב הקודם',
+  'Add step': 'הוספת שלב',
+  Once: 'פעם אחת',
+  '{count} times': '{count} פעמים',
+  "Starts again from the first step, a monitor's cooldown after the last one.":
+    'מתחילה שוב מהשלב הראשון, פרק הצינון של המוניטור אחרי השלב האחרון.',
+  now: 'עכשיו',
+  'after {delay}': 'אחרי {delay}',
   'analytics properties': 'נכסי אנליטיקה',
   'analytics property': 'נכס אנליטיקה',
   'per project.': 'לכל פרויקט.',
   'to create another.': 'כדי ליצור נכס נוסף.',
   'to enable analytics on this site.': 'כדי להפעיל אנליטיקה באתר הזה.',
+  'Your plan checks at most every {interval}.':
+    'בתוכנית שלך הבדיקות רצות לכל היותר פעם ב-{interval}.',
+  'Synthetic checks: {used} of {limit} allowed on your plan.':
+    'בדיקות סינתטיות: {used} מתוך {limit} שהתוכנית שלך מאפשרת.',
+  'Synthetic checks: {used} of {included} included.':
+    'בדיקות סינתטיות: {used} מתוך {included} כלולות בתוכנית.',
+  'Each extra check costs {price} per month.':
+    'כל בדיקה נוספת עולה {price} לחודש.',
+  'Upgrade your plan to add more synthetic checks.':
+    'כדי להוסיף בדיקות סינתטיות, יש לשדרג את התוכנית.',
+  'HTTP, DNS, TCP and SMTP monitors are available on paid plans.':
+    'מוניטורים מסוג HTTP, DNS, TCP ו-SMTP זמינים בתוכניות בתשלום.',
+  'Escalations: {used} of {limit} allowed on your plan.':
+    'הסלמות: {used} מתוך {limit} שהתוכנית שלך מאפשרת.',
+  'On-call responders: {used} of {included} included.':
+    'כוננים: {used} מתוך {included} כלולים בתוכנית.',
+  'Each extra responder costs {price} per month.':
+    'כל כונן נוסף עולה {price} לחודש.',
+  'Upgrade your plan to create more escalations.':
+    'כדי ליצור הסלמות נוספות, יש לשדרג את התוכנית.',
+  'Your plan allows up to {count} steps per escalation.':
+    'התוכנית שלך מאפשרת עד {count} שלבים בכל הסלמה.',
+  'Upgrade your plan to repeat escalations.':
+    'כדי לחזור על הסלמות, יש לשדרג את התוכנית.',
+  'Usage monitors: {used} of {limit} allowed on your plan.':
+    'מוניטורי שימוש: {used} מתוך {limit} שהתוכנית שלך מאפשרת.',
+  'Upgrade your plan to add more usage monitors.':
+    'כדי להוסיף מוניטורי שימוש, יש לשדרג את התוכנית.',
+  // Analytics for signed-in users
+  'Signed-in users, ranked by visits': 'משתמשים מחוברים, לפי מספר הביקורים',
+  'View user': 'הצגת המשתמש',
+  'Could not load analytics': 'לא ניתן לטעון את האנליטיקה',
+  'No analytics yet': 'אין עדיין אנליטיקה',
+  "Add an analytics property and turn on User identification to see each signed-in user's pages and events here.":
+    'הוסיפו נכס אנליטיקה והפעילו זיהוי משתמשים כדי לראות כאן את הדפים והאירועים של כל משתמש מחובר.',
+  'Add analytics': 'הוספת אנליטיקה',
+  'Link {name} to their analytics': 'קישור {name} לנתוני האנליטיקה שלו',
+  "Turn on User identification in a property's settings to record the signed-in user on every event, so their pages, events and sessions show here.":
+    'הפעילו זיהוי משתמשים בהגדרות הנכס כדי לתעד את המשתמש המחובר בכל אירוע, כך שהדפים, האירועים והסשנים שלו יוצגו כאן.',
+  'Open property settings': 'פתיחת הגדרות הנכס',
+  'Last active': 'פעילות אחרונה',
+  Calls: 'קריאות',
+  'Active days': 'ימים פעילים',
+  'No events from this user in the last 30 days':
+    'אין אירועים מהמשתמש הזה ב-30 הימים האחרונים',
+  '30 days ago': 'לפני 30 יום',
+  'No custom events': 'אין אירועים מותאמים',
+  'No model calls': 'אין קריאות למודלים',
+  'No screens viewed': 'לא נצפו מסכים',
+  'No pages viewed': 'לא נצפו דפים',
+  'View in analytics': 'הצגה באנליטיקה',
+  'New installs and updates of your app': 'התקנות ועדכונים חדשים של האפליקציה',
+  'Add the latest tracking SDK to your app to count installs and updates.':
+    'הוסיפו את ה-SDK העדכני למעקב לאפליקציה כדי לספור התקנות ועדכונים.',
+  'Pushes received on devices, and how many were opened':
+    'התראות שהתקבלו במכשירים, וכמה מהן נפתחו',
+  'No push notifications tracked yet': 'עדיין לא נמדדו התראות פוש',
+  'Pushes sent with Messaging show their reach and opens here once the tracking SDK is in your app.':
+    'התראות שנשלחו דרך Messaging יציגו כאן את ההגעה והפתיחות שלהן כשה-SDK למעקב יהיה באפליקציה.',
+  'Open Messaging': 'פתיחת Messaging',
+  Received: 'התקבלו',
+  Opened: 'נפתחו',
+  'Open rate': 'שיעור פתיחה',
+  Rate: 'שיעור',
+  'No pushes with a message ID in this range':
+    'אין התראות עם מזהה הודעה בטווח הזה',
+  '{count} delivered': '{count} נמסרו',
+  'View message': 'הצגת ההודעה',
+  Views: 'צפיות',
+  'Last seen': 'נראה לאחרונה',
+  'Not in this period': 'לא בתקופה הזו',
+  'of {count}': 'מתוך {count}',
+  'Events per day, last 30 days': 'אירועים ליום, 30 הימים האחרונים',
+  Properties: 'נכסים',
+  'Where this user was active, last 30 days':
+    'היכן המשתמש היה פעיל, 30 הימים האחרונים',
+  'No activity': 'אין פעילות',
+  'No locations': 'אין מיקומים',
+  'No sources': 'אין מקורות',
+  'No browsers': 'אין דפדפנים',
+  'No operating systems': 'אין מערכות הפעלה',
+  'No devices': 'אין מכשירים',
+  'No OS versions': 'אין גרסאות מערכת הפעלה',
+  views: 'צפיות',
+  'signed in': 'מחוברים',
+  'Signed in now': 'מחוברים עכשיו',
+  'and {count} more': 'ועוד {count}',
 }

@@ -117,7 +117,7 @@ final class OriginTest extends TestCase
      *
      * @return array<string, mixed>
      */
-    protected function pushPayload(string $branch, bool $created = false, bool $deleted = false): array
+    protected function pushPayload(string $branch, bool $created = false, bool $deleted = false, mixed $before = null): array
     {
         return [
             'deliveryId' => 'whd_0123456789',
@@ -135,7 +135,7 @@ final class OriginTest extends TestCase
                     ],
                     'refUpdates' => [[
                         'ref' => 'refs/heads/' . $branch,
-                        'before' => $created ? str_repeat('0', 40) : 'abc123',
+                        'before' => $before ?? ($created ? str_repeat('0', 40) : 'abc123'),
                         'after' => $deleted ? str_repeat('0', 40) : self::COMMIT_HASH,
                         'created' => $created,
                         'deleted' => $deleted,
@@ -312,6 +312,35 @@ final class OriginTest extends TestCase
         }
     }
 
+    public function testGetEventPushReadsANonStringBeforeAsEmpty(): void
+    {
+        $events = $this->adapter->getEvents('repository.pushed', (string) json_encode($this->pushPayload('main', before: ['abc123'])));
+
+        $this->assertCount(1, $events);
+        $this->assertSame('', $events[0]['previousCommitHash']);
+    }
+
+    public function testCompareFilesReadsNonStringFieldsAsEmpty(): void
+    {
+        $adapter = new class (new Cache(new None())) extends Origin {
+            protected function call(string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, bool $followRedirects = true): array
+            {
+                return [
+                    'headers' => ['status-code' => 200],
+                    'body' => ['files' => [
+                        ['filename' => 'src/index.php', 'status' => 'renamed', 'previousFilename' => 'index.php'],
+                        ['filename' => 42, 'status' => null, 'previousFilename' => ['old.php']],
+                    ]],
+                ];
+            }
+        };
+
+        $this->assertSame([
+            ['filename' => 'src/index.php', 'status' => 'renamed', 'previous_filename' => 'index.php'],
+            ['filename' => '', 'status' => '', 'previous_filename' => ''],
+        ], $adapter->compareFiles(self::OWNER, self::REPOSITORY_NAME, 'abc123', self::COMMIT_HASH));
+    }
+
     public function testGetSigningKeys(): void
     {
         $adapter = new FixtureKeysOrigin(new Cache(new None()));
@@ -336,6 +365,8 @@ final class OriginTest extends TestCase
         $this->assertSame(self::OWNER, $event['owner']);
         $this->assertSame('i_0123456789', $event['installationId']);
         $this->assertSame(self::COMMIT_HASH, $event['commitHash']);
+        $this->assertSame('abc123', $event['previousCommitHash']);
+        $this->assertFalse($event['forced']);
         $this->assertSame(self::COMMIT_MESSAGE, $event['headCommitMessage']);
         $this->assertSame(self::AUTHOR_NAME, $event['headCommitAuthorName']);
         $this->assertSame(self::AUTHOR_EMAIL, $event['headCommitAuthorEmail']);
@@ -414,9 +445,120 @@ final class OriginTest extends TestCase
             $this->assertSame($action, $events[0]['action'], "Unexpected action for {$type}");
         }
 
-        // Comment, review and reviewer deliveries are not lifecycle events
-        $type = 'pull_request.comment.created';
+        // Review and reviewer deliveries are not lifecycle events
+        $type = 'pull_request.review.submitted';
         $this->assertSame([], $this->adapter->getEvents($type, (string) json_encode($this->pullRequestPayload($type))));
+    }
+
+    public function testGetEventCommentOpeningAGeneralThread(): void
+    {
+        $events = $this->adapter->getEvents('pull_request.comment.created', $this->commentPayload([
+            'id' => 'cth_0123456789',
+            'createdAt' => '2026-08-18T10:00:00Z',
+            'updatedAt' => '2026-08-18T10:00:00Z',
+        ], ['user' => ['id' => 'user_0123456789', 'handle' => 'octo']]));
+
+        $this->assertCount(1, $events);
+        $event = $events[0];
+
+        $this->assertSame('created', $event['action']);
+        $this->assertSame(self::REPOSITORY_ID, $event['repositoryId']);
+        $this->assertSame(self::REPOSITORY_NAME, $event['repositoryName']);
+        $this->assertSame(self::OWNER, $event['owner']);
+        $this->assertSame('i_0123456789', $event['installationId']);
+        $this->assertSame(self::PULL_REQUEST_NUMBER, $event['pullRequestNumber']);
+        $this->assertSame('cmt_0123456789', $event['commentId']);
+        $this->assertSame('issue', $event['commentKind']);
+        $this->assertSame('', $event['commentThreadId']);
+        $this->assertSame('', $event['commentReplyToId']);
+        $this->assertSame('@appwrite review', $event['commentBody']);
+        $this->assertSame('https://cursor.com/codebase/' . self::OWNER . '/' . self::REPOSITORY_NAME . '/pull/' . self::PULL_REQUEST_NUMBER, $event['commentUrl']);
+        $this->assertSame('octo', $event['commentAuthor']);
+        $this->assertSame('user_0123456789', $event['commentAuthorId']);
+        $this->assertSame('User', $event['commentAuthorType']);
+    }
+
+    public function testGetEventCommentOpeningAnInlineThread(): void
+    {
+        $events = $this->adapter->getEvents('pull_request.comment.created', $this->commentPayload([
+            'id' => 'cth_0123456789',
+            'version' => ['number' => '1', 'headSha' => self::COMMIT_HASH, 'baseSha' => self::COMMIT_HASH],
+            'path' => 'src/index.ts',
+            'side' => 'right',
+            'startLine' => 3,
+        ], ['user' => ['id' => 'user_0123456789']]));
+
+        $this->assertSame('review', $events[0]['commentKind']);
+        $this->assertSame('cth_0123456789', $events[0]['commentThreadId']);
+        $this->assertSame('', $events[0]['commentReplyToId']);
+        // A user without a public handle is named by their id
+        $this->assertSame('user_0123456789', $events[0]['commentAuthor']);
+    }
+
+    public function testGetEventCommentReplyingInAThread(): void
+    {
+        $events = $this->adapter->getEvents('pull_request.comment.created', $this->commentPayload(
+            ['id' => 'cth_0123456789'],
+            ['app' => ['id' => 'app_0123456789', 'displayName' => 'Reviewer']],
+        ));
+
+        // A reply carries only its thread's id, whatever kind of thread it is in
+        $this->assertSame('review', $events[0]['commentKind']);
+        $this->assertSame('cth_0123456789', $events[0]['commentThreadId']);
+        $this->assertSame('cth_0123456789', $events[0]['commentReplyToId']);
+        $this->assertSame('app_0123456789', $events[0]['commentAuthorId']);
+        $this->assertSame('App', $events[0]['commentAuthorType']);
+    }
+
+    public function testGetEventCommentByServiceAccount(): void
+    {
+        $events = $this->adapter->getEvents('pull_request.comment.created', $this->commentPayload(
+            ['id' => 'cth_0123456789'],
+            ['serviceAccount' => ['id' => 'sa_0123456789', 'type' => 'bugbot']],
+        ));
+
+        $this->assertSame('sa_0123456789', $events[0]['commentAuthorId']);
+        $this->assertSame('Bot', $events[0]['commentAuthorType']);
+    }
+
+    /**
+     * A pull_request.comment.created delivery, enveloped as Origin sends it.
+     *
+     * @param array<string, mixed> $thread
+     * @param array<string, mixed> $author
+     */
+    protected function commentPayload(array $thread, array $author): string
+    {
+        return (string) json_encode([
+            'deliveryId' => 'whd_0123456789',
+            'appId' => 'app_0123456789',
+            'installationId' => 'i_0123456789',
+            'event' => [
+                'id' => 'evt_0123456789',
+                'type' => 'pull_request.comment.created',
+                'eventTime' => '2026-08-18T10:00:00Z',
+                'payload' => [
+                    'pullRequest' => [
+                        'id' => 'pr_0123456789',
+                        'number' => (string) self::PULL_REQUEST_NUMBER,
+                        'repository' => [
+                            'id' => self::REPOSITORY_ID,
+                            'name' => self::REPOSITORY_NAME,
+                            'owner' => ['slug' => self::OWNER, 'id' => 'ns_0123456789', 'type' => 'team'],
+                        ],
+                    ],
+                    'comment' => [
+                        'id' => 'cmt_0123456789',
+                        'thread' => $thread,
+                        'body' => '@appwrite review',
+                        'author' => $author,
+                        'createdAt' => '2026-08-18T10:00:00Z',
+                        'updatedAt' => '2026-08-18T10:00:00Z',
+                        'reactions' => [],
+                    ],
+                ],
+            ],
+        ]);
     }
 
     public function testGetEventInstallation(): void

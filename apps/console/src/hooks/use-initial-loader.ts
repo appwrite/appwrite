@@ -94,6 +94,7 @@ export function useInitialLoader() {
       location.pathname === '/sign-in' ||
       location.pathname === '/sign-up' ||
       location.pathname === '/recovery' ||
+      location.pathname === '/sso' ||
       location.pathname === '/mfa' ||
       location.pathname === '/join' ||
       location.pathname === '/sign-out' ||

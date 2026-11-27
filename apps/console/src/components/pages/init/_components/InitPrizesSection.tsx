@@ -123,7 +123,7 @@ function DailyPrizeCell({
   const meta = PLATFORM_META[giveaway.platform]
   const resolvedHref = useInitHref(giveaway.href)
   const presenceHandlers = usePrizePresenceHandlers(
-    buildInitViewingDailyPrizeActivity(giveaway.day, giveaway.prizeDescription),
+    buildInitViewingDailyPrizeActivity(giveaway),
   )
   const shellClass = cn(
     'group flex h-full min-h-0 min-w-0 flex-col transition-colors hover:bg-accent/15',
@@ -209,7 +209,7 @@ function GrandPrizeCell({
 }) {
   const platformMeta = grandPrize.platform ? PLATFORM_META[grandPrize.platform] : null
   const presenceHandlers = usePrizePresenceHandlers(
-    buildInitViewingGrandPrizeActivity(grandPrize.title),
+    buildInitViewingGrandPrizeActivity(grandPrize),
   )
 
   return (

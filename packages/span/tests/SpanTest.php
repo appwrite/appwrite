@@ -433,6 +433,32 @@ class SpanTest extends TestCase
         );
     }
 
+    public function testForkedProcessDoesNotRepeatParentIds(): void
+    {
+        if (!\function_exists('pcntl_fork')) {
+            $this->markTestSkipped('pcntl is not available');
+        }
+
+        new Span(); // seed the parent's generator before forking
+
+        $file = tempnam(sys_get_temp_dir(), 'span');
+        $pid = pcntl_fork();
+        if ($pid === 0) {
+            $span = new Span();
+            file_put_contents($file, $span->get('span.trace_id') . ' ' . $span->get('span.id'));
+            exit(0);
+        }
+
+        pcntl_waitpid($pid, $status);
+        $span = new Span();
+        $child = (string) file_get_contents($file);
+        unlink($file);
+
+        $this->assertSame(0, pcntl_wexitstatus($status));
+        $this->assertNotSame($span->get('span.trace_id') . ' ' . $span->get('span.id'), $child);
+        $this->assertNotSame((string) $span->get('span.trace_id'), explode(' ', $child)[0]);
+    }
+
     public function testSpanIdIsUniqueBetweenSpans(): void
     {
         $span1 = new Span();

@@ -58,11 +58,11 @@ export function buildInitPresenceActivityAllowlist(
   if (event.prizes) {
     for (const giveaway of event.prizes.dailyGiveaways) {
       allowed.add(
-        buildInitViewingDailyPrizeActivity(giveaway.day, giveaway.prizeDescription),
+        buildInitViewingDailyPrizeActivity(giveaway),
       )
       allowed.add(buildInitRunningGiveawayRaffleActivity(giveaway.day))
     }
-    allowed.add(buildInitViewingGrandPrizeActivity(event.prizes.grandPrize.title))
+    allowed.add(buildInitViewingGrandPrizeActivity(event.prizes.grandPrize))
     allowed.add(buildInitRunningGrandPrizeRevealActivity())
     allowed.add(buildInitSpinningGiveawayRaffleActivity())
   }

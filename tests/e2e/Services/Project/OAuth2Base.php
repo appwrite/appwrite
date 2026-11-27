@@ -35,6 +35,7 @@ trait OAuth2Base
             'authentik' => ['clientId' => '', 'clientSecret' => '', 'endpoint' => '', 'enabled' => false],
             'fusionauth' => ['clientId' => '', 'clientSecret' => '', 'endpoint' => '', 'enabled' => false],
             'keycloak' => ['clientId' => '', 'clientSecret' => '', 'endpoint' => '', 'realmName' => '', 'enabled' => false],
+            'clerk' => ['clientId' => '', 'clientSecret' => '', 'endpoint' => '', 'enabled' => false],
         ];
 
         foreach ($providers as $provider => $payload) {
@@ -469,6 +470,7 @@ trait OAuth2Base
         yield 'auth0 endpoint' => ['auth0', 'clientId', 'clientSecret', ['endpoint' => 'example.us.auth0.com'], ['endpoint' => 'other.us.auth0.com']];
         yield 'gitlab endpoint' => ['gitlab', 'applicationId', 'secret', ['endpoint' => 'https://gitlab.example.com'], ['endpoint' => 'https://other.example.com']];
         yield 'authentik endpoint' => ['authentik', 'clientId', 'clientSecret', ['endpoint' => 'example.authentik.com'], ['endpoint' => 'other.authentik.com']];
+        yield 'clerk endpoint' => ['clerk', 'clientId', 'clientSecret', ['endpoint' => 'clerk.example.com'], ['endpoint' => 'clerk.other.com']];
         yield 'fusionauth endpoint' => ['fusionauth', 'clientId', 'clientSecret', ['endpoint' => 'example.fusionauth.io'], ['endpoint' => 'other.fusionauth.io']];
         yield 'keycloak endpoint' => ['keycloak', 'clientId', 'clientSecret', ['endpoint' => 'keycloak.example.com', 'realmName' => 'appwrite-realm'], ['endpoint' => 'keycloak.other.com']];
         yield 'keycloak realmName' => ['keycloak', 'clientId', 'clientSecret', ['endpoint' => 'keycloak.example.com', 'realmName' => 'appwrite-realm'], ['realmName' => 'other-realm']];
@@ -524,6 +526,34 @@ trait OAuth2Base
         $this->assertSame('aus000000000000000h7z', $update['body']['authorizationServerId']);
         $this->assertSame('', $update['body']['clientSecret']);
         $this->assertTrue($update['body']['enabled']);
+    }
+
+    public function testUpdateOAuth2ClerkRoundTrip(): void
+    {
+        $update = $this->updateOAuth2('clerk', [
+            'clientId' => 'clerk-client',
+            'clientSecret' => 'clerk-secret',
+            'endpoint' => 'clerk.example.com',
+            'enabled' => true,
+        ]);
+
+        $this->assertSame(200, $update['headers']['status-code']);
+        $this->assertSame('clerk-client', $update['body']['clientId']);
+        $this->assertSame('clerk.example.com', $update['body']['endpoint']);
+        $this->assertSame('', $update['body']['clientSecret']);
+        $this->assertTrue($update['body']['enabled']);
+    }
+
+    public function testUpdateOAuth2ClerkEnableRequiresEndpoint(): void
+    {
+        $response = $this->updateOAuth2('clerk', [
+            'clientId' => 'clerk-client',
+            'clientSecret' => 'clerk-secret',
+            'enabled' => true,
+        ]);
+
+        $this->assertSame(400, $response['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $response['body']['type']);
     }
 
     public function testUpdateOAuth2GoogleRoundTrip(): void

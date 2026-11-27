@@ -1,11 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Models } from '@appwrite.io/console'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
+  listsEqual,
   nonEmptyList,
   trimOrEmpty,
+  urlFieldError,
   useOrgAppUpdate,
 } from './useOrgAppUpdate'
 import { AppLogoFilePicker } from '../../_components/AppLogoFilePicker'
@@ -24,11 +26,22 @@ export function BrandingCard({ orgId, app }: BrandingCardProps) {
   const [logoUri, setLogoUri] = useState(app.logoUri ?? '')
   const [images, setImages] = useState(app.images ?? [])
 
+  const syncedAppRef = useRef(app)
+
   useEffect(() => {
+    if (syncedAppRef.current.$id === app.$id) return
+    syncedAppRef.current = app
     setClientUri(app.clientUri ?? '')
     setLogoUri(app.logoUri ?? '')
     setImages(app.images ?? [])
   }, [app])
+
+  const clientUriError = urlFieldError(clientUri)
+
+  const brandingDirty =
+    trimOrEmpty(clientUri) !== (app.clientUri ?? '') ||
+    trimOrEmpty(logoUri) !== (app.logoUri ?? '') ||
+    !listsEqual(nonEmptyList(images), app.images ?? [])
 
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
@@ -49,7 +62,13 @@ export function BrandingCard({ orgId, app }: BrandingCardProps) {
             value={clientUri}
             onChange={(e) => setClientUri(e.target.value)}
             placeholder="https://example.com"
+            aria-invalid={clientUriError !== null}
           />
+          {clientUriError ? (
+            <p className="text-[12px] text-destructive">
+              {clientUriError}
+            </p>
+          ) : null}
         </div>
         <div className="space-y-2">
           <Label>{t('Logo')}</Label>
@@ -74,12 +93,16 @@ export function BrandingCard({ orgId, app }: BrandingCardProps) {
         <Button
           size="sm"
           className="h-9 text-[13px]"
-          disabled={isUpdating}
+          disabled={
+            isUpdating || !brandingDirty || clientUriError !== null
+          }
           onClick={() =>
             submit({
               clientUri: trimOrEmpty(clientUri),
               logoUri: trimOrEmpty(logoUri),
               images: nonEmptyList(images),
+            }).catch(() => {
+              // toast handled in submit
             })
           }
         >
