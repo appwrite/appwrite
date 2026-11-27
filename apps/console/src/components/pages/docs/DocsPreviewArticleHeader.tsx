@@ -48,7 +48,7 @@ export function DocsPreviewArticleHeader({
         <div className="min-w-0 flex-1">
           <h1 className={docsPreviewPrimaryTitleClass}>
             {title}
-            <span className="text-[var(--brand-cta)]">_</span>
+            <span aria-hidden="true" className="heading-cursor" />
           </h1>
           {description ? (
             <p className={PREVIEW_DESCRIPTION_CLASS}>{description}</p>

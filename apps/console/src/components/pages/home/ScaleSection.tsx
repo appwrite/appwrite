@@ -180,7 +180,7 @@ export function ScaleSection() {
       <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
         <h2 className="font-aeonik-pro max-w-3xl text-balance text-[36px] font-normal leading-none tracking-tight text-foreground sm:text-[44px]">
           {t('Over half a million developers scale with Appwrite') /* pragma: allowlist secret */}
-          <span className="text-[var(--brand-cta)]">_</span>
+          <span aria-hidden="true" className="heading-cursor" />
         </h2>
 
         <div className="mt-8 sm:mt-10">

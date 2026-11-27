@@ -221,7 +221,7 @@ export function CompanyTeam() {
         <div className="max-w-3xl">
           <h2 className="font-aeonik-pro text-balance text-[28px] font-normal leading-none tracking-tight text-foreground sm:text-[36px]">
             {t(companyTeamIntro.title)}
-            <span className="text-[var(--brand-cta)]">_</span>
+            <span aria-hidden="true" className="heading-cursor" />
           </h2>
           <p className="mt-5 text-[14px] leading-7 text-muted-foreground sm:mt-6 sm:text-[15px]">
             {t(companyTeamIntro.description)}

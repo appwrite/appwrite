@@ -284,7 +284,7 @@ export function View({ variant = 'default' }: { variant?: HomeVariant }) {
                 {homeCopy.heroTitleLineOne}
                 <br />
                 {homeCopy.heroTitleLineTwo}
-                <span className="text-[var(--brand-cta)]">_</span>
+                <span aria-hidden="true" className="heading-cursor" />
               </h1>
 
               <p className="mx-auto mt-7 max-w-4xl text-[15px] leading-6 text-muted-foreground sm:text-[16px] sm:leading-7">
@@ -374,7 +374,7 @@ export function View({ variant = 'default' }: { variant?: HomeVariant }) {
           <div className="mx-auto w-full max-w-6xl px-4 text-center sm:px-6">
             <h2 className="font-aeonik-pro text-[16px] font-normal tracking-tight text-foreground sm:text-[18px]">
               {homeCopy.toolsHeading}
-              <span className="text-[var(--brand-cta)]">_</span>
+              <span aria-hidden="true" className="heading-cursor" />
             </h2>
 
             <div className="mx-auto mt-8 flex max-w-5xl flex-wrap items-center justify-center gap-x-8 gap-y-7 sm:gap-x-10">
@@ -405,7 +405,7 @@ export function View({ variant = 'default' }: { variant?: HomeVariant }) {
                 {homeCopy.productsHeadingLineOne}
                 <br />
                 {homeCopy.productsHeadingLineTwo}
-                <span className="text-[var(--brand-cta)]">_</span>
+                <span aria-hidden="true" className="heading-cursor" />
               </h2>
               <p className="mx-auto mt-4 max-w-2xl text-[14px] leading-6 text-muted-foreground">
                 {homeCopy.productsDescription}
@@ -511,7 +511,7 @@ export function View({ variant = 'default' }: { variant?: HomeVariant }) {
             <div className="mx-auto max-w-5xl text-center">
               <h2 className="font-aeonik-pro mx-auto max-w-5xl text-balance text-[36px] font-normal leading-none tracking-tight text-foreground sm:text-[44px]">
                 {homeCopy.securityHeading}
-                <span className="text-[var(--brand-cta)]">_</span>
+                <span aria-hidden="true" className="heading-cursor" />
               </h2>
               <p className="mx-auto mt-5 max-w-2xl text-balance text-[14px] leading-6 text-muted-foreground sm:text-[15px] sm:leading-7">
                 {homeCopy.securityDescription}

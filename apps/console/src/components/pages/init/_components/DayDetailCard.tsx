@@ -137,7 +137,7 @@ function DayTitle({
       {leading ? <span>{leading}</span> : null}
       <span className="whitespace-nowrap">
         {lastWord}
-        <span className="text-[var(--brand-cta)]">_</span>
+        <span aria-hidden="true" className="heading-cursor" />
       </span>
     </h3>
   )

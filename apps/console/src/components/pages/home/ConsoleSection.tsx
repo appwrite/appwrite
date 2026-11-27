@@ -57,7 +57,7 @@ export function ConsoleSection() {
           </p>
           <h2 className="font-aeonik-pro mt-3 text-balance text-[36px] font-normal leading-none tracking-tight text-foreground sm:text-[48px]">
             {t('One control room for the whole factory')}
-            <span className="text-[var(--brand-cta)]">_</span>
+            <span aria-hidden="true" className="heading-cursor" />
           </h2>
           <p className="mx-auto mt-5 max-w-2xl text-balance text-[14px] leading-6 text-muted-foreground sm:text-[15px] sm:leading-7">
             {t(

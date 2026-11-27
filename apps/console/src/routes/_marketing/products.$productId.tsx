@@ -3,6 +3,7 @@ import { ProductPageLayout } from '@/components/pages/products/ProductPageLayout
 import { isProductReleased } from '@/lib/products/availability'
 import { getProductPageFeatures } from '@/lib/products/availability-ssr'
 import { getProductContent } from '@/lib/products/content'
+import { getProductSchema } from '@/lib/products/seo'
 import { isProductId, PRODUCT_REGISTRY } from '@/lib/products/registry'
 import {
   MARKETING_PAGE_ROUTE_STATIC_DATA,
@@ -17,6 +18,7 @@ import {
   siteFrameworksQueryOptions,
 } from '@/lib/react-query/hooks/sites'
 import { MARKETING_SITE_TEMPLATES_PROJECT_ID } from '@/lib/sites/site-template-wizard'
+import { stringifyJsonLd } from '@/lib/seo/json-ld'
 import { pageTitle } from '@/lib/utils/page-title'
 import { translate } from '@/lib/i18n/translate'
 
@@ -40,7 +42,12 @@ export const Route = createFileRoute('/_marketing/products/$productId')({
     const { metaTitle, metaDescription, faq } = getProductContent(
       params.productId,
     )
-    const head = { metaTitle, metaDescription, faq }
+    const [application, breadcrumbs] = getProductSchema({
+      id: params.productId,
+      name: PRODUCT_REGISTRY[params.productId].name,
+      description: metaDescription,
+    })
+    const head = { metaTitle, metaDescription, faq, application, breadcrumbs }
 
     if (typeof window !== 'undefined' && params.productId === 'sites') {
       const { queryClient } = context
@@ -83,7 +90,20 @@ export const Route = createFileRoute('/_marketing/products/$productId')({
         ogImageTitle: pageName,
         ogImageSubtitle,
       }),
-      scripts: content.faq.length ? [getMarketingFaqScript(content.faq)] : [],
+      scripts: [
+        {
+          type: 'application/ld+json',
+          children: stringifyJsonLd({
+            ...content.application,
+            description: metaDescription,
+          }),
+        },
+        {
+          type: 'application/ld+json',
+          children: stringifyJsonLd(content.breadcrumbs),
+        },
+        ...(content.faq.length ? [getMarketingFaqScript(content.faq)] : []),
+      ],
     }
   },
   component: ProductPage,

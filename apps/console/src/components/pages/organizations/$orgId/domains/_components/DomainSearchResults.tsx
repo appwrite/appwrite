@@ -207,7 +207,7 @@ export function DomainSearchResults({
                       )}
                     >
                       {title}
-                      <span className="text-[var(--brand-cta)]">_</span>
+                      <span aria-hidden="true" className="heading-cursor" />
                     </HeroHeading>
                   ) : null}
                   {description ? (

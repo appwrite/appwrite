@@ -470,7 +470,7 @@ export function TestimonialsSection() {
         <div className="mx-auto mb-10 max-w-3xl text-center sm:mb-12">
           <h2 className="font-aeonik-pro text-balance text-[36px] font-normal leading-none tracking-tight text-foreground sm:text-[44px]">
             {t('Loved by teams building in production')}
-            <span className="text-[var(--brand-cta)]">_</span>
+            <span aria-hidden="true" className="heading-cursor" />
           </h2>
           <p className="mx-auto mt-5 max-w-2xl text-balance text-[14px] leading-6 text-muted-foreground sm:text-[15px] sm:leading-7">
             {t(

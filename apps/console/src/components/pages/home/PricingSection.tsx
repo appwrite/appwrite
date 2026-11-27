@@ -204,7 +204,7 @@ export function PricingSection() {
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between lg:gap-10">
           <h2 className="font-aeonik-pro max-w-xl text-balance text-[36px] font-normal leading-none tracking-tight text-foreground sm:text-[44px]">
             {t('Start building like a team of hundreds today')}
-            <span className="text-[var(--brand-cta)]">_</span>
+            <span aria-hidden="true" className="heading-cursor" />
           </h2>
 
           <div className="flex shrink-0 flex-wrap items-center gap-2">

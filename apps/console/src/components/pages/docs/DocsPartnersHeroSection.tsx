@@ -24,7 +24,7 @@ export function DocsPartnersHeroSection() {
       >
         <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-muted-foreground">
           Partner documentation
-          <span className="text-[var(--brand-cta)]">_</span>
+          <span aria-hidden="true" className="heading-cursor" />
         </p>
 
         <h1 className="font-aeonik-pro mt-5 max-w-[640px] text-balance text-[32px] font-normal leading-[1.08] tracking-tight text-foreground @[480px]:mt-6 @[480px]:text-[40px] @[900px]:text-[48px]">

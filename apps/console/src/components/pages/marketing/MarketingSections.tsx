@@ -57,7 +57,7 @@ export function MarketingHeroSection({
         {eyebrow ? (
           <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-muted-foreground">
             {t(eyebrow)}
-            <span className="text-[var(--brand-cta)]">_</span>
+            <span aria-hidden="true" className="heading-cursor" />
           </p>
         ) : null}
         {leading ? (
@@ -83,7 +83,7 @@ export function MarketingHeroSection({
           )}
         >
           {t(title)}
-          {!gradientTitle ? <span className="text-[var(--brand-cta)]">_</span> : null}
+          {!gradientTitle ? <span aria-hidden="true" className="heading-cursor" /> : null}
         </h1>
         <p
           className={cn(
@@ -165,7 +165,7 @@ export function MarketingSectionHeading({
         )}
       >
         {t(title)}
-        <span className="text-[var(--brand-cta)]">_</span>
+        <span aria-hidden="true" className="heading-cursor" />
       </h2>
       {description ? (
         <p
@@ -542,7 +542,7 @@ export function MarketingCtaSection({
       <div className="relative mx-auto max-w-xl px-4 py-16 text-center sm:px-6 sm:py-20">
         <h2 className="font-aeonik-pro text-[28px] font-normal leading-tight text-foreground sm:text-[32px]">
           {t(title)}
-          <span className="text-[var(--brand-cta)]">_</span>
+          <span aria-hidden="true" className="heading-cursor" />
         </h2>
         {description ? (
           <p className="mt-4 text-[14px] leading-7 text-muted-foreground">{t(description)}</p>

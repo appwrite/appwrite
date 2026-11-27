@@ -27,7 +27,7 @@ export function DocsHeroSection() {
       >
         <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-muted-foreground">
           Documentation
-          <span className="text-[var(--brand-cta)]">_</span>
+          <span aria-hidden="true" className="heading-cursor" />
         </p>
 
         <h1 className="font-aeonik-pro mt-5 max-w-[600px] text-balance text-[32px] font-normal leading-[1.08] tracking-tight text-foreground @[480px]:mt-6 @[480px]:text-[40px] @[900px]:text-[48px]">
@@ -44,7 +44,7 @@ export function DocsHeroSection() {
         <div className="mt-14 w-full min-w-0 @[480px]:mt-16 @[900px]:mt-20">
           <p className="font-aeonik-pro max-w-[600px] text-[16px] font-normal tracking-tight text-foreground @[480px]:text-[18px]">
             Quick starts for the frameworks you love
-            <span className="text-[var(--brand-cta)]">_</span>
+            <span aria-hidden="true" className="heading-cursor" />
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-start gap-x-7 gap-y-6 @[480px]:mt-10 @[480px]:gap-x-8">
             {DOCS_FRAMEWORK_STRIP.map((tool) => (

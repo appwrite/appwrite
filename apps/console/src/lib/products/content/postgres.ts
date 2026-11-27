@@ -2,9 +2,9 @@ import type { ProductPageContent } from '@/lib/products/types'
 
 export const postgresProductContent: ProductPageContent = {
   id: 'postgres',
-  metaTitle: 'Managed PostgreSQL hosting',
+  metaTitle: 'Managed PostgreSQL hosting, Postgres as a service',
   metaDescription:
-    'Managed PostgreSQL hosting on Appwrite. Every database is provisioned for your project with a TLS hostname, connection pooling, extensions like pgvector, backups, PITR, replicas, and branches.',
+    'Postgres as a service on Appwrite. Every database is provisioned for your project with a TLS hostname, connection pooling, extensions like pgvector, backups, PITR, replicas, and branches.',
   hero: {
     title: 'Raw Postgres, fully managed',
     description:
@@ -139,6 +139,15 @@ export const postgresProductContent: ProductPageContent = {
           label: 'Branches docs',
           href: '/docs/products/databases/postgresql/branches',
         },
+      ],
+    },
+    {
+      question: 'Can AI coding agents create and manage these databases?',
+      answer:
+        'Yes. The Appwrite MCP server exposes the whole PostgreSQL lifecycle as tools, so Claude Code, Cursor, Codex, or any MCP client can create a database, install extensions like pgvector, open a branch with its own expiry, run SQL, and take backups. Writes are marked as changes, so agents that read tool annotations ask before running them, and each one is logged with the agent\'s reason.',
+      links: [
+        { label: 'MCP server docs', href: '/docs/tooling/ai/mcp-servers' },
+        { label: 'Appwrite for agents', href: '/for-agents' },
       ],
     },
     {
