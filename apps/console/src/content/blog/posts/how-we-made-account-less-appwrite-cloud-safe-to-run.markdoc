@@ -60,7 +60,7 @@ Keying those checks on the anonymous user's label alone left a subtle gap we cau
 
 ## Separating secrets by capability
 
-Unclaimed projects split secrets by capability so leaking one limits what it unlocks. The CLI saves the claim secret in local user preferences instead of `appwrite.config.json`, keeping it out of Git commits, and `--json` redacts both the API key and claim secret unless `--show-secrets` is passed. Running `appwrite zero console` avoids browser-history leaks by trading the claim secret for a single-use five-minute sign-in token.
+Unclaimed projects split secrets by capability so leaking one limits what it unlocks. The CLI saves the claim secret in local user preferences instead of `appwrite.config.json`, keeping it out of Git commits, and `--json` prints the claim link and preview token for an agent to hand back, but leaves out the API key unless `--show-secrets` is passed. Running `appwrite zero console` avoids browser-history leaks by trading the claim secret for a single-use five-minute sign-in token.
 
 Inside the Console, only a direct browser session for the anonymous owner can read the claim link from the API. Shorter-lived JWTs and account keys receive the project metadata without the claim code because a claim link would outlive them. Every lookup by ID and claim code compares secrets in constant time and returns the same not-found error for unknown, wrong, claimed, or deleted projects.
 
