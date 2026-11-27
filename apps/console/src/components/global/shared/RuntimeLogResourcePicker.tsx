@@ -8,8 +8,12 @@ import {
   SearchableSelect,
   type SearchableSelectItem,
 } from '@/components/global/shared/SearchableSelect'
+import { DatabaseTypeIcon } from '@/components/pages/projects/$projectId/databases/_components/DatabaseTypeIcon'
 import {
+  consoleDatabasesQueryOptions,
   functionsQueryOptions,
+  RUNTIME_LOG_DATABASES_LIMIT,
+  runtimeLogDatabaseSource,
   sitesQueryOptions,
   type RuntimeLogResourceType,
 } from '@/lib/react-query/hooks'
@@ -22,9 +26,11 @@ const PICK_LIMIT = 25
 
 type Mark = ComponentType<{ className?: string }>
 
-// One mark per runtime and framework, so list items keep their identity
+// One mark per runtime, framework and database type, so list items keep
+// their identity
 const runtimeMarks = new Map<string, Mark>()
 const frameworkMarks = new Map<string, Mark>()
+const databaseMarks = new Map<string, Mark>()
 
 /** A function's runtime logo, in the picker's icon slot. */
 function runtimeMark(runtime: string): Mark {
@@ -50,6 +56,19 @@ function frameworkMark(framework: string): Mark {
   return mark
 }
 
+/** A database's product or engine mark, as the Databases page shows it. */
+function databaseMark(type: string, engine: string): Mark {
+  const key = `${type}:${engine}`
+  let mark = databaseMarks.get(key)
+  if (!mark) {
+    mark = ({ className }) => (
+      <DatabaseTypeIcon apiType={type} engine={engine} className={className} />
+    )
+    databaseMarks.set(key, mark)
+  }
+  return mark
+}
+
 function encode(resource: RuntimeLogResource): string {
   if (!resource.type) return 'all'
   return resource.id ? `${resource.type}:${resource.id}` : resource.type
@@ -63,8 +82,10 @@ function decode(value: string): RuntimeLogResource {
 
 /**
  * The project Logs page's resource filter: every resource, every function,
- * site or database, or one function or site, grouped by kind. Kinds carry the
- * sidebar's icons; functions and sites their runtime and framework logos.
+ * site or database, or one of them, grouped by kind. Kinds carry the
+ * sidebar's icons; functions, sites and databases their runtime, framework
+ * and database marks. Databases come from the list the Databases page reads,
+ * and only those on dedicated compute, which are the ones that log.
  */
 export function RuntimeLogResourcePicker({
   projectId,
@@ -90,6 +111,16 @@ export function RuntimeLogResourcePicker({
     ...sitesQueryOptions(projectId, 0, PICK_LIMIT, query),
     enabled,
     placeholderData: keepPreviousData,
+  })
+  // Shared databases don't log, so read past them to the dedicated ones
+  const databases = useQuery({
+    ...consoleDatabasesQueryOptions(
+      projectId,
+      0,
+      RUNTIME_LOG_DATABASES_LIMIT,
+      query,
+    ),
+    enabled,
   })
 
   const items = useMemo<SearchableSelectItem[]>(
@@ -127,8 +158,21 @@ export function RuntimeLogResourcePicker({
         icon: Database,
         group: 'Databases',
       },
+      ...(databases.data?.databases ?? []).flatMap((database) => {
+        const source = runtimeLogDatabaseSource(database)
+        if (!source) return []
+        return [
+          {
+            value: `databases:${source.id}`,
+            label: source.name,
+            searchText: `${source.name} ${source.id}`,
+            icon: databaseMark(database.type, source.engine!),
+            group: 'Databases',
+          },
+        ]
+      }),
     ],
-    [t, functions.data, sites.data],
+    [t, functions.data, sites.data, databases.data],
   )
 
   return (
@@ -145,7 +189,9 @@ export function RuntimeLogResourcePicker({
       // The API searches functions and sites, so large projects reach every one
       onSearchChange={setSearch}
       ariaLabel={t('Resource')}
-      isFetching={functions.isFetching || sites.isFetching}
+      isFetching={
+        functions.isFetching || sites.isFetching || databases.isFetching
+      }
       searchPlaceholder="Search resources"
       emptyMessage="No resources found"
       selectedName={value.name ?? value.id}
