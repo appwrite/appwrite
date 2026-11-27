@@ -1,4 +1,14 @@
-import { changelogCount } from './content'
+/**
+ * Counted from the entry file names, without loading the entries: the badge
+ * sits in the header of every page, and the entries are hundreds of KB.
+ * Matches `changelogCount` in `./content`, which loads every entry.
+ */
+const changelogCount = Object.keys(
+  import.meta.glob('/src/content/changelog/entries/*.markdoc', {
+    query: '?raw',
+    import: 'default',
+  }),
+).length
 
 export const CHANGELOG_SEEN_COUNT_KEY = 'console.changelogSeenCount'
 

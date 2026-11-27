@@ -185,6 +185,7 @@ export async function runCreateVideoPipeline(input: {
   try {
     video = await runStep('create', () =>
       videos.create({
+        videoId: ID.unique(),
         bucketId,
         fileId,
         name: input.name.trim() || undefined,

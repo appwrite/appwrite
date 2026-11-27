@@ -248,7 +248,9 @@
             "userId",
             "secret"
         ],
-        "avatars.deletePhoto": [],
+        "avatars.deletePhoto": [
+            "userId"
+        ],
         "avatars.getTeamPhoto": [
             "teamId",
             "width",
@@ -334,7 +336,8 @@
             "output"
         ],
         "avatars.updatePhoto": [
-            "file"
+            "file",
+            "userId"
         ],
         "databases.createDocument": [
             "databaseId",
@@ -899,6 +902,7 @@
             "transactionId"
         ],
         "videos.create": [
+            "videoId",
             "bucketId",
             "fileId",
             "name",
@@ -909,13 +913,8 @@
             "bucketId",
             "fileId",
             "name",
-            "code",
+            "language",
             "default"
-        ],
-        "videos.createRendition": [
-            "videoId",
-            "profileId",
-            "output"
         ],
         "videos.delete": [
             "videoId"
@@ -951,7 +950,7 @@
         "videos.getCmafStreamManifest": [
             "videoId",
             "renditionId",
-            "streamId"
+            "streamIndex"
         ],
         "videos.getDashManifest": [
             "videoId"
@@ -972,7 +971,7 @@
         "videos.getStreamManifest": [
             "videoId",
             "renditionId",
-            "streamId"
+            "streamIndex"
         ],
         "videos.getThumbnail": [
             "videoId",
@@ -981,7 +980,7 @@
             "height",
             "output"
         ],
-        "videos.getTimelines": [
+        "videos.getTimeline": [
             "videoId"
         ],
         "videos.list": [
@@ -1010,7 +1009,7 @@
             "bucketId",
             "fileId",
             "name",
-            "code",
+            "language",
             "default"
         ],
         "account.createDevice": [],
@@ -1301,7 +1300,9 @@
             "alertId",
             "acknowledged"
         ],
-        "avatars.deletePhoto": [],
+        "avatars.deletePhoto": [
+            "userId"
+        ],
         "avatars.getTeamPhoto": [
             "teamId",
             "width",
@@ -1387,7 +1388,8 @@
             "output"
         ],
         "avatars.updatePhoto": [
-            "file"
+            "file",
+            "userId"
         ],
         "console.getEmailTemplate": [
             "templateId",
@@ -3312,7 +3314,8 @@
             "cooldown",
             "enabled",
             "notify",
-            "severity"
+            "severity",
+            "escalationId"
         ],
         "monitors.delete": [
             "monitorId"
@@ -3332,7 +3335,8 @@
             "cooldown",
             "enabled",
             "notify",
-            "severity"
+            "severity",
+            "escalationId"
         ],
         "notifications.list": [
             "queries",
@@ -3346,6 +3350,12 @@
             "projectId",
             "scopes",
             "duration"
+        ],
+        "organization.createEscalation": [
+            "escalationId",
+            "name",
+            "steps",
+            "repeat"
         ],
         "organization.createProject": [
             "projectId",
@@ -3365,6 +3375,9 @@
             "recipientId",
             "expire"
         ],
+        "organization.deleteEscalation": [
+            "escalationId"
+        ],
         "organization.deleteProject": [
             "projectId"
         ],
@@ -3374,6 +3387,9 @@
         ],
         "organization.deleteProjectTransfer": [
             "transferId"
+        ],
+        "organization.getEscalation": [
+            "escalationId"
         ],
         "organization.getProject": [
             "projectId"
@@ -3385,6 +3401,10 @@
         "organization.getProjectTransfer": [
             "transferId",
             "secret"
+        ],
+        "organization.listEscalations": [
+            "queries",
+            "total"
         ],
         "organization.listProjectKeys": [
             "projectId",
@@ -3400,6 +3420,12 @@
             "queries",
             "search",
             "total"
+        ],
+        "organization.updateEscalation": [
+            "escalationId",
+            "name",
+            "steps",
+            "repeat"
         ],
         "organization.updateProject": [
             "projectId",
@@ -3490,6 +3516,7 @@
             "description"
         ],
         "project.createVideoProfile": [
+            "profileId",
             "name",
             "videoBitRate",
             "audioBitRate",
@@ -3582,7 +3609,6 @@
         ],
         "project.listVideoProfiles": [
             "queries",
-            "codec",
             "total"
         ],
         "project.updateAndroidPlatform": [
@@ -3736,6 +3762,12 @@
         "project.updateOAuth2Box": [
             "clientId",
             "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Clerk": [
+            "clientId",
+            "clientSecret",
+            "endpoint",
             "enabled"
         ],
         "project.updateOAuth2Cloudflare": [
@@ -3953,6 +3985,11 @@
         "project.updateOAuth2Stripe": [
             "clientId",
             "apiSecretKey",
+            "enabled"
+        ],
+        "project.updateOAuth2Supabase": [
+            "clientId",
+            "clientSecret",
             "enabled"
         ],
         "project.updateOAuth2TikTok": [
@@ -4222,6 +4259,10 @@
         ],
         "reviews.get": [
             "reviewId"
+        ],
+        "reviews.getSummary": [
+            "range",
+            "repositoryId"
         ],
         "reviews.list": [
             "queries",
@@ -5466,6 +5507,9 @@
             "success",
             "failure"
         ],
+        "vcs.createInstallation": [
+            "installationId"
+        ],
         "vcs.createOriginInstallation": [
             "success",
             "failure"
@@ -5501,7 +5545,8 @@
         "vcs.listInstallations": [
             "queries",
             "search",
-            "total"
+            "total",
+            "shared"
         ],
         "vcs.listNamespaces": [
             "installationId",
@@ -5712,6 +5757,7 @@
             "transactionId"
         ],
         "videos.create": [
+            "videoId",
             "bucketId",
             "fileId",
             "name",
@@ -5722,7 +5768,7 @@
             "bucketId",
             "fileId",
             "name",
-            "code",
+            "language",
             "default"
         ],
         "videos.createRendition": [
@@ -5764,7 +5810,7 @@
         "videos.getCmafStreamManifest": [
             "videoId",
             "renditionId",
-            "streamId"
+            "streamIndex"
         ],
         "videos.getDashManifest": [
             "videoId"
@@ -5785,7 +5831,7 @@
         "videos.getStreamManifest": [
             "videoId",
             "renditionId",
-            "streamId"
+            "streamIndex"
         ],
         "videos.getThumbnail": [
             "videoId",
@@ -5794,7 +5840,7 @@
             "height",
             "output"
         ],
-        "videos.getTimelines": [
+        "videos.getTimeline": [
             "videoId"
         ],
         "videos.list": [
@@ -5823,7 +5869,7 @@
             "bucketId",
             "fileId",
             "name",
-            "code",
+            "language",
             "default"
         ],
         "webhooks.create": [
@@ -6138,7 +6184,9 @@
             "alertId",
             "acknowledged"
         ],
-        "avatars.deletePhoto": [],
+        "avatars.deletePhoto": [
+            "userId"
+        ],
         "avatars.getTeamPhoto": [
             "teamId",
             "width",
@@ -6224,7 +6272,8 @@
             "output"
         ],
         "avatars.updatePhoto": [
-            "file"
+            "file",
+            "userId"
         ],
         "databases.create": [
             "databaseId",
@@ -8125,7 +8174,8 @@
             "cooldown",
             "enabled",
             "notify",
-            "severity"
+            "severity",
+            "escalationId"
         ],
         "monitors.delete": [
             "monitorId"
@@ -8145,17 +8195,27 @@
             "cooldown",
             "enabled",
             "notify",
-            "severity"
+            "severity",
+            "escalationId"
         ],
         "organization.createEphemeralProjectKey": [
             "projectId",
             "scopes",
             "duration"
         ],
+        "organization.createEscalation": [
+            "escalationId",
+            "name",
+            "steps",
+            "repeat"
+        ],
         "organization.createProject": [
             "projectId",
             "name",
             "region"
+        ],
+        "organization.deleteEscalation": [
+            "escalationId"
         ],
         "organization.deleteProject": [
             "projectId"
@@ -8164,12 +8224,19 @@
             "projectId",
             "keyId"
         ],
+        "organization.getEscalation": [
+            "escalationId"
+        ],
         "organization.getProject": [
             "projectId"
         ],
         "organization.getProjectKey": [
             "projectId",
             "keyId"
+        ],
+        "organization.listEscalations": [
+            "queries",
+            "total"
         ],
         "organization.listProjectKeys": [
             "projectId",
@@ -8180,6 +8247,12 @@
             "queries",
             "search",
             "total"
+        ],
+        "organization.updateEscalation": [
+            "escalationId",
+            "name",
+            "steps",
+            "repeat"
         ],
         "organization.updateProject": [
             "projectId",
@@ -8261,6 +8334,7 @@
             "description"
         ],
         "project.createVideoProfile": [
+            "profileId",
             "name",
             "videoBitRate",
             "audioBitRate",
@@ -8353,7 +8427,6 @@
         ],
         "project.listVideoProfiles": [
             "queries",
-            "codec",
             "total"
         ],
         "project.updateAndroidPlatform": [
@@ -8507,6 +8580,12 @@
         "project.updateOAuth2Box": [
             "clientId",
             "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Clerk": [
+            "clientId",
+            "clientSecret",
+            "endpoint",
             "enabled"
         ],
         "project.updateOAuth2Cloudflare": [
@@ -8724,6 +8803,11 @@
         "project.updateOAuth2Stripe": [
             "clientId",
             "apiSecretKey",
+            "enabled"
+        ],
+        "project.updateOAuth2Supabase": [
+            "clientId",
+            "clientSecret",
             "enabled"
         ],
         "project.updateOAuth2TikTok": [
@@ -8963,6 +9047,10 @@
         ],
         "reviews.get": [
             "reviewId"
+        ],
+        "reviews.getSummary": [
+            "range",
+            "repositoryId"
         ],
         "reviews.list": [
             "queries",
@@ -10361,6 +10449,7 @@
             "transactionId"
         ],
         "videos.create": [
+            "videoId",
             "bucketId",
             "fileId",
             "name",
@@ -10371,7 +10460,7 @@
             "bucketId",
             "fileId",
             "name",
-            "code",
+            "language",
             "default"
         ],
         "videos.createRendition": [
@@ -10413,7 +10502,7 @@
         "videos.getCmafStreamManifest": [
             "videoId",
             "renditionId",
-            "streamId"
+            "streamIndex"
         ],
         "videos.getDashManifest": [
             "videoId"
@@ -10434,7 +10523,7 @@
         "videos.getStreamManifest": [
             "videoId",
             "renditionId",
-            "streamId"
+            "streamIndex"
         ],
         "videos.getThumbnail": [
             "videoId",
@@ -10443,7 +10532,7 @@
             "height",
             "output"
         ],
-        "videos.getTimelines": [
+        "videos.getTimeline": [
             "videoId"
         ],
         "videos.list": [
@@ -10472,7 +10561,7 @@
             "bucketId",
             "fileId",
             "name",
-            "code",
+            "language",
             "default"
         ],
         "webhooks.create": [

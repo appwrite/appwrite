@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, type MouseEvent } from 'react'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { withAnalyticsComparison } from '@/lib/pricing/analytics'
+import { withFlaggedComparison } from '@/lib/pricing/flags'
 import {
   PolicySidebarSection,
   policySidebarLinkClassName,
@@ -23,12 +23,12 @@ export function CompareToc({ className }: { className?: string }) {
   const pricingPageSections = useMemo(
     () => [
       { id: PRICING_DATABASE_ANCHOR_ID, label: 'Database pricing' },
-      ...withAnalyticsComparison(
+      ...withFlaggedComparison(
         comparisonPageSections.map((section) => ({ ...section, title: section.label })),
-        features.analytics,
+        features,
       ),
     ],
-    [features.analytics],
+    [features],
   )
   const [activeId, setActiveId] = useState(pricingPageSections[0]?.id ?? '')
 

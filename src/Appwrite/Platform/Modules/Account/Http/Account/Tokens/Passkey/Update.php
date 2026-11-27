@@ -167,7 +167,7 @@ class Update extends Action
             'secret' => $proofForToken->hash($secret),
             'expire' => DateTime::addSeconds(new \DateTime(), PASSKEY_TOKEN_DURATION),
             'userAgent' => $request->getUserAgent('UNKNOWN'),
-            'ip' => $request->getIP(),
+            'ip' => $request->getClientIP(),
         ])));
 
         $dbForProject->purgeCachedDocument('users', $user->getId());

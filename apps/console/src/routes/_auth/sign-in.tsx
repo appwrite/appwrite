@@ -373,6 +373,8 @@ function SignInPage() {
             ? handlePasskeySignIn
             : undefined
         }
+        // Everyone on Cloud can sign in with SSO; `/sso` is gated the same way.
+        showSSO={features.sso}
         isLoading={signInMutation.isPending || passkeyBusy || isOpeningMfa}
         oauthLoading={oauthLoading}
         redirect={search.redirect}

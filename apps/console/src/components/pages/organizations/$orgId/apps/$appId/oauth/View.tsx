@@ -22,6 +22,7 @@ import {
   setsEqual,
   useOrgAppUpdate,
 } from '../_components/useOrgAppUpdate'
+import { redirectUriError } from '@/lib/oauth2/redirect'
 import { useT } from '@/lib/i18n/translate'
 
 export function View() {
@@ -154,6 +155,24 @@ function OAuthClientSettings({
             onChange={setClientType}
             disabled={isUpdating}
           />
+          <div className="space-y-2">
+            <Label>{t('Redirect URIs')}</Label>
+            <InputTags
+              value={redirectUris}
+              onChange={setRedirectUris}
+              validateTag={redirectUriError}
+              placeholder={t('Add redirect URI and press Enter')}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>{t('Post-logout redirect URIs')}</Label>
+            <InputTags
+              value={postLogoutRedirectUris}
+              onChange={setPostLogoutRedirectUris}
+              validateTag={redirectUriError}
+              placeholder={t('Add post-logout URI and press Enter')}
+            />
+          </div>
           <div className="flex items-center justify-between gap-4">
             <div>
               <Label htmlFor="app-oauth-device-flow">{t('Device flow')}</Label>
@@ -166,22 +185,6 @@ function OAuthClientSettings({
               checked={deviceFlow}
               disabled={isUpdating}
               onCheckedChange={setDeviceFlow}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>{t('Redirect URIs')}</Label>
-            <InputTags
-              value={redirectUris}
-              onChange={setRedirectUris}
-              placeholder={t('Add redirect URI and press Enter')}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>{t('Post-logout redirect URIs')}</Label>
-            <InputTags
-              value={postLogoutRedirectUris}
-              onChange={setPostLogoutRedirectUris}
-              placeholder={t('Add post-logout URI and press Enter')}
             />
           </div>
         </div>

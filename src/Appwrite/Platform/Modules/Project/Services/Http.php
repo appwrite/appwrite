@@ -31,6 +31,7 @@ use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Bird\Update as UpdateO
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Bitbucket\Update as UpdateOAuth2Bitbucket;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Bitly\Update as UpdateOAuth2Bitly;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Box\Update as UpdateOAuth2Box;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Clerk\Update as UpdateOAuth2Clerk;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Cloudflare\Update as UpdateOAuth2Cloudflare;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Dailymotion\Update as UpdateOAuth2Dailymotion;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Discord\Update as UpdateOAuth2Discord;
@@ -71,6 +72,7 @@ use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Slack\Update as Update
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Spotify\Update as UpdateOAuth2Spotify;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Strava\Update as UpdateOAuth2Strava;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Stripe\Update as UpdateOAuth2Stripe;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Supabase\Update as UpdateOAuth2Supabase;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\TikTok\Update as UpdateOAuth2TikTok;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Tradeshift\Update as UpdateOAuth2Tradeshift;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\TradeshiftSandbox\Update as UpdateOAuth2TradeshiftSandbox;
@@ -310,6 +312,8 @@ class Http extends Service
         $this->addAction('updateProjectOAuth2Strava', UpdateOAuth2Strava::class);
         $this->addAction('updateProjectOAuth2VK', UpdateOAuth2VK::class);
         $this->addAction('updateProjectOAuth2Netlify', UpdateOAuth2Netlify::class);
+        $this->addAction('updateProjectOAuth2Clerk', UpdateOAuth2Clerk::class);
+        $this->addAction('updateProjectOAuth2Supabase', UpdateOAuth2Supabase::class);
         $this->addAction('updateProjectOAuth2Railway', UpdateOAuth2Railway::class);
         $this->addAction('updateProjectOAuth2Reddit', UpdateOAuth2Reddit::class);
         $this->addAction('updateProjectOAuth2Vercel', UpdateOAuth2Vercel::class);

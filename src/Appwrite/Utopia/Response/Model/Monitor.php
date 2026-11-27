@@ -97,10 +97,16 @@ class Monitor extends Model
             ])
             ->addRule('notify', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Organization roles whose confirmed members get an email and a console notification when the monitor fires and resolves. Empty when the alert events are the only delivery.',
+                'description' => 'Organization roles whose confirmed members get an email and a console notification when the monitor fires and resolves. Empty when the alert events are the only delivery. Not used while `escalationId` is set.',
                 'default' => ['owner'],
                 'example' => ['owner'],
                 'array' => true,
+            ])
+            ->addRule('escalationId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'ID of the organization\'s escalation that notifies the team of this monitor\'s alerts, step by step until one is acknowledged. When set, `notify` is not used. Empty to notify the `notify` roles once.',
+                'default' => '',
+                'example' => '5e5ea5c16897e',
             ])
             ->addRule('severity', [
                 'type' => self::TYPE_ENUM,
@@ -109,12 +115,6 @@ class Monitor extends Model
                 'example' => Severity::Warning->value,
                 'enum' => Severity::values(),
                 'enumSDKName' => 'MonitorSeverity',
-            ])
-            ->addRule('critical', [
-                'type' => self::TYPE_BOOLEAN,
-                'description' => 'Deprecated: use `severity`. Whether the monitor\'s severity is `critical`.',
-                'default' => false,
-                'example' => false,
             ])
             ->addRule('status', [
                 'type' => self::TYPE_ENUM,
@@ -153,6 +153,19 @@ class Monitor extends Model
             ]);
     }
 
+    /**
+     * The ID the monitor was created with, not the project-scoped one it is stored under.
+     */
+    public function filter(Document $document): Document
+    {
+        $monitorId = (string) $document->getAttribute('monitorId', '');
+        if ($monitorId !== '') {
+            $document->setAttribute('$id', $monitorId);
+        }
+
+        return $document;
+    }
+
     public function getName(): string
     {
         return 'Monitor';
@@ -161,15 +174,5 @@ class Monitor extends Model
     public function getType(): string
     {
         return Response::MODEL_MONITOR;
-    }
-
-    /**
-     * `critical` predates `severity` and stays for clients that read it.
-     */
-    public function filter(Document $document): Document
-    {
-        $document->setAttribute('critical', $document->getAttribute('severity') === Severity::Critical->value);
-
-        return $document;
     }
 }

@@ -1,0 +1,34 @@
+name: Console / Prune images
+
+# Console builds push ~45 images a day to ghcr.io/appwrite/new, which fills the org's shared package storage.
+# Keeps everything from the last 30 days plus the newest 50 older tagged images; kept images keep their platform manifests.
+
+on:
+    schedule:
+        - cron: '0 3 * * 1' # Mondays, 03:00 UTC
+    workflow_dispatch:
+        inputs:
+            dry-run:
+                description: List what would be deleted without deleting it
+                type: boolean
+                default: true
+
+concurrency:
+    group: ${{ github.workflow }}
+    cancel-in-progress: false
+
+permissions:
+    packages: write
+
+jobs:
+    prune:
+        runs-on: ubuntu-24.04
+        steps:
+            - uses: dataaxiom/ghcr-cleanup-action@ac45a8c04b1eb4b27974ca79a0a74f344c93664b # v1.3.0
+              with:
+                  package: new
+                  keep-n-tagged: 50
+                  older-than: 30 days
+                  delete-untagged: true
+                  delete-orphaned-images: true
+                  dry-run: ${{ github.event_name == 'workflow_dispatch' && inputs.dry-run }}

@@ -381,7 +381,7 @@ export function RenditionsSpreadsheet({
                         bodyCellBorderClass,
                       )}
                     >
-                      {formatBitrate(rendition.videoBitRate, 'kbps')}
+                      {formatBitrate(rendition.videoBitRate)}
                     </td>
                     <td
                       className={cn(
@@ -389,7 +389,7 @@ export function RenditionsSpreadsheet({
                         bodyCellBorderClass,
                       )}
                     >
-                      {formatBitrate(rendition.audioBitRate, 'kbps')}
+                      {formatBitrate(rendition.audioBitRate)}
                     </td>
                     <td
                       className={cn(

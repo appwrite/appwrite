@@ -772,12 +772,12 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
         $response = $this->receiveSubscribeMessageResponse(['documents'], $headers, [
             Query::or([
                 Query::equal('status', ['active']),
-                Query::between('score', 0, 100),
+                Query::endsWith('name', 'test'),
             ])->toString(),
         ]);
         $this->assertEquals('error', $response['type']);
         $this->assertStringContainsString('not supported in Realtime queries', (string) $response['data']['message']);
-        $this->assertStringContainsString('between', (string) $response['data']['message']);
+        $this->assertStringContainsString('endsWith', (string) $response['data']['message']);
 
         // Test 4: Deeply nested invalid query (AND -> OR -> invalid)
         $response = $this->receiveSubscribeMessageResponse(['documents'], $headers, [
