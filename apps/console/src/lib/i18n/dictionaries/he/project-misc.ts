@@ -4596,14 +4596,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'JSON copied': 'ה-JSON הועתק',
   'Last 15 minutes': '15 הדקות האחרונות',
   'Line copied': 'השורה הועתקה',
-  "Lines your database writes show up here. Logs may not be collected in this project's region yet.":
-    'השורות שמסד הנתונים שלכם כותב יופיעו כאן. ייתכן שעדיין לא נאספים לוגים באזור של הפרויקט הזה.',
-  "Lines your function writes to stdout and stderr show up here. Logs may not be collected in this project's region yet.":
-    'השורות שהפונקציה שלכם כותבת ל-stdout ול-stderr יופיעו כאן. ייתכן שעדיין לא נאספים לוגים באזור של הפרויקט הזה.',
-  "Lines your functions, sites and databases write to stdout and stderr show up here. Logs may not be collected in this project's region yet.":
-    'השורות שהפונקציות, האתרים ומסדי הנתונים שלכם כותבים ל-stdout ול-stderr יופיעו כאן. ייתכן שעדיין לא נאספים לוגים באזור של הפרויקט הזה.',
-  "Lines your site writes to stdout and stderr show up here. Logs may not be collected in this project's region yet.":
-    'השורות שהאתר שלכם כותב ל-stdout ול-stderr יופיעו כאן. ייתכן שעדיין לא נאספים לוגים באזור של הפרויקט הזה.',
   'Live tail paused on an error and will retry:':
     'המעקב החי נעצר בגלל שגיאה וינסה שוב:',
   'Load older': 'טעינת שורות ישנות יותר',
@@ -4614,7 +4606,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Newer line': 'שורה חדשה יותר',
   'No deployment selected': 'לא נבחרה פריסה',
   'No lines in this time range': 'אין שורות בטווח הזמן הזה',
-  'No logs': 'אין לוגים',
   'No matching lines': 'אין שורות תואמות',
   'No resources found': 'לא נמצאו משאבים',
   'Older line': 'שורה ישנה יותר',
@@ -4641,4 +4632,27 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Your plan keeps logs for a limited time. Pick a more recent range, or upgrade your plan for longer retention.':
     'התוכנית שלכם שומרת לוגים לזמן מוגבל. בחרו טווח עדכני יותר, או שדרגו את התוכנית לשמירה ארוכה יותר.',
   'Show the last 24 hours': 'הצגת 24 השעות האחרונות',
+  "Your project's runtime logs": 'לוגי זמן הריצה של הפרויקט',
+  'Lines your functions, sites and dedicated databases write show up here within seconds, ready to search, filter and inspect. Nothing has been written in this time range yet.':
+    'השורות שהפונקציות, האתרים ומסדי הנתונים הייעודיים שלכם כותבים יופיעו כאן תוך שניות, מוכנות לחיפוש, לסינון ולבדיקה. עדיין לא נכתב דבר בטווח הזמן הזה.',
+  "Logs may not be collected in this project's region yet.":
+    'ייתכן שעדיין לא נאספים לוגים באזור של הפרויקט הזה.',
+  'Every line, as it is written': 'כל שורה, ברגע שנכתבת',
+  'What your functions, sites and dedicated databases write to stdout and stderr lands here, newest first. Turn on Live to follow along.':
+    'מה שהפונקציות, האתרים ומסדי הנתונים הייעודיים שלכם כותבים ל-stdout ול-stderr מגיע לכאן, מהחדש לישן. הפעילו Live כדי לעקוב בזמן אמת.',
+  'Narrow it down': 'צמצום התוצאות',
+  'Filter by resource, level, stream and time, or search the lines you have loaded.':
+    'סננו לפי משאב, רמה, סטרים וזמן, או חפשו בשורות שנטענו.',
+  'Inspect any line': 'בדיקת כל שורה',
+  'Open a line to read its fields, where it ran, and the line exactly as it was written.':
+    'פתחו שורה כדי לקרוא את השדות שלה, היכן היא רצה, ואת השורה בדיוק כפי שנכתבה.',
+  'No logs in this time range': 'אין לוגים בטווח הזמן הזה',
+  'Lines your functions, sites and databases write to stdout and stderr show up here.':
+    'השורות שהפונקציות, האתרים ומסדי הנתונים שלכם כותבים ל-stdout ול-stderr יופיעו כאן.',
+  'Lines your function writes to stdout and stderr show up here.':
+    'השורות שהפונקציה שלכם כותבת ל-stdout ול-stderr יופיעו כאן.',
+  'Lines your site writes to stdout and stderr show up here.':
+    'השורות שהאתר שלכם כותב ל-stdout ול-stderr יופיעו כאן.',
+  'Lines your database writes show up here.':
+    'השורות שמסד הנתונים שלכם כותב יופיעו כאן.',
 }

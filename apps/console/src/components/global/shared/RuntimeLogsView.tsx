@@ -11,7 +11,7 @@ import type { ReactNode } from 'react'
 import type { DateRange } from 'react-day-picker'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
-import { AlertCircle, Clock, Loader2, ScrollText, Search } from 'lucide-react'
+import { AlertCircle, Clock, FileText, Loader2, Search } from 'lucide-react'
 import { DisplayTimeZoneBadge } from '@/components/global/shared/DisplayTimeZoneBadge'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { RuntimeLogDrawer } from '@/components/global/shared/RuntimeLogDrawer'
@@ -105,6 +105,12 @@ export interface RuntimeLogsViewProps {
    * the toolbar's bottom border runs edge to edge like other filter bars.
    */
   insetClassName?: string
+  /**
+   * Shown instead of the list, chart and footer while nothing is filtered and
+   * the default range holds no lines, like the other Observe pages' first
+   * view. Without it, the list's own empty state shows.
+   */
+  emptyState?: ReactNode
   className?: string
 }
 
@@ -123,6 +129,7 @@ export function RuntimeLogsView({
   filters: controlledFilters,
   onFiltersChange,
   insetClassName = 'px-4 sm:px-6',
+  emptyState,
   className,
 }: RuntimeLogsViewProps) {
   const t = useT()
@@ -476,19 +483,45 @@ export function RuntimeLogsView({
 
   const emptyDescription = isProject
     ? t(
-        "Lines your functions, sites and databases write to stdout and stderr show up here. Logs may not be collected in this project's region yet.",
+        'Lines your functions, sites and databases write to stdout and stderr show up here.',
       )
     : resourceType === 'functions'
-      ? t(
-          "Lines your function writes to stdout and stderr show up here. Logs may not be collected in this project's region yet.",
-        )
+      ? t('Lines your function writes to stdout and stderr show up here.')
       : resourceType === 'sites'
-        ? t(
-            "Lines your site writes to stdout and stderr show up here. Logs may not be collected in this project's region yet.",
-          )
-        : t(
-            "Lines your database writes show up here. Logs may not be collected in this project's region yet.",
-          )
+        ? t('Lines your site writes to stdout and stderr show up here.')
+        : t('Lines your database writes show up here.')
+
+  // Nothing narrowed and nothing in the default range: the page's first view
+  const pristine =
+    filters.resource.type === null &&
+    filters.stream === 'all' &&
+    filters.levels.length === 0 &&
+    searchDraft.trim() === '' &&
+    filters.window === undefined &&
+    filters.range === DEFAULT_RUNTIME_LOG_FILTERS.range
+  // An empty range says so once, in the list; a window picked on the chart
+  // keeps the chart, so it can be reset from there
+  const emptyRange =
+    usage.data?.total === 0 &&
+    !usage.isPlaceholderData &&
+    filters.window === undefined
+  const firstView =
+    !!emptyState &&
+    ready &&
+    !feed.isLoading &&
+    !feed.error &&
+    entries.length === 0 &&
+    pristine
+  const widenRange =
+    filters.window !== undefined || filters.range !== '24h' ? (
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => updateFilters({ range: '24h', window: undefined })}
+      >
+        {t('Show the last 24 hours')}
+      </Button>
+    ) : undefined
 
   const loadOlder = feed.hasNextPage ? (
     <Button
@@ -513,8 +546,9 @@ export function RuntimeLogsView({
   if (!ready) {
     body = (
       <EmptyState
-        icon={ScrollText}
+        icon={FileText}
         variant="centered"
+        iconSize="md"
         title={t('No deployment selected')}
         description={t('Pick a deployment to see its logs.')}
       />
@@ -548,6 +582,7 @@ export function RuntimeLogsView({
       <EmptyState
         icon={Clock}
         variant="centered"
+        iconSize="md"
         title={t('Older than your plan keeps logs')}
         description={t(
           'Your plan keeps logs for a limited time. Pick a more recent range, or upgrade your plan for longer retention.',
@@ -568,6 +603,7 @@ export function RuntimeLogsView({
       <EmptyState
         icon={AlertCircle}
         variant="centered"
+        iconSize="md"
         title={t('Could not load logs')}
         description={getErrorMessage(feed.error)}
         action={
@@ -582,6 +618,7 @@ export function RuntimeLogsView({
       <EmptyState
         icon={Search}
         variant="centered"
+        iconSize="md"
         hasFilters
         title={t('No matching lines')}
         description={t(
@@ -605,12 +642,16 @@ export function RuntimeLogsView({
           </div>
         }
       />
+    ) : firstView ? (
+      emptyState
     ) : (
       <EmptyState
-        icon={ScrollText}
+        icon={FileText}
         variant="centered"
-        title={t('No logs')}
+        iconSize="md"
+        title={t('No logs in this time range')}
         description={emptyDescription}
+        action={widenRange}
       />
     )
   } else {
@@ -648,7 +689,7 @@ export function RuntimeLogsView({
 
   const loaded = entries.length
   const status =
-    !ready || feed.isLoading || feed.error
+    !ready || feed.isLoading || feed.error || firstView || loaded === 0
       ? null
       : filtering
         ? t('{shown} of {loaded} loaded lines')
@@ -724,7 +765,7 @@ export function RuntimeLogsView({
           {t('Live tail paused on an error and will retry:')} {feed.tailError}
         </p>
       )}
-      {ready && !usage.error && (
+      {ready && !usage.error && !firstView && !emptyRange && (
         <RuntimeLogsVolumeChart
           points={usage.data?.points}
           interval={usage.data?.interval}

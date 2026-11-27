@@ -8,6 +8,7 @@ import {
 } from '@/lib/runtime-log-filters'
 import { Route } from '@/routes/_public/projects.$projectId.logs'
 import { ServiceHeader } from '../shared/ServiceHeader'
+import { LogsEmptyState } from './_components/LogsEmptyState'
 
 /** Every line the project's functions, sites and databases wrote, in one place. */
 export function View() {
@@ -39,6 +40,7 @@ export function View() {
           filters={filters}
           onFiltersChange={handleFiltersChange}
           insetClassName="px-4 md:px-6"
+          emptyState={<LogsEmptyState />}
         />
       </div>
     </div>
