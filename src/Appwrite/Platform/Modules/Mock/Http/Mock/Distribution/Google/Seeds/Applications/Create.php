@@ -16,10 +16,6 @@ use Utopia\Validator\Text;
 
 class Create extends Base
 {
-    private const string LOCK_TARGET = 'mock';
-    private const int LOCK_TTL = 10;
-    private const float LOCK_WAIT = 10.0;
-
     public static function getName(): string
     {
         return 'createDistributionGoogleSeedApplication';
@@ -67,13 +63,7 @@ class Create extends Base
         $tracks = \array_map($this->track(...), $tracks);
         $key = $this->key(self::RESOURCE_APPLICATION, $packageName);
 
-        $application = $lock->withKey(
-            'lock:' . $key,
-            fn (): array => $this->merge($cache, $key, $packageName, $emails, $tracks),
-            target: self::LOCK_TARGET,
-            ttl: self::LOCK_TTL,
-            waitTimeout: self::LOCK_WAIT,
-        );
+        $application = $this->locked($lock, $packageName, fn (): array => $this->merge($cache, $key, $packageName, $emails, $tracks));
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -83,7 +73,7 @@ class Create extends Base
     /**
      * @param array<string> $emails
      * @param list<array{track: string, releases: list<mixed>}> $tracks
-     * @return array{packageName: string, emails: list<string>, tracks: list<array<string, mixed>>}
+     * @return array<string, mixed>
      */
     private function merge(Cache $cache, string $key, string $packageName, array $emails, array $tracks): array
     {
@@ -95,6 +85,7 @@ class Create extends Base
         }
 
         $application = [
+            ...$existing,
             'packageName' => $packageName,
             'emails' => \array_values(\array_unique([...($existing['emails'] ?? []), ...$emails])),
             'tracks' => $tracks,

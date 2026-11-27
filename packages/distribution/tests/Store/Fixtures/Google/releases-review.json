@@ -1,0 +1,24 @@
+{
+    "releases": [
+        {
+            "releaseName": "1.1.0",
+            "track": "production",
+            "activeArtifacts": [
+                {
+                    "versionCode": "87"
+                }
+            ],
+            "releaseLifecycleState": "RELEASE_LIFECYCLE_STATE_PUBLISHED"
+        },
+        {
+            "releaseName": "1.2.0",
+            "track": "production",
+            "activeArtifacts": [
+                {
+                    "versionCode": "88"
+                }
+            ],
+            "releaseLifecycleState": "RELEASE_LIFECYCLE_STATE_IN_REVIEW"
+        }
+    ]
+}

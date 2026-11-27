@@ -1,0 +1,16 @@
+{
+    "track": "production",
+    "releases": [
+        {
+            "name": "1.1.0",
+            "versionCodes": ["87"],
+            "status": "completed"
+        },
+        {
+            "name": "1.2.0",
+            "versionCodes": ["88"],
+            "status": "halted",
+            "userFraction": 0.1
+        }
+    ]
+}

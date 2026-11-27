@@ -1,0 +1,21 @@
+{
+    "kind": "androidpublisher#tracksListResponse",
+    "tracks": [
+        {
+            "track": "production",
+            "releases": []
+        },
+        {
+            "track": "beta",
+            "releases": []
+        },
+        {
+            "track": "alpha",
+            "releases": []
+        },
+        {
+            "track": "qa",
+            "releases": []
+        }
+    ]
+}
