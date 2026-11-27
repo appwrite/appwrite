@@ -15,6 +15,9 @@ export const PRODUCT_LAUNCH_DATES: Partial<Record<ProductNavItemId, string>> = {
   agent: '2026-08-04',
   analytics: '2026-10-13',
   zero: '2026-12-02',
+  monitors: '2026-12-03',
+  beep: '2026-12-03',
+  reviews: '2026-12-04',
 }
 
 const DOCS_PRODUCT_NEW_HREFS: Partial<Record<string, ProductNavItemId>> = {

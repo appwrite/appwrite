@@ -10,7 +10,6 @@ const GIT_PROVIDERS = [
   { name: 'GitHub', src: '/icons/github.svg' },
   { name: 'GitLab', src: '/icons/gitlab.svg' },
   { name: 'Bitbucket', src: '/icons/bitbucket.svg' },
-  { name: 'Gitea', src: '/icons/gitea.svg' },
 ] as const
 
 /**

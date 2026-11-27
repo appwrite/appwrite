@@ -164,6 +164,13 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
             href: '/init',
             actionLabel: 'Coming soon',
           },
+          {
+            id: 'init5-day4-monitors-product',
+            typeLabel: 'Product',
+            title: 'Appwrite Monitors',
+            href: '/products/monitors',
+            actionLabel: 'View product',
+          },
         ],
       },
       {
@@ -185,10 +192,22 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
             href: '/init',
             actionLabel: 'Coming soon',
           },
+          {
+            id: 'init5-day4-beep-product',
+            typeLabel: 'Product',
+            title: 'Appwrite Beep',
+            href: '/products/beep',
+            actionLabel: 'View product',
+          },
         ],
       },
     ],
     sessionCount: 1,
+    headerNavCta: {
+      label: 'Explore Appwrite Monitors',
+      href: '/products/monitors',
+      external: false,
+    },
     resources: [],
   },
   {
@@ -204,9 +223,14 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
     visual: {
       mockVisualId: 'reviews',
       imageAlt:
-        'Every pull request, reviewed: Appwrite Reviews on Sites, Functions and repositories on GitHub, GitLab, Bitbucket or Gitea, with a finding posted beside the lines it is about',
+        'Every pull request, reviewed: Appwrite Reviews on Sites, Functions and repositories on GitHub, GitLab or Bitbucket, with a finding posted beside the lines it is about',
     },
     sessionCount: 1,
+    headerNavCta: {
+      label: 'Explore Appwrite Reviews',
+      href: '/products/reviews',
+      external: false,
+    },
     resources: [
       {
         id: 'init5-day5-announce',
@@ -214,6 +238,13 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
         title: 'Introducing Appwrite Reviews',
         href: '/init',
         actionLabel: 'Coming soon',
+      },
+      {
+        id: 'init5-day5-product',
+        typeLabel: 'Product',
+        title: 'Appwrite Reviews',
+        href: '/products/reviews',
+        actionLabel: 'View product',
       },
       {
         id: 'init5-day5-recap',

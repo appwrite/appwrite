@@ -1885,4 +1885,704 @@ export const heAlternativesDictionary: Record<string, string> = {
   'Upload a file, get a stream': 'מעלים קובץ, מקבלים סטרים',
   'Upload to Storage, create a video, and play an adaptive stream in any HLS or DASH player.':
     'העלו לאחסון, צרו סרטון ונגנו סטרים אדפטיבי בכל נגן HLS או DASH.',
+
+  // AI code review comparisons: CodeRabbit, GitHub Copilot, Cursor Bugbot, Greptile
+  'One Appwrite project': 'פרויקט Appwrite אחד',
+  'One Git connection, one Console, one bill':
+    'חיבור Git אחד, קונסולה אחת, חשבון אחד',
+  'View review': 'הצגת הסקירה',
+  'Adds exponential backoff to sign-in retries and stops after five attempts. One minor finding: the new retry path has no test yet.':
+    'מוסיף exponential backoff לניסיונות התחברות חוזרים ועוצר אחרי חמישה ניסיונות. ממצא קל אחד: למסלול הניסיון החוזר החדש עדיין אין בדיקה.',
+  'Same Git connection': 'אותו חיבור Git',
+  'Your preview and your review, side by side':
+    'התצוגה המקדימה והסקירה שלכם, זו לצד זו',
+  'Tier A · Approved': 'Tier A · אושר',
+  'Preview ready': 'התצוגה המקדימה מוכנה',
+  'On your phone': 'בטלפון שלכם',
+  'Summary and walkthrough': 'סיכום ומעבר על השינויים',
+  'One comment per pull request, updated on every review, with what changed, what is still open, and what got fixed.':
+    'תגובה אחת לכל Pull request, שמתעדכנת בכל סקירה, עם מה שהשתנה, מה שעדיין פתוח ומה שתוקן.',
+  'Findings on the lines': 'ממצאים על השורות',
+  'Critical, major, minor, or info, with a category, a suggested change when the fix is certain, and a prompt for your coding agent.':
+    'קריטי, משמעותי, קל או מידע, עם קטגוריה, שינוי מוצע כשהתיקון ודאי והנחיה לסוכן הפיתוח שלכם.',
+  'Checked before posting': 'נבדק לפני פרסום',
+  'A second model verifies every finding against the code before it is posted, and broken suggestions are removed.':
+    'מודל שני מאמת כל ממצא מול הקוד לפני שהוא מתפרסם, והצעות שבורות מוסרות.',
+  'A grade and a verdict': 'ציון והחלטה',
+  'Merge confidence from S to F, and approve, request changes, or comment, decided by code from the findings.':
+    'ביטחון למיזוג מ-S עד F, ואישור, בקשת שינויים או תגובה, שנקבעים על ידי קוד לפי הממצאים.',
+  'Learns your rules': 'לומד את הכללים שלכם',
+  'Reply with a lasting preference and the reviewer saves a learning that later reviews of the repository follow.':
+    'השיבו עם העדפה קבועה, והסוקר ישמור למידה שהסקירות הבאות של המאגר יפעלו לפיה.',
+  'Three strengths': 'שלוש עוצמות',
+  'Basic reads the code, Normal runs commands in a sandbox to confirm a bug, and Expert splits the work across subagents.':
+    'סקירה בסיסית קוראת את הקוד, סקירה רגילה מריצה פקודות בסביבה מבודדת כדי לאמת באג, וסקירת מומחה מחלקת את העבודה בין סוכני משנה.',
+  '10, 50, or 500 credits per review, by strength. No seats.':
+    '10, 50 או 500 קרדיטים לסקירה, לפי עוצמה. בלי חיוב לפי משתמש.',
+  'Shared by the organization, about two Normal reviews.':
+    'משותפים לכל הארגון, כשתי סקירות רגילות.',
+  '2,000 credits a month on Pro': '2,000 קרדיטים בחודש ב-Pro',
+  'For each project, then $1 per 100 credits up to your budget cap.':
+    'לכל פרויקט, ואז $1 לכל 100 קרדיטים, עד תקרת התקציב שלכם.',
+  'Answers are free': 'תשובות בחינם',
+  'Chat replies cost nothing, and failed or skipped reviews are not billed.':
+    'תשובות בשיחה לא עולות כלום, וסקירות שנכשלו או דולגו לא מחויבות.',
+  'Review pull requests is on when you create a site from a repository.':
+    'האפשרות "סקירת Pull requests" מופעלת כשיוצרים אתר ממאגר.',
+  'The same Git connection deploys and reviews each function.':
+    'אותו חיבור Git פורס וסוקר כל פונקציה.',
+  'See how a release changed traffic on the site you merged.':
+    'ראו איך גרסה חדשה שינתה את התעבורה באתר שמיזגתם.',
+  'Watch usage and endpoints in production after you merge.':
+    'עקבו אחרי השימוש וה-Endpoints בפרודקשן אחרי שאתם ממזגים.',
+  'Beep': 'Beep',
+  'Alerts reach your phone, with escalations until someone acknowledges.':
+    'התראות מגיעות לטלפון שלכם, עם הסלמות עד שמישהו מאשר טיפול.',
+  'Rate limit or block the traffic a release attracts.':
+    'הגבילו את קצב התעבורה שגרסה חדשה מושכת, או חסמו אותה.',
+  'CodeRabbit is a dedicated reviewer you add to your Git provider and pay for per developer. Appwrite Reviews comes with the platform that deploys your Sites and Functions, watches production, and pages your phone, so one Git connection and one bill cover the whole pull request.':
+    'CodeRabbit הוא סוקר ייעודי שמוסיפים לספק ה-Git ומשלמים עליו לפי מפתח. Appwrite Reviews מגיע עם הפלטפורמה שפורסת את האתרים והפונקציות שלכם, מנטרת את הפרודקשן ומזעיקה אתכם בטלפון, כך שחיבור Git אחד וחשבון אחד מכסים את כל ה-Pull request.',
+  'A seat per developer': 'רישיון לכל מפתח',
+  'Everyone who opens pull requests needs one, from $24 a month billed annually.':
+    'כל מי שפותח Pull requests צריך רישיון, החל מ-$24 לחודש בחיוב שנתי.',
+  'Higher tiers for more': 'תוכניות יקרות יותר לעוד יכולות',
+  'Team at $48 and Advanced at $72 per developer add tests, CI fixes, and security review.':
+    'Team ב-$48 ו-Advanced ב-$72 לכל מפתח מוסיפות בדיקות, תיקוני CI וסקירת אבטחה.',
+  'Hourly review limits': 'מגבלות סקירה לשעה',
+  'From 5 pull request reviews per developer an hour on Essentials.':
+    'החל מ-5 סקירות Pull request לכל מפתח בשעה ב-Essentials.',
+  'Usage past the limits': 'שימוש מעבר למגבלות',
+  '$0.25 per reviewed file, with no spending cap unless an admin sets one.':
+    '$0.25 לכל קובץ שנסקר, בלי תקרת הוצאות אלא אם מנהל מגדיר אחת.',
+  'Another platform': 'פלטפורמה אחרת',
+  'Another tool': 'כלי אחר',
+  'Another app': 'אפליקציה אחרת',
+  'Connect a repository, turn on review, and get a summary, findings, and a grade on the next pull request.':
+    'חברו מאגר, הפעילו סקירה וקבלו סיכום, ממצאים וציון ב-Pull request הבא.',
+  'Reviews from the platform that': 'סקירות קוד מהפלטפורמה',
+  'ships your code': 'שמעלה את הקוד שלכם לאוויר',
+  'Explore Appwrite Reviews': 'גלו את Appwrite Reviews',
+  'Hosting, monitoring, and paging come from other vendors':
+    'אירוח, ניטור והזעקת כוננים מגיעים מספקים אחרים',
+  'Appwrite’s Git app deploys every commit to Sites and Functions and reviews the same pull request. The review lands next to the deployment comment, in the same layout, from the app you already installed.':
+    'אפליקציית ה-Git של Appwrite פורסת כל קומיט לאתרים ולפונקציות וסוקרת את אותו Pull request. הסקירה מופיעה לצד תגובת הפריסה, באותו מבנה, מהאפליקציה שכבר התקנתם.',
+  'Pay per review, not per developer': 'משלמים לפי סקירה, לא לפי מפתח',
+  'CodeRabbit charges a seat for every developer who opens pull requests. Appwrite Reviews draws credits from the plan your project already has, whoever opens the pull request.':
+    'CodeRabbit גובה רישיון על כל מפתח שפותח Pull requests. Appwrite Reviews משתמש בקרדיטים מהתוכנית שכבר יש לפרויקט שלכם, לא משנה מי פותח את ה-Pull request.',
+  'Published prices as of November 2026. CodeRabbit also bills monthly at higher rates, and reviews public open source repositories for free.':
+    'מחירים שפורסמו נכון לנובמבר 2026. CodeRabbit מציע גם חיוב חודשי בתעריפים גבוהים יותר, וסוקר בחינם מאגרי קוד פתוח ציבוריים.',
+  'What every pull request gets': 'מה כל Pull request מקבל',
+  'A summary, findings on the lines they concern, and a grade you can merge on, checked before anything is posted.':
+    'סיכום, ממצאים על השורות הרלוונטיות וציון שאפשר למזג לפיו, והכול נבדק לפני שמשהו מתפרסם.',
+  'Review where the rest of your app lives':
+    'סקירה במקום שבו נמצאת שאר האפליקציה שלכם',
+  'CodeRabbit reviews the code and stops at the pull request. Appwrite Reviews shares a project with the products that deploy, run, and watch what you merge.':
+    'CodeRabbit סוקר את הקוד ועוצר ב-Pull request. Appwrite Reviews חולק פרויקט עם המוצרים שפורסים, מריצים ומנטרים את מה שאתם ממזגים.',
+  'CodeRabbit reviews code. Appwrite also runs it.':
+    'CodeRabbit סוקר קוד. Appwrite גם מריצה אותו.',
+  'Swap a review vendor for a platform. Appwrite Reviews comes with auth, databases, storage, functions, messaging, realtime, and hosting in the same project.':
+    'החליפו ספק סקירות בפלטפורמה. Appwrite Reviews מגיע עם אימות, מסדי נתונים, אחסון, פונקציות, הודעות, Realtime ואירוח באותו פרויקט.',
+  'A reviewer you can read and run': 'סוקר שאפשר לקרוא את הקוד שלו ולהריץ אותו',
+  'CodeRabbit is a closed service. Appwrite and its review service are open source, so you can audit how your code is reviewed and run it on your own servers.':
+    'CodeRabbit הוא שירות סגור. Appwrite ושירות הסקירה שלה הם קוד פתוח, כך שאפשר לבדוק איך הקוד שלכם נסקר ולהריץ את זה על השרתים שלכם.',
+  'Review features, inside your platform': 'יכולות סקירה, בתוך הפלטפורמה שלכם',
+  'CodeRabbit is a dedicated code reviewer. Appwrite Reviews is code review built into the platform that ships your app.':
+    'CodeRabbit הוא סוקר קוד ייעודי. Appwrite Reviews הוא סקירת קוד שמובנית בפלטפורמה שמעלה את האפליקציה שלכם לאוויר.',
+  'Reviews the PR': 'סוקר את ה-PR',
+  'Separate vendor': 'ספק נפרד',
+  'Retrying after a timeout can create a second order.':
+    'ניסיון חוזר אחרי Timeout עלול ליצור הזמנה שנייה.',
+  'The endpoint is idempotent. We send an Idempotency-Key header on every retry.':
+    'ה-Endpoint הוא אידמפוטנטי. אנחנו שולחים כותרת Idempotency-Key בכל ניסיון חוזר.',
+  'replied': 'השיב',
+  'Confirmed: createOrder sends the key on every retry. Dismissing this finding.':
+    'אומת: createOrder שולח את המפתח בכל ניסיון חוזר. דוחה את הממצא הזה.',
+  'Learning saved: retries are safe when requests carry an idempotency key':
+    'הלמידה נשמרה: ניסיונות חוזרים בטוחים כשהבקשות כוללות מפתח אידמפוטנטיות',
+  'Git provider': 'ספק Git',
+  'Copilot code review lives in GitHub and bills AI Credits and Actions minutes for each review. Appwrite Reviews works on GitHub, GitLab, and Bitbucket, answers your replies, and comes with the platform that deploys, hosts, and monitors your app.':
+    'סקירת הקוד של Copilot נמצאת ב-GitHub ומחייבת AI Credits ודקות Actions על כל סקירה. Appwrite Reviews עובד ב-GitHub, ב-GitLab וב-Bitbucket, עונה לתגובות שלכם ומגיע עם הפלטפורמה שפורסת, מארחת ומנטרת את האפליקציה שלכם.',
+  'AI Credits per review': 'AI Credits לכל סקירה',
+  'About $1.50 at the default effort, from about $0.25 on Lite to about $10 on Max.':
+    'כ-$1.50 ברמת המאמץ המוגדרת כברירת מחדל, ובטווח שבין כ-$0.25 ב-Lite לכ-$10 ב-Max.',
+  'Plus Actions minutes': 'וגם דקות Actions',
+  'Each review also runs on GitHub Actions time.':
+    'כל סקירה צורכת גם זמן של GitHub Actions.',
+  'A Copilot plan': 'תוכנית Copilot',
+  'Pro includes 1,500 credits for $10 a month. Business is $19 per seat.':
+    'Pro כוללת 1,500 קרדיטים ב-$10 לחודש. Business עולה $19 למשתמש.',
+  'No reviews on Copilot Free': 'אין סקירות ב-Copilot Free',
+  'Free can only review a selection in VS Code.':
+    'ב-Free אפשר לסקור רק קטע קוד מסומן ב-VS Code.',
+  'Get a reviewer that answers back': 'קבלו סוקר שעונה לכם',
+  'Connect a repository on any supported Git provider and get a summary, findings, and a grade on the next pull request.':
+    'חברו מאגר בכל ספק Git נתמך וקבלו סיכום, ממצאים וציון ב-Pull request הבא.',
+  'Conversation': 'שיחה',
+  'A reviewer that answers back': 'סוקר שעונה לכם',
+  'Reply to a finding and Appwrite Reviews reads the code to check what you said, resolves or dismisses the finding, and remembers lasting rules. GitHub documents that Copilot code review does not see replies to its comments.':
+    'השיבו לממצא, ו-Appwrite Reviews יקרא את הקוד כדי לבדוק את מה שאמרתם, יסמן את הממצא כנפתר או ידחה אותו, ויזכור כללים קבועים. לפי התיעוד של GitHub, סקירת הקוד של Copilot לא רואה תגובות להערות שלה.',
+  'Not only GitHub': 'לא רק GitHub',
+  'Appwrite Reviews works on GitHub, GitLab, and Bitbucket. Copilot code review runs on GitHub.com and Azure DevOps.':
+    'Appwrite Reviews עובד ב-GitHub, ב-GitLab וב-Bitbucket. סקירת הקוד של Copilot פועלת ב-GitHub.com וב-Azure DevOps.',
+  'Reviews that answer back,': 'סקירות שעונות לכם,',
+  'next to your deploys': 'לצד הפריסות שלכם',
+  'GitHub hosts your code and CI, not your backend':
+    'GitHub מארח את הקוד וה-CI שלכם, לא את ה-backend',
+  'On GitHub, the Appwrite app that deploys your Sites and Functions is the one that reviews the pull request. Its review sits next to the deployment comment, with the same layout and a link back to the Console.':
+    'ב-GitHub, אפליקציית Appwrite שפורסת את האתרים והפונקציות שלכם היא זו שסוקרת את ה-Pull request. הסקירה שלה מופיעה לצד תגובת הפריסה, באותו מבנה ועם קישור חזרה לקונסולה.',
+  'Review credits that come with your plan':
+    'קרדיטי סקירה שמגיעים עם התוכנית שלכם',
+  'Copilot code review draws GitHub AI Credits and Actions minutes for each review. Appwrite Reviews uses credits from the plan your project already has.':
+    'סקירת הקוד של Copilot צורכת AI Credits של GitHub ודקות Actions על כל סקירה. Appwrite Reviews משתמש בקרדיטים מהתוכנית שכבר יש לפרויקט שלכם.',
+  'Averages published by GitHub in November 2026. Actual Copilot costs vary with pull request size and effort.':
+    'ממוצעים ש-GitHub פרסם בנובמבר 2026. העלויות בפועל של Copilot משתנות לפי גודל ה-Pull request ורמת המאמץ.',
+  'A review you can merge on': 'סקירה שאפשר למזג לפיה',
+  'Every review grades the pull request and decides its verdict from verified findings, so the status on the pull request means something.':
+    'כל סקירה נותנת ל-Pull request ציון וקובעת את ההחלטה לפי ממצאים מאומתים, כך שלסטטוס ב-Pull request יש משמעות.',
+  'Built into the project that runs your app':
+    'מובנה בפרויקט שמריץ את האפליקציה שלכם',
+  'GitHub keeps your code and runs your CI. Appwrite runs what you ship: the same project reviews the pull request, deploys it, and watches it in production.':
+    'GitHub שומר את הקוד שלכם ומריץ את ה-CI. Appwrite מריצה את מה שאתם משחררים: אותו פרויקט סוקר את ה-Pull request, פורס אותו ומנטר אותו בפרודקשן.',
+  'Copilot reviews code. Appwrite also runs it.':
+    'Copilot סוקר קוד. Appwrite גם מריצה אותו.',
+  'Appwrite Reviews comes with auth, databases, storage, functions, messaging, realtime, and hosting in one project, next to the repository you already keep on GitHub.':
+    'Appwrite Reviews מגיע עם אימות, מסדי נתונים, אחסון, פונקציות, הודעות, Realtime ואירוח בפרויקט אחד, לצד המאגר שכבר שמור אצלכם ב-GitHub.',
+  'Open source, down to the reviewer': 'קוד פתוח, עד רמת הסוקר',
+  'Copilot is a closed service that runs only on GitHub.com. Appwrite and its review service are open source, so you can read how reviews work and run them yourself.':
+    'Copilot הוא שירות סגור שפועל רק ב-GitHub.com. Appwrite ושירות הסקירה שלה הם קוד פתוח, כך שאפשר לקרוא איך הסקירות עובדות ולהריץ אותן בעצמכם.',
+  'Code review, provider by provider': 'סקירת קוד, ספק אחר ספק',
+  'Copilot code review is part of GitHub. Appwrite Reviews is part of the platform that ships your app, on the Git provider you choose.':
+    'סקירת הקוד של Copilot היא חלק מ-GitHub. Appwrite Reviews הוא חלק מהפלטפורמה שמעלה את האפליקציה שלכם לאוויר, בספק ה-Git שתבחרו.',
+  'Static sites only': 'אתרים סטטיים בלבד',
+  'No hosting or databases':
+    'בלי אירוח ובלי מסדי נתונים',
+  'Your sites and Postgres still run with another vendor.':
+    'האתרים וה-Postgres שלכם עדיין רצים אצל ספק אחר.',
+  'Origin, in early beta': 'Origin, בבטא מוקדמת',
+  'Git hosting with Vercel preview deploys and Buildkite or Depot CI.':
+    'אירוח Git עם פריסות תצוגה מקדימה ב-Vercel ו-CI של Buildkite או Depot.',
+  'Rollouts on your observability': 'Rollouts על כלי ה-Observability שלכם',
+  'Checks deploys against a tool you connect, such as Datadog, and opens an issue. It never rolls back on its own.':
+    'בודק פריסות מול כלי שאתם מחברים, כמו Datadog, ופותח Issue. הוא אף פעם לא משחזר גרסה בעצמו.',
+  'Review per use': 'סקירה לפי שימוש',
+  'About $1.00 to $1.50 a review, on a Cursor Premium or Teams plan.':
+    'כ-$1.00 עד $1.50 לסקירה, בתוכנית Cursor Premium או Teams.',
+  'Auth for your own users': 'אימות למשתמשים שלכם',
+  'Email, OAuth, SMS, MFA, teams, and sessions for the people who use your app.':
+    'אימייל, OAuth, SMS, MFA, צוותים וסשנים לאנשים שמשתמשים באפליקציה שלכם.',
+  'A complete backend': 'Backend שלם',
+  'Databases, storage, functions in 13+ runtimes, messaging, and realtime.':
+    'מסדי נתונים, אחסון, פונקציות ביותר מ-13 סביבות ריצה, הודעות ו-Realtime.',
+  'Hosting with custom domains': 'אירוח עם דומיינים מותאמים',
+  'Sites and Functions deploy from Git, with a preview for each pull request.':
+    'אתרים ופונקציות נפרסים מ-Git, עם תצוגה מקדימה לכל Pull request.',
+  'Monitors and Beep': 'מוניטורים ו-Beep',
+  'Usage monitors and endpoint checks, with alerts and escalations on your phone.':
+    'מוניטורי שימוש ובדיקות Endpoint, עם התראות והסלמות בטלפון שלכם.',
+  'Review it, ship it, watch it': 'סקרו, שחררו ועקבו',
+  'Connect a repository, deploy it to Appwrite, and get a review on the next pull request with Monitors watching after the merge.':
+    'חברו מאגר, פרסו אותו ב-Appwrite וקבלו סקירה ב-Pull request הבא, עם מוניטורים שממשיכים לעקוב אחרי המיזוג.',
+  'Review the code, then run': 'סקרו את הקוד, ואז הריצו',
+  'the app your customers use': 'את האפליקציה שהלקוחות שלכם משתמשים בה',
+  'Hosting, databases, and paging come from other vendors':
+    'אירוח, מסדי נתונים והזעקת כוננים מגיעים מספקים אחרים',
+  'One Appwrite Git connection deploys your Sites and Functions and reviews their pull requests. The review and the deployment comment arrive together, in the same layout, from the same app.':
+    'חיבור Git אחד של Appwrite פורס את האתרים והפונקציות שלכם וסוקר את ה-Pull requests שלהם. הסקירה ותגובת הפריסה מגיעות יחד, באותו מבנה, מאותה אפליקציה.',
+  'Beyond review': 'מעבר לסקירה',
+  'Built for the app your customers use':
+    'בנוי לאפליקציה שהלקוחות שלכם משתמשים בה',
+  'Cursor now reaches past the editor, into Git hosting and deploy checks, but not into hosting your app or its database. Appwrite is the production backend the reviewed code runs on, open source and self-hostable.':
+    'Cursor מגיע היום מעבר לעורך, לאירוח Git ולבדיקות פריסה, אבל לא לאירוח האפליקציה שלכם או מסד הנתונים שלה. Appwrite היא ה-backend לפרודקשן שהקוד הנסקר רץ עליו, בקוד פתוח ועם אפשרות לאירוח עצמי.',
+  'Cursor features as documented in November 2026. Origin is in early beta, and Rollouts is on Teams and Enterprise plans.':
+    'היכולות של Cursor כפי שתועדו בנובמבר 2026. Origin נמצא בבטא מוקדמת, ו-Rollouts זמין בתוכניות Teams ו-Enterprise.',
+  'Findings you can act on': 'ממצאים שאפשר לפעול לפיהם',
+  'Every finding is verified before it is posted, graded into a merge decision, and comes with a prompt your coding agent can pick up.':
+    'כל ממצא מאומת לפני שהוא מתפרסם, נכנס לציון שמכריע לגבי המיזוג ומגיע עם הנחיה שסוכן הפיתוח שלכם יכול להמשיך ממנה.',
+  'One project, from pull request to pager':
+    'פרויקט אחד, מה-Pull request ועד הזעקת הכונן',
+  'Bugbot ends at the review and Rollouts reads tools you bring. Appwrite Reviews sits in the project that deploys the code, measures its traffic, and pages you when it misbehaves.':
+    'Bugbot נגמר בסקירה, ו-Rollouts קורא כלים שאתם מביאים. Appwrite Reviews נמצא בפרויקט שפורס את הקוד, מודד את התעבורה שלו ומזעיק אתכם כשמשהו לא מתנהג כמו שצריך.',
+  'Bugbot reviews code. Appwrite runs your product.':
+    'Bugbot סוקר קוד. Appwrite מריצה את המוצר שלכם.',
+  'Appwrite Reviews comes with auth, databases, storage, functions, messaging, realtime, and hosting for customer-facing apps, all in one open-source project.':
+    'Appwrite Reviews מגיע עם אימות, מסדי נתונים, אחסון, פונקציות, הודעות, Realtime ואירוח לאפליקציות שמשרתות לקוחות, הכול בפרויקט אחד בקוד פתוח.',
+  'Open source from review to runtime': 'קוד פתוח מהסקירה ועד זמן הריצה',
+  'Bugbot, Graphite, and Origin are closed services. Appwrite and its review service are open source, so the platform behind your app is code you can read and run.':
+    'Bugbot, Graphite ו-Origin הם שירותים סגורים. Appwrite ושירות הסקירה שלה הם קוד פתוח, כך שהפלטפורמה שמאחורי האפליקציה שלכם היא קוד שאפשר לקרוא ולהריץ.',
+  'Code review, and what runs after it': 'סקירת קוד, ומה שרץ אחריה',
+  'Internal tools': 'כלים פנימיים',
+  'Your own tools': 'הכלים שלכם',
+  'Bugbot is Cursor’s pull request reviewer, and your sites and databases still run somewhere else. Appwrite Reviews comes with a production backend: auth for your own users, databases, functions, and hosting, with Monitors and Beep watching it after every merge.':
+    'Bugbot הוא הסוקר של Cursor ל-Pull requests, והאתרים ומסדי הנתונים שלכם עדיין רצים במקום אחר. Appwrite Reviews מגיע עם backend לפרודקשן: אימות למשתמשים שלכם, מסדי נתונים, פונקציות ואירוח, עם מוניטורים ו-Beep שעוקבים אחריו אחרי כל מיזוג.',
+  'Bugbot is part of Cursor. Appwrite Reviews is part of the backend platform your app runs on.':
+    'Bugbot הוא חלק מ-Cursor. Appwrite Reviews הוא חלק מפלטפורמת ה-backend שהאפליקציה שלכם רצה עליה.',
+  'Greptile reviews pull requests and can test the app in a sandbox. Appwrite Reviews comes with the platform that deploys the app for real, previews every pull request, and watches production with Monitors and Beep after the merge.':
+    'Greptile סוקר Pull requests ויכול לבדוק את האפליקציה בסביבה מבודדת. Appwrite Reviews מגיע עם הפלטפורמה שפורסת את האפליקציה באמת, מציגה תצוגה מקדימה לכל Pull request ומנטרת את הפרודקשן עם מוניטורים ו-Beep אחרי המיזוג.',
+  'TREX in a sandbox': 'TREX בסביבה מבודדת',
+  'Runs the pull request’s app, clicks through the flows it touches, and attaches logs and video.':
+    'מריץ את האפליקציה של ה-Pull request, עובר בקליקים על התהליכים שהוא משנה ומצרף לוגים ווידאו.',
+  'Three credits a run': 'שלושה קרדיטים לכל הרצה',
+  'On top of the review, at $1 a credit.': 'בנוסף לסקירה, ב-$1 לקרדיט.',
+  'Ends at the merge': 'נגמר במיזוג',
+  'Hosting, deploys, and production monitoring stay with other tools.':
+    'אירוח, פריסות וניטור פרודקשן נשארים בכלים אחרים.',
+  'A preview for each pull request': 'תצוגה מקדימה לכל Pull request',
+  'Sites builds the branch and posts a preview link next to the review.':
+    'שירות האתרים בונה את ה-Branch ומפרסם קישור לתצוגה מקדימה לצד הסקירה.',
+  'Commands in a sandbox': 'פקודות בסביבה מבודדת',
+  'Normal and Expert reviews can run targeted commands to confirm a suspected bug.':
+    'סקירות רגילות וסקירות מומחה יכולות להריץ פקודות ממוקדות כדי לאמת חשד לבאג.',
+  'Production after the merge': 'פרודקשן אחרי המיזוג',
+  'Monitors watch usage and endpoints, and alerts escalate to your phone with Beep.':
+    'מוניטורים עוקבים אחרי השימוש וה-Endpoints, וההתראות מוסלמות לטלפון שלכם עם Beep.',
+  'Prepaid $1 credits': 'קרדיטים בתשלום מראש, $1 לקרדיט',
+  'Shared by the organization, with no seat fees.':
+    'משותפים לכל הארגון, בלי חיוב לפי משתמש.',
+  '1, 3, or 10 credits a review': '1, 3 או 10 קרדיטים לסקירה',
+  'Base, Plus, or Apex, plus 3 for a TREX run.':
+    'Base, Plus או Apex, ועוד 3 להרצת TREX.',
+  '50 free credits a month': '50 קרדיטים חינם בחודש',
+  'On Starter, for one active developer.': 'ב-Starter, למפתח פעיל אחד.',
+  'Reviews pause at zero': 'הסקירות נעצרות באפס',
+  'Until someone adds credits.': 'עד שמישהו מוסיף קרדיטים.',
+  'Ship the pull request, then watch it':
+    'שחררו את ה-Pull request, ואז עקבו אחריו',
+  'Connect a repository, get a graded review on the next pull request, and keep watching it in production with Monitors.':
+    'חברו מאגר, קבלו סקירה עם ציון ב-Pull request הבא, והמשיכו לעקוב אחריו בפרודקשן עם מוניטורים.',
+  'Review the pull request,': 'סקרו את ה-Pull request,',
+  'then run it for real': 'ואז הריצו אותו באמת',
+  'Before and after the merge': 'לפני המיזוג ואחריו',
+  'From a sandbox run to production': 'מהרצה בסביבה מבודדת ועד פרודקשן',
+  'Greptile can exercise a pull request in a sandbox before you merge. Appwrite previews it on your real hosting, then keeps watching it in production.':
+    'Greptile יכול לבחון Pull request בסביבה מבודדת לפני שאתם ממזגים. Appwrite מציגה תצוגה מקדימה שלו על האירוח האמיתי שלכם, ואז ממשיכה לנטר אותו בפרודקשן.',
+  'The Appwrite app that builds the preview also reviews the pull request. Both comments land on the pull request together, in the same layout, with links back to the Console.':
+    'אפליקציית Appwrite שבונה את התצוגה המקדימה גם סוקרת את ה-Pull request. שתי התגובות מגיעות ל-Pull request יחד, באותו מבנה, עם קישורים חזרה לקונסולה.',
+  'A grade, not just a score': 'ציון למיזוג, לא רק ניקוד',
+  'Every review ends in a merge confidence grade from S to F and a verdict decided by code, both built from findings a second model has verified.':
+    'כל סקירה מסתיימת בציון ביטחון למיזוג מ-S עד F ובהחלטה שנקבעת על ידי קוד, ושניהם מבוססים על ממצאים שמודל שני אימת.',
+  'Credits that come with your plan': 'קרדיטים שמגיעים עם התוכנית שלכם',
+  'Both bill reviews in credits. Greptile sells them prepaid at $1 each. Appwrite includes them in the plan your project already has, every month.':
+    'שניהם מחייבים על סקירות בקרדיטים. Greptile מוכר אותם בתשלום מראש, $1 לקרדיט. Appwrite כוללת אותם בתוכנית שכבר יש לפרויקט שלכם, בכל חודש.',
+  'Published prices as of November 2026. Greptile reviews non-commercial open source for free and offers startup credits.':
+    'מחירים שפורסמו נכון לנובמבר 2026. Greptile סוקר בחינם קוד פתוח לא מסחרי ומציע קרדיטים לסטארטאפים.',
+  'The review is one step of the release': 'הסקירה היא שלב אחד בשחרור הגרסה',
+  'Greptile focuses on the pull request. Appwrite Reviews shares a project with the products that deploy, measure, protect, and watch the code you merge.':
+    'Greptile מתמקד ב-Pull request. Appwrite Reviews חולק פרויקט עם המוצרים שפורסים, מודדים, מגינים ומנטרים את הקוד שאתם ממזגים.',
+  'Greptile reviews code. Appwrite also runs it.':
+    'Greptile סוקר קוד. Appwrite גם מריצה אותו.',
+  'Appwrite Reviews comes with auth, databases, storage, functions, messaging, realtime, and hosting in the same project.':
+    'Appwrite Reviews מגיע עם אימות, מסדי נתונים, אחסון, פונקציות, הודעות, Realtime ואירוח באותו פרויקט.',
+  'Greptile is closed source. Appwrite and its review service are open source, so you can audit how your code is reviewed and run it on your own servers.':
+    'Greptile הוא קוד סגור. Appwrite ושירות הסקירה שלה הם קוד פתוח, כך שאפשר לבדוק איך הקוד שלכם נסקר ולהריץ את זה על השרתים שלכם.',
+  'Review features, side by side': 'יכולות סקירה, זו לצד זו',
+  'Greptile is a dedicated code reviewer. Appwrite Reviews is code review inside the platform that ships and runs your app.':
+    'Greptile הוא סוקר קוד ייעודי. Appwrite Reviews הוא סקירת קוד בתוך הפלטפורמה שמעלה לאוויר ומריצה את האפליקציה שלכם.',
+  'Sandbox test only': 'בדיקה בסביבה מבודדת בלבד',
+  'Pull request summary and walkthrough':
+    'סיכום ומעבר על השינויים ב-Pull request',
+  'One comment, updated on every review': 'תגובה אחת שמתעדכנת בכל סקירה',
+  'With diagrams': 'עם דיאגרמות',
+  'Findings on the changed lines': 'ממצאים על השורות שהשתנו',
+  'With a category on each': 'עם קטגוריה לכל אחד',
+  'Severity on each comment': 'רמת חומרה לכל תגובה',
+  'Suggested fixes': 'תיקונים מוצעים',
+  'Suggestions and prompts for coding agents': 'הצעות והנחיות לסוכני פיתוח',
+  'One-click fixes': 'תיקונים בלחיצה אחת',
+  'Chat with the reviewer': 'שיחה עם הסוקר',
+  'Mention it or reply to a finding': 'תייגו אותו או השיבו לממצא',
+  'Mention @coderabbitai': 'תיוג @coderabbitai',
+  'Learns team preferences': 'לומד את העדפות הצוות',
+  'Learnings saved from conversations': 'למידות שנשמרות משיחות',
+  'Editable learnings': 'למידות שאפשר לערוך',
+  'With a verdict decided by code': 'עם החלטה שנקבעת על ידי קוד',
+  'Pre-merge checks, merge blocking on Advanced':
+    'בדיקות לפני מיזוג, וחסימת מיזוג ב-Advanced',
+  'Reads failed CI checks': 'קורא בדיקות CI שנכשלו',
+  'Failed checks on the head commit': 'בדיקות שנכשלו בקומיט ה-head',
+  'Logs from GitHub Actions, GitLab CI, and more':
+    'לוגים מ-GitHub Actions, מ-GitLab CI ועוד',
+  'Linters and security scanners in the review': 'לינטרים וסורקי אבטחה בסקירה',
+  '50+ tools': 'יותר מ-50 כלים',
+  'Reviews in the IDE and CLI': 'סקירות ב-IDE וב-CLI',
+  'Git providers': 'ספקי Git',
+  'From your Appwrite plan': 'מהתוכנית שלכם ב-Appwrite',
+  'From $24 a month, billed annually': 'החל מ-$24 לחודש, בחיוב שנתי',
+  'About two Normal reviews': 'כשתי סקירות רגילות',
+  'Pull request summaries; reviews in the IDE and CLI':
+    'סיכומי Pull request; סקירות ב-IDE וב-CLI',
+  'Usage past the plan': 'שימוש מעבר לתוכנית',
+  'No spending cap unless an admin sets one':
+    'בלי תקרת הוצאות, אלא אם מנהל מגדיר אחת',
+  'Deploys your Sites and Functions': 'פורס את האתרים והפונקציות שלכם',
+  'Backend for the app you review': 'Backend לאפליקציה שאתם סוקרים',
+  'Auth, databases, storage, messaging, realtime':
+    'אימות, מסדי נתונים, אחסון, הודעות, Realtime',
+  'Monitors production': 'מנטר את הפרודקשן',
+  'Usage monitors and endpoint checks': 'מוניטורי שימוש ובדיקות Endpoint',
+  'An incident agent reads your Datadog or Sentry':
+    'סוכן תקלות קורא את Datadog או Sentry שלכם',
+  'On-call pushes to your phone': 'התראות כוננות לטלפון שלכם',
+  'Appwrite Beep, with escalations': 'Appwrite Beep, עם הסלמות',
+  'Suggested changes': 'שינויים מוצעים',
+  'Answers replies to its comments': 'עונה כשמשיבים לתגובות שלו',
+  'Fix with Copilot hands off to the cloud agent':
+    'Fix with Copilot מעביר את העבודה לסוכן בענן',
+  'Copilot Memory keeps repository facts':
+    'Copilot Memory שומר עובדות על המאגר',
+  'Decided by code from the findings': 'נקבעת על ידי קוד לפי הממצאים',
+  'Approvals are optional': 'אישורים הם אופציונליים',
+  'Merge confidence grade': 'ציון ביטחון למיזוג',
+  'On every review': 'בכל סקירה',
+  'An approval assessment': 'הערכה אם לאשר',
+  'Follows AGENTS.md and instruction files': 'פועל לפי AGENTS.md וקובצי הנחיות',
+  'Pulls context from MCP tools': 'מושך הקשר מכלי MCP',
+  'Issue trackers, docs, and incident tools':
+    'מערכות למעקב אחר Issues, תיעוד וכלים לטיפול בתקלות',
+  'Reviews in the IDE': 'סקירות ב-IDE',
+  'VS Code, Visual Studio, JetBrains, Xcode':
+    'VS Code, Visual Studio, JetBrains, Xcode',
+  'Since November 2026': 'מאז נובמבר 2026',
+  'Plus GitHub Actions minutes': 'וגם דקות GitHub Actions',
+  'Typical review': 'סקירה טיפוסית',
+  '$0.50 past your plan’s included credits':
+    '$0.50 מעבר לקרדיטים שכלולים בתוכנית שלכם',
+  'Average at the default effort': 'ממוצע ברמת המאמץ המוגדרת כברירת מחדל',
+  'No pull request reviews on Copilot Free':
+    'אין סקירות Pull request ב-Copilot Free',
+  'Included with a paid plan': 'כלול בתוכנית בתשלום',
+  'For each project on Pro': 'לכל פרויקט ב-Pro',
+  'On Copilot Pro, $10 a month': 'ב-Copilot Pro, $10 לחודש',
+  'Hosts your Git repositories and CI': 'מארח את מאגרי ה-Git וה-CI שלכם',
+  'Deploys and hosts your app': 'פורס ומארח את האפליקציה שלכם',
+  'GitHub Pages for static sites': 'GitHub Pages לאתרים סטטיים',
+  'Backend for your app': 'Backend לאפליקציה שלכם',
+  'Pull request summary': 'סיכום Pull request',
+  'Fix in Cursor or on the web': 'תיקון ב-Cursor או ב-Web',
+  'Fixes findings with an agent': 'מתקן ממצאים עם סוכן',
+  'Hands a prompt to your own agent': 'מעביר הנחיה לסוכן שלכם',
+  'Autofix with the cloud agent, billed as agent usage':
+    'Autofix עם הסוכן בענן, בחיוב כשימוש בסוכן',
+  'Learns team rules': 'לומד את כללי הצוות',
+  'Learned rules and BUGBOT.md': 'כללים נלמדים ו-BUGBOT.md',
+  'Status check on the commit': 'בדיקת סטטוס על הקומיט',
+  'Review analytics': 'אנליטיקה של סקירות',
+  'Approvals, useful findings, review time':
+    'אישורים, ממצאים מועילים, זמן סקירה',
+  'Dashboard and rule analytics': 'דשבורד ואנליטיקה של כללים',
+  'Run a review from the editor': 'הרצת סקירה מהעורך',
+  'From the Cursor agent': 'מהסוכן של Cursor',
+  'About $1.00 to $1.50 on average': 'כ-$1.00 עד $1.50 בממוצע',
+  'Plan you need': 'התוכנית הנדרשת',
+  '100 credits a month on Free': '100 קרדיטים בחודש ב-Free',
+  'From $30 a month': 'החל מ-$30 לחודש',
+  'Typical review past the plan': 'סקירה טיפוסית מעבר לתוכנית',
+  'A Normal review, 50 credits': 'סקירה רגילה, 50 קרדיטים',
+  'Billed to whoever enabled it': 'בחיוב למי שהפעיל אותו',
+  'Hosts customer-facing apps': 'מארח אפליקציות שמשרתות לקוחות',
+  'Sites and Functions with custom domains':
+    'אתרים ופונקציות עם דומיינים מותאמים',
+  'Databases, storage, messaging, and realtime':
+    'מסדי נתונים, אחסון, הודעות ו-Realtime',
+  'Hosts your Git repositories': 'מארח את מאגרי ה-Git שלכם',
+  'Watches production': 'מנטר את הפרודקשן',
+  'Monitors on usage and endpoints': 'מוניטורים על השימוש וה-Endpoints',
+  'Rollouts read your observability tool':
+    'Rollouts קורא את כלי ה-Observability שלכם',
+  'With a walkthrough': 'עם מעבר על השינויים',
+  'Severity on each finding': 'רמת חומרה לכל ממצא',
+  'A confidence score on each review': 'ציון ביטחון לכל סקירה',
+  'Mention @greptileai': 'תיוג @greptileai',
+  'From pull request conversations': 'משיחות ב-Pull requests',
+  'From reactions and replies': 'מריאקציות ומתגובות',
+  'Hands findings to coding agents': 'מעביר ממצאים לסוכני פיתוח',
+  'A fix prompt on every finding': 'הנחיית תיקון לכל ממצא',
+  'Fix with your agent': 'תיקון עם הסוכן שלכם',
+  'Runs code while reviewing': 'מריץ קוד במהלך הסקירה',
+  'Targeted commands in a sandbox': 'פקודות ממוקדות בסביבה מבודדת',
+  'TREX clicks through the app, +3 credits':
+    'TREX עובר בקליקים על האפליקציה, בתוספת 3 קרדיטים',
+  'Cross-repository context': 'הקשר בין מאגרים',
+  'Jira, Linear, and Notion': 'Jira, Linear ו-Notion',
+  'Enterprise only': 'Enterprise בלבד',
+  'Included every month': 'כלולים בכל חודש',
+  '$1 each, shared by the organization': '$1 לקרדיט, משותפים לכל הארגון',
+  'Credits per review': 'קרדיטים לכל סקירה',
+  'Basic, Normal, or Expert': 'בסיסית, רגילה או מומחה',
+  'Base, Plus, or Apex': 'Base, Plus או Apex',
+  'Free tier': 'מסלול חינמי',
+  'For the organization': 'לארגון',
+  'One active developer': 'מפתח פעיל אחד',
+  'When credits run out': 'כשהקרדיטים נגמרים',
+  '$1 per 100, up to your budget cap': '$1 לכל 100, עד תקרת התקציב שלכם',
+  'Until you add credits': 'עד שאתם מוסיפים קרדיטים',
+  'Deploys and hosts the app': 'פורס ומארח את האפליקציה',
+  'Backend for the app': 'Backend לאפליקציה',
+  'Critical to Info': 'מקריטי ועד מידע',
+  'Critical to Trivial': 'Critical to Trivial',
+  'S to F grade': 'ציון מ-S עד F',
+  'Per developer': 'לפי מפתח',
+  '100 credits a month': '100 קרדיטים בחודש',
+  '$1 per 100 credits': '$1 לכל 100 קרדיטים',
+  '$0.25 per file': '$0.25 לכל קובץ',
+  'High to Low': 'High to Low',
+  'Approve, request changes, or comment': 'אישור, בקשת שינויים או תגובה',
+  'Comment by default': 'תגובה כברירת מחדל',
+  '50 credits': '50 קרדיטים',
+  'About $1.50': 'כ-$1.50',
+  '2,000 credits a month': '2,000 קרדיטים בחודש',
+  '1,500 credits a month': '1,500 קרדיטים בחודש',
+  'Usage per review': 'לפי שימוש בכל סקירה',
+  'Any Appwrite plan': 'כל תוכנית Appwrite',
+  'Cursor Premium or Teams': 'Cursor Premium או Teams',
+  'About $1.00 to $1.50': 'כ-$1.00 עד $1.50',
+  'P0 to P2': 'P0 to P2',
+  '0 to 5 score': 'ניקוד מ-0 עד 5',
+  'Credits from your plan': 'קרדיטים מהתוכנית שלכם',
+  'Prepaid credits': 'קרדיטים בתשלום מראש',
+  '10, 50, or 500': '10, 50 או 500',
+  '1, 3, or 10': '1, 3 או 10',
+  '50 credits a month': '50 קרדיטים בחודש',
+  'Extra credits': 'קרדיטים נוספים',
+  'Reviews pause': 'הסקירות נעצרות',
+  'When CodeRabbit might still fit': 'מתי עדיין כדאי לבחור ב-CodeRabbit',
+  'CodeRabbit is a mature, dedicated reviewer with a wide set of review tools. If review depth is all you need from a vendor, it is a strong choice.':
+    'CodeRabbit הוא סוקר ייעודי ובוגר עם מגוון רחב של כלי סקירה. אם כל מה שאתם צריכים מספק הוא עומק בסקירה, זו בחירה חזקה.',
+  'When GitHub Copilot might still fit':
+    'מתי עדיין כדאי לבחור ב-GitHub Copilot',
+  'Copilot code review is built into GitHub and the editors your team already uses. If you live in GitHub and Copilot, it is the shortest path to a reviewer.':
+    'סקירת הקוד של Copilot מובנית ב-GitHub ובעורכים שהצוות שלכם כבר משתמש בהם. אם אתם חיים ב-GitHub וב-Copilot, זו הדרך הקצרה ביותר לסוקר.',
+  'When Cursor Bugbot might still fit': 'מתי עדיין כדאי לבחור ב-Cursor Bugbot',
+  'Bugbot lives inside Cursor, and Cursor now reaches from the editor to Git hosting and deploy checks. If your team builds in Cursor, it keeps review next to the agent that writes the code.':
+    'Bugbot נמצא בתוך Cursor, ו-Cursor מגיע היום מהעורך ועד אירוח Git ובדיקות פריסה. אם הצוות שלכם בונה ב-Cursor, הוא שומר את הסקירה לצד הסוכן שכותב את הקוד.',
+  'When Greptile might still fit': 'מתי עדיין כדאי לבחור ב-Greptile',
+  'Greptile is a focused reviewer with deep codebase context and an agent that tests the app. If you want the reviewer to click through your app before merge, it is built for that.':
+    'Greptile הוא סוקר ממוקד עם הקשר עמוק על בסיס הקוד וסוכן שבודק את האפליקציה. אם אתם רוצים שהסוקר יעבור בקליקים על האפליקציה שלכם לפני המיזוג, הוא בנוי בדיוק בשביל זה.',
+  'Code review on every pull request, next to your deploys.':
+    'סקירת קוד בכל Pull request, לצד הפריסות שלכם.',
+  'Appwrite Functions': 'Appwrite Functions',
+  'Alerts when your project crosses a threshold you set.':
+    'התראות כשהפרויקט שלכם חוצה סף שהגדרתם.',
+  'Your project updates on your phone, on your terms.':
+    'העדכונים מהפרויקט שלכם בטלפון, בתנאים שלכם.',
+  'Appwrite pricing': 'התמחור של Appwrite',
+  'One plan for your backend, hosting, and reviews.':
+    'תוכנית אחת ל-backend, לאירוח ולסקירות שלכם.',
+  'Appwrite Auth': 'Appwrite Auth',
+  'Appwrite Databases': 'Appwrite Databases',
+  'Is Appwrite Reviews a good CodeRabbit alternative?':
+    'האם Appwrite Reviews היא חלופה טובה ל-CodeRabbit?',
+  'Yes, especially if your code ships on Appwrite. Appwrite Reviews posts a summary, findings on the lines they concern, a verdict, and a merge confidence grade on every pull request, from the same Appwrite project that deploys your Sites and Functions, monitors production, and pages you with Beep. CodeRabbit is a dedicated reviewer you add as another vendor, priced per developer.':
+    'כן, במיוחד אם הקוד שלכם עולה לאוויר ב-Appwrite. Appwrite Reviews מפרסם בכל Pull request סיכום, ממצאים על השורות הרלוונטיות, החלטה וציון ביטחון למיזוג, מאותו פרויקט Appwrite שפורס את האתרים והפונקציות שלכם, מנטר את הפרודקשן ומזעיק אתכם עם Beep. CodeRabbit הוא סוקר ייעודי שמוסיפים כספק נוסף, בתמחור לפי מפתח.',
+  'How is Appwrite Reviews priced compared with CodeRabbit?':
+    'איך מתומחר Appwrite Reviews בהשוואה ל-CodeRabbit?',
+  'Appwrite Reviews uses credits from your Appwrite plan instead of seats. A Basic review uses 10 credits, Normal 50, and Expert 500. Free includes 100 credits a month for your organization, Pro includes 2,000 a month for each project, and extra credits cost $1 per 100 on paid plans. CodeRabbit charges per developer who opens pull requests, from $24 a month billed annually, with usage charges past its limits.':
+    'Appwrite Reviews משתמש בקרדיטים מתוכנית Appwrite שלכם במקום בחיוב לפי משתמש. סקירה בסיסית צורכת 10 קרדיטים, סקירה רגילה 50 וסקירת מומחה 500. Free כוללת 100 קרדיטים בחודש לארגון שלכם, Pro כוללת 2,000 בחודש לכל פרויקט, וקרדיטים נוספים עולים $1 לכל 100 בתוכניות בתשלום. CodeRabbit גובה תשלום לכל מפתח שפותח Pull requests, החל מ-$24 לחודש בחיוב שנתי, עם חיובי שימוש מעבר למגבלות שלו.',
+  'Which Git providers does each one support?':
+    'באילו ספקי Git כל אחד מהם תומך?',
+  'Appwrite Reviews works with GitHub, GitLab, and Bitbucket. CodeRabbit supports GitHub, GitLab, Bitbucket, and Azure DevOps, including their self-managed editions.':
+    'Appwrite Reviews עובד עם GitHub, GitLab ו-Bitbucket. CodeRabbit תומך ב-GitHub, ב-GitLab, ב-Bitbucket וב-Azure DevOps, כולל הגרסאות שלהם בניהול עצמי.',
+  'Yes. Mention it in a comment to ask a question or request a new review, or reply to one of its findings. Answers are free, and when you state a lasting rule it saves a learning that later reviews follow. CodeRabbit also chats through @coderabbitai and keeps editable learnings.':
+    'כן. תייגו אותו בתגובה כדי לשאול שאלה או לבקש סקירה חדשה, או השיבו לאחד הממצאים שלו. תשובות הן בחינם, וכשאתם מנסחים כלל קבוע הוא שומר למידה שהסקירות הבאות פועלות לפיה. גם CodeRabbit מנהל שיחות דרך @coderabbitai ושומר למידות שאפשר לערוך.',
+  'Does Appwrite Reviews read my deployments or logs?':
+    'האם Appwrite Reviews קורא את הפריסות או הלוגים שלי?',
+  'No. The reviewer reads the pull request: the diff, the repository at its head, the description, linked issues, failed checks, and rule files such as AGENTS.md. What Appwrite adds is everything around the review: the same Git connection deploys the code, and the same project hosts, monitors, and alerts on it after you merge.':
+    'לא. הסוקר קורא את ה-Pull request: ה-diff, המאגר ב-head שלו, התיאור, Issues מקושרים, בדיקות שנכשלו וקובצי כללים כמו AGENTS.md. מה ש-Appwrite מוסיפה הוא כל מה שמסביב לסקירה: אותו חיבור Git פורס את הקוד, ואותו פרויקט מארח אותו, מנטר אותו ומתריע עליו אחרי שאתם ממזגים.',
+  'How does it work with Appwrite Sites and Functions?':
+    'איך זה עובד עם Appwrite Sites ו-Functions?',
+  'Review pull requests is on by default when you create a site or function from a repository, every site and function has a Reviews tab, and the review comment sits next to the deployment comment from the same Appwrite app on the pull request.':
+    'האפשרות "סקירת Pull requests" מופעלת כברירת מחדל כשיוצרים אתר או פונקציה ממאגר, לכל אתר ופונקציה יש לשונית סקירות, ותגובת הסקירה מופיעה ב-Pull request לצד תגובת הפריסה, מאותה אפליקציית Appwrite.',
+  'Is Appwrite open source?': 'האם Appwrite היא קוד פתוח?',
+  'Yes. Appwrite and its review service are open source, and you can self-host them. CodeRabbit is closed source, with self-hosting on Enterprise plans for 500 or more seats.':
+    'כן. Appwrite ושירות הסקירה שלה הם קוד פתוח, ואפשר להריץ אותם באירוח עצמי. CodeRabbit הוא קוד סגור, עם אירוח עצמי בתוכניות Enterprise של 500 משתמשים ומעלה.',
+  'Is Appwrite Reviews an alternative to GitHub Copilot code review?':
+    'האם Appwrite Reviews היא חלופה לסקירת הקוד של GitHub Copilot?',
+  'Yes. Appwrite Reviews posts a summary, findings with severity, a verdict, and a merge confidence grade on every pull request, on GitHub, GitLab, and Bitbucket. It runs from the Appwrite project that deploys, hosts, and monitors your app, so reviews and production share one Console and one bill.':
+    'כן. Appwrite Reviews מפרסם בכל Pull request סיכום, ממצאים עם רמת חומרה, החלטה וציון ביטחון למיזוג, ב-GitHub, ב-GitLab וב-Bitbucket. הוא פועל מתוך פרויקט Appwrite שפורס, מארח ומנטר את האפליקציה שלכם, כך שהסקירות והפרודקשן חולקים קונסולה אחת וחשבון אחד.',
+  'Does the reviewer answer my replies?': 'האם הסוקר עונה לתגובות שלי?',
+  'Yes. Reply to a finding or mention the reviewer and it reads the code to answer, can resolve or dismiss the finding, and saves lasting rules as learnings. Answers are free. GitHub documents that Copilot code review does not see or answer replies to its comments.':
+    'כן. השיבו לממצא או תייגו את הסוקר, והוא יקרא את הקוד כדי לענות, יוכל לסמן את הממצא כנפתר או לדחות אותו, וישמור כללים קבועים כלמידות. תשובות הן בחינם. לפי התיעוד של GitHub, סקירת הקוד של Copilot לא רואה תגובות להערות שלה ולא עונה להן.',
+  'How do the costs compare?': 'איך משתוות העלויות?',
+  'Appwrite Reviews uses credits from your Appwrite plan: 10, 50, or 500 credits per review, with 100 a month on Free, 2,000 a month for each project on Pro, and extra credits at $1 per 100. Copilot code review uses GitHub AI Credits, about $1.50 for a review at the default effort, plus GitHub Actions minutes.':
+    'Appwrite Reviews משתמש בקרדיטים מתוכנית Appwrite שלכם: 10, 50 או 500 קרדיטים לסקירה, עם 100 בחודש ב-Free, 2,000 בחודש לכל פרויקט ב-Pro וקרדיטים נוספים ב-$1 לכל 100. סקירת הקוד של Copilot משתמשת ב-AI Credits של GitHub, כ-$1.50 לסקירה ברמת המאמץ המוגדרת כברירת מחדל, וגם בדקות GitHub Actions.',
+  'Do I need GitHub?': 'האם צריך GitHub?',
+  'No. Appwrite Reviews works with GitHub, GitLab, and Bitbucket. Copilot code review works on GitHub.com and, since November 2026, Azure DevOps.':
+    'לא. Appwrite Reviews עובד עם GitHub, GitLab ו-Bitbucket. סקירת הקוד של Copilot עובדת ב-GitHub.com, ומאז נובמבר 2026 גם ב-Azure DevOps.',
+  'Can I use both on the same pull request?':
+    'אפשר להשתמש בשניהם באותו Pull request?',
+  'Yes. Each posts its own review. Appwrite Reviews is on by default for the repositories behind new Appwrite Sites and Functions, and you choose any other repositories in the Console.':
+    'כן. כל אחד מפרסם סקירה משלו. Appwrite Reviews מופעל כברירת מחדל במאגרים של אתרים ופונקציות חדשים ב-Appwrite, ואת שאר המאגרים בוחרים בקונסולה.',
+  'Does Appwrite Reviews read my production data?':
+    'האם Appwrite Reviews קורא את נתוני הפרודקשן שלי?',
+  'Yes. Appwrite and its review service are open source, and you can self-host them. Copilot is closed source and is not available on GitHub Enterprise Server.':
+    'כן. Appwrite ושירות הסקירה שלה הם קוד פתוח, ואפשר להריץ אותם באירוח עצמי. Copilot הוא קוד סגור ואינו זמין ב-GitHub Enterprise Server.',
+  'Is Appwrite Reviews a good alternative to Cursor Bugbot?':
+    'האם Appwrite Reviews היא חלופה טובה ל-Cursor Bugbot?',
+  'Does Cursor host my app or its database?':
+    'האם Cursor מארח את האפליקציה שלי או את מסד הנתונים שלה?',
+  'No. Cursor doesn’t host sites or run PostgreSQL for your app. Origin hosts Git repositories in early beta, and Rollouts checks deploys against an observability tool you connect. Appwrite is a production backend for customer-facing apps: auth for your own users, managed PostgreSQL and other databases, storage, functions, messaging, realtime, and hosting with custom domains, open source and self-hostable.':
+    'לא. Cursor לא מארח אתרים ולא מריץ PostgreSQL עבור האפליקציה שלכם. Origin מארח מאגרי Git בבטא מוקדמת, ו-Rollouts בודק פריסות מול כלי ניטור שאתם מחברים. Appwrite היא backend לפרודקשן לאפליקציות שמשרתות לקוחות: אימות למשתמשים שלכם, PostgreSQL מנוהל ומסדי נתונים נוספים, אחסון, פונקציות, הודעות, Realtime ואירוח עם דומיינים מותאמים אישית, בקוד פתוח ועם אפשרות לאירוח עצמי.',
+  'How does pricing compare?': 'איך משתווה התמחור?',
+  'Bugbot bills each review, about $1.00 to $1.50 on average, and needs Cursor Premium or a Teams plan. Appwrite Reviews uses credits from your Appwrite plan: 10, 50, or 500 credits per review, 100 a month on Free, 2,000 a month for each project on Pro, and extra credits at $1 per 100.':
+    'Bugbot מחייב על כל סקירה, כ-$1.00 עד $1.50 בממוצע, ודורש Cursor Premium או תוכנית Teams. Appwrite Reviews משתמש בקרדיטים מתוכנית Appwrite שלכם: 10, 50 או 500 קרדיטים לסקירה, 100 בחודש ב-Free, 2,000 בחודש לכל פרויקט ב-Pro וקרדיטים נוספים ב-$1 לכל 100.',
+  'What about Graphite?': 'ומה לגבי Graphite?',
+  'Graphite, now part of Cursor, offers stacked pull requests and an AI reviewer on GitHub, from $20 per user a month on Starter and $40 on Team, billed annually. Appwrite Reviews has no seats and works on GitHub, GitLab, and Bitbucket.':
+    'Graphite, שהיום הוא חלק מ-Cursor, מציע stacked pull requests וסוקר AI ב-GitHub, החל מ-$20 למשתמש בחודש ב-Starter ו-$40 ב-Team, בחיוב שנתי. ב-Appwrite Reviews אין חיוב לפי משתמש, והוא עובד ב-GitHub, ב-GitLab וב-Bitbucket.',
+  'Does Appwrite watch my deploys after the merge?':
+    'האם Appwrite עוקבת אחרי הפריסות שלי אחרי המיזוג?',
+  'Appwrite Monitors watch usage metrics and endpoints of the project you deploy to, and alert by email, in the Console, and on your phone with Beep, escalating until someone acknowledges. Cursor Rollouts checks deploys against an observability tool you connect, such as Datadog, and opens an issue.':
+    'Appwrite Monitors עוקבים אחרי מדדי השימוש וה-Endpoints של הפרויקט שאליו אתם פורסים, ומתריעים באימייל, בקונסולה ובטלפון עם Beep, בהסלמה עד שמישהו מאשר טיפול. Cursor Rollouts בודק פריסות מול כלי Observability שאתם מחברים, כמו Datadog, ופותח Issue.',
+  'Can coding agents act on the findings?':
+    'האם סוכני פיתוח יכולים לפעול לפי הממצאים?',
+  'Yes. Each finding includes a prompt to fix it with an AI agent, and the summary has one prompt for all of them. Bugbot can also fix findings itself with Cursor’s cloud agent, billed as agent usage.':
+    'כן. כל ממצא כולל הנחיה לתיקון עם סוכן AI, ובסיכום יש הנחיה אחת לכולם. Bugbot יכול גם לתקן ממצאים בעצמו עם הסוכן בענן של Cursor, בחיוב כשימוש בסוכן.',
+  'Yes. Appwrite and its review service are open source, and you can self-host them. Bugbot, Graphite, and Origin are closed source services run by Cursor.':
+    'כן. Appwrite ושירות הסקירה שלה הם קוד פתוח, ואפשר להריץ אותם באירוח עצמי. Bugbot, Graphite ו-Origin הם שירותי קוד סגור שמופעלים על ידי Cursor.',
+  'Yes, especially for apps that run on Appwrite. Appwrite Reviews reviews every pull request on GitHub, GitLab, and Bitbucket, from the same project that deploys your Sites and Functions, runs your backend, watches production with Monitors, and pages your phone with Beep. Bugbot is part of Cursor, billed per review on top of a Cursor plan.':
+    'כן, במיוחד לאפליקציות שרצות על Appwrite. Appwrite Reviews סוקר כל Pull request ב-GitHub, ב-GitLab וב-Bitbucket, מאותו פרויקט שפורס את האתרים והפונקציות שלכם, מריץ את ה-backend, מנטר את הפרודקשן עם מוניטורים ומזעיק אתכם בטלפון עם Beep. Bugbot הוא חלק מ-Cursor, בחיוב לפי סקירה מעבר לתוכנית Cursor.',
+  'Is Appwrite Reviews a good Greptile alternative?':
+    'האם Appwrite Reviews היא חלופה טובה ל-Greptile?',
+  'Yes, especially if your app runs on Appwrite. Appwrite Reviews posts a summary, verified findings, a verdict, and a merge confidence grade on every pull request, from the same project that deploys, hosts, and monitors your app. Greptile is a dedicated reviewer billed in prepaid credits.':
+    'כן, במיוחד אם האפליקציה שלכם רצה על Appwrite. Appwrite Reviews מפרסם בכל Pull request סיכום, ממצאים מאומתים, החלטה וציון ביטחון למיזוג, מאותו פרויקט שפורס, מארח ומנטר את האפליקציה שלכם. Greptile הוא סוקר ייעודי בחיוב בקרדיטים בתשלום מראש.',
+  'How do the credits compare?': 'איך משתווים הקרדיטים?',
+  'Both bill reviews in credits. Greptile credits cost $1: a Base review uses 1, Plus 3, and Apex 10, and reviews pause when credits run out. Appwrite review credits come with your plan: 100 a month on Free, 2,000 a month for each project on Pro, and 20,000 on Scale. A review uses 10, 50, or 500 credits, and extra credits cost $1 per 100.':
+    'שניהם מחייבים על סקירות בקרדיטים. קרדיט של Greptile עולה $1: סקירת Base צורכת 1, Plus צורכת 3 ו-Apex צורכת 10, והסקירות נעצרות כשהקרדיטים נגמרים. קרדיטי הסקירה של Appwrite מגיעים עם התוכנית שלכם: 100 בחודש ב-Free, 2,000 בחודש לכל פרויקט ב-Pro ו-20,000 ב-Scale. סקירה צורכת 10, 50 או 500 קרדיטים, וקרדיטים נוספים עולים $1 לכל 100.',
+  'Greptile runs my app in a sandbox. Does Appwrite?':
+    'Greptile מריץ את האפליקציה שלי בסביבה מבודדת. גם Appwrite?',
+  'Greptile’s TREX runs the pull request’s app in a sandbox and clicks through its flows. Appwrite Reviews can run targeted commands in a sandbox to confirm a suspected bug on Normal and Expert strengths, and Appwrite hosts the app itself: a preview deployment on Sites for each pull request, then Monitors and Beep in production after you merge.':
+    'TREX של Greptile מריץ את האפליקציה של ה-Pull request בסביבה מבודדת ועובר בקליקים על התהליכים שלה. Appwrite Reviews יכול להריץ פקודות ממוקדות בסביבה מבודדת כדי לאמת חשד לבאג בעוצמות רגילה ומומחה, ו-Appwrite מארחת את האפליקציה עצמה: פריסת תצוגה מקדימה ב-Appwrite Sites לכל Pull request, ואז מוניטורים ו-Beep בפרודקשן אחרי שאתם ממזגים.',
+  'What does the merge grade mean?': 'מה המשמעות של ציון המיזוג?',
+  'Every review grades the pull request from S, ready to merge, to F, do not merge. Open findings cap the grade, and the verdict to approve, request changes, or comment is decided by code from the findings, not by the model.':
+    'כל סקירה נותנת ל-Pull request ציון מ-S (מוכן למיזוג) עד F (אין למזג). ממצאים פתוחים מגבילים את הציון, וההחלטה אם לאשר, לבקש שינויים או להגיב נקבעת על ידי קוד לפי הממצאים, לא על ידי המודל.',
+  'Appwrite Reviews works with GitHub, GitLab, and Bitbucket. Greptile supports GitHub, GitLab, and Bitbucket on every plan, and Gitea on Enterprise.':
+    'Appwrite Reviews עובד עם GitHub, GitLab ו-Bitbucket. Greptile תומך ב-GitHub, ב-GitLab וב-Bitbucket בכל התוכניות, וב-Gitea ב-Enterprise.',
+  'Yes. Appwrite and its review service are open source, and you can self-host them. Greptile is closed source, with self-hosting on Enterprise contracts.':
+    'כן. Appwrite ושירות הסקירה שלה הם קוד פתוח, ואפשר להריץ אותם באירוח עצמי. Greptile הוא קוד סגור, עם אירוח עצמי בחוזי Enterprise.',
+  'CodeRabbit pricing': 'התמחור של CodeRabbit',
+  'CodeRabbit plans': 'התוכניות של CodeRabbit',
+  'CodeRabbit usage-based add-on': 'תוסף החיוב לפי שימוש של CodeRabbit',
+  'CodeRabbit platforms': 'הפלטפורמות של CodeRabbit',
+  'CodeRabbit code review overview': 'סקירת הקוד של CodeRabbit: מבט כללי',
+  'CodeRabbit code guidelines': 'הנחיות הקוד של CodeRabbit',
+  'CodeRabbit tools': 'הכלים של CodeRabbit',
+  'CodeRabbit IDE': 'CodeRabbit ב-IDE',
+  'CodeRabbit CI/CD analysis': 'ניתוח CI/CD של CodeRabbit',
+  'CodeRabbit self-hosted': 'CodeRabbit באירוח עצמי',
+  'CodeRabbit security': 'האבטחה של CodeRabbit',
+  'Copilot plans': 'התוכניות של Copilot',
+  'Copilot plans and pricing': 'התוכניות והתמחור של Copilot',
+  'Copilot code review': 'סקירת הקוד של Copilot',
+  'Using Copilot code review': 'שימוש בסקירת הקוד של Copilot',
+  'Copilot usage-based billing': 'החיוב לפי שימוש של Copilot',
+  'Copilot code review on Azure DevOps': 'סקירת הקוד של Copilot ב-Azure DevOps',
+  'Copilot code review billing defaults':
+    'ברירות המחדל לחיוב בסקירת הקוד של Copilot',
+  'GitHub Spark deprecation': 'הוצאה משימוש של GitHub Spark',
+  'Copilot trust center': 'מרכז האמון של Copilot',
+  'Bugbot docs': 'התיעוד של Bugbot',
+  'Bugbot legacy pricing': 'התמחור הקודם של Bugbot',
+  'Bugbot pricing changes': 'שינויי התמחור של Bugbot',
+  'Cursor pricing': 'התמחור של Cursor',
+  'Cursor acquires Graphite': 'Cursor רוכש את Graphite',
+  'Graphite pricing': 'התמחור של Graphite',
+  'Cursor data use': 'השימוש של Cursor בנתונים',
+  'Greptile pricing': 'התמחור של Greptile',
+  'Greptile billing and seats': 'החיוב והרישיונות של Greptile',
+  'Greptile code providers': 'ספקי הקוד של Greptile',
+  'Greptile first review': 'הסקירה הראשונה ב-Greptile',
+  'Greptile key features': 'היכולות המרכזיות של Greptile',
+  'Greptile TREX': 'TREX של Greptile',
+  'Greptile security': 'האבטחה של Greptile',
+  'Greptile Series B': 'סבב Series B של Greptile',
+  'Product analytics suite': 'חבילת אנליטיקה למוצר',
+  'Appwrite Analytics vs PostHog: a cookieless PostHog alternative':
+    'Appwrite Analytics מול PostHog: חלופה ל-PostHog בלי עוגיות',
+  'Compare Appwrite Analytics and PostHog for web analytics. No cookies, no stored IP addresses, daily-rotating visitor IDs, bot and AI traffic built in, and your backend and hosting in the same project.':
+    'השוו בין Appwrite Analytics ל-PostHog באנליטיקת Web. בלי עוגיות, בלי שמירת כתובות IP, מזהי מבקרים שמתחלפים מדי יום, תעבורת בוטים ו-AI מובנית, וה-backend והאירוח שלכם באותו פרויקט.',
+  'Web analytics that are private by default.':
+    'אנליטיקת Web פרטית כברירת מחדל.',
+  'Privacy-friendly web analytics': 'אנליטיקת Web ששומרת על פרטיות',
+  'Appwrite Analytics vs Plausible: a privacy-first Plausible alternative':
+    'Appwrite Analytics מול Plausible: חלופה ל-Plausible שמציבה את הפרטיות במקום הראשון',
+  'Compare Appwrite Analytics and Plausible. The same cookieless privacy model, plus a free plan, custom properties on every plan, labeled bot and AI traffic, and analytics next to your hosting and backend.':
+    'השוו בין Appwrite Analytics ל-Plausible. אותו מודל פרטיות בלי עוגיות, ובנוסף תוכנית חינמית, מאפיינים מותאמים בכל תוכנית, תעבורת בוטים ו-AI מתויגת, ואנליטיקה לצד האירוח וה-backend שלכם.',
+  'Cookieless analytics with a free plan and bots in view.':
+    'אנליטיקה בלי עוגיות, עם תוכנית חינמית ובוטים בתמונה.',
+  'AI code review': 'סקירת קוד מבוססת AI',
+  'Appwrite Reviews vs CodeRabbit: AI code review from the platform that ships your code':
+    'Appwrite Reviews מול CodeRabbit: סקירת קוד מבוססת AI מהפלטפורמה שמעלה את הקוד שלכם לאוויר',
+  'Compare Appwrite Reviews and CodeRabbit. AI review on every pull request from the Appwrite project that deploys your Sites and Functions, watches production with Monitors, and pages your phone with Beep, billed in credits instead of seats.':
+    'השוו בין Appwrite Reviews ל-CodeRabbit. סקירת AI בכל Pull request מפרויקט ה-Appwrite שפורס את האתרים והפונקציות שלכם, מנטר את הפרודקשן עם מוניטורים ומזעיק אתכם בטלפון עם Beep, בחיוב לפי קרדיטים במקום לפי משתמשים.',
+  'Reviews from the platform that ships your code.':
+    'סקירות קוד מהפלטפורמה שמעלה את הקוד שלכם לאוויר.',
+  'AI coding assistant': 'עוזר קוד מבוסס AI',
+  'Appwrite Reviews vs GitHub Copilot code review: a reviewer for every Git provider':
+    'Appwrite Reviews מול סקירת הקוד של GitHub Copilot: סוקר לכל ספק Git',
+  'Compare Appwrite Reviews and GitHub Copilot code review. Reviews on GitHub, GitLab, and Bitbucket that answer your replies and learn your rules, from the Appwrite project that deploys, hosts, and monitors your app.':
+    'השוו בין Appwrite Reviews לסקירת הקוד של GitHub Copilot. סקירות ב-GitHub, ב-GitLab וב-Bitbucket שעונות לתגובות שלכם ולומדות את הכללים שלכם, מפרויקט ה-Appwrite שפורס, מארח ומנטר את האפליקציה שלכם.',
+  'Reviews on every Git provider, next to your deploys.':
+    'סקירות בכל ספק Git, לצד הפריסות שלכם.',
+  'AI code review in Cursor': 'סקירת קוד מבוססת AI ב-Cursor',
+  'Appwrite Reviews vs Cursor Bugbot: code review next to a production backend':
+    'Appwrite Reviews מול Cursor Bugbot: סקירת קוד לצד backend לפרודקשן',
+  'Compare Appwrite Reviews and Cursor Bugbot. AI review on every pull request from the open-source platform that hosts your customer-facing app, with auth, databases, functions, monitors, and on-call pushes in the same project.':
+    'השוו בין Appwrite Reviews ל-Cursor Bugbot. סקירת AI בכל Pull request מפלטפורמת הקוד הפתוח שמארחת את האפליקציה שמשרתת את הלקוחות שלכם, עם אימות, מסדי נתונים, פונקציות, מוניטורים והתראות כוננות באותו פרויקט.',
+  'Review, host, and monitor customer-facing apps.':
+    'סקירה, אירוח וניטור לאפליקציות שמשרתות לקוחות.',
+  'Appwrite Reviews vs Greptile: AI code review from your deploy platform':
+    'Appwrite Reviews מול Greptile: סקירת קוד מבוססת AI מפלטפורמת הפריסה שלכם',
+  'Compare Appwrite Reviews and Greptile. Verified findings, a merge grade, and learnings on every pull request, from the same Appwrite project that deploys, hosts, and monitors your app, with one bill.':
+    'השוו בין Appwrite Reviews ל-Greptile. ממצאים מאומתים, ציון מיזוג ולמידות בכל Pull request, מאותו פרויקט Appwrite שפורס, מארח ומנטר את האפליקציה שלכם, בחשבון אחד.',
+  'Review in the same project that runs the app.':
+    'סקירה באותו פרויקט שמריץ את האפליקציה.',
+  'Closed source and cloud only. Only the client SDKs and emulators are open.':
+    'קוד סגור, בענן בלבד. רק ה-SDKs ללקוח והאמולטורים פתוחים.',
+  'Source-available under the Functional Source License, which is not an open source license.':
+    'קוד זמין לעיון תחת Functional Source License, שאינו רישיון קוד פתוח.',
+  'The core is MIT licensed and can be self-hosted for smaller deployments.':
+    'הליבה ברישיון MIT, ואפשר להריץ אותה באירוח עצמי בפריסות קטנות יותר.',
+  'Community Edition is AGPL licensed and self-hostable, with fewer features than the cloud service.':
+    'Community Edition ברישיון AGPL וניתנת לאירוח עצמי, עם פחות יכולות משירות הענן.',
+  'Closed source. Self-hosting is an Enterprise option for 500 or more seats.':
+    'קוד סגור. אירוח עצמי הוא אפשרות של Enterprise ל-500 משתמשים ומעלה.',
+  'Closed source and cloud only. Copilot is not available on GitHub Enterprise Server.':
+    'קוד סגור, בענן בלבד. Copilot אינו זמין ב-GitHub Enterprise Server.',
+  'Bugbot, Graphite, and Origin are closed source services run by Cursor.':
+    'Bugbot, Graphite ו-Origin הם שירותי קוד סגור שמופעלים על ידי Cursor.',
+  'Closed source. Self-hosting with Docker or Kubernetes is an Enterprise option.':
+    'קוד סגור. אירוח עצמי עם Docker או Kubernetes הוא אפשרות של Enterprise.',
+  'Checked against public pricing and documentation in November 2026.':
+    'נבדק מול מחירונים ותיעוד ציבוריים בנובמבר 2026.',
+  // AI code review comparisons: fair play points and other strings passed through t()
+  'Findings (1)': 'ממצאים (1)',
+  'Appwrite': 'Appwrite',
+  'You want reviews in your editor and terminal as well as on pull requests.':
+    'אתם רוצים סקירות בעורך ובטרמינל, ולא רק ב-Pull requests.',
+  'Your repositories are on Azure DevOps.':
+    'המאגרים שלכם נמצאים ב-Azure DevOps.',
+  'You want 50+ linters and security scanners run inside every review.':
+    'אתם רוצים שיותר מ-50 לינטרים וסורקי אבטחה ירוצו בתוך כל סקירה.',
+  'You want generated tests, CI failure fixes, and Jira or Linear context built in.':
+    'אתם רוצים יצירת בדיקות, תיקוני כשלים ב-CI והקשר מ-Jira או מ-Linear, כחלק מובנה.',
+  'Your team already pays for Copilot Business or Enterprise and wants reviews on the same bill.':
+    'הצוות שלכם כבר משלם על Copilot Business או Enterprise ורוצה את הסקירות באותו חשבון.',
+  'You want reviews in VS Code, JetBrains, Xcode, and the GitHub CLI before you open a pull request.':
+    'אתם רוצים סקירות ב-VS Code, ב-JetBrains, ב-Xcode וב-GitHub CLI לפני שאתם פותחים Pull request.',
+  'You want review context pulled from issue trackers and incident tools through MCP.':
+    'אתם רוצים שההקשר לסקירה יגיע ממערכות למעקב אחר Issues ומכלים לטיפול בתקלות דרך MCP.',
+  'Your team writes code in Cursor and wants findings to open as fixes in the editor or the cloud agent.':
+    'הצוות שלכם כותב קוד ב-Cursor ורוצה שממצאים ייפתחו כתיקונים בעורך או בסוכן בענן.',
+  'You review on Azure DevOps or GitHub Enterprise Server.':
+    'אתם סוקרים קוד ב-Azure DevOps או ב-GitHub Enterprise Server.',
+  'You want Rollouts to check deploys against the observability tools you already run.':
+    'אתם רוצים ש-Rollouts יבדוק פריסות מול כלי ה-Observability שאתם כבר מריצים.',
+  'You use Graphite for stacked pull requests on GitHub.':
+    'אתם משתמשים ב-Graphite ל-stacked pull requests ב-GitHub.',
+  'You want TREX to run the pull request’s app in a sandbox and attach logs and video.':
+    'אתם רוצים ש-TREX יריץ את האפליקציה של ה-Pull request בסביבה מבודדת ויצרף לוגים ווידאו.',
+  'You want cross-repository context in every review.':
+    'אתם רוצים הקשר בין מאגרים בכל סקירה.',
+  'You track work in Jira, Linear, or Notion and want reviews linked to it.':
+    'אתם מנהלים את העבודה ב-Jira, ב-Linear או ב-Notion ורוצים שהסקירות יקושרו אליה.',
+  'You need an air-gapped, self-hosted reviewer with SSO on an Enterprise contract.':
+    'אתם צריכים סוקר באירוח עצמי בסביבה מנותקת (air-gapped), עם SSO בחוזה Enterprise.',
 }

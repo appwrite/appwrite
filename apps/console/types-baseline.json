@@ -1089,9 +1089,6 @@
   "src/lib/i18n/dictionaries/ja/databases.ts": {
     "TS1117: An object literal cannot have multiple properties with the same name.": 21
   },
-  "src/lib/i18n/dictionaries/ja/product-pages.ts": {
-    "TS1117: An object literal cannot have multiple properties with the same name.": 1
-  },
   "src/lib/i18n/dictionaries/ja/project-misc.ts": {
     "TS1117: An object literal cannot have multiple properties with the same name.": 19
   },
