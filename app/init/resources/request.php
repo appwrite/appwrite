@@ -12,10 +12,12 @@ use Appwrite\Auth\Validator\PasswordPwned\None as PasswordPwnedNone;
 use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Databases\TransactionState;
 use Appwrite\Deployment\Deployments;
+use Appwrite\Distribution\Builds;
 use Appwrite\Distribution\Stores;
 use Appwrite\Event\Context\Audit as AuditContext;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
+use Appwrite\Event\Publisher\DistributionBuild as DistributionBuildPublisher;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
@@ -234,6 +236,10 @@ return function (Container $context): void {
     }, ['jobs', 'platform', 'publisherForBuilds']);
     $context->set('buildTimeout', fn () => (int) System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900));
     $context->set('deployments', fn (callable $deploymentsFactory, Database $dbForProject, Document $project) => $deploymentsFactory($dbForProject, $project), ['deploymentsFactory', 'dbForProject', 'project']);
+    $context->set('distributionBuildsFactory', function (Jobs $jobsForDistribution, Jobs $jobsForDistributionSigning, Database $dbForPlatform, array $platform, DistributionBuildPublisher $publisherForDistributionBuilds, Cache $cache) {
+        return fn (Database $dbForProject, Document $project): Builds => new Builds($jobsForDistribution, $jobsForDistributionSigning, $dbForProject, $dbForPlatform, $project, $platform, $publisherForDistributionBuilds, $cache);
+    }, ['jobsForDistribution', 'jobsForDistributionSigning', 'dbForPlatform', 'platform', 'publisherForDistributionBuilds', 'cache']);
+    $context->set('distributionBuilds', fn (callable $distributionBuildsFactory, Database $dbForProject, Document $project) => $distributionBuildsFactory($dbForProject, $project), ['distributionBuildsFactory', 'dbForProject', 'project']);
     $context->set('eventProcessor', fn () => new EventProcessor(), []);
     $context->set('databaseFactory', fn (Registry $register, Group $pools, Cache $cache, Authorization $authorization) => $register->get('databaseFactory')(
         $pools,

@@ -23,6 +23,11 @@ class XList extends Action
 {
     use HTTP;
 
+    private const array HIDDEN = [
+        SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_BUILD,
+        SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_SUBMISSION,
+    ];
+
     public static function getName(): string
     {
         return 'listSchedules';
@@ -82,6 +87,10 @@ class XList extends Action
             Query::isNull('projectInternalId'),
         ]);
 
+        foreach (self::HIDDEN as $type) {
+            $queries[] = Query::notEqual('resourceType', $type);
+        }
+
         $cursor = Query::getCursorQueries($queries, false);
         $cursor = \reset($cursor);
 
@@ -98,6 +107,7 @@ class XList extends Action
                 $cursorDocument->isEmpty()
                 || $cursorDocument->getAttribute('projectId') !== $project->getId()
                 || !$this->matchesProjectInternalId($cursorDocument, $project)
+                || \in_array($cursorDocument->getAttribute('resourceType'), self::HIDDEN, true)
             ) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Schedule '{$scheduleId}' for the 'cursor' value not found.");
             }

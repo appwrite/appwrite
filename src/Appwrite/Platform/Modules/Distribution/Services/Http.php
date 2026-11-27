@@ -7,6 +7,7 @@ use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Artifacts\Dele
 use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Artifacts\Download\Get as GetArtifactDownload;
 use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Artifacts\Get as GetArtifact;
 use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Artifacts\XList as ListArtifacts;
+use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Builds\Signing\Get as GetBuildSigning;
 use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Create as CreateApp;
 use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Delete as DeleteApp;
 use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Get as GetApp;
@@ -29,6 +30,7 @@ use Appwrite\Platform\Modules\Distribution\Http\Distribution\Connections\Get as 
 use Appwrite\Platform\Modules\Distribution\Http\Distribution\Connections\Google\Create as CreateGoogleConnection;
 use Appwrite\Platform\Modules\Distribution\Http\Distribution\Connections\Google\Update as UpdateGoogleConnection;
 use Appwrite\Platform\Modules\Distribution\Http\Distribution\Connections\XList as ListConnections;
+use Appwrite\Platform\Modules\Distribution\Http\Distribution\Events\Create as CreateEvent;
 use Appwrite\Platform\Modules\Distribution\Http\Distribution\SigningIdentities\Android\Create as CreateAndroidSigningIdentity;
 use Appwrite\Platform\Modules\Distribution\Http\Distribution\SigningIdentities\Delete as DeleteSigningIdentity;
 use Appwrite\Platform\Modules\Distribution\Http\Distribution\SigningIdentities\Download\Get as GetSigningIdentityDownload;
@@ -86,5 +88,8 @@ class Http extends Service
         $this->addAction(GetArtifact::getName(), GetArtifact::class);
         $this->addAction(GetArtifactDownload::getName(), GetArtifactDownload::class);
         $this->addAction(DeleteArtifact::getName(), DeleteArtifact::class);
+
+        $this->addAction(CreateEvent::getName(), CreateEvent::class);
+        $this->addAction(GetBuildSigning::getName(), GetBuildSigning::class);
     }
 }

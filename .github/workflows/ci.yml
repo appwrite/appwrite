@@ -927,6 +927,15 @@ jobs:
           # --profile would replace COMPOSE_PROFILES and drop the lane's database service
           COMPOSE_PROFILES="${COMPOSE_PROFILES:+$COMPOSE_PROFILES,}openldap-seed" docker compose run --rm openldap-seed
 
+      - name: Build Distribution tools image
+        if: matrix.service.name == 'Distribution'
+        timeout-minutes: 15
+        env:
+          DISTRIBUTION_RUNNER_SHA: 8030402016ad3ccbb996a8b229939518a02ed5e9
+        run: |
+          CONTEXT="https://github.com/appwrite/distribution-runner.git#${DISTRIBUTION_RUNNER_SHA}:images/tools"
+          docker build --target test -t appwrite/distribution-tools:test "$CONTEXT"
+
       - name: Load and Start Appwrite
         timeout-minutes: 5
         env:
@@ -940,6 +949,7 @@ jobs:
           _APP_DISTRIBUTION: ${{ matrix.service.name == 'Distribution' && 'enabled' || 'disabled' }}
           _APP_DISTRIBUTION_APPLE_ENDPOINT: http://appwrite/v1/mock/distribution/apple
           _APP_DISTRIBUTION_GOOGLE_ENDPOINT: http://appwrite/v1/mock/distribution/google
+          _APP_DISTRIBUTION_IMAGE_TOOLS: appwrite/distribution-tools:test
           # Only the Projects suite waits for the scheduler to reach a project of each cohort; empty keeps the default.
           _APP_MAINTENANCE_INTERVAL: ${{ matrix.service.name == 'Projects' && '30' || '' }}
           _APP_MAINTENANCE_INACTIVE_INTERVAL: ${{ matrix.service.name == 'Projects' && '30' || '' }}

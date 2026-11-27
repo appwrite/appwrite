@@ -3,9 +3,11 @@
 use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Deployment\Deployments;
 use Appwrite\Deployment\Retention;
+use Appwrite\Distribution\Builds;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\ProjectContext;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
+use Appwrite\Event\Publisher\DistributionBuild as DistributionBuildPublisher;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Notification as NotificationPublisher;
 use Appwrite\Event\Realtime;
@@ -201,6 +203,10 @@ return function (Container $container): void {
     $container->set('deployments', function (Jobs $jobs, Database $dbForProject, Document $project, array $platform, BuildPublisher $publisherForBuilds) {
         return new Deployments($jobs, $dbForProject, $project, $platform, $publisherForBuilds);
     }, ['jobs', 'dbForProject', 'project', 'platform', 'publisherForBuilds']);
+
+    $container->set('distributionBuilds', function (Jobs $jobsForDistribution, Jobs $jobsForDistributionSigning, Database $dbForProject, Database $dbForPlatform, Document $project, array $platform, DistributionBuildPublisher $publisherForDistributionBuilds, Cache $cache) {
+        return new Builds($jobsForDistribution, $jobsForDistributionSigning, $dbForProject, $dbForPlatform, $project, $platform, $publisherForDistributionBuilds, $cache);
+    }, ['jobsForDistribution', 'jobsForDistributionSigning', 'dbForProject', 'dbForPlatform', 'project', 'platform', 'publisherForDistributionBuilds', 'cache']);
 
     $container->set('getAudit', function (Database $dbForPlatform, callable $getProjectDB) {
         return function (Document $project) use ($dbForPlatform, $getProjectDB) {

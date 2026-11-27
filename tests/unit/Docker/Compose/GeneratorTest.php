@@ -82,6 +82,22 @@ final class GeneratorTest extends TestCase
         }
     }
 
+    public function testSeparateTopologyMergesExtendedEnvironmentByName(): void
+    {
+        $compose = $this->render([
+            'topology' => 'separate',
+        ]);
+
+        $combined = $compose['services']['appwrite-worker']['environment'];
+        $environment = $compose['services']['appwrite-worker-distribution-builds']['environment'];
+
+        $this->assertContains('_APP_WORKER_MAX_COROUTINES=8', $environment);
+        $this->assertCount(1, \array_filter($environment, fn (string $entry): bool => \str_starts_with($entry, '_APP_WORKER_MAX_COROUTINES=')));
+        $this->assertCount(\count($combined), $environment);
+        $this->assertSame($combined[0], $environment[0]);
+        $this->assertContains('_APP_MEMORY_LIMIT', $environment);
+    }
+
     public function testLeavesOutReviewsByDefault(): void
     {
         $compose = $this->render();

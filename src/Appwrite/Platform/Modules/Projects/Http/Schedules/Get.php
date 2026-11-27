@@ -16,6 +16,11 @@ class Get extends Action
 {
     use HTTP;
 
+    private const array HIDDEN = [
+        SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_BUILD,
+        SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_SUBMISSION,
+    ];
+
     public static function getName(): string
     {
         return 'getSchedule';
@@ -63,7 +68,7 @@ class Get extends Action
 
         $schedule = $dbForPlatform->getDocument('schedules', $scheduleId);
 
-        if ($schedule->isEmpty()) {
+        if ($schedule->isEmpty() || \in_array($schedule->getAttribute('resourceType'), self::HIDDEN, true)) {
             throw new Exception(Exception::SCHEDULE_NOT_FOUND);
         }
 

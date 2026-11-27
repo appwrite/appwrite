@@ -6,6 +6,7 @@ namespace Tests\Unit\Platform\Workers;
 
 use Appwrite\Platform\Modules\Alerts\Services\Workers as AlertsWorkers;
 use Appwrite\Platform\Modules\Databases\Services\Workers as DatabasesWorkers;
+use Appwrite\Platform\Modules\Distribution\Services\Workers as DistributionWorkers;
 use Appwrite\Platform\Modules\Functions\Services\Workers as FunctionsWorkers;
 use Appwrite\Platform\Modules\Usage\Services\Workers as UsageWorkers;
 use Appwrite\Platform\Modules\Videos\Services\Workers as VideosWorkers;
@@ -36,7 +37,7 @@ final class RegistrationTest extends TestCase
     public function testRegisteredWorkerNamesMatchConfigWithoutDuplicates(): void
     {
         $names = [];
-        foreach ([new Workers(), new AlertsWorkers(), new DatabasesWorkers(), new FunctionsWorkers(), new UsageWorkers(), new VideosWorkers()] as $service) {
+        foreach ([new Workers(), new AlertsWorkers(), new DatabasesWorkers(), new DistributionWorkers(), new FunctionsWorkers(), new UsageWorkers(), new VideosWorkers()] as $service) {
             foreach ($service->getActions() as $key => $action) {
                 $name = \strtolower((string) $key);
                 $this->assertArrayNotHasKey($name, $names, "Duplicate worker action '{$name}'");
