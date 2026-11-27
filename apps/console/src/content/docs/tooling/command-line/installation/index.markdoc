@@ -125,7 +125,7 @@ appwrite login
 
 {% feature_gate anyOf="zero" %}
 {% info title="No account yet?" %}
-Run `appwrite zero` to create an [Appwrite Zero](/docs/tooling/command-line/zero) project without an account. The CLI signs in to the new project. Claim the project to keep it.
+To start without an account, run `appwrite zero` to create an [Appwrite Zero](/docs/tooling/command-line/zero) project. The CLI signs in to that project directly. To keep the project, claim it.
 {% /info %}
 {% /feature_gate %}
 

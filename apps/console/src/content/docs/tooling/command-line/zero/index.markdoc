@@ -1,31 +1,31 @@
 ---
 layout: article
 title: Zero
-description: Create and manage Appwrite Zero projects from the CLI without an Appwrite account.
+description: Use the Appwrite CLI to start and manage Appwrite Zero projects without an account.
 ---
 
-The `zero` command creates an [Appwrite Zero](/docs/zero) project without an account and links the current directory to it. The other `zero` commands check the time left, open the Console, extend the build window, list the Zero projects created on this machine, and delete a project.
+Running `zero` creates an [Appwrite Zero](/docs/zero) project without an account and links it to the current directory. Additional `zero` subcommands report remaining time, open the Console, extend the build window, list Zero projects created on this machine, and delete a project.
 
 {% info title="CLI version" %}
-`appwrite zero` is available in Appwrite CLI version 28.15.0 and later. [Update your CLI](/docs/tooling/command-line/installation#update-your-cli) to the latest version before you start.
+`appwrite zero` requires Appwrite CLI 28.15.0 or later. [Update the CLI](/docs/tooling/command-line/installation#update-your-cli) to the latest release first.
 {% /info %}
 
-# Create a project {% #create %}
+# Start a Zero project {% #create %}
 
-Run `zero` in your app's directory, or pass a directory name to create a new one:
+Run `zero` inside an existing app directory, or pass a directory name to create a new one:
 
 ```sh
 appwrite zero
 appwrite zero my-app
 ```
 
-The CLI writes `appwrite.config.json`, signs in to the new project, and prints its endpoint, ID, and claim link. Other commands, such as `appwrite push`, then work against the project.
+The CLI writes `appwrite.config.json`, signs in to the new project, and prints the project ID, endpoint, and claim link. Follow-up commands such as `appwrite push` run against that project right away.
 
 {% info title="Active session" %}
-Creating a Zero project makes its session the CLI's active one. To go back to your own account, run `appwrite login --switch`.
+Creating a Zero project switches the CLI's active session to that project. To return to your own account, run `appwrite login --switch`.
 {% /info %}
 
-# Check the time left {% #status %}
+# Check project status {% #status %}
 
 ```sh
 appwrite zero status
@@ -45,9 +45,9 @@ ownerLinks
   https://<DOMAIN>.appwrite.network/__appwrite/zero?token=<TOKEN>
 ```
 
-`ownerLinks` lists a link for each site and function domain. Open a link in a browser to access that domain's private deployment previews.
+The `ownerLinks` section provides one URL per site and function domain. Open any of these links in a browser to view private deployment previews for that domain.
 
-# Commands {% #commands %}
+# Available commands {% #commands %}
 
 ```sh
 appwrite zero [directory] [options]
@@ -59,36 +59,36 @@ appwrite zero [command] [options]
 * Description
 ---
 * `zero [directory]`
-* Create a Zero project and link the directory to it. Without a directory, uses the current one.
+* Create a Zero project and link it to the given directory, defaulting to the current directory when omitted.
 ---
 * `zero status`
-* Show the time left to build and to claim, the claim link, and the owner links for the project's domains.
+* Display the remaining build and claim times, the claim link, and the owner links for each project domain.
 ---
 * `zero console`
-* Open the project in the Console, signed in as its temporary owner. The link works once, for a few minutes.
+* Open the project in the Console under its temporary owner account using a single-use link valid for a few minutes.
 ---
 * `zero extend`
-* Add an hour to the build window, resuming a paused project. Works up to three times, never past the claim deadline.
+* Add one hour to the build window and resume a paused project. Allowed up to three times, and never past the claim deadline.
 ---
 * `zero list`
-* List the Zero projects created on this machine, with the time left on each and its claim link.
+* List all Zero projects created on this machine along with each project's remaining time and claim link.
 ---
 * `zero delete`
-* Delete the project before the claim deadline. Asks for confirmation unless `--force` is set.
+* Remove the project ahead of the claim deadline. Requires confirmation unless `--force` is passed.
 {% /table %}
 
-# Options {% #options %}
+# Command options {% #options %}
 
 {% table %}
 * Option
 * Description
 ---
 * `--region <region>`
-* Create the project in a region: `fra`, `nyc`, `sfo`, `sgp`, `syd`, or `tor`. Defaults to the region closest to you.
+* Place the new project in `fra`, `nyc`, `sfo`, `sgp`, `syd`, or `tor`. Defaults to the nearest region.
 ---
 * `--json`
-* Print the result as JSON. On `zero`, this includes the claim link and the access token for private previews. On `zero console`, it prints the sign-in link without opening a browser.
+* Output results as JSON. With `zero`, includes the claim link and the access token for private previews. With `zero console`, prints the sign-in link without launching a browser.
 ---
 * `--force`
-* Skip the confirmation on `zero delete`, for agents and scripts.
+* Bypass the confirmation prompt on `zero delete` when running from agents or scripts.
 {% /table %}

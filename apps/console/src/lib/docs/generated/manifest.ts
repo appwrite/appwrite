@@ -4503,7 +4503,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
   {
     "slug": "tooling/command-line/zero",
     "title": "Zero",
-    "description": "Create and manage Appwrite Zero projects from the CLI without an Appwrite account.",
+    "description": "Use the Appwrite CLI to start and manage Appwrite Zero projects without an account.",
     "layout": "article",
     "readingTimeMinutes": 2
   },
@@ -5514,9 +5514,9 @@ export const DOCS_PAGES: DocsPageMeta[] = [
   {
     "slug": "zero",
     "title": "Appwrite Zero",
-    "description": "Create an Appwrite Cloud project without an account, build with a coding agent, and claim the project to keep it.",
+    "description": "Start an Appwrite Cloud project without an account, build with a coding agent, and claim the project to keep it.",
     "layout": "article",
-    "readingTimeMinutes": 5
+    "readingTimeMinutes": 6
   }
 ] as DocsPageMeta[]
 

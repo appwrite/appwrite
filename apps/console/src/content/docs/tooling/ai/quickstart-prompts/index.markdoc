@@ -21,7 +21,7 @@ Quick start prompts offer several advantages when building with Appwrite:
 4. When prompted, provide your Appwrite project details (region and project ID) from the Appwrite Console.
 
 {% feature_gate anyOf="zero" %}
-Without an Appwrite account, ask the assistant to run `npx appwrite-cli@latest zero` to create an [Appwrite Zero](/docs/zero) project without an account. Claim the project to keep it.
+To build without an Appwrite account, instruct the assistant to run `npx appwrite-cli@latest zero` and start an [Appwrite Zero](/docs/zero) project, then claim the project to keep it.
 {% /feature_gate %}
 
 {% info title="MCP server" %}

@@ -6981,8 +6981,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "tooling/command-line/zero",
     "title": "Zero",
-    "description": "Create and manage Appwrite Zero projects from the CLI without an Appwrite account.",
-    "excerpt": "The command creates an Appwrite Zero project without an account and links the current directory to it. The other commands check the time left, open the Console, extend the build window, list the Zero projects created on this machine, and delete a project. is available in Appwrite CLI version 28.15.0 and later. Update your CLI to the latest version before you start. Create a project Run in your app's directory, or pass a directory name to create a new one:…",
+    "description": "Use the Appwrite CLI to start and manage Appwrite Zero projects without an account.",
+    "excerpt": "Running creates an Appwrite Zero project without an account and links it to the current directory. Additional subcommands report remaining time, open the Console, extend the build window, list Zero projects created on this machine, and delete a project. requires Appwrite CLI 28.15.0 or later. Update the CLI to the latest release first. Start a Zero project Run inside an existing app directory, or pass a directory name to create a new one: The CLI writes , signs in to…",
     "breadcrumbs": [
       "Tooling",
       "Zero"
@@ -8344,8 +8344,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "zero",
     "title": "Appwrite Zero",
-    "description": "Create an Appwrite Cloud project without an account, build with a coding agent, and claim the project to keep it.",
-    "excerpt": "Appwrite **Zero** creates an Appwrite Cloud project without an account. A CLI command creates the project and an API key for a coding agent to use. A Zero project has a 60-minute build window, then pauses. The claim deadline is 24 hours after the first 60 minutes end. At the claim deadline, an unclaimed project and its data are deleted. Claiming moves the project into an Appwrite organization with its ID, data, and API key unchanged. How it works 1.…",
+    "description": "Start an Appwrite Cloud project without an account, build with a coding agent, and claim the project to keep it.",
+    "excerpt": "With Appwrite **Zero**, a single CLI command creates an Appwrite Cloud project and an API key for a coding agent without requiring an Appwrite account. Every Zero project runs for a 60-minute build window before pausing. The claim deadline falls 24 hours after that initial 60-minute window ends, after which unclaimed projects and their data are deleted. Claiming moves the project into an Appwrite organization while keeping its ID, data, and API key intact. Project lifecycle 1. **Build.** The project…",
     "breadcrumbs": [
       "Appwrite Zero"
     ]

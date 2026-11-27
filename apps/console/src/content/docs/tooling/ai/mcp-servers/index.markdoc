@@ -53,7 +53,7 @@ Before connecting to the MCP server, you must [set up an Appwrite project](https
 
 {% feature_gate anyOf="zero" %}
 {% info title="No account yet?" %}
-An agent can [create an Appwrite Zero project](/docs/zero#ai) with the CLI and build on it without an account. The hosted MCP server requires an Appwrite account and cannot create Zero projects. After the project is claimed, connect the server with your Appwrite account to keep working on it.
+Without an account, an agent can [start an Appwrite Zero project](/docs/zero#ai) through the CLI and build on it there. Because the hosted MCP server requires an Appwrite account, it cannot create Zero projects. Once the project is claimed, connect the MCP server with your Appwrite account to continue working on it.
 {% /info %}
 {% /feature_gate %}
 
