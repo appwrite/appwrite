@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Requires utopia-php/database `^10.3.1` instead of `^8.3.4`, and utopia-php/query `^0.8.0`
+  instead of `^0.7`.
+
 ## 0.17.0 (unreleased) — utopia-php/database 8
 
 ### Added
