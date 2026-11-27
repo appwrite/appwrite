@@ -7,9 +7,8 @@ import * as actualHooks from '../../src/lib/react-query/hooks/index.ts'
 import * as actualHelpers from '../../src/components/global/shared/sso/SSOCardHelpers.tsx'
 
 GlobalRegistrator.register()
-const { act, cleanup, fireEvent, render } = await import(
-  '@testing-library/react'
-)
+const { act, cleanup, fireEvent, render } =
+  await import('@testing-library/react')
 
 const consoleRoot = join(import.meta.dir, '../..')
 const hooksPath = join(consoleRoot, 'src/lib/react-query/hooks/index.ts')
@@ -33,6 +32,12 @@ const dialogPath = join(
 type Check = {
   status: 'verified' | 'missing' | 'mismatch' | 'misplaced' | 'failed'
   current?: string[]
+  regions?: {
+    id: string
+    name: string
+    status: 'verified' | 'missing' | 'mismatch' | 'failed'
+    current: string[]
+  }[]
 }
 
 function domainWith(check?: Check) {
@@ -50,7 +55,7 @@ function domainWith(check?: Check) {
       name: '_appwrite.example.com',
       expected: 'team:org1',
       current: check.current ?? [],
-      regions: [],
+      regions: check.regions ?? [],
       status: check.status,
       message: '',
       checkedAt: '2026-11-02T00:00:00.000+00:00',
@@ -175,6 +180,54 @@ describe('VerifyEmailDomain record check', () => {
       'It holds team:other. Change it to team:org1.',
     )
     expect(alertOf(banner)).toContain('red')
+  })
+
+  test('a record at the doubled name shows where it was found', async () => {
+    // Test for FAILURE
+    const rule = domainWith({
+      status: 'misplaced',
+      current: ['team:org1'],
+    })
+    domains = [rule]
+    const view = await renderDialog(rule)
+
+    expect(view.getByText('Wrong name')).toBeTruthy()
+    expect(view.getByText('Found at:')).toBeTruthy()
+    expect(
+      view.getByText('_appwrite.example.com.example.com', { selector: 'span' }),
+    ).toBeTruthy()
+    const banner = view.getByText(
+      'It was added as _appwrite.example.com.example.com. In your DNS provider, enter only _appwrite as the host.',
+    )
+    expect(alertOf(banner)).toContain('red')
+  })
+
+  test('a record some regions see is propagating, not wrong', async () => {
+    // Test for SUCCESS
+    const rule = domainWith({
+      status: 'missing',
+      regions: [
+        {
+          id: 'fra',
+          name: 'Frankfurt',
+          status: 'verified',
+          current: ['team:org1'],
+        },
+        { id: 'nyc', name: 'New York', status: 'missing', current: [] },
+      ],
+    })
+    domains = [rule]
+    const view = await renderDialog(rule)
+
+    expect(
+      view.getByLabelText('Propagating: 1 of 2 regions see your record'),
+    ).toBeTruthy()
+    expect(view.queryByText('Not detected')).toBeNull()
+    const banner = view.getByText(
+      '1 of 2 regions see your new record. This usually finishes within an hour. Verify again in a few minutes.',
+    )
+    expect(alertOf(banner)).toContain('amber')
+    expect(view.getByText('Checked from 2 regions')).toBeTruthy()
   })
 
   test('without a check from the server, a failed check is pending, in amber', async () => {
