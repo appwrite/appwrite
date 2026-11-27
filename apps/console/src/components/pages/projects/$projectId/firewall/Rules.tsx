@@ -58,6 +58,7 @@ import {
 import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import {
   FIREWALL_CHALLENGE_TYPES,
+  formatChallengeAttempts,
   getRuleChallenge,
   getRuleRateLimit,
   getRuleRedirect,
@@ -268,8 +269,9 @@ export function RulesList({
     const conditions = parseFirewallConditions(rule.conditions)
     const rateLimit = getRuleRateLimit(rule)
     const redirect = getRuleRedirect(rule)
+    const challenge = getRuleChallenge(rule)
     const challengeTypeLabel = FIREWALL_CHALLENGE_TYPES.find(
-      (type) => type.value === getRuleChallenge(rule)?.challengeType,
+      (type) => type.value === challenge?.challengeType,
     )?.label
     const isToggling = togglingRuleId === rule.$id
     const toggleDisabled = !canWrite || isToggling || updateMutation.isPending
@@ -353,6 +355,13 @@ export function RulesList({
               {challengeTypeLabel ? (
                 <span className="text-[11px] text-muted-foreground">
                   {t(challengeTypeLabel)}
+                  {challenge?.challengeType === 'password'
+                    ? ` · ${formatChallengeAttempts(
+                        challenge.attempts,
+                        challenge.attemptsInterval,
+                        t,
+                      )}`
+                    : null}
                 </span>
               ) : null}
             </div>

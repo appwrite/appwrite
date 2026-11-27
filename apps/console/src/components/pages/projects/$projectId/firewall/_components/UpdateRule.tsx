@@ -21,6 +21,7 @@ import { FunctionSelector } from '@/components/global/shared/FunctionSelector'
 import { SiteSelector } from '@/components/global/shared/SiteSelector'
 import { RuleImpactPreview } from './RuleImpactPreview'
 import { RuleSchedule } from './RuleSchedule'
+import { PasswordChallengeFields } from './PasswordChallengeFields'
 import { useUpdateFirewallRule } from '@/lib/react-query/hooks'
 import {
   type FirewallChallengeType,
@@ -42,8 +43,10 @@ import {
   CHALLENGE_TTL_MIN,
   CHALLENGE_TTL_MAX,
   CHALLENGE_TTL_DEFAULT,
+  CHALLENGE_ATTEMPTS_DEFAULT,
+  CHALLENGE_ATTEMPTS_INTERVAL_DEFAULT,
   FIREWALL_CHALLENGE_TYPES,
-  isChallengePasswordValid,
+  isChallengeRuleInputValid,
 } from '@/lib/firewall/actions'
 import {
   FIREWALL_RESOURCE_TYPES,
@@ -103,6 +106,10 @@ export function UpdateRule({
   const [difficulty, setDifficulty] = useState(CHALLENGE_DIFFICULTY_DEFAULT)
   const [ttl, setTtl] = useState(CHALLENGE_TTL_DEFAULT)
   const [password, setPassword] = useState('')
+  const [attempts, setAttempts] = useState(CHALLENGE_ATTEMPTS_DEFAULT)
+  const [attemptsInterval, setAttemptsInterval] = useState(
+    CHALLENGE_ATTEMPTS_INTERVAL_DEFAULT,
+  )
   const [location, setLocation] = useState('/')
   const [statusCode, setStatusCode] = useState(302)
   const [conditions, setConditions] = useState<FirewallConditionDraft[]>([
@@ -142,6 +149,10 @@ export function UpdateRule({
     setDifficulty(challenge?.difficulty ?? CHALLENGE_DIFFICULTY_DEFAULT)
     setTtl(challenge?.ttl ?? CHALLENGE_TTL_DEFAULT)
     setPassword('')
+    setAttempts(challenge?.attempts ?? CHALLENGE_ATTEMPTS_DEFAULT)
+    setAttemptsInterval(
+      challenge?.attemptsInterval ?? CHALLENGE_ATTEMPTS_INTERVAL_DEFAULT,
+    )
     const redirect = getRuleRedirect(rule)
     setLocation(redirect?.location ?? '/')
     setStatusCode(redirect?.statusCode ?? 302)
@@ -174,13 +185,16 @@ export function UpdateRule({
           (maxBucketSize >= MAX_BUCKET_SIZE_MIN &&
             maxBucketSize <= MAX_BUCKET_SIZE_MAX)))) &&
     (action !== WafRuleAction.Challenge ||
-      (ttl >= CHALLENGE_TTL_MIN &&
-        ttl <= CHALLENGE_TTL_MAX &&
-        (isPasswordChallenge
-          ? resourceType !== 'api' &&
-            isChallengePasswordValid(password, !hasStoredPassword)
-          : difficulty >= CHALLENGE_DIFFICULTY_MIN &&
-            difficulty <= CHALLENGE_DIFFICULTY_MAX))) &&
+      isChallengeRuleInputValid({
+        challengeType,
+        difficulty,
+        ttl,
+        password,
+        attempts,
+        attemptsInterval,
+        resourceType,
+        passwordRequired: !hasStoredPassword,
+      })) &&
     (action !== WafRuleAction.Redirect ||
       (location.trim().length > 0 && statusCode > 0)) &&
     isScheduleDraftComplete(schedule)
@@ -210,6 +224,8 @@ export function UpdateRule({
         difficulty,
         ttl,
         password,
+        attempts,
+        attemptsInterval,
         location: location.trim(),
         statusCode,
         schedule: scheduleUpdatePayload(
@@ -352,33 +368,17 @@ export function UpdateRule({
           ) : null}
         </div>
         {isPasswordChallenge ? (
-          <div className="space-y-1.5">
-            <Label htmlFor="update-firewall-password" className="text-[12px]">
-              {t('Password')}
-            </Label>
-            <Input
-              id="update-firewall-password"
-              type="password"
-              autoComplete="new-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder={t('At least 8 characters')}
-              disabled={updateMutation.isPending}
-            />
-            {password && !isChallengePasswordValid(password, true) ? (
-              <p className="text-[12px] text-destructive">
-                {t('Use 8 to 256 characters.')}
-              </p>
-            ) : (
-              <p className="text-[12px] text-muted-foreground">
-                {hasStoredPassword
-                  ? t('Leave blank to keep the current password.')
-                  : t(
-                      'Visitors must enter this password before they can continue.',
-                    )}
-              </p>
-            )}
-          </div>
+          <PasswordChallengeFields
+            idPrefix="update-firewall"
+            password={password}
+            onPasswordChange={setPassword}
+            hasStoredPassword={hasStoredPassword}
+            attempts={attempts}
+            onAttemptsChange={setAttempts}
+            attemptsInterval={attemptsInterval}
+            onAttemptsIntervalChange={setAttemptsInterval}
+            disabled={updateMutation.isPending}
+          />
         ) : (
           <div className="space-y-1.5">
             <Label htmlFor="update-firewall-difficulty" className="text-[12px]">

@@ -20,6 +20,7 @@ import { ConditionsBuilder } from '../_components/ConditionsBuilder'
 import { PriorityHint } from '../_components/PriorityHint'
 import { RuleImpactPreview } from '../_components/RuleImpactPreview'
 import { RuleSchedule } from '../_components/RuleSchedule'
+import { PasswordChallengeFields } from '../_components/PasswordChallengeFields'
 import { useCreateFirewallRule } from '@/lib/react-query/hooks'
 import {
   type FirewallChallengeType,
@@ -38,8 +39,10 @@ import {
   CHALLENGE_TTL_MIN,
   CHALLENGE_TTL_MAX,
   CHALLENGE_TTL_DEFAULT,
+  CHALLENGE_ATTEMPTS_DEFAULT,
+  CHALLENGE_ATTEMPTS_INTERVAL_DEFAULT,
   FIREWALL_CHALLENGE_TYPES,
-  isChallengePasswordValid,
+  isChallengeRuleInputValid,
 } from '@/lib/firewall/actions'
 import {
   areFirewallConditionsComplete,
@@ -90,6 +93,8 @@ const DEFAULT_FORM = {
   difficulty: CHALLENGE_DIFFICULTY_DEFAULT,
   ttl: CHALLENGE_TTL_DEFAULT,
   password: '',
+  attempts: CHALLENGE_ATTEMPTS_DEFAULT,
+  attemptsInterval: CHALLENGE_ATTEMPTS_INTERVAL_DEFAULT,
   location: '/',
   statusCode: 302,
 }
@@ -132,13 +137,11 @@ export function View() {
           (form.maxBucketSize >= MAX_BUCKET_SIZE_MIN &&
             form.maxBucketSize <= MAX_BUCKET_SIZE_MAX)))) &&
     (form.action !== WafRuleAction.Challenge ||
-      (form.ttl >= CHALLENGE_TTL_MIN &&
-        form.ttl <= CHALLENGE_TTL_MAX &&
-        (form.challengeType === 'password'
-          ? !passwordUnavailable &&
-            isChallengePasswordValid(form.password, true)
-          : form.difficulty >= CHALLENGE_DIFFICULTY_MIN &&
-            form.difficulty <= CHALLENGE_DIFFICULTY_MAX))) &&
+      isChallengeRuleInputValid({
+        ...form,
+        resourceType: scope.resourceType,
+        passwordRequired: true,
+      })) &&
     (form.action !== WafRuleAction.Redirect ||
       (form.location.trim().length > 0 && form.statusCode > 0)) &&
     isScheduleDraftComplete(schedule)
@@ -169,6 +172,8 @@ export function View() {
         difficulty: form.difficulty,
         ttl: form.ttl,
         password: form.password,
+        attempts: form.attempts,
+        attemptsInterval: form.attemptsInterval,
         location: form.location.trim(),
         statusCode: form.statusCode,
         schedule: schedulePayload(schedule),
@@ -313,30 +318,18 @@ export function View() {
           ) : null}
         </div>
         {form.challengeType === 'password' ? (
-          <div className="space-y-1.5">
-            <Label htmlFor="firewall-password" className="text-[12px]">
-              {t('Password')}
-            </Label>
-            <Input
-              id="firewall-password"
-              type="password"
-              autoComplete="new-password"
-              value={form.password}
-              onChange={(e) => setForm({ ...form, password: e.target.value })}
-              placeholder={t('At least 8 characters')}
-            />
-            {form.password && !isChallengePasswordValid(form.password, true) ? (
-              <p className="text-[12px] text-destructive">
-                {t('Use 8 to 256 characters.')}
-              </p>
-            ) : (
-              <p className="text-[12px] text-muted-foreground">
-                {t(
-                  'Visitors must enter this password before they can continue.',
-                )}
-              </p>
-            )}
-          </div>
+          <PasswordChallengeFields
+            idPrefix="firewall"
+            password={form.password}
+            onPasswordChange={(password) => setForm({ ...form, password })}
+            hasStoredPassword={false}
+            attempts={form.attempts}
+            onAttemptsChange={(attempts) => setForm({ ...form, attempts })}
+            attemptsInterval={form.attemptsInterval}
+            onAttemptsIntervalChange={(attemptsInterval) =>
+              setForm({ ...form, attemptsInterval })
+            }
+          />
         ) : (
           <div className="space-y-1.5">
             <Label htmlFor="firewall-difficulty" className="text-[12px]">

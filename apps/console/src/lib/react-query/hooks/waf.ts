@@ -103,6 +103,10 @@ export type CreateFirewallRuleInput = {
   ttl?: number
   /** Password challenges only. */
   password?: string
+  /** Password challenges only: wrong guesses allowed per window. */
+  attempts?: number
+  /** Password challenges only: the window, in seconds. */
+  attemptsInterval?: number
   /** When the rule is active. Leave out for always active. */
   schedule?: FirewallSchedulePayload
 }
@@ -132,6 +136,10 @@ export type UpdateFirewallRuleInput = {
   ttl?: number
   /** Password challenges only. Leave out to keep the stored password. */
   password?: string
+  /** Password challenges only: wrong guesses allowed per window. */
+  attempts?: number
+  /** Password challenges only: the window, in seconds. */
+  attemptsInterval?: number
   /** Leave out to keep the stored schedule; an empty object removes it. */
   schedule?: FirewallSchedulePayload | Record<string, never>
 }
