@@ -80,6 +80,15 @@ const ONBOARDING: &[&str] = &[
     "videos.getDashManifest",
     "videos.getCmafHlsManifest",
     "videos.getCmafDashManifest",
+    "analytics.createProperty",
+    "analytics.createEvent",
+    "monitors.createHttpMonitor",
+    "monitors.createDnsMonitor",
+    "monitors.createTcpMonitor",
+    "monitors.createSmtpMonitor",
+    "monitors.createUsageMonitor",
+    "reviews.createRepository",
+    "reviews.updateInstallation",
 ];
 
 impl Job {
