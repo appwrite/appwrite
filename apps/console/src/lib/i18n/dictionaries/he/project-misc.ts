@@ -561,6 +561,22 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'החלונות מיושרים לפי התנהגות אנושית. מאפשר פרצים קצרים שנצברו, ומתמלא מחדש לקצב מתמשך.',
   'Redirect location': 'יעד הפניה',
   'Status code': 'קוד סטטוס',
+  'Wrong guesses allowed': 'ניחושים שגויים מותרים',
+  '1 to 100 per visitor network.': '1 עד 100 לכל רשת של מבקר.',
+  'Counted over (seconds)': 'חלון ספירה (שניות)',
+  '60 (1 minute) to 86400 (24 hours).': '60 (דקה) עד 86400 (24 שעות).',
+  '{count} guesses / {window}': '{count} ניחושים / {window}',
+  '1 guess / {window}': 'ניחוש אחד / {window}',
+  '{count} min': '{count} דק׳',
+  '{count} h': '{count} שע׳',
+  '{count} sec': '{count} שנ׳',
+  'Challenge type': 'סוג אתגר',
+  'Password challenges apply to sites and functions only.':
+    'אתגרי סיסמה חלים על אתרים ופונקציות בלבד.',
+  'Use 8 to 256 bytes. Some characters, like emoji or non-Latin letters, take more than one byte.':
+    'השתמשו ב-8 עד 256 בתים. תווים מסוימים, כמו אימוג׳י או אותיות שאינן לטיניות, תופסים יותר מבית אחד.',
+  'Visitors must enter this password before they can continue.':
+    'מבקרים חייבים להזין את הסיסמה הזו לפני שיוכלו להמשיך.',
   'Match requests when all conditions are true.':
     'התאימו בקשות כאשר כל התנאים מתקיימים.',
   'Add condition': 'הוספת תנאי',
