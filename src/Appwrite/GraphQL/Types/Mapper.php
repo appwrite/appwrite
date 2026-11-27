@@ -301,6 +301,16 @@ class Mapper
             case \Appwrite\Utopia\Database\Validator\Queries\Columns::class:
             case \Appwrite\Utopia\Database\Validator\Queries\Databases::class:
             case \Appwrite\Utopia\Database\Validator\Queries\Deployments::class:
+            case \Appwrite\Utopia\Database\Validator\Queries\DistributionApps::class:
+            case \Appwrite\Utopia\Database\Validator\Queries\DistributionArtifacts::class:
+            case \Appwrite\Utopia\Database\Validator\Queries\DistributionBuilds::class:
+            case \Appwrite\Utopia\Database\Validator\Queries\DistributionConnections::class:
+            case \Appwrite\Utopia\Database\Validator\Queries\DistributionListings::class:
+            case \Appwrite\Utopia\Database\Validator\Queries\DistributionLogs::class:
+            case \Appwrite\Utopia\Database\Validator\Queries\DistributionReleases::class:
+            case \Appwrite\Utopia\Database\Validator\Queries\DistributionSigningIdentities::class:
+            case \Appwrite\Utopia\Database\Validator\Queries\DistributionSubmissions::class:
+            case \Appwrite\Utopia\Database\Validator\Queries\DistributionTargets::class:
             case \Appwrite\Utopia\Database\Validator\Queries\Executions::class:
             case \Appwrite\Utopia\Database\Validator\Queries\Files::class:
             case \Appwrite\Utopia\Database\Validator\Queries\Functions::class:

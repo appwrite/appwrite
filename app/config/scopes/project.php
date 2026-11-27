@@ -536,4 +536,28 @@ return [
         'description' => 'Access to create, update, and delete your project\'s video content',
         'category' => 'Videos',
     ],
+    'distribution.read' => [
+        'description' => 'Access to read your project\'s distribution apps, targets, variables, builds, logs, artifacts, releases, listings and checks',
+        'category' => 'Distribution',
+    ],
+    'distribution.write' => [
+        'description' => 'Access to create, update, and delete your project\'s distribution apps, targets, variables, artifacts, releases and listings, and to start and cancel builds',
+        'category' => 'Distribution',
+    ],
+    'distribution.credentials.read' => [
+        'description' => 'Access to read your project\'s distribution store connections and signing identities, never their secrets',
+        'category' => 'Distribution',
+    ],
+    'distribution.credentials.write' => [
+        'description' => 'Access to create, update, delete, and download your project\'s distribution store connections and signing identities',
+        'category' => 'Distribution',
+    ],
+    'distribution.submissions.read' => [
+        'description' => 'Access to read your project\'s distribution store submissions',
+        'category' => 'Distribution',
+    ],
+    'distribution.submissions.write' => [
+        'description' => 'Access to create your project\'s distribution store submissions and to change, halt, resume, and cancel their rollout',
+        'category' => 'Distribution',
+    ],
 ];

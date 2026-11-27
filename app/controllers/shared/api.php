@@ -533,6 +533,7 @@ Http::init()
                 'documentsdb' => ['_APP_DOCUMENTSDB', 'disabled'],
                 'vectorsdb' => ['_APP_VECTORSDB', 'disabled'],
                 'embeddings' => ['_APP_EMBEDDING', 'enabled'],
+                'distribution' => ['_APP_DISTRIBUTION', 'disabled'],
             ];
             if (
                 isset($products[$namespace])

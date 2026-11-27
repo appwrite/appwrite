@@ -472,20 +472,7 @@ final class MigrationVersionsTest extends TestCase
         $database->create();
 
         $migrate = function (string $tenant) use ($database, $authorization): void {
-            // Only the collection pass matters here; the document passes read
-            // collections a fresh schema does not have.
-            $migration = new class () extends V25 {
-                #[\Override]
-                public function forEachDocument(callable $callback): void
-                {
-                }
-
-                #[\Override]
-                protected function documentsIterator(string $collection, array $queries = []): \Generator
-                {
-                    yield from [];
-                }
-            };
+            $migration = $this->v25WithoutWalks();
             $database->setTenant($tenant);
             $migration->setProject(
                 new Document(['$id' => 'project-' . $tenant, '$sequence' => $tenant]),
@@ -560,5 +547,127 @@ final class MigrationVersionsTest extends TestCase
             $this->assertFalse($metadata->isEmpty(), "Expected metadata for \"{$collectionId}\" to exist");
             $this->assertNull($metadata->getTenant(), "Expected \"{$collectionId}\" metadata to stay global");
         }
+    }
+
+    /**
+     * The 2.7.x upgrade path creates the project distribution collections from
+     * V25, so the shared-tables rule holds there too: the metadata row belongs
+     * to no tenant, and a second project on the host sees the collections.
+     */
+    public function testV25SharedTablesCreateGlobalDistributionCollections(): void
+    {
+        require_once __DIR__ . '/../../../app/init.php';
+
+        $authorization = new Authorization();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationV25Shared')
+            ->setNamespace('migration_distribution_shared_v25_' . \uniqid())
+            ->setSharedTables(true)
+            ->setTenant(null);
+        $database->create();
+
+        $migrate = function (string $tenant) use ($database, $authorization): void {
+            $migration = $this->v25WithoutWalks();
+            $database->setTenant($tenant);
+            $migration->setProject(
+                new Document(['$id' => 'project-' . $tenant, '$sequence' => $tenant]),
+                $database,
+                $database,
+                $authorization,
+            );
+
+            \ob_start();
+            try {
+                $migration->execute();
+            } finally {
+                \ob_end_clean();
+            }
+        };
+
+        $collections = [
+            'distributionApps',
+            'distributionTargets',
+            'distributionConnections',
+            'distributionSigningIdentities',
+            'distributionBuilds',
+            'distributionLogs',
+            'distributionArtifacts',
+            'distributionReleases',
+            'distributionSubmissions',
+            'distributionListings',
+        ];
+
+        $migrate('tenant-a');
+
+        foreach ($collections as $collectionId) {
+            $metadata = $database->withTenant(null, fn () => $database->getDocument(Database::METADATA, $collectionId));
+            $this->assertFalse($metadata->isEmpty(), "Expected metadata for \"{$collectionId}\" to exist");
+            $this->assertNull($metadata->getTenant(), "Expected \"{$collectionId}\" metadata to be global");
+        }
+
+        $migrate('tenant-b');
+
+        foreach ($collections as $collectionId) {
+            $this->assertFalse(
+                $database->getCollection($collectionId)->isEmpty(),
+                "Expected collection \"{$collectionId}\" to exist for tenant-b"
+            );
+            $metadata = $database->withTenant(null, fn () => $database->getDocument(Database::METADATA, $collectionId));
+            $this->assertFalse($metadata->isEmpty(), "Expected metadata for \"{$collectionId}\" to exist");
+            $this->assertNull($metadata->getTenant(), "Expected \"{$collectionId}\" metadata to stay global");
+        }
+    }
+
+    public function testV25CreatesDistributionRunnerAndLeaseCollectionsForConsole(): void
+    {
+        require_once __DIR__ . '/../../../app/init.php';
+
+        $authorization = new Authorization();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationV25')
+            ->setNamespace('migration_distribution_console_' . \uniqid());
+        $database->create();
+
+        $migration = $this->v25WithoutWalks();
+        $migration->setProject(
+            new Document(['$id' => 'console', '$sequence' => 'console']),
+            $database,
+            $database,
+            $authorization,
+        );
+
+        \ob_start();
+        try {
+            $migration->execute();
+        } finally {
+            \ob_end_clean();
+        }
+
+        foreach (['distributionRunners', 'distributionLeases'] as $collectionId) {
+            $this->assertInstanceOf(Collection::class, $database->findCollection($collectionId), "Expected collection \"{$collectionId}\" to exist");
+        }
+    }
+
+    /**
+     * V25 without its document walks, which read collections a fresh schema does not have.
+     */
+    private function v25WithoutWalks(): V25
+    {
+        return new class () extends V25 {
+            #[\Override]
+            public function forEachDocument(callable $callback): void
+            {
+            }
+
+            #[\Override]
+            protected function documentsIterator(string $collection, array $queries = []): \Generator
+            {
+                yield from [];
+            }
+        };
     }
 }

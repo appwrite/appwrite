@@ -566,6 +566,8 @@ class V25 extends Migration
                     break;
 
                 case 'transfers':
+                case 'distributionRunners':
+                case 'distributionLeases':
                     if ($collectionType === 'console') {
                         $this->createCollection($id);
                     }
@@ -600,9 +602,19 @@ class V25 extends Migration
                 case 'reviewChats':
                 case 'reviewLearnings':
                 case 'reviewUsage':
-                    // Videos are new in 2.6.0, reviews in 2.7.0. Both are created even when the
-                    // feature is disabled, so turning it on later needs no migration, and the
-                    // document pass visits them regardless.
+                case 'distributionApps':
+                case 'distributionTargets':
+                case 'distributionConnections':
+                case 'distributionSigningIdentities':
+                case 'distributionBuilds':
+                case 'distributionLogs':
+                case 'distributionArtifacts':
+                case 'distributionReleases':
+                case 'distributionSubmissions':
+                case 'distributionListings':
+                    // Videos are new in 2.6.0, reviews in 2.7.0, distribution in 2.8.0. All are created
+                    // even when the feature is disabled, so turning it on later needs no migration, and
+                    // the document pass visits them regardless.
                     // On shared tables the collection is global: created with a project's tenant, its
                     // metadata row would belong to that project only and be missing for every other one.
                     $tenant = $this->dbForProject->getTenant();

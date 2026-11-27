@@ -1143,7 +1143,10 @@ class Realtime extends MessagingAdapter
             case 'rules':
             case 'migrations':
             case 'monitors':
-                // Rules, migrations and alerts carry project data, so only those who can read the project receive them.
+            case 'distributionApps':
+            case 'distributionConnections':
+            case 'distributionSigningIdentities':
+                // Rules, migrations, alerts and distribution resources carry project data, so only those who can read the project receive them.
                 $channels[] = 'console';
                 $channels[] = 'projects.' . $project->getId();
                 $projectId = 'console';

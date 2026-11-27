@@ -454,4 +454,18 @@ return [
         'icon' => '/images/services/storage.png',
         'platforms' => ['client', 'server', 'console'],
     ],
+    'distribution' => [
+        'key' => 'distribution',
+        'name' => 'Distribution',
+        'subtitle' => 'The Distribution service allows you to build, sign, and submit your iOS and Android apps to the app stores.',
+        'description' => '',
+        'controller' => '',
+        'sdk' => true,
+        'docs' => true,
+        'docsUrl' => '',
+        'tests' => false,
+        'optional' => false,
+        'icon' => '',
+        'platforms' => ['server', 'console'],
+    ],
 ];

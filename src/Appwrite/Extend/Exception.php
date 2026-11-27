@@ -31,7 +31,8 @@ class Exception extends \Exception
      * - Keys
      * - Platform
      * - Domain
-     * * Video
+     * - Video
+     * - Distribution
      * - GraphQL
      * - Migrations
      */
@@ -415,7 +416,38 @@ class Exception extends \Exception
     public const string VIDEO_TIMELINES_NOT_FOUND = 'video_timelines_not_found';
     public const string VIDEO_TIMELINE_IN_PROGRESS = 'video_timeline_in_progress';
 
-    /** GraphqQL */
+    /** Distribution */
+    public const string DISTRIBUTION_APP_NOT_FOUND = 'distribution_app_not_found';
+    public const string DISTRIBUTION_TARGET_NOT_FOUND = 'distribution_target_not_found';
+    public const string DISTRIBUTION_CONNECTION_NOT_FOUND = 'distribution_connection_not_found';
+    public const string DISTRIBUTION_SIGNING_IDENTITY_NOT_FOUND = 'distribution_signing_identity_not_found';
+    public const string DISTRIBUTION_BUILD_NOT_FOUND = 'distribution_build_not_found';
+    public const string DISTRIBUTION_ARTIFACT_NOT_FOUND = 'distribution_artifact_not_found';
+    public const string DISTRIBUTION_RELEASE_NOT_FOUND = 'distribution_release_not_found';
+    public const string DISTRIBUTION_SUBMISSION_NOT_FOUND = 'distribution_submission_not_found';
+    public const string DISTRIBUTION_LISTING_NOT_FOUND = 'distribution_listing_not_found';
+    public const string DISTRIBUTION_RUNNER_NOT_FOUND = 'distribution_runner_not_found';
+    public const string DISTRIBUTION_LEASE_NOT_FOUND = 'distribution_lease_not_found';
+    public const string DISTRIBUTION_APP_ALREADY_EXISTS = 'distribution_app_already_exists';
+    public const string DISTRIBUTION_TARGET_ALREADY_EXISTS = 'distribution_target_already_exists';
+    public const string DISTRIBUTION_RELEASE_ALREADY_EXISTS = 'distribution_release_already_exists';
+    public const string DISTRIBUTION_CONNECTION_IN_USE = 'distribution_connection_in_use';
+    public const string DISTRIBUTION_SIGNING_IDENTITY_IN_USE = 'distribution_signing_identity_in_use';
+    public const string DISTRIBUTION_CONNECTION_INVALID = 'distribution_connection_invalid';
+    public const string DISTRIBUTION_SIGNING_IDENTITY_INVALID = 'distribution_signing_identity_invalid';
+    public const string DISTRIBUTION_ARTIFACT_INVALID = 'distribution_artifact_invalid';
+    public const string DISTRIBUTION_REPOSITORY_MISSING = 'distribution_repository_missing';
+    public const string DISTRIBUTION_REFERENCE_NOT_FOUND = 'distribution_reference_not_found';
+    public const string DISTRIBUTION_VERSION_INVALID = 'distribution_version_invalid';
+    public const string DISTRIBUTION_TRACK_INVALID = 'distribution_track_invalid';
+    public const string DISTRIBUTION_BUILD_TRANSITION_INVALID = 'distribution_build_transition_invalid';
+    public const string DISTRIBUTION_SUBMISSION_TRANSITION_INVALID = 'distribution_submission_transition_invalid';
+    public const string DISTRIBUTION_ARTIFACT_NOT_READY = 'distribution_artifact_not_ready';
+    public const string DISTRIBUTION_CHECK_FAILED = 'distribution_check_failed';
+    public const string DISTRIBUTION_RUNNER_UNAVAILABLE = 'distribution_runner_unavailable';
+    public const string DISTRIBUTION_STORE_UNAVAILABLE = 'distribution_store_unavailable';
+
+    /** GraphQL */
     public const string GRAPHQL_NO_QUERY = 'graphql_no_query';
     public const string GRAPHQL_TOO_MANY_QUERIES = 'graphql_too_many_queries';
     public const string GRAPHQL_METHOD_UNSUPPORTED = 'graphql_method_unsupported';

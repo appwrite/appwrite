@@ -1648,6 +1648,10 @@ final class MessagingTest extends TestCase
         yield 'columns' => ['tablesdb.database1.tables.table1.columns.column1.update'];
         yield 'indexes' => ['documentsdb.database1.collections.collection1.indexes.index1.delete'];
         yield 'alerts' => ['monitors.monitor1.alerts.alert1.create'];
+        yield 'distributionApps' => ['distributionApps.app1.create'];
+        yield 'distributionLogs' => ['distributionApps.app1.builds.build1.logs.log1.create'];
+        yield 'distributionConnections' => ['distributionConnections.connection1.update'];
+        yield 'distributionSigningIdentities' => ['distributionSigningIdentities.identity1.delete'];
     }
 
     #[DataProvider('consoleProjectEvents')]

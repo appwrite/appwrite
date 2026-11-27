@@ -1828,6 +1828,155 @@ return [
         'code' => 409,
     ],
 
+    /** Distribution */
+    Exception::DISTRIBUTION_APP_NOT_FOUND => [
+        'name' => Exception::DISTRIBUTION_APP_NOT_FOUND,
+        'description' => 'Distribution app with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::DISTRIBUTION_TARGET_NOT_FOUND => [
+        'name' => Exception::DISTRIBUTION_TARGET_NOT_FOUND,
+        'description' => 'Distribution target with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::DISTRIBUTION_CONNECTION_NOT_FOUND => [
+        'name' => Exception::DISTRIBUTION_CONNECTION_NOT_FOUND,
+        'description' => 'Store connection with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::DISTRIBUTION_SIGNING_IDENTITY_NOT_FOUND => [
+        'name' => Exception::DISTRIBUTION_SIGNING_IDENTITY_NOT_FOUND,
+        'description' => 'Signing identity with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::DISTRIBUTION_BUILD_NOT_FOUND => [
+        'name' => Exception::DISTRIBUTION_BUILD_NOT_FOUND,
+        'description' => 'Build with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::DISTRIBUTION_ARTIFACT_NOT_FOUND => [
+        'name' => Exception::DISTRIBUTION_ARTIFACT_NOT_FOUND,
+        'description' => 'Artifact with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::DISTRIBUTION_RELEASE_NOT_FOUND => [
+        'name' => Exception::DISTRIBUTION_RELEASE_NOT_FOUND,
+        'description' => 'Release with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::DISTRIBUTION_SUBMISSION_NOT_FOUND => [
+        'name' => Exception::DISTRIBUTION_SUBMISSION_NOT_FOUND,
+        'description' => 'Submission with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::DISTRIBUTION_LISTING_NOT_FOUND => [
+        'name' => Exception::DISTRIBUTION_LISTING_NOT_FOUND,
+        'description' => 'Store listing with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::DISTRIBUTION_RUNNER_NOT_FOUND => [
+        'name' => Exception::DISTRIBUTION_RUNNER_NOT_FOUND,
+        'description' => 'Build runner with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::DISTRIBUTION_LEASE_NOT_FOUND => [
+        'name' => Exception::DISTRIBUTION_LEASE_NOT_FOUND,
+        'description' => 'Build lease with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::DISTRIBUTION_APP_ALREADY_EXISTS => [
+        'name' => Exception::DISTRIBUTION_APP_ALREADY_EXISTS,
+        'description' => 'Distribution app with the same ID already exists. Try again with a different ID.',
+        'code' => 409,
+    ],
+    Exception::DISTRIBUTION_TARGET_ALREADY_EXISTS => [
+        'name' => Exception::DISTRIBUTION_TARGET_ALREADY_EXISTS,
+        'description' => 'The app already has a target for this platform, or a target with the same ID already exists.',
+        'code' => 409,
+    ],
+    Exception::DISTRIBUTION_RELEASE_ALREADY_EXISTS => [
+        'name' => Exception::DISTRIBUTION_RELEASE_ALREADY_EXISTS,
+        'description' => 'A release with the same version or ID already exists for this app.',
+        'code' => 409,
+    ],
+    Exception::DISTRIBUTION_CONNECTION_IN_USE => [
+        'name' => Exception::DISTRIBUTION_CONNECTION_IN_USE,
+        'description' => 'The store connection is used by one or more targets. Remove it from those targets before deleting it.',
+        'code' => 409,
+    ],
+    Exception::DISTRIBUTION_SIGNING_IDENTITY_IN_USE => [
+        'name' => Exception::DISTRIBUTION_SIGNING_IDENTITY_IN_USE,
+        'description' => 'The signing identity is used by one or more targets. Remove it from those targets before deleting it.',
+        'code' => 409,
+    ],
+    Exception::DISTRIBUTION_CONNECTION_INVALID => [
+        'name' => Exception::DISTRIBUTION_CONNECTION_INVALID,
+        'description' => 'The store connection credentials are invalid or were rejected by the store.',
+        'code' => 400,
+    ],
+    Exception::DISTRIBUTION_SIGNING_IDENTITY_INVALID => [
+        'name' => Exception::DISTRIBUTION_SIGNING_IDENTITY_INVALID,
+        'description' => 'The signing identity is invalid. Check the certificate, key, profile or password and try again.',
+        'code' => 400,
+    ],
+    Exception::DISTRIBUTION_ARTIFACT_INVALID => [
+        'name' => Exception::DISTRIBUTION_ARTIFACT_INVALID,
+        'description' => 'The uploaded artifact is not a valid IPA or AAB for this target.',
+        'code' => 400,
+    ],
+    Exception::DISTRIBUTION_REPOSITORY_MISSING => [
+        'name' => Exception::DISTRIBUTION_REPOSITORY_MISSING,
+        'description' => 'The app has no connected repository, or the repository provider is not supported for builds.',
+        'code' => 400,
+    ],
+    Exception::DISTRIBUTION_REFERENCE_NOT_FOUND => [
+        'name' => Exception::DISTRIBUTION_REFERENCE_NOT_FOUND,
+        'description' => 'The requested branch, commit or tag could not be found in the connected repository.',
+        'code' => 400,
+    ],
+    Exception::DISTRIBUTION_VERSION_INVALID => [
+        'name' => Exception::DISTRIBUTION_VERSION_INVALID,
+        'description' => 'The version is invalid, or its version code has already been used on this target or track.',
+        'code' => 400,
+    ],
+    Exception::DISTRIBUTION_TRACK_INVALID => [
+        'name' => Exception::DISTRIBUTION_TRACK_INVALID,
+        'description' => 'The requested track is not valid for the target store.',
+        'code' => 400,
+    ],
+    Exception::DISTRIBUTION_BUILD_TRANSITION_INVALID => [
+        'name' => Exception::DISTRIBUTION_BUILD_TRANSITION_INVALID,
+        'description' => 'The build cannot move to the requested status from its current status.',
+        'code' => 409,
+    ],
+    Exception::DISTRIBUTION_SUBMISSION_TRANSITION_INVALID => [
+        'name' => Exception::DISTRIBUTION_SUBMISSION_TRANSITION_INVALID,
+        'description' => 'The submission cannot move to the requested status from its current status.',
+        'code' => 409,
+    ],
+    Exception::DISTRIBUTION_ARTIFACT_NOT_READY => [
+        'name' => Exception::DISTRIBUTION_ARTIFACT_NOT_READY,
+        'description' => 'The artifact is not ready. Wait for processing to finish and try again.',
+        'code' => 409,
+    ],
+    Exception::DISTRIBUTION_CHECK_FAILED => [
+        'name' => Exception::DISTRIBUTION_CHECK_FAILED,
+        'description' => 'Preflight checks found blocking issues. Resolve the reported issues and try again.',
+        'code' => 409,
+    ],
+    Exception::DISTRIBUTION_RUNNER_UNAVAILABLE => [
+        'name' => Exception::DISTRIBUTION_RUNNER_UNAVAILABLE,
+        'description' => 'No build runner is available for this platform. Connect a runner and try again.',
+        'code' => 503,
+        'publish' => false,
+    ],
+    Exception::DISTRIBUTION_STORE_UNAVAILABLE => [
+        'name' => Exception::DISTRIBUTION_STORE_UNAVAILABLE,
+        'description' => 'The app store could not be reached or did not respond. Please try again later.',
+        'code' => 502,
+        'publish' => false,
+    ],
+
     /** Reviews */
     Exception::REVIEW_NOT_FOUND => [
         'name' => Exception::REVIEW_NOT_FOUND,
