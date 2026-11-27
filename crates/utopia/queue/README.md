@@ -241,6 +241,34 @@ utopia_async::Runtime::new()?.block_on(async {
 })?;
 ```
 
+## Work a queue beside PHP workers
+
+`jetstream::Worker` takes messages from the same JetStream queue as PHP workers on `Broker\Nats`, at the same time, so a queue can move to Rust one replica at a time. It joins the `worker` consumer `Broker\Nats` provisions (waiting for it if it starts first), reads the redelivery budget and backoff from it, and dead-letters to the same subjects with the same headers, so PHP's `retry()` requeues what it gives up on. Provisioning, the max-deliveries advisory and `reap()` stay with the PHP workers.
+
+```rust
+use std::time::Duration;
+use utopia_queue::jetstream::Worker;
+
+utopia_async::Runtime::new()?.block_on(async {
+    let worker = Worker::connect("nats://user:password@nats:4222", "v1-analytics").await?;
+    loop {
+        let deliveries = worker.receive(100, Duration::from_secs(5)).await?;
+        let held: Vec<_> = deliveries.iter().collect();
+        let written = worker.hold(&held, async { /* write each delivery.envelope.payload */ true }).await;
+        for delivery in deliveries {
+            if written {
+                worker.commit(delivery).await?;
+            } else {
+                // `true` sends it straight to the dead stream instead of retrying.
+                worker.reject(delivery, false).await?;
+            }
+        }
+    }
+    #[allow(unreachable_code)]
+    Ok::<_, utopia_queue::jetstream::Error>(())
+})?;
+```
+
 ## Pin the clock in tests
 
 Brokers read time and ids from a `Clock`. Replace it to make messages reproducible.

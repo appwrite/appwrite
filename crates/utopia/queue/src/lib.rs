@@ -18,6 +18,7 @@
 //! | `Utopia\Queue\Consumer`, `Consumer\Bounded`, `Consumer\Exclusive` | [`Consumer`] ([`Consumer::in_flight_ceiling`], [`Consumer::is_exclusive`]) |
 //! | `Utopia\Queue\Connection`, `Connection\Redis`, `Connection\RedisCluster`, `Connection\Locking` | [`connection::Connection`], [`connection::Redis`], [`connection::RedisCluster`], [`connection::Locking`] |
 //! | `Utopia\Queue\Broker\*` | [`broker`] |
+//! | `Broker\Nats`'s worker side, beside PHP workers | [`jetstream::Worker`] |
 //! | `Utopia\Queue\Server` | [`Server`] |
 //! | `Utopia\Queue\Job`, `Utopia\Servers\Hook` | [`Job`], [`Hook`] |
 //! | `Utopia\Queue\Adapter`, `Adapter\Swoole`, `Adapter\KubernetesJob` | [`adapter::Adapter`] with [`adapter::Runtime::Workers`], [`adapter::Runtime::Drain`] |
@@ -36,6 +37,8 @@ pub mod connection;
 mod contract;
 mod error;
 pub mod hook;
+#[cfg(feature = "nats")]
+pub mod jetstream;
 mod message;
 mod queue;
 mod server;
