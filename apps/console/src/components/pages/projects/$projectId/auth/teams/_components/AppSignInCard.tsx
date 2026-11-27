@@ -27,7 +27,7 @@ import {
 } from '@/lib/config/ide'
 import { useT } from '@/lib/i18n/translate'
 import {
-  teamSSOFor,
+  teamsFor,
   useSSODomains,
   useSSOProviders,
 } from '@/lib/react-query/hooks'
@@ -83,7 +83,7 @@ export function AppSignInCard({
 }) {
   const t = useT()
   const target: SSOTarget = { scope: 'project', projectId, teamId }
-  const endpoint = teamSSOFor(target).client.config.endpoint
+  const endpoint = teamsFor(target).client.config.endpoint
   const { providers } = useSSOProviders(target)
   const { domains } = useSSODomains(target)
   const [platform, setPlatform] = useState<SSOSignInPlatform>('web')
@@ -196,7 +196,10 @@ export function AppSignInCard({
                 <ChevronDown />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="z-[10050] min-w-[200px]">
+            <DropdownMenuContent
+              align="end"
+              className="z-[10050] min-w-[200px]"
+            >
               {aiChatIDEs.map((ide) => (
                 <DropdownMenuItem key={ide.id} onClick={() => openInTool(ide)}>
                   <img src={ide.iconPath} alt={ide.name} className="h-4 w-4" />

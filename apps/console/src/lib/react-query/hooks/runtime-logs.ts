@@ -111,34 +111,18 @@ export function canListRuntimeLogs(
   return resourceType === 'databases' || !!filter.deploymentId
 }
 
-/**
- * The pinned Console SDK requires a resource, so a project-wide list calls the
- * route directly. Switch to `logs.list()` once the SDK makes both optional.
- */
+/** A project-wide list leaves out the resource. */
 async function listRuntimeLogs(
   projectId: string,
   resourceType: RuntimeLogScope,
   resourceId: string | null | undefined,
   queries: string[],
 ): Promise<Models.RuntimeLog[]> {
-  const project = sdk.forProject(projectId)
-  if (resourceType !== null) {
-    const response = await project.logs.list({
-      resourceType,
-      resourceId: resourceId!,
-      queries,
-      total: false,
-    })
-    return response.logs ?? []
-  }
-  const client = project.client
-  const uri = new URL(client.config.endpoint + '/logs')
-  for (const query of queries) uri.searchParams.append('queries[]', query)
-  uri.searchParams.set('total', 'false')
-  const response = (await client.call('get', uri, {
-    'X-Appwrite-Project': client.config.project,
-    'content-type': 'application/json',
-  })) as Models.RuntimeLogList
+  const response = await sdk.forProject(projectId).logs.list({
+    ...(resourceType !== null ? { resourceType, resourceId: resourceId! } : {}),
+    queries,
+    total: false,
+  })
   return response.logs ?? []
 }
 
@@ -250,7 +234,7 @@ interface RuntimeLogUsage {
   buckets: RuntimeLogUsageBucket[]
 }
 
-/** The pinned Console SDK has no `logs.getUsage()` yet, so call the route directly. */
+/** Like the list, a project-wide count leaves out the resource. */
 async function getRuntimeLogUsage(
   projectId: string,
   resourceType: RuntimeLogScope,
@@ -258,18 +242,15 @@ async function getRuntimeLogUsage(
   queries: string[],
   interval: string,
 ): Promise<RuntimeLogUsage> {
-  const client = sdk.forProject(projectId).client
-  const uri = new URL(client.config.endpoint + '/logs/usage')
-  if (resourceType !== null) {
-    uri.searchParams.set('resourceType', resourceType)
-    uri.searchParams.set('resourceId', resourceId!)
-  }
-  for (const query of queries) uri.searchParams.append('queries[]', query)
-  uri.searchParams.set('interval', interval)
-  const response = (await client.call('get', uri, {
-    'X-Appwrite-Project': client.config.project,
-    'content-type': 'application/json',
-  })) as Partial<RuntimeLogUsage>
+  const response: Partial<RuntimeLogUsage> = await sdk
+    .forProject(projectId)
+    .logs.getUsage({
+      ...(resourceType !== null
+        ? { resourceType, resourceId: resourceId! }
+        : {}),
+      queries,
+      interval,
+    })
   return {
     interval: response.interval ?? interval,
     linesTotal: response.linesTotal ?? 0,

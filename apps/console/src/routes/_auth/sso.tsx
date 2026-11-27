@@ -25,7 +25,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { sdk } from '@/lib/appwrite/sdk'
-import type { SSOSignInProvider } from '@/lib/appwrite/team-sso'
+import {
+  ssoProviderSignInURL,
+  type SSOSignInProvider,
+} from '@/lib/appwrite/team-sso'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { useT } from '@/lib/i18n/translate'
 import { parseOrganizationIdFromPath } from '@/lib/organization-overview-prefetch'
@@ -127,7 +130,12 @@ function SingleSignOnPage() {
       search.redirect,
     )
     saveEmail(email.trim())
-    const url = sdk.forConsole.teamSSO.signInURL(providerId, success, back)
+    const url = ssoProviderSignInURL(
+      sdk.forConsole.client,
+      providerId,
+      success,
+      back,
+    )
     if (replace) window.location.replace(url)
     else window.location.href = url
   }
@@ -149,7 +157,9 @@ function SingleSignOnPage() {
 
   const lookup = useMutation({
     mutationFn: (value: string) =>
-      sdk.forConsole.teamSSO.listSignInProviders(value.trim().toLowerCase()),
+      sdk.forConsole.account.listSSOProviders({
+        email: value.trim().toLowerCase(),
+      }),
     onSuccess: (result) => {
       // One way in: go straight to it. Several: let the person choose.
       if (result.providers.length === 1) {

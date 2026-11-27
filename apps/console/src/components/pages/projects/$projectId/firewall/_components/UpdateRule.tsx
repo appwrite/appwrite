@@ -21,8 +21,10 @@ import { FunctionSelector } from '@/components/global/shared/FunctionSelector'
 import { SiteSelector } from '@/components/global/shared/SiteSelector'
 import { RuleImpactPreview } from './RuleImpactPreview'
 import { RuleSchedule } from './RuleSchedule'
+import { PasswordChallengeFields } from './PasswordChallengeFields'
 import { useUpdateFirewallRule } from '@/lib/react-query/hooks'
 import {
+  type FirewallChallengeType,
   type FirewallCreatableAction,
   type FirewallRateLimitKey,
   type FirewallRateLimitStrategy,
@@ -41,6 +43,10 @@ import {
   CHALLENGE_TTL_MIN,
   CHALLENGE_TTL_MAX,
   CHALLENGE_TTL_DEFAULT,
+  CHALLENGE_ATTEMPTS_DEFAULT,
+  CHALLENGE_ATTEMPTS_INTERVAL_DEFAULT,
+  FIREWALL_CHALLENGE_TYPES,
+  isChallengeRuleInputValid,
 } from '@/lib/firewall/actions'
 import {
   FIREWALL_RESOURCE_TYPES,
@@ -95,8 +101,15 @@ export function UpdateRule({
     FIREWALL_RATE_LIMIT_STRATEGY_DEFAULT,
   )
   const [maxBucketSize, setMaxBucketSize] = useState(50)
+  const [challengeType, setChallengeType] =
+    useState<FirewallChallengeType>('compute')
   const [difficulty, setDifficulty] = useState(CHALLENGE_DIFFICULTY_DEFAULT)
   const [ttl, setTtl] = useState(CHALLENGE_TTL_DEFAULT)
+  const [password, setPassword] = useState('')
+  const [attempts, setAttempts] = useState(CHALLENGE_ATTEMPTS_DEFAULT)
+  const [attemptsInterval, setAttemptsInterval] = useState(
+    CHALLENGE_ATTEMPTS_INTERVAL_DEFAULT,
+  )
   const [location, setLocation] = useState('/')
   const [statusCode, setStatusCode] = useState(302)
   const [conditions, setConditions] = useState<FirewallConditionDraft[]>([
@@ -130,8 +143,16 @@ export function UpdateRule({
         : (rateLimit?.limit ?? 100),
     )
     const challenge = getRuleChallenge(rule)
+    setChallengeType(
+      challenge?.challengeType === 'password' ? 'password' : 'compute',
+    )
     setDifficulty(challenge?.difficulty ?? CHALLENGE_DIFFICULTY_DEFAULT)
     setTtl(challenge?.ttl ?? CHALLENGE_TTL_DEFAULT)
+    setPassword('')
+    setAttempts(challenge?.attempts ?? CHALLENGE_ATTEMPTS_DEFAULT)
+    setAttemptsInterval(
+      challenge?.attemptsInterval ?? CHALLENGE_ATTEMPTS_INTERVAL_DEFAULT,
+    )
     const redirect = getRuleRedirect(rule)
     setLocation(redirect?.location ?? '/')
     setStatusCode(redirect?.statusCode ?? 302)
@@ -149,6 +170,10 @@ export function UpdateRule({
 
   const action = String(rule.action) as FirewallCreatableAction
   const needsResourceId = resourceType !== 'api'
+  const isPasswordChallenge =
+    action === WafRuleAction.Challenge && challengeType === 'password'
+  // A rule that already has a password keeps it when the field is left empty.
+  const hasStoredPassword = getRuleChallenge(rule)?.challengeType === 'password'
   const canSubmit =
     name.trim().length > 0 &&
     (!needsResourceId || resourceId.trim().length > 0) &&
@@ -160,10 +185,16 @@ export function UpdateRule({
           (maxBucketSize >= MAX_BUCKET_SIZE_MIN &&
             maxBucketSize <= MAX_BUCKET_SIZE_MAX)))) &&
     (action !== WafRuleAction.Challenge ||
-      (difficulty >= CHALLENGE_DIFFICULTY_MIN &&
-        difficulty <= CHALLENGE_DIFFICULTY_MAX &&
-        ttl >= CHALLENGE_TTL_MIN &&
-        ttl <= CHALLENGE_TTL_MAX)) &&
+      isChallengeRuleInputValid({
+        challengeType,
+        difficulty,
+        ttl,
+        password,
+        attempts,
+        attemptsInterval,
+        resourceType,
+        passwordRequired: !hasStoredPassword,
+      })) &&
     (action !== WafRuleAction.Redirect ||
       (location.trim().length > 0 && statusCode > 0)) &&
     isScheduleDraftComplete(schedule)
@@ -189,8 +220,12 @@ export function UpdateRule({
         key: rateLimitKey,
         strategy,
         maxBucketSize,
+        challengeType,
         difficulty,
         ttl,
+        password,
+        attempts,
+        attemptsInterval,
         location: location.trim(),
         statusCode,
         schedule: scheduleUpdatePayload(
@@ -294,22 +329,74 @@ export function UpdateRule({
       </div>
     ) : action === WafRuleAction.Challenge ? (
       <div className="grid gap-3 sm:grid-cols-2">
-        <div className="space-y-1.5">
-          <Label htmlFor="update-firewall-difficulty" className="text-[12px]">
-            {t('Difficulty')}
+        <div className="space-y-1.5 sm:col-span-2">
+          <Label
+            htmlFor="update-firewall-challenge-type"
+            className="text-[12px]"
+          >
+            {t('Challenge type')}
           </Label>
-          <NumberInput
-            id="update-firewall-difficulty"
-            min={CHALLENGE_DIFFICULTY_MIN}
-            max={CHALLENGE_DIFFICULTY_MAX}
-            value={difficulty}
-            onValueChange={setDifficulty}
+          <Select
+            value={challengeType}
+            disabled={updateMutation.isPending}
+            onValueChange={(value) =>
+              setChallengeType(value as FirewallChallengeType)
+            }
+          >
+            <SelectTrigger
+              id="update-firewall-challenge-type"
+              className="h-9 w-full"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {FIREWALL_CHALLENGE_TYPES.map((type) => (
+                <SelectItem
+                  key={type.value}
+                  value={type.value}
+                  disabled={type.value === 'password' && resourceType === 'api'}
+                >
+                  {t(type.label)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {resourceType === 'api' || isPasswordChallenge ? (
+            <p className="text-[12px] text-muted-foreground">
+              {t('Password challenges apply to sites and functions only.')}
+            </p>
+          ) : null}
+        </div>
+        {isPasswordChallenge ? (
+          <PasswordChallengeFields
+            idPrefix="update-firewall"
+            password={password}
+            onPasswordChange={setPassword}
+            hasStoredPassword={hasStoredPassword}
+            attempts={attempts}
+            onAttemptsChange={setAttempts}
+            attemptsInterval={attemptsInterval}
+            onAttemptsIntervalChange={setAttemptsInterval}
             disabled={updateMutation.isPending}
           />
-          <p className="text-[12px] text-muted-foreground">
-            {t('1 (easiest) to 5 (hardest).')}
-          </p>
-        </div>
+        ) : (
+          <div className="space-y-1.5">
+            <Label htmlFor="update-firewall-difficulty" className="text-[12px]">
+              {t('Difficulty')}
+            </Label>
+            <NumberInput
+              id="update-firewall-difficulty"
+              min={CHALLENGE_DIFFICULTY_MIN}
+              max={CHALLENGE_DIFFICULTY_MAX}
+              value={difficulty}
+              onValueChange={setDifficulty}
+              disabled={updateMutation.isPending}
+            />
+            <p className="text-[12px] text-muted-foreground">
+              {t('1 (easiest) to 5 (hardest).')}
+            </p>
+          </div>
+        )}
         <div className="space-y-1.5">
           <Label htmlFor="update-firewall-ttl" className="text-[12px]">
             {t('TTL (seconds)')}
@@ -416,7 +503,13 @@ export function UpdateRule({
                     </SelectTrigger>
                     <SelectContent>
                       {FIREWALL_RESOURCE_TYPES.map((resource) => (
-                        <SelectItem key={resource.value} value={resource.value}>
+                        <SelectItem
+                          key={resource.value}
+                          value={resource.value}
+                          disabled={
+                            resource.value === 'api' && isPasswordChallenge
+                          }
+                        >
                           {t(resource.label)}
                         </SelectItem>
                       ))}

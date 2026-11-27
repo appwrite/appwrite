@@ -1,5 +1,14 @@
 # Change Log
 
+## 32.4.0
+
+* Added: `videos` service to create, list, get, update and delete videos from files in Storage
+* Added: `videos.createRendition`, `listRenditions`, `getRendition` and `deleteRendition` to transcode a video into HLS, DASH or CMAF
+* Added: `videos.createCaption`, `listCaptions`, `updateCaption` and `deleteCaption` for subtitle tracks
+* Added: `getHlsManifest`, `getDashManifest`, `getCmafHlsManifest`, `getCmafDashManifest`, `getCaptionManifest`, `getThumbnail` and `getTimeline` playback URLs, and `listCodecs`
+* Added: `project.listVideoProfiles`, `createVideoProfile`, `getVideoProfile`, `updateVideoProfile` and `deleteVideoProfile`
+* Added: `Video`, `VideoCodec`, `VideoProfile`, `VideoRendition` and `VideoCaption` models, their list models, and the `VideoCodecId`, `VideoOutput`, `VideoRenditionStatus`, `VideoCaptionStatus` and `VideoTimelineStatus` enums
+
 ## 32.3.0
 
 * Added: `client.setRequest(request)` forwards the end user's user agent, and on Appwrite Functions and Sites their IP address, from the request your server is handling

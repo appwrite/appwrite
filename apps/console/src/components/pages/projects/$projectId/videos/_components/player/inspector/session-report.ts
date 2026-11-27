@@ -77,12 +77,15 @@ export function buildSessionSummary(
     stats && stats.currentLevel >= 0
       ? player.levels[stats.currentLevel]
       : undefined
+  // Native playback cannot see the manifest; startup counts from the metadata.
+  const start = player.engine === 'native' ? 'Metadata' : 'Manifest'
   const lines = [
     `Stream session: ${context.videoName} (${context.videoId})`,
     `Format: ${context.output.toUpperCase()} · ${player.engine ?? '-'} ${player.playerVersion ?? ''}`.trim(),
     context.manifestUrl ? `Manifest: ${context.manifestUrl}` : null,
     `Experience score: ${metrics.scores?.overall ?? '-'} / 100`,
-    `Time to first frame: ${formatMs(metrics.startupMs)}`,
+    `Time to first frame: ${formatMs(metrics.startupMs)} (counted from the loaded ${start.toLowerCase()})`,
+    `${start} load: ${formatMs(metrics.manifestMs)}`,
     `Rebuffering: ${formatPercent(metrics.rebufferRatio)} (${metrics.stallCount} stalls, ${formatMs(metrics.stallMs)})`,
     `Average bitrate: ${formatBitrate(metrics.averageBitrate)}`,
     `Current rendition: ${levelDescription(level)}`,

@@ -36,6 +36,7 @@ import type {
   ReviewStrength,
   ReviewSummary,
 } from '@/lib/appwrite/reviews'
+import type { ReviewStrength as SdkReviewStrength } from '@appwrite.io/console'
 import { isReviewVcsProvider } from '@/lib/vcs/providers'
 import { DEFAULT_PAGE_SIZE, DEFAULT_STALE_TIME } from './constants'
 import {
@@ -88,14 +89,15 @@ export async function fetchReviews(
     return { reviews: [], total: 0 }
   }
 
-  return await sdk.forProject(projectId).reviews.list({
+  // The SDK types a review's status, verdict and severity as plain strings.
+  return (await sdk.forProject(projectId).reviews.list({
     queries: [
       ...(filterQueries ?? []),
       Query.orderDesc('$createdAt'),
       Query.limit(limit),
       Query.offset(page * limit),
     ],
-  })
+  })) as ReviewList
 }
 
 /** Statuses the reviews list counts in its tabs, each as the filter its tab applies. */
@@ -144,7 +146,7 @@ export async function fetchRepositoryReviews(
   repositoryId: string,
   cursor?: string,
 ): Promise<ReviewList> {
-  return await sdk.forProject(projectId).reviews.list({
+  return (await sdk.forProject(projectId).reviews.list({
     queries: [
       Query.equal('repositoryId', [repositoryId]),
       Query.orderDesc('$createdAt'),
@@ -152,7 +154,7 @@ export async function fetchRepositoryReviews(
       ...(cursor ? [Query.cursorAfter(cursor)] : []),
     ],
     total: false,
-  })
+  })) as ReviewList
 }
 
 /**
@@ -165,7 +167,7 @@ export async function fetchReview(
   if (!projectId || !reviewId) {
     throw new Error('Project ID and Review ID are required')
   }
-  return await sdk.forProject(projectId).reviews.get({ reviewId })
+  return (await sdk.forProject(projectId).reviews.get({ reviewId })) as Review
 }
 
 /**
@@ -186,7 +188,8 @@ export async function fetchReviewEvents(
         ...(last ? [Query.cursorAfter(last.$id)] : []),
       ],
     })
-    events.push(...page.events)
+    // The SDK types an event's data as a bare object.
+    events.push(...(page.events as ReviewEventList['events']))
     if (page.events.length < REVIEW_EVENTS_PAGE_SIZE) {
       return { total: events.length, events }
     }
@@ -954,8 +957,18 @@ export function useUpdateReviewRepositoryStrength(
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (params: { repositoryId: string; strength: ReviewStrength }) =>
-      sdk.forProject(projectId!).reviews.updateRepositoryStrength(params),
+    mutationFn: ({
+      repositoryId,
+      strength,
+    }: {
+      repositoryId: string
+      strength: ReviewStrength
+    }) =>
+      sdk.forProject(projectId!).reviews.updateRepositoryStrength({
+        repositoryId,
+        // The console's strengths are the SDK enum's values.
+        strength: strength as SdkReviewStrength,
+      }),
     onSuccess: async () => {
       await queryClient.refetchQueries({
         queryKey: ['review-repositories', 'project', projectId],
