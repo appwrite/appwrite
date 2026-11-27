@@ -4,6 +4,7 @@ namespace Appwrite\Distribution;
 
 use Appwrite\Distribution\Artifact\Status as ArtifactStatus;
 use Appwrite\Distribution\Check\Code;
+use Appwrite\Distribution\Check\Severity;
 use Appwrite\Distribution\Connection\Status as ConnectionStatus;
 use Appwrite\Distribution\Release\Status as ReleaseStatus;
 use Appwrite\Distribution\Submission\Checkpoint;
@@ -246,6 +247,14 @@ readonly class Submissions
 
         if (empty($target->getAttribute('connectionId'))) {
             return $this->terminate($submission, Exception::DISTRIBUTION_CHECK_FAILED, 'The target has no store connection.');
+        }
+
+        $app = $this->dbForProject->getDocument('distributionApps', (string) $submission->getAttribute('appId', ''));
+        $check = (new Checks($this->dbForProject, $this->stores))->run($app, $target, (string) $submission->getAttribute('track', ''), $artifact);
+        $errors = \array_filter($check['issues'], static fn (array $issue): bool => $issue['severity'] === Severity::Error->value);
+
+        if ($errors !== []) {
+            return $this->terminate($submission, Exception::DISTRIBUTION_CHECK_FAILED, \implode(' ', \array_column($errors, 'message')));
         }
 
         return $this->advance($submission, Step::Validated);

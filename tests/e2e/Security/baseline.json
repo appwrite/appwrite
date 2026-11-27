@@ -664,6 +664,7 @@
         "POST /v1/databases/transactions/:transactionId/operations",
         "POST /v1/distribution/apps",
         "POST /v1/distribution/apps/:appId/artifacts",
+        "POST /v1/distribution/apps/:appId/checks",
         "POST /v1/distribution/apps/:appId/releases",
         "POST /v1/distribution/apps/:appId/submissions",
         "POST /v1/distribution/apps/:appId/targets",

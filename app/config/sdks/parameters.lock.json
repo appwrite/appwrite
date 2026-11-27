@@ -1995,6 +1995,11 @@
             "appId",
             "file"
         ],
+        "distribution.createCheck": [
+            "appId",
+            "targetId",
+            "track"
+        ],
         "distribution.createGoogleConnection": [
             "connectionId",
             "name",
@@ -6786,6 +6791,11 @@
         "distribution.createArtifact": [
             "appId",
             "file"
+        ],
+        "distribution.createCheck": [
+            "appId",
+            "targetId",
+            "track"
         ],
         "distribution.createGoogleConnection": [
             "connectionId",

@@ -57,6 +57,7 @@ trait DistributionBase
         yield 'getSubmission' => [Client::METHOD_GET, '/distribution/apps/missing/submissions/missing', 'distribution.submissions.read'];
         yield 'updateSubmission' => [Client::METHOD_PATCH, '/distribution/apps/missing/submissions/missing', 'distribution.submissions.write'];
         yield 'updateSubmissionStatus' => [Client::METHOD_PATCH, '/distribution/apps/missing/submissions/missing/status', 'distribution.submissions.write'];
+        yield 'createCheck' => [Client::METHOD_POST, '/distribution/apps/missing/checks', 'distribution.read'];
     }
 
     /**
