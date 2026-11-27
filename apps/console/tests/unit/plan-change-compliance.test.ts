@@ -52,6 +52,8 @@ const limits: PlanChangeLimits = {
   projects: withinLimit('projects', 1, 2),
   members: overLimit('members', 4, 1),
   domains: withinLimit('domains', 0, 1),
+  probes: withinLimit('probes', 0, 0),
+  escalations: withinLimit('escalations', 0, 0),
   projectCompliance: [
     {
       $id: 'compliant',
