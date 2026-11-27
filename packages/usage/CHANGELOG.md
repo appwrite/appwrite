@@ -10,6 +10,13 @@
   already could. `setup()` adds the column to an existing event table, and the
   daily materialized view still groups by resource identity, so billing sums
   every member.
+- `Usage::inspect()` reports where the storage differs from what `migrate()`
+  leaves, without changing it. The ClickHouse adapter lists missing tables,
+  missing or drifted columns and skip indexes, an index that duplicates a
+  defined one, a missing projection, the partitions whose parts a projection
+  has not been built for, and mutations that are unfinished or failing. It
+  does not compare retention or a projection's definition. Other adapters
+  report nothing.
 - `Usage::migrate()` brings an existing schema up to date (tables, the daily
   materialized view, columns, skip indexes and projections) without touching
   an existing table's retention. A table it creates carries the configured
