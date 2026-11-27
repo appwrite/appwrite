@@ -1322,11 +1322,13 @@ class S3 extends Device
 
         $contentType = $responseHeaders['content-type'] ?? '';
         $isXml = $contentType === 'application/xml' || (str_starts_with($responseBody, '<?xml') && $contentType !== 'image/svg+xml');
+        // Some S3-compatible providers label an empty response (a successful PUT, a HEAD) as application/xml.
+        $hasBody = $responseBody !== '';
 
         return new S3\Response(
             code: $code,
             headers: $responseHeaders,
-            body: $decode && $isXml ? $this->decodeXml($responseBody) : $responseBody,
+            body: $decode && $isXml && $hasBody ? $this->decodeXml($responseBody) : $responseBody,
         );
     }
 

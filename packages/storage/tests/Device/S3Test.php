@@ -1203,6 +1203,43 @@ final class S3Test extends TestCase
         $this->device($client)->write('/root/file.txt', new Stream('Hello World'), 'text/plain');
     }
 
+    public function testWriteSucceedsWhenAnEmptyResponseIsLabelledAsXml(): void
+    {
+        // Some S3-compatible providers answer a successful PUT with an empty body and Content-Type: application/xml.
+        $client = new ScriptedClient([new Response(200)
+            ->withHeader('content-type', 'application/xml')
+            ->withHeader('content-length', '0')
+            ->withHeader('etag', '"abc123"')]);
+
+        $this->assertSame('abc123', $this->device($client)->write('/root/file.txt', new Stream('Hello World'), 'text/plain'));
+        $this->assertCount(1, $client->requests);
+    }
+
+    public function testGetFileInfoOfAnXmlObjectDoesNotDecodeTheMissingBody(): void
+    {
+        // A HEAD response never has a body, even for an object stored as application/xml.
+        $client = new ScriptedClient([new Response(200)
+            ->withHeader('etag', '"abc123"')
+            ->withHeader('content-length', '11')
+            ->withHeader('content-type', 'application/xml')]);
+
+        $info = $this->device($client)->getFileInfo('/root/data.xml');
+
+        $this->assertSame('HEAD', $client->requests[0]->getMethod());
+        $this->assertSame('application/xml', $info->mimeType);
+        $this->assertSame(11, $info->size);
+    }
+
+    public function testMalformedXmlIsStillAnError(): void
+    {
+        $client = new ScriptedClient([new Response(200, body: new Stream('<?xml version="1.0" encoding="UTF-8"?><InitiateMultipartUploadResult>'))->withHeader('content-type', 'application/xml')]);
+
+        $this->expectException(RemoteException::class);
+        $this->expectExceptionMessage('Failed to decode S3 XML response');
+        $metadata = [];
+        $this->device($client)->prepare('/root/file.txt', 'application/gzip', 2, $metadata);
+    }
+
     public function testUploadListingIsDecodedIntoTypedUploads(): void
     {
         $body = '<?xml version="1.0" encoding="UTF-8"?><ListMultipartUploadsResult><Bucket>my-bucket</Bucket><Prefix>root/</Prefix><IsTruncated>true</IsTruncated><NextKeyMarker>root/b.mp4</NextKeyMarker><NextUploadIdMarker>upload-2</NextUploadIdMarker>'
