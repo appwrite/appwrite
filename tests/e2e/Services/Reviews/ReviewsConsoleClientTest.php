@@ -476,10 +476,11 @@ final class ReviewsConsoleClientTest extends Scope
             $this->assertSame(204, $this->createChatUsage($repositoryId, $pullRequest, $question)['headers']['status-code']);
         }
 
-        // Another app may ask, e.g. an agent answering a finding
+        // Another app may ask on a pull request it opened, e.g. an agent answering a finding
         $agent = $reply + 6;
-        $this->sendCommentEvent('pull_request_review_comment', $pullRequest, $agent, 'Fixed in the latest commit.', replyTo: $reply - 1, authorType: 'Bot', author: 'cursor[bot]', association: 'NONE');
-        $this->assertSame(204, $this->createChatUsage($repositoryId, $pullRequest, $agent)['headers']['status-code']);
+        $agentPullRequest = $pullRequest + 2;
+        $this->sendCommentEvent('pull_request_review_comment', $agentPullRequest, $agent, 'Fixed in the latest commit.', replyTo: $reply - 1, authorType: 'Bot', author: 'cursor[bot]', association: 'NONE', pullRequestAuthor: 'cursor[bot]');
+        $this->assertSame(204, $this->createChatUsage($repositoryId, $agentPullRequest, $agent)['headers']['status-code']);
 
         // Each answered comment is counted once, however many usage reports it sends
         $usageHeaders = [
@@ -506,15 +507,15 @@ final class ReviewsConsoleClientTest extends Scope
         $this->sendCommentEvent('issue_comment', $pullRequest, $plain, 'Looks good to me.');
         $this->assertChatNotQueued($repositoryId, $pullRequest, $plain);
 
-        // Edits, the reviewer itself, people without write association and the first comment
-        // of a thread without a mention queue nothing
+        // Edits, the reviewer itself, anyone but the pull request's author, an author without
+        // write association and the first comment of a thread without a mention queue nothing
         $edited = $reply + 3;
         $this->sendCommentEvent('pull_request_review_comment', $pullRequest, $edited, 'Why?', replyTo: $reply - 1, action: 'edited');
         $this->assertChatNotQueued($repositoryId, $pullRequest, $edited);
 
         if ($handle !== '') {
             $itself = $reply + 4;
-            $this->sendCommentEvent('pull_request_review_comment', $pullRequest, $itself, 'Why?', replyTo: $reply - 1, authorType: 'Bot', author: $handle . '[bot]');
+            $this->sendCommentEvent('pull_request_review_comment', $pullRequest, $itself, 'Why?', replyTo: $reply - 1, authorType: 'Bot', author: $handle . '[bot]', pullRequestAuthor: $handle . '[bot]');
             $this->assertChatNotQueued($repositoryId, $pullRequest, $itself);
 
             $quoted = $reply + 7;
@@ -522,8 +523,18 @@ final class ReviewsConsoleClientTest extends Scope
             $this->assertChatNotQueued($repositoryId, $pullRequest, $quoted);
         }
 
+        $member = $reply + 9;
+        $this->sendCommentEvent('pull_request_review_comment', $pullRequest, $member, 'Why?', replyTo: $reply - 1, author: 'appwrite-member', association: 'MEMBER');
+        $this->assertChatNotQueued($repositoryId, $pullRequest, $member);
+
+        $agentElsewhere = $reply + 10;
+        $this->sendCommentEvent('pull_request_review_comment', $pullRequest, $agentElsewhere, 'Fixed in the latest commit.', replyTo: $reply - 1, authorType: 'Bot', author: 'cursor[bot]', association: 'NONE');
+        $this->assertChatNotQueued($repositoryId, $pullRequest, $agentElsewhere);
+
+        // The author's permission on the repository is read when the delivery does not trust
+        // them, so the outsider is an account that is no collaborator on it.
         $outsider = $reply + 8;
-        $this->sendCommentEvent('pull_request_review_comment', $pullRequest, $outsider, 'Why?', replyTo: $reply - 1, association: 'CONTRIBUTOR');
+        $this->sendCommentEvent('pull_request_review_comment', $pullRequest, $outsider, 'Why?', replyTo: $reply - 1, author: 'octocat', association: 'CONTRIBUTOR', pullRequestAuthor: 'octocat');
         $this->assertChatNotQueued($repositoryId, $pullRequest, $outsider);
 
         $threadStart = $reply + 5;
@@ -1359,7 +1370,7 @@ final class ReviewsConsoleClientTest extends Scope
         $this->assertSame('review_chat_not_found', $usage['body']['type']);
     }
 
-    private function sendCommentEvent(string $event, int $pullRequest, int $commentId, string $body, ?int $replyTo = null, string $action = 'created', string $authorType = 'User', string $author = 'appwrite-test', string $association = 'MEMBER'): array
+    private function sendCommentEvent(string $event, int $pullRequest, int $commentId, string $body, ?int $replyTo = null, string $action = 'created', string $authorType = 'User', string $author = 'appwrite-test', string $association = 'MEMBER', string $pullRequestAuthor = 'appwrite-test'): array
     {
         $comment = [
             'id' => $commentId,
@@ -1383,9 +1394,9 @@ final class ReviewsConsoleClientTest extends Scope
             'installation' => ['id' => (int) $this->providerInstallationId],
         ];
         if ($event === 'issue_comment') {
-            $payload['issue'] = ['number' => $pullRequest, 'pull_request' => ['url' => 'https://api.github.com/repos/appwrite-test/svelte-starter/pulls/' . $pullRequest]];
+            $payload['issue'] = ['number' => $pullRequest, 'user' => ['login' => $pullRequestAuthor], 'pull_request' => ['url' => 'https://api.github.com/repos/appwrite-test/svelte-starter/pulls/' . $pullRequest]];
         } else {
-            $payload['pull_request'] = ['number' => $pullRequest];
+            $payload['pull_request'] = ['number' => $pullRequest, 'user' => ['login' => $pullRequestAuthor]];
         }
 
         return $this->client->call(Client::METHOD_POST, '/vcs/github/events', [

@@ -204,6 +204,58 @@ export const PLATFORM_COVERAGE: Record<AlternativeId, Record<PlatformProductId, 
     domains: 'no',
     firewall: 'no',
   },
+  // Code review tools. Review agents, CI analysis, and sandboxes that run the
+  // app for testing are not app backends or hosting.
+  coderabbit: {
+    auth: 'no',
+    databases: 'no',
+    postgres: 'no',
+    storage: 'no',
+    functions: 'no',
+    realtime: 'no',
+    messaging: 'no',
+    sites: 'no',
+    domains: 'no',
+    firewall: 'no',
+  },
+  // GitHub Pages hosts static sites; Actions is CI, not app functions.
+  copilot: {
+    auth: 'no',
+    databases: 'no',
+    postgres: 'no',
+    storage: 'no',
+    functions: 'no',
+    realtime: 'no',
+    messaging: 'no',
+    sites: 'partial',
+    domains: 'no',
+    firewall: 'no',
+  },
+  // Cursor hosts Git (Origin) but not sites, databases, or auth for your users.
+  bugbot: {
+    auth: 'no',
+    databases: 'no',
+    postgres: 'no',
+    storage: 'no',
+    functions: 'no',
+    realtime: 'no',
+    messaging: 'no',
+    sites: 'no',
+    domains: 'no',
+    firewall: 'no',
+  },
+  greptile: {
+    auth: 'no',
+    databases: 'no',
+    postgres: 'no',
+    storage: 'no',
+    functions: 'no',
+    realtime: 'no',
+    messaging: 'no',
+    sites: 'no',
+    domains: 'no',
+    firewall: 'no',
+  },
 }
 
 /** How each competitor ships its source, shown next to Appwrite being open source. */
@@ -263,5 +315,21 @@ export const COMPETITOR_SOURCE: Record<AlternativeId, { status: string; detail: 
   mux: {
     status: 'Proprietary',
     detail: 'Mux Player and the upload SDKs are open source, but encoding, storage, and delivery run only on Mux.',
+  },
+  coderabbit: {
+    status: 'Proprietary',
+    detail: 'Closed source. Self-hosting is an Enterprise option for 500 or more seats.',
+  },
+  copilot: {
+    status: 'Proprietary',
+    detail: 'Closed source and cloud only. Copilot is not available on GitHub Enterprise Server.',
+  },
+  bugbot: {
+    status: 'Proprietary',
+    detail: 'Bugbot, Graphite, and Origin are closed source services run by Cursor.',
+  },
+  greptile: {
+    status: 'Proprietary',
+    detail: 'Closed source. Self-hosting with Docker or Kubernetes is an Enterprise option.',
   },
 }

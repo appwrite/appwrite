@@ -2475,7 +2475,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Maintenance",
     "description": "Maintenance windows, online engine version upgrades, pause and resume, and the lifecycle states of your PostgreSQL database.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/databases/postgresql/monitoring",

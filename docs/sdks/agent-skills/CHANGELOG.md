@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.8.0
+
+* Added: Appwrite Zero project setup flow (`npx appwrite-cli@latest zero`) in all ten SDK skills so agents create a project when none is configured instead of asking the user to sign up
+* Updated: `appwrite-cli` skill with the same project-selection flow, `--json --show-secrets` guidance for server-side API keys, `npx appwrite-cli@latest zero extend`, and the five-projects-per-network daily limit
+
 ## 0.7.0
 
 * Added: `appwrite zero` in the `appwrite-cli` skill, so agents start a project with no account and hand the user the claim link

@@ -168,6 +168,7 @@ export const jaCatalog: EnCatalog = {
           network: 'Network',
           analytics: 'アナリティクス',
           firewall: 'Firewall',
+          reviews: 'コードレビュー',
           mcp1: 'MCP1',
         },
         learn: {
@@ -389,6 +390,8 @@ export const jaCatalog: EnCatalog = {
         startBuilding: '構築を開始',
         viewDocs: 'ドキュメントを見る',
         viewPricing: '料金を見る',
+        appStore: 'App Store からダウンロード',
+        googlePlay: 'Google Play で入手',
       },
       productNames: {
         ...enCatalog.website.products.productNames,
@@ -400,6 +403,7 @@ export const jaCatalog: EnCatalog = {
         videos: '動画',
         sites: 'サイト',
         analytics: 'アナリティクス',
+        reviews: 'コードレビュー',
       },
       explore: {
         ...enCatalog.website.products.explore,
@@ -438,8 +442,11 @@ export const jaCatalog: EnCatalog = {
           domainsName: 'Domains',
           domainsTagline: 'ドメインの検索、購入、移管、管理。',
           analyticsTagline: 'Sites と Auth に組み込まれた、Cookie 不要の分析。',
+          monitorsTagline: '使用量のしきい値と、応答しないエンドポイントを通知。',
+          beepTagline: 'すべてのプロジェクトのアラートと使用量を、スマートフォンで。',
           firewallName: 'Firewall',
           firewallTagline: 'プロジェクトルールで拒否、レート制限、リダイレクト。',
+          reviewsTagline: 'デプロイと同じ場所で、すべてのプルリクエストを AI がコードレビュー。',
           advisorName: 'Advisor',
           advisorTagline: 'セキュリティとパフォーマンスのインサイト。',
         },

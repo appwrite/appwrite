@@ -43,6 +43,9 @@ utopia-validators = { path = "crates/utopia/validators" }
 ext-php-rs = "0.16.5"
 # Multi-needle substring search (utopia-user-agent: the bot table, in one pass).
 aho-corasick = "1"
+# JetStream for utopia-queue, which shares queues with utopia-php/queue's Broker\Nats.
+async-nats = "0.53"
+futures-util = { version = "0.3", default-features = false, features = ["std"] }
 argon2 = { version = "0.5", features = ["std"] }
 # BLAKE2b for php-std's Argon2, which fills lanes on scoped threads (the `argon2` crate, a test
 # reference, fills them one after the other).
@@ -106,6 +109,7 @@ lzma-rust2 = { version = "0.22", default-features = false, features = ["std", "e
 mimalloc = { version = "0.1.52", default-features = false, features = ["local_dynamic_tls"] }
 png = "0.18"
 thiserror = "2"
+tokio = { version = "1", features = ["time"] }
 # libzstd 1.5.7, built from source and linked statically, as PHP's ext-zstd links it. No
 # `zstdmt`: multithreaded compression would start threads in a process that forks.
 zstd-safe = { version = "8", default-features = false, features = ["std"] }
