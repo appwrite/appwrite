@@ -1,0 +1,102 @@
+---
+layout: post
+title: "Announcing Cursor Origin support for Sites and Functions"
+description: Connect a Cursor workspace to Appwrite and deploy Sites and Functions from Cursor Origin repositories, with branch previews, check runs, and PR comments.
+date: 2026-11-27
+cover: /images/blog/announcing-cursor-origin-support/cover.avif
+timeToRead: 5
+author: aditya-oberai
+category: announcements
+featured: false
+callToAction: true
+faqs:
+  - question: "Can Appwrite deploy from a Cursor Origin repository?"
+    answer: "Yes. Origin is one of Appwrite's Git providers for Sites and Functions on Appwrite Cloud. Install Appwrite's Origin app on a Cursor workspace, connect a repository to a site or function, and every push to that repository creates a deployment."
+  - question: "How do I connect Cursor Origin to my Appwrite project?"
+    answer: "In the Appwrite Console, go to **Project settings** > **Git configuration**, click **Add installation**, and choose **Origin**. Approve Appwrite's installation on Cursor for the workspace that holds your repositories, and Cursor sends you back to the Console with the workspace listed as an installation. The [integration guide](/integrations/deployments-origin) covers each step."
+  - question: "Can I create a new Origin repository from the Appwrite Console?"
+    answer: "No. Origin only lets people create repositories, not apps, so Origin workspaces don't appear under **Create new repository** in the Site and Function wizards. Create the repository in Cursor, then connect it. This includes starting from a template: create an empty repository in Cursor and choose **Connect existing repository**."
+  - question: "Do Cursor Origin branches get preview deployments?"
+    answer: "Yes. Pushes to your production branch build and activate. Pushes to any other branch build without activating, and Sites get a [preview link](/docs/products/sites/previews) that only members of your Appwrite organization can open."
+  - question: "How do I see Appwrite build results on Cursor Origin?"
+    answer: "Appwrite adds a check run to every commit it builds, which moves from building to passed or failed and links to the deployment in the Console. When a pull request is opened, Appwrite also comments on it with the build status of each site and function, and updates the comment as builds finish. Both can be turned off in the site or function's [Git automation](/docs/products/sites/deploy-from-git#git-automation) settings."
+  - question: "Is Cursor Origin available on self-hosted Appwrite?"
+    answer: "Origin is available as a Git provider on [Appwrite Cloud](/sign-up). The Console that ships with self-hosted Appwrite 2.7.4 and earlier doesn't offer new Origin connections."
+  - question: "Can one Appwrite project deploy from Origin and GitHub at the same time?"
+    answer: "Yes. A project can hold installations from several Git providers at once. Workspaces and organizations from every connected provider appear in one repository picker, so different Sites and Functions in the same project can deploy from different providers."
+---
+
+Cursor launched Origin in August as a Git host built into the editor. It keeps repositories, pull requests, and code browsing in the same app where agents write the code. Teams that moved repositories to Origin still needed a way to ship them. Until now, deploying an Origin repository to Appwrite meant also pushing it to a Git provider that Appwrite could deploy from, or deploying by hand with the [Appwrite CLI](/docs/tooling/command-line/installation).
+
+Today, we're announcing **Cursor Origin support for Appwrite Sites and Functions**. Connect a Cursor workspace to your Appwrite project, pick a repository, and every push builds and deploys.
+
+# What Cursor Origin support includes
+
+Origin works like the other Git providers in Appwrite. Here's what you get on **Appwrite Cloud**:
+
+- **One installation per workspace.** Install Appwrite's Origin app on a Cursor workspace and choose which of its repositories Appwrite can reach. To deploy from another workspace, add another installation.
+- **Push to deploy.** Commits to your production branch build and activate. Commits to any other branch build without activating, and Sites get a [preview link](/docs/products/sites/previews) that only members of your Appwrite organization can open.
+- **Check runs on every commit.** Appwrite reports each build back to Origin as a check run that moves from building to passed or failed. It links to the deployment in the Console and, for Sites, includes the preview URL.
+- **Build summaries on pull requests.** When a pull request is opened, Appwrite comments on it with the build status of every site and function it deploys, and updates the comment as builds finish.
+- **The same build controls.** [Branch and path filters](/docs/products/sites/deploy-from-git#build-triggers), root directories, install and build commands, and environment variables work exactly as they do for any Git-connected Site or Function.
+- **Links that resolve to Cursor.** Deployments link to the repository, branch, and commit on Cursor, under `cursor.com/codebase/<workspace>`.
+- **Narrow access.** Appwrite only reaches the repositories you give its installation, and it can't create or delete repositories on Origin. If you uninstall Appwrite from the workspace, Appwrite disconnects the Sites and Functions that deployed from it.
+
+# How to deploy from Cursor Origin
+
+The setup takes three steps in the Appwrite Console, plus a push.
+
+## Connect your Cursor workspace
+
+Open your project, go to **Project settings** > **Git configuration**, click **Add installation**, and choose **Origin**. Appwrite's installation page opens on Cursor. Pick the workspace and the repositories Appwrite can reach, then approve the installation. Cursor sends you back to the Console, where the workspace appears in the **Owner** column of the installation list.
+
+If the project has no Git installation yet, you can run the same flow from the Site or Function creation wizard instead.
+
+## Create a site or function from an Origin repository
+
+Go to **Sites** and click **Create site**. Under **Import repository**, open the organization menu, choose your Cursor workspace, and connect the repository. Appwrite detects the framework and fills in the install command, build command, and output directory. Confirm them, add any environment variables, and deploy.
+
+Functions follow the same path: click **Create function**, choose your workspace under **Connect Git repository**, then set the root directory and entrypoint.
+
+Appwrite can't create repositories on Origin, because Origin only lets people, not apps, create them. Create the repository in Cursor first. That includes starting from a template: create an empty repository in Cursor, then pick it under **Connect existing repository** in the template wizard.
+
+## Push to deploy
+
+From then on, every push creates a deployment. Pushes to the production branch, usually `main`, replace the active deployment and serve on your site's domains. Pushes to other branches build without activating, so you can open the preview link from the pull request instead of pulling the branch and running it locally.
+
+Path filters decide which pushes deploy, which matters for a monorepo with a site and a function in one repository:
+
+```txt
+apps/web/**
+packages/ui/**
+!docs/**
+```
+
+For the first push of a new branch, Appwrite compares the branch with the repository's default branch, so path filters see every file the branch changes. A new branch with no commits beyond the default branch doesn't create a deployment. A force push that rewrites history also counts the files the replaced commits changed, so rolling a branch back to an older commit still triggers a build when a filtered path changed.
+
+# What's different on Origin
+
+A few things work differently on Origin, because its API differs from GitHub's:
+
+- **Builds report as check runs.** Origin has no commit status API, so Appwrite reports every build as a check run, as it does on GitHub. GitLab and Gitea get a commit status instead.
+- **Pull request comments are text only.** Origin doesn't show images in comments. The build summary uses plain status labels and links to each preview's QR code instead of showing it.
+- **Repositories are always private.** Origin has no public repositories, and every repository belongs to a workspace.
+
+You can turn off check runs and pull request comments separately in each site or function's [Git automation](/docs/products/sites/deploy-from-git#git-automation) settings, the same as on any other provider.
+
+# When to connect Cursor Origin
+
+Connect Origin when your repositories are already there, or when your team is moving to Origin and wants Appwrite to deploy from the same repositories. You no longer push to a second remote or run a manual CLI deploy to ship an Origin repository.
+
+You don't have to move everything at once. One Appwrite project can hold installations from several Git providers at the same time, such as GitHub and Origin, and their owners appear side by side in one repository picker. You can move a single site or function to an Origin repository and keep its domains, environment variables, and build settings as they are.
+
+If you want to compare Origin with GitHub before moving anything, our post on [Cursor Origin vs GitHub](/blog/post/cursor-origin-vs-github-what-actually-changes-for-developers) covers what changes in a day-to-day workflow.
+
+# Getting started with Cursor Origin on Appwrite
+
+Cursor Origin support is available on [Appwrite Cloud](/sign-up) today. Connect a workspace from **Project settings** > **Git configuration**, pick a repository, and push.
+
+- [Deployments with Cursor Origin](/integrations/deployments-origin) walks through connecting a workspace, creating a site or function, and troubleshooting.
+- [Deploy Sites from Git](/docs/products/sites/deploy-from-git) covers Git automation, build triggers, install and build commands, and output directories.
+- [Deploy Functions from Git](/docs/products/functions/deploy-from-git) covers the same settings for serverless functions.
+- [Preview deployments](/docs/products/sites/previews) explains how branch deployments get their links and who can open them.

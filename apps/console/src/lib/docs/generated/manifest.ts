@@ -378,7 +378,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Environment variables",
     "description": "Customize the behavior of your self-hosted Appwrite instance to your unique needs. Customize SMTP, SMS, functions, S3 adaptor, database, and other behaiors.",
     "layout": "article",
-    "readingTimeMinutes": 26
+    "readingTimeMinutes": 27
   },
   {
     "slug": "advanced/self-hosting/configuration/functions",

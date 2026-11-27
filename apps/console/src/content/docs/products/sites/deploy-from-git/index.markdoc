@@ -68,7 +68,7 @@ The card holds the **Production branch** and three switches, all on by default:
 ---
 * **Report commit status**
 * `providerStatuses`
-* Appwrite reports each build on its commit as building, passed, or failed. On GitHub, it adds a check run. On Entire, it adds a check run and a deployment entry. On GitLab and Gitea, it sets a commit status, and on Bitbucket, a build status.
+* Appwrite reports each build on its commit as building, passed, or failed. On GitHub and Origin, it adds a check run. On Entire, it adds a check run and a deployment entry. On GitLab and Gitea, it sets a commit status, and on Bitbucket, a build status.
 {% /table %}
 
 Changes apply from the next push, without a redeploy.
@@ -83,7 +83,7 @@ While it's off, the Console disables **Production branch** and **Post build summ
 
 Turn off **Post build summaries** to keep Appwrite's comment out of pull requests. Preview deployments are still created, and if **Report commit status** stays on, each commit still shows whether the build passed.
 
-Appwrite posts the summary when a pull request is opened or reopened, so turning the switch on doesn't add one to a pull request that's already open. Entire doesn't get build summaries.
+Appwrite posts the summary when a pull request is opened or reopened, so turning the switch on doesn't add one to a pull request that's already open. Entire doesn't get build summaries. Origin doesn't show images in comments, so on Origin the summary is text only and links to each preview's QR code instead of showing it.
 
 ### Report commit status {% #report-commit-status %}
 
