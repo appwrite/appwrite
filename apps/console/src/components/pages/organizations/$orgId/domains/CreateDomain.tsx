@@ -20,7 +20,7 @@ import { useT } from '@/lib/i18n/translate'
 import { getAppwriteErrorInfo } from '@/lib/utils/error-formatting'
 import {
   domainFieldError,
-  getClaimRecord,
+  getOrganizationDomainClaimRecord,
   isOrganizationDomainClaimError,
   isValidDomain,
 } from '@/lib/utils/proxy-domains'
@@ -94,7 +94,7 @@ export function CreateDomainDialog({
   }
 
   const record = claimDomain
-    ? getClaimRecord(claimDomain, `team:${organizationId}`)
+    ? getOrganizationDomainClaimRecord(claimDomain, organizationId)
     : null
 
   return (
