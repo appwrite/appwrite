@@ -2,7 +2,7 @@
 layout: post
 title: "Take a claimed Appwrite Zero project to production"
 description: "Get a claimed Appwrite Zero project ready for users: rename it, replace the Zero API key, tighten permissions, connect Git, and add a custom domain."
-date: 2026-12-01
+date: 2026-12-02
 cover: /images/blog/take-a-claimed-appwrite-zero-project-to-production/cover.avif
 timeToRead: 4
 author: chirag-aggarwal

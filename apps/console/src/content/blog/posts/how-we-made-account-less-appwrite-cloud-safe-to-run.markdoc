@@ -2,7 +2,7 @@
 layout: post
 title: "How we made account-less Appwrite Cloud safe to run"
 description: Appwrite Zero creates real Appwrite Cloud projects before signup. Here is how we limit usage, lock down temporary accounts, and clean up expired projects.
-date: 2026-12-01
+date: 2026-12-02
 cover: /images/blog/how-we-made-account-less-appwrite-cloud-safe-to-run/cover.avif
 timeToRead: 4
 author: chirag-aggarwal
