@@ -3,6 +3,19 @@
 namespace Appwrite\Platform\Modules\Mock\Services;
 
 use Appwrite\Platform\Modules\Mock\Http\Mock\APIKey\Unprefixed\Create as CreateAPIKeyUnprefixed;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\Apps\XList as ListDistributionAppleApps;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\Builds\XList as ListDistributionAppleBuilds;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\Seeds\Apps\Create as CreateDistributionAppleSeedApp;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\Seeds\Builds\Create as CreateDistributionAppleSeedBuild;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\Seeds\Keys\Create as CreateDistributionAppleSeedKey;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Applications\Edits\Create as CreateDistributionGoogleEdit;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Applications\Edits\Delete as DeleteDistributionGoogleEdit;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Applications\Edits\Get as GetDistributionGoogleEdit;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Applications\Edits\Tracks\XList as ListDistributionGoogleTracks;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Applications\Edits\Update as UpdateDistributionGoogleEdit;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Seeds\Applications\Create as CreateDistributionGoogleSeedApplication;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Seeds\ServiceAccounts\Create as CreateDistributionGoogleSeedServiceAccount;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Token\Create as CreateDistributionGoogleToken;
 use Appwrite\Platform\Modules\Mock\Http\Mock\GitHub\Callback\Get as GetGitHubCallback;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Tests\Avatars\BadIcon\Get as GetBadIcon;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Tests\Avatars\FaviconPage\Get as GetFaviconPage;
@@ -49,6 +62,19 @@ class Http extends Service
         $this->addAction('getOAuth2Failure', GetOAuth2Failure::class);
         $this->addAction('createAPIKeyUnprefixed', CreateAPIKeyUnprefixed::class);
         $this->addAction('getGitHubCallback', GetGitHubCallback::class);
+        $this->addAction('createDistributionGoogleToken', CreateDistributionGoogleToken::class);
+        $this->addAction('createDistributionGoogleSeedServiceAccount', CreateDistributionGoogleSeedServiceAccount::class);
+        $this->addAction('createDistributionGoogleSeedApplication', CreateDistributionGoogleSeedApplication::class);
+        $this->addAction('createDistributionGoogleEdit', CreateDistributionGoogleEdit::class);
+        $this->addAction('getDistributionGoogleEdit', GetDistributionGoogleEdit::class);
+        $this->addAction('updateDistributionGoogleEdit', UpdateDistributionGoogleEdit::class);
+        $this->addAction('deleteDistributionGoogleEdit', DeleteDistributionGoogleEdit::class);
+        $this->addAction('listDistributionGoogleTracks', ListDistributionGoogleTracks::class);
+        $this->addAction('createDistributionAppleSeedKey', CreateDistributionAppleSeedKey::class);
+        $this->addAction('createDistributionAppleSeedApp', CreateDistributionAppleSeedApp::class);
+        $this->addAction('listDistributionAppleApps', ListDistributionAppleApps::class);
+        $this->addAction('createDistributionAppleSeedBuild', CreateDistributionAppleSeedBuild::class);
+        $this->addAction('listDistributionAppleBuilds', ListDistributionAppleBuilds::class);
         $this->addAction('shutdown', Shutdown::class);
     }
 }
