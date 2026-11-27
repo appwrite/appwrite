@@ -251,7 +251,7 @@ class Store
         $later = [];
         foreach ($executions as $execution) {
             $row = $this->snapshot($projectId, $execution, false);
-            if (\in_array($execution->getAttribute('status', ''), self::FIRST_STATUSES, true)) {
+            if ($this->insertBuffer > 0 && \in_array($execution->getAttribute('status', ''), self::FIRST_STATUSES, true)) {
                 $first[] = $row;
             } else {
                 $later[] = $row;
