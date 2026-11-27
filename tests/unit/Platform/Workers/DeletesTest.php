@@ -110,6 +110,7 @@ final class DeletesTest extends TestCase
                     deviceForSites: $device,
                     deviceForBuilds: $device,
                     deviceForVideos: $device,
+                    deviceForDistribution: $device,
                     telemetry: new NoTelemetry(),
                     mqtt: $this->mqtt(),
                     certificates: $this->createStub(Certificates::class),
@@ -178,6 +179,7 @@ final class DeletesTest extends TestCase
                 deviceForSites: $device,
                 deviceForBuilds: $device,
                 deviceForVideos: $device,
+                deviceForDistribution: $device,
                 telemetry: $telemetry,
                 mqtt: $this->mqtt(),
                 certificates: $certificates,
@@ -246,6 +248,7 @@ final class DeletesTest extends TestCase
             deviceForSites: $this->createStub(Device::class),
             deviceForBuilds: $this->createStub(Device::class),
             deviceForVideos: $this->createStub(Device::class),
+            deviceForDistribution: $this->createStub(Device::class),
             telemetry: new NoTelemetry(),
             mqtt: $this->mqtt(),
             certificates: $this->createStub(Certificates::class),
@@ -347,6 +350,89 @@ final class DeletesTest extends TestCase
         $this->assertFalse($this->database->getDocument($collection, 'failing')->isEmpty(), 'a resumed upload keeps its row and bytes');
     }
 
+    public function testArtifactDeleteRemovesOnlyItsFile(): void
+    {
+        $directory = $this->createDirectory('artifacts');
+        \file_put_contents($directory . '/artifact.aab', 'bundle');
+        \file_put_contents($directory . '/other.aab', 'other');
+        $artifact = new Document([
+            '$id' => 'artifact',
+            '$collection' => DELETE_TYPE_DISTRIBUTION_ARTIFACTS,
+            'status' => 'ready',
+            'path' => $directory . '/artifact.aab',
+        ]);
+
+        try {
+            // Queue delivery is at least once; a second run finds nothing left to remove.
+            for ($attempt = 0; $attempt < 2; $attempt++) {
+                $this->deleteDocument($artifact, new Local($directory));
+                $this->assertFileDoesNotExist($directory . '/artifact.aab');
+                $this->assertSame('other', \file_get_contents($directory . '/other.aab'), 'another artifact keeps its file');
+            }
+        } finally {
+            (new Local($directory))->delete($directory, true);
+        }
+    }
+
+    public function testUnfinishedArtifactUploadLeavesNoChunks(): void
+    {
+        $directory = $this->createDirectory('artifacts');
+        \mkdir($directory . '/tmp_artifact.aab');
+        \file_put_contents($directory . '/tmp_artifact.aab/artifact.part.1', 'chunk');
+        $artifact = new Document([
+            '$id' => 'artifact',
+            '$collection' => DELETE_TYPE_DISTRIBUTION_ARTIFACTS,
+            'status' => 'uploading',
+            'path' => $directory . '/artifact.aab',
+            'metadata' => [],
+        ]);
+
+        try {
+            $this->deleteDocument($artifact, new Local($directory));
+
+            $this->assertDirectoryDoesNotExist($directory . '/tmp_artifact.aab', 'the received chunks go with the artifact');
+        } finally {
+            (new Local($directory))->delete($directory, true);
+        }
+    }
+
+    private function createDirectory(string $prefix): string
+    {
+        $directory = \sys_get_temp_dir() . '/' . $prefix . '-' . \bin2hex(\random_bytes(8));
+        \mkdir($directory);
+
+        return $directory;
+    }
+
+    private function deleteDocument(Document $document, Device $deviceForDistribution): void
+    {
+        (new Deletes())->action(
+            message: (new Message())->setPayload((new DeleteMessage(type: DELETE_TYPE_DOCUMENT, document: $document))->toArray()),
+            project: new Document(['$id' => 'project', '$sequence' => '1']),
+            dbForPlatform: $this->database,
+            getProjectDB: fn () => $this->database,
+            getDatabasesDB: fn () => $this->database,
+            deviceForFiles: $this->createStub(Device::class),
+            deviceForFunctions: $this->createStub(Device::class),
+            deviceForSites: $this->createStub(Device::class),
+            deviceForBuilds: $this->createStub(Device::class),
+            deviceForVideos: $this->createStub(Device::class),
+            deviceForDistribution: $deviceForDistribution,
+            telemetry: new NoTelemetry(),
+            mqtt: $this->mqtt(),
+            certificates: $this->createStub(Certificates::class),
+            executor: $this->createStub(Executor::class),
+            executionRetention: '',
+            executionsRetentionCount: 0,
+            deploymentRetention: new Retention(),
+            publisherForDeletes: $this->createStub(DeletePublisher::class),
+            publisherForUsage: $this->createStub(UsagePublisher::class),
+            bus: new Bus(),
+            executionStore: $this->createStub(ExecutionStore::class),
+            queueForRealtime: $this->createStub(Realtime::class),
+        );
+    }
+
     /**
      * @param array<string, array<string, mixed>> $uploads file ID => extra metadata
      */
@@ -409,6 +495,7 @@ final class DeletesTest extends TestCase
             deviceForSites: $this->createStub(Device::class),
             deviceForBuilds: $this->createStub(Device::class),
             deviceForVideos: $this->createStub(Device::class),
+            deviceForDistribution: $this->createStub(Device::class),
             telemetry: new NoTelemetry(),
             mqtt: $this->mqtt(),
             certificates: $this->createStub(Certificates::class),

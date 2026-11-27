@@ -136,6 +136,7 @@ RUN mkdir -p /storage/uploads && \
     mkdir -p /storage/functions && \
     mkdir -p /storage/videos && \
     mkdir -p /storage/videos-tmp && \
+    mkdir -p /storage/distribution && \
     mkdir -p /storage/debug && \
     chown -Rf www-data:www-data /storage/uploads && chmod -Rf 0755 /storage/uploads && \
     chown -Rf www-data:www-data /storage/imports && chmod -Rf 0755 /storage/imports && \
@@ -145,6 +146,7 @@ RUN mkdir -p /storage/uploads && \
     chown -Rf www-data:www-data /storage/functions && chmod -Rf 0755 /storage/functions && \
     chown -Rf www-data:www-data /storage/videos && chmod -Rf 0755 /storage/videos && \
     chown -Rf www-data:www-data /storage/videos-tmp && chmod -Rf 0755 /storage/videos-tmp && \
+    chown -Rf www-data:www-data /storage/distribution && chmod -Rf 0755 /storage/distribution && \
     chown -Rf www-data:www-data /storage/debug && chmod -Rf 0755 /storage/debug
 
 # Executables
