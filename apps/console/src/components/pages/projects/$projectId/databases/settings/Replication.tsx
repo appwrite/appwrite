@@ -14,12 +14,12 @@ import { DatabaseSettingsLoading } from './DatabaseSettingsLoading'
 import {
   dedicatedDatabaseByIdQueryOptions,
   useProjectDatabase,
+  type DedicatedDatabaseHaSource,
 } from '@/lib/react-query/hooks'
 import {
   canConfigureDedicatedReplication,
   productDedicatedEngineHints,
 } from '@/lib/databases/database-compute'
-import { dedicatedReplicationSourceFromRouteKind } from '@/lib/databases/dedicated-replication'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { useT } from '@/lib/i18n/translate'
 import type { Models } from '@appwrite.io/console'
@@ -53,11 +53,8 @@ export function View() {
   const t = useT()
   const { projectId, databaseId, dbKind, canWrite, isLoading } =
     useDatabaseSettingsPage()
-  const { database: productDatabase } = useProjectDatabase(
-    projectId,
-    databaseId,
-    dbKind,
-  )
+  const { database: productDatabase, isLoading: productLoading } =
+    useProjectDatabase(projectId, databaseId, dbKind)
   const engineHints = useMemo(
     () => productDedicatedEngineHints(dbKind),
     [dbKind],
@@ -69,17 +66,23 @@ export function View() {
     }),
   )
 
-  if (isLoading || dedicatedLoading) return <DatabaseSettingsLoading />
+  if (isLoading || productLoading || dedicatedLoading) {
+    return <DatabaseSettingsLoading />
+  }
+  if (!productDatabase) return null
 
+  const productDetail = productDatabase as typeof productDatabase & {
+    status?: string | null
+    replicas?: number | null
+    specification?: string | null
+  }
   const productHints = {
-    $id: productDatabase?.$id,
-    name: productDatabase?.name,
+    $id: productDetail.$id,
+    name: productDetail.name,
     databaseType: dbKind,
-    status: (productDatabase as { status?: string | null } | null)?.status,
-    replicas: (productDatabase as { replicas?: number | null } | null)?.replicas,
-    specification: (
-      productDatabase as { specification?: string | null } | null
-    )?.specification,
+    status: productDetail.status,
+    replicas: productDetail.replicas,
+    specification: productDetail.specification,
   }
 
   if (!canConfigureDedicatedReplication(productHints, dedicated)) {
@@ -93,15 +96,26 @@ export function View() {
     )
   }
 
-  const database = toReplicationDatabase(dedicated, {
-    $id: productDatabase?.$id ?? databaseId,
-    name: productDatabase?.name ?? databaseId,
-    status: productHints.status,
-    replicas: productHints.replicas,
-  }, engineHints[0] || 'postgresql')
+  const database = toReplicationDatabase(
+    dedicated,
+    {
+      $id: productDatabase.$id,
+      name: productDatabase.name,
+      status: productHints.status,
+      replicas: productHints.replicas,
+    },
+    engineHints[0] || 'postgresql',
+  )
   if (!database) return null
 
-  const replicationSource = dedicatedReplicationSourceFromRouteKind(dbKind)
+  const replicationSource: DedicatedDatabaseHaSource = {
+    type: 'product',
+    api: dbKind,
+    identity: {
+      name: productDatabase.name,
+      enabled: productDatabase.enabled !== false,
+    },
+  }
   const haEngine = dedicated?.engine || engineHints[0] || 'postgresql'
   const cardProps = {
     projectId,
@@ -117,7 +131,14 @@ export function View() {
       id: 'replicas',
       search: {
         title: 'Read replicas',
-        keywords: ['replica', 'replicas', 'failover', 'ha', 'topology', 'cluster'],
+        keywords: [
+          'replica',
+          'replicas',
+          'failover',
+          'ha',
+          'topology',
+          'cluster',
+        ],
       },
       node: <PostgresDatabaseReplicasCard {...cardProps} />,
     },

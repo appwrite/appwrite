@@ -20,6 +20,7 @@ import { DEFAULT_STALE_TIME } from './constants'
 import {
   invalidateDatabaseModel,
   refetchProjectDatabaseLists,
+  type ProductDatabaseIdentity,
 } from './databases'
 import { postgresDatabaseQueryOptions } from './postgres-databases'
 
@@ -100,7 +101,10 @@ export async function createDedicatedDatabaseFailover(
   source: DedicatedReplicationSource,
   targetReplicaId: string,
 ) {
-  return dedicatedReplicationService(sdk.forProject(projectId), source).createFailover({
+  return dedicatedReplicationService(
+    sdk.forProject(projectId),
+    source,
+  ).createFailover({
     databaseId,
     targetReplicaId,
   })
@@ -125,18 +129,12 @@ export function useCreateDedicatedDatabaseFailover(
     },
     onSuccess: async (database) => {
       if (!projectId || !databaseId) return
-      // Native postgres settings cache
       queryClient.setQueryData(
         postgresDatabaseQueryOptions(projectId, databaseId).queryKey,
         database,
       )
       queryClient.setQueryData(
-        [
-          'dedicated-database',
-          'project',
-          projectId,
-          databaseId,
-        ],
+        ['dedicated-database', 'project', projectId, databaseId],
         database,
       )
       await Promise.all([
@@ -168,11 +166,15 @@ export function useCreateDedicatedDatabaseFailover(
   })
 }
 
+export type DedicatedDatabaseHaSource =
+  | Extract<DedicatedReplicationSource, { type: 'engine' }>
+  | (Extract<DedicatedReplicationSource, { type: 'product' }> & {
+      identity: ProductDatabaseIdentity
+    })
+
 export type UpdateDedicatedDatabaseHaInput = {
   replicas?: number
   syncMode?: string
-  /** Required by documentsDB / vectorsDB update; optional for tablesDB. */
-  name?: string
 }
 
 /**
@@ -186,55 +188,47 @@ export type UpdateDedicatedDatabaseHaInput = {
 export async function updateDedicatedDatabaseHa(
   projectId: string,
   databaseId: string,
-  source: DedicatedReplicationSource,
+  source: DedicatedDatabaseHaSource,
   input: UpdateDedicatedDatabaseHaInput,
 ) {
-  const service = dedicatedReplicationService(
-    sdk.forProject(projectId),
-    source,
-  )
+  const service = dedicatedReplicationService(sdk.forProject(projectId), source)
   // Product and engine `update` overloads differ (e.g. required `name` on
   // documentsDB/vectorsDB). Narrow to the shared HA patch surface.
   const updateHa = service.update.bind(service) as (params: {
     databaseId: string
     name?: string
+    enabled?: boolean
     replicas?: number
     syncMode?: string
   }) => Promise<Models.DedicatedDatabase>
 
+  const patch = {
+    ...(input.replicas != null ? { replicas: input.replicas } : {}),
+    ...(input.syncMode != null ? { syncMode: input.syncMode } : {}),
+  }
+
   if (source.type === 'product') {
     return updateHa({
       databaseId,
-      ...(input.name != null && input.name !== ''
-        ? { name: input.name }
-        : {}),
-      ...(input.replicas != null ? { replicas: input.replicas } : {}),
-      ...(input.syncMode != null ? { syncMode: input.syncMode } : {}),
+      name: source.identity.name.trim() || databaseId,
+      enabled: source.identity.enabled,
+      ...patch,
     })
   }
 
-  const { name: _name, ...engineInput } = input
-  return updateHa({
-    databaseId,
-    ...engineInput,
-  })
+  return updateHa({ databaseId, ...patch })
 }
 
 export function useUpdateDedicatedDatabaseHa(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
-  source: DedicatedReplicationSource,
+  source: DedicatedDatabaseHaSource,
 ) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (input: UpdateDedicatedDatabaseHaInput) => {
       requireOperationalDatabase(queryClient, projectId!, databaseId!)
-      return updateDedicatedDatabaseHa(
-        projectId!,
-        databaseId!,
-        source,
-        input,
-      )
+      return updateDedicatedDatabaseHa(projectId!, databaseId!, source, input)
     },
     onSuccess: async (database) => {
       if (!projectId || !databaseId) return
