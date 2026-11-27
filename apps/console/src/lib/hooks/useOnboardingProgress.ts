@@ -1,5 +1,8 @@
 import { useMemo } from 'react'
-import { useProjectOnboardingSnapshot } from '@/lib/react-query/hooks/onboarding'
+import {
+  useOnboardingProductCategories,
+  useProjectOnboardingSnapshot,
+} from '@/lib/react-query/hooks/onboarding'
 import {
   computeOnboardingProgress,
   getAtomicOnboardingStepCount,
@@ -10,17 +13,18 @@ import {
  */
 export function useOnboardingProgress(projectId: string | undefined) {
   const { data: snapshot, isPending } = useProjectOnboardingSnapshot(projectId)
+  const categories = useOnboardingProductCategories(projectId)
 
   const values = useMemo(() => {
     if (!snapshot) {
       return {
         progress: 0,
         completedSteps: 0,
-        totalSteps: getAtomicOnboardingStepCount(),
+        totalSteps: getAtomicOnboardingStepCount(categories),
       }
     }
-    return computeOnboardingProgress(snapshot)
-  }, [snapshot])
+    return computeOnboardingProgress(snapshot, categories)
+  }, [snapshot, categories])
 
   return { ...values, isPending }
 }

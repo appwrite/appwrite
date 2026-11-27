@@ -184,6 +184,63 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Ship a build to production and tune environments.':
     'שלחו בנייה לייצור וכווננו סביבות.',
   'View site': 'צפייה באתר',
+  // Onboarding: Init 5 products (Videos, Analytics, Monitors, Code review)
+  'Upload video once and stream it everywhere, with adaptive renditions and captions.':
+    'העלו סרטון פעם אחת והזרימו אותו לכל מקום, עם גרסאות קידוד מותאמות וכתוביות.',
+  'Upload a video':
+    'העלאת סרטון',
+  'Add a video file; Appwrite transcodes it into streaming renditions.':
+    'הוסיפו קובץ וידאו, ו-Appwrite יקודד אותו לגרסאות סטרימינג.',
+  'Upload video':
+    'העלאת סרטון',
+  'Manage videos':
+    'ניהול סרטונים',
+  'Attach captions in any language so every viewer can follow along.':
+    'צרפו כתוביות בכל שפה כדי שכל צופה יוכל לעקוב.',
+  'Open videos':
+    'פתיחת סרטונים',
+  'Play it in your app':
+    'ניגון באפליקציה שלכם',
+  'Point your player at the HLS or DASH manifest to start streaming.':
+    'כוונו את הנגן שלכם ל-manifest של HLS או DASH כדי להתחיל בסטרימינג.',
+  'Set up playback':
+    'הגדרת ניגון',
+  'See who visits your sites and apps, where they come from, and what they do.':
+    'ראו מי מבקר באתרים ובאפליקציות שלכם, מאיפה הם מגיעים ומה הם עושים.',
+  'Add a property':
+    'הוספת נכס',
+  'Track a website, mobile app, or AI agent as its own property.':
+    'עקבו אחרי אתר, אפליקציית מובייל או סוכן AI כנכס נפרד.',
+  'Add property':
+    'הוספת נכס',
+  'Manage properties':
+    'ניהול נכסים',
+  'Record your first visit':
+    'תיעוד הביקור הראשון',
+  'Turn on analytics for a site, or send page views and events from your app.':
+    'הפעילו אנליטיקה לאתר, או שלחו צפיות בדפים ואירועים מהאפליקציה שלכם.',
+  'Start tracking':
+    'התחלת מעקב',
+  'View traffic':
+    'צפייה בתנועה',
+  'Watch your endpoints and usage, and get alerted the moment something needs you.':
+    'עקבו אחרי ה-Endpoints והשימוש שלכם, וקבלו התראה ברגע שמשהו דורש את תשומת לבכם.',
+  'Create a monitor':
+    'יצירת מוניטור',
+  'Check an endpoint, a domain, or a usage limit on a schedule.':
+    'בדקו Endpoint, דומיין או מגבלת שימוש לפי לוח זמנים.',
+  'Manage monitors':
+    'ניהול מוניטורים',
+  'Get an AI review on every pull request, with findings that learn from your team.':
+    'קבלו סקירת AI לכל Pull request, עם ממצאים שלומדים מהצוות שלכם.',
+  'Turn on code review':
+    'הפעלת סקירת קוד',
+  'Add a repository, and its next pull request gets a review.':
+    'הוסיפו repo, וה-Pull request הבא שלו יקבל סקירה.',
+  'Manage repositories':
+    'ניהול Repos',
+  'Observe':
+    'ניטור',
   Build: 'בנייה',
   Deploy: 'פריסה',
 
