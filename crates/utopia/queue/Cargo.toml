@@ -1,0 +1,26 @@
+[package]
+name = "utopia-queue"
+description = "Queue consumers that share queues with utopia-php/queue: a JetStream worker that reads, settles and dead-letters the way Broker\\Nats does."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+async-nats.workspace = true
+bytes.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tokio = { workspace = true, features = ["macros"] }
+utopia-dsn.workspace = true
+xxhash-rust.workspace = true
+futures-util.workspace = true
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["rt-multi-thread"] }
+
+[package.metadata.utopia]
+category = "transport"
