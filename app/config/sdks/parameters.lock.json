@@ -2008,6 +2008,16 @@
             "appId",
             "file"
         ],
+        "distribution.createBuild": [
+            "appId",
+            "targetId",
+            "type",
+            "reference",
+            "versionName",
+            "versionCode",
+            "releaseId",
+            "key"
+        ],
         "distribution.createCheck": [
             "appId",
             "targetId",
@@ -2072,6 +2082,10 @@
             "appId",
             "artifactId"
         ],
+        "distribution.deleteBuild": [
+            "appId",
+            "buildId"
+        ],
         "distribution.deleteConnection": [
             "connectionId"
         ],
@@ -2100,6 +2114,10 @@
         "distribution.getArtifactDownload": [
             "appId",
             "artifactId"
+        ],
+        "distribution.getBuild": [
+            "appId",
+            "buildId"
         ],
         "distribution.getConnection": [
             "connectionId"
@@ -2131,6 +2149,17 @@
             "total"
         ],
         "distribution.listArtifacts": [
+            "appId",
+            "queries",
+            "total"
+        ],
+        "distribution.listBuildLogs": [
+            "appId",
+            "buildId",
+            "queries",
+            "total"
+        ],
+        "distribution.listBuilds": [
             "appId",
             "queries",
             "total"
@@ -2186,6 +2215,11 @@
             "keyId",
             "issuerId",
             "privateKey"
+        ],
+        "distribution.updateBuildStatus": [
+            "appId",
+            "buildId",
+            "status"
         ],
         "distribution.updateGoogleConnection": [
             "connectionId",
@@ -6874,6 +6908,16 @@
             "appId",
             "file"
         ],
+        "distribution.createBuild": [
+            "appId",
+            "targetId",
+            "type",
+            "reference",
+            "versionName",
+            "versionCode",
+            "releaseId",
+            "key"
+        ],
         "distribution.createCheck": [
             "appId",
             "targetId",
@@ -6938,6 +6982,10 @@
             "appId",
             "artifactId"
         ],
+        "distribution.deleteBuild": [
+            "appId",
+            "buildId"
+        ],
         "distribution.deleteConnection": [
             "connectionId"
         ],
@@ -6966,6 +7014,10 @@
         "distribution.getArtifactDownload": [
             "appId",
             "artifactId"
+        ],
+        "distribution.getBuild": [
+            "appId",
+            "buildId"
         ],
         "distribution.getConnection": [
             "connectionId"
@@ -6997,6 +7049,17 @@
             "total"
         ],
         "distribution.listArtifacts": [
+            "appId",
+            "queries",
+            "total"
+        ],
+        "distribution.listBuildLogs": [
+            "appId",
+            "buildId",
+            "queries",
+            "total"
+        ],
+        "distribution.listBuilds": [
             "appId",
             "queries",
             "total"
@@ -7052,6 +7115,11 @@
             "keyId",
             "issuerId",
             "privateKey"
+        ],
+        "distribution.updateBuildStatus": [
+            "appId",
+            "buildId",
+            "status"
         ],
         "distribution.updateGoogleConnection": [
             "connectionId",

@@ -23,6 +23,8 @@ trait GiteaRepositories
     private array $giteaCookies = [];
 
     /**
+     * Installs through the Console session on either side, because only a Console user can authorize a provider.
+     *
      * @return array<string, mixed>
      */
     protected function createGiteaInstallation(?string $projectId = null): array
@@ -77,6 +79,15 @@ trait GiteaRepositories
         return $repository['body'];
     }
 
+    protected function createGiteaTag(string $repository, string $tag): void
+    {
+        $created = $this->giteaApi(Client::METHOD_POST, '/api/v1/repos/' . self::GITEA_USERNAME . '/' . $repository . '/tags', [
+            'tag_name' => $tag,
+            'target' => self::GITEA_BRANCH,
+        ]);
+        $this->assertSame(201, $created['headers']['status-code'], \json_encode($created['body']));
+    }
+
     /**
      * @return list<array<string, mixed>>
      */
@@ -95,7 +106,12 @@ trait GiteaRepositories
     {
         $this->giteaCookies = [];
         $settings = 'http://localhost/projects/' . $projectId . '/settings';
-        $headers = \array_merge(['x-appwrite-project' => $projectId], $this->getHeaders());
+        $headers = [
+            'x-appwrite-project' => $projectId,
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-mode' => 'admin',
+        ];
 
         $authorize = $this->client->call(Client::METHOD_GET, '/vcs/gitea/authorize', $headers, [
             'success' => $settings,

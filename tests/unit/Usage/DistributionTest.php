@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Usage;
 
+use Appwrite\Distribution\Build\Status as BuildStatus;
 use Appwrite\Distribution\Submission\Status as SubmissionStatus;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Usage\Context;
@@ -38,6 +39,73 @@ final class DistributionTest extends TestCase
         $this->assertSame([METRIC_DISTRIBUTION_SIGNING => 1], $this->values($metrics));
         $this->assertScopedToApp($metrics);
         $this->assertTrue($this->usage->isEmpty(), 'the context is reset after publishing');
+    }
+
+    public function testReadyBuildCountsSuccessAndCompute(): void
+    {
+        Distribution::publishBuild($this->usage, $this->app, $this->build(BuildStatus::Ready), $this->project, $this->publisherForUsage);
+
+        $metrics = $this->published();
+        $this->assertSame([
+            METRIC_DISTRIBUTION_BUILDS => 1,
+            METRIC_DISTRIBUTION_BUILDS_SUCCESS => 1,
+            'distribution.builds.android.compute' => 120_000,
+            'distribution.builds.android.mbSeconds' => 8192 * 120 * 4,
+        ], $this->values($metrics));
+        $this->assertScopedToApp($metrics);
+        $this->assertTrue($this->usage->isEmpty(), 'the context is reset after publishing');
+    }
+
+    public function testFailedBuildCountsFailure(): void
+    {
+        Distribution::publishBuild($this->usage, $this->app, $this->build(BuildStatus::Failed), $this->project, $this->publisherForUsage);
+
+        $values = $this->values($this->published());
+        $this->assertSame(1, $values[METRIC_DISTRIBUTION_BUILDS_FAILED] ?? null);
+        $this->assertArrayNotHasKey(METRIC_DISTRIBUTION_BUILDS_SUCCESS, $values);
+        $this->assertSame(1, $values[METRIC_DISTRIBUTION_BUILDS]);
+    }
+
+    public function testBuildThatNeverStartedMetersNoCompute(): void
+    {
+        $build = $this->build(BuildStatus::Failed)->setAttribute('startedAt', null)->setAttribute('duration', 0);
+
+        Distribution::publishBuild($this->usage, $this->app, $build, $this->project, $this->publisherForUsage);
+
+        $this->assertSame([
+            METRIC_DISTRIBUTION_BUILDS => 1,
+            METRIC_DISTRIBUTION_BUILDS_FAILED => 1,
+        ], $this->values($this->published()));
+    }
+
+    public function testCacheHitIsCounted(): void
+    {
+        $build = $this->build(BuildStatus::Ready)->setAttribute('toolchain', ['image' => 'android:1', 'cache' => true]);
+
+        Distribution::publishBuild($this->usage, $this->app, $build, $this->project, $this->publisherForUsage);
+
+        $this->assertSame(1, $this->values($this->published())[METRIC_DISTRIBUTION_BUILDS_CACHE_HITS] ?? null);
+    }
+
+    public function testAttemptMetersComputeOnly(): void
+    {
+        Distribution::publishAttempt($this->usage, $this->app, $this->build(BuildStatus::Building), $this->project, $this->publisherForUsage);
+
+        $metrics = $this->published();
+        $this->assertSame([
+            'distribution.builds.android.compute' => 120_000,
+            'distribution.builds.android.mbSeconds' => 8192 * 120 * 4,
+        ], $this->values($metrics));
+        $this->assertScopedToApp($metrics);
+    }
+
+    public function testAttemptThatNeverStartedPublishesNothing(): void
+    {
+        $build = $this->build(BuildStatus::Waiting)->setAttribute('startedAt', null);
+
+        Distribution::publishAttempt($this->usage, $this->app, $build, $this->project, $this->publisherForUsage);
+
+        $this->assertSame([], $this->publisher->published);
     }
 
     public function testPublishedSubmissionCountsSuccess(): void
@@ -115,6 +183,20 @@ final class DistributionTest extends TestCase
     {
         yield 'zero' => [0];
         yield 'negative' => [-1];
+    }
+
+    private function build(BuildStatus $status): Document
+    {
+        return new Document([
+            '$id' => 'build',
+            'status' => $status->value,
+            'platform' => 'android',
+            'startedAt' => '2026-11-28T10:00:00.000+00:00',
+            'duration' => 120,
+            'cpus' => 4,
+            'memory' => 8192,
+            'toolchain' => ['image' => 'android:1', 'cache' => false],
+        ]);
     }
 
     private function publishSubmission(SubmissionStatus $status): void

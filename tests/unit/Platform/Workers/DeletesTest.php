@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Platform\Workers;
 
 use Appwrite\Deployment\Retention;
+use Appwrite\Distribution\Builds;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
@@ -448,7 +449,12 @@ final class DeletesTest extends TestCase
         $this->addDistributionSchedule(SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_SUBMISSION, 'submission');
         $this->addDistributionSchedule(SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_SUBMISSION, 'other-submission');
 
-        foreach (['artifact.aab', 'other-artifact.aab', 'builds/build/app.aab', 'signed/artifact/app.aab', 'listings/listing/phone.png', 'listings/other-listing/phone.png'] as $file) {
+        $image = Config::getParam('distribution')['images']['android'];
+        $project = new Document(['$id' => 'project']);
+        $cache = Builds::cache($project, 'target', $image);
+        $otherCache = Builds::cache($project, 'other-target', $image);
+
+        foreach (['artifact.aab', 'other-artifact.aab', 'builds/build/app.aab', 'signed/artifact/app.aab', 'listings/listing/phone.png', 'listings/other-listing/phone.png', $cache, $otherCache] as $file) {
             @\mkdir(\dirname($directory . '/' . $file), recursive: true);
             \file_put_contents($directory . '/' . $file, $file);
         }
@@ -490,6 +496,8 @@ final class DeletesTest extends TestCase
             }
             $this->assertFileExists($directory . '/other-artifact.aab');
             $this->assertFileExists($directory . '/listings/other-listing/phone.png');
+            $this->assertDirectoryDoesNotExist($directory . '/' . \dirname($cache), 'the build cache of each target goes too');
+            $this->assertFileExists($directory . '/' . $otherCache, 'another app keeps its build cache');
         } finally {
             (new Local($directory))->delete($directory, true);
         }

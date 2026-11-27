@@ -5,6 +5,7 @@ namespace Tests\E2E\Services\Distribution;
 use Appwrite\ID;
 use Appwrite\Tests\Async\Exceptions\Critical;
 use Tests\E2E\Client;
+use Utopia\Distribution\Signing\Keystore;
 
 trait DistributionBase
 {
@@ -58,6 +59,12 @@ trait DistributionBase
         yield 'updateSubmission' => [Client::METHOD_PATCH, '/distribution/apps/missing/submissions/missing', 'distribution.submissions.write'];
         yield 'updateSubmissionStatus' => [Client::METHOD_PATCH, '/distribution/apps/missing/submissions/missing/status', 'distribution.submissions.write'];
         yield 'createCheck' => [Client::METHOD_POST, '/distribution/apps/missing/checks', 'distribution.read'];
+        yield 'createBuild' => [Client::METHOD_POST, '/distribution/apps/missing/builds', 'distribution.write'];
+        yield 'listBuilds' => [Client::METHOD_GET, '/distribution/apps/missing/builds', 'distribution.read'];
+        yield 'getBuild' => [Client::METHOD_GET, '/distribution/apps/missing/builds/missing', 'distribution.read'];
+        yield 'deleteBuild' => [Client::METHOD_DELETE, '/distribution/apps/missing/builds/missing', 'distribution.write'];
+        yield 'updateBuildStatus' => [Client::METHOD_PATCH, '/distribution/apps/missing/builds/missing/status', 'distribution.write'];
+        yield 'listBuildLogs' => [Client::METHOD_GET, '/distribution/apps/missing/builds/missing/logs', 'distribution.read'];
     }
 
     /**
@@ -130,6 +137,61 @@ trait DistributionBase
     protected function getRelease(string $appId, string $releaseId): array
     {
         return $this->client->call(Client::METHOD_GET, '/distribution/apps/' . $appId . '/releases/' . $releaseId, $this->headers());
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function createKeystoreIdentity(Keystore $keystore): array
+    {
+        return $this->client->call(Client::METHOD_POST, '/distribution/signing-identities/android', $this->headers(), [
+            'signingIdentityId' => ID::unique(),
+            'name' => 'Keystore ' . \uniqid(),
+            'keystore' => \base64_encode($keystore->archive),
+            'storePassword' => $keystore->password,
+            'keyAlias' => $keystore->alias,
+            'keyPassword' => $keystore->password,
+        ]);
+    }
+
+    /**
+     * @param array<string, mixed> $params
+     * @return array<string, mixed>
+     */
+    protected function createBuild(string $appId, array $params): array
+    {
+        return $this->client->call(Client::METHOD_POST, '/distribution/apps/' . $appId . '/builds', $this->headers(), $params);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function getBuild(string $appId, string $buildId): array
+    {
+        return $this->client->call(Client::METHOD_GET, '/distribution/apps/' . $appId . '/builds/' . $buildId, $this->headers());
+    }
+
+    /**
+     * @param list<string> $statuses
+     * @return array<string, mixed>
+     */
+    protected function awaitBuild(string $appId, string $buildId, array $statuses, int $timeoutMs = 300_000): array
+    {
+        $build = [];
+
+        $this->assertEventually(function () use ($appId, $buildId, $statuses, &$build): void {
+            $fetched = $this->getBuild($appId, $buildId);
+            $this->assertSame(200, $fetched['headers']['status-code']);
+            $build = $fetched['body'];
+
+            if (!\in_array($build['status'], $statuses, true) && \in_array($build['status'], ['ready', 'failed', 'canceled'], true)) {
+                throw new Critical('Build ' . $buildId . ' ended ' . $build['status'] . ' instead of ' . \implode(' or ', $statuses) . ': ' . $build['errorCode'] . ' ' . $build['errorMessage']);
+            }
+
+            $this->assertContains($build['status'], $statuses);
+        }, $timeoutMs, 2000);
+
+        return $build;
     }
 
     /**

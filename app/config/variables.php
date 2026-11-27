@@ -2078,7 +2078,7 @@ return [
             ],
             [
                 'name' => '_APP_DISTRIBUTION_CALLBACK_SECRET',
-                'description' => 'The secret that signs and verifies the callbacks Distribution build jobs send to Appwrite. Empty uses `_APP_JOBS_SECRET`. **Keep it a secret**.',
+                'description' => 'The secret that signs and verifies the callbacks Distribution build jobs send to Appwrite. Empty derives a per-plane key from `_APP_JOBS_SECRET`. **Keep it a secret**.',
                 'introduction' => '2.8.0',
                 'default' => '',
                 'required' => false,
@@ -2087,7 +2087,7 @@ return [
             ],
             [
                 'name' => '_APP_DISTRIBUTION_SIGNING_CALLBACK_SECRET',
-                'description' => 'The secret that signs and verifies the callbacks Distribution signing jobs send to Appwrite. Empty uses `_APP_JOBS_SECRET`. **Keep it a secret**.',
+                'description' => 'The secret that signs and verifies the callbacks Distribution signing jobs send to Appwrite. Empty derives a per-plane key from `_APP_JOBS_SECRET`. **Keep it a secret**.',
                 'introduction' => '2.8.0',
                 'default' => '',
                 'required' => false,

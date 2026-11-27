@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Artifact
 use Appwrite\Distribution\Artifact\Source;
 use Appwrite\Distribution\Artifact\Status;
 use Appwrite\Distribution\Artifact\Type;
+use Appwrite\Distribution\Builds;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\DistributionBuild as DistributionBuildMessage;
 use Appwrite\Event\Message\DistributionBuildAction;
@@ -201,7 +202,7 @@ class Create extends Action
 
                 $deviceForDistribution->prepare($path, $metadata['content_type'] ?? '', $chunks, $metadata);
 
-                $retention = (int) System::getEnv('_APP_DISTRIBUTION_ARTIFACT_RETENTION', '7776000');
+                $retention = (int) System::getEnv('_APP_DISTRIBUTION_ARTIFACT_RETENTION', Builds::ARTIFACT_RETENTION);
 
                 $dbForProject->createDocument('distributionArtifacts', new Document([
                     '$id' => $artifactId,

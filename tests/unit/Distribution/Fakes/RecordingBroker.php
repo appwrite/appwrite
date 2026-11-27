@@ -8,18 +8,29 @@ use Utopia\Queue\Publisher\Synchronous;
 use Utopia\Queue\Queue;
 
 /**
- * A broker that accepts every message and keeps none.
+ * A broker that records every message and accepts or refuses all of them.
  */
-final class SilentBroker implements Synchronous
+final class RecordingBroker implements Synchronous
 {
+    /** @var list<array<string, mixed>> */
+    public array $messages = [];
+
+    public function __construct(private bool $accepts = true)
+    {
+    }
+
     public function publish(Queue $queue, array $payload): bool
     {
-        return true;
+        $this->messages[] = $payload;
+
+        return $this->accepts;
     }
 
     public function publishMany(Queue $queue, array $payloads): bool
     {
-        return true;
+        \array_push($this->messages, ...$payloads);
+
+        return $this->accepts;
     }
 
     public function retry(Queue $queue, ?int $limit = null): void

@@ -6,17 +6,36 @@ namespace Tests\Unit\Distribution\Fakes;
 
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Limit;
+use Utopia\Database\Exception\NotFound;
+use Utopia\Database\Exception\Query as QueryException;
+use Utopia\Database\PermissionType;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Query\Method;
 
 /**
- * A Database holding documents in memory, matching `equal` and `notEqual` queries.
+ * A Database holding documents in memory, matching `equal`, `notEqual` and `isNull` queries. Like the
+ * real query validator, it refuses a `notEqual` with more than one value.
  */
 final class MemoryDatabase extends Database
 {
     /** @var array<string, array<string, Document>> */
     public array $documents = [];
+
+    /**
+     * Runs once, right after the next increment and before it returns, to interleave a concurrent writer.
+     *
+     * @var (\Closure(): void)|null
+     */
+    public ?\Closure $onIncrease = null;
+
+    /**
+     * Runs once, right before the next bulk update matches, to interleave a concurrent writer.
+     *
+     * @var (\Closure(): void)|null
+     */
+    public ?\Closure $onUpdates = null;
 
     private int $sequence = 0;
 
@@ -70,12 +89,52 @@ final class MemoryDatabase extends Database
         int $batchSize = self::BATCH_SIZE,
         ?callable $onNext = null,
     ): int {
+        $hook = $this->onUpdates;
+        $this->onUpdates = null;
+        $hook?->__invoke();
+
         $matches = $this->matching($collection, $queries);
         foreach ($matches as $document) {
             $this->updateDocument($collection, $document->getId(), $updates);
         }
 
         return \count($matches);
+    }
+
+    #[\Override]
+    public function increaseDocumentAttribute(string $collection, string $id, string $attribute, int|float|string $value = 1, int|float|string|null $max = null): Document
+    {
+        $document = $this->getDocument($collection, $id);
+        if ($document->isEmpty()) {
+            throw new NotFound('Document not found');
+        }
+
+        $increased = ($document->getAttribute($attribute) ?? 0) + $value;
+        if ($max !== null && $increased > $max) {
+            throw new Limit('Attribute value exceeds maximum limit: ' . $max);
+        }
+
+        $document = $this->updateDocument($collection, $id, new Document([
+            $attribute => $increased,
+        ]));
+
+        $hook = $this->onIncrease;
+        $this->onIncrease = null;
+        $hook?->__invoke();
+
+        return $document;
+    }
+
+    #[\Override]
+    public function find(string $collection, array $queries = [], PermissionType $forPermission = PermissionType::Read): array
+    {
+        return $this->matching($collection, $queries);
+    }
+
+    #[\Override]
+    public function count(string $collection, array $queries = [], ?int $max = null): int
+    {
+        return \count($this->matching($collection, $queries));
     }
 
     #[\Override]
@@ -90,11 +149,18 @@ final class MemoryDatabase extends Database
      */
     private function matching(string $collection, array $queries): array
     {
+        foreach ($queries as $query) {
+            if ($query->getMethod() === Method::NotEqual && \count($query->getValues()) !== 1) {
+                throw new QueryException('Invalid query: NotEqual queries require exactly one value.');
+            }
+        }
+
         return \array_values(\array_filter(
             $this->documents[$collection] ?? [],
             fn (Document $document): bool => \array_all($queries, fn (Query $query): bool => match ($query->getMethod()) {
                 Method::Equal => \in_array($document->getAttribute($query->getAttribute()), $query->getValues(), true),
-                Method::NotEqual => $document->getAttribute($query->getAttribute()) !== $query->getValue(),
+                Method::NotEqual => !\in_array($document->getAttribute($query->getAttribute()), $query->getValues(), true),
+                Method::IsNull => $document->getAttribute($query->getAttribute()) === null,
                 default => true,
             }),
         ));

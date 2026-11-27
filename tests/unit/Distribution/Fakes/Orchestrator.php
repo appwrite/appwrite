@@ -7,6 +7,7 @@ namespace Tests\Unit\Distribution\Fakes;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Utopia\Client\Exception\TimeoutException;
 use Utopia\Psr7\Response;
 use Utopia\Psr7\Stream;
 
@@ -16,6 +17,11 @@ use Utopia\Psr7\Stream;
  */
 final class Orchestrator implements ClientInterface
 {
+    /**
+     * A status that answers nothing: the client times out.
+     */
+    public const int TIMEOUT = 0;
+
     /** @var list<RequestInterface> */
     public array $requests = [];
 
@@ -30,6 +36,10 @@ final class Orchestrator implements ClientInterface
     {
         $this->requests[] = $request;
         $status = $this->statuses[$request->getMethod()] ?? 200;
+
+        if ($status === self::TIMEOUT) {
+            throw new TimeoutException($request, 'Request timed out');
+        }
 
         if ($status >= 300) {
             return new Response($status, body: new Stream((string) \json_encode(['error' => 'Request failed with status ' . $status])));

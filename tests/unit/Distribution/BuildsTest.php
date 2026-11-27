@@ -4,13 +4,19 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Distribution;
 
+use Appwrite\Auth\JobsSecret;
+use Appwrite\Distribution\Build\Status as BuildStatus;
 use Appwrite\Distribution\Builds;
+use Appwrite\Distribution\Schedules;
 use Appwrite\Distribution\Signing;
 use Appwrite\Event\Publisher\DistributionBuild as DistributionBuildPublisher;
+use Appwrite\Extend\Exception;
 use OpenRuntimes\Orchestrator\Exception\ApiException;
 use OpenRuntimes\Orchestrator\Jobs;
 use OpenRuntimes\Orchestrator\Model\Artifact\DownloadArtifact;
 use OpenRuntimes\Orchestrator\Model\Artifact\ReadArtifact;
+use OpenRuntimes\Orchestrator\Model\Artifact\UnarchiveArtifact;
+use OpenRuntimes\Orchestrator\Model\Artifact\UploadArtifact;
 use OpenRuntimes\Orchestrator\Model\Callback;
 use OpenRuntimes\Orchestrator\Model\Volume;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -22,10 +28,13 @@ use Tests\Unit\Distribution\Fakes\MemoryBuilds;
 use Tests\Unit\Distribution\Fakes\MemoryDatabase;
 use Tests\Unit\Distribution\Fakes\MemoryDevice;
 use Tests\Unit\Distribution\Fakes\Orchestrator;
+use Tests\Unit\Distribution\Fakes\RecordingBroker;
+use Tests\Unit\Distribution\Fakes\RecordingGit;
 use Tests\Unit\Distribution\Fakes\RemoteBuilds;
-use Tests\Unit\Distribution\Fakes\SilentBroker;
+use Tests\Unit\Distribution\Fakes\ScriptedChecks;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Queue\Queue;
@@ -41,6 +50,13 @@ final class BuildsTest extends TestCase
         '_APP_JOBS_ENDPOINT' => 'http://appwrite',
         '_APP_DISTRIBUTION_VOLUME' => 'appwrite-distribution',
     ];
+
+    private const array DEFAULTS = [
+        '_APP_DISTRIBUTION_BUILD_SPECIFICATION' => 'd-4vcpu-8gb',
+        '_APP_DISTRIBUTION_BUILD_TIMEOUT' => '3600',
+    ];
+
+    private const string CREDENTIAL = 'store-credential-never-in-a-job';
 
     /**
      * Unset for every test, so objectUrl() resolves the bucket from the device alone.
@@ -76,9 +92,11 @@ final class BuildsTest extends TestCase
 
     private Cache $cache;
 
+    private RecordingBroker $broker;
+
     protected function setUp(): void
     {
-        foreach (self::SECRETS as $name => $value) {
+        foreach ([...self::SECRETS, ...self::DEFAULTS] as $name => $value) {
             $this->environment[$name] = \getenv($name);
             \putenv("{$name}={$value}");
         }
@@ -94,6 +112,7 @@ final class BuildsTest extends TestCase
         $this->dbForProject = new MemoryDatabase();
         $this->dbForPlatform = new MemoryDatabase();
         $this->cache = new Cache(new AgingMemory());
+        $this->broker = new RecordingBroker();
     }
 
     protected function tearDown(): void
@@ -165,6 +184,13 @@ final class BuildsTest extends TestCase
         yield 'sign interrupted' => [Builds::STAGE_SIGN, 130, Builds::ERROR_JOB_FAILED];
         yield 'sign terminated' => [Builds::STAGE_SIGN, 143, Builds::ERROR_JOB_FAILED];
         yield 'sign killed' => [Builds::STAGE_SIGN, 137, Builds::ERROR_JOB_FAILED];
+        yield 'build success' => [Builds::STAGE_BUILD, 0, null];
+        yield 'build failed' => [Builds::STAGE_BUILD, 1, Builds::ERROR_BUILD_FAILED];
+        yield 'build invalid' => [Builds::STAGE_BUILD, 2, Builds::ERROR_BUILD_INVALID];
+        yield 'build already signed' => [Builds::STAGE_BUILD, 3, Builds::ERROR_BUILD_ALREADY_SIGNED];
+        yield 'build keystore required' => [Builds::STAGE_BUILD, 4, Builds::ERROR_BUILD_KEYSTORE_REQUIRED];
+        yield 'build killed' => [Builds::STAGE_BUILD, 137, Builds::ERROR_BUILD_FAILED];
+        yield 'build terminated' => [Builds::STAGE_BUILD, 143, Builds::ERROR_BUILD_FAILED];
     }
 
     #[DataProvider('exits')]
@@ -178,13 +204,17 @@ final class BuildsTest extends TestCase
      */
     public static function secrets(): \Iterator
     {
+        $build = \hash_hmac('sha256', 'distribution:build', 'jobs-api-secret');
+        $signing = \hash_hmac('sha256', 'distribution:signing', 'jobs-api-secret');
+
         yield 'build uses the build key' => [Builds::STAGE_BUILD, 'build-callback-secret', 'signing-callback-secret', 'build-callback-secret'];
-        yield 'build falls back to the jobs secret' => [Builds::STAGE_BUILD, '', 'signing-callback-secret', 'jobs-api-secret'];
+        yield 'build derives from the jobs secret' => [Builds::STAGE_BUILD, '', 'signing-callback-secret', $build];
         yield 'sign uses the signing key' => [Builds::STAGE_SIGN, 'build-callback-secret', 'signing-callback-secret', 'signing-callback-secret'];
         yield 'inspect uses the signing key' => [Builds::STAGE_INSPECT, 'build-callback-secret', 'signing-callback-secret', 'signing-callback-secret'];
-        yield 'sign never falls back to the build key' => [Builds::STAGE_SIGN, 'build-callback-secret', '', 'jobs-api-secret'];
-        yield 'inspect never falls back to the build key' => [Builds::STAGE_INSPECT, 'build-callback-secret', '', 'jobs-api-secret'];
-        yield 'sign falls back to the jobs secret' => [Builds::STAGE_SIGN, '', '', 'jobs-api-secret'];
+        yield 'sign never falls back to the build key' => [Builds::STAGE_SIGN, 'build-callback-secret', '', $signing];
+        yield 'inspect never falls back to the build key' => [Builds::STAGE_INSPECT, 'build-callback-secret', '', $signing];
+        yield 'sign derives from the jobs secret' => [Builds::STAGE_SIGN, '', '', $signing];
+        yield 'inspect derives from the jobs secret' => [Builds::STAGE_INSPECT, '', '', $signing];
     }
 
     #[DataProvider('secrets')]
@@ -196,6 +226,62 @@ final class BuildsTest extends TestCase
         $this->assertSame($expected, Builds::secret($stage));
     }
 
+    public function testFallbackKeysAreSeparatedByPlane(): void
+    {
+        \putenv('_APP_DISTRIBUTION_CALLBACK_SECRET=');
+        \putenv('_APP_DISTRIBUTION_SIGNING_CALLBACK_SECRET=');
+
+        $build = Builds::secret(Builds::STAGE_BUILD);
+        $signing = Builds::secret(Builds::STAGE_SIGN);
+
+        $this->assertNotSame($build, $signing);
+        $this->assertNotSame('jobs-api-secret', $build);
+        $this->assertNotSame('jobs-api-secret', $signing);
+        $this->assertSame($signing, Builds::secret(Builds::STAGE_INSPECT));
+    }
+
+    public function testBuildKeyCannotForgeSigningEvent(): void
+    {
+        \putenv('_APP_DISTRIBUTION_CALLBACK_SECRET=');
+        \putenv('_APP_DISTRIBUTION_SIGNING_CALLBACK_SECRET=');
+
+        foreach ([Builds::STAGE_SIGN, Builds::STAGE_INSPECT] as $stage) {
+            $body = (string) \json_encode([
+                'type' => 'orchestrator.job.exit',
+                'data' => ['exitCode' => 0, 'meta' => ['projectId' => 'project1', 'stage' => $stage]],
+            ]);
+            $forged = 'sha256=' . \hash_hmac('sha256', $body, Builds::secret(Builds::STAGE_BUILD));
+
+            $this->assertTrue(JobsSecret::verify($body, $forged, Builds::secret(Builds::STAGE_BUILD)), $stage);
+            $this->assertFalse(JobsSecret::verify($body, $forged, Builds::secret($stage)), $stage);
+        }
+    }
+
+    /**
+     * @return \Iterator<string, array{string}>
+     */
+    public static function insecureJobsSecrets(): \Iterator
+    {
+        yield 'empty' => [''];
+        yield 'placeholder' => [JobsSecret::PLACEHOLDER];
+    }
+
+    #[DataProvider('insecureJobsSecrets')]
+    public function testInsecureJobsSecretIsNeverDerived(string $jobsSecret): void
+    {
+        \putenv("_APP_JOBS_SECRET={$jobsSecret}");
+        \putenv('_APP_DISTRIBUTION_CALLBACK_SECRET=');
+        \putenv('_APP_DISTRIBUTION_SIGNING_CALLBACK_SECRET=');
+        $body = '{"type":"orchestrator.job.exit"}';
+
+        foreach ([Builds::STAGE_BUILD, Builds::STAGE_INSPECT, Builds::STAGE_SIGN] as $stage) {
+            $secret = Builds::secret($stage);
+
+            $this->assertSame($jobsSecret, $secret, $stage);
+            $this->assertFalse(JobsSecret::verify($body, 'sha256=' . \hash_hmac('sha256', $body, $secret), $secret), $stage);
+        }
+    }
+
     public function testSigningJobNeverSignsWithTheBuildKey(): void
     {
         \putenv('_APP_DISTRIBUTION_SIGNING_CALLBACK_SECRET=');
@@ -204,7 +290,8 @@ final class BuildsTest extends TestCase
 
         $callback = $payload['callback'];
         $this->assertInstanceOf(Callback::class, $callback);
-        $this->assertSame('jobs-api-secret', $callback->key);
+        $this->assertSame(\hash_hmac('sha256', 'distribution:signing', 'jobs-api-secret'), $callback->key);
+        $this->assertNotSame(Builds::secret(Builds::STAGE_BUILD), $callback->key);
     }
 
     /**
@@ -618,6 +705,1043 @@ final class BuildsTest extends TestCase
         $this->assertSame([], $this->signingPlane->requests);
     }
 
+    public function testActiveAndTerminalPartitionTheBuildStatuses(): void
+    {
+        $statuses = [...Builds::ACTIVE, ...Builds::TERMINAL];
+        \sort($statuses);
+        $values = BuildStatus::values();
+        \sort($values);
+
+        $this->assertSame($values, $statuses);
+        $this->assertSame([], \array_intersect(Builds::ACTIVE, Builds::TERMINAL));
+
+        foreach (Builds::ACTIVE as $status) {
+            $this->assertTrue(BuildStatus::from($status)->canTransition(BuildStatus::Canceled), "{$status} can be canceled");
+        }
+
+        foreach (Builds::TERMINAL as $status) {
+            $this->assertFalse(BuildStatus::from($status)->canTransition(BuildStatus::Canceled), "{$status} cannot be canceled");
+        }
+    }
+
+    public function testOutputAndCacheNameTheBuildFiles(): void
+    {
+        $cache = Builds::cache($this->project, 'target1', 'appwrite/distribution-android:1.0.0');
+
+        $this->assertSame('builds/build1', Builds::output('build1'));
+        $this->assertSame($cache, Builds::cache($this->project, 'target1', 'appwrite/distribution-android:1.0.0'));
+        $this->assertStringStartsWith('cache/', $cache);
+        $this->assertStringEndsWith('/cache.sqfs', $cache);
+        $this->assertSame(48, \strlen(\substr($cache, \strlen('cache/'), -\strlen('/cache.sqfs'))));
+        $this->assertNotSame($cache, Builds::cache($this->project, 'target2', 'appwrite/distribution-android:1.0.0'));
+        $this->assertNotSame($cache, Builds::cache($this->project, 'target1', 'appwrite/distribution-android:1.0.1'));
+        $this->assertNotSame($cache, Builds::cache(new Document(['$id' => 'project2']), 'target1', 'appwrite/distribution-android:1.0.0'));
+    }
+
+    public function testEveryBuildErrorHasAMessage(): void
+    {
+        foreach ([
+            Builds::ERROR_BUILD_FAILED,
+            Builds::ERROR_BUILD_TIMEOUT,
+            Builds::ERROR_BUILD_OUT_OF_MEMORY,
+            Builds::ERROR_BUILD_LOST,
+            Builds::ERROR_BUILD_INVALID,
+            Builds::ERROR_BUILD_ALREADY_SIGNED,
+            Builds::ERROR_BUILD_KEYSTORE_REQUIRED,
+            Builds::ERROR_BUILD_CANCELED,
+            Builds::ERROR_BUILD_OUTPUT_INVALID,
+            Builds::ERROR_BUILD_SOURCE_FAILED,
+            Builds::ERROR_RUNNER_UNAVAILABLE,
+            Builds::ERROR_VARIABLE_INVALID,
+        ] as $code) {
+            $this->assertNotSame('', Builds::message($code), "{$code} needs a message.");
+        }
+
+        $this->assertSame('', Builds::message('unknown'));
+        $this->assertSame('Your build script requires a keystore file; guard it or remove the signing config.', Builds::message(Builds::ERROR_BUILD_KEYSTORE_REQUIRED));
+    }
+
+    /**
+     * @return \Iterator<string, array{?int, int, int}>
+     */
+    public static function runtimes(): \Iterator
+    {
+        yield 'never started' => [null, 3600, 0];
+        yield 'running' => [100, 3600, 100];
+        yield 'past the timeout' => [5000, 3600, 3600];
+    }
+
+    #[DataProvider('runtimes')]
+    public function testRuntimeIsCappedByTheTimeout(?int $age, int $timeout, int $expected): void
+    {
+        $build = new Document([
+            'startedAt' => $age === null ? null : DateTime::addSeconds(new \DateTime(), -$age),
+            'timeout' => $timeout,
+        ]);
+
+        $this->assertEqualsWithDelta($expected, Builds::runtime($build), 1);
+    }
+
+    public function testBuildPayloadCarriesNoKeystoreStoreCredentialOrApiKey(): void
+    {
+        $this->dbForProject->createDocument('distributionSigningIdentities', new Document(['$id' => 'identity1', 'platform' => 'android', 'secret' => self::IDENTITY]));
+        $this->dbForProject->createDocument('distributionConnections', new Document(['$id' => 'connection1', 'provider' => 'google', 'credentials' => ['serviceAccount' => self::CREDENTIAL]]));
+        $app = $this->storedApp();
+        $this->storedTarget(['signingIdentityId' => 'identity1', 'connectionId' => 'connection1']);
+        $this->variable('project', '', 'PROJECT_TOKEN', 'project-value');
+        $this->variable('distributionApps', $app->getSequence(), 'APP_TOKEN', 'app-value');
+
+        foreach ([LocalBuilds::class, MemoryBuilds::class] as $class) {
+            $this->buildPlane = new Orchestrator();
+            $this->dbForProject->documents['distributionBuilds'] = [];
+            $this->builds($class)->dispatch($this->storedBuild(), new RecordingGit());
+
+            $job = $this->buildPlane->job();
+            $this->assertNotSame([], $job);
+            $this->assertSame([], $this->signingPlane->requests);
+
+            $exposed = (string) \json_encode([$job['environment'], $job['meta'], $job['artifacts'], $job['volumes'] ?? [], $job['command']]);
+            foreach ([...\array_values(self::IDENTITY), self::CREDENTIAL, ...\array_values(self::SECRETS)] as $secret) {
+                if (\str_starts_with($secret, 'http') || $secret === 'appwrite-distribution') {
+                    continue;
+                }
+                $this->assertStringNotContainsString($secret, $exposed, "{$class} leaks {$secret}.");
+            }
+            $this->assertStringNotContainsString(\base64_decode(self::IDENTITY['keystore']), $exposed);
+            $this->assertStringNotContainsString('API_KEY', $exposed);
+            $this->assertSame([], \array_filter(\array_keys($job['environment']), fn (string $key): bool => \str_starts_with($key, 'APPWRITE_') && \str_ends_with($key, '_API_KEY')));
+            $this->assertSame('project-value', $job['environment']['PROJECT_TOKEN']);
+            $this->assertSame('app-value', $job['environment']['APP_TOKEN']);
+        }
+    }
+
+    public function testBuildPayloadUsesTheBuildPlaneKeyAndLogs(): void
+    {
+        $payload = $this->builds(LocalBuilds::class)->buildPayload($this->app(), $this->buildTarget(), $this->build());
+
+        $callback = $payload['callback'];
+        $this->assertInstanceOf(Callback::class, $callback);
+        $this->assertSame('build-callback-secret', $callback->key);
+        $this->assertSame('http://appwrite/v1/distribution/events?project=project1', $callback->url);
+        $this->assertSame([
+            'orchestrator.job.start',
+            'orchestrator.job.log',
+            'orchestrator.job.exit',
+            'orchestrator.job.complete',
+            'orchestrator.job.artifact',
+        ], $callback->toArray()['events']);
+
+        $this->assertSame(Config::getParam('distribution')['images']['android'], $payload['image']);
+        $this->assertSame('/usr/local/distribution/build.sh', $payload['command']);
+        $this->assertSame('/mnt/code', $payload['workspace']);
+        $this->assertSame(3600 + Builds::SETUP, $payload['timeoutSeconds']);
+        $this->assertEqualsWithDelta(4.0, $payload['cpu'], PHP_FLOAT_EPSILON);
+        $this->assertSame(8192, $payload['memory']);
+        $this->assertSame([
+            'projectId' => 'project1',
+            'appId' => 'app1',
+            'buildId' => 'build1',
+            'stage' => 'build',
+            'attempt' => '1',
+        ], $payload['meta']);
+    }
+
+    public function testBuildPayloadExtractsTheWholeArchive(): void
+    {
+        $payload = $this->builds(LocalBuilds::class)->buildPayload($this->app(), $this->buildTarget(), $this->build());
+
+        [$source, $extract] = $payload['artifacts'];
+        $this->assertInstanceOf(DownloadArtifact::class, $source);
+        $this->assertSame('source', $source->id);
+        $this->assertSame(RecordingGit::ARCHIVE, $source->in);
+        $this->assertSame('source.tar.gz', $source->out);
+        $this->assertSame(RecordingGit::HEADERS, $source->headers);
+        $this->assertSame(Builds::TRANSFER_TIMEOUT, $source->timeoutSeconds);
+
+        $this->assertInstanceOf(UnarchiveArtifact::class, $extract);
+        $this->assertSame('extract', $extract->id);
+        $this->assertSame('source.tar.gz', $extract->in);
+        $this->assertSame('source', $extract->out);
+        $this->assertTrue($extract->strip);
+        $this->assertNull($extract->subdir);
+        $this->assertSame('source', $extract->depends);
+
+        $this->assertResult($payload['artifacts'][\array_key_last($payload['artifacts'])]);
+    }
+
+    public function testSystemVariablesOverrideUserVariables(): void
+    {
+        $payload = $this->builds(LocalBuilds::class)->buildPayload($this->app(), $this->buildTarget(), $this->build(), [
+            'MY_VARIABLE' => 'mine',
+            'DISTRIBUTION_IDENTIFIER' => 'io.attacker.app',
+            'DISTRIBUTION_VERSION_CODE' => '1',
+            'APPWRITE_VCS_COMMIT_HASH' => 'forged',
+            'CI' => 'false',
+        ]);
+
+        $this->assertSame([
+            'MY_VARIABLE' => 'mine',
+            'DISTRIBUTION_IDENTIFIER' => 'io.appwrite.example',
+            'DISTRIBUTION_VERSION_CODE' => '7',
+            'APPWRITE_VCS_COMMIT_HASH' => 'abc1234def5678',
+            'CI' => 'true',
+            'DISTRIBUTION_PLATFORM' => 'android',
+            'DISTRIBUTION_FRAMEWORK' => 'flutter',
+            'DISTRIBUTION_ROOT_DIRECTORY' => 'mobile',
+            'DISTRIBUTION_INSTALL_COMMAND' => 'flutter pub get',
+            'DISTRIBUTION_BUILD_COMMAND' => 'flutter build appbundle --release --flavor production',
+            'DISTRIBUTION_OUTPUT_PATH' => 'build/app/outputs/bundle/release/*.aab',
+            'DISTRIBUTION_CONFIGURATION' => '{"flavor":"production"}',
+            'DISTRIBUTION_VERSION_NAME' => '1.2.3',
+            'DISTRIBUTION_BUILD_ID' => 'build1',
+            'DISTRIBUTION_OUTPUT_DIR' => '/mnt/output',
+            'DISTRIBUTION_CACHE_ARTIFACT' => '/mnt/cache/cache.sqfs',
+            'APPWRITE_VCS_REPOSITORY_ID' => '42',
+            'APPWRITE_VCS_REPOSITORY_NAME' => 'mobile-app',
+            'APPWRITE_VCS_REPOSITORY_OWNER' => 'appwrite',
+            'APPWRITE_VCS_REPOSITORY_URL' => 'http://gitea:3000/appwrite/mobile-app',
+            'APPWRITE_VCS_REPOSITORY_BRANCH' => 'main',
+            'APPWRITE_VCS_REPOSITORY_BRANCH_URL' => 'http://gitea:3000/appwrite/mobile-app/src/branch/main',
+            'APPWRITE_VCS_COMMIT_MESSAGE' => "Ship it\n\nWith a body",
+            'APPWRITE_VCS_COMMIT_URL' => 'http://gitea:3000/appwrite/mobile-app/commit/abc1234def5678',
+            'APPWRITE_VCS_COMMIT_AUTHOR_NAME' => 'Ada',
+            'APPWRITE_VCS_COMMIT_AUTHOR_URL' => 'http://gitea:3000/ada',
+            'APPWRITE_VCS_ROOT_DIRECTORY' => 'mobile',
+        ], $payload['environment']);
+    }
+
+    public function testBuildPayloadDefaultsAnEmptyRootDirectoryAndConfiguration(): void
+    {
+        $payload = $this->builds(LocalBuilds::class)->buildPayload(
+            $this->app(['framework' => 'android']),
+            new Document([...$this->buildTarget()->getArrayCopy(), 'buildCommand' => '', 'configuration' => null]),
+            new Document([...$this->build()->getArrayCopy(), 'providerRootDirectory' => '']),
+        );
+
+        $this->assertSame('.', $payload['environment']['DISTRIBUTION_ROOT_DIRECTORY']);
+        $this->assertSame('{}', $payload['environment']['DISTRIBUTION_CONFIGURATION']);
+        $this->assertSame('', $payload['environment']['DISTRIBUTION_INSTALL_COMMAND']);
+        $this->assertSame('./gradlew --no-daemon bundleRelease', $payload['environment']['DISTRIBUTION_BUILD_COMMAND']);
+        $this->assertSame('app/build/outputs/bundle/release/*.aab', $payload['environment']['DISTRIBUTION_OUTPUT_PATH']);
+    }
+
+    public function testLocalBuildMountsOnlyItsOutputAndTheCache(): void
+    {
+        $image = Config::getParam('distribution')['images']['android'];
+        $key = \dirname(Builds::cache($this->project, 'target1', $image));
+        $payload = $this->builds(LocalBuilds::class)->buildPayload($this->app(), $this->buildTarget(), $this->build());
+
+        [$output, $cache] = $payload['volumes'];
+        $this->assertCount(2, $payload['volumes']);
+        $this->assertInstanceOf(Volume::class, $output);
+        $this->assertSame('appwrite-distribution', $output->source);
+        $this->assertSame('/mnt/output', $output->path);
+        $this->assertSame('app-project1/builds/build1', $output->subPath);
+        $this->assertFalse($output->readonly);
+        $this->assertInstanceOf(Volume::class, $cache);
+        $this->assertSame('/mnt/cache', $cache->path);
+        $this->assertSame("app-project1/{$key}", $cache->subPath, 'only this target\'s cache key is mounted');
+        $this->assertNotSame("app-project1/{$key}", 'app-project1/' . \dirname(Builds::cache($this->project, 'target2', $image)), 'another target of the project mounts another directory');
+        $this->assertFalse($cache->readonly);
+        $this->assertSame('/mnt/cache/cache.sqfs', $payload['environment']['DISTRIBUTION_CACHE_ARTIFACT']);
+
+        foreach ($payload['volumes'] as $volume) {
+            $this->assertNotSame('app-project1', $volume->subPath);
+            $this->assertNotSame('app-project1/cache', $volume->subPath);
+            $this->assertStringStartsNotWith('/mnt/code', $volume->path);
+        }
+
+        $this->assertDirectoryExists(LocalBuilds::root('project1') . '/builds/build1');
+        $this->assertDirectoryExists(LocalBuilds::root('project1') . "/{$key}");
+        $this->assertSame(['source', 'extract', 'result'], $this->ids($payload));
+    }
+
+    public function testRemoteBuildPullsTheCacheOnlyWhenItExists(): void
+    {
+        $cache = Builds::cache($this->project, 'target1', Config::getParam('distribution')['images']['android']);
+        $builds = $this->builds(MemoryBuilds::class);
+
+        $cold = $builds->buildPayload($this->app(), $this->buildTarget(), $this->build());
+        $this->assertSame([], $cold['volumes']);
+        $this->assertSame(['source', 'extract', 'output', 'resultCopy', 'mapping', 'cache', 'result'], $this->ids($cold));
+        $this->assertSame($cache, $cold['environment']['DISTRIBUTION_CACHE_ARTIFACT']);
+        $this->assertArrayNotHasKey('DISTRIBUTION_OUTPUT_DIR', $cold['environment']);
+
+        $uploads = $this->artifacts($cold, UploadArtifact::class);
+        $this->assertSame([
+            'output' => ['output/app-unsigned.aab', 's3://distribution/app-project1/builds/build1/app-unsigned.aab', Builds::TRANSFER_TIMEOUT],
+            'resultCopy' => ['output/result.json', 's3://distribution/app-project1/builds/build1/result.json', Builds::SIGNING_TIMEOUT],
+            'mapping' => ['output/mapping.txt', 's3://distribution/app-project1/builds/build1/mapping.txt', Builds::SIGNING_TIMEOUT],
+            'cache' => [$cache, "s3://distribution/app-project1/{$cache}", Builds::TRANSFER_TIMEOUT],
+        ], \array_map(fn (UploadArtifact $upload): array => [$upload->in, $upload->out, $upload->timeoutSeconds], $uploads));
+        foreach ($uploads as $upload) {
+            $this->assertSame('job', $upload->depends);
+        }
+
+        MemoryDevice::$objects["distribution/app-project1/{$cache}"] = 'squashfs';
+        $warm = $builds->buildPayload($this->app(), $this->buildTarget(), $this->build());
+
+        $this->assertSame(['source', 'extract', 'cachePull', 'output', 'resultCopy', 'mapping', 'cache', 'result'], $this->ids($warm));
+        $pull = $warm['artifacts'][2];
+        $this->assertInstanceOf(DownloadArtifact::class, $pull);
+        $this->assertSame("s3://distribution/app-project1/{$cache}", $pull->in);
+        $this->assertSame($cache, $pull->out);
+        $this->assertSame(Builds::TRANSFER_TIMEOUT, $pull->timeoutSeconds);
+        $this->assertNull($pull->depends);
+    }
+
+    public function testBuildPostBudgetCoversEveryPostJobUpload(): void
+    {
+        $payload = $this->builds(MemoryBuilds::class)->buildPayload($this->app(), $this->buildTarget(), $this->build());
+        $uploads = \array_filter($this->artifacts($payload, UploadArtifact::class), fn (UploadArtifact $upload): bool => $upload->depends === 'job');
+
+        $this->assertCount(4, $uploads);
+        $this->assertSame(Builds::BUILD_POST_BUDGET, \array_sum(\array_map(fn (UploadArtifact $upload): int => (int) $upload->timeoutSeconds * 4, $uploads)));
+    }
+
+    public function testBuildJobIdChangesWithTheAttempt(): void
+    {
+        $builds = $this->builds(LocalBuilds::class);
+        $first = $builds->buildPayload($this->app(), $this->buildTarget(), $this->build());
+        $second = $builds->buildPayload($this->app(), $this->buildTarget(), new Document([...$this->build()->getArrayCopy(), 'attempt' => 2]));
+
+        $this->assertSame(Builds::id($this->project, $this->build(), Builds::STAGE_BUILD, 1), $first['id']);
+        $this->assertSame(Builds::id($this->project, $this->build(), Builds::STAGE_BUILD, 2), $second['id']);
+        $this->assertNotSame($first['id'], $second['id']);
+        $this->assertSame('2', $second['meta']['attempt']);
+    }
+
+    public function testDispatchRecordsJobScheduleAndProcessing(): void
+    {
+        $this->storedApp();
+        $this->storedTarget();
+        $git = new RecordingGit();
+
+        $dispatched = $this->builds(LocalBuilds::class)->dispatch($this->storedBuild(), $git);
+
+        $job = $this->buildPlane->job();
+        $this->assertSame(Builds::id($this->project, $dispatched, Builds::STAGE_BUILD, 1), $job['id']);
+        $this->assertSame([], $this->signingPlane->requests);
+        $this->assertSame([['appwrite', 'mobile-app', 'abc1234def5678']], $git->archives);
+        $this->assertSame('processing', $dispatched->getAttribute('status'));
+        $this->assertSame('build', $dispatched->getAttribute('stage'));
+        $this->assertSame($job['id'], $dispatched->getAttribute('jobId'));
+        $this->assertSame('orchestrator', $dispatched->getAttribute('runner'));
+        $this->assertNotEmpty($dispatched->getAttribute('dispatchedAt'));
+        $this->assertSame(['image' => Config::getParam('distribution')['images']['android'], 'cache' => false], $dispatched->getAttribute('toolchain'));
+
+        $schedule = $this->schedule('build1');
+        $this->assertTrue($schedule->getAttribute('active'));
+        $this->assertSame(1, $schedule->getAttribute('interval'));
+        $this->assertSame(SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_BUILD, $schedule->getAttribute('resourceType'));
+    }
+
+    public function testDispatchRecordsALocalCacheHit(): void
+    {
+        $this->storedApp();
+        $this->storedTarget();
+        $cache = LocalBuilds::root('project1') . '/' . Builds::cache($this->project, 'target1', Config::getParam('distribution')['images']['android']);
+        @\mkdir(\dirname($cache), 0o777, true);
+        \file_put_contents($cache, 'squashfs');
+
+        try {
+            $dispatched = $this->builds(LocalBuilds::class)->dispatch($this->storedBuild(), new RecordingGit());
+        } finally {
+            \unlink($cache);
+        }
+
+        $this->assertTrue($dispatched->getAttribute('toolchain')['cache']);
+    }
+
+    public function testDispatchPassesProjectThenAppVariables(): void
+    {
+        $app = $this->storedApp();
+        $this->storedTarget();
+        $this->variable('project', '', 'SHARED', 'project');
+        $this->variable('project', '', 'PROJECT_ONLY', 'project');
+        $this->variable('distributionApps', $app->getSequence(), 'SHARED', 'app');
+        $this->variable('distributionApps', 'another', 'OTHER_APP', 'other');
+
+        $this->builds(LocalBuilds::class)->dispatch($this->storedBuild(), new RecordingGit());
+
+        $environment = $this->buildPlane->job()['environment'];
+        $this->assertSame('app', $environment['SHARED']);
+        $this->assertSame('project', $environment['PROJECT_ONLY']);
+        $this->assertArrayNotHasKey('OTHER_APP', $environment);
+    }
+
+    public function testDispatchTreatsAConflictAsSubmitted(): void
+    {
+        $this->buildPlane = new Orchestrator(['POST' => 409]);
+        $this->storedApp();
+        $this->storedTarget();
+
+        $dispatched = $this->builds(LocalBuilds::class)->dispatch($this->storedBuild(), new RecordingGit());
+
+        $this->assertSame('processing', $dispatched->getAttribute('status'));
+        $this->assertTrue($this->schedule('build1')->getAttribute('active'));
+    }
+
+    public function testDispatchLeavesATimedOutBuildWaiting(): void
+    {
+        $this->buildPlane = new Orchestrator(['POST' => Orchestrator::TIMEOUT]);
+        $this->storedApp();
+        $this->storedTarget();
+
+        $dispatched = $this->builds(LocalBuilds::class)->dispatch($this->storedBuild(), new RecordingGit());
+
+        $this->assertSame('waiting', $dispatched->getAttribute('status'));
+        $this->assertSame(Builds::id($this->project, $dispatched, Builds::STAGE_BUILD, 1), $dispatched->getAttribute('jobId'));
+        $this->assertTrue($this->schedule('build1')->getAttribute('active'));
+    }
+
+    /**
+     * @return \Iterator<string, array{string, bool}>
+     */
+    public static function undispatchable(): \Iterator
+    {
+        yield 'started' => ['processing', true];
+        yield 'building' => ['building', true];
+        yield 'signing' => ['signing', true];
+        yield 'ready' => ['ready', false];
+        yield 'failed' => ['failed', false];
+        yield 'canceled' => ['canceled', false];
+    }
+
+    #[DataProvider('undispatchable')]
+    public function testDispatchSkipsAStartedOrTerminalBuild(string $status, bool $started): void
+    {
+        $this->storedApp();
+        $this->storedTarget();
+        $build = $this->storedBuild(['status' => $status, 'startedAt' => $started ? DateTime::now() : null]);
+
+        $skipped = $this->builds(LocalBuilds::class)->dispatch($build, new RecordingGit());
+
+        $this->assertSame([], $this->buildPlane->requests);
+        $this->assertSame($status, $skipped->getAttribute('status'));
+        $this->assertTrue($this->schedule('build1')->isEmpty());
+    }
+
+    public function testDispatchSubmitsAProcessingBuildThatNeverStartedAgain(): void
+    {
+        $this->storedApp();
+        $this->storedTarget();
+
+        $dispatched = $this->builds(LocalBuilds::class)->dispatch($this->storedBuild(['status' => 'processing']), new RecordingGit());
+
+        $this->assertSame(Builds::id($this->project, $dispatched, Builds::STAGE_BUILD, 1), $this->buildPlane->job()['id']);
+        $this->assertSame('processing', $dispatched->getAttribute('status'));
+    }
+
+    /**
+     * @return \Iterator<string, array{string}>
+     */
+    public static function resubmittable(): \Iterator
+    {
+        yield 'timed out while waiting' => ['waiting'];
+        yield 'processing but never started' => ['processing'];
+    }
+
+    #[DataProvider('resubmittable')]
+    public function testDispatchKeepsTheDispatchTimeOfTheSameAttempt(string $status): void
+    {
+        $this->storedApp();
+        $this->storedTarget();
+        $dispatchedAt = DateTime::addSeconds(new \DateTime(), -7200);
+        $jobId = Builds::id($this->project, $this->build(), Builds::STAGE_BUILD, 1);
+
+        $dispatched = $this->builds(LocalBuilds::class)->dispatch($this->storedBuild(['status' => $status, 'jobId' => $jobId, 'dispatchedAt' => $dispatchedAt]), new RecordingGit());
+
+        $this->assertSame($jobId, $this->buildPlane->job()['id']);
+        $this->assertSame($jobId, $dispatched->getAttribute('jobId'));
+        $this->assertSame($dispatchedAt, $dispatched->getAttribute('dispatchedAt'), 'a re-submit of the same job keeps counting toward the deadline');
+    }
+
+    public function testRedispatchResetsTheDispatchTime(): void
+    {
+        $this->storedApp();
+        $this->storedTarget();
+        $dispatchedAt = DateTime::addSeconds(new \DateTime(), -7200);
+        $builds = $this->builds(LocalBuilds::class);
+        $builds->dispatch($this->storedBuild(['jobId' => Builds::id($this->project, $this->build(), Builds::STAGE_BUILD, 1), 'dispatchedAt' => $dispatchedAt]), new RecordingGit());
+
+        $redispatched = $builds->redispatch($this->started(), new RecordingGit());
+
+        $this->assertSame(2, $redispatched->getAttribute('attempt'));
+        $this->assertNotSame($dispatchedAt, $redispatched->getAttribute('dispatchedAt'), 'a new attempt starts its own deadline');
+        $this->assertGreaterThan(\strtotime($dispatchedAt), \strtotime((string) $redispatched->getAttribute('dispatchedAt')));
+    }
+
+    public function testDispatchFailsAnInvalidVariableKey(): void
+    {
+        $app = $this->storedApp();
+        $this->storedTarget();
+        $this->variable('distributionApps', $app->getSequence(), 'BAD KEY', 'value');
+
+        $failed = $this->builds(LocalBuilds::class)->dispatch($this->storedBuild(), new RecordingGit());
+
+        $this->assertSame([], $this->buildPlane->requests);
+        $this->assertSame('failed', $failed->getAttribute('status'));
+        $this->assertSame(Builds::ERROR_VARIABLE_INVALID, $failed->getAttribute('errorCode'));
+        $this->assertStringContainsString('"BAD KEY"', (string) $failed->getAttribute('errorMessage'));
+    }
+
+    public function testDispatchFailsAnIosBuildWithoutRunners(): void
+    {
+        $this->storedApp();
+        $this->storedTarget(['platform' => 'ios']);
+
+        $failed = $this->builds(LocalBuilds::class)->dispatch($this->storedBuild(['platform' => 'ios', 'runner' => 'pool']), new RecordingGit());
+
+        $this->assertSame([], $this->buildPlane->requests);
+        $this->assertSame('failed', $failed->getAttribute('status'));
+        $this->assertSame('distribution_runner_unavailable', $failed->getAttribute('errorCode'));
+        $this->assertSame(0, $failed->getAttribute('duration'));
+        $this->assertNotEmpty($failed->getAttribute('endedAt'));
+    }
+
+    public function testDispatchAfterACacheFailurePullsNoCache(): void
+    {
+        $this->storedApp();
+        $this->storedTarget();
+        $cache = Builds::cache($this->project, 'target1', Config::getParam('distribution')['images']['android']);
+        MemoryDevice::$objects["distribution/app-project1/{$cache}"] = 'squashfs';
+
+        $dispatched = $this->builds(MemoryBuilds::class)->dispatch($this->storedBuild(['toolchain' => ['cacheFailed' => true]]), new RecordingGit());
+
+        $job = $this->buildPlane->job();
+        $this->assertSame(['source', 'extract', 'output', 'resultCopy', 'mapping', 'result'], \array_column($job['artifacts'], 'id'));
+        $this->assertArrayNotHasKey('DISTRIBUTION_CACHE_ARTIFACT', $job['environment']);
+        $this->assertFalse($dispatched->getAttribute('toolchain')['cache']);
+        $this->assertTrue($dispatched->getAttribute('toolchain')['cacheFailed']);
+    }
+
+    public function testLocalDispatchAfterACacheFailureMountsNoCache(): void
+    {
+        $this->storedApp();
+        $this->storedTarget();
+
+        $dispatched = $this->builds(LocalBuilds::class)->dispatch($this->storedBuild(['toolchain' => ['cacheFailed' => true]]), new RecordingGit());
+
+        $job = $this->buildPlane->job();
+        $this->assertSame(['/mnt/output'], \array_column($job['volumes'], 'path'));
+        $this->assertArrayNotHasKey('DISTRIBUTION_CACHE_ARTIFACT', $job['environment']);
+        $this->assertSame('/mnt/output', $job['environment']['DISTRIBUTION_OUTPUT_DIR']);
+        $this->assertTrue($dispatched->getAttribute('toolchain')['cacheFailed']);
+    }
+
+    /**
+     * @return \Iterator<string, array{string, string}>
+     */
+    public static function failures(): \Iterator
+    {
+        yield 'missing app' => ['app', Builds::ERROR_BUILD_FAILED];
+        yield 'missing target' => ['target', Builds::ERROR_BUILD_FAILED];
+        yield 'invalid variable key' => ['variable', Builds::ERROR_VARIABLE_INVALID];
+        yield 'unavailable source' => ['source', Builds::ERROR_BUILD_SOURCE_FAILED];
+        yield 'refused job' => ['job', Builds::ERROR_BUILD_FAILED];
+        yield 'ios' => ['ios', Builds::ERROR_RUNNER_UNAVAILABLE];
+        yield 'failed enqueue' => ['enqueue', Builds::ERROR_BUILD_FAILED];
+    }
+
+    #[DataProvider('failures')]
+    public function testEveryFailurePathLeavesAScheduleRow(string $failure, string $code): void
+    {
+        $app = $this->storedApp();
+        $target = $this->storedTarget(['platform' => $failure === 'ios' ? 'ios' : 'android']);
+        if ($failure === 'variable') {
+            $this->variable('distributionApps', $app->getSequence(), '1INVALID', 'value');
+        }
+        if ($failure === 'job') {
+            $this->buildPlane = new Orchestrator(['POST' => 500]);
+        }
+        if ($failure === 'enqueue') {
+            $this->broker = new RecordingBroker(accepts: false);
+        }
+
+        try {
+            if ($failure === 'enqueue') {
+                $this->builds(LocalBuilds::class)->create($app, $target, $this->request(), new RecordingGit(), 'appwrite', 'mobile-app');
+                $this->fail('A build that cannot be queued must surface.');
+            }
+
+            $this->builds(LocalBuilds::class)->dispatch($this->storedBuild([
+                'appId' => $failure === 'app' ? 'missing' : 'app1',
+                'targetId' => $failure === 'target' ? 'missing' : 'target1',
+                'platform' => $failure === 'ios' ? 'ios' : 'android',
+            ]), new RecordingGit(failure: $failure === 'source' ? new \RuntimeException('Archive refused') : null));
+
+            if ($failure === 'job') {
+                $this->fail('A refused job must surface.');
+            }
+        } catch (ApiException $error) {
+            $this->assertSame('job', $failure);
+            $this->assertSame(500, $error->statusCode);
+        } catch (Exception $error) {
+            $this->assertSame('enqueue', $failure);
+            $this->assertSame(Exception::GENERAL_SERVER_ERROR, $error->getType());
+        }
+
+        $build = $this->dbForProject->getDocument('distributionBuilds', 'build1');
+        $this->assertSame('failed', $build->getAttribute('status'));
+        $this->assertSame($code, $build->getAttribute('errorCode'));
+        $this->assertNotSame('', (string) $build->getAttribute('errorMessage'));
+        $this->assertNotEmpty($build->getAttribute('endedAt'));
+        $this->assertSame(0, $build->getAttribute('duration'));
+        $this->assertTrue($this->schedule('build1')->getAttribute('active'));
+    }
+
+    public function testCreateEnqueuesDispatch(): void
+    {
+        $app = $this->storedApp();
+        $target = $this->storedTarget();
+        $git = new RecordingGit();
+
+        $build = $this->builds(LocalBuilds::class)->create($app, $target, $this->request(), $git, 'appwrite', 'mobile-app');
+
+        $this->assertCount(1, $this->broker->messages);
+        $this->assertSame('dispatch', $this->broker->messages[0]['action']);
+        $this->assertSame('build1', $this->broker->messages[0]['id']);
+        $this->assertSame('project1', $this->broker->messages[0]['project']['$id']);
+
+        $this->assertSame('waiting', $build->getAttribute('status'));
+        $this->assertSame(1, $build->getAttribute('attempt'));
+        $this->assertSame('orchestrator', $build->getAttribute('runner'));
+        $this->assertSame('manual', $build->getAttribute('type'));
+        $this->assertSame('app1', $build->getAttribute('appId'));
+        $this->assertSame($app->getSequence(), $build->getAttribute('appInternalId'));
+        $this->assertSame('target1', $build->getAttribute('targetId'));
+        $this->assertSame($target->getSequence(), $build->getAttribute('targetInternalId'));
+        $this->assertSame('android', $build->getAttribute('platform'));
+        $this->assertSame('appwrite', $build->getAttribute('providerRepositoryOwner'));
+        $this->assertSame('mobile-app', $build->getAttribute('providerRepositoryName'));
+        $this->assertSame('http://gitea:3000/appwrite/mobile-app', $build->getAttribute('providerRepositoryUrl'));
+        $this->assertSame('mobile', $build->getAttribute('providerRootDirectory'));
+        $this->assertSame('d-4vcpu-8gb', $build->getAttribute('specification'));
+        $this->assertSame(4, $build->getAttribute('cpus'));
+        $this->assertSame(8192, $build->getAttribute('memory'));
+        $this->assertSame(3600, $build->getAttribute('timeout'));
+        $this->assertSame(1, $build->getAttribute('versionCode'));
+
+        $stored = $this->dbForProject->getDocument('distributionApps', 'app1');
+        $this->assertSame('build1', $stored->getAttribute('latestBuildId'));
+        $this->assertSame($build->getSequence(), $stored->getAttribute('latestBuildInternalId'));
+        $this->assertSame('waiting', $stored->getAttribute('latestBuildStatus'));
+        $this->assertNotEmpty($stored->getAttribute('latestBuildCreatedAt'));
+
+        $this->assertSame('queued', $git->checks[0]['state']);
+        $this->assertTrue($this->schedule('build1')->getAttribute('active'));
+        $this->assertSame([], $this->buildPlane->requests);
+    }
+
+    public function testCreateAllocatesTheNextVersionCode(): void
+    {
+        $builds = $this->builds(LocalBuilds::class);
+        $app = $this->storedApp();
+        $target = $this->storedTarget();
+
+        $first = $builds->create($app, $target, $this->request('build1'), new RecordingGit(), 'appwrite', 'mobile-app');
+        $second = $builds->create($app, $target, $this->request('build2'), new RecordingGit(), 'appwrite', 'mobile-app');
+
+        $this->assertSame(1, $first->getAttribute('versionCode'));
+        $this->assertSame(2, $second->getAttribute('versionCode'));
+        $this->assertSame(2, $this->dbForProject->getDocument('distributionTargets', 'target1')->getAttribute('versionCode'));
+    }
+
+    public function testCreateRaisesTheCodeAboveTheLatest(): void
+    {
+        $build = $this->builds(LocalBuilds::class)->create($this->storedApp(), $this->storedTarget(['versionCode' => 3]), $this->request(), new RecordingGit(), 'appwrite', 'mobile-app', latest: 41);
+
+        $this->assertSame(42, $build->getAttribute('versionCode'));
+        $this->assertSame(42, $this->dbForProject->getDocument('distributionTargets', 'target1')->getAttribute('versionCode'));
+    }
+
+    /**
+     * @return \Iterator<string, array{?int}>
+     */
+    public static function latests(): \Iterator
+    {
+        yield 'no latest' => [null];
+        yield 'a lower latest' => [5];
+    }
+
+    #[DataProvider('latests')]
+    public function testCreateWithoutALatestKeepsTheCounter(?int $latest): void
+    {
+        $build = $this->builds(LocalBuilds::class)->create($this->storedApp(), $this->storedTarget(['versionCode' => 10]), $this->request(), new RecordingGit(), 'appwrite', 'mobile-app', latest: $latest);
+
+        $this->assertSame(11, $build->getAttribute('versionCode'));
+        $this->assertSame(11, $this->dbForProject->getDocument('distributionTargets', 'target1')->getAttribute('versionCode'));
+    }
+
+    public function testInterleavedCreatesNeverShareAVersionCode(): void
+    {
+        $builds = $this->builds(LocalBuilds::class);
+        $app = $this->storedApp();
+        $target = $this->storedTarget();
+        $second = null;
+        $this->dbForProject->onIncrease = function () use ($builds, $app, $target, &$second): void {
+            $second = $builds->create($app, $target, $this->request('build2'), new RecordingGit(), 'appwrite', 'mobile-app', latest: 5);
+        };
+
+        $first = $builds->create($app, $target, $this->request('build1'), new RecordingGit(), 'appwrite', 'mobile-app', latest: 5);
+
+        $this->assertInstanceOf(Document::class, $second);
+        $codes = [$first->getAttribute('versionCode'), $second->getAttribute('versionCode')];
+        $this->assertNotSame($codes[0], $codes[1]);
+        $this->assertGreaterThan(5, $codes[0]);
+        $this->assertGreaterThan(5, $codes[1]);
+        $this->assertSame(\max($codes), $this->dbForProject->getDocument('distributionTargets', 'target1')->getAttribute('versionCode'));
+    }
+
+    /**
+     * @return \Iterator<string, array{int, ?int}>
+     */
+    public static function exhausted(): \Iterator
+    {
+        yield 'the counter' => [Builds::MAX_VERSION_CODE, null];
+        yield 'the latest' => [10, Builds::MAX_VERSION_CODE];
+    }
+
+    #[DataProvider('exhausted')]
+    public function testCreateRefusesACodeAboveTheMaximum(int $counter, ?int $latest): void
+    {
+        try {
+            $this->builds(LocalBuilds::class)->create($this->storedApp(), $this->storedTarget(['versionCode' => $counter]), $this->request(), new RecordingGit(), 'appwrite', 'mobile-app', latest: $latest);
+            $this->fail('A version code above the maximum must be refused.');
+        } catch (Exception $error) {
+            $this->assertSame(Exception::DISTRIBUTION_VERSION_INVALID, $error->getType());
+        }
+
+        $this->assertSame([], $this->dbForProject->documents['distributionBuilds'] ?? []);
+    }
+
+    public function testCreateAllocatesTheMaximumCode(): void
+    {
+        $build = $this->builds(LocalBuilds::class)->create($this->storedApp(), $this->storedTarget(['versionCode' => 5]), $this->request(), new RecordingGit(), 'appwrite', 'mobile-app', latest: Builds::MAX_VERSION_CODE - 1);
+
+        $this->assertSame(Builds::MAX_VERSION_CODE, $build->getAttribute('versionCode'));
+    }
+
+    public function testManualStrategyRequiresACode(): void
+    {
+        $builds = $this->builds(LocalBuilds::class);
+        $app = $this->storedApp();
+        $target = $this->storedTarget(['versionStrategy' => 'manual', 'versionCode' => 9]);
+
+        try {
+            $builds->create($app, $target, $this->request(), new RecordingGit(), 'appwrite', 'mobile-app');
+            $this->fail('A manual build without a version code must be refused.');
+        } catch (Exception $error) {
+            $this->assertSame(Exception::DISTRIBUTION_VERSION_INVALID, $error->getType());
+        }
+        $this->assertSame([], $this->dbForProject->documents['distributionBuilds'] ?? []);
+
+        $build = $builds->create($app, $target, $this->request('build1', ['versionCode' => 99]), new RecordingGit(), 'appwrite', 'mobile-app', latest: 500);
+
+        $this->assertSame(99, $build->getAttribute('versionCode'));
+        $this->assertSame(9, $this->dbForProject->getDocument('distributionTargets', 'target1')->getAttribute('versionCode'));
+    }
+
+    public function testCreateStoresAnIosCodeAsTheBuildNumber(): void
+    {
+        $build = $this->builds(LocalBuilds::class)->create($this->storedApp(), $this->storedTarget(['platform' => 'ios', 'identifier' => 'io.appwrite.example']), $this->request(), new RecordingGit(), 'appwrite', 'mobile-app');
+
+        $this->assertSame('1', $build->getAttribute('buildNumber'));
+        $this->assertNull($build->getAttribute('versionCode'));
+        $this->assertSame('pool', $build->getAttribute('runner'));
+    }
+
+    /**
+     * @return \Iterator<string, array{array<string, mixed>, array<string, mixed>, array<string, bool>, bool, string}>
+     */
+    public static function refusals(): \Iterator
+    {
+        yield 'disabled app' => [['enabled' => false], [], [], true, Exception::GENERAL_ARGUMENT_INVALID];
+        yield 'no installation' => [['installationId' => ''], [], [], true, Exception::DISTRIBUTION_REPOSITORY_MISSING];
+        yield 'no repository' => [['providerRepositoryId' => ''], [], [], true, Exception::DISTRIBUTION_REPOSITORY_MISSING];
+        yield 'provider without archives' => [[], [], [], false, Exception::DISTRIBUTION_REPOSITORY_MISSING];
+        yield 'rest disabled' => [[], [], ['rest' => false], true, Exception::GENERAL_API_DISABLED];
+        yield 'unknown specification' => [[], ['specification' => 's-1vcpu-512mb'], [], true, Exception::GENERAL_ARGUMENT_INVALID];
+    }
+
+    /**
+     * @param array<string, mixed> $app
+     * @param array<string, mixed> $target
+     * @param array<string, bool> $apis
+     */
+    #[DataProvider('refusals')]
+    public function testCreateRefusesDisabledAppMissingRepositoryAndRestDisabled(array $app, array $target, array $apis, bool $archives, string $type): void
+    {
+        $this->project = new Document([...$this->project->getArrayCopy(), 'apis' => $apis]);
+
+        try {
+            $this->builds(LocalBuilds::class)->create($this->storedApp($app), $this->storedTarget($target), $this->request(), new RecordingGit(archived: $archives), 'appwrite', 'mobile-app');
+            $this->fail('The build must be refused.');
+        } catch (Exception $error) {
+            $this->assertSame($type, $error->getType());
+        }
+
+        $this->assertSame([], $this->dbForProject->documents['distributionBuilds'] ?? []);
+        $this->assertSame(0, $this->dbForProject->getDocument('distributionTargets', 'target1')->getAttribute('versionCode'));
+        $this->assertSame([], $this->broker->messages);
+    }
+
+    public function testCreateLogsPreflightIssuesWithoutFailing(): void
+    {
+        $checks = new ScriptedChecks([
+            $this->issue('error', 'connection_missing', 'The target has no store connection.', 'Connect a Google Play account.'),
+            $this->issue('warning', 'signing_identity_missing', 'The target has no signing identity.', 'Upload a keystore.'),
+        ]);
+
+        $build = $this->builds(LocalBuilds::class)->create($this->storedApp(), $this->storedTarget(), $this->request(), new RecordingGit(), 'appwrite', 'mobile-app', checks: $checks);
+
+        $logs = \array_values($this->dbForProject->documents['distributionLogs']);
+        $this->assertSame([
+            ['build1', $build->getSequence(), 0, 0, 'source', "error connection_missing: The target has no store connection. Connect a Google Play account.\n"],
+            ['build1', $build->getSequence(), 0, 1, 'source', "warning signing_identity_missing: The target has no signing identity. Upload a keystore.\n"],
+        ], \array_map(fn (Document $log): array => [
+            $log->getAttribute('buildId'),
+            $log->getAttribute('buildInternalId'),
+            $log->getAttribute('sequence'),
+            $log->getAttribute('chunk'),
+            $log->getAttribute('stage'),
+            $log->getAttribute('content'),
+        ], $logs));
+        $this->assertSame(\array_sum(\array_map(fn (Document $log): int => \strlen($log->getAttribute('content')), $logs)), $build->getAttribute('logsSize'));
+        $this->assertSame([['internal', false]], $checks->calls->getArrayCopy());
+        $this->assertSame('waiting', $build->getAttribute('status'));
+        $this->assertCount(1, $this->broker->messages);
+    }
+
+    public function testCreateIgnoresAFailingPreflight(): void
+    {
+        $checks = new ScriptedChecks(failure: new Exception(Exception::DISTRIBUTION_TRACK_INVALID));
+
+        $build = $this->builds(LocalBuilds::class)->create($this->storedApp(), $this->storedTarget(), $this->request(), new RecordingGit(), 'appwrite', 'mobile-app', checks: $checks);
+
+        $this->assertSame([], $this->dbForProject->documents['distributionLogs'] ?? []);
+        $this->assertSame(0, $build->getAttribute('logsSize'));
+        $this->assertSame('waiting', $build->getAttribute('status'));
+        $this->assertCount(1, $this->broker->messages);
+    }
+
+    public function testPreflightOnATargetWithoutATrackUsesTheProviderDefault(): void
+    {
+        $checks = new ScriptedChecks([$this->issue('warning', 'track_unknown', 'No track is set.', 'Choose a track.')]);
+
+        $this->builds(LocalBuilds::class)->create($this->storedApp(), $this->storedTarget(['track' => '']), $this->request(), new RecordingGit(), 'appwrite', 'mobile-app', checks: $checks);
+
+        $this->assertSame([[Config::getParam('distribution')['tracks']['google'][0], false]], $checks->calls->getArrayCopy());
+        $this->assertSame('internal', $checks->calls[0][0]);
+        $this->assertCount(1, $this->dbForProject->documents['distributionLogs']);
+    }
+
+    /**
+     * @return \Iterator<string, array{array<string, mixed>, array<string, mixed>}>
+     */
+    public static function silences(): \Iterator
+    {
+        yield 'statuses off' => [['providerStatuses' => false], []];
+        yield 'silent mode' => [['providerSilentMode' => true], []];
+        yield 'no commit' => [[], ['providerCommitHash' => '']];
+    }
+
+    /**
+     * @param array<string, mixed> $app
+     * @param array<string, mixed> $build
+     */
+    #[DataProvider('silences')]
+    public function testReportIsSilentWhenStatusesOffOrSilentMode(array $app, array $build): void
+    {
+        $git = new RecordingGit();
+
+        $this->assertTrue($this->builds(LocalBuilds::class)->report($this->app($app), new Document([...$this->build()->getArrayCopy(), ...$build]), $git));
+        $this->assertSame([], $git->checks);
+    }
+
+    /**
+     * @return \Iterator<string, array{string, string, string}>
+     */
+    public static function states(): \Iterator
+    {
+        yield 'waiting' => ['waiting', 'queued', 'Queued...'];
+        yield 'processing' => ['processing', 'pending', 'Building...'];
+        yield 'building' => ['building', 'pending', 'Building...'];
+        yield 'signing' => ['signing', 'pending', 'Signing...'];
+        yield 'ready' => ['ready', 'success', 'Build succeeded.'];
+        yield 'failed' => ['failed', 'failure', 'Build failed.'];
+        yield 'canceled' => ['canceled', 'cancelled', 'Build canceled.'];
+    }
+
+    #[DataProvider('states')]
+    public function testReportMapsStatusToCheckState(string $status, string $state, string $title): void
+    {
+        $git = new RecordingGit();
+
+        $this->assertTrue($this->builds(LocalBuilds::class)->report($this->app(), new Document([...$this->build()->getArrayCopy(), 'status' => $status]), $git));
+
+        $this->assertCount(1, $git->checks);
+        $this->assertSame($state, $git->checks[0]['state']);
+        $this->assertSame($title, $git->checks[0]['title']);
+    }
+
+    public function testReportNamesTheCheckByAppAndPlatform(): void
+    {
+        $git = new RecordingGit();
+        $this->project = new Document([...$this->project->getArrayCopy(), 'name' => 'Mobile']);
+
+        $this->builds(LocalBuilds::class)->report($this->app(), new Document([...$this->build()->getArrayCopy(), 'status' => 'ready', 'duration' => 98]), $git);
+
+        $this->assertSame([
+            'owner' => 'appwrite',
+            'repository' => 'mobile-app',
+            'commit' => 'abc1234def5678',
+            'state' => 'success',
+            'name' => 'Example',
+            'title' => 'Build succeeded.',
+            'summary' => "- Commit abc1234 on main: Ship it\n- Platform android\n- Version 1.2.3 (7)\n- Built in 98s",
+            'detailsUrl' => 'https://console.example.test/projects/project1/distribution/app1/builds/build1',
+            'suite' => 'Mobile',
+            'key' => 'project1/distributionApps/app1/android',
+            'suiteKey' => 'project1',
+        ], $git->checks[0]);
+    }
+
+    public function testReportReturnsFalseWhenTheProviderFails(): void
+    {
+        $this->assertFalse($this->builds(LocalBuilds::class)->report($this->app(), $this->build(), new RecordingGit(failure: new \RuntimeException('Provider unavailable'))));
+    }
+
+    public function testAbortCancelsTheBuildJob(): void
+    {
+        $build = $this->storedBuild([
+            'status' => 'building',
+            'stage' => 'build',
+            'jobId' => 'dist-build-job',
+            'startedAt' => DateTime::addSeconds(new \DateTime(), -100),
+        ]);
+
+        $canceled = $this->builds(LocalBuilds::class)->abort($build);
+
+        $this->assertSame('canceled', $canceled->getAttribute('status'));
+        $this->assertSame(Builds::ERROR_BUILD_CANCELED, $canceled->getAttribute('errorCode'));
+        $this->assertSame(Builds::message(Builds::ERROR_BUILD_CANCELED), $canceled->getAttribute('errorMessage'));
+        $this->assertNotEmpty($canceled->getAttribute('endedAt'));
+        $this->assertEqualsWithDelta(100, $canceled->getAttribute('duration'), 1);
+
+        $this->assertCount(1, $this->buildPlane->requests);
+        $this->assertSame('DELETE', $this->buildPlane->requests[0]->getMethod());
+        $this->assertSame('/v1/jobs/dist-build-job', $this->buildPlane->requests[0]->getUri()->getPath());
+        $this->assertSame([], $this->signingPlane->requests);
+        $this->assertSame([['reconcile', 'build1']], \array_map(fn (array $message): array => [$message['action'], $message['id']], $this->broker->messages));
+    }
+
+    public function testAbortCancelsTheJobAndTheInFlightArtifact(): void
+    {
+        $artifact = $this->stored(new Document([
+            ...$this->artifact('aab')->getArrayCopy(),
+            'source' => 'build',
+            'buildId' => 'build1',
+            'metadata' => ['job' => ['stage' => Builds::STAGE_SIGN, 'id' => 'dist-sign-job', 'attempt' => 1]],
+        ]));
+        (new Schedules($this->dbForPlatform))->write($this->project, SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_BUILD, $artifact, 1);
+        $build = $this->storedBuild(['status' => 'signing', 'stage' => 'sign', 'jobId' => 'dist-build-job', 'artifactId' => 'artifact1', 'duration' => 240]);
+
+        $canceled = $this->builds(LocalBuilds::class)->abort($build);
+
+        $this->assertSame('canceled', $canceled->getAttribute('status'));
+        $this->assertSame(240, $canceled->getAttribute('duration'));
+
+        $stored = $this->dbForProject->getDocument('distributionArtifacts', 'artifact1');
+        $this->assertSame('invalid', $stored->getAttribute('status'));
+        $this->assertSame(Builds::ERROR_BUILD_CANCELED, $stored->getAttribute('errorCode'));
+        $this->assertFalse($this->schedule('artifact1')->getAttribute('active'));
+
+        $this->assertSame([], $this->buildPlane->requests);
+        $this->assertCount(1, $this->signingPlane->requests);
+        $this->assertSame('/v1/jobs/dist-sign-job', $this->signingPlane->requests[0]->getUri()->getPath());
+    }
+
+    public function testAbortKeepsTheScheduleRow(): void
+    {
+        $build = $this->storedBuild(['status' => 'building', 'stage' => 'build', 'jobId' => 'dist-build-job']);
+        (new Schedules($this->dbForPlatform))->write($this->project, SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_BUILD, $build, 1);
+        $this->buildPlane = new Orchestrator(['DELETE' => 500]);
+
+        $canceled = $this->builds(LocalBuilds::class)->abort($build);
+
+        $this->assertSame('canceled', $canceled->getAttribute('status'));
+        $this->assertTrue($this->schedule('build1')->getAttribute('active'));
+        $this->assertSame(1, $this->schedule('build1')->getAttribute('interval'));
+    }
+
+    public function testAbortLeavesATerminalBuild(): void
+    {
+        $build = $this->storedBuild(['status' => 'ready', 'stage' => 'sign', 'jobId' => 'dist-build-job', 'artifactId' => 'artifact1']);
+
+        $result = $this->builds(LocalBuilds::class)->abort($build);
+
+        $this->assertSame('ready', $result->getAttribute('status'));
+        $this->assertSame([], $this->buildPlane->requests);
+        $this->assertSame([], $this->signingPlane->requests);
+        $this->assertSame([], $this->broker->messages);
+        $this->assertTrue($this->schedule('build1')->isEmpty());
+    }
+
+    public function testAbortReturnsTheBuildAConcurrentWriteConcluded(): void
+    {
+        $build = $this->storedBuild(['status' => 'signing', 'stage' => 'sign', 'jobId' => 'dist-build-job', 'artifactId' => 'artifact1']);
+        $this->dbForProject->onUpdates = function (): void {
+            $this->dbForProject->updateDocument('distributionBuilds', 'build1', new Document([
+                'status' => 'ready',
+                'endedAt' => DateTime::now(),
+            ]));
+        };
+
+        $result = $this->builds(LocalBuilds::class)->abort($build);
+
+        $this->assertSame('ready', $result->getAttribute('status'));
+        $this->assertNotEmpty($result->getAttribute('endedAt'));
+        $this->assertSame([], $this->buildPlane->requests);
+        $this->assertSame([], $this->signingPlane->requests);
+        $this->assertSame([], $this->broker->messages);
+    }
+
+    public function testRedispatchStopsAfterThreeAttempts(): void
+    {
+        $this->storedApp();
+        $this->storedTarget();
+        $builds = $this->builds(LocalBuilds::class);
+        $build = $builds->dispatch($this->storedBuild(['toolchain' => ['cacheFailed' => true]]), new RecordingGit());
+
+        foreach ([2, 3] as $attempt) {
+            $build = $builds->redispatch($this->started(), new RecordingGit());
+
+            $this->assertSame($attempt, $build->getAttribute('attempt'));
+            $this->assertSame(Builds::id($this->project, $build, Builds::STAGE_BUILD, $attempt), $build->getAttribute('jobId'));
+            $this->assertSame('processing', $build->getAttribute('status'));
+            $this->assertNull($build->getAttribute('startedAt'));
+            $this->assertNull($build->getAttribute('redispatchAt'));
+            $this->assertTrue($build->getAttribute('toolchain')['cacheFailed']);
+        }
+
+        $spent = $builds->redispatch($this->started(), new RecordingGit());
+
+        $this->assertSame(3, $spent->getAttribute('attempt'));
+        $this->assertSame('building', $spent->getAttribute('status'));
+        $this->assertCount(3, $this->buildPlane->requests);
+    }
+
+    public function testRedispatchLeavesATerminalBuild(): void
+    {
+        $build = $this->builds(LocalBuilds::class)->redispatch($this->storedBuild(['status' => 'canceled', 'jobId' => 'dist-build-job']), new RecordingGit());
+
+        $this->assertSame('canceled', $build->getAttribute('status'));
+        $this->assertSame(1, $build->getAttribute('attempt'));
+        $this->assertSame([], $this->buildPlane->requests);
+    }
+
     /**
      * @template T of ExposedBuilds
      * @param class-string<T> $class
@@ -631,8 +1755,8 @@ final class BuildsTest extends TestCase
             $this->dbForProject,
             $this->dbForPlatform,
             $this->project,
-            ['apiHostname' => 'appwrite'],
-            new DistributionBuildPublisher(new SilentBroker(), new Queue('v1-distribution-builds')),
+            ['apiHostname' => 'appwrite', 'consoleUrl' => 'https://console.example.test'],
+            new DistributionBuildPublisher($this->broker, new Queue('v1-distribution-builds')),
             $this->cache,
         );
     }
@@ -729,5 +1853,187 @@ final class BuildsTest extends TestCase
             'orchestrator.job.complete',
             'orchestrator.job.artifact',
         ], $callback->toArray()['events']);
+    }
+
+    /**
+     * @param array<string, mixed> $attributes
+     */
+    private function app(array $attributes = []): Document
+    {
+        return new Document([
+            '$id' => 'app1',
+            '$sequence' => '1',
+            'name' => 'Example',
+            'enabled' => true,
+            'framework' => 'flutter',
+            'installationId' => 'installation1',
+            'providerRepositoryId' => '42',
+            'providerRootDirectory' => 'mobile',
+            'providerSilentMode' => false,
+            'providerStatuses' => true,
+            ...$attributes,
+        ]);
+    }
+
+    private function buildTarget(): Document
+    {
+        return new Document([
+            '$id' => 'target1',
+            'appId' => 'app1',
+            'platform' => 'android',
+            'identifier' => 'io.appwrite.example',
+            'versionStrategy' => 'automatic',
+            'versionCode' => 0,
+            'track' => 'internal',
+            'specification' => '',
+            'timeout' => 0,
+            'installCommand' => '',
+            'buildCommand' => 'flutter build appbundle --release --flavor production',
+            'outputPath' => '',
+            'configuration' => ['flavor' => 'production'],
+        ]);
+    }
+
+    private function build(): Document
+    {
+        return new Document([
+            '$id' => 'build1',
+            '$collection' => 'distributionBuilds',
+            'appId' => 'app1',
+            'targetId' => 'target1',
+            'platform' => 'android',
+            'type' => 'manual',
+            'status' => 'waiting',
+            'stage' => '',
+            'attempt' => 1,
+            'runner' => 'orchestrator',
+            'jobId' => '',
+            'cpus' => 4,
+            'memory' => 8192,
+            'timeout' => 3600,
+            'versionName' => '1.2.3',
+            'versionCode' => 7,
+            'providerRepositoryOwner' => 'appwrite',
+            'providerRepositoryName' => 'mobile-app',
+            'providerRepositoryUrl' => 'http://gitea:3000/appwrite/mobile-app',
+            'providerRootDirectory' => 'mobile',
+            'providerBranch' => 'main',
+            'providerBranchUrl' => 'http://gitea:3000/appwrite/mobile-app/src/branch/main',
+            'providerCommitHash' => 'abc1234def5678',
+            'providerCommitMessage' => "Ship it\n\nWith a body",
+            'providerCommitUrl' => 'http://gitea:3000/appwrite/mobile-app/commit/abc1234def5678',
+            'providerCommitAuthor' => 'Ada',
+            'providerCommitAuthorUrl' => 'http://gitea:3000/ada',
+        ]);
+    }
+
+    /**
+     * The build a route hands to create().
+     *
+     * @param array<string, mixed> $attributes
+     */
+    private function request(string $id = 'build1', array $attributes = []): Document
+    {
+        return new Document([
+            '$id' => $id,
+            'type' => 'manual',
+            'providerBranch' => 'main',
+            'providerCommitHash' => 'abc1234def5678',
+            'providerCommitMessage' => 'Ship it',
+            'versionName' => '1.2.3',
+            ...$attributes,
+        ]);
+    }
+
+    /**
+     * @param array<string, mixed> $attributes
+     */
+    private function storedApp(array $attributes = []): Document
+    {
+        $app = $this->app($attributes)->getArrayCopy();
+        unset($app['$sequence']);
+
+        return $this->dbForProject->createDocument('distributionApps', new Document($app));
+    }
+
+    /**
+     * @param array<string, mixed> $attributes
+     */
+    private function storedTarget(array $attributes = []): Document
+    {
+        return $this->dbForProject->createDocument('distributionTargets', new Document([...$this->buildTarget()->getArrayCopy(), ...$attributes]));
+    }
+
+    /**
+     * @param array<string, mixed> $attributes
+     */
+    private function storedBuild(array $attributes = []): Document
+    {
+        return $this->dbForProject->createDocument('distributionBuilds', new Document([...$this->build()->getArrayCopy(), ...$attributes]));
+    }
+
+    /**
+     * The stored build, as the start event of its job leaves it, with a re-dispatch asked for.
+     */
+    private function started(): Document
+    {
+        return $this->dbForProject->updateDocument('distributionBuilds', 'build1', new Document([
+            'status' => 'building',
+            'startedAt' => DateTime::now(),
+            'redispatchAt' => DateTime::now(),
+        ]));
+    }
+
+    private function variable(string $resourceType, string $resourceInternalId, string $key, string $value): void
+    {
+        $this->dbForProject->createDocument('variables', new Document([
+            'resourceType' => $resourceType,
+            'resourceInternalId' => $resourceInternalId,
+            'key' => $key,
+            'value' => $value,
+        ]));
+    }
+
+    /**
+     * @return array{code: string, severity: string, platform: string, field: string, message: string, remediation: string, manualActionRequired: bool}
+     */
+    private function issue(string $severity, string $code, string $message, string $remediation): array
+    {
+        return [
+            'code' => $code,
+            'severity' => $severity,
+            'platform' => 'android',
+            'field' => '',
+            'message' => $message,
+            'remediation' => $remediation,
+            'manualActionRequired' => false,
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     * @return list<string>
+     */
+    private function ids(array $payload): array
+    {
+        return \array_map(fn (DownloadArtifact|UploadArtifact|UnarchiveArtifact|ReadArtifact $artifact): string => $artifact->id, $payload['artifacts']);
+    }
+
+    /**
+     * @template T of object
+     * @param array<string, mixed> $payload
+     * @param class-string<T> $class
+     * @return array<string, T> By artifact id
+     */
+    private function artifacts(array $payload, string $class): array
+    {
+        $artifacts = [];
+        foreach ($payload['artifacts'] as $artifact) {
+            if ($artifact instanceof $class) {
+                $artifacts[$artifact->id] = $artifact;
+            }
+        }
+
+        return $artifacts;
     }
 }
