@@ -33,6 +33,7 @@ import {
   canCreateDistributionApp,
   canWriteDistributionApp,
   canShowDistributionCredentials,
+  canShowDistributionSubmissions,
 } from '@/lib/console-access-checks'
 import {
   deriveAccessFromRolesScopes,
@@ -343,4 +344,14 @@ export async function canAccessDistributionCredentials(
   if (!access) return true
   const features = getActiveProfileFeatures()
   return canShowDistributionCredentials(access, features)
+}
+
+export async function canAccessDistributionSubmissions(
+  queryClient: QueryClient,
+  projectId: string,
+): Promise<boolean> {
+  const access = await getProjectAccess(queryClient, projectId)
+  if (!access) return true
+  const features = getActiveProfileFeatures()
+  return canShowDistributionSubmissions(access, features)
 }

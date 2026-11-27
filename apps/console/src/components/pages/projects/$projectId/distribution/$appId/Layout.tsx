@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   Link,
   Outlet,
@@ -6,18 +6,23 @@ import {
   useParams,
   useRouterState,
 } from '@tanstack/react-router'
-import { AlertCircle, ArrowLeft, Package } from 'lucide-react'
+import { AlertCircle, ArrowLeft, Package, Rocket } from 'lucide-react'
 import { ServiceHeader, type Tab } from '../../shared/ServiceHeader'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { analyticsAttrs } from '@/lib/analytics-actions'
 import type { DistributionApp } from '@/lib/appwrite/distribution'
-import { canWriteDistributionApp } from '@/lib/console-access-checks'
+import {
+  canPublishDistributionApp,
+  canWriteDistributionApp,
+} from '@/lib/console-access-checks'
 import { useT } from '@/lib/i18n/translate'
 import {
   useDistributionApp,
+  useDistributionTargets,
   useOrganizationScopes,
   useProject,
 } from '@/lib/react-query/hooks'
@@ -25,8 +30,18 @@ import {
   getErrorMessage,
   isAppwriteHttpStatus,
 } from '@/lib/utils/error-formatting'
+import { DisabledReasonTooltip } from '../_components/DisabledReasonTooltip'
+import { Publish } from './_components/Publish'
 
-const APP_TABS = ['targets', 'settings', 'variables'] as const
+const APP_TABS = [
+  'overview',
+  'builds',
+  'releases',
+  'artifacts',
+  'targets',
+  'settings',
+  'variables',
+] as const
 
 type AppTabId = (typeof APP_TABS)[number]
 
@@ -64,12 +79,20 @@ export function Layout({ initialData }: LayoutProps = {}) {
   const { features } = useConsoleProfile()
   const { access } = useOrganizationScopes(project?.teamId)
   const showSettings = canWriteDistributionApp(access, features)
+  const canPublish = canPublishDistributionApp(access, features)
+  const {
+    targets,
+    isLoading: targetsLoading,
+    error: targetsError,
+  } = useDistributionTargets(projectId, appId)
+  const [publishOpen, setPublishOpen] = useState(false)
+  const [publishSession, setPublishSession] = useState(0)
 
   const activeTab = useMemo<AppTabId>(() => {
     const segments = pathname.split('/').filter(Boolean)
     const distributionIndex = segments.indexOf('distribution')
     const segment = segments[distributionIndex + 2]
-    return distributionIndex >= 0 && isAppTab(segment) ? segment : 'targets'
+    return distributionIndex >= 0 && isAppTab(segment) ? segment : 'overview'
   }, [pathname])
 
   useEffect(() => {
@@ -86,6 +109,30 @@ export function Layout({ initialData }: LayoutProps = {}) {
   const tabs = useMemo<Tab[]>(() => {
     const params = { projectId, appId }
     return [
+      {
+        id: 'overview',
+        label: t('Overview'),
+        to: '/projects/$projectId/distribution/$appId/overview',
+        params,
+      },
+      {
+        id: 'builds',
+        label: t('Builds'),
+        to: '/projects/$projectId/distribution/$appId/builds',
+        params,
+      },
+      {
+        id: 'releases',
+        label: t('Releases'),
+        to: '/projects/$projectId/distribution/$appId/releases',
+        params,
+      },
+      {
+        id: 'artifacts',
+        label: t('Artifacts'),
+        to: '/projects/$projectId/distribution/$appId/artifacts',
+        params,
+      },
       {
         id: 'targets',
         label: t('Targets'),
@@ -202,12 +249,70 @@ export function Layout({ initialData }: LayoutProps = {}) {
             ) : null}
           </span>
         }
+        titleRightContent={
+          app ? (
+            <PublishButton
+              disabled={!canPublish || targetsLoading || targets.length === 0}
+              disabledReason={
+                !canPublish
+                  ? t("You don't have permission to publish this app.")
+                  : targetsError
+                    ? t('Could not load the targets of this app.')
+                    : !targetsLoading && targets.length === 0
+                      ? t('Add a target to publish this app.')
+                      : undefined
+              }
+              onClick={() => {
+                setPublishSession((session) => session + 1)
+                setPublishOpen(true)
+              }}
+            />
+          ) : undefined
+        }
         tabs={tabs}
         activeTab={activeTab}
         fullWidthBorder
         hideToolbar
       />
       <Outlet />
+      {app && canPublish && targets.length > 0 ? (
+        <Publish
+          key={publishSession}
+          open={publishOpen}
+          onOpenChange={setPublishOpen}
+          projectId={projectId}
+          app={app}
+          targets={targets}
+        />
+      ) : null}
     </div>
+  )
+}
+
+function PublishButton({
+  disabled,
+  disabledReason,
+  onClick,
+}: {
+  disabled: boolean
+  disabledReason: string | undefined
+  onClick: () => void
+}) {
+  const t = useT()
+  return (
+    <DisabledReasonTooltip reason={disabledReason ?? null} side="bottom">
+      <Button
+        type="button"
+        variant="brandCta"
+        size="sm"
+        className="h-8 gap-1.5 text-[13px] font-medium"
+        onClick={onClick}
+        disabled={disabled}
+        {...analyticsAttrs('distribution-publish')}
+      >
+        <Rocket className="h-4 w-4 shrink-0" />
+        {t('Publish')}
+      </Button>
+    </DisabledReasonTooltip>
   )
 }

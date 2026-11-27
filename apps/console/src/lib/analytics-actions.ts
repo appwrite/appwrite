@@ -357,6 +357,22 @@ export const ANALYTICS_ACTIONS = {
   'import-data': 'Import Data Clicked',
   'create-marketplace-app': 'Create Marketplace App Clicked',
   'create-analytics-property': 'Create Analytics Property Clicked',
+
+  // Distribution
+  'distribution-create-build': 'Create Distribution Build Clicked',
+  'distribution-cancel-build': 'Cancel Distribution Build Clicked',
+  'distribution-retry-build': 'Retry Distribution Build Clicked',
+  'distribution-upload-artifact': 'Upload Distribution Artifact Clicked',
+  'distribution-download-artifact': 'Download Distribution Artifact Clicked',
+  'distribution-create-release': 'Create Distribution Release Clicked',
+  'distribution-create-submission': 'Create Distribution Submission Clicked',
+  'distribution-halt-submission': 'Halt Distribution Submission Clicked',
+  'distribution-resume-submission': 'Resume Distribution Submission Clicked',
+  'distribution-publish-submission': 'Publish Distribution Submission Clicked',
+  'distribution-cancel-submission': 'Cancel Distribution Submission Clicked',
+  'distribution-update-rollout': 'Update Distribution Rollout Clicked',
+  'distribution-run-checks': 'Run Distribution Checks Clicked',
+  'distribution-publish': 'Publish Distribution App Clicked',
 } as const
 
 export type AnalyticsActionId = keyof typeof ANALYTICS_ACTIONS

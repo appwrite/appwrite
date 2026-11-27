@@ -14,11 +14,6 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
 import { useSyncStateFromServer } from '@/hooks/use-sync-state-from-server'
 import type {
   DistributionConnection,
@@ -40,6 +35,7 @@ import {
 } from '@/lib/react-query/hooks'
 import { cn } from '@/lib/utils'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { DisabledReasonTooltip } from './DisabledReasonTooltip'
 import { PlatformIcon } from './platform'
 import {
   ConnectionField,
@@ -191,9 +187,9 @@ export function TargetCard({
     changes.identifier === undefined ||
     isValidIdentifier(target.platform, changes.identifier)
   const timeoutValid = isValidTimeout(form.timeout)
-  const permissionMessage = t(
-    "You don't have permission to perform this action.",
-  )
+  const permissionReason = canEdit
+    ? null
+    : t("You don't have permission to perform this action.")
 
   const setField = <K extends keyof TargetForm>(key: K, value: TargetForm[K]) =>
     setForm((current) => ({ ...current, [key]: value }))
@@ -248,7 +244,7 @@ export function TargetCard({
             <CopyableId id={target.$id} size="xs" />
           </div>
         </div>
-        <PermissionTooltip enabled={!canEdit} message={permissionMessage}>
+        <DisabledReasonTooltip reason={permissionReason}>
           <Button
             variant="ghost"
             size="sm"
@@ -259,7 +255,7 @@ export function TargetCard({
           >
             <Trash2 className="h-4 w-4" />
           </Button>
-        </PermissionTooltip>
+        </DisabledReasonTooltip>
       </div>
 
       <div className="border-t border-border" />
@@ -518,7 +514,7 @@ export function TargetCard({
       </Section>
 
       <div className="px-6 py-4 border-t border-border bg-muted/30">
-        <PermissionTooltip enabled={!canEdit} message={permissionMessage}>
+        <DisabledReasonTooltip reason={permissionReason}>
           <Button
             size="sm"
             className="h-9 text-[13px]"
@@ -529,7 +525,7 @@ export function TargetCard({
           >
             {t('Update')}
           </Button>
-        </PermissionTooltip>
+        </DisabledReasonTooltip>
       </div>
 
       <ConfirmActionDialog
@@ -604,25 +600,5 @@ function TextInput({
         className="h-9 font-mono text-[13px]"
       />
     </div>
-  )
-}
-
-function PermissionTooltip({
-  enabled,
-  message,
-  children,
-}: {
-  enabled: boolean
-  message: string
-  children: ReactNode
-}) {
-  if (!enabled) return children
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <span className="inline-flex">{children}</span>
-      </TooltipTrigger>
-      <TooltipContent>{message}</TooltipContent>
-    </Tooltip>
   )
 }

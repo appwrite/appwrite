@@ -165,7 +165,7 @@ export function CreateAppView({ projectId }: { projectId: string }) {
       toast.success(t('App created'))
     }
     await navigate({
-      to: '/projects/$projectId/distribution/$appId',
+      to: '/projects/$projectId/distribution/$appId/targets',
       params: { projectId, appId: app.$id },
     })
   }

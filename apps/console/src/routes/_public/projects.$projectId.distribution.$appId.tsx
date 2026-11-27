@@ -5,6 +5,7 @@ import {
 } from '@/components/pages/projects/$projectId/distribution/$appId/Layout'
 import {
   distributionAppQueryOptions,
+  distributionTargetsQueryOptions,
   projectQueryOptions,
 } from '@/lib/react-query/hooks'
 import { pageTitle } from '@/lib/utils/page-title'
@@ -22,11 +23,19 @@ export const Route = createFileRoute(
     if (typeof window === 'undefined') return undefined
     const { projectId, appId } = params
     const { queryClient } = context
+    const optional = <T,>(request: Promise<T>) => request.catch(() => undefined)
     try {
       await queryClient.ensureQueryData(projectQueryOptions(projectId))
-      const app = await queryClient.ensureQueryData(
-        distributionAppQueryOptions(projectId, appId),
-      )
+      const [app] = await Promise.all([
+        queryClient.ensureQueryData(
+          distributionAppQueryOptions(projectId, appId),
+        ),
+        optional(
+          queryClient.ensureQueryData(
+            distributionTargetsQueryOptions(projectId, appId),
+          ),
+        ),
+      ])
       return { app }
     } catch (error) {
       console.warn('Failed to load the distribution app:', error)

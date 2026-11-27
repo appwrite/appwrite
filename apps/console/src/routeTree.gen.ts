@@ -352,6 +352,10 @@ import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdRouteImport } 
 import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId'
 import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId'
 import { Route as PublicProjectsProjectIdDistributionAppIdIndexRouteImport } from './routes/_public/projects.$projectId.distribution.$appId.index'
+import { Route as PublicProjectsProjectIdDistributionAppIdArtifactsRouteImport } from './routes/_public/projects.$projectId.distribution.$appId.artifacts'
+import { Route as PublicProjectsProjectIdDistributionAppIdBuildsRouteImport } from './routes/_public/projects.$projectId.distribution.$appId.builds'
+import { Route as PublicProjectsProjectIdDistributionAppIdOverviewRouteImport } from './routes/_public/projects.$projectId.distribution.$appId.overview'
+import { Route as PublicProjectsProjectIdDistributionAppIdReleasesRouteImport } from './routes/_public/projects.$projectId.distribution.$appId.releases'
 import { Route as PublicProjectsProjectIdDistributionAppIdSettingsRouteImport } from './routes/_public/projects.$projectId.distribution.$appId.settings'
 import { Route as PublicProjectsProjectIdDistributionAppIdTargetsRouteImport } from './routes/_public/projects.$projectId.distribution.$appId.targets'
 import { Route as PublicProjectsProjectIdDistributionAppIdVariablesRouteImport } from './routes/_public/projects.$projectId.distribution.$appId.variables'
@@ -451,6 +455,10 @@ import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdRolesRouteIm
 import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.settings'
 import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdSqlRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.sql'
 import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdVisualizerRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.visualizer'
+import { Route as PublicProjectsProjectIdDistributionAppIdBuildsIndexRouteImport } from './routes/_public/projects.$projectId.distribution.$appId.builds.index'
+import { Route as PublicProjectsProjectIdDistributionAppIdBuildsBuildIdRouteImport } from './routes/_public/projects.$projectId.distribution.$appId.builds.$buildId'
+import { Route as PublicProjectsProjectIdDistributionAppIdReleasesIndexRouteImport } from './routes/_public/projects.$projectId.distribution.$appId.releases.index'
+import { Route as PublicProjectsProjectIdDistributionAppIdReleasesReleaseIdRouteImport } from './routes/_public/projects.$projectId.distribution.$appId.releases.$releaseId'
 import { Route as PublicProjectsProjectIdFunctionsFunctionIdDeploymentsIndexRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.deployments.index'
 import { Route as PublicProjectsProjectIdFunctionsFunctionIdDomainsIndexRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.domains.index'
 import { Route as PublicProjectsProjectIdFunctionsFunctionIdDomainsAddRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.domains.add'
@@ -2467,6 +2475,30 @@ const PublicProjectsProjectIdDistributionAppIdIndexRoute =
     path: '/',
     getParentRoute: () => PublicProjectsProjectIdDistributionAppIdRoute,
   } as any)
+const PublicProjectsProjectIdDistributionAppIdArtifactsRoute =
+  PublicProjectsProjectIdDistributionAppIdArtifactsRouteImport.update({
+    id: '/artifacts',
+    path: '/artifacts',
+    getParentRoute: () => PublicProjectsProjectIdDistributionAppIdRoute,
+  } as any)
+const PublicProjectsProjectIdDistributionAppIdBuildsRoute =
+  PublicProjectsProjectIdDistributionAppIdBuildsRouteImport.update({
+    id: '/builds',
+    path: '/builds',
+    getParentRoute: () => PublicProjectsProjectIdDistributionAppIdRoute,
+  } as any)
+const PublicProjectsProjectIdDistributionAppIdOverviewRoute =
+  PublicProjectsProjectIdDistributionAppIdOverviewRouteImport.update({
+    id: '/overview',
+    path: '/overview',
+    getParentRoute: () => PublicProjectsProjectIdDistributionAppIdRoute,
+  } as any)
+const PublicProjectsProjectIdDistributionAppIdReleasesRoute =
+  PublicProjectsProjectIdDistributionAppIdReleasesRouteImport.update({
+    id: '/releases',
+    path: '/releases',
+    getParentRoute: () => PublicProjectsProjectIdDistributionAppIdRoute,
+  } as any)
 const PublicProjectsProjectIdDistributionAppIdSettingsRoute =
   PublicProjectsProjectIdDistributionAppIdSettingsRouteImport.update({
     id: '/settings',
@@ -3084,6 +3116,30 @@ const PublicProjectsProjectIdDatabasesPostgresDatabaseIdVisualizerRoute =
         PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute,
     } as any,
   )
+const PublicProjectsProjectIdDistributionAppIdBuildsIndexRoute =
+  PublicProjectsProjectIdDistributionAppIdBuildsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => PublicProjectsProjectIdDistributionAppIdBuildsRoute,
+  } as any)
+const PublicProjectsProjectIdDistributionAppIdBuildsBuildIdRoute =
+  PublicProjectsProjectIdDistributionAppIdBuildsBuildIdRouteImport.update({
+    id: '/$buildId',
+    path: '/$buildId',
+    getParentRoute: () => PublicProjectsProjectIdDistributionAppIdBuildsRoute,
+  } as any)
+const PublicProjectsProjectIdDistributionAppIdReleasesIndexRoute =
+  PublicProjectsProjectIdDistributionAppIdReleasesIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => PublicProjectsProjectIdDistributionAppIdReleasesRoute,
+  } as any)
+const PublicProjectsProjectIdDistributionAppIdReleasesReleaseIdRoute =
+  PublicProjectsProjectIdDistributionAppIdReleasesReleaseIdRouteImport.update({
+    id: '/$releaseId',
+    path: '/$releaseId',
+    getParentRoute: () => PublicProjectsProjectIdDistributionAppIdReleasesRoute,
+  } as any)
 const PublicProjectsProjectIdFunctionsFunctionIdDeploymentsIndexRoute =
   PublicProjectsProjectIdFunctionsFunctionIdDeploymentsIndexRouteImport.update({
     id: '/',
@@ -4216,6 +4272,10 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/databases/$dbKind/$databaseId': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdRouteWithChildren
   '/projects/$projectId/databases/mysql/$databaseId': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRouteWithChildren
   '/projects/$projectId/databases/postgres/$databaseId': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdRouteWithChildren
+  '/projects/$projectId/distribution/$appId/artifacts': typeof PublicProjectsProjectIdDistributionAppIdArtifactsRoute
+  '/projects/$projectId/distribution/$appId/builds': typeof PublicProjectsProjectIdDistributionAppIdBuildsRouteWithChildren
+  '/projects/$projectId/distribution/$appId/overview': typeof PublicProjectsProjectIdDistributionAppIdOverviewRoute
+  '/projects/$projectId/distribution/$appId/releases': typeof PublicProjectsProjectIdDistributionAppIdReleasesRouteWithChildren
   '/projects/$projectId/distribution/$appId/settings': typeof PublicProjectsProjectIdDistributionAppIdSettingsRoute
   '/projects/$projectId/distribution/$appId/targets': typeof PublicProjectsProjectIdDistributionAppIdTargetsRoute
   '/projects/$projectId/distribution/$appId/variables': typeof PublicProjectsProjectIdDistributionAppIdVariablesRoute
@@ -4320,6 +4380,8 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/databases/postgres/$databaseId/settings': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRouteWithChildren
   '/projects/$projectId/databases/postgres/$databaseId/sql': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSqlRoute
   '/projects/$projectId/databases/postgres/$databaseId/visualizer': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdVisualizerRoute
+  '/projects/$projectId/distribution/$appId/builds/$buildId': typeof PublicProjectsProjectIdDistributionAppIdBuildsBuildIdRoute
+  '/projects/$projectId/distribution/$appId/releases/$releaseId': typeof PublicProjectsProjectIdDistributionAppIdReleasesReleaseIdRoute
   '/projects/$projectId/functions/$functionId/domains/add': typeof PublicProjectsProjectIdFunctionsFunctionIdDomainsAddRoute
   '/projects/$projectId/functions/$functionId/settings/build': typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsBuildRoute
   '/projects/$projectId/functions/$functionId/settings/danger-zone': typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsDangerZoneRoute
@@ -4348,6 +4410,8 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/databases/$dbKind/$databaseId/': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdIndexRoute
   '/projects/$projectId/databases/mysql/$databaseId/': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdIndexRoute
   '/projects/$projectId/databases/postgres/$databaseId/': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdIndexRoute
+  '/projects/$projectId/distribution/$appId/builds/': typeof PublicProjectsProjectIdDistributionAppIdBuildsIndexRoute
+  '/projects/$projectId/distribution/$appId/releases/': typeof PublicProjectsProjectIdDistributionAppIdReleasesIndexRoute
   '/projects/$projectId/functions/$functionId/deployments/': typeof PublicProjectsProjectIdFunctionsFunctionIdDeploymentsIndexRoute
   '/projects/$projectId/functions/$functionId/domains/': typeof PublicProjectsProjectIdFunctionsFunctionIdDomainsIndexRoute
   '/projects/$projectId/functions/$functionId/settings/': typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsIndexRoute
@@ -4710,6 +4774,8 @@ export interface FileRoutesByTo {
   '/projects/$projectId/auth/policies/users': typeof PublicProjectsProjectIdAuthPoliciesUsersRoute
   '/projects/$projectId/auth/teams/$teamId': typeof PublicProjectsProjectIdAuthTeamsTeamIdRouteWithChildren
   '/projects/$projectId/auth/users/$userId': typeof PublicProjectsProjectIdAuthUsersUserIdRouteWithChildren
+  '/projects/$projectId/distribution/$appId/artifacts': typeof PublicProjectsProjectIdDistributionAppIdArtifactsRoute
+  '/projects/$projectId/distribution/$appId/overview': typeof PublicProjectsProjectIdDistributionAppIdOverviewRoute
   '/projects/$projectId/distribution/$appId/settings': typeof PublicProjectsProjectIdDistributionAppIdSettingsRoute
   '/projects/$projectId/distribution/$appId/targets': typeof PublicProjectsProjectIdDistributionAppIdTargetsRoute
   '/projects/$projectId/distribution/$appId/variables': typeof PublicProjectsProjectIdDistributionAppIdVariablesRoute
@@ -4802,6 +4868,8 @@ export interface FileRoutesByTo {
   '/projects/$projectId/databases/postgres/$databaseId/roles': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdRolesRoute
   '/projects/$projectId/databases/postgres/$databaseId/sql': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSqlRoute
   '/projects/$projectId/databases/postgres/$databaseId/visualizer': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdVisualizerRoute
+  '/projects/$projectId/distribution/$appId/builds/$buildId': typeof PublicProjectsProjectIdDistributionAppIdBuildsBuildIdRoute
+  '/projects/$projectId/distribution/$appId/releases/$releaseId': typeof PublicProjectsProjectIdDistributionAppIdReleasesReleaseIdRoute
   '/projects/$projectId/functions/$functionId/domains/add': typeof PublicProjectsProjectIdFunctionsFunctionIdDomainsAddRoute
   '/projects/$projectId/functions/$functionId/settings/build': typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsBuildRoute
   '/projects/$projectId/functions/$functionId/settings/danger-zone': typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsDangerZoneRoute
@@ -4829,6 +4897,8 @@ export interface FileRoutesByTo {
   '/projects/$projectId/databases/$dbKind/$databaseId': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdIndexRoute
   '/projects/$projectId/databases/mysql/$databaseId': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdIndexRoute
   '/projects/$projectId/databases/postgres/$databaseId': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdIndexRoute
+  '/projects/$projectId/distribution/$appId/builds': typeof PublicProjectsProjectIdDistributionAppIdBuildsIndexRoute
+  '/projects/$projectId/distribution/$appId/releases': typeof PublicProjectsProjectIdDistributionAppIdReleasesIndexRoute
   '/projects/$projectId/functions/$functionId/deployments': typeof PublicProjectsProjectIdFunctionsFunctionIdDeploymentsIndexRoute
   '/projects/$projectId/functions/$functionId/domains': typeof PublicProjectsProjectIdFunctionsFunctionIdDomainsIndexRoute
   '/projects/$projectId/functions/$functionId/settings': typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsIndexRoute
@@ -5238,6 +5308,10 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/databases/$dbKind/$databaseId': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdRouteWithChildren
   '/_public/projects/$projectId/databases/mysql/$databaseId': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRouteWithChildren
   '/_public/projects/$projectId/databases/postgres/$databaseId': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdRouteWithChildren
+  '/_public/projects/$projectId/distribution/$appId/artifacts': typeof PublicProjectsProjectIdDistributionAppIdArtifactsRoute
+  '/_public/projects/$projectId/distribution/$appId/builds': typeof PublicProjectsProjectIdDistributionAppIdBuildsRouteWithChildren
+  '/_public/projects/$projectId/distribution/$appId/overview': typeof PublicProjectsProjectIdDistributionAppIdOverviewRoute
+  '/_public/projects/$projectId/distribution/$appId/releases': typeof PublicProjectsProjectIdDistributionAppIdReleasesRouteWithChildren
   '/_public/projects/$projectId/distribution/$appId/settings': typeof PublicProjectsProjectIdDistributionAppIdSettingsRoute
   '/_public/projects/$projectId/distribution/$appId/targets': typeof PublicProjectsProjectIdDistributionAppIdTargetsRoute
   '/_public/projects/$projectId/distribution/$appId/variables': typeof PublicProjectsProjectIdDistributionAppIdVariablesRoute
@@ -5342,6 +5416,8 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/databases/postgres/$databaseId/settings': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRouteWithChildren
   '/_public/projects/$projectId/databases/postgres/$databaseId/sql': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSqlRoute
   '/_public/projects/$projectId/databases/postgres/$databaseId/visualizer': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdVisualizerRoute
+  '/_public/projects/$projectId/distribution/$appId/builds/$buildId': typeof PublicProjectsProjectIdDistributionAppIdBuildsBuildIdRoute
+  '/_public/projects/$projectId/distribution/$appId/releases/$releaseId': typeof PublicProjectsProjectIdDistributionAppIdReleasesReleaseIdRoute
   '/_public/projects/$projectId/functions/$functionId/domains/add': typeof PublicProjectsProjectIdFunctionsFunctionIdDomainsAddRoute
   '/_public/projects/$projectId/functions/$functionId/settings/build': typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsBuildRoute
   '/_public/projects/$projectId/functions/$functionId/settings/danger-zone': typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsDangerZoneRoute
@@ -5370,6 +5446,8 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdIndexRoute
   '/_public/projects/$projectId/databases/mysql/$databaseId/': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdIndexRoute
   '/_public/projects/$projectId/databases/postgres/$databaseId/': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdIndexRoute
+  '/_public/projects/$projectId/distribution/$appId/builds/': typeof PublicProjectsProjectIdDistributionAppIdBuildsIndexRoute
+  '/_public/projects/$projectId/distribution/$appId/releases/': typeof PublicProjectsProjectIdDistributionAppIdReleasesIndexRoute
   '/_public/projects/$projectId/functions/$functionId/deployments/': typeof PublicProjectsProjectIdFunctionsFunctionIdDeploymentsIndexRoute
   '/_public/projects/$projectId/functions/$functionId/domains/': typeof PublicProjectsProjectIdFunctionsFunctionIdDomainsIndexRoute
   '/_public/projects/$projectId/functions/$functionId/settings/': typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsIndexRoute
@@ -5778,6 +5856,10 @@ export interface FileRouteTypes {
     | '/projects/$projectId/databases/$dbKind/$databaseId'
     | '/projects/$projectId/databases/mysql/$databaseId'
     | '/projects/$projectId/databases/postgres/$databaseId'
+    | '/projects/$projectId/distribution/$appId/artifacts'
+    | '/projects/$projectId/distribution/$appId/builds'
+    | '/projects/$projectId/distribution/$appId/overview'
+    | '/projects/$projectId/distribution/$appId/releases'
     | '/projects/$projectId/distribution/$appId/settings'
     | '/projects/$projectId/distribution/$appId/targets'
     | '/projects/$projectId/distribution/$appId/variables'
@@ -5882,6 +5964,8 @@ export interface FileRouteTypes {
     | '/projects/$projectId/databases/postgres/$databaseId/settings'
     | '/projects/$projectId/databases/postgres/$databaseId/sql'
     | '/projects/$projectId/databases/postgres/$databaseId/visualizer'
+    | '/projects/$projectId/distribution/$appId/builds/$buildId'
+    | '/projects/$projectId/distribution/$appId/releases/$releaseId'
     | '/projects/$projectId/functions/$functionId/domains/add'
     | '/projects/$projectId/functions/$functionId/settings/build'
     | '/projects/$projectId/functions/$functionId/settings/danger-zone'
@@ -5910,6 +5994,8 @@ export interface FileRouteTypes {
     | '/projects/$projectId/databases/$dbKind/$databaseId/'
     | '/projects/$projectId/databases/mysql/$databaseId/'
     | '/projects/$projectId/databases/postgres/$databaseId/'
+    | '/projects/$projectId/distribution/$appId/builds/'
+    | '/projects/$projectId/distribution/$appId/releases/'
     | '/projects/$projectId/functions/$functionId/deployments/'
     | '/projects/$projectId/functions/$functionId/domains/'
     | '/projects/$projectId/functions/$functionId/settings/'
@@ -6272,6 +6358,8 @@ export interface FileRouteTypes {
     | '/projects/$projectId/auth/policies/users'
     | '/projects/$projectId/auth/teams/$teamId'
     | '/projects/$projectId/auth/users/$userId'
+    | '/projects/$projectId/distribution/$appId/artifacts'
+    | '/projects/$projectId/distribution/$appId/overview'
     | '/projects/$projectId/distribution/$appId/settings'
     | '/projects/$projectId/distribution/$appId/targets'
     | '/projects/$projectId/distribution/$appId/variables'
@@ -6364,6 +6452,8 @@ export interface FileRouteTypes {
     | '/projects/$projectId/databases/postgres/$databaseId/roles'
     | '/projects/$projectId/databases/postgres/$databaseId/sql'
     | '/projects/$projectId/databases/postgres/$databaseId/visualizer'
+    | '/projects/$projectId/distribution/$appId/builds/$buildId'
+    | '/projects/$projectId/distribution/$appId/releases/$releaseId'
     | '/projects/$projectId/functions/$functionId/domains/add'
     | '/projects/$projectId/functions/$functionId/settings/build'
     | '/projects/$projectId/functions/$functionId/settings/danger-zone'
@@ -6391,6 +6481,8 @@ export interface FileRouteTypes {
     | '/projects/$projectId/databases/$dbKind/$databaseId'
     | '/projects/$projectId/databases/mysql/$databaseId'
     | '/projects/$projectId/databases/postgres/$databaseId'
+    | '/projects/$projectId/distribution/$appId/builds'
+    | '/projects/$projectId/distribution/$appId/releases'
     | '/projects/$projectId/functions/$functionId/deployments'
     | '/projects/$projectId/functions/$functionId/domains'
     | '/projects/$projectId/functions/$functionId/settings'
@@ -6799,6 +6891,10 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId'
     | '/_public/projects/$projectId/databases/mysql/$databaseId'
     | '/_public/projects/$projectId/databases/postgres/$databaseId'
+    | '/_public/projects/$projectId/distribution/$appId/artifacts'
+    | '/_public/projects/$projectId/distribution/$appId/builds'
+    | '/_public/projects/$projectId/distribution/$appId/overview'
+    | '/_public/projects/$projectId/distribution/$appId/releases'
     | '/_public/projects/$projectId/distribution/$appId/settings'
     | '/_public/projects/$projectId/distribution/$appId/targets'
     | '/_public/projects/$projectId/distribution/$appId/variables'
@@ -6903,6 +6999,8 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/databases/postgres/$databaseId/settings'
     | '/_public/projects/$projectId/databases/postgres/$databaseId/sql'
     | '/_public/projects/$projectId/databases/postgres/$databaseId/visualizer'
+    | '/_public/projects/$projectId/distribution/$appId/builds/$buildId'
+    | '/_public/projects/$projectId/distribution/$appId/releases/$releaseId'
     | '/_public/projects/$projectId/functions/$functionId/domains/add'
     | '/_public/projects/$projectId/functions/$functionId/settings/build'
     | '/_public/projects/$projectId/functions/$functionId/settings/danger-zone'
@@ -6931,6 +7029,8 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId/'
     | '/_public/projects/$projectId/databases/mysql/$databaseId/'
     | '/_public/projects/$projectId/databases/postgres/$databaseId/'
+    | '/_public/projects/$projectId/distribution/$appId/builds/'
+    | '/_public/projects/$projectId/distribution/$appId/releases/'
     | '/_public/projects/$projectId/functions/$functionId/deployments/'
     | '/_public/projects/$projectId/functions/$functionId/domains/'
     | '/_public/projects/$projectId/functions/$functionId/settings/'
@@ -9471,6 +9571,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdDistributionAppIdIndexRouteImport
       parentRoute: typeof PublicProjectsProjectIdDistributionAppIdRoute
     }
+    '/_public/projects/$projectId/distribution/$appId/artifacts': {
+      id: '/_public/projects/$projectId/distribution/$appId/artifacts'
+      path: '/artifacts'
+      fullPath: '/projects/$projectId/distribution/$appId/artifacts'
+      preLoaderRoute: typeof PublicProjectsProjectIdDistributionAppIdArtifactsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDistributionAppIdRoute
+    }
+    '/_public/projects/$projectId/distribution/$appId/builds': {
+      id: '/_public/projects/$projectId/distribution/$appId/builds'
+      path: '/builds'
+      fullPath: '/projects/$projectId/distribution/$appId/builds'
+      preLoaderRoute: typeof PublicProjectsProjectIdDistributionAppIdBuildsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDistributionAppIdRoute
+    }
+    '/_public/projects/$projectId/distribution/$appId/overview': {
+      id: '/_public/projects/$projectId/distribution/$appId/overview'
+      path: '/overview'
+      fullPath: '/projects/$projectId/distribution/$appId/overview'
+      preLoaderRoute: typeof PublicProjectsProjectIdDistributionAppIdOverviewRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDistributionAppIdRoute
+    }
+    '/_public/projects/$projectId/distribution/$appId/releases': {
+      id: '/_public/projects/$projectId/distribution/$appId/releases'
+      path: '/releases'
+      fullPath: '/projects/$projectId/distribution/$appId/releases'
+      preLoaderRoute: typeof PublicProjectsProjectIdDistributionAppIdReleasesRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDistributionAppIdRoute
+    }
     '/_public/projects/$projectId/distribution/$appId/settings': {
       id: '/_public/projects/$projectId/distribution/$appId/settings'
       path: '/settings'
@@ -10163,6 +10291,34 @@ declare module '@tanstack/react-router' {
       fullPath: '/projects/$projectId/databases/postgres/$databaseId/visualizer'
       preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdVisualizerRouteImport
       parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute
+    }
+    '/_public/projects/$projectId/distribution/$appId/builds/': {
+      id: '/_public/projects/$projectId/distribution/$appId/builds/'
+      path: '/'
+      fullPath: '/projects/$projectId/distribution/$appId/builds/'
+      preLoaderRoute: typeof PublicProjectsProjectIdDistributionAppIdBuildsIndexRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDistributionAppIdBuildsRoute
+    }
+    '/_public/projects/$projectId/distribution/$appId/builds/$buildId': {
+      id: '/_public/projects/$projectId/distribution/$appId/builds/$buildId'
+      path: '/$buildId'
+      fullPath: '/projects/$projectId/distribution/$appId/builds/$buildId'
+      preLoaderRoute: typeof PublicProjectsProjectIdDistributionAppIdBuildsBuildIdRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDistributionAppIdBuildsRoute
+    }
+    '/_public/projects/$projectId/distribution/$appId/releases/': {
+      id: '/_public/projects/$projectId/distribution/$appId/releases/'
+      path: '/'
+      fullPath: '/projects/$projectId/distribution/$appId/releases/'
+      preLoaderRoute: typeof PublicProjectsProjectIdDistributionAppIdReleasesIndexRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDistributionAppIdReleasesRoute
+    }
+    '/_public/projects/$projectId/distribution/$appId/releases/$releaseId': {
+      id: '/_public/projects/$projectId/distribution/$appId/releases/$releaseId'
+      path: '/$releaseId'
+      fullPath: '/projects/$projectId/distribution/$appId/releases/$releaseId'
+      preLoaderRoute: typeof PublicProjectsProjectIdDistributionAppIdReleasesReleaseIdRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDistributionAppIdReleasesRoute
     }
     '/_public/projects/$projectId/functions/$functionId/deployments/': {
       id: '/_public/projects/$projectId/functions/$functionId/deployments/'
@@ -12003,7 +12159,47 @@ const PublicProjectsProjectIdDatabasesRouteWithChildren =
     PublicProjectsProjectIdDatabasesRouteChildren,
   )
 
+interface PublicProjectsProjectIdDistributionAppIdBuildsRouteChildren {
+  PublicProjectsProjectIdDistributionAppIdBuildsBuildIdRoute: typeof PublicProjectsProjectIdDistributionAppIdBuildsBuildIdRoute
+  PublicProjectsProjectIdDistributionAppIdBuildsIndexRoute: typeof PublicProjectsProjectIdDistributionAppIdBuildsIndexRoute
+}
+
+const PublicProjectsProjectIdDistributionAppIdBuildsRouteChildren: PublicProjectsProjectIdDistributionAppIdBuildsRouteChildren =
+  {
+    PublicProjectsProjectIdDistributionAppIdBuildsBuildIdRoute:
+      PublicProjectsProjectIdDistributionAppIdBuildsBuildIdRoute,
+    PublicProjectsProjectIdDistributionAppIdBuildsIndexRoute:
+      PublicProjectsProjectIdDistributionAppIdBuildsIndexRoute,
+  }
+
+const PublicProjectsProjectIdDistributionAppIdBuildsRouteWithChildren =
+  PublicProjectsProjectIdDistributionAppIdBuildsRoute._addFileChildren(
+    PublicProjectsProjectIdDistributionAppIdBuildsRouteChildren,
+  )
+
+interface PublicProjectsProjectIdDistributionAppIdReleasesRouteChildren {
+  PublicProjectsProjectIdDistributionAppIdReleasesReleaseIdRoute: typeof PublicProjectsProjectIdDistributionAppIdReleasesReleaseIdRoute
+  PublicProjectsProjectIdDistributionAppIdReleasesIndexRoute: typeof PublicProjectsProjectIdDistributionAppIdReleasesIndexRoute
+}
+
+const PublicProjectsProjectIdDistributionAppIdReleasesRouteChildren: PublicProjectsProjectIdDistributionAppIdReleasesRouteChildren =
+  {
+    PublicProjectsProjectIdDistributionAppIdReleasesReleaseIdRoute:
+      PublicProjectsProjectIdDistributionAppIdReleasesReleaseIdRoute,
+    PublicProjectsProjectIdDistributionAppIdReleasesIndexRoute:
+      PublicProjectsProjectIdDistributionAppIdReleasesIndexRoute,
+  }
+
+const PublicProjectsProjectIdDistributionAppIdReleasesRouteWithChildren =
+  PublicProjectsProjectIdDistributionAppIdReleasesRoute._addFileChildren(
+    PublicProjectsProjectIdDistributionAppIdReleasesRouteChildren,
+  )
+
 interface PublicProjectsProjectIdDistributionAppIdRouteChildren {
+  PublicProjectsProjectIdDistributionAppIdArtifactsRoute: typeof PublicProjectsProjectIdDistributionAppIdArtifactsRoute
+  PublicProjectsProjectIdDistributionAppIdBuildsRoute: typeof PublicProjectsProjectIdDistributionAppIdBuildsRouteWithChildren
+  PublicProjectsProjectIdDistributionAppIdOverviewRoute: typeof PublicProjectsProjectIdDistributionAppIdOverviewRoute
+  PublicProjectsProjectIdDistributionAppIdReleasesRoute: typeof PublicProjectsProjectIdDistributionAppIdReleasesRouteWithChildren
   PublicProjectsProjectIdDistributionAppIdSettingsRoute: typeof PublicProjectsProjectIdDistributionAppIdSettingsRoute
   PublicProjectsProjectIdDistributionAppIdTargetsRoute: typeof PublicProjectsProjectIdDistributionAppIdTargetsRoute
   PublicProjectsProjectIdDistributionAppIdVariablesRoute: typeof PublicProjectsProjectIdDistributionAppIdVariablesRoute
@@ -12012,6 +12208,14 @@ interface PublicProjectsProjectIdDistributionAppIdRouteChildren {
 
 const PublicProjectsProjectIdDistributionAppIdRouteChildren: PublicProjectsProjectIdDistributionAppIdRouteChildren =
   {
+    PublicProjectsProjectIdDistributionAppIdArtifactsRoute:
+      PublicProjectsProjectIdDistributionAppIdArtifactsRoute,
+    PublicProjectsProjectIdDistributionAppIdBuildsRoute:
+      PublicProjectsProjectIdDistributionAppIdBuildsRouteWithChildren,
+    PublicProjectsProjectIdDistributionAppIdOverviewRoute:
+      PublicProjectsProjectIdDistributionAppIdOverviewRoute,
+    PublicProjectsProjectIdDistributionAppIdReleasesRoute:
+      PublicProjectsProjectIdDistributionAppIdReleasesRouteWithChildren,
     PublicProjectsProjectIdDistributionAppIdSettingsRoute:
       PublicProjectsProjectIdDistributionAppIdSettingsRoute,
     PublicProjectsProjectIdDistributionAppIdTargetsRoute:

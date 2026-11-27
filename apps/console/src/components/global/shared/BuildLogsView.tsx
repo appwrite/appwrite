@@ -248,7 +248,10 @@ export interface BuildLogsViewProps {
   /** Log line numbers (1-based) to highlight as selected. */
   selectedLines?: ReadonlySet<number> | null
   /** When set, rows are selectable on click. */
-  onLineClick?: (lineNumber: number, event: React.MouseEvent<HTMLDivElement>) => void
+  onLineClick?: (
+    lineNumber: number,
+    event: React.MouseEvent<HTMLDivElement>,
+  ) => void
   /** Ref map for line elements (e.g. for scroll-into-view) */
   lineRefs?: React.MutableRefObject<Map<number, HTMLDivElement>>
   /** Message when buildLogs is empty */
@@ -333,67 +336,69 @@ export function BuildLogsView({
       </div>
     )
 
-    const rows = linesToDisplay.map(({ line, originalLineNumber }, displayIndex) => {
-      const parsedLine = parseAnsiLogs(line, term || undefined)
-      const isSelected =
-        selectedLines != null && selectedLines.has(originalLineNumber)
-      const isClickable = !!onLineClick
-      const showHover = isClickable || highlightLineOnHover
+    const rows = linesToDisplay.map(
+      ({ line, originalLineNumber }, displayIndex) => {
+        const parsedLine = parseAnsiLogs(line, term || undefined)
+        const isSelected =
+          selectedLines != null && selectedLines.has(originalLineNumber)
+        const isClickable = !!onLineClick
+        const showHover = isClickable || highlightLineOnHover
 
-      return (
-        <div
-          key={`${originalLineNumber}-${displayIndex}`}
-          ref={(el) => {
-            if (el && lineRefs) {
-              lineRefs.current.set(originalLineNumber, el)
-            } else if (lineRefs) {
-              lineRefs.current.delete(originalLineNumber)
-            }
-          }}
-          className={`grid min-w-0 items-stretch gap-4 transition-colors ${rowPadding} ${
-            isSelected
-              ? 'bg-yellow-100/50 dark:bg-yellow-900/20'
-              : showHover
-                ? 'hover:bg-muted/30'
-                : ''
-          }`}
-          style={gridStyle}
-          title={
-            highlightLineOnHover
-              ? `${t('Line')} ${originalLineNumber}`
-              : undefined
-          }
-        >
+        return (
           <div
-            onClick={
-              isClickable
-                ? (e) => {
-                    e.preventDefault()
-                    onLineClick(originalLineNumber, e)
-                  }
-                : undefined
-            }
-            className={`flex select-none items-start justify-end border-e border-border/50 pe-2 font-mono tabular-nums transition-colors ${fontSizeClass} ${
+            key={`${originalLineNumber}-${displayIndex}`}
+            ref={(el) => {
+              if (el && lineRefs) {
+                lineRefs.current.set(originalLineNumber, el)
+              } else if (lineRefs) {
+                lineRefs.current.delete(originalLineNumber)
+              }
+            }}
+            className={`grid min-w-0 items-stretch gap-4 transition-colors ${rowPadding} ${
               isSelected
-                ? 'text-yellow-600 dark:text-yellow-400 font-semibold'
-                : 'text-muted-foreground'
-            } ${isClickable ? 'cursor-pointer' : ''}`}
+                ? 'bg-yellow-100/50 dark:bg-yellow-900/20'
+                : showHover
+                  ? 'hover:bg-muted/30'
+                  : ''
+            }`}
+            style={gridStyle}
             title={
-              isClickable
-                ? `${t('Select line')} ${originalLineNumber} ${t('(Shift for range, ⌘/Ctrl to toggle)')}`
+              highlightLineOnHover
+                ? `${t('Line')} ${originalLineNumber}`
                 : undefined
             }
           >
-            {originalLineNumber}
+            <div
+              onClick={
+                isClickable
+                  ? (e) => {
+                      e.preventDefault()
+                      onLineClick(originalLineNumber, e)
+                    }
+                  : undefined
+              }
+              className={`flex select-none items-start justify-end border-e border-border/50 pe-2 font-mono tabular-nums transition-colors ${fontSizeClass} ${
+                isSelected
+                  ? 'text-yellow-600 dark:text-yellow-400 font-semibold'
+                  : 'text-muted-foreground'
+              } ${isClickable ? 'cursor-pointer' : ''}`}
+              title={
+                isClickable
+                  ? `${t('Select line')} ${originalLineNumber} ${t('(Shift for range, ⌘/Ctrl to toggle)')}`
+                  : undefined
+              }
+            >
+              {originalLineNumber}
+            </div>
+            <div
+              className={`min-w-0 break-all ps-1 font-mono ${fontSizeClass}`}
+            >
+              {parsedLine}
+            </div>
           </div>
-          <div
-            className={`min-w-0 break-all ps-1 font-mono ${fontSizeClass}`}
-          >
-            {parsedLine}
-          </div>
-        </div>
-      )
-    })
+        )
+      },
+    )
 
     return (
       <>
@@ -432,7 +437,7 @@ export function BuildLogsView({
   }
 
   return (
-    <div className={cn('min-w-0', className)}>
+    <div dir="ltr" className={cn('min-w-0', className)}>
       <div
         className={`${fontSizeClass} font-mono text-foreground flex min-w-0 max-w-full flex-col overflow-x-auto break-all`}
       >

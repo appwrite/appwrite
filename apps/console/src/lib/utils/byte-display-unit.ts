@@ -11,9 +11,7 @@ export type BinaryByteUnit = 'bytes' | 'kb' | 'mb' | 'gb' | 'tb'
  * Coerce API byte counts that may arrive as bigint (SDK json-bigint / int64).
  * Arithmetic with mixed bigint/number throws; convert before formatting or math.
  */
-export function toByteCount(
-  value: number | bigint | null | undefined,
-): number {
+export function toByteCount(value: number | bigint | null | undefined): number {
   if (value == null) return 0
   if (typeof value === 'bigint') {
     const n = Number(value)
@@ -91,6 +89,26 @@ export function formatDecimalBytes(bytes: number | bigint): string {
   const label = unit === 'bytes' ? 'B' : unit
 
   return formatByteDisplayValue(value, label, unit === 'bytes')
+}
+
+export function formatBinaryBytesProgress(
+  loaded: number | bigint,
+  total: number | bigint,
+): string {
+  const totalBytes = toByteCount(total)
+  const loadedBytes = Math.min(Math.max(toByteCount(loaded), 0), totalBytes)
+  const { unit } = pickUnitWithLargestReadableValue(
+    totalBytes,
+    BINARY_BYTE_SCALES,
+  )
+  const scale = BINARY_BYTE_SCALES.find((item) => item.unit === unit)
+  const factor = scale?.factor ?? 1
+  const label = unit === 'bytes' ? 'B' : unit.toUpperCase()
+  const format = (bytes: number) =>
+    unit === 'bytes'
+      ? `${Math.round(bytes)} ${label}`
+      : `${(bytes / factor).toFixed(2)} ${label}`
+  return `${format(loadedBytes)} / ${format(Math.max(totalBytes, 0))}`
 }
 
 export function formatBinaryBytes(bytes: number | bigint): string {

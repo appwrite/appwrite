@@ -5,7 +5,7 @@ export const Route = createFileRoute(
 )({
   loader: ({ params }) => {
     throw redirect({
-      to: '/projects/$projectId/distribution/$appId/targets',
+      to: '/projects/$projectId/distribution/$appId/overview',
       params,
       replace: true,
     })

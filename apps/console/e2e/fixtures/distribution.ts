@@ -1,18 +1,34 @@
-import type { Page, Route } from '@playwright/test'
+import { mkdir, writeFile } from 'node:fs/promises'
+import { join } from 'node:path'
+import type { Locator, Page, Request, Route } from '@playwright/test'
 import type { Models } from '@appwrite.io/console'
 import type {
   DistributionApp,
+  DistributionArtifact,
+  DistributionBuild,
+  DistributionCheck,
+  DistributionCheckIssue,
   DistributionConnection,
   DistributionGoogleServiceAccount,
+  DistributionLog,
   DistributionPlatform,
   DistributionProvider,
+  DistributionRelease,
+  DistributionReleaseStatus,
   DistributionSigningIdentity,
   DistributionSigningIdentityDownload,
+  DistributionSubmission,
+  DistributionSubmissionStatus,
   DistributionTarget,
 } from '@/lib/appwrite/distribution'
 import { expect, test } from '../fixtures'
+import { distributionEvents } from './distribution-events'
+import {
+  mockDistributionRealtime,
+  type DistributionRealtime,
+} from './distribution-realtime'
 
-export { expect, test }
+export { distributionEvents, expect, test }
 
 export const NOW = '2026-11-20T12:00:00.000+00:00'
 
@@ -20,6 +36,10 @@ const DAY = 24 * 60 * 60 * 1000
 
 function daysFromNow(days: number): string {
   return new Date(Date.parse(NOW) + days * DAY).toISOString()
+}
+
+function minutesFromNow(minutes: number): string {
+  return new Date(Date.parse(NOW) + minutes * 60 * 1000).toISOString()
 }
 
 export const ACCOUNT = {
@@ -80,6 +100,94 @@ const SIGNING_IOS_IMPORTED = 'signing000000000000001'
 const SIGNING_IOS_MANAGED = 'signing000000000000002'
 const SIGNING_ANDROID_MANAGED = 'signing000000000000003'
 const SIGNING_ANDROID_IMPORTED = 'signing000000000000004'
+
+const BUILD_SHOP_READY = 'build0000000000000000001'
+const BUILD_FIELD_NOTES_FAILED = 'build0000000000000000002'
+const BUILD_SHOP_ACTIVE = 'build0000000000000000003'
+
+const ARTIFACT_SHOP_IOS = 'artifact000000000000001'
+const ARTIFACT_SHOP_ANDROID = 'artifact000000000000002'
+const ARTIFACT_PROCESSING = 'artifact000000000000003'
+const ARTIFACT_INVALID = 'artifact000000000000004'
+
+const RELEASE_ACTIVE = 'release0000000000000001'
+const RELEASE_PUBLISHED = 'release0000000000000002'
+const RELEASE_DRAFT = 'release0000000000000003'
+const RELEASE_ATTENTION = 'release0000000000000004'
+
+const SUBMISSION_TESTFLIGHT = 'submission0000000000001'
+const SUBMISSION_PRODUCTION = 'submission0000000000002'
+const SUBMISSION_APPROVED = 'submission0000000000003'
+const SUBMISSION_HALTED = 'submission0000000000004'
+const SUBMISSION_REVIEWING = 'submission0000000000005'
+const SUBMISSION_REJECTED = 'submission0000000000006'
+
+function targetId(appId: string, platform: DistributionPlatform): string {
+  return `${appId.slice(-8)}${platform}`
+}
+
+export const DISTRIBUTION_IDS = {
+  apps: {
+    shop: APP_SHOP,
+    rewards: APP_REWARDS,
+    fieldNotes: APP_FIELD_NOTES,
+  },
+  targets: {
+    shopIos: targetId(APP_SHOP, 'ios'),
+    shopAndroid: targetId(APP_SHOP, 'android'),
+    rewardsIos: targetId(APP_REWARDS, 'ios'),
+    rewardsAndroid: targetId(APP_REWARDS, 'android'),
+    fieldNotesAndroid: targetId(APP_FIELD_NOTES, 'android'),
+  },
+  connections: {
+    apple: CONNECTION_APPLE,
+    google: CONNECTION_GOOGLE,
+    googleInvalid: CONNECTION_GOOGLE_INVALID,
+  },
+  signingIdentities: {
+    iosImported: SIGNING_IOS_IMPORTED,
+    iosManaged: SIGNING_IOS_MANAGED,
+    androidManaged: SIGNING_ANDROID_MANAGED,
+    androidImported: SIGNING_ANDROID_IMPORTED,
+  },
+  builds: {
+    shopReady: BUILD_SHOP_READY,
+    fieldNotesFailed: BUILD_FIELD_NOTES_FAILED,
+    shopActive: BUILD_SHOP_ACTIVE,
+  },
+  artifacts: {
+    shopIos: ARTIFACT_SHOP_IOS,
+    shopAndroid: ARTIFACT_SHOP_ANDROID,
+    processing: ARTIFACT_PROCESSING,
+    invalid: ARTIFACT_INVALID,
+  },
+  releases: {
+    active: RELEASE_ACTIVE,
+    published: RELEASE_PUBLISHED,
+    draft: RELEASE_DRAFT,
+    attention: RELEASE_ATTENTION,
+  },
+  submissions: {
+    testflight: SUBMISSION_TESTFLIGHT,
+    production: SUBMISSION_PRODUCTION,
+    approved: SUBMISSION_APPROVED,
+    halted: SUBMISSION_HALTED,
+    reviewing: SUBMISSION_REVIEWING,
+    rejected: SUBMISSION_REJECTED,
+  },
+} as const
+
+export const ARTIFACT_CHUNK_SIZE = 5 * 1024 * 1024
+
+const TRACKS: Record<DistributionProvider, string[]> = {
+  apple: ['testflight', 'testflight-external', 'production'],
+  google: ['internal', 'alpha', 'beta', 'production'],
+}
+
+const DEFAULT_TRACKS: Record<DistributionPlatform, string> = {
+  ios: 'testflight',
+  android: 'internal',
+}
 
 const APPLE_TEAM_ID = 'A1B2C3D4E5'
 
@@ -172,7 +280,7 @@ export function targetsFixtures(
   const identifier = IDENTIFIERS[appId] ?? `com.example.${appId}`
   const targets: Record<DistributionPlatform, DistributionTarget> = {
     ios: {
-      $id: `${appId.slice(-8)}ios`,
+      $id: targetId(appId, 'ios'),
       $createdAt: NOW,
       $updatedAt: NOW,
       appId,
@@ -197,7 +305,7 @@ export function targetsFixtures(
       timeout: 1800,
     },
     android: {
-      $id: `${appId.slice(-8)}android`,
+      $id: targetId(appId, 'android'),
       $createdAt: NOW,
       $updatedAt: NOW,
       appId,
@@ -412,6 +520,513 @@ export function signingDownloadFixture(
   }
 }
 
+const REPOSITORY_SHOP = 'shop-app'
+const REPOSITORY_FIELD_NOTES = 'field-notes'
+
+function commit(
+  repository: string,
+  branch: string,
+  hash: string,
+  message: string,
+): Partial<DistributionBuild> {
+  const url = `https://github.com/${ORGANIZATION_LOGIN}/${repository}`
+  return {
+    providerCommitHash: hash,
+    providerBranch: branch,
+    providerCommitMessage: message,
+    providerCommitAuthor: ACCOUNT.name,
+    providerCommitAuthorUrl: 'https://github.com/demo-operator',
+    providerCommitUrl: `${url}/commit/${hash}`,
+    providerBranchUrl: branch ? `${url}/tree/${branch}` : '',
+    providerRepositoryName: repository,
+    providerRepositoryOwner: ORGANIZATION_LOGIN,
+    providerRepositoryUrl: url,
+  }
+}
+
+function build(
+  overrides: Partial<DistributionBuild> &
+    Pick<
+      DistributionBuild,
+      '$id' | 'appId' | 'targetId' | 'platform' | 'status'
+    >,
+): DistributionBuild {
+  return {
+    $createdAt: NOW,
+    $updatedAt: NOW,
+    type: 'manual',
+    stage: '',
+    attempt: 1,
+    providerCommitHash: '',
+    providerBranch: '',
+    providerTag: '',
+    providerCommitMessage: '',
+    providerCommitAuthor: '',
+    providerCommitAuthorUrl: '',
+    providerCommitUrl: '',
+    providerBranchUrl: '',
+    providerRepositoryName: '',
+    providerRepositoryOwner: '',
+    providerRepositoryUrl: '',
+    providerRootDirectory: '',
+    versionName: '',
+    versionCode: 0,
+    buildNumber: '',
+    toolchain: {},
+    specification: '',
+    cpus: 0,
+    memory: 0,
+    timeout: 0,
+    artifactId: '',
+    releaseId: '',
+    logsSize: 0,
+    dispatchedAt: null,
+    startedAt: null,
+    endedAt: null,
+    duration: 0,
+    errorCode: '',
+    errorMessage: '',
+    ...overrides,
+  }
+}
+
+export function buildsFixtures(): DistributionBuild[] {
+  return [
+    build({
+      $id: BUILD_SHOP_ACTIVE,
+      $createdAt: minutesFromNow(-6),
+      $updatedAt: minutesFromNow(-1),
+      appId: APP_SHOP,
+      targetId: targetId(APP_SHOP, 'android'),
+      platform: 'android',
+      status: 'building',
+      stage: 'build',
+      ...commit(
+        REPOSITORY_SHOP,
+        'main',
+        '9f1c2e7a4b3d5c6e8f0a1b2c3d4e5f60718293a4',
+        'Add saved carts',
+      ),
+      providerRootDirectory: './',
+      versionName: '1.5.0',
+      versionCode: 18,
+      buildNumber: '18',
+      toolchain: { flutter: '3.27.1', java: '17' },
+      specification: 's-2vcpu-4gb',
+      cpus: 2,
+      memory: 4096,
+      timeout: 3600,
+      logsSize: 9_600,
+      dispatchedAt: minutesFromNow(-6),
+      startedAt: minutesFromNow(-5),
+    }),
+    build({
+      $id: BUILD_SHOP_READY,
+      $createdAt: daysFromNow(-1),
+      $updatedAt: daysFromNow(-1),
+      appId: APP_SHOP,
+      targetId: targetId(APP_SHOP, 'ios'),
+      platform: 'ios',
+      type: 'vcs',
+      status: 'ready',
+      stage: 'sign',
+      ...commit(
+        REPOSITORY_SHOP,
+        'main',
+        'a1b2c3d4e5f60718293a4b5c6d7e8f9012345678',
+        'Release 1.4.0',
+      ),
+      providerRootDirectory: './',
+      versionName: '1.4.0',
+      buildNumber: '42',
+      toolchain: { flutter: '3.27.1', xcode: '16.2' },
+      specification: 's-4vcpu-8gb',
+      cpus: 4,
+      memory: 8192,
+      timeout: 1800,
+      artifactId: ARTIFACT_SHOP_IOS,
+      releaseId: RELEASE_ACTIVE,
+      logsSize: 182_344,
+      dispatchedAt: daysFromNow(-1),
+      startedAt: daysFromNow(-1),
+      endedAt: daysFromNow(-1),
+      duration: 612,
+    }),
+    build({
+      $id: BUILD_FIELD_NOTES_FAILED,
+      $createdAt: daysFromNow(-3),
+      $updatedAt: daysFromNow(-3),
+      appId: APP_FIELD_NOTES,
+      targetId: targetId(APP_FIELD_NOTES, 'android'),
+      platform: 'android',
+      type: 'vcs',
+      status: 'failed',
+      stage: 'build',
+      ...commit(
+        REPOSITORY_FIELD_NOTES,
+        'develop',
+        '0f9e8d7c6b5a49382716f5e4d3c2b1a098765432',
+        'Upgrade the Android Gradle plugin',
+      ),
+      providerRootDirectory: 'android',
+      versionName: '2.4.0',
+      versionCode: 31,
+      buildNumber: '31',
+      toolchain: { java: '17' },
+      specification: 's-2vcpu-4gb',
+      cpus: 2,
+      memory: 4096,
+      timeout: 3600,
+      logsSize: 4_096,
+      dispatchedAt: daysFromNow(-3),
+      startedAt: daysFromNow(-3),
+      endedAt: daysFromNow(-3),
+      duration: 148,
+      errorCode: 'build_failed',
+      errorMessage:
+        "Gradle task 'bundleProductionRelease' failed with exit code 1.",
+    }),
+  ]
+}
+
+const LOG_SEQUENCE = 1_763_640_000_000_000_000n
+const LOG_SEQUENCE_STEP = 1n
+
+const LOG_LINES = [
+  '\u001b[36m$\u001b[0m flutter pub get',
+  'Resolving dependencies...',
+  '\u001b[32m+\u001b[0m http 1.2.2',
+  'Running Gradle task \u001b[1mbundleProductionRelease\u001b[0m...',
+  '\u001b[33mwarning:\u001b[0m [options] source value 8 is obsolete',
+  '\u001b[32m✓\u001b[0m Built build/app/outputs/bundle/productionRelease',
+]
+
+export function logsFixtures(
+  buildId: string,
+  count: number,
+): DistributionLog[] {
+  return Array.from({ length: count }, (_, index) => ({
+    $id: `${buildId.slice(-4)}log${String(index + 1).padStart(6, '0')}`,
+    $createdAt: new Date(
+      Date.parse(NOW) - (count - index) * 1000,
+    ).toISOString(),
+    buildId,
+    sequence: (LOG_SEQUENCE + BigInt(index) * LOG_SEQUENCE_STEP).toString(),
+    chunk: 0,
+    stage: index < count / 5 ? 'source' : 'build',
+    content: `\u001b[90m[${String(index + 1).padStart(3, '0')}]\u001b[0m ${LOG_LINES[index % LOG_LINES.length]}\n`,
+  }))
+}
+
+function artifact(
+  overrides: Partial<DistributionArtifact> &
+    Pick<
+      DistributionArtifact,
+      '$id' | 'type' | 'source' | 'status' | 'name' | 'size'
+    >,
+): DistributionArtifact {
+  const chunksTotal = Math.ceil(overrides.size / ARTIFACT_CHUNK_SIZE)
+  return {
+    $createdAt: NOW,
+    $updatedAt: NOW,
+    appId: APP_SHOP,
+    targetId: '',
+    platform: '',
+    buildId: '',
+    chunksTotal,
+    chunksUploaded: chunksTotal,
+    digest: '',
+    identifier: '',
+    versionName: '',
+    versionCode: 0,
+    buildNumber: '',
+    signed: false,
+    fingerprint: '',
+    manifest: {},
+    errorCode: '',
+    errorMessage: '',
+    expiresAt: daysFromNow(90),
+    ...overrides,
+  }
+}
+
+export function artifactsFixtures(): DistributionArtifact[] {
+  return [
+    artifact({
+      $id: ARTIFACT_PROCESSING,
+      $createdAt: minutesFromNow(-2),
+      $updatedAt: minutesFromNow(-2),
+      type: 'aab',
+      source: 'upload',
+      status: 'processing',
+      name: 'app-release.aab',
+      size: 22_020_096,
+    }),
+    artifact({
+      $id: ARTIFACT_SHOP_IOS,
+      $createdAt: daysFromNow(-1),
+      $updatedAt: daysFromNow(-1),
+      targetId: targetId(APP_SHOP, 'ios'),
+      platform: 'ios',
+      type: 'ipa',
+      source: 'build',
+      buildId: BUILD_SHOP_READY,
+      status: 'ready',
+      name: 'Runner.ipa',
+      size: 48_234_496,
+      digest:
+        '5d41402abc4b2a76b9719d911017c592ae2f1b5c3d7e8f9a0b1c2d3e4f506172',
+      identifier: 'com.acme.shop',
+      versionName: '1.4.0',
+      buildNumber: '42',
+      signed: true,
+      fingerprint:
+        '3f2a9c1d8e7b6a5f4e3d2c1b0a9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c3b2a19',
+      manifest: { minimumOSVersion: '15.0', bundleVersion: '42' },
+      expiresAt: daysFromNow(89),
+    }),
+    artifact({
+      $id: ARTIFACT_INVALID,
+      $createdAt: daysFromNow(-4),
+      $updatedAt: daysFromNow(-4),
+      platform: 'ios',
+      type: 'ipa',
+      source: 'upload',
+      status: 'invalid',
+      name: 'Unknown.ipa',
+      size: 12_582_912,
+      identifier: 'com.acme.unknown',
+      versionName: '0.9.0',
+      buildNumber: '7',
+      errorCode: 'artifact_identifier_unknown',
+      errorMessage:
+        'No target of the app ships the bundle ID com.acme.unknown.',
+      expiresAt: daysFromNow(86),
+    }),
+    artifact({
+      $id: ARTIFACT_SHOP_ANDROID,
+      $createdAt: daysFromNow(-14),
+      $updatedAt: daysFromNow(-14),
+      targetId: targetId(APP_SHOP, 'android'),
+      platform: 'android',
+      type: 'aab',
+      source: 'upload',
+      status: 'ready',
+      name: 'app-production-release.aab',
+      size: 31_457_280,
+      digest:
+        '7c222fb2927d828af22f592134e8932480637c0d4a8e9f1b2c3d4e5f60718293',
+      identifier: 'com.acme.shop',
+      versionName: '1.3.0',
+      versionCode: 17,
+      buildNumber: '17',
+      signed: true,
+      fingerprint:
+        'c5b4a3f2e1d0c9b8a7f6e5d4c3b2a193f2a9c1d8e7b6a5f4e3d2c1b0a9f8e7d6',
+      manifest: { minSdkVersion: 24, targetSdkVersion: 35 },
+      expiresAt: daysFromNow(76),
+    }),
+  ]
+}
+
+function release(
+  overrides: Partial<DistributionRelease> &
+    Pick<DistributionRelease, '$id' | 'version' | 'status'>,
+): DistributionRelease {
+  return {
+    $createdAt: NOW,
+    $updatedAt: NOW,
+    appId: APP_SHOP,
+    notes: {},
+    ...overrides,
+  }
+}
+
+export function releasesFixtures(): DistributionRelease[] {
+  return [
+    release({
+      $id: RELEASE_DRAFT,
+      $createdAt: minutesFromNow(-90),
+      $updatedAt: minutesFromNow(-90),
+      version: '1.5.0',
+      status: 'draft',
+    }),
+    release({
+      $id: RELEASE_ACTIVE,
+      $createdAt: daysFromNow(-1),
+      $updatedAt: daysFromNow(-1),
+      version: '1.4.0',
+      notes: { 'en-US': 'Faster checkout and a redesigned cart.' },
+      status: 'active',
+    }),
+    release({
+      $id: RELEASE_PUBLISHED,
+      $createdAt: daysFromNow(-14),
+      $updatedAt: daysFromNow(-12),
+      version: '1.3.0',
+      notes: {
+        'en-US': 'Track your orders.',
+        'de-DE': 'Bestellungen verfolgen.',
+      },
+      status: 'published',
+    }),
+    release({
+      $id: RELEASE_ATTENTION,
+      $createdAt: daysFromNow(-30),
+      $updatedAt: daysFromNow(-27),
+      version: '1.2.0',
+      notes: { 'en-US': 'Bug fixes.' },
+      status: 'attention',
+    }),
+  ]
+}
+
+function submission(
+  overrides: Partial<DistributionSubmission> &
+    Pick<
+      DistributionSubmission,
+      | '$id'
+      | 'releaseId'
+      | 'targetId'
+      | 'artifactId'
+      | 'platform'
+      | 'track'
+      | 'status'
+    >,
+): DistributionSubmission {
+  const platform: DistributionPlatform = overrides.platform
+  return {
+    $createdAt: NOW,
+    $updatedAt: NOW,
+    appId: APP_SHOP,
+    provider: PROVIDERS[platform],
+    rollout: 1,
+    automatic: true,
+    storeStatus: '',
+    step: '',
+    external: {},
+    key: `${overrides.targetId}:${overrides.track}:${overrides.artifactId}`,
+    attempt: 1,
+    retryAt: null,
+    submittedAt: null,
+    reviewedAt: null,
+    publishedAt: null,
+    errorCode: '',
+    errorMessage: '',
+    ...overrides,
+  }
+}
+
+export function submissionsFixtures(): DistributionSubmission[] {
+  const ios = {
+    targetId: targetId(APP_SHOP, 'ios'),
+    artifactId: ARTIFACT_SHOP_IOS,
+    platform: 'ios',
+  } as const
+  const android = {
+    targetId: targetId(APP_SHOP, 'android'),
+    artifactId: ARTIFACT_SHOP_ANDROID,
+    platform: 'android',
+  } as const
+  return [
+    submission({
+      ...ios,
+      $id: SUBMISSION_TESTFLIGHT,
+      $createdAt: minutesFromNow(-20 * 60),
+      $updatedAt: minutesFromNow(-18 * 60),
+      releaseId: RELEASE_ACTIVE,
+      track: 'testflight',
+      status: 'published',
+      storeStatus: 'IN_BETA_TESTING',
+      step: 'settled',
+      external: { buildId: 'a8c1e2f4-7b3d-4c5e-9f6a-0b1c2d3e4f50' },
+      submittedAt: minutesFromNow(-20 * 60),
+      publishedAt: minutesFromNow(-18 * 60),
+    }),
+    submission({
+      ...ios,
+      $id: SUBMISSION_APPROVED,
+      $createdAt: minutesFromNow(-19 * 60),
+      $updatedAt: minutesFromNow(-2 * 60),
+      releaseId: RELEASE_ACTIVE,
+      track: 'production',
+      automatic: false,
+      status: 'approved',
+      storeStatus: 'PENDING_DEVELOPER_RELEASE',
+      step: 'processed',
+      submittedAt: minutesFromNow(-19 * 60),
+      reviewedAt: minutesFromNow(-2 * 60),
+    }),
+    submission({
+      ...android,
+      $id: SUBMISSION_REVIEWING,
+      $createdAt: minutesFromNow(-19 * 60),
+      $updatedAt: minutesFromNow(-17 * 60),
+      releaseId: RELEASE_ACTIVE,
+      track: 'production',
+      status: 'reviewing',
+      storeStatus: 'inReview',
+      step: 'processed',
+      submittedAt: minutesFromNow(-19 * 60),
+    }),
+    submission({
+      ...android,
+      $id: SUBMISSION_PRODUCTION,
+      $createdAt: daysFromNow(-13),
+      $updatedAt: daysFromNow(-12),
+      releaseId: RELEASE_PUBLISHED,
+      track: 'production',
+      rollout: 0.2,
+      status: 'published',
+      storeStatus: 'inProgress',
+      step: 'released',
+      submittedAt: daysFromNow(-13),
+      reviewedAt: daysFromNow(-12),
+      publishedAt: daysFromNow(-12),
+    }),
+    submission({
+      ...android,
+      $id: SUBMISSION_HALTED,
+      $createdAt: daysFromNow(-29),
+      $updatedAt: daysFromNow(-27),
+      releaseId: RELEASE_ATTENTION,
+      track: 'production',
+      rollout: 0.5,
+      status: 'halted',
+      storeStatus: 'halted',
+      step: 'released',
+      submittedAt: daysFromNow(-29),
+      reviewedAt: daysFromNow(-28),
+      publishedAt: daysFromNow(-28),
+    }),
+    submission({
+      ...ios,
+      $id: SUBMISSION_REJECTED,
+      $createdAt: daysFromNow(-29),
+      $updatedAt: daysFromNow(-27),
+      releaseId: RELEASE_ATTENTION,
+      track: 'production',
+      status: 'rejected',
+      storeStatus: 'REJECTED',
+      step: 'processed',
+      submittedAt: daysFromNow(-29),
+      reviewedAt: daysFromNow(-27),
+      errorCode: 'store_rejected',
+      errorMessage:
+        'Guideline 2.1 - Performance - App Completeness: the app crashed on launch.',
+    }),
+  ]
+}
+
+export function checkFixture(
+  issues: DistributionCheckIssue[] = [],
+): DistributionCheck {
+  return {
+    ready: !issues.some((issue) => issue.severity === 'error'),
+    issues,
+  }
+}
+
 export type DistributionRepository = Models.ProviderRepositoryFramework
 
 export function vcsFixtures(): {
@@ -473,6 +1088,12 @@ export type DistributionSeed = {
   branches?: string[]
   directories?: string[]
   downloads?: Record<string, DistributionSigningIdentityDownload>
+  builds?: DistributionBuild[]
+  logs?: DistributionLog[]
+  artifacts?: DistributionArtifact[]
+  releases?: DistributionRelease[]
+  submissions?: DistributionSubmission[]
+  checks?: Record<string, DistributionCheck>
 }
 
 export type DistributionRole = 'owner' | 'readonly'
@@ -484,22 +1105,46 @@ export type DistributionMockOptions = {
   empty?: boolean
   seed?: DistributionSeed
   language?: string
+  scopes?: string[]
 }
 
 export type DistributionRequest = {
   method: string
   path: string
   body: Record<string, unknown>
+  headers: Record<string, string>
 }
 
 export type DistributionStore = Required<DistributionSeed>
 
+export type DistributionChangeKind =
+  | 'builds'
+  | 'artifacts'
+  | 'releases'
+  | 'submissions'
+
+export type DistributionLogOptions = {
+  stage?: string
+  chunks?: number
+}
+
 export type DistributionMock = {
   store: DistributionStore
   requests: DistributionRequest[]
+  realtime: DistributionRealtime
+  change<K extends DistributionChangeKind>(
+    kind: K,
+    id: string,
+    changes: Partial<DistributionStore[K][number]>,
+  ): DistributionStore[K][number]
+  appendLog(
+    buildId: string,
+    content: string,
+    options?: DistributionLogOptions,
+  ): DistributionLog[]
 }
 
-const OWNER_SCOPES = [
+export const OWNER_SCOPES = [
   'projects.read',
   'distribution.read',
   'distribution.write',
@@ -535,6 +1180,17 @@ function initialStore(
     connections: empty ? [] : connectionsFixtures(),
     signingIdentities: empty ? [] : signingFixtures(),
     downloads: {},
+    builds: empty ? [] : buildsFixtures(),
+    logs: empty
+      ? []
+      : [
+          ...logsFixtures(BUILD_SHOP_ACTIVE, 150),
+          ...logsFixtures(BUILD_FIELD_NOTES_FAILED, 12),
+        ],
+    artifacts: empty ? [] : artifactsFixtures(),
+    releases: empty ? [] : releasesFixtures(),
+    submissions: empty ? [] : submissionsFixtures(),
+    checks: {},
     ...vcs,
   }
   return structuredClone({ ...defaults, ...seed })
@@ -546,6 +1202,25 @@ function parseQueries(url: URL): Query[] {
   return [...url.searchParams]
     .filter(([key]) => key.startsWith('queries['))
     .map(([, query]) => JSON.parse(query) as Query)
+}
+
+function isDigits(value: string): boolean {
+  return (
+    value !== '' &&
+    [...value].every((character) => character >= '0' && character <= '9')
+  )
+}
+
+function compareValues(left: unknown, right: unknown): number {
+  if (typeof left === 'number' && typeof right === 'number') {
+    return left - right
+  }
+  const first = String(left ?? '')
+  const second = String(right ?? '')
+  if (isDigits(first) && isDigits(second) && first.length !== second.length) {
+    return first.length - second.length
+  }
+  return first.localeCompare(second)
 }
 
 function paginate<T extends object>(
@@ -576,23 +1251,28 @@ function paginate<T extends object>(
       searchable(item).some((value) => value.toLowerCase().includes(term)),
     ),
   )
-  const order = queries.find(
-    (query) => query.method === 'orderAsc' || query.method === 'orderDesc',
+  const orders = queries.filter(
+    (query) =>
+      (query.method === 'orderAsc' || query.method === 'orderDesc') &&
+      query.attribute,
   )
-  if (order?.attribute) {
-    const direction = order.method === 'orderAsc' ? 1 : -1
-    rows = [...rows].sort(
-      (left, right) =>
-        String(field(left, order.attribute!)).localeCompare(
-          String(field(right, order.attribute!)),
-        ) * direction,
-    )
+  if (orders.length) {
+    rows = [...rows].sort((left, right) => {
+      for (const order of orders) {
+        const result = compareValues(
+          field(left, order.attribute!),
+          field(right, order.attribute!),
+        )
+        if (result !== 0) return order.method === 'orderAsc' ? result : -result
+      }
+      return 0
+    })
   }
   const numeric = (method: string) => {
     const query = queries.find((candidate) => candidate.method === method)
     return query ? Number(query.values?.[0]) : undefined
   }
-  const total = rows.length
+  const total = url.searchParams.get('total') === 'false' ? 0 : rows.length
   const cursor = queries.find((query) => query.method === 'cursorAfter')
     ?.values?.[0]
   if (cursor !== undefined) {
@@ -646,10 +1326,18 @@ function timestamp(): string {
   return new Date().toISOString()
 }
 
-function fingerprint(): string {
-  return Array.from({ length: 64 }, () =>
+function hex(length: number): string {
+  return Array.from({ length }, () =>
     Math.floor(Math.random() * 16).toString(16),
   ).join('')
+}
+
+function fingerprint(): string {
+  return hex(64)
+}
+
+function uniqueId(): string {
+  return hex(20)
 }
 
 const APP_KEYS = [
@@ -704,7 +1392,11 @@ function invalid(type: string, message: string): never {
   throw new Failure(400, type, message)
 }
 
-type Reply = { status: number; body?: unknown }
+type Reply = {
+  status: number
+  body?: unknown
+  file?: { name: string; content: Buffer }
+}
 
 function ok(body: unknown, status: number = 200): Reply {
   return { status, body }
@@ -712,12 +1404,29 @@ function ok(body: unknown, status: number = 200): Reply {
 
 const NO_CONTENT: Reply = { status: 204 }
 
+type UploadedFile = { name: string; size: number }
+
+type Publish = (
+  params: [string, string][],
+  action: string,
+  payload: Record<string, unknown>,
+) => void
+
+type Flow = {
+  headers: Record<string, string>
+  file: UploadedFile | undefined
+  uploads: Map<string, Set<number>>
+  publish: Publish
+  later: (callback: () => void) => void
+}
+
 function distributionRoutes(
   store: DistributionStore,
   method: string,
   segments: string[],
   url: URL,
   body: Record<string, unknown>,
+  flow: Flow,
 ): Reply {
   const [resource, id, child, childId] = segments
 
@@ -813,6 +1522,16 @@ function distributionRoutes(
       store.variables = store.variables.filter(
         (variable) => variable.resourceId !== id,
       )
+      const builds = new Set(
+        store.builds
+          .filter((item) => item.appId === id)
+          .map((item) => item.$id),
+      )
+      store.builds = store.builds.filter((item) => item.appId !== id)
+      store.logs = store.logs.filter((log) => !builds.has(log.buildId))
+      store.artifacts = store.artifacts.filter((item) => item.appId !== id)
+      store.releases = store.releases.filter((item) => item.appId !== id)
+      store.submissions = store.submissions.filter((item) => item.appId !== id)
       return NO_CONTENT
     }
   }
@@ -1074,7 +1793,873 @@ function distributionRoutes(
     }
   }
 
+  if (resource === 'apps' && id && child) {
+    const handled = flowRoutes(
+      store,
+      flow,
+      method,
+      findApp(id),
+      segments.slice(2),
+      url,
+      body,
+    )
+    if (handled) return handled
+  }
+
   return notFound('general_route_not_found', 'Route not found.')
+}
+
+const ACTIVE_BUILD_STATUSES: readonly string[] = [
+  'waiting',
+  'processing',
+  'building',
+  'signing',
+]
+
+const SUBMISSION_TRANSITIONS: Record<
+  DistributionSubmissionStatus,
+  DistributionSubmissionStatus[]
+> = {
+  waiting: [
+    'validating',
+    'uploading',
+    'processing',
+    'pending',
+    'reviewing',
+    'approved',
+    'published',
+    'failed',
+    'canceled',
+  ],
+  validating: [
+    'uploading',
+    'processing',
+    'pending',
+    'reviewing',
+    'approved',
+    'published',
+    'failed',
+    'canceled',
+  ],
+  uploading: [
+    'processing',
+    'pending',
+    'reviewing',
+    'approved',
+    'published',
+    'failed',
+    'canceled',
+  ],
+  processing: [
+    'pending',
+    'reviewing',
+    'approved',
+    'published',
+    'rejected',
+    'failed',
+    'canceled',
+  ],
+  pending: [
+    'reviewing',
+    'approved',
+    'published',
+    'rejected',
+    'failed',
+    'canceled',
+  ],
+  reviewing: ['approved', 'published', 'rejected', 'failed', 'canceled'],
+  approved: ['published', 'failed', 'canceled'],
+  published: ['halted', 'failed'],
+  halted: ['published', 'failed'],
+  rejected: [],
+  failed: [],
+  canceled: [],
+}
+
+const ACTIVE_SUBMISSION_STATUSES: readonly string[] = [
+  'waiting',
+  'validating',
+  'uploading',
+  'processing',
+  'pending',
+  'reviewing',
+  'approved',
+  'halted',
+]
+
+const REQUESTABLE_SUBMISSION_STATUSES: readonly string[] = [
+  'canceled',
+  'halted',
+  'published',
+]
+
+const PUBLISHABLE_SUBMISSION_STATUSES: readonly string[] = [
+  'approved',
+  'halted',
+]
+
+const SUBMISSION_STATUS_DELAY = 100
+
+function isSubmissionActive(
+  submission: Pick<DistributionSubmission, 'status' | 'rollout'>,
+): boolean {
+  return (
+    ACTIVE_SUBMISSION_STATUSES.includes(submission.status) ||
+    (submission.status === 'published' && submission.rollout < 1)
+  )
+}
+
+function canRequest(
+  submission: Pick<
+    DistributionSubmission,
+    'status' | 'rollout' | 'provider' | 'step'
+  >,
+  requested: DistributionSubmissionStatus,
+): boolean {
+  if (
+    !REQUESTABLE_SUBMISSION_STATUSES.includes(requested) ||
+    !isSubmissionActive(submission)
+  ) {
+    return false
+  }
+  if (
+    requested === 'canceled' &&
+    submission.provider === 'google' &&
+    (submission.step === 'released' || submission.step === 'settled')
+  ) {
+    return false
+  }
+  if (
+    requested === 'published' &&
+    !PUBLISHABLE_SUBMISSION_STATUSES.includes(submission.status)
+  ) {
+    return false
+  }
+  return SUBMISSION_TRANSITIONS[submission.status].includes(requested)
+}
+
+function releaseStatus(
+  submissions: DistributionSubmission[],
+): DistributionReleaseStatus {
+  if (!submissions.length) return 'draft'
+  if (
+    submissions.some(
+      (item) => item.status === 'rejected' || item.status === 'failed',
+    )
+  ) {
+    return 'attention'
+  }
+  const targets = new Set(submissions.map((item) => item.targetId))
+  const published = [...targets].every((target) =>
+    submissions.some(
+      (item) =>
+        item.targetId === target &&
+        item.track === 'production' &&
+        item.status === 'published',
+    ),
+  )
+  return published ? 'published' : 'active'
+}
+
+function publishRow(
+  publish: Publish,
+  kind: string,
+  row: { $id: string; appId: string },
+  action: string,
+) {
+  publish(
+    [
+      ['distributionApps', row.appId],
+      [kind, row.$id],
+    ],
+    action,
+    row,
+  )
+}
+
+function refreshRelease(
+  store: DistributionStore,
+  publish: Publish,
+  releaseId: string,
+) {
+  const current = store.releases.find((item) => item.$id === releaseId)
+  if (!current) return
+  Object.assign(current, {
+    status: releaseStatus(
+      store.submissions.filter((item) => item.releaseId === releaseId),
+    ),
+    $updatedAt: timestamp(),
+  })
+  publishRow(publish, 'releases', current, 'update')
+}
+
+function contentRange(
+  header: string | undefined,
+): { start: number; end: number; size: number } | undefined {
+  if (header === undefined) return undefined
+  const prefix = 'bytes '
+  const [range = '', size = ''] = header.startsWith(prefix)
+    ? header.slice(prefix.length).split('/')
+    : []
+  const [start = '', end = ''] = range.split('-')
+  const values = [start, end, size]
+  if (values.some((value) => !isDigits(value))) {
+    invalid('storage_invalid_content_range', 'The content range is invalid.')
+  }
+  return { start: Number(start), end: Number(end), size: Number(size) }
+}
+
+function uploadedFile(request: Request): UploadedFile | undefined {
+  const type = request.headers()['content-type'] ?? ''
+  const marker = 'boundary='
+  const data = request.postDataBuffer()
+  if (!type.startsWith('multipart/form-data') || !data) return undefined
+  const boundary = type
+    .slice(type.indexOf(marker) + marker.length)
+    .split(';')[0]
+    .trim()
+    .replaceAll('"', '')
+  const nameMarker = 'filename="'
+  const nameStart = data.indexOf(nameMarker)
+  if (nameStart < 0) return undefined
+  const nameEnd = data.indexOf('"', nameStart + nameMarker.length)
+  const contentStart = data.indexOf('\r\n\r\n', nameEnd) + 4
+  const contentEnd = data.indexOf(`\r\n--${boundary}`, contentStart)
+  return {
+    name: data.subarray(nameStart + nameMarker.length, nameEnd).toString(),
+    size: contentEnd - contentStart,
+  }
+}
+
+function createBuild(
+  store: DistributionStore,
+  app: DistributionApp,
+  body: Record<string, unknown>,
+): DistributionBuild {
+  if (!app.installationId || !app.providerRepositoryId) {
+    invalid(
+      'distribution_repository_missing',
+      'Connect a repository to the app before you start a build.',
+    )
+  }
+  const target =
+    store.targets.find(
+      (item) => item.appId === app.$id && item.$id === body.targetId,
+    ) ?? notFound('distribution_target_not_found', 'Target not found.')
+  const type = String(body.type ?? 'branch')
+  if (!['branch', 'commit', 'tag'].includes(type)) {
+    invalid(
+      'general_argument_invalid',
+      'Invalid `type` param: Value must be one of (branch, commit, tag)',
+    )
+  }
+  if (target.versionStrategy === 'manual' && body.versionCode === undefined) {
+    invalid(
+      'distribution_version_invalid',
+      'The target sets version codes manually. Pass a version code.',
+    )
+  }
+  const releaseId = String(body.releaseId ?? '')
+  if (
+    releaseId &&
+    !store.releases.some(
+      (item) => item.appId === app.$id && item.$id === releaseId,
+    )
+  ) {
+    notFound('distribution_release_not_found', 'Release not found.')
+  }
+  const reference = String(body.reference || app.providerBranch)
+  const repository =
+    store.repositories.find((item) => item.id === app.providerRepositoryId)
+      ?.name ?? ''
+  return build({
+    $id: uniqueId(),
+    $createdAt: timestamp(),
+    $updatedAt: timestamp(),
+    appId: app.$id,
+    targetId: target.$id,
+    platform: target.platform,
+    status: 'waiting',
+    ...commit(
+      repository,
+      type === 'branch' ? reference : '',
+      type === 'commit' ? reference : hex(40),
+      '',
+    ),
+    providerTag: type === 'tag' ? reference : '',
+    providerRootDirectory: app.providerRootDirectory,
+    versionName: String(body.versionName ?? ''),
+    versionCode: Number(body.versionCode ?? 0),
+    specification: target.specification,
+    timeout: target.timeout,
+    releaseId,
+  })
+}
+
+function uploadArtifact(
+  store: DistributionStore,
+  flow: Flow,
+  app: DistributionApp,
+): Reply {
+  const file = flow.file ?? invalid('storage_file_empty', 'No file sent')
+  const extension = file.name
+    .slice(file.name.lastIndexOf('.') + 1)
+    .toLowerCase()
+  if (
+    !file.name.includes('.') ||
+    (extension !== 'ipa' && extension !== 'aab')
+  ) {
+    invalid(
+      'storage_file_type_unsupported',
+      'Only ipa and aab files can be uploaded.',
+    )
+  }
+  const range = contentRange(flow.headers['content-range']) ?? {
+    start: 0,
+    end: file.size - 1,
+    size: file.size,
+  }
+  if (range.start > range.end || range.end >= range.size) {
+    invalid('storage_invalid_content_range', 'The content range is invalid.')
+  }
+  const artifactId = flow.headers['x-appwrite-id'] || uniqueId()
+  const existing = store.artifacts.find((item) => item.$id === artifactId)
+  if (
+    existing &&
+    (existing.appId !== app.$id || existing.source !== 'upload')
+  ) {
+    notFound('distribution_artifact_not_found', 'Artifact not found.')
+  }
+  if (
+    existing &&
+    (existing.type !== extension || existing.size !== range.size)
+  ) {
+    invalid(
+      'storage_invalid_content_range',
+      'Every chunk must carry the file of the first chunk.',
+    )
+  }
+  const current =
+    existing ??
+    artifact({
+      $id: artifactId,
+      $createdAt: timestamp(),
+      $updatedAt: timestamp(),
+      appId: app.$id,
+      type: extension === 'ipa' ? 'ipa' : 'aab',
+      source: 'upload',
+      status: 'uploading',
+      name: file.name,
+      size: range.size,
+      chunksUploaded: 0,
+    })
+  if (!existing) store.artifacts.unshift(current)
+  if (current.chunksUploaded >= current.chunksTotal) return ok(current, 202)
+  const chunks = flow.uploads.get(artifactId) ?? new Set<number>()
+  chunks.add(Math.floor(range.start / ARTIFACT_CHUNK_SIZE))
+  flow.uploads.set(artifactId, chunks)
+  Object.assign(current, {
+    chunksUploaded: chunks.size,
+    $updatedAt: timestamp(),
+  })
+  if (current.chunksUploaded === current.chunksTotal) {
+    current.status = 'processing'
+    publishRow(flow.publish, 'artifacts', current, 'create')
+  }
+  return ok(current, 202)
+}
+
+function releaseVersion(value: unknown): string {
+  const version = String(value ?? '')
+  if (version.length < 1 || version.length > 64) {
+    invalid(
+      'general_argument_invalid',
+      'Invalid `version` param: Value must be a valid string and at least 1 chars and no longer than 64 chars',
+    )
+  }
+  return version
+}
+
+function releaseNotes(value: unknown): Record<string, string> {
+  if (
+    !value ||
+    typeof value !== 'object' ||
+    Array.isArray(value) ||
+    Object.entries(value).some(
+      ([locale, text]) => locale === '' || typeof text !== 'string',
+    )
+  ) {
+    invalid(
+      'general_argument_invalid',
+      'Notes must be an object of locale to text.',
+    )
+  }
+  return value as Record<string, string>
+}
+
+function createSubmission(
+  store: DistributionStore,
+  app: DistributionApp,
+  body: Record<string, unknown>,
+): { submission: DistributionSubmission; created: boolean } {
+  const owned = <T extends { $id: string; appId: string }>(
+    rows: T[],
+    id: unknown,
+  ) => rows.find((item) => item.appId === app.$id && item.$id === id)
+  const parent =
+    owned(store.releases, body.releaseId) ??
+    notFound('distribution_release_not_found', 'Release not found.')
+  const target =
+    owned(store.targets, body.targetId) ??
+    notFound('distribution_target_not_found', 'Target not found.')
+  const selected =
+    owned(store.artifacts, body.artifactId) ??
+    notFound('distribution_artifact_not_found', 'Artifact not found.')
+  if (selected.status !== 'ready') {
+    conflict(
+      'distribution_artifact_not_ready',
+      `Artifact '${selected.$id}' is '${selected.status}'. Only a ready artifact can be submitted.`,
+    )
+  }
+  if (
+    selected.platform !== target.platform ||
+    selected.identifier !== target.identifier
+  ) {
+    invalid(
+      'distribution_artifact_invalid',
+      `Artifact '${selected.$id}' was built for '${selected.identifier}' on ${selected.platform}, but target '${target.$id}' ships '${target.identifier}' on ${target.platform}.`,
+    )
+  }
+  const provider = PROVIDERS[target.platform]
+  if (!target.connectionId) {
+    invalid(
+      'distribution_connection_invalid',
+      `Target '${target.$id}' has no store connection. Attach one with updateTarget before submitting.`,
+    )
+  }
+  const connection =
+    store.connections.find((item) => item.$id === target.connectionId) ??
+    notFound('distribution_connection_not_found', 'Connection not found.')
+  if (connection.provider !== provider) {
+    invalid(
+      'distribution_connection_invalid',
+      `A '${target.platform}' target needs a '${provider}' connection.`,
+    )
+  }
+  const track = String(body.track || target.track)
+  if (!TRACKS[provider].includes(track)) {
+    invalid(
+      'distribution_track_invalid',
+      `Track '${track}' is not a valid track for ${target.platform}. Use one of: ${TRACKS[provider].join(', ')}.`,
+    )
+  }
+  const key = String(body.key ?? '')
+  const existing = key
+    ? store.submissions.find(
+        (item) => item.appId === app.$id && item.key === key,
+      )
+    : undefined
+  if (existing) return { submission: existing, created: false }
+  const rollout = body.rollout === undefined ? 1 : Number(body.rollout)
+  if (!(rollout > 0 && rollout <= 1)) {
+    invalid(
+      'general_argument_invalid',
+      'Rollout must be greater than 0 and at most 1.',
+    )
+  }
+  const version =
+    target.platform === 'ios'
+      ? selected.buildNumber
+      : String(selected.versionCode || '')
+  return {
+    created: true,
+    submission: submission({
+      $id: uniqueId(),
+      $createdAt: timestamp(),
+      $updatedAt: timestamp(),
+      appId: app.$id,
+      releaseId: parent.$id,
+      targetId: target.$id,
+      artifactId: selected.$id,
+      platform: target.platform,
+      track,
+      rollout,
+      automatic: body.automatic !== false,
+      status: 'waiting',
+      key: key || `${target.$id}:${track}:${version || selected.$id}`,
+    }),
+  }
+}
+
+function targetIssues(
+  store: DistributionStore,
+  target: DistributionTarget,
+): DistributionCheckIssue[] {
+  const issue = (
+    code: string,
+    field: string,
+    message: string,
+    remediation: string,
+  ): DistributionCheckIssue => ({
+    code,
+    severity: 'error',
+    platform: target.platform,
+    field,
+    message,
+    remediation,
+    manualActionRequired: false,
+  })
+  const issues: DistributionCheckIssue[] = []
+  const connection = store.connections.find(
+    (item) => item.$id === target.connectionId,
+  )
+  if (!connection) {
+    issues.push(
+      issue(
+        'connection_missing',
+        'connectionId',
+        'The target has no store connection.',
+        'Connect an App Store Connect or Google Play account and set it as the connection of the target.',
+      ),
+    )
+  } else if (connection.status === 'invalid') {
+    issues.push(
+      issue(
+        'connection_unauthorized',
+        'connectionId',
+        `The store rejected the credentials of the connection. ${connection.error}`.trim(),
+        'Update the connection with a valid key.',
+      ),
+    )
+  }
+  if (
+    !store.signingIdentities.some(
+      (item) => item.$id === target.signingIdentityId,
+    )
+  ) {
+    issues.push(
+      issue(
+        'signing_missing',
+        'signingIdentityId',
+        'The target has no signing identity.',
+        'Import a certificate or keystore, or generate a managed identity, and set it as the signing identity of the target.',
+      ),
+    )
+  }
+  return issues
+}
+
+function flowRoutes(
+  store: DistributionStore,
+  flow: Flow,
+  method: string,
+  app: DistributionApp,
+  [child, childId, grandchild]: string[],
+  url: URL,
+  body: Record<string, unknown>,
+): Reply | undefined {
+  if (child === 'builds') {
+    const builds = store.builds.filter((item) => item.appId === app.$id)
+    if (!childId && method === 'GET') {
+      const { total, rows } = paginate(builds, url, (item) => [
+        item.$id,
+        item.versionName,
+        item.providerBranch,
+        item.providerTag,
+        item.providerCommitHash,
+      ])
+      return ok({ total, builds: rows })
+    }
+    if (!childId && method === 'POST') {
+      const created = createBuild(store, app, body)
+      store.builds.unshift(created)
+      publishRow(flow.publish, 'builds', created, 'create')
+      return ok(created, 201)
+    }
+    if (!childId) return undefined
+    const current =
+      builds.find((item) => item.$id === childId) ??
+      notFound('distribution_build_not_found', 'Build not found.')
+    if (!grandchild && method === 'GET') return ok(current)
+    if (!grandchild && method === 'DELETE') {
+      store.builds = store.builds.filter((item) => item.$id !== childId)
+      store.logs = store.logs.filter((log) => log.buildId !== childId)
+      publishRow(flow.publish, 'builds', current, 'delete')
+      return NO_CONTENT
+    }
+    if (grandchild === 'status' && method === 'PATCH') {
+      if (body.status !== 'canceled') {
+        invalid(
+          'general_argument_invalid',
+          'Invalid `status` param: Value must be one of (canceled)',
+        )
+      }
+      if (!ACTIVE_BUILD_STATUSES.includes(current.status)) {
+        conflict(
+          'distribution_build_transition_invalid',
+          `Build '${current.$id}' cannot change from '${current.status}' to 'canceled'.`,
+        )
+      }
+      Object.assign(current, {
+        status: 'canceled',
+        endedAt: timestamp(),
+        $updatedAt: timestamp(),
+      })
+      publishRow(flow.publish, 'builds', current, 'update')
+      return ok(current)
+    }
+    if (grandchild === 'logs' && method === 'GET') {
+      const logs = store.logs.filter((log) => log.buildId === childId)
+      const { total, rows } = paginate(logs, url, (item) => [item.content])
+      return ok({ total, logs: rows })
+    }
+    return undefined
+  }
+
+  if (child === 'artifacts') {
+    const artifacts = store.artifacts.filter((item) => item.appId === app.$id)
+    if (!childId && method === 'GET') {
+      const { total, rows } = paginate(artifacts, url, (item) => [
+        item.$id,
+        item.name,
+        item.identifier,
+        item.versionName,
+      ])
+      return ok({ total, artifacts: rows })
+    }
+    if (!childId && method === 'POST') return uploadArtifact(store, flow, app)
+    if (!childId) return undefined
+    const current =
+      artifacts.find((item) => item.$id === childId) ??
+      notFound('distribution_artifact_not_found', 'Artifact not found.')
+    if (!grandchild && method === 'GET') return ok(current)
+    if (!grandchild && method === 'DELETE') {
+      store.artifacts = store.artifacts.filter((item) => item.$id !== childId)
+      flow.uploads.delete(childId)
+      publishRow(flow.publish, 'artifacts', current, 'delete')
+      return NO_CONTENT
+    }
+    if (grandchild === 'download' && method === 'GET') {
+      if (current.status === 'uploading') {
+        conflict(
+          'distribution_artifact_not_ready',
+          'The artifact is still uploading.',
+        )
+      }
+      return {
+        status: 200,
+        file: { name: current.name, content: Buffer.from(`${current.name}\n`) },
+      }
+    }
+    return undefined
+  }
+
+  if (child === 'releases') {
+    const releases = store.releases.filter((item) => item.appId === app.$id)
+    if (!childId && method === 'GET') {
+      const { total, rows } = paginate(releases, url, (item) => [
+        item.$id,
+        item.version,
+      ])
+      return ok({ total, releases: rows })
+    }
+    if (!childId && method === 'POST') {
+      const requested = String(body.releaseId ?? '')
+      const releaseId = requested === 'unique()' ? uniqueId() : requested
+      if (!releaseId) {
+        invalid(
+          'general_argument_invalid',
+          'Param "releaseId" is not optional.',
+        )
+      }
+      const version = releaseVersion(body.version)
+      if (store.releases.some((item) => item.$id === releaseId)) {
+        conflict(
+          'distribution_release_already_exists',
+          'Release already exists.',
+        )
+      }
+      const created = release({
+        $id: releaseId,
+        $createdAt: timestamp(),
+        $updatedAt: timestamp(),
+        appId: app.$id,
+        version,
+        notes: releaseNotes(body.notes ?? {}),
+        status: 'draft',
+      })
+      store.releases.unshift(created)
+      publishRow(flow.publish, 'releases', created, 'create')
+      return ok(created, 201)
+    }
+    if (!childId || grandchild) return undefined
+    const current =
+      releases.find((item) => item.$id === childId) ??
+      notFound('distribution_release_not_found', 'Release not found.')
+    if (method === 'GET') return ok(current)
+    if (method === 'PATCH') {
+      if (body.version == null && body.notes == null) {
+        invalid(
+          'general_argument_invalid',
+          'At least one of version or notes is required.',
+        )
+      }
+      Object.assign(
+        current,
+        body.version == null ? {} : { version: releaseVersion(body.version) },
+        body.notes == null ? {} : { notes: releaseNotes(body.notes) },
+        { $updatedAt: timestamp() },
+      )
+      publishRow(flow.publish, 'releases', current, 'update')
+      return ok(current)
+    }
+    if (method === 'DELETE') {
+      if (
+        store.submissions.some(
+          (item) => item.releaseId === current.$id && isSubmissionActive(item),
+        )
+      ) {
+        conflict(
+          'distribution_release_in_use',
+          'The release has a submission in progress. Cancel it or wait for it to finish first.',
+        )
+      }
+      store.releases = store.releases.filter((item) => item.$id !== childId)
+      publishRow(flow.publish, 'releases', current, 'delete')
+      return NO_CONTENT
+    }
+    return undefined
+  }
+
+  if (child === 'submissions') {
+    const submissions = store.submissions.filter(
+      (item) => item.appId === app.$id,
+    )
+    if (!childId && method === 'GET') {
+      const { total, rows } = paginate(submissions, url, (item) => [
+        item.$id,
+        item.track,
+        item.status,
+      ])
+      return ok({ total, submissions: rows })
+    }
+    if (!childId && method === 'POST') {
+      const { submission: result, created } = createSubmission(store, app, body)
+      if (!created) return ok(result)
+      store.submissions.unshift(result)
+      publishRow(flow.publish, 'submissions', result, 'create')
+      refreshRelease(store, flow.publish, result.releaseId)
+      return ok(result, 201)
+    }
+    if (!childId) return undefined
+    const current =
+      submissions.find((item) => item.$id === childId) ??
+      notFound('distribution_submission_not_found', 'Submission not found.')
+    if (!grandchild && method === 'GET') return ok(current)
+    if (!grandchild && method === 'PATCH') {
+      if (body.automatic === undefined && body.rollout === undefined) {
+        invalid(
+          'general_argument_invalid',
+          'At least one parameter to update is required.',
+        )
+      }
+      if (
+        body.automatic !== undefined &&
+        (!isSubmissionActive(current) ||
+          current.step === 'released' ||
+          current.step === 'settled')
+      ) {
+        conflict(
+          'distribution_submission_transition_invalid',
+          `Submission '${current.$id}' was already released to the store, so automatic can no longer change.`,
+        )
+      }
+      const rollout =
+        body.rollout === undefined ? undefined : Number(body.rollout)
+      if (rollout !== undefined) {
+        if (current.provider !== 'google') {
+          invalid(
+            'general_argument_invalid',
+            'Only Google Play submissions have a staged rollout.',
+          )
+        }
+        if (
+          !(
+            (current.status === 'published' && current.rollout < 1) ||
+            current.status === 'halted'
+          )
+        ) {
+          conflict(
+            'distribution_submission_transition_invalid',
+            `Submission '${current.$id}' has no staged rollout to change.`,
+          )
+        }
+        if (!(rollout > 0 && rollout <= 1)) {
+          invalid(
+            'general_argument_invalid',
+            'Rollout must be greater than 0 and at most 1.',
+          )
+        }
+      }
+      Object.assign(
+        current,
+        definedEntries({ automatic: body.automatic, rollout }, [
+          'automatic',
+          'rollout',
+        ]),
+        { $updatedAt: timestamp() },
+      )
+      publishRow(flow.publish, 'submissions', current, 'update')
+      return ok(current)
+    }
+    if (grandchild === 'status' && method === 'PATCH') {
+      const requested = String(body.status ?? '')
+      if (!(requested in SUBMISSION_TRANSITIONS)) {
+        invalid('general_argument_invalid', 'Invalid `status` param.')
+      }
+      const status = requested as DistributionSubmissionStatus
+      if (!canRequest(current, status)) {
+        conflict(
+          'distribution_submission_transition_invalid',
+          `Submission '${current.$id}' cannot change from '${current.status}' to '${status}'.`,
+        )
+      }
+      const unchanged = structuredClone(current)
+      publishRow(flow.publish, 'submissions', unchanged, 'update')
+      flow.later(() => {
+        Object.assign(current, {
+          status,
+          $updatedAt: timestamp(),
+          ...(status === 'published'
+            ? {
+                publishedAt: current.publishedAt ?? timestamp(),
+                step: 'released',
+              }
+            : {}),
+        })
+        publishRow(flow.publish, 'submissions', current, 'update')
+        refreshRelease(store, flow.publish, current.releaseId)
+      })
+      return ok(unchanged)
+    }
+    return undefined
+  }
+
+  if (child === 'checks' && !childId && method === 'POST') {
+    const target =
+      store.targets.find(
+        (item) => item.appId === app.$id && item.$id === body.targetId,
+      ) ?? notFound('distribution_target_not_found', 'Target not found.')
+    const track = String(
+      body.track || target.track || DEFAULT_TRACKS[target.platform],
+    )
+    return ok(
+      store.checks[`${target.$id}:${track}`] ??
+        checkFixture(targetIssues(store, target)),
+    )
+  }
+
+  return undefined
 }
 
 function appleAccount(
@@ -1335,11 +2920,88 @@ export async function mockDistributionApi(
     empty = false,
     seed = {},
     language,
+    scopes,
   }: DistributionMockOptions = {},
 ): Promise<DistributionMock> {
   const localOrigin = new URL(String(test.info().project.use.baseURL)).origin
   const store = initialStore(empty, seed)
   const requests: DistributionRequest[] = []
+  const uploads = new Map<string, Set<number>>()
+  const realtime = await mockDistributionRealtime(page, {
+    user: ACCOUNT,
+    channels: ['console', `projects.${PROJECT.$id}`],
+  })
+  const publish: Publish = (params, action, payload) =>
+    realtime.emit(distributionEvents(params, action), payload)
+  const timers = new Set<ReturnType<typeof setTimeout>>()
+  page.once('close', () => timers.forEach((timer) => clearTimeout(timer)))
+  const later = (callback: () => void) => {
+    const timer = setTimeout(() => {
+      timers.delete(timer)
+      callback()
+    }, SUBMISSION_STATUS_DELAY)
+    timers.add(timer)
+  }
+
+  const change = <K extends DistributionChangeKind>(
+    kind: K,
+    id: string,
+    changes: Partial<DistributionStore[K][number]>,
+  ): DistributionStore[K][number] => {
+    const rows: { $id: string; appId: string }[] = store[kind]
+    const row = rows.find((item) => item.$id === id)
+    if (!row) throw new Error(`No ${kind} row has the ID ${id}.`)
+    Object.assign(row, { $updatedAt: timestamp() }, changes)
+    publishRow(publish, kind, row, 'update')
+    if (kind === 'submissions') {
+      refreshRelease(store, publish, (row as DistributionSubmission).releaseId)
+    }
+    return row as DistributionStore[K][number]
+  }
+
+  const appendLog = (
+    buildId: string,
+    content: string,
+    { stage, chunks = 1 }: DistributionLogOptions = {},
+  ): DistributionLog[] => {
+    const current = store.builds.find((item) => item.$id === buildId)
+    if (!current) throw new Error(`No build has the ID ${buildId}.`)
+    const count = Math.max(1, Math.floor(chunks))
+    const latest = store.logs
+      .filter((log) => log.buildId === buildId)
+      .reduce(
+        (highest, log) =>
+          BigInt(log.sequence) > highest ? BigInt(log.sequence) : highest,
+        LOG_SEQUENCE,
+      )
+    const sequence = (latest + LOG_SEQUENCE_STEP).toString()
+    const size = Math.ceil(content.length / count)
+    const rows: DistributionLog[] = Array.from(
+      { length: count },
+      (_, chunk) => ({
+        $id: uniqueId(),
+        $createdAt: timestamp(),
+        buildId,
+        sequence,
+        chunk,
+        stage: stage ?? (current.stage || 'build'),
+        content: content.slice(chunk * size, (chunk + 1) * size),
+      }),
+    )
+    store.logs.push(...rows)
+    current.logsSize += content.length
+    const last = rows[rows.length - 1]
+    publish(
+      [
+        ['distributionApps', current.appId],
+        ['builds', buildId],
+        ['logs', last.$id],
+      ],
+      'create',
+      { ...last, chunks: count },
+    )
+    return rows
+  }
 
   await page.addInitScript(
     ({ profileFeatures, activeLanguage }) => {
@@ -1366,14 +3028,24 @@ export async function mockDistributionApi(
     if (!apiPath || request.method() === 'OPTIONS') {
       return route.fulfill({ status: 204, headers })
     }
-    const reply = ({ status, body }: Reply) =>
-      body === undefined
-        ? route.fulfill({ status, headers })
-        : route.fulfill({
+    const reply = ({ status, body, file }: Reply) =>
+      file
+        ? route.fulfill({
             status,
-            headers: { ...headers, 'content-type': 'application/json' },
-            body: JSON.stringify(body),
+            headers: {
+              ...headers,
+              'content-type': 'application/octet-stream',
+              'content-disposition': `attachment; filename="${file.name}"`,
+            },
+            body: file.content,
           })
+        : body === undefined
+          ? route.fulfill({ status, headers })
+          : route.fulfill({
+              status,
+              headers: { ...headers, 'content-type': 'application/json' },
+              body: JSON.stringify(body),
+            })
     const json = (body: unknown) => reply(ok(body))
     const failure = (code: number, type: string, message: string) =>
       reply({ status: code, body: { message, code, type, version: '2.0.0' } })
@@ -1401,8 +3073,8 @@ export async function mockDistributionApi(
     ) {
       return json(
         role === 'owner'
-          ? { roles: ['owner'], scopes: OWNER_SCOPES }
-          : { roles: ['developer'], scopes: READONLY_SCOPES },
+          ? { roles: ['owner'], scopes: scopes ?? OWNER_SCOPES }
+          : { roles: ['developer'], scopes: scopes ?? READONLY_SCOPES },
       )
     }
     if (apiPath === '/organizations' || apiPath === '/teams') {
@@ -1429,11 +3101,19 @@ export async function mockDistributionApi(
     }
 
     const segments = apiPath.split('/').filter(Boolean).map(decodeURIComponent)
-    const body = request.method() === 'GET' ? {} : requestBody(route)
+    const file = request.method() === 'GET' ? undefined : uploadedFile(request)
+    const body =
+      request.method() === 'GET' ? {} : file ? { file } : requestBody(route)
+    const requestHeaders = request.headers()
 
     try {
       if (segments[0] === 'distribution') {
-        requests.push({ method: request.method(), path: apiPath, body })
+        requests.push({
+          method: request.method(),
+          path: apiPath,
+          body,
+          headers: requestHeaders,
+        })
         if (!enabled) {
           return failure(
             503,
@@ -1448,6 +3128,13 @@ export async function mockDistributionApi(
             segments.slice(1),
             url,
             body,
+            {
+              headers: requestHeaders,
+              file,
+              uploads,
+              publish,
+              later,
+            },
           ),
         )
       }
@@ -1471,13 +3158,30 @@ export async function mockDistributionApi(
     return failure(404, 'general_route_not_found', 'Route not found.')
   })
 
-  return { store, requests }
+  return { store, requests, realtime, change, appendLog }
+}
+
+async function keepScreenshot(name: string, image: Buffer) {
+  const directory = process.env.SCREENSHOTS_DIR
+  if (directory) {
+    await mkdir(directory, { recursive: true })
+    await writeFile(join(directory, name), image)
+  }
 }
 
 export async function screenshot(page: Page, name: string) {
   await expect(page.locator('[data-fullscreen-loader]')).toBeHidden()
-  await page.screenshot({
+  const image = await page.screenshot({
     path: test.info().outputPath(name),
     fullPage: true,
   })
+  await keepScreenshot(name, image)
+}
+
+export async function screenshotElement(locator: Locator, name: string) {
+  await expect(locator).toBeVisible()
+  const image = await locator.screenshot({
+    path: test.info().outputPath(name),
+  })
+  await keepScreenshot(name, image)
 }

@@ -16,6 +16,15 @@ export const heDistributionDictionary: Record<string, string> = {
   Signing: 'בחתימה',
   Expiring: 'יפוג בקרוב',
   Revoked: 'נשלל',
+  // Statuses
+  Validating: 'באימות',
+  'In review': 'בבדיקה',
+  Published: 'פורסם',
+  Rejected: 'נדחה',
+  Halted: 'הושהה',
+  'Needs attention': 'דורש טיפול',
+  Blocker: 'חוסם',
+  'Manual action required': 'נדרשת פעולה ידנית',
   // Targets
   '4 vCPU, 8 GB RAM': '4 vCPU, 8 GB RAM',
   '8 vCPU, 16 GB RAM': '8 vCPU, 16 GB RAM',
@@ -82,6 +91,9 @@ export const heDistributionDictionary: Record<string, string> = {
     'לאן ה-Builds של היעד מוגשים ואיך הם נחתמים.',
   Workspace: 'Workspace',
   'Xcode project': 'פרויקט Xcode',
+  // App tabs
+  Artifacts: 'ארטיפקטים',
+  Releases: 'שחרורים',
   // Settings
   'Variables are passed to every build of this app. App variables override project variables with the same key. Keys cannot start with DISTRIBUTION_ or APPWRITE_.':
     'המשתנים מועברים לכל Build של האפליקציה. משתני אפליקציה גוברים על משתני פרויקט עם אותו מפתח. מפתחות לא יכולים להתחיל ב-DISTRIBUTION_ או ב-APPWRITE_.',
@@ -133,6 +145,57 @@ export const heDistributionDictionary: Record<string, string> = {
   'Use letters, numbers and glob characters, and do not include and exclude the same pattern.':
     'השתמשו באותיות, ספרות ותווי glob, ואל תכללו ותחריגו את אותה תבנית.',
 
+  // Builds
+  'Add a target to the app to start builds.':
+    'הוסיפו יעד לאפליקציה כדי להפעיל Builds.',
+  'Back to builds': 'חזרה ל-Builds',
+  'Build a target from a branch, tag or commit of the connected repository.':
+    'בניית יעד מ-Branch, מתגית או מ-commit של המאגר המחובר.',
+  'Build canceled': 'ה-Build בוטל',
+  'Build deleted': 'ה-Build נמחק',
+  'Build failed': 'ה-Build נכשל',
+  'Build from': 'בנייה מתוך',
+  'Build not found': 'ה-Build לא נמצא',
+  'Build started': 'ה-Build התחיל',
+  'Cancel the build before you delete it.': 'בטלו את ה-Build לפני שתמחקו אותו.',
+  'Connect a repository to the app to start builds.':
+    'חברו מאגר לאפליקציה כדי להפעיל Builds.',
+  'Could not load this build': 'לא ניתן לטעון את ה-Build',
+  'Create build': 'יצירת Build',
+  'Delete build': 'מחיקת Build',
+  'Each build compiles one target from the repository and signs it for its store.':
+    'כל Build מהדר יעד אחד מהמאגר וחותם אותו עבור החנות שלו.',
+  'Failed to delete build': 'מחיקת ה-Build נכשלה',
+  'Failed to start build': 'הפעלת ה-Build נכשלה',
+  'Fetching source': 'במשיכת קוד המקור',
+  Inspecting: 'בניתוח',
+  'Its logs are deleted, and so is its artifact when no submission uses it. This action cannot be undone.':
+    'הלוגים שלו יימחקו, וכך גם הארטיפקט שלו אם אף הגשה לא משתמשת בו. לא ניתן לבטל פעולה זו.',
+  'Leave empty to use the version set in your project.':
+    'השאירו ריק כדי להשתמש בגרסה שמוגדרת בפרויקט שלכם.',
+  'Load earlier logs': 'טעינת לוגים קודמים',
+  'Loading builds...': 'טוען Builds...',
+  'No version': 'ללא גרסה',
+  'Showing the most recent logs.': 'מוצגים הלוגים האחרונים.',
+  'Start a build from the connected repository, or push to a branch that matches your triggers.':
+    'הפעילו Build מהמאגר המחובר, או בצעו push ל-Branch שתואם לטריגרים שלכם.',
+  'The build stops and its logs are kept. Start a new build to try again.':
+    'ה-Build ייעצר והלוגים שלו יישמרו. הפעילו Build חדש כדי לנסות שוב.',
+  'This build does not exist or has been deleted.':
+    'ה-Build הזה לא קיים או שנמחק.',
+  'This build has no commit to build again.':
+    'ל-Build הזה אין commit לבנייה חוזרת.',
+  'This build has no logs.': 'ל-Build הזה אין לוגים.',
+  'Failed to load logs': 'טעינת הלוגים נכשלה',
+  'This target sets version codes manually.':
+    'היעד הזה מגדיר קודי גרסה באופן ידני.',
+  'Uploading to the store': 'בהעלאה לחנות',
+  'Version code': 'קוד גרסה',
+  'Version name': 'שם גרסה',
+  builds: 'Builds',
+  'Enter a whole number from 1 to 2,100,000,000.':
+    'הזינו מספר שלם בין 1 ל-2,100,000,000.',
+  'Failed to load builds': 'טעינת ה-Builds נכשלה',
   // Apps
   'A native Android project built with Gradle.':
     'פרויקט Android נייטיב שנבנה עם Gradle.',
@@ -185,6 +248,33 @@ export const heDistributionDictionary: Record<string, string> = {
   'Upload signed builds yourself. A repository can be connected in settings.':
     'העלו Builds חתומים בעצמכם. אפשר לחבר מאגר בהגדרות.',
   "You don't have permission to create apps.": 'אין לכם הרשאה ליצור אפליקציות.',
+  // Artifacts
+  'Upload artifact': 'העלאת ארטיפקט',
+  'Binaries built by Appwrite or uploaded from your own pipeline. A ready artifact can be submitted to the stores from a release.':
+    'קבצים בינאריים ש-Appwrite בנה או שהועלו מה-pipeline שלכם. ארטיפקט מוכן אפשר להגיש לחנויות מתוך שחרור.',
+  'Failed to load artifacts': 'טעינת הארטיפקטים נכשלה',
+  'No artifacts yet': 'אין עדיין ארטיפקטים',
+  'Builds produce artifacts here. You can also upload an IPA or AAB built elsewhere.':
+    'ה-Builds יוצרים כאן ארטיפקטים. אפשר גם להעלות IPA או AAB שנבנו במקום אחר.',
+  artifacts: 'ארטיפקטים',
+  'Only a ready artifact can be downloaded.': 'אפשר להוריד רק ארטיפקט מוכן.',
+  Signed: 'חתום',
+  Unsigned: 'לא חתום',
+  'Upload an IPA for iOS or an AAB for Android. Appwrite inspects the binary and matches it to a target by its bundle ID or package name.':
+    'העלו IPA ל-iOS או AAB ל-Android. Appwrite בודק את הקובץ הבינארי ומשייך אותו ליעד לפי ה-bundle ID או שם החבילה.',
+  'Choose an .ipa or .aab file.': 'בחרו קובץ מסוג ipa או aab.',
+  'The upload runs in the background while you keep working. Reloading the page stops it.':
+    'ההעלאה ממשיכה ברקע בזמן שאתם ממשיכים לעבוד. רענון הדף עוצר אותה.',
+  'This app has no targets yet. An artifact that matches no target is marked invalid.':
+    'לאפליקציה הזו אין עדיין יעדים. ארטיפקט שלא תואם לאף יעד מסומן כלא תקין.',
+  'Delete {name}? Its file is removed and it can no longer be submitted. This action cannot be undone.':
+    'למחוק את {name}? הקובץ שלו יוסר ולא יהיה אפשר להגיש אותו יותר. לא ניתן לבטל פעולה זו.',
+  'Artifact deleted': 'הארטיפקט נמחק',
+  'Failed to delete artifact': 'מחיקת הארטיפקט נכשלה',
+  'Delete artifact': 'מחיקת ארטיפקט',
+  'Uploaded. Appwrite is inspecting the binary.':
+    'הועלה. Appwrite בודק את הקובץ הבינארי.',
+  'View artifacts': 'הצגת ארטיפקטים',
   // Connections
   "You don't have permission to manage store connections.":
     'אין לכם הרשאה לנהל חיבורים לחנויות.',
@@ -297,6 +387,126 @@ export const heDistributionDictionary: Record<string, string> = {
   'Drop a file here': 'גררו קובץ לכאן',
   'Add another file': 'הוספת קובץ נוסף',
   'Paste contents': 'הדבקת תוכן',
+  // Releases
+  releases: 'שחרורים',
+  'A release is one version of this app. Submit it to each store from the release page.':
+    'שחרור הוא גרסה אחת של האפליקציה. מגישים אותו לכל חנות מדף השחרור.',
+  'Add a target to this app before submitting a release.':
+    'הוסיפו יעד לאפליקציה לפני הגשת שחרור.',
+  'Add locale': 'הוספת Locale',
+  'Appwrite stops this submission and withdraws it from review. You can submit the release again later.':
+    'Appwrite יעצור את ההגשה וימשוך אותה מהבדיקה. אפשר להגיש את השחרור שוב מאוחר יותר.',
+  'Appwrite uploads the artifact to the store, then follows processing and review. Track the progress on this page.':
+    'Appwrite מעלה את הארטיפקט לחנות ועוקב אחרי העיבוד והבדיקה. ההתקדמות מוצגת בדף הזה.',
+  'Back to releases': 'חזרה לשחרורים',
+  'Below 100% requests a staged rollout that you can raise, pause and resume. If the store applies a different percentage, you are warned after submitting.':
+    'ערך מתחת ל-100% מבקש השקה מדורגת שאפשר להגדיל, להשהות ולחדש. אם החנות תחיל אחוז אחר, תוצג לכם אזהרה אחרי ההגשה.',
+  'Bug fixes and performance improvements.': 'תיקוני באגים ושיפורי ביצועים.',
+  'Builds for this release': 'Builds של השחרור',
+  'Builds started for this release. Submit a ready build to a store from here.':
+    'Builds שהופעלו עבור השחרור. אפשר להגיש מכאן Build מוכן לחנות.',
+  'Cancel submission': 'ביטול ההגשה',
+  'Change requested': 'השינוי התבקש',
+  'Choose the percentage of Google Play users who receive this version. Use 100% to finish the staged rollout.':
+    'בחרו את אחוז המשתמשים ב-Google Play שיקבלו את הגרסה. הזינו 100% כדי להשלים את ההשקה המדורגת.',
+  'Could not load this release': 'לא ניתן לטעון את השחרור',
+  'Create a release for the next version of this app, then submit its builds to the App Store and Google Play.':
+    'צרו שחרור לגרסה הבאה של האפליקציה, ואז הגישו את ה-Builds שלו ל-App Store ול-Google Play.',
+  'Create release': 'יצירת שחרור',
+  'Delete release': 'מחיקת שחרור',
+  'Delete release {version}? Its submission history is deleted with it. Versions already in the stores stay there. This action cannot be undone.':
+    'למחוק את השחרור {version}? היסטוריית ההגשות שלו תימחק יחד איתו. גרסאות שכבר נמצאות בחנויות יישארו שם. לא ניתן לבטל פעולה זו.',
+  'Each locale can have only one note.':
+    'לכל Locale יכולה להיות הערה אחת בלבד.',
+  'Each store target gets its own submissions. The status follows the store as it processes, reviews and releases the version.':
+    'לכל יעד חנות יש הגשות משלו. הסטטוס מתעדכן לפי החנות בזמן שהיא מעבדת, בודקת ומשחררת את הגרסה.',
+  'Enter a locale for every note.': 'הזינו Locale לכל הערה.',
+  'Enter a whole number from 1 to 100.': 'הזינו מספר שלם בין 1 ל-100.',
+  'Failed to create release': 'יצירת השחרור נכשלה',
+  'Failed to create submission': 'יצירת ההגשה נכשלה',
+  'Failed to delete release': 'מחיקת השחרור נכשלה',
+  'Failed to load releases': 'טעינת השחרורים נכשלה',
+  'Failed to update release': 'עדכון השחרור נכשל',
+  'Failed to update the rollout': 'עדכון ההשקה נכשל',
+  'Failed to update the submission': 'עדכון ההגשה נכשל',
+  'Loading artifacts...': 'טוען ארטיפקטים...',
+  Located: 'אותר',
+  'No builds for this release yet.': 'אין עדיין Builds לשחרור הזה.',
+  'No release notes.': 'אין הערות שחרור.',
+  'No releases yet': 'אין עדיין שחרורים',
+  'No submissions for this target yet.': 'אין עדיין הגשות ליעד הזה.',
+  Notes: 'הערות',
+  'Pause rollout': 'השהיית ההשקה',
+  Processed: 'עבר עיבוד',
+  'Published on': 'תאריך פרסום',
+  'Release automatically': 'שחרור אוטומטי',
+  'Release created': 'השחרור נוצר',
+  'Release deleted': 'השחרור נמחק',
+  'Release mode': 'אופן השחרור',
+  'Release not found': 'השחרור לא נמצא',
+  'Release notes': 'הערות שחרור',
+  'Release the version as soon as Apple approves it. Turn this off to release it yourself from this page.':
+    'הגרסה תשוחרר ברגע ש-Apple תאשר אותה. כבו את האפשרות כדי לשחרר אותה בעצמכם מהדף הזה.',
+  'Release to the store': 'שחרור לחנות',
+  'Release updated': 'השחרור עודכן',
+  Released: 'שוחרר',
+  'Remove notes': 'הסרת ההערות',
+  'Resume rollout': 'חידוש ההשקה',
+  'Reviewed on': 'תאריך הבדיקה',
+  Rollout: 'השקה',
+  'Rollout percentage': 'אחוז ההשקה',
+  'Rollout updated': 'ההשקה עודכנה',
+  'Search releases': 'חיפוש שחרורים',
+  'Search releases...': 'חיפוש שחרורים...',
+  Settled: 'הושלם',
+  'Store releases cannot be rolled back. To stop a release, pause a Google Play staged rollout or an App Store phased release, or submit a previous artifact with a higher version code as a new submission.':
+    'אי אפשר להחזיר לאחור שחרור בחנות. כדי לעצור שחרור, השהו השקה מדורגת ב-Google Play או שחרור הדרגתי ב-App Store, או הגישו ארטיפקט קודם עם קוד גרסה גבוה יותר כהגשה חדשה.',
+  'Store status': 'סטטוס בחנות',
+  'Submission created': 'ההגשה נוצרה',
+  Submissions: 'הגשות',
+  'Submissions already sent to a store keep the version and notes they were sent with.':
+    'הגשות שכבר נשלחו לחנות שומרות על הגרסה ועל ההערות שאיתן נשלחו.',
+  'Submit build': 'הגשת ה-Build',
+  'Submit release': 'הגשת השחרור',
+  'Submit to Google Play': 'הגשה ל-Google Play',
+  'Submit to the App Store': 'הגשה ל-App Store',
+  'Submitted on': 'תאריך ההגשה',
+  'The store continues offering this version from the current rollout percentage.':
+    'החנות תמשיך להציע את הגרסה מאחוז ההשקה הנוכחי.',
+  'The store makes this approved version available to users. A released version cannot be withdrawn.':
+    'החנות תהפוך את הגרסה המאושרת לזמינה למשתמשים. אי אפשר למשוך גרסה ששוחררה.',
+  'The store stops offering this version to more users. Users who already updated keep it. You can resume the rollout later.':
+    'החנות תפסיק להציע את הגרסה למשתמשים נוספים. משתמשים שכבר עדכנו יישארו איתה. אפשר לחדש את ההשקה מאוחר יותר.',
+  'The version can be at most 64 characters.': 'הגרסה יכולה להכיל עד 64 תווים.',
+  'The version users see in the stores, for example 1.2.0.':
+    'הגרסה שמשתמשים רואים בחנויות, לדוגמה 1.2.0.',
+  'This release does not exist or has been deleted.':
+    'השחרור הזה אינו קיים או שנמחק.',
+  'This target has no ready artifact. Build the release or upload a binary first.':
+    'אין ליעד הזה ארטיפקט מוכן. בנו את השחרור או העלו קובץ בינארי קודם.',
+  'Update release': 'עדכון שחרור',
+  'Update rollout': 'עדכון ההשקה',
+  Validated: 'אומת',
+  'What changed in this version, per store locale. The stores show these notes to users.':
+    'מה השתנה בגרסה, לפי Locale של החנות. החנויות מציגות את ההערות האלה למשתמשים.',
+  "You don't have permission to create releases.":
+    'אין לכם הרשאה ליצור שחרורים.',
+  "You don't have permission to manage submissions.":
+    'אין לכם הרשאה לנהל הגשות.',
+  "You don't have permission to update releases.":
+    'אין לכם הרשאה לעדכן שחרורים.',
+  "You don't have permission to view submissions. Ask an organization owner for access.":
+    'אין לכם הרשאה לצפות בהגשות. בקשו גישה מבעלי הארגון.',
+  'Select an artifact': 'בחירת ארטיפקט',
+  'The selected artifact is not ready for this target. Choose another artifact or wait for it to finish processing.':
+    'הארטיפקט שנבחר אינו מוכן ליעד הזה. בחרו ארטיפקט אחר או המתינו לסיום העיבוד שלו.',
+  'The store applied a {percent}% rollout instead of the requested {requested}%.':
+    'החנות החילה השקה של {percent}% במקום {requested}% שהתבקשו.',
+  "This build's artifact is not available for submission.":
+    'הארטיפקט של ה-Build הזה אינו זמין להגשה.',
+  "This build's artifact is still processing.":
+    'הארטיפקט של ה-Build הזה עדיין בעיבוד.',
+  "This build's target no longer exists.": 'היעד של ה-Build הזה כבר לא קיים.',
   // Signing
   "You don't have permission to manage signing identities.":
     'אין לכם הרשאה לנהל זהויות חתימה.',
@@ -378,6 +588,40 @@ export const heDistributionDictionary: Record<string, string> = {
     'פרופילי provisioning (.mobileprovision)',
   'Add one App Store profile for each bundle ID, including app extensions. Each profile must contain this certificate.':
     'הוסיפו פרופיל App Store אחד לכל Bundle ID, כולל הרחבות אפליקציה. כל פרופיל חייב לכלול את התעודה הזו.',
+  // Overview
+  'Checking…': 'בודקים…',
+  'Run checks again': 'הרצת הבדיקות שוב',
+  'Could not run the checks': 'לא ניתן היה להריץ את הבדיקות',
+  'Ready to submit': 'מוכן להגשה',
+  'Not ready to submit': 'לא מוכן להגשה',
+  'Resolve the blockers below before submitting.':
+    'פתרו את החוסמים שלמטה לפני ההגשה.',
+  'Latest submission': 'הגשה אחרונה',
+  'No submissions yet': 'אין עדיין הגשות',
+  'View build': 'צפייה ב-Build',
+  'View release': 'צפייה בשחרור',
+  'Add an iOS or Android target to check whether this app is ready to submit to the stores.':
+    'הוסיפו יעד iOS או Android כדי לבדוק אם האפליקציה מוכנה להגשה לחנויות.',
+  'Go to targets': 'מעבר ליעדים',
+  'Store tasks': 'משימות בחנויות',
+  'Appwrite cannot do these for you. Complete them in each store before the first submission.':
+    'Appwrite לא יכול לבצע את המשימות האלה בשבילכם. השלימו אותן בכל חנות לפני ההגשה הראשונה.',
+  'Create the app record in App Store Connect with the bundle ID of the target.':
+    'צרו את רשומת האפליקציה ב-App Store Connect עם ה-Bundle ID של היעד.',
+  'Accept the latest agreements in App Store Connect.':
+    'אשרו את ההסכמים העדכניים ב-App Store Connect.',
+  'Complete the app privacy labels.': 'מלאו את תוויות הפרטיות של האפליקציה.',
+  'Answer the export compliance questions.':
+    'ענו על השאלות בנושא תאימות לתקנות ייצוא.',
+  'Create the app in Play Console with the package name of the target.':
+    'צרו את האפליקציה ב-Play Console עם שם החבילה של היעד.',
+  'Accept the latest agreements in Play Console.':
+    'אשרו את ההסכמים העדכניים ב-Play Console.',
+  'Complete the data safety form.': 'מלאו את טופס בטיחות הנתונים.',
+  'Upload the first build in Play Console yourself. Google Play accepts uploads from Appwrite after that.':
+    'העלו בעצמכם את ה-Build הראשון ב-Play Console. אחרי זה Google Play מקבל העלאות מ-Appwrite.',
+  'New personal developer accounts must run a closed test before releasing to production.':
+    'בחשבונות מפתח אישיים חדשים צריך להריץ בדיקה סגורה לפני שחרור לפרודקשן.',
   // Review fixes: signing download
   'Show signing files': 'הצגת קובצי החתימה',
   'Every download is recorded in the audit log.':
@@ -396,4 +640,68 @@ export const heDistributionDictionary: Record<string, string> = {
   'Delete {name}? Appwrite deletes its encrypted files. Download them first if you still need them. This action cannot be undone.':
     'למחוק את {name}? Appwrite ימחק את הקבצים המוצפנים שלה. אם אתם עדיין צריכים אותם, הורידו אותם קודם. לא ניתן לבטל פעולה זו.',
   'Failed to load signing identities': 'טעינת זהויות החתימה נכשלה',
+  // Publish
+  Publish: 'פרסום',
+  'Publish app': 'פרסום האפליקציה',
+  "You don't have permission to publish this app.":
+    'אין לכם הרשאה לפרסם את האפליקציה הזו.',
+  'Add a target to publish this app.': 'הוסיפו יעד כדי לפרסם את האפליקציה הזו.',
+  'Choose the targets to publish and check that each one is ready for its store.':
+    'בחרו את היעדים לפרסום ובדקו שכל אחד מהם מוכן לחנות שלו.',
+  'Choose the release that the builds and submissions belong to.':
+    'בחרו את השחרור שאליו שייכים ה-Builds וההגשות.',
+  'Choose what to submit for each target.': 'בחרו מה להגיש לכל יעד.',
+  'Review what happens for each target, then publish.':
+    'בדקו מה יקרה בכל יעד, ואז פרסמו.',
+  'Release automatically after approval': 'שחרור אוטומטי אחרי האישור',
+  'This target has no store connection.': 'ליעד הזה אין חיבור לחנות.',
+  'Run checks': 'הרצת בדיקות',
+  'Running checks...': 'מריץ בדיקות...',
+  'Select at least one target to publish.': 'בחרו לפחות יעד אחד לפרסום.',
+  'Run the checks to continue.': 'הריצו את הבדיקות כדי להמשיך.',
+  'Some checks could not run. Run them again to continue.':
+    'חלק מהבדיקות לא רצו. הריצו אותן שוב כדי להמשיך.',
+  'Resolve the blockers or deselect those targets to continue.':
+    'פתרו את החוסמים או בטלו את הבחירה ביעדים האלה כדי להמשיך.',
+  'Failed to run the checks': 'הרצת הבדיקות נכשלה',
+  'Create a release': 'יצירת שחרור',
+  'The version people see in the stores, for example 1.4.0.':
+    'הגרסה שמשתמשים רואים בחנויות, למשל 1.4.0.',
+  'What is new in this release': 'מה חדש בשחרור הזה',
+  'Add to an open release': 'הוספה לשחרור פתוח',
+  'This app has no draft or active releases.':
+    'לאפליקציה הזו אין שחרורים בטיוטה או פעילים.',
+  'Choose a release': 'בחרו שחרור',
+  'Build from {branch}': 'Build מ-{branch}',
+  'Build from Git': 'Build מ-Git',
+  'Connect a repository in the app settings to build from Git.':
+    'חברו מאגר בהגדרות האפליקציה כדי לבצע Build מ-Git.',
+  'Use an artifact': 'שימוש בארטיפקט',
+  'Appwrite builds the app for this release. Submit the build from the release page when it is ready.':
+    'Appwrite יבצע Build לאפליקציה עבור השחרור הזה. הגישו את ה-Build מדף השחרור כשהוא מוכן.',
+  'This target sets version codes manually. Use a number higher than the last upload.':
+    'היעד הזה מגדיר קודי גרסה ידנית. השתמשו במספר גבוה מההעלאה האחרונה.',
+  'No ready artifacts for this target. Upload one from the Artifacts tab.':
+    'אין ליעד הזה ארטיפקטים מוכנים. העלו אחד מהלשונית ארטיפקטים.',
+  'Choose an artifact': 'בחרו ארטיפקט',
+  'After approval': 'אחרי האישור',
+  'Wait for a manual release': 'המתנה לשחרור ידני',
+  'Submit this build from the release page when it is ready.':
+    'הגישו את ה-Build הזה מדף השחרור כשהוא מוכן.',
+  'Starting build': 'מתחיל Build',
+  Submitting: 'מגיש',
+  Submitted: 'הוגש',
+  'Failed to create the release': 'יצירת השחרור נכשלה',
+  'Failed to publish this target': 'פרסום היעד נכשל',
+  'Publishing started': 'הפרסום התחיל',
+  // Review fixes: publish
+  Artifact: 'ארטיפקט',
+  'The checks use the track shown for each target. Choose the track for an artifact in the Source step.':
+    'הבדיקות משתמשות במסלול שמוצג לכל יעד. בחרו את המסלול לארטיפקט בשלב מקור.',
+  'The checks changed since you ran them. Review the targets to publish.':
+    'תוצאות הבדיקות השתנו מאז שהרצתם אותן. בדקו את היעדים כדי לפרסם.',
+  'Could not load the targets of this app.':
+    'לא ניתן היה לטעון את היעדים של האפליקציה הזו.',
+  'Set a production branch in the app settings to build from Git.':
+    'הגדירו Branch פרודקשן בהגדרות האפליקציה כדי לבצע Build מ-Git.',
 }

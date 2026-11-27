@@ -1,11 +1,6 @@
 import { useState } from 'react'
 import { useParams } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import type {
   DistributionConnection,
@@ -22,6 +17,7 @@ import {
   useProject,
 } from '@/lib/react-query/hooks'
 import { CreateTarget } from '../../_components/CreateTarget'
+import { DisabledReasonTooltip } from '../../_components/DisabledReasonTooltip'
 import {
   PLATFORMS,
   PlatformIcon,
@@ -131,17 +127,6 @@ function MissingTarget({
   onAdd: () => void
 }) {
   const t = useT()
-  const button = (
-    <Button
-      variant="outline"
-      size="sm"
-      className="h-9 shrink-0 text-[13px]"
-      disabled={!canEdit}
-      onClick={onAdd}
-    >
-      {t('Add target')}
-    </Button>
-  )
   return (
     <section
       data-testid={`target-${platform}-missing`}
@@ -160,18 +145,23 @@ function MissingTarget({
           </p>
         </div>
       </div>
-      {canEdit ? (
-        button
-      ) : (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span className="inline-flex shrink-0">{button}</span>
-          </TooltipTrigger>
-          <TooltipContent>
-            {t("You don't have permission to perform this action.")}
-          </TooltipContent>
-        </Tooltip>
-      )}
+      <DisabledReasonTooltip
+        reason={
+          canEdit
+            ? null
+            : t("You don't have permission to perform this action.")
+        }
+      >
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-9 shrink-0 text-[13px]"
+          disabled={!canEdit}
+          onClick={onAdd}
+        >
+          {t('Add target')}
+        </Button>
+      </DisabledReasonTooltip>
     </section>
   )
 }

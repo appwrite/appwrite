@@ -17,6 +17,10 @@ const envSchema = z
     E2E_ORG_ID: z.string().min(1).optional(),
     /** Optional override when the account has multiple projects. */
     E2E_PROJECT_ID: z.string().min(1).optional(),
+    E2E_PORT: z.preprocess(
+      (value) => (value === '' ? undefined : value),
+      z.coerce.number().int().min(1).max(65535).default(4173),
+    ),
   })
   .superRefine((value, ctx) => {
     if (!value.E2E_TEST_SESSION_SECRET && !value.E2E_FALLBACK_COOKIES) {

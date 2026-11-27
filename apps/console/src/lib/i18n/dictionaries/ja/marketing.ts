@@ -1364,7 +1364,6 @@ export const jaMarketingDictionary: Record<string, string> = {
     'エージェントは、いつも使っている同じ Composer から Appwrite の MCP と Skills を呼び出します。',
   'Ask to chart usage, scaffold auth, or query tables...':
     '使用状況のチャート作成、Auth のスキャフォールド、テーブルの照会を依頼...',
-  'Artifact': 'Artifact',
   'Auth is up 18% week over week. Functions executions followed the same curve after the Friday deploy.':
     'Auth は前週比 18% 増加しています。Functions の実行数は金曜のデプロイ後に同じ曲線をたどりました。',
   'Auth signups vs function executions': 'Auth の登録数と Functions の実行数',
