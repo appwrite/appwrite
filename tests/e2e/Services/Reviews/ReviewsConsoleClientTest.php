@@ -522,8 +522,10 @@ final class ReviewsConsoleClientTest extends Scope
             $this->assertChatNotQueued($repositoryId, $pullRequest, $quoted);
         }
 
+        // The author's permission on the repository is read when the delivery does not trust
+        // them, so the outsider is an account that is no collaborator on it.
         $outsider = $reply + 8;
-        $this->sendCommentEvent('pull_request_review_comment', $pullRequest, $outsider, 'Why?', replyTo: $reply - 1, association: 'CONTRIBUTOR');
+        $this->sendCommentEvent('pull_request_review_comment', $pullRequest, $outsider, 'Why?', replyTo: $reply - 1, author: 'octocat', association: 'CONTRIBUTOR');
         $this->assertChatNotQueued($repositoryId, $pullRequest, $outsider);
 
         $threadStart = $reply + 5;
