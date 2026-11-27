@@ -1,6 +1,8 @@
 /**
  * Reviews response models, copied from `Review`, `ReviewFinding`,
- * `ReviewRepository`, `ReviewLearning`, `ReviewAuthor` and `ReviewCategory` in `src/Appwrite/Utopia/Response/Model`. Delete with
+ * `ReviewRepository`, `ReviewLearning`, `ReviewAuthor`, `ReviewCategory`,
+ * `ReviewSummary`, `ReviewPeriod`, `ReviewDay` and `ReviewRepositorySummary` in
+ * `src/Appwrite/Utopia/Response/Model`. Delete with
  * `service.ts` once the generated SDK carries the `reviews` service.
  */
 
@@ -71,6 +73,20 @@ export type ReviewFinding = {
    * VCS comment the finding was posted as.
    */
   providerCommentId: string
+}
+
+/**
+ * A changed file in a review's walkthrough.
+ */
+export type ReviewWalkthroughEntry = {
+  /**
+   * File path from the repository root.
+   */
+  path: string
+  /**
+   * What the pull request changes in the file.
+   */
+  change: string
 }
 
 /**
@@ -147,6 +163,10 @@ export type Review = {
    */
   summary: string
   /**
+   * What each changed file does, once completed. Empty until then.
+   */
+  walkthrough: ReviewWalkthroughEntry[]
+  /**
    * Why the review was skipped or failed.
    */
   reason: string
@@ -162,6 +182,14 @@ export type Review = {
    * Date the review ended, in ISO 8601 format.
    */
   completedAt: string
+  /**
+   * Findings the review posted. Findings dropped before posting are not counted.
+   */
+  findingsTotal: number
+  /**
+   * Severity of the worst finding the review posted. Empty when it posted none.
+   */
+  severity: ReviewFindingSeverity | ''
   /**
    * Findings posted with the review. Empty in lists; get a review to read them.
    */
@@ -374,4 +402,114 @@ export type ReviewCategoryList = {
    * Categories with the most dismissed findings first.
    */
   categories: ReviewCategory[]
+}
+
+/**
+ * Review Period: how the project's pull requests fared in review over a period.
+ */
+export type ReviewPeriod = {
+  /** Start of the period in ISO 8601 format. */
+  start: string
+  /** End of the period in ISO 8601 format. */
+  end: string
+  /** Pull requests reviewed. */
+  pulls: number
+  /** Completed reviews of the pull requests. */
+  reviews: number
+  /** Pull requests whose latest review of the period approved. */
+  approved: number
+  /** Pull requests approved by their first review of the period. */
+  approvedFirst: number
+  /** Findings posted on the pull requests. */
+  findings: number
+  /** Critical findings posted. */
+  critical: number
+  /** Major findings posted. */
+  major: number
+  /** Minor findings posted. */
+  minor: number
+  /** Informational findings posted. */
+  info: number
+  /** Findings fixed by a later commit. */
+  resolved: number
+  /** Findings settled in their thread or dismissed by a maintainer. */
+  dismissed: number
+  /** Median time from a review being queued to it completing, in milliseconds. 0 when no review completed. */
+  duration: number
+}
+
+/**
+ * Review Day: what the reviews completed on one UTC day concluded.
+ */
+export type ReviewDay = {
+  /** Start of the day, in UTC, in ISO 8601 format. */
+  date: string
+  /** Reviews completed that day. */
+  reviews: number
+  /** Reviews that approved. */
+  approved: number
+  /** Reviews that requested changes. */
+  changesRequested: number
+  /** Reviews that only commented. */
+  commented: number
+  /** Findings the reviews posted. */
+  findings: number
+  /** Critical findings posted. */
+  critical: number
+  /** Major findings posted. */
+  major: number
+  /** Minor findings posted. */
+  minor: number
+  /** Informational findings posted. */
+  info: number
+  /** Findings since fixed by a later commit. */
+  resolved: number
+  /** Findings since settled in their thread or dismissed by a maintainer. */
+  dismissed: number
+}
+
+/**
+ * Review Repository Summary: how one repository's pull requests fared in
+ * review over a range.
+ */
+export type ReviewRepositorySummary = {
+  /** ID of the repository the reviews belong to. */
+  repositoryId: string
+  /** VCS repository owner, as of the latest review. */
+  providerRepositoryOwner: string
+  /** VCS repository name, as of the latest review. */
+  providerRepositoryName: string
+  /** Pull requests reviewed. */
+  pulls: number
+  /** Completed reviews of the pull requests. */
+  reviews: number
+  /** Pull requests whose latest review approved. */
+  approved: number
+  /** Pull requests approved by their first review. */
+  approvedFirst: number
+  /** Findings posted on the pull requests. */
+  findings: number
+  /** Critical findings posted. */
+  critical: number
+  /** Major findings posted. */
+  major: number
+  /** Findings fixed by a later commit. */
+  resolved: number
+  /** Findings settled in their thread or dismissed by a maintainer. */
+  dismissed: number
+  /** Date of the latest review in ISO 8601 format. */
+  lastReviewAt: string
+}
+
+/**
+ * Review Summary: a range next to the same length of time before it, each
+ * day of the range, and each repository's share of it.
+ */
+export type ReviewSummary = {
+  /** The range, then the same length of time before it. */
+  periods: ReviewPeriod[]
+  /** Each day of the range, oldest first. */
+  days: ReviewDay[]
+  /** Each repository with a review in the range, the most reviewed pull requests first. */
+  repositories: ReviewRepositorySummary[]
 }

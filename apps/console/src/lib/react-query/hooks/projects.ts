@@ -30,7 +30,10 @@ import {
 import { sdk, getApiEndpoint } from '@/lib/appwrite/sdk'
 import { fetchProjectById } from '@/lib/project-settings'
 import { registerProjectRegionsFromProjects } from '@/lib/project-region'
-import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import {
+  getActiveProfileFeatures,
+  isCloudProfile,
+} from '@/lib/console-profiles'
 import {
   fetchAllVariables,
   getVariableValueError,
@@ -153,26 +156,24 @@ function getProjectStatusQueries(): string[] {
 }
 
 /**
- * Legacy console project list search: fulltext on the `search` attribute OR
- * substring match on `labels` (e.g. finding a project by ID used as a label).
+ * Project list search: fulltext on the `search` attribute OR substring match on
+ * `labels`, plus an exact `$id` match when the term could be a project ID, so a
+ * pasted ID resolves in the same request.
  * Prefer this over the list endpoint's `search` param, which does not mirror that OR.
  */
 function projectListSearchOrQuery(trimmedSearch: string): string {
   return Query.or([
     Query.search('search', trimmedSearch),
     Query.contains('labels', trimmedSearch),
+    ...(isProbableConsoleProjectId(trimmedSearch)
+      ? [Query.equal('$id', trimmedSearch)]
+      : []),
   ])
 }
 
 /** Console project custom ID rules (a–z, 0–9, hyphen; max 36; no leading special char). */
 function isProbableConsoleProjectId(value: string): boolean {
   return /^[a-z0-9][a-z0-9-]{0,35}$/i.test(value)
-}
-
-function projectMatchesActiveListStatus(project: Models.Project): boolean {
-  if (!getActiveProfileFeatures().billing) return true
-  const status = project.status
-  return status == null || status !== 'archived'
 }
 
 // ============================================================================
@@ -243,7 +244,6 @@ export async function fetchActiveProjects(
   if (isRestricted && allowedIds.length === 0) {
     return { projects: [], total: 0 }
   }
-  const allowedIdSet = new Set(allowedIds)
   const restrictQueries = isRestricted
     ? [
         allowedIds.length === 1
@@ -253,7 +253,8 @@ export async function fetchActiveProjects(
     : []
 
   // Environments are reached through their project's switcher, not listed beside it.
-  const hideEnvironments = getActiveProfileFeatures().projectEnvironments
+  // Cloud only: self-hosted has no environments and rejects `parentId` in project list queries.
+  const hideEnvironments = isCloudProfile()
   const statusQueries = [
     ...getProjectStatusQueries(),
     ...(hideEnvironments ? [Query.isNull('parentId')] : []),
@@ -279,29 +280,6 @@ export async function fetchActiveProjects(
     excludeProjectIds.every((id) => typeof id === 'string' && id.length > 0)
       ? excludeProjectIds
       : []
-
-  // `projects.list` only documents filters on name/teamId/labels/search - not `$id`.
-  // Pasting a project ID never hits fulltext/labels, so resolve ID-shaped terms via get.
-  if (trimmedSearch && isProbableConsoleProjectId(trimmedSearch)) {
-    try {
-      const direct = await fetchProjectById(trimmedSearch)
-      if (
-        !excludeIds.includes(direct.$id) &&
-        direct.teamId === teamId &&
-        // Pasting an id must not reveal a project outside the member's scope.
-        (!isRestricted || allowedIdSet.has(direct.$id)) &&
-        projectMatchesActiveListStatus(direct) &&
-        !(hideEnvironments && direct.parentId)
-      ) {
-        return {
-          projects: page === 0 ? [direct] : [],
-          total: 1,
-        }
-      }
-    } catch {
-      // Not found, wrong console, or no access - fall through to list search.
-    }
-  }
 
   const queries =
     excludeIds.length > 0
@@ -360,9 +338,7 @@ export async function fetchProjectsByIds(
       Query.select(getProjectListSelect()),
       Query.equal('teamId', teamId),
       ...getProjectStatusQueries(),
-      ...(getActiveProfileFeatures().projectEnvironments
-        ? [Query.isNull('parentId')]
-        : []),
+      ...(isCloudProfile() ? [Query.isNull('parentId')] : []),
       idQuery,
       Query.limit(validIds.length),
     ],
@@ -650,7 +626,7 @@ export function projectsForTeamInfiniteQueryKey(
     search,
     excludeKey,
     projectRestrictionKey(restrictToProjectIds),
-    getActiveProfileFeatures().projectEnvironments,
+    isCloudProfile(),
   ]
 }
 
@@ -670,7 +646,7 @@ export function activeProjectsTotalQueryOptions(
       'total',
       orgId,
       restrictKey,
-      getActiveProfileFeatures().projectEnvironments,
+      isCloudProfile(),
     ],
     queryFn: () =>
       fetchActiveProjects(orgId!, 0, 1, '', undefined, restrictToProjectIds),
@@ -707,7 +683,7 @@ export function activeProjectsQueryOptions(
       search,
       excludeKey,
       restrictKey,
-      getActiveProfileFeatures().projectEnvironments,
+      isCloudProfile(),
     ],
     queryFn: () =>
       fetchActiveProjects(
@@ -741,13 +717,7 @@ export function pinnedProjectsQueryOptions(
   const idsKey =
     projectIds.length > 0 ? projectIds.slice().sort().join(',') : ''
   return queryOptions({
-    queryKey: [
-      'projects',
-      'pinned',
-      orgId,
-      idsKey,
-      getActiveProfileFeatures().projectEnvironments,
-    ],
+    queryKey: ['projects', 'pinned', orgId, idsKey, isCloudProfile()],
     queryFn: () => fetchProjectsByIds(orgId!, projectIds),
     enabled: !!orgId,
     staleTime: DEFAULT_STALE_TIME,
@@ -771,13 +741,7 @@ export function projectsByIdsQueryOptions(
   const idsKey =
     projectIds.length > 0 ? projectIds.slice().sort().join(',') : ''
   return queryOptions({
-    queryKey: [
-      'projects',
-      'by-ids',
-      orgId,
-      idsKey,
-      getActiveProfileFeatures().projectEnvironments,
-    ],
+    queryKey: ['projects', 'by-ids', orgId, idsKey, isCloudProfile()],
     queryFn: () => fetchProjectsByIds(orgId!, projectIds),
     enabled: !!orgId && projectIds.length > 0,
     staleTime: DEFAULT_STALE_TIME,
@@ -1052,7 +1016,7 @@ export function useProjectsForTeam(
       page,
       limit,
       search,
-      getActiveProfileFeatures().projectEnvironments,
+      isCloudProfile(),
     ],
     queryFn: () => fetchActiveProjects(teamId!, page, limit, search),
     enabled: !!teamId,

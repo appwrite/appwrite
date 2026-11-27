@@ -57,7 +57,7 @@ describe('organization OAuth apps settings', () => {
         { orgRoles: false },
         SETTINGS_PATH,
       ),
-    ).toBe(SETTINGS_PATH)
+    ).toBe(`${SETTINGS_PATH}/installations`)
   })
 
   test('hides outside Cloud', () => {

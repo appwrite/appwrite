@@ -71,6 +71,8 @@ export function ManualCreateView({ runtimeFromSearch }: ManualCreateViewProps) {
   const [commands, setCommands] = useState('')
   const [domain, setDomain] = useState('')
   const [domainValid, setDomainValid] = useState(false)
+  // Domain follows the function name until the user edits it
+  const domainEditedRef = useRef(false)
   const [variables, setVariables] = useState<FunctionWizardVariable[]>([])
   const [isPublic, setIsPublic] = useState(true)
   const [specification, setSpecification] = useState('')
@@ -137,9 +139,8 @@ export function ManualCreateView({ runtimeFromSearch }: ManualCreateViewProps) {
   }, [runtimeFromSearch])
 
   useEffect(() => {
-    if (functionName && !domain) {
+    if (functionName && !domainEditedRef.current) {
       setDomain(generateDomain(functionName))
-      setDomainValid(true)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [functionName, generateDomain])
@@ -422,6 +423,9 @@ export function ManualCreateView({ runtimeFromSearch }: ManualCreateViewProps) {
         setDomain={setDomain}
         domainValid={domainValid}
         setDomainValid={setDomainValid}
+        onEdit={() => {
+          domainEditedRef.current = true
+        }}
       />
 
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden mb-6">

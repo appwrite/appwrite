@@ -5,54 +5,11 @@
  * All Appwrite operations are handled client-side.
  */
 
-import {
-  Account,
-  Activities,
-  Affiliates,
-  Analytics,
-  Apps,
-  Avatars,
-  Backups,
-  Client,
-  Console,
-  Functions,
-  Growth,
-  ImageFormat,
-  Locale,
-  Manager,
-  Messaging,
-  Migrations,
-  Oauth2,
-  Project,
-  Project as ProjectApi,
-  Projects,
-  Proxy,
-  Realtime,
-  Storage,
-  Teams,
-  Users,
-  Vcs,
-  Sites,
-  Tokens,
-  TablesDB,
-  DocumentsDB,
-  VectorsDB,
-  Postgresql,
-  Mysql,
-  Mongo,
-  Domains,
-  Organization,
-  Organizations,
-  Presences,
-  Usage,
-  Webhooks,
-  Notifications,
-  Waf,
-  Videos,
-} from '@appwrite.io/console'
+import { Account, Activities, Affiliates, Analytics, Apps, Avatars, Backups, Client, Console, Functions, Growth, ImageFormat, Locale, Logs, Manager, Messaging, Migrations, Oauth2, Project, Project as ProjectApi, Projects, Proxy, Realtime, Storage, Teams, Users, Vcs, Sites, Tokens, TablesDB, DocumentsDB, VectorsDB, Postgresql, Mysql, Mongo, Domains, Organization, Organizations, Presences, Usage, Webhooks, Notifications, Waf, Videos } from '@appwrite.io/console'
 import { Agent } from '@/lib/appwrite/agent'
 import { Distribution } from '@/lib/appwrite/distribution'
 import { Reviews } from '@/lib/appwrite/reviews'
+import { TeamSSO } from '@/lib/appwrite/team-sso'
 import { Zero } from '@/lib/appwrite/zero'
 import {
   getDebugEndpointBaseUrl,
@@ -240,6 +197,9 @@ function createConsoleSdkRaw(client: Client) {
     teams: new Teams(client),
     users: new Users(client),
     migrations: new Migrations(client),
+    proxy: new Proxy(client),
+    // Hand-written until a Console SDK release carries the Teams single sign-on methods.
+    teamSSO: new TeamSSO(client),
     console: new Console(client),
     agent: new Agent(client),
     sites: new Sites(client),
@@ -595,12 +555,16 @@ const createProjectSdkRaw = (clientProject: Client) => ({
   mongo: new Mongo(clientProject),
   functions: new Functions(clientProject),
   locale: new Locale(clientProject),
+  logs: new Logs(clientProject),
   messaging: new Messaging(clientProject),
   project: new Project(clientProject),
   projectApi: new ProjectApi(clientProject),
   storage: new Storage(clientProject),
   tokens: new Tokens(clientProject),
   teams: new Teams(clientProject),
+  // Hand-written until a Console SDK release carries the Teams single sign-on
+  // methods: single sign-on for the project's teams, on the project's client.
+  teamSSO: new TeamSSO(clientProject),
   users: new Users(clientProject),
   vcs: new Vcs(clientProject),
   proxy: new Proxy(clientProject),

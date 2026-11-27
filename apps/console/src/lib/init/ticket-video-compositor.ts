@@ -6,7 +6,10 @@ import {
   isInitTicketVideoShowingBack,
   resolveInitTicketVideoProjectionRotateY,
 } from '@/lib/init/ticket-video-capture'
-import { INIT_TICKET_MAX_WIDTH_PX } from '@/lib/init/ticket-layout'
+import {
+  INIT_TICKET_CARD_INSET,
+  INIT_TICKET_MAX_WIDTH_PX,
+} from '@/lib/init/ticket-layout'
 import {
   initTicketDisplayAspectRatio,
   initTicketVideoSceneHeight,
@@ -19,6 +22,10 @@ import {
   type TicketVideoPoint,
 } from '@/lib/init/ticket-video-perspective'
 import { createInitTicketVideoPerspectiveBlitter } from '@/lib/init/ticket-video-homography'
+import {
+  createInitTicketVideoFog,
+  type InitTicketVideoFogPalette,
+} from '@/lib/init/ticket-video-fog'
 
 export type InitTicketVideoCompositorOptions = {
   ticketImage: CanvasImageSource
@@ -30,6 +37,8 @@ export type InitTicketVideoCompositorOptions = {
   backgroundColor: string
   borderColor: string
   usesDarkChrome?: boolean
+  /** Init 5: the hero's electric fog behind the ticket and light on its edge. */
+  fog?: InitTicketVideoFogPalette
 }
 
 export type InitTicketVideoCompositor = {
@@ -44,7 +53,12 @@ function parseRgba(color: string): [number, number, number, number] | null {
   )
   if (!match) return null
   const alpha = match[4] === undefined ? 1 : Number(match[4])
-  return [Number(match[1]), Number(match[2]), Number(match[3]), Number.isNaN(alpha) ? 1 : alpha]
+  return [
+    Number(match[1]),
+    Number(match[2]),
+    Number(match[3]),
+    Number.isNaN(alpha) ? 1 : alpha,
+  ]
 }
 
 function withAlpha(color: string, alpha: number) {
@@ -240,10 +254,17 @@ function drawTicketWithPerspective(
   meshOriginX: number,
   meshOriginY: number,
   localWidth: number,
-  quad: [TicketVideoPoint, TicketVideoPoint, TicketVideoPoint, TicketVideoPoint],
+  quad: [
+    TicketVideoPoint,
+    TicketVideoPoint,
+    TicketVideoPoint,
+    TicketVideoPoint,
+  ],
   depths: [number, number, number, number],
   textureVMax: number,
-  perspectiveBlitter: ReturnType<typeof createInitTicketVideoPerspectiveBlitter>,
+  perspectiveBlitter: ReturnType<
+    typeof createInitTicketVideoPerspectiveBlitter
+  >,
   face: 'front' | 'back',
 ) {
   if (perspectiveBlitter) {
@@ -267,7 +288,12 @@ function drawTicketWithPerspective(
 
 function drawTicketShadow(
   ctx: CanvasRenderingContext2D,
-  quad: [TicketVideoPoint, TicketVideoPoint, TicketVideoPoint, TicketVideoPoint],
+  quad: [
+    TicketVideoPoint,
+    TicketVideoPoint,
+    TicketVideoPoint,
+    TicketVideoPoint,
+  ],
   localWidth: number,
   localHeight: number,
   rotateX: number,
@@ -312,6 +338,7 @@ export function createInitTicketVideoCompositor({
   backgroundColor,
   borderColor,
   usesDarkChrome = true,
+  fog: fogPalette,
 }: InitTicketVideoCompositorOptions): InitTicketVideoCompositor {
   const canvas = document.createElement('canvas')
   canvas.width = width
@@ -321,7 +348,9 @@ export function createInitTicketVideoCompositor({
     throw new Error('Could not create ticket video canvas')
   }
 
-  const maxTicketWidth = Math.round(width * INIT_TICKET_VIDEO_TICKET_WIDTH_RATIO)
+  const maxTicketWidth = Math.round(
+    width * INIT_TICKET_VIDEO_TICKET_WIDTH_RATIO,
+  )
   const displayAspect = initTicketDisplayAspectRatio()
   let localWidth = maxTicketWidth
   let localHeight = Math.round(localWidth / displayAspect)
@@ -337,14 +366,25 @@ export function createInitTicketVideoCompositor({
   const dotSpacing =
     INIT_TICKET_VIDEO_DOT_SPACING_CSS_PX * (width / INIT_TICKET_MAX_WIDTH_PX)
   const dotColor = withAlpha(borderColor, 1)
+  // Init 5 trades the dotted backdrop for the fog; older events keep their dots.
+  const showDots = !fogPalette
   const dotsCanvas = document.createElement('canvas')
-  dotsCanvas.width = width
-  dotsCanvas.height = height
-  const dotsCtx = dotsCanvas.getContext('2d', { alpha: true })
+  dotsCanvas.width = showDots ? width : 0
+  dotsCanvas.height = showDots ? height : 0
+  const dotsCtx = showDots ? dotsCanvas.getContext('2d', { alpha: true }) : null
   if (dotsCtx) {
     dotsCtx.clearRect(0, 0, width, height)
     drawDotPattern(dotsCtx, width, height, dotColor, dotSpacing)
   }
+
+  const fog = fogPalette
+    ? createInitTicketVideoFog({
+        width,
+        height,
+        palette: fogPalette,
+        isDark: usesDarkChrome,
+      })
+    : null
 
   const perspectiveBlitter = createInitTicketVideoPerspectiveBlitter(
     width,
@@ -356,7 +396,9 @@ export function createInitTicketVideoCompositor({
   const drawFrame = (progress: number) => {
     const motion = getInitTicketMotionForProgress(progress)
     const rotateY = motion.flipY + motion.y
-    const showingBack = Boolean(ticketBackImage && isInitTicketVideoShowingBack(rotateY))
+    const showingBack = Boolean(
+      ticketBackImage && isInitTicketVideoShowingBack(rotateY),
+    )
     const projectionRotateY = resolveInitTicketVideoProjectionRotateY(rotateY)
     const activeFace: 'front' | 'back' = showingBack ? 'back' : 'front'
     const activeImage = showingBack ? ticketBackImage! : ticketImage
@@ -370,9 +412,11 @@ export function createInitTicketVideoCompositor({
 
     if (dotsCtx) {
       ctx.drawImage(dotsCanvas, 0, 0)
-    } else {
+    } else if (showDots) {
       drawDotPattern(ctx, width, height, dotColor, dotSpacing)
     }
+
+    fog?.drawBackdrop(ctx, progress)
 
     const localQuad = projectInitTicketVisibleQuad(
       localWidth,
@@ -417,6 +461,42 @@ export function createInitTicketVideoCompositor({
       perspectiveBlitter,
       activeFace,
     )
+    if (fog) {
+      // The comets ride the card's own edge, inside the frame's padding.
+      const fullHeight = initTicketVideoSceneHeight(localWidth)
+      const left = (INIT_TICKET_CARD_INSET.left / 100) * localWidth
+      const right = (1 - INIT_TICKET_CARD_INSET.right / 100) * localWidth
+      const top = (INIT_TICKET_CARD_INSET.top / 100) * fullHeight
+      const bottom = (1 - INIT_TICKET_CARD_INSET.bottom / 100) * fullHeight
+      const card = (
+        [
+          [left, top],
+          [right, top],
+          [right, bottom],
+          [left, bottom],
+        ] as const
+      ).map(([x, y]) => {
+        const point = projectInitTicketPoint(
+          x,
+          y,
+          localWidth,
+          fullHeight,
+          motion.x,
+          projectionRotateY,
+          perspective,
+        )
+        return {
+          x: point.x + originX + centerDx,
+          y: point.y + originY + centerDy,
+        }
+      }) as [
+        TicketVideoPoint,
+        TicketVideoPoint,
+        TicketVideoPoint,
+        TicketVideoPoint,
+      ]
+      fog.drawEdge(ctx, card, progress)
+    }
   }
 
   return {

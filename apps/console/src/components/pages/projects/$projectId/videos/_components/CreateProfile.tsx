@@ -1,4 +1,4 @@
-import { VideoCodec, type Models } from '@appwrite.io/console'
+import { VideoCodecId, type Models } from '@appwrite.io/console'
 import { useEffect, useState } from 'react'
 import { ArrowLeft, SlidersHorizontal } from 'lucide-react'
 import { toast } from 'sonner'
@@ -57,8 +57,8 @@ const EMPTY_FORM: FormState = {
   name: '',
   width: String(DEFAULT_PROFILE_PRESET.width),
   height: String(DEFAULT_PROFILE_PRESET.height),
-  videoBitRate: String(DEFAULT_PROFILE_PRESET.videoBitRate),
-  audioBitRate: String(DEFAULT_PROFILE_PRESET.audioBitRate),
+  videoBitRate: String(DEFAULT_PROFILE_PRESET.videoBitRate / 1000),
+  audioBitRate: String(DEFAULT_PROFILE_PRESET.audioBitRate / 1000),
 }
 
 function toForm(
@@ -69,8 +69,9 @@ function toForm(
     name: profile.name,
     width: String(profile.width),
     height: String(profile.height),
-    videoBitRate: String(profile.videoBitRate),
-    audioBitRate: String(profile.audioBitRate),
+    // The form takes kbps; the API speaks bits per second.
+    videoBitRate: String(profile.videoBitRate / 1000),
+    audioBitRate: String(profile.audioBitRate / 1000),
   }
 }
 
@@ -102,7 +103,7 @@ export function CreateProfile({
   const [presets, setPresets] = useState<Set<string>>(
     () => new Set([DEFAULT_PROFILE_PRESET.name]),
   )
-  const [codec, setCodec] = useState<string>(VideoCodec.H264)
+  const [codec, setCodec] = useState<string>(VideoCodecId.H264)
   const saveMutation = useSaveVideoProfile(projectId)
   const createMutation = useCreateVideoProfiles(projectId)
   const pending = saveMutation.isPending || createMutation.isPending
@@ -117,7 +118,7 @@ export function CreateProfile({
   const presetExists = (item: ProfilePreset) =>
     existingProfiles.some(
       (existing) =>
-        (existing.codec || VideoCodec.H264) === codec &&
+        (existing.codec || VideoCodecId.H264) === codec &&
         isSameSpec(existing, item),
     )
   // A preset that already exists for the codec cannot be added again.
@@ -137,7 +138,7 @@ export function CreateProfile({
     setForm(toForm(profile))
     setMode('preset')
     setPresets(new Set([DEFAULT_PROFILE_PRESET.name]))
-    setCodec(profile?.codec || VideoCodec.H264)
+    setCodec(profile?.codec || VideoCodecId.H264)
   }, [open, profile])
 
   const openCustom = () => {
@@ -169,7 +170,7 @@ export function CreateProfile({
         height: item.height,
         videoBitRate: item.videoBitRate,
         audioBitRate: item.audioBitRate,
-        codec: codec as VideoCodec,
+        codec: codec as VideoCodecId,
       })),
       {
         onSuccess: (failures) => {
@@ -210,9 +211,9 @@ export function CreateProfile({
         name: form.name.trim(),
         width: Number(form.width),
         height: Number(form.height),
-        videoBitRate: Number(form.videoBitRate),
-        audioBitRate: Number(form.audioBitRate),
-        codec: codec as VideoCodec,
+        videoBitRate: Number(form.videoBitRate) * 1000,
+        audioBitRate: Number(form.audioBitRate) * 1000,
+        codec: codec as VideoCodecId,
       },
       {
         onSuccess: () => {
@@ -309,7 +310,7 @@ export function CreateProfile({
                   </Label>
                   <Input
                     id="video-profile-codec"
-                    value={codecName(profile?.codec || VideoCodec.H264)}
+                    value={codecName(profile?.codec || VideoCodecId.H264)}
                     disabled
                     readOnly
                   />
@@ -395,10 +396,10 @@ export function CreateProfile({
                         {formatResolution(item.width, item.height)}
                       </span>
                       <span className="w-[72px] shrink-0 text-end font-mono text-[11px] text-muted-foreground">
-                        {formatBitrate(item.videoBitRate, 'kbps')}
+                        {formatBitrate(item.videoBitRate)}
                       </span>
                       <span className="w-[60px] shrink-0 text-end font-mono text-[11px] text-muted-foreground">
-                        {formatBitrate(item.audioBitRate, 'kbps')}
+                        {formatBitrate(item.audioBitRate)}
                       </span>
                     </Label>
                   )

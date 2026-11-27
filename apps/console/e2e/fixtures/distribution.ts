@@ -448,6 +448,7 @@ export function vcsFixtures(): {
         organization: ORGANIZATION_LOGIN,
         providerInstallationId: '41000001',
         organizationUrl: `https://github.com/${ORGANIZATION_LOGIN}`,
+        personal: false,
         reviewNewRepositories: false,
       },
     ],

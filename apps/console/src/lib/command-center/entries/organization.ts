@@ -12,6 +12,7 @@ import {
   FolderOpen,
   Globe,
   Handshake,
+  Blocks,
   Key,
   Store,
   Plus,
@@ -32,6 +33,7 @@ import {
   canShowOrgDomainsTab,
   canShowOrgMarketplaceTab,
   canShowOrgOAuthAppsSettings,
+  canShowOrgInstalledAppsSettings,
   canShowOrgSettingsTab,
 } from '@/lib/console-access-checks'
 import { registerCommands } from '../registry'
@@ -142,6 +144,24 @@ const ORG_SETTINGS_TABS: CommandEntry[] = [
     keywords: ['oauth', 'apps', 'third party', 'integrations'],
     available: (ctx) => canShowOrgOAuthAppsSettings(ctx.access),
     to: (ctx) => `/organizations/${ctx.orgId}/settings/oauth-apps`,
+  },
+  {
+    id: 'org.tab.settings.installations',
+    scopes: ['organization'],
+    kind: 'tab',
+    group: 'Settings',
+    label: 'Settings · Installed apps',
+    description: 'Marketplace apps installed on this organization',
+    icon: Blocks,
+    keywords: [
+      'installed',
+      'apps',
+      'installations',
+      'marketplace',
+      'uninstall',
+    ],
+    available: () => canShowOrgInstalledAppsSettings(),
+    to: (ctx) => `/organizations/${ctx.orgId}/settings/installations`,
   },
   {
     id: 'org.tab.settings.partners',

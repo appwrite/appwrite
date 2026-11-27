@@ -360,6 +360,10 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Search videos by name or ID...': '名前または ID で動画を検索…',
   'Search rows by ID...': 'ID で行を検索…',
   'Search sites...': 'サイトを検索…',
+  'Create a function to protect it with Firewall rules.':
+    'Firewall ルールで保護するには関数を作成してください。',
+  'Create a site to protect it with Firewall rules.':
+    'Firewall ルールで保護するにはサイトを作成してください。',
   'Search sites by name or ID...': '名前または ID でサイトを検索…',
   'Search tables by name or ID...': '名前または ID でテーブルを検索…',
   'Search teams...': 'チームを検索…',
@@ -385,7 +389,8 @@ export const jaSharedUiDictionary: Record<string, string> = {
   Searching: '検索中',
   'Select database': 'データベースを選択',
   'Select a bucket to browse files': 'ファイルを閲覧するバケットを選択',
-  'This file type is not supported.': 'このファイル形式はサポートされていません。',
+  'This file type is not supported.':
+    'このファイル形式はサポートされていません。',
   'Select a timezone': 'タイムゾーンを選択',
   'Select a service to build': 'ビルドするサービスを選択',
   'Select all': 'すべて選択',
@@ -721,12 +726,7 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Settings · Migrations': '設定 · マイグレーション',
   'Import data from other backends': '他のバックエンドからデータをインポート',
   'Settings · SMTP': '設定 · SMTP',
-  'Settings · Firewall': '設定 · ファイアウォール',
-  'Firewall has moved': 'ファイアウォールの場所が変わりました',
-  'Firewall rules now sit next to what they protect: a Firewall tab on each function and site, and one in project settings for the API.':
-    'ファイアウォールのルールは、保護する対象のそばに移りました。各関数とサイトの「ファイアウォール」タブと、API 用のプロジェクト設定のタブです。',
-  'Got it': '了解',
-  'Open API firewall': 'API のファイアウォールを開く',
+  'Security · Firewall rules': 'セキュリティ · ファイアウォールルール',
   // Function and site overview cards, filter chips
   '1 rule': '1 件のルール',
   '{count} rules': '{count} 件のルール',
@@ -1384,6 +1384,32 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Load more': 'さらに読み込む',
   'Loading more failed. Try again.':
     'さらに読み込めませんでした。もう一度お試しください。',
+  'Browse Init events': 'Init イベントを見る',
+  'Switch between past and upcoming Init launch weeks.':
+    '過去と今後の Init ローンチ週を切り替えます。',
+  Past: '過去',
+  Upcoming: '近日公開',
+  'AUGUST 31 - SEPTEMBER 4': '8月31日 - 9月4日',
+  'NOVEMBER 30 - DECEMBER 4': '11月30日 - 12月4日',
+  'Starts in': '開始まで',
+  'Join us on our biggest Init ever. 5 days, 5 new product launches. It will be electric.':
+    '過去最大の Init に参加しよう。5日間で5つの新製品をローンチ。電撃的な1週間になります。',
+  "Init 5 is live. Catch today's reveal and join the launch event on Discord.":
+    'Init 5 開催中。今日の発表をチェックして、Discord のローンチイベントに参加しましょう。',
+  'Init 5 is a wrap. Explore every launch from the week.':
+    'Init 5 は終了しました。今週のすべてのローンチをご覧ください。',
+  'Init 5 launch event': 'Init 5 ローンチイベント',
+  'Introducing Appwrite Analytics': 'Appwrite Analytics のご紹介',
+  'Introducing Appwrite Videos': 'Appwrite Videos のご紹介',
+  'Introducing Appwrite Zero': 'Appwrite Zero のご紹介',
+  'Introducing Appwrite Monitors & Appwrite Beep':
+    'Appwrite Monitors と Appwrite Beep のご紹介',
+  'Introducing Appwrite Reviews': 'Appwrite Reviews のご紹介',
+  'Ask us anything': '何でも聞いてください',
+  'Bring your questions about every Init 5 launch. The team answers live on r/appwrite.':
+    'Init 5 のすべてのローンチについて質問をお寄せください。チームが r/appwrite でライブで回答します。',
+  'The team answered your questions about every Init 5 launch on r/appwrite.':
+    'チームが r/appwrite で Init 5 のすべてのローンチに関する質問に回答しました。',
   Previews: 'プレビュー',
   'Early access. Saved in this browser.':
     '早期アクセスです。このブラウザに保存されます。',
@@ -1393,12 +1419,10 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Appwrite Videos': 'Appwrite Videos',
   'Transcode, stream, and caption videos.':
     '動画のトランスコード、配信、字幕付けを行います。',
-  'Project environments': 'プロジェクト環境',
-  'Switch or clone staging and production.':
-    'ステージングと本番を切り替え、複製します。',
   'Repository not available': 'リポジトリを利用できません',
-  'This Git installation can no longer reach the repository. It may have been deleted, removed from the installation, or moved to another installation. Connect the repository again to keep deploying.':
-    'この Git インストールからリポジトリにアクセスできなくなりました。削除された、インストールから外された、または別のインストールに移された可能性があります。デプロイを続けるには、リポジトリを接続し直してください。',
+  "This Git installation can no longer reach the repository. If it was removed from the installation's repository access, add it back with Update repository access. If it was deleted or moved, connect it again.":
+    'この Git インストールからリポジトリにアクセスできなくなりました。インストールのリポジトリアクセスから外された場合は、「リポジトリアクセスを更新」で追加し直してください。削除または移動された場合は、接続し直してください。',
+  'Update repository access': 'リポジトリアクセスを更新',
   // Halloween caution tape
   Caution: '注意',
   'Spooky zone': '恐怖ゾーン',

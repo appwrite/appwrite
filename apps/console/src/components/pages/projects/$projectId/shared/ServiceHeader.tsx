@@ -114,7 +114,7 @@ interface ServiceHeaderProps {
   titleRightContent?: React.ReactNode
   /** Renders centered on the title row (e.g. a mode switch) */
   titleCenterContent?: React.ReactNode
-  /** Content to render after the border separator, before the toolbar */
+  /** Content to render after the border separator, before the toolbar. Never changes the title row's spacing, so it may load late or render nothing. */
   contentAfterBorder?: React.ReactNode
   /** Show a bottom border under the toolbar row (search/filters/actions) */
   showToolbarBottomBorder?: boolean
@@ -400,12 +400,14 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
               <div
                 className={cn(
                   'flex flex-col gap-1 overflow-visible px-4 sm:px-6',
+                  // Only the tabs row may change the title's spacing: it is
+                  // fixed for the page. `contentAfterBorder` sits below the
+                  // border, often arrives after a query (plan limit warnings)
+                  // and may render nothing, so keying padding on it shrank
+                  // the header a moment after the page appeared.
                   titleCenterContent
                     ? 'py-3'
-                    : cn(
-                        'pt-6',
-                        hasTabs || contentAfterBorder ? 'pb-4' : 'pb-6',
-                      ),
+                    : cn('pt-6', hasTabs ? 'pb-4' : 'pb-6'),
                   fullWidthBorder && !fullWidth && 'mx-auto w-full max-w-7xl',
                   fullWidthBorder && fullWidth && 'w-full',
                 )}

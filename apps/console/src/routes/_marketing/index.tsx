@@ -7,7 +7,8 @@ import { AppwriteException } from '@appwrite.io/console'
 import { AccountAccessBlockedScreen } from '@/components/global/auth/AccountAccessBlockedScreen'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { ConsoleImpersonationBanner } from '@/components/global/shared/ConsoleImpersonationBanner'
-import { getHomePageHead, View as HomeView } from '@/components/pages/home/View'
+import { getHomePageHead } from '@/components/pages/home/head'
+import { View as HomeView } from '@/components/pages/home/View'
 import {
   isOAuthLoginMethod,
   setLastLoginMethod,

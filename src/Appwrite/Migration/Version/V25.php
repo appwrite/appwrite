@@ -2,6 +2,7 @@
 
 namespace Appwrite\Migration\Version;
 
+use Appwrite\Alert\Monitors;
 use Appwrite\Alert\Severity;
 use Appwrite\Certificates\LetsEncrypt;
 use Appwrite\Migration\Migration;
@@ -11,6 +12,7 @@ use Utopia\Console\Console;
 use Utopia\Database\Attribute;
 use Utopia\Database\Attribute\Update as AttributeUpdate;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Exception\NotFound;
@@ -140,7 +142,7 @@ class V25 extends Migration
 
                 case 'notifications':
                     if ($collectionType === 'console') {
-                        $attributes = ['teamId', 'teamInternalId'];
+                        $attributes = ['teamId', 'teamInternalId', 'subjectType', 'subjectId', 'status'];
                         foreach ($attributes as $attribute) {
                             try {
                                 $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);
@@ -151,10 +153,12 @@ class V25 extends Migration
 
                         $this->dbForProject->purgeCachedCollection($id);
 
-                        try {
-                            $this->createIndexFromCollection($this->dbForProject, $id, '_key_team');
-                        } catch (Throwable $th) {
-                            Console::warning("Failed to create index \"_key_team\" from {$id}: {$th->getMessage()}");
+                        foreach (['_key_team', '_key_subject'] as $index) {
+                            try {
+                                $this->createIndexFromCollection($this->dbForProject, $id, $index);
+                            } catch (Throwable $th) {
+                                Console::warning("Failed to create index \"{$index}\" from {$id}: {$th->getMessage()}");
+                            }
                         }
                     }
                     $this->dbForProject->purgeCachedCollection($id);
@@ -619,6 +623,28 @@ class V25 extends Migration
                                 }
                             }
                         }
+                        // Indexes added since for review performance. An existing index is skipped.
+                        $index = match ($id) {
+                            'reviews' => '_key_status_createdAt',
+                            'reviewFindings' => '_key_reviewInternalId_status',
+                            default => null,
+                        };
+                        if ($existed && $index !== null) {
+                            try {
+                                $this->createIndexFromCollection($this->dbForProject, $id, $index);
+                            } catch (Duplicate) {
+                            }
+                            $this->dbForProject->purgeCachedCollection($id);
+                        }
+                        // Segments created before each row stored its bytes. An existing
+                        // attribute is skipped; a second migrate hits that path.
+                        if ($existed && $id === 'videosRenditionsSegments') {
+                            try {
+                                $this->createAttributeFromCollection($this->dbForProject, $id, 'size');
+                            } catch (Duplicate) {
+                            }
+                            $this->dbForProject->purgeCachedCollection($id);
+                        }
                     } finally {
                         $this->dbForProject->setTenant($tenant);
                     }
@@ -626,14 +652,27 @@ class V25 extends Migration
 
                 case 'monitors':
                 case 'monitorAlerts':
+                case 'escalations':
                     // New in 2.7.0. Platform collections, so only the console project visits them.
                     $this->createCollection($id);
-                    // Created before monitors had a severity, or alerts were acknowledged.
-                    $attributes = $id === 'monitorAlerts' ? ['severity', 'acknowledgedAt', 'acknowledgedBy', 'acknowledgedByName'] : ['severity'];
+                    // Created before monitors had a severity or an escalation, or alerts were acknowledged or escalated.
+                    $attributes = match ($id) {
+                        'monitorAlerts' => ['severity', 'acknowledgedAt', 'acknowledgedBy', 'acknowledgedByName', 'escalationId', 'escalationSteps', 'escalationUserIds', 'escalationRepeat', 'escalationStep', 'escalationRound', 'escalatesAt'],
+                        'monitors' => ['severity', 'escalationId', 'monitorId'],
+                        default => [],
+                    };
                     foreach ($attributes as $attribute) {
                         try {
                             $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);
                         } catch (Duplicate) {
+                        }
+                    }
+                    if ($id === 'monitors') {
+                        foreach (['_key_escalationId', '_key_monitorId_project'] as $index) {
+                            try {
+                                $this->createIndexFromCollection($this->dbForProject, $id, $index);
+                            } catch (Duplicate) {
+                            }
                         }
                     }
                     $this->dbForProject->purgeCachedCollection($id);
@@ -746,6 +785,142 @@ class V25 extends Migration
                     break;
             }
         }
+
+        if ($collectionType === 'console' && $this->dbForProject->findCollection('monitors') !== null) {
+            $this->migrateMonitorIds();
+        }
+    }
+
+    /**
+     * Monitor IDs were global; each is now stored under an ID scoped to its project,
+     * or its team for a monitor without one, and keeps the chosen ID in `monitorId`.
+     * The rename keeps `$sequence`, which alerts join on, and runs after every
+     * collection is migrated so `schedules` and `users` hold their attributes. Every
+     * step is skipped once done, so a failed run can be repeated; it throws after the
+     * last monitor when any step failed, so the migration is not recorded as done.
+     */
+    private function migrateMonitorIds(): void
+    {
+        /** @var array<string, string> $stored chosen ID to stored ID, the oldest monitor first, as opt-outs named it */
+        $stored = [];
+        $sequence = null;
+        $failures = 0;
+
+        do {
+            $queries = [Query::orderAsc('$sequence'), Query::limit($this->limit)];
+            if ($sequence !== null) {
+                $queries[] = Query::greaterThan('$sequence', $sequence);
+            }
+            $monitors = $this->dbForProject->find('monitors', $queries);
+
+            foreach ($monitors as $monitor) {
+                $sequence = $monitor->getSequence();
+                $monitorId = (string) $monitor->getAttribute('monitorId', '');
+                $old = $monitor->getId();
+
+                if ($monitorId === '') {
+                    $monitorId = $old;
+                    $new = Monitors::id(Monitors::scope($monitor), $old);
+
+                    try {
+                        $monitor = $this->dbForProject->updateDocument('monitors', $old, new Document([
+                            '$id' => $new,
+                            'monitorId' => $old,
+                        ]));
+                    } catch (Duplicate) {
+                        Console::warning("Monitor \"{$old}\" of project \"{$monitor->getAttribute('projectId')}\" is disabled: a monitor with its ID was created in the project before it was moved.");
+                        $this->disableMonitor($monitor);
+                        continue;
+                    } catch (Throwable $th) {
+                        Console::warning("Failed to move monitor \"{$old}\" to \"{$new}\": {$th->getMessage()}");
+                        $failures++;
+                        continue;
+                    }
+                }
+
+                $stored[$monitorId] ??= $monitor->getId();
+
+                try {
+                    $this->moveSchedules($monitor, $monitorId);
+                } catch (Throwable $th) {
+                    Console::warning("Failed to move the schedule of monitor \"{$monitorId}\" to \"{$monitor->getId()}\": {$th->getMessage()}");
+                    $failures++;
+                }
+            }
+        } while (\count($monitors) === $this->limit);
+
+        if ($stored !== []) {
+            // A user's opt-outs name monitors by ID, next to whole types.
+            try {
+                foreach ($this->dbForProject->cursor('users', [Query::isNotNull('alertsUnsubscribed')], batchSize: $this->limit) as $user) {
+                    $unsubscribed = $user->getAttribute('alertsUnsubscribed', []);
+                    $moved = \array_map(fn (string $entry): string => $stored[$entry] ?? $entry, $unsubscribed);
+                    if ($moved !== $unsubscribed) {
+                        $this->dbForProject->updateDocument('users', $user->getId(), new Document(['alertsUnsubscribed' => $moved]));
+                    }
+                }
+            } catch (Throwable $th) {
+                Console::warning('Failed to move alert opt-outs to the new monitor IDs: ' . $th->getMessage());
+                $failures++;
+            }
+        }
+
+        if ($failures > 0) {
+            throw new Exception("Failed {$failures} step(s) of moving monitors to project-scoped IDs; run the migration again to retry them.");
+        }
+    }
+
+    /**
+     * Points the monitor's schedule at its stored ID. Moving `resourceUpdatedAt` makes a
+     * running scheduler pick the change up, and `active` undoes a stop the worker made
+     * while the monitor could not be found under its old ID.
+     */
+    private function moveSchedules(Document $monitor, string $monitorId): void
+    {
+        foreach ($this->monitorSchedules($monitor, [$monitorId, $monitor->getId()]) as $schedule) {
+            if ($schedule->getAttribute('resourceId') === $monitor->getId()) {
+                continue;
+            }
+            $this->dbForProject->updateDocument('schedules', $schedule->getId(), new Document([
+                'resourceId' => $monitor->getId(),
+                'active' => (bool) $monitor->getAttribute('enabled', false),
+                'resourceUpdatedAt' => DateTime::now(),
+            ]));
+        }
+    }
+
+    /**
+     * The monitor's schedules among those naming any of `$resourceIds`.
+     *
+     * @param list<string> $resourceIds
+     * @return array<Document>
+     */
+    private function monitorSchedules(Document $monitor, array $resourceIds): array
+    {
+        return $this->dbForProject->find('schedules', [
+            Query::equal('region', [(string) $monitor->getAttribute('region')]),
+            Query::equal('resourceType', [SCHEDULE_RESOURCE_TYPE_MONITOR]),
+            Query::equal('projectId', [(string) $monitor->getAttribute('projectId', '')]),
+            Query::equal('resourceId', $resourceIds),
+        ]);
+    }
+
+    /**
+     * Stops a monitor that cannot take its scoped ID, so it does not go on evaluating unseen.
+     */
+    private function disableMonitor(Document $monitor): void
+    {
+        try {
+            $this->dbForProject->updateDocument('monitors', $monitor->getId(), new Document(['enabled' => false]));
+            foreach ($this->monitorSchedules($monitor, [$monitor->getId()]) as $schedule) {
+                $this->dbForProject->updateDocument('schedules', $schedule->getId(), new Document([
+                    'active' => false,
+                    'resourceUpdatedAt' => DateTime::now(),
+                ]));
+            }
+        } catch (Throwable $th) {
+            Console::warning("Failed to disable monitor \"{$monitor->getId()}\": {$th->getMessage()}");
+        }
     }
 
     /**
@@ -796,7 +971,17 @@ class V25 extends Migration
             $retired = ['devKeys.read', 'devKeys.write', 'assistant.read'];
             $scopes = $document->getAttribute('scopes', []);
             if (\is_array($scopes) && \array_intersect($scopes, $retired) !== []) {
-                $document->setAttribute('scopes', \array_values(\array_diff($scopes, $retired)));
+                $scopes = \array_values(\array_diff($scopes, $retired));
+                $document->setAttribute('scopes', $scopes);
+            }
+
+            // Organization keys reached escalations through `monitors.*` before escalations had their own scopes.
+            if (\is_array($scopes) && $document->getAttribute('resourceType') === 'teams') {
+                $granted = \array_keys(\array_intersect(['escalations.read' => 'monitors.read', 'escalations.write' => 'monitors.write'], $scopes));
+                $missing = \array_diff($granted, $scopes);
+                if ($missing !== []) {
+                    $document->setAttribute('scopes', \array_values(\array_merge($scopes, $missing)));
+                }
             }
 
             return $document;

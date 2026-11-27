@@ -211,9 +211,10 @@ trait StagesBase
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $project['apiKey'],
         ], [
+            'profileId' => ID::unique(),
             'name' => 'onboarding-' . ID::unique(),
-            'videoBitRate' => 1000,
-            'audioBitRate' => 64,
+            'videoBitRate' => 1000000,
+            'audioBitRate' => 64000,
             'width' => 640,
             'height' => 360,
         ]);

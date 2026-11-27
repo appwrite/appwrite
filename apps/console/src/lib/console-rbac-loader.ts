@@ -20,9 +20,11 @@ import {
   canShowSiteSettingsTab,
   canShowVideoSettings,
   canShowTopicSettingsTab,
+  canWriteMonitors,
   canAccessOrgSettingsOverview,
   canAccessOrgDomains,
   canShowOrgApiKeysSettings,
+  canShowOrgSsoSettings,
   canShowGetStartedSection,
   canShowAgentMcpConnectCta,
   canCreateDatabase,
@@ -216,6 +218,16 @@ export async function canAccessTopicSettings(
   return canShowTopicSettingsTab(access, features)
 }
 
+/** A monitor's Settings, for members who can change monitors. */
+export async function canAccessMonitorSettings(
+  queryClient: QueryClient,
+  projectId: string,
+): Promise<boolean> {
+  const access = await getProjectAccess(queryClient, projectId)
+  if (!access) return true
+  return canWriteMonitors(access, getActiveProfileFeatures())
+}
+
 /** Organization Settings overview (owner-only). */
 export async function canAccessOrganizationSettings(
   queryClient: QueryClient,
@@ -247,6 +259,17 @@ export async function canAccessOrganizationApiKeys(
   if (!access) return true
   const features = getActiveProfileFeatures()
   return canShowOrgApiKeysSettings(access, features)
+}
+
+/** Organization settings → Single sign-on. */
+export async function canAccessOrganizationSso(
+  queryClient: QueryClient,
+  organizationId: string,
+): Promise<boolean> {
+  const access = await getOrganizationAccess(queryClient, organizationId)
+  if (!access) return true
+  const features = getActiveProfileFeatures()
+  return canShowOrgSsoSettings(access, features)
 }
 
 /** Project coding-agent MCP page (same audience as Connect). */

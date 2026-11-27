@@ -6,6 +6,7 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Videos\Base;
+use Appwrite\Platform\Modules\Videos\SegmentCache;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -48,8 +49,6 @@ class Delete extends Base
                 namespace: 'videos',
                 group: 'captions',
                 name: 'deleteCaption',
-                // Hidden until videos is generally available; preview SDK builds show it.
-                hide: System::getEnv('_APP_SDK_PREVIEW', 'disabled') !== 'enabled',
                 description: '/docs/references/videos/delete-caption.md',
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [
@@ -69,6 +68,7 @@ class Delete extends Base
             ->inject('project')
             ->inject('queueForEvents')
             ->inject('publisherForDeletes')
+            ->inject('purgeVideoSegmentCache')
             ->callback($this->action(...));
     }
 
@@ -81,7 +81,8 @@ class Delete extends Base
         Authorization $authorization,
         Document $project,
         Event $queueForEvents,
-        DeletePublisher $publisherForDeletes
+        DeletePublisher $publisherForDeletes,
+        SegmentCache $segmentCache
     ): void {
         $video = $this->getAuthorizedVideo($dbForProject, $authorization, $user, $videoId);
         $this->assertCanUpdateVideo($authorization, $user, $video);
@@ -142,6 +143,10 @@ class Delete extends Base
             ->setParam('videoId', $video->getId())
             ->setParam('captionId', $caption->getId())
             ->setPayload($response->output($caption, Response::MODEL_VIDEO_CAPTION));
+
+        // The row is already gone and file cleanup is queued. Public segments
+        // stay cached under the video key until this purge.
+        $segmentCache->purge($project->getId(), $video->getId());
 
         $response->noContent();
     }

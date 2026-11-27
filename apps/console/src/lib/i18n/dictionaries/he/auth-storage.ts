@@ -1781,4 +1781,98 @@ export const heAuthStorageDictionary: Record<string, string> = {
   "Couldn't load sign-ups": 'לא ניתן היה לטעון הרשמות',
   'sign-ups': 'הרשמות',
   second: 'שנייה',
+  // Single sign-on for a team of a project
+  "Prove the domains this team owns. The team's identity providers sign in only users with an email on a verified domain.":
+    'הוכיחו אילו דומיינים שייכים לצוות הזה. ספקי הזהויות של הצוות מאפשרים התחברות רק למשתמשים עם אימייל בדומיין מאומת.',
+  "Add the domain of your users' emails, then connect an identity provider so they sign in to your app with single sign-on.":
+    'הוסיפו את הדומיין של כתובות האימייל של המשתמשים שלכם, ואז חברו ספק זהויות כדי שיתחברו לאפליקציה שלכם בהתחברות יחידה (SSO).',
+  "Users with an email on it can no longer sign in through the team's identity providers. Users who already joined stay members.":
+    'משתמשים עם אימייל בדומיין הזה לא יוכלו עוד להתחבר דרך ספקי הזהויות של הצוות. משתמשים שכבר הצטרפו יישארו חברים בצוות.',
+  "Require SSO is on and this is the team's only verified domain: deleting it pauses Require SSO, and members keep the team's roles however they sign in.":
+    'חיוב SSO פעיל וזה הדומיין המאומת היחיד של הצוות: מחיקתו תשהה את חיוב ה-SSO, וחברים ישמרו על תפקידי הצוות בכל דרך שבה יתחברו.',
+  "Prove this team owns this domain with a DNS record. The team's identity providers then sign in users with an email on it.":
+    'הוכיחו באמצעות רשומת DNS שהדומיין הזה שייך לצוות. לאחר מכן ספקי הזהויות של הצוות יאפשרו התחברות למשתמשים עם אימייל בדומיין.',
+  "Users on the team's verified domains sign in to your app through an identity provider, like Okta, Microsoft Entra ID, Google Workspace or Keycloak, and join the team with its roles.":
+    'משתמשים בדומיינים המאומתים של הצוות מתחברים לאפליקציה שלכם דרך ספק זהויות, למשל Okta,‏ Microsoft Entra ID,‏ Google Workspace או Keycloak, ומצטרפים לצוות עם התפקידים שלו.',
+  "Connect an identity provider so users on the team's domains sign in to your app with single sign-on.":
+    'חברו ספק זהויות כדי שמשתמשים בדומיינים של הצוות יתחברו לאפליקציה שלכם בהתחברות יחידה (SSO).',
+  'Users can no longer sign in through it. Users who already joined stay members.':
+    'משתמשים לא יוכלו עוד להתחבר דרכו. משתמשים שכבר הצטרפו יישארו חברים בצוות.',
+  "Require SSO is on and this is the team's only enabled identity provider: deleting it pauses Require SSO, and members keep the team's roles however they sign in.":
+    'חיוב SSO פעיל וזה ספק הזהויות הפעיל היחיד של הצוות: מחיקתו תשהה את חיוב ה-SSO, וחברים ישמרו על תפקידי הצוות בכל דרך שבה יתחברו.',
+  'Your app can show this name when users choose how to sign in.':
+    'האפליקציה שלכם יכולה להציג את השם הזה כשמשתמשים בוחרים איך להתחבר.',
+  'Add at least one role.': 'הוסיפו לפחות תפקיד אחד.',
+  'Roles users get in this team when they sign in through this identity provider.':
+    'התפקידים שמשתמשים מקבלים בצוות הזה כשהם מתחברים דרך ספק הזהויות הזה.',
+  'A role can be at most 36 characters.': 'תפקיד יכול להכיל עד 36 תווים.',
+  'Use letters, numbers, periods, hyphens and underscores, starting with a letter or number.':
+    'השתמשו באותיות, ספרות, נקודות, מקפים וקווים תחתונים, והתחילו באות או בספרה.',
+  "Members with an email on the team's verified domains keep their account, but get the team's roles only after signing in through one of its identity providers. Team owners keep their roles however they sign in, so a broken identity provider never locks the team out. Members on other domains are not affected.":
+    'חברים עם אימייל בדומיינים המאומתים של הצוות שומרים על החשבון שלהם, אבל מקבלים את תפקידי הצוות רק אחרי התחברות דרך אחד מספקי הזהויות שלו. בעלי הצוות שומרים על התפקידים שלהם בכל דרך שבה יתחברו, כך שספק זהויות תקול לעולם לא ינעל את הצוות בחוץ. חברים בדומיינים אחרים לא מושפעים.',
+  "Enabled - members on the team's verified domains get its roles only through single sign-on.":
+    'מופעל - חברים בדומיינים המאומתים של הצוות מקבלים את התפקידים שלו רק דרך התחברות יחידה (SSO).',
+  "Disabled - members get the team's roles however they sign in.":
+    'מושבת - חברים מקבלים את תפקידי הצוות בכל דרך שבה יתחברו.',
+  "Members on the team's verified domains who signed in another way keep their account but lose the team's roles until they sign in through one of its identity providers. Their other teams are not affected. Team owners keep their roles, so a broken identity provider never locks the team out.":
+    'חברים בדומיינים המאומתים של הצוות שהתחברו בדרך אחרת ישמרו על החשבון שלהם, אבל יאבדו את תפקידי הצוות עד שיתחברו דרך אחד מספקי הזהויות שלו. הצוותים האחרים שלהם לא מושפעים. בעלי הצוות שומרים על התפקידים שלהם, כך שספק זהויות תקול לעולם לא ינעל את הצוות בחוץ.',
+  'Add sign-in to your app': 'הוספת התחברות לאפליקציה שלכם',
+  'Declare the API key':
+    'הצהרה על מפתח ה-API',
+  'SvelteKit reads it from the environment when the app starts. Put it in .env locally.':
+    'SvelteKit קורא אותו מהסביבה כשהאפליקציה עולה. בפיתוח מקומי שימו אותו ב-.env.',
+  'Turn on desugaring':
+    'הפעלת desugaring',
+  'Android only: the Appwrite SDK needs core library desugaring, or the build fails.':
+    'Android בלבד: ה-SDK של Appwrite צריך core library desugaring, אחרת הבנייה נכשלת.',
+  'Build settings':
+    'הגדרות בנייה',
+  'People type their work email, sign in at their identity provider and come back signed in, as members of this team. Hand the setup to your AI tool, or follow the steps.':
+    'אנשים מקלידים את כתובת האימייל של העבודה, מתחברים אצל ספק הזהויות שלהם וחוזרים מחוברים, כחברים בצוות הזה. העבירו את ההגדרה לכלי ה-AI שלכם, או עקבו אחרי השלבים.',
+  'Find the identity providers for an email':
+    'מציאת ספקי הזהויות לכתובת אימייל',
+  'People type their work email. None found: offer your other sign-in methods. Several: let them choose by name.':
+    'אנשים מקלידים את כתובת האימייל של העבודה. לא נמצא ספק: הציעו את שיטות ההתחברות האחרות שלכם. כמה ספקים: תנו להם לבחור לפי שם.',
+  'Send the browser to the chosen one':
+    'שליחת הדפדפן לספק שנבחר',
+  'With a fresh random state, so your app only accepts sign-ins it started.':
+    'עם state אקראי חדש, כדי שהאפליקציה שלכם תקבל רק התחברויות שהיא עצמה התחילה.',
+  'Create the session when it comes back':
+    'יצירת הסשן כשהדפדפן חוזר',
+  'The success URL gets userId, secret and state. Check the state, then trade the rest for the session.':
+    'כתובת ההצלחה מקבלת userId,‏ secret ו-state. בדקו את ה-state, ואז המירו את השאר לסשן.',
+  'Handle the callback scheme':
+    'טיפול בסכמת ה-callback',
+  'Android only: let flutter_web_auth_2 receive the callback. iOS needs nothing.':
+    'Android בלבד: אפשרו ל-flutter_web_auth_2 לקבל את ה-callback. ב-iOS לא צריך כלום.',
+  'Register the scheme so the system hands the callback back to the app.':
+    'רשמו את הסכמה כדי שהמערכת תחזיר את ה-callback לאפליקציה.',
+  'The Custom Tab hands the callback to this activity.':
+    'ה-Custom Tab מעביר את ה-callback לאקטיביטי הזה.',
+  'Find providers':
+    'מציאת ספקים',
+  'Create session':
+    'יצירת סשן',
+  'Callback scheme':
+    'סכמת callback',
+  "Add your site as a Web platform of this project first: Appwrite only sends people back to its platforms' hostnames, and localhost.":
+    'קודם הוסיפו את האתר שלכם כפלטפורמת ווב של הפרויקט הזה: Appwrite מחזיר אנשים רק לשמות המארח של הפלטפורמות שלו, ול-localhost.',
+  'The server trades the token for the session with an API key that has the sessions.write scope, then keeps the session in its own cookie.':
+    'השרת ממיר את הטוקן לסשן בעזרת מפתח API עם ההרשאה sessions.write, ושומר את הסשן בעוגייה משלו.',
+  'The sign-in opens in a system browser sheet and comes back to the appwrite-callback scheme, which every app of this project may use.':
+    'ההתחברות נפתחת בחלון דפדפן של המערכת וחוזרת לסכמה appwrite-callback, שכל אפליקציה של הפרויקט הזה יכולה להשתמש בה.',
+  'ASWebAuthenticationSession catches the appwrite-callback scheme itself, so there is nothing to register in Info.plist.':
+    'ASWebAuthenticationSession תופס את הסכמה appwrite-callback בעצמו, כך שאין מה לרשום ב-Info.plist.',
+  'The sign-in opens in a Custom Tab and comes back to an activity that handles the appwrite-callback scheme.':
+    'ההתחברות נפתחת ב-Custom Tab וחוזרת לאקטיביטי שמטפל בסכמה appwrite-callback.',
+  'Any language works: two requests and one browser redirect. With an API key, the session response includes its secret for your own cookie.':
+    'כל שפה מתאימה: שתי בקשות והפניה אחת של הדפדפן. עם מפתח API, תשובת הסשן כוללת את ה-secret שלו בשביל העוגייה שלכם.',
+  'Installation':
+    'התקנה',
+  'Add to your app':
+    'הוספה לאפליקציה',
+  'Select step':
+    'בחירת שלב',
+  'Users can sign in through this identity provider.':
+    'משתמשים יכולים להתחבר דרך ספק הזהויות הזה.',
 }

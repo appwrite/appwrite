@@ -50,6 +50,8 @@ export const POSTGRES_DATABASE_SETTINGS_NAV: PostgresDatabaseSettingsNavItem[] =
         'created',
         'updated',
         'identifiers',
+        'version',
+        'upgrade',
         'delete',
         'remove',
         'trash',

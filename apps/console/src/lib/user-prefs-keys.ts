@@ -5,6 +5,7 @@
  * (see "Team and user preferences (key-value format)").
  */
 
+import { BEEP_PREFS_KEY, isPlainObject } from '@/lib/notifications/beep-prefs'
 import {
   parseVideoSubtitleSize,
   type VideoSubtitleSize,
@@ -277,9 +278,15 @@ export const APPWRITE_ACCOUNT_PREFS_MAX_BYTES = 65535
  */
 export function sanitizeAccountPrefsForWrite(
   prefs: Record<string, unknown>,
-): Record<string, string | number | boolean> {
-  const out: Record<string, string | number | boolean> = {}
+): Record<string, unknown> {
+  const out: Record<string, unknown> = {}
   for (const [key, value] of Object.entries(prefs)) {
+    // Beep, the mobile app, keeps its push settings as an object under
+    // `beep`. Dropping it would clear the person's mutes and snoozes.
+    if (key === BEEP_PREFS_KEY) {
+      if (isPlainObject(value)) out[key] = value
+      continue
+    }
     if (
       typeof value === 'string' ||
       typeof value === 'number' ||

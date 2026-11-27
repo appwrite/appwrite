@@ -149,6 +149,40 @@ final class ClickHouseTest extends TestCase
     }
 
     /**
+     * A method the adapter has no SQL for (and, or, groupBy, …) used to be skipped,
+     * so a logical filter returned every log the other filters allowed. find() and
+     * count() now refuse it.
+     */
+    public function testUnsupportedQueryMethodsAreRefusedNotSkipped(): void
+    {
+        $unsupported = [
+            'or' => Query::or([Query::equal('event', ['create']), Query::equal('event', ['delete'])]),
+            'and' => Query::and([Query::equal('event', ['create'])]),
+            'groupBy' => Query::groupBy(['event']),
+        ];
+
+        foreach ($unsupported as $name => $query) {
+            foreach (['find', 'count'] as $call) {
+                $thrown = null;
+                try {
+                    $this->audit->{$call}([Query::equal('userId', ['userId']), $query]);
+                } catch (Exception $e) {
+                    $thrown = $e;
+                }
+
+                $this->assertNotNull($thrown, "{$call}() with {$name} should throw");
+                $this->assertSame(
+                    'Query method not supported by the ClickHouse audit adapter: ' . $query->getMethod()->value,
+                    $thrown->getMessage(),
+                    "{$call}() with {$name}",
+                );
+            }
+        }
+
+        $this->assertNotEmpty($this->audit->find([Query::equal('userId', ['userId'])]));
+    }
+
+    /**
      * Test setDatabase validates empty identifier
      */
     public function testSetDatabaseValidatesEmpty(): void

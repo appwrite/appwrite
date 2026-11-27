@@ -21,6 +21,13 @@ abstract class Adapter
     public const METHOD_PUT = 'PUT';
     public const METHOD_PATCH = 'PATCH';
     public const METHOD_DELETE = 'DELETE';
+
+    /**
+     * Sent on every provider API call. GitHub requires a User-Agent; it names
+     * this client honestly, since a browser-like one makes Bitbucket apply
+     * its XSRF check to writes.
+     */
+    public const USER_AGENT = 'utopia-php/vcs';
     public const METHOD_HEAD = 'HEAD';
     public const METHOD_OPTIONS = 'OPTIONS';
     public const METHOD_CONNECT = 'CONNECT';
@@ -324,11 +331,14 @@ abstract class Adapter
 
     /**
      * Reports a build check on a commit
-     * state can be one of: queued, pending, success, failure, error, cancelled
+     * state can be one of: queued, pending, success, failure, error, cancelled,
+     * neutral (nothing was built, such as a skipped push), action_required
+     * (waiting on someone, such as a contributor to authorize)
      *
      * A provider with plain commit statuses carries the title as the status
-     * description and drops the summary; queued is pending there, and the
-     * suite joins the name as "Site (Project)". A provider with check runs
+     * description and drops the summary; queued and action_required are
+     * pending there, neutral is success, and the suite joins the name as
+     * "Site (Project)". A provider with check runs
      * overrides this to carry the summary and a conclusion, and files the
      * run under its suite. The key and suite key identify the check and its
      * suite where their names can repeat; they default to the names.
@@ -336,7 +346,12 @@ abstract class Adapter
     public function updateCheck(string $owner, string $repositoryName, string $SHA, string $state, string $name, string $title, string $summary = '', string $detailsUrl = '', string $suite = '', string $key = '', string $suiteKey = ''): void
     {
         $context = $suite === '' ? $name : "{$name} ({$suite})";
-        $this->updateCommitStatus($repositoryName, $SHA, $owner, $state === 'queued' ? 'pending' : $state, $title, $detailsUrl, $context);
+        $state = match ($state) {
+            'queued', 'action_required' => 'pending',
+            'neutral' => 'success',
+            default => $state,
+        };
+        $this->updateCommitStatus($repositoryName, $SHA, $owner, $state, $title, $detailsUrl, $context);
     }
 
     /**
@@ -541,7 +556,7 @@ abstract class Adapter
         $client = new Client(new CurlAdapter(options: [
             CURLOPT_PATH_AS_IS => true,
             CURLOPT_ENCODING => null,
-            CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36',
+            CURLOPT_USERAGENT => self::USER_AGENT,
         ]))
             ->withFollowRedirects($followRedirects)
             ->withConnectTimeout(0)

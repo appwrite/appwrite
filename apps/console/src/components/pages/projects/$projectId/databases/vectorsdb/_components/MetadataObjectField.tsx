@@ -130,7 +130,6 @@ export function MetadataObjectField({
         ) : null}
       </Label>
       <CodeEditor
-        modelPath={`inmemory://vectorsdb-metadata/${id ?? fieldKey}`}
         value={text}
         onChange={handleChange}
         language="json"

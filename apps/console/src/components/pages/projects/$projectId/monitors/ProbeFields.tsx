@@ -1,8 +1,9 @@
-import type { ReactNode } from 'react'
+import { useEffect, type ReactNode } from 'react'
 import * as RadioGroupPrimitive from '@radix-ui/react-radio-group'
 import {
   Gauge,
   Globe,
+  Lock,
   Mail,
   Plug,
   Signpost,
@@ -41,6 +42,8 @@ import {
   probeTarget,
 } from '@/lib/alerts/probes'
 import { useT } from '@/lib/i18n/translate'
+import { alertingLimits, defaultProbeInterval } from '@/lib/alerts/plan-limits'
+import { useOrganizationPlan, useProject } from '@/lib/react-query/hooks'
 import { cn } from '@/lib/utils'
 import {
   NotifyFields,
@@ -48,6 +51,7 @@ import {
   SectionHeading,
   Word,
   durationOptions,
+  type Recipients,
 } from './RuleFields'
 
 /** Probe monitor form state; headers and status codes are kept as typed. */
@@ -73,6 +77,8 @@ export type ProbeForm = {
   timeout: number
   cooldown: number
   notify: string[]
+  recipients: Recipients
+  escalationId: string
   severity: MonitorSeverity
 }
 
@@ -100,6 +106,8 @@ export function emptyProbeForm(type: ProbeType): ProbeForm {
     timeout: 10,
     cooldown: 3600,
     notify: ['owner'],
+    recipients: 'roles',
+    escalationId: '',
     severity: 'warning',
   }
 }
@@ -127,6 +135,8 @@ export function probeFormFromMonitor(
     timeout: monitor.timeout,
     cooldown: monitor.cooldown,
     notify: monitor.notify,
+    recipients: monitor.escalationId ? 'escalation' : 'roles',
+    escalationId: monitor.escalationId ?? '',
     severity: monitor.severity,
   }
 }
@@ -149,6 +159,7 @@ export function probeInputFromForm(form: ProbeForm): ProbeMonitorInput {
     timeout: form.timeout,
     cooldown: form.cooldown,
     notify: form.notify,
+    escalationId: form.recipients === 'escalation' ? form.escalationId : '',
     severity: form.severity,
   }
   switch (form.type) {
@@ -228,6 +239,9 @@ export function probeFormError(
   if (form.timeout > form.interval) {
     return t('The timeout must not be longer than the interval.')
   }
+  if (form.recipients === 'escalation' && !form.escalationId) {
+    return t('Select an escalation.')
+  }
   return undefined
 }
 
@@ -249,10 +263,13 @@ export function MonitorTypePicker({
   value,
   onChange,
   disabled,
+  probesLocked = false,
 }: {
   value: 'usage' | ProbeType
   onChange: (type: 'usage' | ProbeType) => void
   disabled?: boolean
+  /** The plan offers no synthetic checks, so only usage can be picked. */
+  probesLocked?: boolean
 }) {
   const t = useT()
   return (
@@ -262,23 +279,28 @@ export function MonitorTypePicker({
       onValueChange={(next) => onChange(next as 'usage' | ProbeType)}
       disabled={disabled}
       orientation="horizontal"
-      className="flex flex-wrap gap-2"
+      className="grid grid-cols-2 gap-2 sm:grid-cols-5"
     >
-      {MONITOR_TYPES.map(({ value: type, label, icon: Icon }) => (
-        <RadioGroupPrimitive.Item
-          key={type}
-          value={type}
-          className={cn(
-            'inline-flex h-8 items-center gap-1.5 rounded-md border px-3 text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60',
-            value === type
-              ? 'border-foreground font-medium text-foreground ring-1 ring-inset ring-foreground'
-              : 'border-border text-muted-foreground hover:bg-accent/40',
-          )}
-        >
-          <Icon aria-hidden className="h-3.5 w-3.5" />
-          {t(label)}
-        </RadioGroupPrimitive.Item>
-      ))}
+      {MONITOR_TYPES.map(({ value: type, label, icon: Icon }) => {
+        const locked = probesLocked && type !== 'usage'
+        return (
+          <RadioGroupPrimitive.Item
+            key={type}
+            value={type}
+            disabled={locked}
+            className={cn(
+              'flex h-10 items-center justify-center gap-2 rounded-md border px-3 text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60',
+              value === type
+                ? 'border-foreground font-medium text-foreground ring-1 ring-inset ring-foreground'
+                : 'border-border text-muted-foreground hover:bg-accent/40',
+            )}
+          >
+            <Icon aria-hidden className="h-4 w-4" />
+            {t(label)}
+            {locked && <Lock aria-hidden className="h-3 w-3" />}
+          </RadioGroupPrimitive.Item>
+        )
+      })}
     </RadioGroupPrimitive.Root>
   )
 }
@@ -298,10 +320,13 @@ function Field({
 }) {
   return (
     <div className={cn('min-w-0', className)}>
-      <Label htmlFor={id} className="text-[13px] font-semibold">
+      <Label
+        htmlFor={id}
+        className="text-[12px] font-medium text-muted-foreground"
+      >
         {label}
       </Label>
-      <div className="mt-2">{children}</div>
+      <div className="mt-1.5">{children}</div>
       {hint && (
         <p className="mt-1.5 text-[12px] text-muted-foreground">{hint}</p>
       )}
@@ -345,18 +370,38 @@ function HostFields({ form, onChange, disabled }: ProbeFieldsProps) {
   )
 }
 
-export function ProbeFields({ form, onChange, disabled }: ProbeFieldsProps) {
+export function ProbeFields({
+  projectId,
+  form,
+  onChange,
+  disabled,
+  part,
+}: ProbeFieldsProps & {
+  projectId: string
+  /** Only what the check calls and how often, for a settings card of its own. */
+  part?: 'target'
+}) {
   const t = useT()
+  const { project } = useProject(projectId)
+  const { plan } = useOrganizationPlan(project?.teamId)
+  const minimum = alertingLimits(plan).probeInterval
   const definition = PROBE_TYPES.find((entry) => entry.value === form.type)
 
+  // The API refuses an interval shorter than the plan's, so start new checks on one it accepts.
+  useEffect(() => {
+    if (!disabled && form.interval < minimum) {
+      onChange({ interval: defaultProbeInterval(minimum) })
+    }
+  }, [disabled, form.interval, minimum, onChange])
+
   return (
-    <div className="space-y-7">
+    <div className="space-y-8">
       <section>
         <SectionHeading
           title={t('Target')}
           description={definition ? t(definition.description) : undefined}
         />
-        <div className="space-y-4 rounded-xl border border-border bg-muted/20 p-4">
+        <div className="space-y-5">
           {form.type === 'http' && (
             <>
               <div className="grid gap-4 sm:grid-cols-[120px_1fr]">
@@ -594,7 +639,11 @@ export function ProbeFields({ form, onChange, disabled }: ProbeFieldsProps) {
             </SelectTrigger>
             <SelectContent>
               {durationOptions(INTERVALS, form.interval, t).map((option) => (
-                <SelectItem key={option.value} value={String(option.value)}>
+                <SelectItem
+                  key={option.value}
+                  value={String(option.value)}
+                  disabled={option.value < minimum}
+                >
                   {option.label}
                 </SelectItem>
               ))}
@@ -625,22 +674,41 @@ export function ProbeFields({ form, onChange, disabled }: ProbeFieldsProps) {
             </SelectContent>
           </Select>
         </div>
+        {minimum > INTERVALS[0].value && (
+          <p className="mt-2 text-[12px] text-muted-foreground">
+            {t('Your plan checks at most every {interval}.').replace(
+              '{interval}',
+              durationOptions(INTERVALS, minimum, t).find(
+                (option) => option.value === minimum,
+              )?.label ?? `${minimum}s`,
+            )}
+          </p>
+        )}
       </section>
 
-      <NotifyFields
-        notify={form.notify}
-        severity={form.severity}
-        onChange={onChange}
-        disabled={disabled}
-      />
+      {part !== 'target' && (
+        <>
+          <NotifyFields
+            notify={form.notify}
+            severity={form.severity}
+            escalation={{
+              organizationId: project?.teamId,
+              recipients: form.recipients,
+              escalationId: form.escalationId,
+            }}
+            onChange={onChange}
+            disabled={disabled}
+          />
 
-      <OptionalFields
-        name={form.name}
-        cooldown={form.cooldown}
-        placeholder={suggestedProbeName(form) || t('Name')}
-        onChange={onChange}
-        disabled={disabled}
-      />
+          <OptionalFields
+            name={form.name}
+            cooldown={form.cooldown}
+            placeholder={suggestedProbeName(form) || t('Name')}
+            onChange={onChange}
+            disabled={disabled}
+          />
+        </>
+      )}
     </div>
   )
 }

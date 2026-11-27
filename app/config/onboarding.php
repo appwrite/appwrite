@@ -94,7 +94,7 @@ return [
     'project.createVideoProfile' => true,
     'videos.createRendition' => true,
     'videos.createCaption' => true,
-    'videos.getTimelines' => true,
+    'videos.getTimeline' => true,
     // Master-manifest SDK methods; OR them in the UI for a single
     // "played a video" milestone.
     'videos.getHlsManifest' => true,

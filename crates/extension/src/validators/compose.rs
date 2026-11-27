@@ -21,8 +21,8 @@ use ext_php_rs::zend::{ClassEntry, ExecuteData, ce};
 
 use super::engine::{
     self, Callee, Declared, KeyRef, Literal, MAY_BE_ARRAY, MAY_BE_BOOL, MAY_BE_FALSE, MAY_BE_LONG, MAY_BE_NULL,
-    MAY_BE_STATIC, MAY_BE_STRING, Property, PropertyType, array_arg, call, call_method, get, long_arg, set,
-    str_zval_arg, string, too_few, type_error,
+    MAY_BE_STATIC, MAY_BE_STRING, MethodCache, Property, PropertyType, array_arg, call, call_method, get, long_arg,
+    set, str_zval_arg, string, too_few, type_error,
 };
 use super::leaf::{
     self, Method, PRIVATE, PUBLIC, TYPE_ARRAY, TYPE_MIXED, TYPE_OBJECT, VALIDATOR, VALUE, VALUE_MIXED, build, is_array,
@@ -105,6 +105,24 @@ fn return_property(ex: &mut ExecuteData, retval: &mut Zval, scope: &AtomicPtr<Cl
     }
 }
 
+/// `$rule->isValid($value)`, resolving the method once per class rather than per call: a
+/// cache for each call site, so the classes the sites see do not displace each other.
+fn is_valid(rule: &Zval, value: &Zval, cache: &MethodCache) -> Option<Zval> {
+    engine::call_method_cached(rule, &IS_VALID, cache, &[value.dereference().shallow_clone()])
+}
+
+static NULLABLE_IS_VALID: MethodCache = MethodCache::new();
+static ARRAY_LIST_IS_VALID: MethodCache = MethodCache::new();
+static OF_IS_VALID: MethodCache = MethodCache::new();
+static MULTIPLE_IS_VALID: MethodCache = MethodCache::new();
+
+/// Forgets the methods found this request (request shutdown), as their classes may go.
+pub fn request_shutdown() {
+    for cache in [&NULLABLE_IS_VALID, &ARRAY_LIST_IS_VALID, &OF_IS_VALID, &MULTIPLE_IS_VALID] {
+        cache.reset();
+    }
+}
+
 /// `$value` as `json_encode($value)` encodes it: its bytes, `None` for `false`.
 fn json_encode(value: &Zval) -> Option<Option<Vec<u8>>> {
     let encoded = call("json_encode", &[value])?;
@@ -113,9 +131,97 @@ fn json_encode(value: &Zval) -> Option<Option<Vec<u8>>> {
 
 /// `json_decode($value)` (its value), and whether `json_last_error()` then says it decoded.
 fn json_decode(value: &Zval) -> Option<(Zval, bool)> {
+    if let Some(string) = value.zend_str()
+        && json::direct()
+    {
+        return Some(json::decode(string));
+    }
     let decoded = call("json_decode", &[value])?;
     let error = call("json_last_error", &[])?;
     Some((decoded, error.long() == Some(0)))
+}
+
+/// `json_decode()` and `json_last_error()` for a string, without calling them: what
+/// `json_decode($string)` does with its default arguments (ext/json/json.c), through the
+/// decoder and error code ext/json exports for other extensions. Used once the first call
+/// has checked that the error code is where this reads it.
+mod json {
+    use std::ffi::{c_char, c_int};
+    use std::sync::OnceLock;
+
+    use ext_php_rs::ffi::{zend_long, zval};
+    use ext_php_rs::types::{ZendStr, Zval};
+
+    use super::call;
+
+    /// `zend_json_globals` (ext/json/php_json.h).
+    #[repr(C)]
+    struct Globals {
+        encoder_depth: c_int,
+        encode_max_depth: c_int,
+        error_code: c_int,
+    }
+
+    unsafe extern "C" {
+        static mut json_globals: Globals;
+        fn php_json_decode_ex(
+            return_value: *mut zval,
+            str: *const c_char,
+            str_len: usize,
+            options: zend_long,
+            depth: zend_long,
+        ) -> c_int;
+    }
+
+    const ERROR_NONE: c_int = 0;
+    const ERROR_SYNTAX: c_int = 4;
+    /// `PHP_JSON_PARSER_DEFAULT_DEPTH`, `json_decode()`'s default `$depth`.
+    const DEPTH: zend_long = 512;
+
+    fn error_code() -> c_int {
+        // SAFETY: ext/json's globals, which live for the process; read on the request's thread.
+        unsafe { (*std::ptr::addr_of!(json_globals)).error_code }
+    }
+
+    fn set_error_code(code: c_int) {
+        // SAFETY: as in `error_code`; `json_decode()` writes the same field.
+        unsafe { (*std::ptr::addr_of_mut!(json_globals)).error_code = code };
+    }
+
+    /// Whether `json_last_error()` reads the field this writes: checked once, on the first
+    /// call, against the PHP functions themselves. Otherwise the functions are called.
+    pub(super) fn direct() -> bool {
+        static DIRECT: OnceLock<bool> = OnceLock::new();
+        *DIRECT.get_or_init(|| {
+            let agrees = |input: &[u8], expected: c_int| {
+                let input = super::string(input);
+                let Some(_) = call("json_decode", &[&input]) else { return false };
+                let Some(last) = call("json_last_error", &[]) else { return false };
+                last.long() == Some(i64::from(expected)) && error_code() == expected
+            };
+            let direct = agrees(b"[", ERROR_SYNTAX) && agrees(b"[]", ERROR_NONE);
+            // Leave the error as a successful decode left it, whichever path is taken.
+            set_error_code(ERROR_NONE);
+            direct
+        })
+    }
+
+    /// `json_decode($string)` and whether `json_last_error()` is then `JSON_ERROR_NONE`.
+    pub(super) fn decode(string: &ZendStr) -> (Zval, bool) {
+        let bytes = string.as_bytes();
+        let mut decoded = Zval::new();
+        if bytes.is_empty() {
+            set_error_code(ERROR_SYNTAX);
+            return (decoded, false);
+        }
+        set_error_code(ERROR_NONE);
+        // SAFETY: a live string and a fresh return value, as `json_decode()` passes them; with
+        // no `JSON_THROW_ON_ERROR` the decoder sets the error code rather than throwing.
+        unsafe {
+            php_json_decode_ex(&raw mut decoded, bytes.as_ptr().cast(), bytes.len(), 0, DEPTH);
+        }
+        (decoded, error_code() == ERROR_NONE)
+    }
 }
 
 // Nullable ------------------------------------------------------------------------------
@@ -194,7 +300,7 @@ extern "C" fn nullable_is_valid(ex: &mut ExecuteData, retval: &mut Zval) {
     }
     let Some(this) = this(ex) else { return };
     let Some(validator) = get(stored(&NULLABLE), this, &NULLABLE_VALIDATOR) else { return };
-    let Some(valid) = call_method(&validator, &IS_VALID, &[&*value]) else { return };
+    let Some(valid) = is_valid(&validator, value, &NULLABLE_IS_VALID) else { return };
     if let Some(valid) = engine::verify_return(ex, valid, MAY_BE_BOOL, true) {
         *retval = valid;
     }
@@ -310,7 +416,7 @@ extern "C" fn array_list_is_valid(ex: &mut ExecuteData, retval: &mut Zval) {
     let scope = stored(&ARRAY_LIST);
     for element in engine::values(elements) {
         let Some(validator) = get(scope, this, &ARRAY_LIST_VALIDATOR) else { return };
-        let Some(valid) = call_method(&validator, &IS_VALID, &[element]) else { return };
+        let Some(valid) = is_valid(&validator, element, &ARRAY_LIST_IS_VALID) else { return };
         if !engine::condition(&valid) {
             set_bool(retval, false);
             return;
@@ -464,7 +570,7 @@ fn of_is_valid(of: Of, ex: &mut ExecuteData, retval: &mut Zval) {
     let Some(validators) = get(scope, this, &OF_VALIDATORS) else { return };
     let Some(list) = validators.array() else { return };
     for rule in engine::values(list) {
-        let Some(valid) = call_method(rule, &IS_VALID, &[&*value]) else { return };
+        let Some(valid) = is_valid(rule, value, &OF_IS_VALID) else { return };
         // `$this->failedRule = $rule`: a Validator straight into the slot, anything else
         // through the engine's type check.
         let record = |this: &mut ZendObject| {
@@ -723,7 +829,7 @@ extern "C" fn multiple_is_valid(ex: &mut ExecuteData, retval: &mut Zval) {
     let Some(items) = engine::foreach_items(&rules) else { return };
     if let Some(items) = items.array() {
         for rule in engine::values(items) {
-            let Some(valid) = call_method(rule, &IS_VALID, &[&*value]) else { return };
+            let Some(valid) = is_valid(rule, value, &MULTIPLE_IS_VALID) else { return };
             // `false === $rule->isValid($value)`.
             if valid.dereference().bool() == Some(false) {
                 set_bool(retval, false);

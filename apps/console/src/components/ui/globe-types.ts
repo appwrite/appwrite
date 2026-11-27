@@ -7,7 +7,8 @@ export type GlobeArc = {
   endLat: number
   endLng: number
   arcAlt: number
-  color: string
+  /** One color, or several for a gradient along the arc. */
+  color: string | string[]
 }
 
 export type GlobeMarker = {

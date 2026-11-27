@@ -125,7 +125,7 @@ class Create extends Action
             'secret' => $proofForCode->hash($secret),
             'expire' => $expire,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
-            'ip' => $request->getIP(),
+            'ip' => $request->getClientIP(),
         ]);
 
         $authorization->addRole(Role::user($user->getId())->toString());

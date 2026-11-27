@@ -1042,7 +1042,9 @@ function RecordedLine({
         <span className="flex items-center gap-2">
           {item.description}
           {item.type === 'addon' &&
-            (item.resourceId === 'member' || item.resourceId === 'projects') &&
+            ['member', 'projects', 'probes', 'responders'].includes(
+              item.resourceId ?? '',
+            ) &&
             item.quantity != null && (
               <Badge
                 variant="info"
