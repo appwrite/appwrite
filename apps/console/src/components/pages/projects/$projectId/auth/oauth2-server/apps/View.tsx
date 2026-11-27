@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import {
+  AlertTriangle,
   Copy,
   ExternalLink,
   FileJson,
@@ -121,7 +122,7 @@ export function View({ projectId }: OAuth2ServerAppsViewProps) {
   const t = useT()
   const navigate = useNavigate()
   const search = useSearch({ strict: false }) as { appId?: string }
-  const { project } = useProject(projectId)
+  const { project, projectData } = useProject(projectId)
   const { apps, isLoading, isFetching } = useProjectOAuth2Apps(
     projectId,
     project?.region,
@@ -270,6 +271,21 @@ export function View({ projectId }: OAuth2ServerAppsViewProps) {
             </Button>
           </div>
           <div className="border-t border-border" />
+          {projectData?.oAuth2ServerEnabled === false ? (
+            <div className="border-b border-border bg-amber-500/10 px-6 py-3">
+              <Alert className="border-0 bg-transparent p-0 text-foreground">
+                <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                <AlertTitle className="text-[12px] font-medium">
+                  {t('OAuth2 server is disabled')}
+                </AlertTitle>
+                <AlertDescription className="text-[12px] text-muted-foreground">
+                  {t(
+                    'Apps cannot authorize users until the OAuth2 server is enabled in the Server settings.',
+                  )}
+                </AlertDescription>
+              </Alert>
+            </div>
+          ) : null}
           <div className="border-b border-border bg-blue-500/5 px-6 py-3">
             <Alert
               variant="default"
@@ -317,7 +333,7 @@ export function View({ projectId }: OAuth2ServerAppsViewProps) {
                 <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
               </div>
             ) : (
-              <div className="overflow-hidden rounded-lg border border-border">
+              <div className="overflow-x-auto rounded-lg border border-border">
                 <Table>
                   <TableHeader>
                     <TableRow className="hover:bg-transparent border-b border-border">

@@ -24,6 +24,7 @@ import {
 } from '@/lib/database-specs'
 import {
   POSTGRES_DATABASE_SPECS_SOURCE,
+  useCreatePostgresDatabaseUpgrade,
   useDatabaseSpecifications,
   useProject,
   useUpdatePostgresDatabase,
@@ -31,6 +32,8 @@ import {
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { cn } from '@/lib/utils'
 import { dedicatedDatabaseStatusBadgeVariant } from '@/lib/databases/dedicated-database-status'
+import { POSTGRES_ENGINE_VERSIONS } from '@/lib/databases/engine-versions'
+import { DedicatedDatabaseVersionCard } from '../../_components/DedicatedDatabaseVersionCard'
 import { localizeResourceStatusLabel } from '@/lib/i18n/resource-status-labels'
 import { useT } from '@/lib/i18n/translate'
 import type { PostgresDatabaseSettingsCardProps } from './postgres-database-settings-types'
@@ -250,6 +253,28 @@ export function PostgresDatabaseDetailsCard({
         </div>
       ) : null}
     </div>
+  )
+}
+
+export function PostgresDatabaseVersionCard({
+  projectId,
+  databaseId,
+  database,
+  canWrite,
+}: PostgresDatabaseSettingsCardProps) {
+  const upgrade = useCreatePostgresDatabaseUpgrade(projectId, databaseId)
+  return (
+    <DedicatedDatabaseVersionCard
+      engine="PostgreSQL"
+      versions={POSTGRES_ENGINE_VERSIONS}
+      database={database}
+      canWrite={canWrite}
+      upgrade={upgrade}
+      notes={[
+        'At cutover, writes pause for a moment and open connections are closed, so your app needs to reconnect.',
+        'Check that your installed extensions support the target version.',
+      ]}
+    />
   )
 }
 

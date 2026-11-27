@@ -1701,8 +1701,6 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Database is pausing': 'מסד הנתונים מושהה',
   'Database is resuming': 'מסד הנתונים חוזר לפעילות',
   'Database is deleting': 'מסד הנתונים נמחק',
-  'A database upgrade is in progress. Some operations may be temporarily unavailable.':
-    'שדרוג מסד נתונים בתהליך. חלק מהפעולות עשויות להיות זמנית לא זמינות.',
   'A database migration is in progress. Some operations may be temporarily unavailable.':
     'מיגרציית מסד נתונים בתהליך. חלק מהפעולות עשויות להיות זמנית לא זמינות.',
   'Starting dedicated migration': 'מתחילים מיגרציה ל-compute ייעודי',
@@ -2285,4 +2283,24 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Keep this database safe': 'שמרו על מסד הנתונים הזה',
   'Back up on a schedule, keep copies for as long as you need, and restore any of them when something goes wrong.':
     'גבו לפי לוח זמנים, שמרו עותקים כמה זמן שצריך, ושחזרו כל אחד מהם כשמשהו משתבש.',
+  'This database runs the latest supported version.':
+    'מסד הנתונים הזה רץ על הגרסה העדכנית ביותר שנתמכת.',
+  'Upgrade to {version}':
+    'שדרוג ל-{version}',
+  'Upgrade to {version} started':
+    'השדרוג ל-{version} התחיל',
+  'Failed to start the upgrade':
+    'הפעלת השדרוג נכשלה',
+  'A version upgrade is in progress. Your database stays online while it runs.':
+    'מתבצע שדרוג גרסה. מסד הנתונים נשאר זמין לאורך כל התהליך.',
+  'Upgrade to a newer {engine} version. Upgrades run online while your database keeps serving traffic. Downgrades are not supported.':
+    'שדרגו לגרסה חדשה יותר של {engine}. השדרוג מתבצע אונליין, ומסד הנתונים ממשיך לשרת תעבורה. אין אפשרות לחזור לגרסה קודמת.',
+  'A new instance is created on the target version and your data is copied over while the database stays online. Traffic switches over once it has caught up.':
+    'נוצר מופע חדש על גרסת היעד והנתונים מועתקים אליו בזמן שמסד הנתונים נשאר זמין. כשהוא מדביק את הפער, התעבורה עוברת אליו.',
+  'At cutover, writes pause for a moment and open connections are closed, so your app needs to reconnect.':
+    'בזמן המעבר הכתיבה נעצרת לרגע והחיבורים הפתוחים נסגרים, כך שהאפליקציה צריכה להתחבר מחדש.',
+  'Check that your installed extensions support the target version.':
+    'ודאו שההרחבות המותקנות תומכות בגרסת היעד.',
+  'You cannot downgrade afterwards.':
+    'לא ניתן לחזור לגרסה קודמת אחר כך.',
 }

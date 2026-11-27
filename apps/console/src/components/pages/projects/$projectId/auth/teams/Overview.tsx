@@ -10,7 +10,7 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { InitialsAvatar } from '@/components/global/shared/Avatar'
+import { TeamAvatar } from '@/components/global/shared/Avatar'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import {
@@ -25,6 +25,7 @@ import { Plus, Trash2 } from 'lucide-react'
 import { useHashScroll } from '@/lib/hooks/useHashScroll'
 import { formatPrefValue, formatPrefsForEditor } from '@/lib/prefs-value'
 import { useT } from '@/lib/i18n/translate'
+import { TeamPhoto } from './_components/TeamPhoto'
 
 export function TeamOverview() {
   const t = useT()
@@ -202,7 +203,13 @@ export function TeamOverview() {
         <div className="border-t border-border" />
         <div className="px-6 py-4">
           <div className="flex items-start gap-4 flex-wrap">
-            <InitialsAvatar name={team.name} size="lg" className="shrink-0" />
+            <TeamAvatar
+              teamId={team.$id}
+              projectId={projectId}
+              name={team.name}
+              size="lg"
+              className="shrink-0"
+            />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1 flex-wrap">
                 <p className="text-[15px] font-medium text-foreground truncate">
@@ -231,6 +238,12 @@ export function TeamOverview() {
           </div>
         </div>
       </div>
+
+      <TeamPhoto
+        projectId={projectId as string}
+        teamId={team.$id}
+        name={team.name}
+      />
 
       {/* Update Name */}
       <div
@@ -389,7 +402,12 @@ export function TeamOverview() {
 
           {/* Team Info Summary */}
           <div className="flex items-center gap-3 mt-4">
-            <InitialsAvatar name={team.name} size="md" />
+            <TeamAvatar
+              teamId={team.$id}
+              projectId={projectId}
+              name={team.name}
+              size="md"
+            />
             <div className="flex-1 min-w-0">
               <p className="text-[14px] font-medium text-foreground truncate">
                 {team.name}

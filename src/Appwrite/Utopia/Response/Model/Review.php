@@ -152,6 +152,18 @@ class Review extends Model
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
+            ->addRule('findingsTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Findings the review posted. Findings dropped before posting are not counted.',
+                'default' => 0,
+                'example' => 5,
+            ])
+            ->addRule('severity', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Severity of the worst finding the review posted: critical, major, minor or info. Empty when it posted none.',
+                'default' => '',
+                'example' => 'major',
+            ])
             ->addRule('findings', [
                 'type' => Response::MODEL_REVIEW_FINDING,
                 'description' => 'Findings of the review, posted or not.',

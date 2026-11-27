@@ -74,7 +74,7 @@ const caption = await videos.createCaption({
     bucketId: '<BUCKET_ID>',
     fileId: '<CAPTION_FILE_ID>',
     name: 'English',
-    code: 'eng',
+    language: 'eng',
     xdefault: true // optional
 });
 ```
@@ -95,7 +95,7 @@ caption = videos.create_caption(
     bucket_id = '<BUCKET_ID>',
     file_id = '<CAPTION_FILE_ID>',
     name = 'English',
-    code = 'eng',
+    language = 'eng',
     default = True # optional
 )
 ```
@@ -115,7 +115,7 @@ final caption = await videos.createCaption(
     bucketId: '<BUCKET_ID>',
     fileId: '<CAPTION_FILE_ID>',
     name: 'English',
-    code: 'eng',
+    language: 'eng',
     xdefault: true, // (optional)
 );
 ```
@@ -138,7 +138,7 @@ $caption = $videos->createCaption(
     bucketId: '<BUCKET_ID>',
     fileId: '<CAPTION_FILE_ID>',
     name: 'English',
-    code: 'eng',
+    language: 'eng',
     default: true // optional
 );
 ```
@@ -160,7 +160,7 @@ caption = videos.create_caption(
     bucket_id: '<BUCKET_ID>',
     file_id: '<CAPTION_FILE_ID>',
     name: 'English',
-    code: 'eng',
+    language: 'eng',
     default: true # optional
 )
 ```
@@ -182,7 +182,7 @@ VideoCaption caption = await videos.CreateCaption(
     bucketId: "<BUCKET_ID>",
     fileId: "<CAPTION_FILE_ID>",
     name: "English",
-    code: "eng",
+    language: "eng",
     @default: true // optional
 );
 ```
@@ -202,7 +202,7 @@ const caption = await videos.createCaption({
     bucketId: '<BUCKET_ID>',
     fileId: '<CAPTION_FILE_ID>',
     name: 'English',
-    code: 'eng',
+    language: 'eng',
     xdefault: true // optional
 });
 ```
@@ -257,7 +257,7 @@ let caption = try await videos.createCaption(
     bucketId: "<BUCKET_ID>",
     fileId: "<CAPTION_FILE_ID>",
     name: "English",
-    code: "eng",
+    language: "eng",
     default: true // optional
 )
 ```
@@ -278,7 +278,7 @@ val caption = videos.createCaption(
     bucketId = "<BUCKET_ID>",
     fileId = "<CAPTION_FILE_ID>",
     name = "English",
-    code = "eng",
+    language = "eng",
     default = true // optional
 )
 ```
@@ -302,7 +302,7 @@ try {
         "<BUCKET_ID>", // bucketId
         "<CAPTION_FILE_ID>", // fileId
         "English", // name
-        "eng", // code
+        "eng", // language
         true, // default (optional)
         new CoroutineCallback<>((result, error) -> {
             if (error != null) {
@@ -369,7 +369,7 @@ Each caption has an **ISO 639-2** three-letter language code, such as `eng`, `sp
 
 Embedded tracks without a language tag show as `und` (undetermined).
 
-To fix a track's language in the Console, open the caption and change **Language** in the editor's **Settings** panel. Retagging updates the name, code, or default flag without re-processing the file. Changing the file itself re-packages the track.
+To fix a track's language in the Console, open the caption and change **Language** in the editor's **Settings** panel. Retagging updates the name, language, or default flag without re-processing the file. Changing the file itself re-packages the track.
 
 With a server SDK, pass only the fields you want to change. For example, to tag an embedded track that came in as `und`:
 
@@ -388,7 +388,7 @@ const caption = await videos.updateCaption({
     videoId: '<VIDEO_ID>',
     captionId: '<CAPTION_ID>',
     name: 'Hebrew', // optional
-    code: 'heb' // optional
+    language: 'heb' // optional
 });
 ```
 
@@ -407,7 +407,7 @@ caption = videos.update_caption(
     video_id = '<VIDEO_ID>',
     caption_id = '<CAPTION_ID>',
     name = 'Hebrew', # optional
-    code = 'heb' # optional
+    language = 'heb' # optional
 )
 ```
 
@@ -425,7 +425,7 @@ final caption = await videos.updateCaption(
     videoId: '<VIDEO_ID>',
     captionId: '<CAPTION_ID>',
     name: 'Hebrew', // (optional)
-    code: 'heb', // (optional)
+    language: 'heb', // (optional)
 );
 ```
 
@@ -446,7 +446,7 @@ $caption = $videos->updateCaption(
     videoId: '<VIDEO_ID>',
     captionId: '<CAPTION_ID>',
     name: 'Hebrew', // optional
-    code: 'heb' // optional
+    language: 'heb' // optional
 );
 ```
 
@@ -466,7 +466,7 @@ caption = videos.update_caption(
     video_id: '<VIDEO_ID>',
     caption_id: '<CAPTION_ID>',
     name: 'Hebrew', # optional
-    code: 'heb' # optional
+    language: 'heb' # optional
 )
 ```
 
@@ -486,7 +486,7 @@ VideoCaption caption = await videos.UpdateCaption(
     videoId: "<VIDEO_ID>",
     captionId: "<CAPTION_ID>",
     name: "Hebrew", // optional
-    code: "heb" // optional
+    language: "heb" // optional
 );
 ```
 
@@ -504,7 +504,7 @@ const caption = await videos.updateCaption({
     videoId: '<VIDEO_ID>',
     captionId: '<CAPTION_ID>',
     name: 'Hebrew', // optional
-    code: 'heb' // optional
+    language: 'heb' // optional
 });
 ```
 
@@ -555,7 +555,7 @@ let caption = try await videos.updateCaption(
     videoId: "<VIDEO_ID>",
     captionId: "<CAPTION_ID>",
     name: "Hebrew", // optional
-    code: "heb" // optional
+    language: "heb" // optional
 )
 ```
 
@@ -574,7 +574,7 @@ val caption = videos.updateCaption(
     videoId = "<VIDEO_ID>",
     captionId = "<CAPTION_ID>",
     name = "Hebrew", // optional
-    code = "heb" // optional
+    language = "heb" // optional
 )
 ```
 
@@ -598,7 +598,7 @@ try {
         null, // bucketId (optional)
         null, // fileId (optional)
         "Hebrew", // name (optional)
-        "heb", // code (optional)
+        "heb", // language (optional)
         new CoroutineCallback<>((result, error) -> {
             if (error != null) {
                 error.printStackTrace();
@@ -632,7 +632,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         None, // bucketId
         None, // fileId
         Some("Hebrew"), // name
-        Some("heb") // code
+        Some("heb") // language
     ).await?;
 
     println!("{:?}", caption);

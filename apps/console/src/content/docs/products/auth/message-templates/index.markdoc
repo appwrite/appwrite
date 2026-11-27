@@ -14,9 +14,9 @@ Appwrite Cloud has a default SMTP server to get you started. This SMTP server se
 
 Custom SMTP is available on Appwrite Cloud Pro and higher plans. You can connect a supported provider in one click, or enter the settings from any SMTP provider by hand.
 
-## One-click setup with Resend {% #smtp-one-click-setup %}
+## One-click setup with Resend or Bird {% #smtp-one-click-setup %}
 
-On Appwrite Cloud, the **SMTP** tab starts with a **One-click setup** card. Connect a [Resend](https://resend.com) account and Appwrite creates a sending-only API key for one of your verified domains, then fills in and enables the custom SMTP settings for you.
+On Appwrite Cloud, the **SMTP** tab starts with a **One-click setup** card. Connect a [Resend](https://resend.com) account or a [Bird](https://bird.com) workspace, and Appwrite creates a sending-only API key, then fills in and enables the custom SMTP settings for you.
 
 {% only_dark %}
 ![One-click setup card on the SMTP tab](/images/docs/auth/smtp/dark/one-click-setup.avif)
@@ -27,12 +27,16 @@ On Appwrite Cloud, the **SMTP** tab starts with a **One-click setup** card. Conn
 
 1. Navigate to your project's **Settings**.
 1. Navigate to the **SMTP** tab.
-1. Under **One-click setup**, click **Connect with Resend**.
-1. Authorize Appwrite in Resend. You are returned to the same tab, and the Resend tile now shows **Connected**.
-1. Select a verified **Domain**. Domains that are not yet verified in Resend are listed but can't be selected.
-1. Enter a **Sender name** and a **Sender email** on the selected domain. Appwrite suggests `noreply@<domain>`.
+1. Under **One-click setup**, click **Connect with Resend** or **Connect with Bird**.
+1. Authorize Appwrite with the provider. You are returned to the same tab, and the provider's tile now shows **Connected**.
+1. Select a verified **Domain**. Domains that the provider hasn't verified yet are listed but can't be selected.
+1. Review the **Sender name** and **Sender email**. Appwrite fills in your current SMTP sender name or the project name, and `noreply@<domain>`. The sender email must be on the selected domain.
 1. Click **Set up**.
 
+Appwrite creates an API key with the provider named `Appwrite SMTP: <project name>`, stores it as the SMTP password, and writes the rest of the settings for you.
+
+{% tabs %}
+{% tabsitem #smtp-resend title="Resend" %}
 {% only_dark %}
 ![Set up SMTP with Resend](/images/docs/auth/smtp/dark/one-click-setup-resend.avif)
 {% /only_dark %}
@@ -40,7 +44,7 @@ On Appwrite Cloud, the **SMTP** tab starts with a **One-click setup** card. Conn
 ![Set up SMTP with Resend](/images/docs/auth/smtp/one-click-setup-resend.avif)
 {% /only_light %}
 
-Appwrite creates an API key in your Resend account named `Appwrite SMTP: <project name>`. The key has sending-only permission and is restricted to the selected domain. Appwrite stores it as the SMTP password and writes the rest of the settings for you.
+The key has sending-only permission and is restricted to the selected domain.
 
 {% table %}
 * Setting
@@ -62,11 +66,50 @@ Appwrite creates an API key in your Resend account named `Appwrite SMTP: <projec
 * The sending-only API key Appwrite created
 {% /table %}
 
-Custom SMTP is enabled as soon as the setup completes. Your existing reply-to email is kept. If you don't have a verified domain yet, add one in [Resend's domains page](https://resend.com/domains) and click **Check again**.
+If you don't have a verified domain yet, add one in [Resend's domains page](https://resend.com/domains) and click **Check again**.
+{% /tabsitem %}
 
-The connection lives on your Console account, not the project, so it shows as **Connected** in every project you open. Resend issues a short-lived access token that Appwrite stores on the linked identity of your Console account, and Appwrite asks you to **Reconnect** when it expires. To remove the connection, open the tile's menu and click **Disconnect**. Disconnecting removes the Resend identity from your Console account and doesn't change the SMTP settings already saved on your projects or revoke keys already in use.
+{% tabsitem #smtp-bird title="Bird" %}
+{% only_dark %}
+![Set up SMTP with Bird](/images/docs/auth/smtp/dark/one-click-setup-bird.avif)
+{% /only_dark %}
+{% only_light %}
+![Set up SMTP with Bird](/images/docs/auth/smtp/one-click-setup-bird.avif)
+{% /only_light %}
 
-Mailgun and SendGrid tiles appear as **Coming soon**. Click **Notify me** on either to be told when it ships.
+The key has only the `emails:write` scope. Bird keys aren't tied to a domain, so the domain you pick sets the sender address. Bird runs one SMTP relay per region, and Appwrite uses the relay in your workspace's region.
+
+{% table %}
+* Setting
+* Value
+---
+* Server host
+* `<region>.smtp.bird.com`, for example `eu1.smtp.bird.com`
+---
+* Server port
+* `587`
+---
+* Username
+* `bird`
+---
+* Secure protocol
+* TLS
+---
+* Password
+* The sending-only API key Appwrite created
+{% /table %}
+
+Bird counts a domain as verified once its sending check passes, including while it's still in Bird's grace period. If you don't have a verified domain yet, click **Manage domains**, add one under **Email** > **Domains** in Bird, and click **Check again**.
+{% /tabsitem %}
+{% /tabs %}
+
+Custom SMTP is enabled as soon as the setup completes. Your existing reply-to email is kept.
+
+The connection lives on your Console account, not the project, so it shows as **Connected** in every project you open. The provider issues an access token that Appwrite stores on the linked identity of your Console account, and Appwrite asks you to **Reconnect** when it expires. To remove the connection, open the tile's menu and click **Disconnect**. Disconnecting removes the provider identity from your Console account and doesn't change the SMTP settings already saved on your projects or revoke keys already in use.
+
+A Bird connection also covers the one-click setup of the [Bird email](/docs/products/messaging/bird-email#one-click-setup) and [Bird SMS](/docs/products/messaging/bird-sms#one-click-setup) providers in Messaging, and a Resend connection covers the [Resend provider](/docs/products/messaging/resend#one-click-setup).
+
+The Mailgun tile appears as **Coming soon**. Click **Notify me** to be told when it ships.
 
 ## Configure SMTP manually {% #smtp-manual-setup %}
 

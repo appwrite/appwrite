@@ -1,0 +1,12 @@
+---
+layout: changelog
+title: "A faster Appwrite Console"
+date: 2026-11-26
+tags: console, performance
+---
+
+The Appwrite Console now downloads 27% less JavaScript before it shows the first page, and pages no longer wait for data they don't display. A project page makes 12 fewer API calls when it first loads, and organization settings no longer wait for your project list.
+
+In our tests on a slowed-down connection, project and organization pages showed their content about 20% sooner, and moving between pages in the sidebar was 37% faster. Links also start loading the next page as soon as you hover over them.
+
+It's live on Appwrite Cloud now.

@@ -73,4 +73,56 @@ final class ResolversTest extends TestCase
         $this->assertSame(3, $completed, 'Every field resolves');
         $this->assertSame(1, $peak, 'Fields of one request run one at a time');
     }
+
+    /**
+     * The organization comes from the matched route. The outer /v1/graphql request resolves it
+     * first (the CORS and key checks read it), so a field has to rebuild it, and the key built
+     * from it, for its own route instead of reading the outer request's.
+     */
+    #[RunInSeparateProcess]
+    public function testFieldsResolveTheOrganizationFromTheirOwnRoute(): void
+    {
+        $seen = [];
+
+        $route = Http::get('/v1/mock/graphql/organization')
+            ->hook(false)
+            ->inject('team')
+            ->inject('apiKey')
+            ->action(function (string $team, string $apiKey) use (&$seen): void {
+                $seen[] = [$team, $apiKey];
+            });
+
+        run(function () use ($route, &$seen): void {
+            $server = new CoroutineServer();
+            $http = new Http($server, 'UTC');
+            $swooleRequest = new SwooleRequest();
+            $swooleRequest->server = ['request_uri' => '/v1/graphql', 'request_method' => 'POST'];
+            $request = new Request($swooleRequest);
+            $response = new Response(new SwooleResponse());
+
+            $context = new Container($server->resources());
+            $setRequestContext = require __DIR__ . '/../../../app/init/resources/request.php';
+            $setRequestContext($context);
+            $context->set('request', fn () => $request);
+            $context->set('response', fn () => $response);
+            $context->set('utopia', fn () => $http);
+            $context->set('team', fn (Request $request): string => 'team for ' . $request->getURI(), ['request']);
+            $context->set('apiKey', fn (string $team): string => "key for $team", ['team']);
+            Coroutine::getContext()[CoroutineServer::CONTEXT_KEY] = $context;
+
+            $this->assertSame('key for team for /v1/graphql', $context->get('apiKey'));
+
+            $resolver = Resolvers::api($http, $route, Http::REQUEST_METHOD_GET);
+            $resolver(null, [], null, null);
+
+            $deadline = \microtime(true) + 5;
+            while ($seen === [] && \microtime(true) < $deadline) {
+                Coroutine::sleep(0.01);
+            }
+
+            $this->assertSame('key for team for /v1/graphql', $context->get('apiKey'), 'The outer request keeps its own organization');
+        });
+
+        $this->assertSame([['team for /v1/mock/graphql/organization', 'key for team for /v1/mock/graphql/organization']], $seen);
+    }
 }

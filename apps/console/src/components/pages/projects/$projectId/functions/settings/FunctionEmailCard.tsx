@@ -14,7 +14,6 @@ import { useT } from '@/lib/i18n/translate'
 import {
   buildFunctionEmailAddress,
   isFunctionEmailEnabled,
-  putFunction,
   type FunctionWithEmail,
 } from '@/lib/function-email'
 
@@ -52,14 +51,11 @@ export function FunctionEmailCard({
     mutationFn: async (nextEnabled: boolean) => {
       if (!projectId || !functionId)
         throw new Error('Project ID and Function ID are required')
-      const projectSdk = sdk.forProject(projectId)
-      const params = buildFunctionUpdateParams(func, {}) as {
-        functionId: string
-      } & Record<string, unknown>
-      return await putFunction(projectSdk.client, {
-        ...params,
-        emailEnabled: nextEnabled,
-      })
+      return await sdk
+        .forProject(projectId)
+        .functions.update(
+          buildFunctionUpdateParams(func, { emailEnabled: nextEnabled }),
+        )
     },
     onSuccess: (updated, nextEnabled) => {
       toast.success(

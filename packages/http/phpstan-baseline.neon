@@ -1,12 +1,6 @@
 parameters:
 	ignoreErrors:
 		-
-			message: '#^Method Swoole\\Server\:\:getClientInfo\(\) invoked with 3 parameters, 1\-2 required\.$#'
-			identifier: arguments.count
-			count: 1
-			path: src/Adapter/Swoole/Response.php
-
-		-
 			message: '#^Method Utopia\\Http\\Adapter\\FPM\\Request\:\:generateCookies\(\) should return array\<string, string\> but returns array\<mixed\>\.$#'
 			identifier: return.type
 			count: 1
@@ -126,6 +120,11 @@ parameters:
 			count: 1
 			path: src/Adapter/Swoole/Request.php
 
+		-
+			message: '#^Method Swoole\\Server\:\:getClientInfo\(\) invoked with 3 parameters, 1\-2 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: src/Adapter/Swoole/Response.php
 
 		-
 			message: '#^Cannot access offset ''__utopia__'' on mixed\.$#'
@@ -218,31 +217,7 @@ parameters:
 			path: src/Http.php
 
 		-
-			message: '#^Cannot access offset ''aliases'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: src/Http.php
-
-		-
-			message: '#^Cannot access offset ''default'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: src/Http.php
-
-		-
-			message: '#^Cannot access offset ''injections'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: src/Http.php
-
-		-
 			message: '#^Cannot access offset ''name'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: src/Http.php
-
-		-
-			message: '#^Cannot access offset ''optional'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 2
 			path: src/Http.php
@@ -250,17 +225,11 @@ parameters:
 		-
 			message: '#^Cannot access offset ''order'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
+			count: 1
 			path: src/Http.php
 
 		-
-			message: '#^Cannot access offset ''skipValidation'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: src/Http.php
-
-		-
-			message: '#^Method Utopia\\Http\\Http\:\:getArguments\(\) should return array\<int, mixed\> but returns array\.$#'
+			message: '#^Method Utopia\\Http\\Http\:\:getArguments\(\) should return array\<int, mixed\> but returns array\<mixed\>\.$#'
 			identifier: return.type
 			count: 1
 			path: src/Http.php
@@ -290,27 +259,9 @@ parameters:
 			path: src/Http.php
 
 		-
-			message: '#^Parameter \#1 \$param of method Utopia\\Http\\Http\:\:coerce\(\) expects array\<string, mixed\>, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Http.php
-
-		-
-			message: '#^Parameter \#1 \$param of method Utopia\\Http\\Http\:\:resolveValidator\(\) expects array\<string, mixed\>, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Http.php
-
-		-
 			message: '#^Parameter \#2 \$array of function array_map expects array, mixed given\.$#'
 			identifier: argument.type
 			count: 2
-			path: src/Http.php
-
-		-
-			message: '#^Parameter \#2 \$param of method Utopia\\Http\\Http\:\:validate\(\) expects array\<string, mixed\>, mixed given\.$#'
-			identifier: argument.type
-			count: 1
 			path: src/Http.php
 
 		-

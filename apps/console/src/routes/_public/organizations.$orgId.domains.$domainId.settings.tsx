@@ -1,6 +1,6 @@
 import { View } from '@/components/pages/organizations/$orgId/domains/$domainId/View'
 import { createFileRoute, redirect } from '@tanstack/react-router'
-import { fetchDomain, fetchOrganizations } from '@/lib/react-query/hooks'
+import { fetchDomain, organizationsQueryOptions } from '@/lib/react-query/hooks'
 import { pageTitle } from '@/lib/utils/page-title'
 import { getAppwriteErrorInfo } from '@/lib/utils/error-formatting'
 import { canAccessOrganizationDomains } from '@/lib/console-rbac-loader'
@@ -47,11 +47,7 @@ export const Route = createFileRoute(
             return undefined
           throw error
         }),
-      queryClient.fetchQuery({
-        queryKey: ['organizations', 'console'],
-        queryFn: fetchOrganizations,
-        staleTime: STALE_TIME,
-      }),
+      queryClient.ensureQueryData(organizationsQueryOptions()),
     ])
     const domain = queryClient.getQueryData<{ domain?: string }>([
       'domain',
