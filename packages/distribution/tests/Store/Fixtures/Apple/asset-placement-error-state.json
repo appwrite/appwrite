@@ -1,0 +1,11 @@
+{
+    "errors": [
+        {
+            "id": "0c5a5f53-6b3e-4b0e-9a63-6f2a2f1d0031",
+            "status": "409",
+            "code": "STATE_ERROR",
+            "title": "The request cannot be fulfilled because of the state of another resource.",
+            "detail": "Placements can only be created while the parent surface is editable."
+        }
+    ]
+}

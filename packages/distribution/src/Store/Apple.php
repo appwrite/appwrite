@@ -19,6 +19,7 @@ use Utopia\Distribution\Exception\Unauthorized;
 use Utopia\Distribution\Exception\Unavailable;
 use Utopia\Distribution\Issue;
 use Utopia\Distribution\JWT;
+use Utopia\Distribution\Listing;
 use Utopia\Distribution\Progress;
 use Utopia\Distribution\Release;
 use Utopia\Distribution\State;
@@ -29,6 +30,7 @@ use Utopia\Psr7\ContentType;
 use Utopia\Psr7\Header;
 use Utopia\Psr7\Method;
 use Utopia\Psr7\Request\Factory;
+use Utopia\Storage\Device;
 
 class Apple extends Store
 {
@@ -277,6 +279,62 @@ class Apple extends Store
         'COMPLETING',
     ];
 
+    private const string PATH_APP_INFOS = '/v1/appInfos';
+
+    private const string PATH_APP_INFO_LOCALIZATIONS = '/v1/appInfoLocalizations';
+
+    private const string PATH_ASSET_IMAGES = '/v1/appAssetLibraryImages';
+
+    private const string PATH_PLACEMENTS = '/v1/appAssetLibraryPlacements';
+
+    private const string PATH_PLACEMENT_ORDERING_REQUESTS = '/v1/appAssetLibraryPlacementOrderingRequests';
+
+    private const string RELATIONSHIP_ASSET_LIBRARY = 'assetLibrary';
+
+    private const string TYPE_APP_INFOS = 'appInfos';
+
+    private const string TYPE_APP_INFO_LOCALIZATIONS = 'appInfoLocalizations';
+
+    private const string TYPE_ASSET_LIBRARIES = 'appAssetLibraries';
+
+    private const string TYPE_ASSET_IMAGES = 'appAssetLibraryImages';
+
+    private const string TYPE_PLACEMENTS = 'appAssetLibraryPlacements';
+
+    private const string TYPE_PLACEMENT_ORDERING_REQUESTS = 'appAssetLibraryPlacementOrderingRequests';
+
+    private const string RELATIONSHIP_PLACEMENTS = 'placements';
+
+    private const string RELATIONSHIP_IMAGE = 'image';
+
+    private const string SORT_PLACEMENTS = 'placementGroupPosition';
+
+    private const string ASSET_CATEGORY = 'APP_SCREENSHOTS_AND_PREVIEWS';
+
+    private const string ASSET_STATE_FAILED = 'FAILED';
+
+    private const array ASSET_STATES_PENDING = ['AWAITING_UPLOAD', 'UPLOAD_COMPLETE'];
+
+    private const array ASSET_STATES_READY = ['COMPLETE', 'PREPARE_FOR_SUBMISSION', 'READY_FOR_REVIEW', 'WAITING_FOR_REVIEW', 'IN_REVIEW', 'ACCEPTED', 'APPROVED'];
+
+    private const string PLACEMENT_TYPE = 'APP_SCREENSHOT';
+
+    private const array APP_INFO_EDITABLE = ['PREPARE_FOR_SUBMISSION', 'DEVELOPER_REJECTED', 'REJECTED'];
+
+    private const array LISTING_VERSION_FIELDS = [
+        Listing::FIELD_DESCRIPTION => 'description',
+        Listing::FIELD_KEYWORDS => 'keywords',
+        Listing::FIELD_PROMOTIONAL_TEXT => 'promotionalText',
+        Listing::FIELD_SUPPORT_URL => 'supportUrl',
+        Listing::FIELD_MARKETING_URL => 'marketingUrl',
+    ];
+
+    private const array LISTING_APP_INFO_FIELDS = [
+        Listing::FIELD_NAME => 'name',
+        Listing::FIELD_SUBTITLE => 'subtitle',
+        Listing::FIELD_PRIVACY_URL => 'privacyPolicyUrl',
+    ];
+
     private readonly JWT $jwt;
 
     private readonly Factory $factory;
@@ -516,7 +574,7 @@ class Apple extends Store
                     throw $unavailable;
                 }
 
-                $this->discard($session['buildUploadId']);
+                $this->discard(self::PATH_BUILD_UPLOADS, $session['buildUploadId']);
                 $session = $this->reserve($upload, $progress);
                 $this->transfer($upload, $session, $progress);
             }
@@ -564,6 +622,59 @@ class Apple extends Store
         }
 
         throw new Unavailable('App Store Connect returned a build without a known processing state');
+    }
+
+    /**
+     * @param array<string, mixed> $external
+     *
+     * @return array<string, mixed>
+     */
+    #[\Override]
+    public function listing(Listing $listing, array $external): array
+    {
+        $appId = $this->text($external, 'appId') ?? throw new Invalid('The listing has no App Store Connect app id');
+        $versionString = $this->text($external, 'version') ?? throw new Invalid('The listing has no version');
+
+        $version = $this->appStoreVersion($appId, $versionString);
+        $state = $this->attribute($version, 'appVersionState') ?? 'unknown';
+
+        if (!\in_array($state, self::VERSION_EDITABLE, true)) {
+            throw new Conflict(
+                "App Store Connect version {$versionString} is {$state} and its listing cannot be edited",
+                [new Issue(self::CODE_STATE, "The version is {$state}")],
+            );
+        }
+
+        $information = $this->listingFields($listing, self::LISTING_APP_INFO_FIELDS);
+
+        if ($information !== []) {
+            $external['appInfoId'] = $this->listingAppInfo($appId, $listing->locale, $information);
+        }
+
+        $text = $this->listingFields($listing, self::LISTING_VERSION_FIELDS);
+
+        if ($text === [] && $listing->screenshots === []) {
+            return [...$external, 'complete' => true];
+        }
+
+        $localizationId = $this->listingLocalization($this->identify($version), $listing->locale, $text);
+
+        if ($listing->screenshots === []) {
+            return [...$external, 'complete' => true];
+        }
+
+        $device = $listing->device ?? throw new Invalid('Listing screenshots need a device to read them from');
+        $libraryId = $this->text($external, 'libraryId') ?? $this->listingLibrary($appId);
+        $images = $this->listingImages($libraryId, $listing->screenshots, $device, $this->listingAssets($external));
+        $external = [...$external, 'libraryId' => $libraryId, 'assets' => $images['assets']];
+
+        if (!$images['complete']) {
+            return [...$external, 'complete' => false];
+        }
+
+        $this->listingPlacements($localizationId, $listing->screenshots, $images['assets']);
+
+        return [...$external, 'complete' => true];
     }
 
     protected function now(): int
@@ -1108,7 +1219,7 @@ class Apple extends Store
         }
 
         if (!\is_string($buildUploadFileId) || $buildUploadFileId === '') {
-            $this->discard($buildUploadId);
+            $this->discard(self::PATH_BUILD_UPLOADS, $buildUploadId);
 
             return null;
         }
@@ -1132,7 +1243,7 @@ class Apple extends Store
         try {
             $file = $this->resource($this->request(Method::GET, self::PATH_BUILD_UPLOAD_FILES . '/' . rawurlencode($buildUploadFileId)));
         } catch (NotFound) {
-            $this->discard($buildUploadId);
+            $this->discard(self::PATH_BUILD_UPLOADS, $buildUploadId);
 
             return null;
         }
@@ -1148,7 +1259,7 @@ class Apple extends Store
         $expired = array_any($operations, fn (array $operation): bool => $operation['expiration'] !== null && $operation['expiration'] <= $now);
 
         if ($expired || $delivery === self::DELIVERY_STATE_FAILED || $operations === []) {
-            $this->discard($buildUploadId);
+            $this->discard(self::PATH_BUILD_UPLOADS, $buildUploadId);
 
             return null;
         }
@@ -1379,12 +1490,12 @@ class Apple extends Store
         return $state !== self::UPLOAD_STATE_AWAITING;
     }
 
-    private function discard(string $buildUploadId): void
+    private function discard(string $path, string $id): void
     {
         try {
-            $this->request(Method::DELETE, self::PATH_BUILD_UPLOADS . '/' . rawurlencode($buildUploadId));
+            $this->request(Method::DELETE, $path . '/' . rawurlencode($id));
         } catch (Exception) {
-            // Best effort: an abandoned build upload expires on Apple's side.
+            // Best effort: a leftover upload or image is clutter, not a failure.
         }
     }
 
@@ -2048,5 +2159,354 @@ class Apple extends Store
         }
 
         return $identifiers;
+    }
+
+    /**
+     * @param array<string, string> $map
+     *
+     * @return array<string, string>
+     */
+    private function listingFields(Listing $listing, array $map): array
+    {
+        $attributes = [];
+
+        foreach ($map as $field => $attribute) {
+            if (isset($listing->fields[$field])) {
+                $attributes[$attribute] = $listing->fields[$field];
+            }
+        }
+
+        return $attributes;
+    }
+
+    /**
+     * @param array<string, string> $attributes
+     */
+    private function listingAppInfo(string $appId, string $locale, array $attributes): string
+    {
+        $appInfos = $this->resources($this->request(Method::GET, self::PATH_APPS . '/' . rawurlencode($appId) . '/' . self::TYPE_APP_INFOS, [
+            'limit' => self::LIMIT,
+        ]));
+
+        foreach ($appInfos as $appInfo) {
+            if (!\in_array($this->attribute($appInfo, 'state'), self::APP_INFO_EDITABLE, true)) {
+                continue;
+            }
+
+            $appInfoId = $this->identify($appInfo);
+
+            $localizations = $this->resources($this->request(Method::GET, self::PATH_APP_INFOS . '/' . rawurlencode($appInfoId) . '/' . self::TYPE_APP_INFO_LOCALIZATIONS, [
+                'limit' => self::LIMIT,
+            ]));
+
+            $this->localize(
+                self::PATH_APP_INFO_LOCALIZATIONS,
+                self::TYPE_APP_INFO_LOCALIZATIONS,
+                $localizations,
+                ['appInfo' => ['data' => ['type' => self::TYPE_APP_INFOS, 'id' => $appInfoId]]],
+                $locale,
+                $attributes,
+            );
+
+            return $appInfoId;
+        }
+
+        throw new Conflict(
+            'App Store Connect has no editable app information for this app',
+            [new Issue(self::CODE_STATE, 'The app information is not editable')],
+        );
+    }
+
+    /**
+     * @param array<string, string> $attributes
+     */
+    private function listingLocalization(string $versionId, string $locale, array $attributes): string
+    {
+        $localizations = $this->resources($this->request(Method::GET, self::PATH_APP_STORE_VERSIONS . '/' . rawurlencode($versionId) . '/' . self::TYPE_LOCALIZATIONS, [
+            'limit' => self::LIMIT,
+        ]));
+
+        return $this->localize(
+            self::PATH_LOCALIZATIONS,
+            self::TYPE_LOCALIZATIONS,
+            $localizations,
+            ['appStoreVersion' => ['data' => ['type' => self::TYPE_APP_STORE_VERSIONS, 'id' => $versionId]]],
+            $locale,
+            $attributes,
+        );
+    }
+
+    private function listingLibrary(string $appId): string
+    {
+        return $this->identify($this->resource($this->request(Method::GET, self::PATH_APPS . '/' . rawurlencode($appId) . '/' . self::RELATIONSHIP_ASSET_LIBRARY)));
+    }
+
+    /**
+     * @param array<string, mixed> $external
+     *
+     * @return array<string, string>
+     */
+    private function listingAssets(array $external): array
+    {
+        $assets = [];
+        $recorded = $external['assets'] ?? null;
+
+        foreach (\is_array($recorded) ? $recorded : [] as $digest => $imageId) {
+            if (\is_string($imageId) && $imageId !== '') {
+                $assets[(string) $digest] = $imageId;
+            }
+        }
+
+        return $assets;
+    }
+
+    /**
+     * @param list<array{set: string, path: string, size: int, width: int, height: int, digest: string}> $screenshots
+     * @param array<string, string> $assets
+     *
+     * @return array{assets: array<string, string>, complete: bool}
+     */
+    private function listingImages(string $libraryId, array $screenshots, Device $device, array $assets): array
+    {
+        $complete = true;
+        $checked = [];
+        $missing = [];
+
+        foreach ($screenshots as $screenshot) {
+            $digest = $screenshot['digest'];
+
+            if (isset($checked[$digest]) || isset($missing[$digest])) {
+                continue;
+            }
+
+            $image = $this->listingImage($assets[$digest] ?? null);
+
+            if ($image === null) {
+                $missing[$digest] = $screenshot;
+
+                continue;
+            }
+
+            $checked[$digest] = true;
+            $complete = $this->listingReady($image) && $complete;
+        }
+
+        foreach ($missing as $digest => $screenshot) {
+            $image = $this->listingUpload($libraryId, $screenshot, $device);
+            $assets[(string) $digest] = $this->identify($image);
+            $complete = $this->listingReady($image) && $complete;
+        }
+
+        return ['assets' => $assets, 'complete' => $complete];
+    }
+
+    /**
+     * @return array<mixed>|null
+     */
+    private function listingImage(?string $imageId): ?array
+    {
+        if ($imageId === null) {
+            return null;
+        }
+
+        try {
+            return $this->resource($this->request(Method::GET, self::PATH_ASSET_IMAGES . '/' . rawurlencode($imageId)));
+        } catch (NotFound) {
+            return null;
+        }
+    }
+
+    /**
+     * @param array{set: string, path: string, size: int, width: int, height: int, digest: string} $screenshot
+     *
+     * @return array<mixed>
+     */
+    private function listingUpload(string $libraryId, array $screenshot, Device $device): array
+    {
+        $image = $this->resource($this->request(Method::POST, self::PATH_ASSET_IMAGES, body: [
+            'data' => [
+                'type' => self::TYPE_ASSET_IMAGES,
+                'attributes' => [
+                    'category' => self::ASSET_CATEGORY,
+                    'fileName' => basename($screenshot['path']),
+                    'fileSize' => $screenshot['size'],
+                    'referenceName' => $screenshot['digest'],
+                ],
+                'relationships' => [
+                    self::RELATIONSHIP_ASSET_LIBRARY => ['data' => ['type' => self::TYPE_ASSET_LIBRARIES, 'id' => $libraryId]],
+                ],
+            ],
+        ]));
+
+        $imageId = $this->identify($image);
+
+        try {
+            foreach ($this->operations($image) as $operation) {
+                if ($operation['offset'] + $operation['length'] > $screenshot['size']) {
+                    throw new Unavailable("App Store Connect asked for part {$operation['partNumber']} beyond the end of the screenshot");
+                }
+
+                $this->transmit($operation, $device->read($screenshot['path'], $operation['offset'], $operation['length']));
+            }
+
+            return $this->resource($this->request(Method::PATCH, self::PATH_ASSET_IMAGES . '/' . rawurlencode($imageId), body: [
+                'data' => [
+                    'type' => self::TYPE_ASSET_IMAGES,
+                    'id' => $imageId,
+                    'attributes' => ['uploaded' => true],
+                ],
+            ]));
+        } catch (\Throwable $throwable) {
+            $this->discard(self::PATH_ASSET_IMAGES, $imageId);
+
+            throw $throwable;
+        }
+    }
+
+    /**
+     * @param array<mixed> $image
+     */
+    private function listingReady(array $image): bool
+    {
+        $state = $this->attribute($image, 'state') ?? throw new Unavailable('App Store Connect returned an image without a state');
+
+        if (\in_array($state, self::ASSET_STATES_READY, true)) {
+            return true;
+        }
+
+        if (\in_array($state, self::ASSET_STATES_PENDING, true)) {
+            return false;
+        }
+
+        $name = $this->attribute($image, 'referenceName') ?? $this->identify($image);
+
+        if ($state !== self::ASSET_STATE_FAILED) {
+            throw new Unavailable("App Store Connect returned the screenshot {$name} in state {$state}, which cannot be placed");
+        }
+
+        $attributes = $image['attributes'] ?? null;
+        $issues = [];
+
+        foreach ($this->objects(\is_array($attributes) ? ($attributes['stateDetails'] ?? null) : null) as $detail) {
+            $code = $this->text($detail, 'code');
+
+            if ($code !== null) {
+                $issues[] = new Issue($code, $this->text($detail, 'description') ?? $code);
+            }
+        }
+
+        throw new Invalid(
+            "App Store Connect could not process the screenshot {$name}",
+            $issues === [] ? [new Issue(self::ASSET_STATE_FAILED, 'App Store Connect could not process the screenshot')] : $issues,
+        );
+    }
+
+    /**
+     * @param list<array{set: string, path: string, size: int, width: int, height: int, digest: string}> $screenshots
+     * @param array<string, string> $assets
+     */
+    private function listingPlacements(string $localizationId, array $screenshots, array $assets): void
+    {
+        $desired = [];
+
+        foreach ($screenshots as $screenshot) {
+            $imageId = $assets[$screenshot['digest']] ?? throw new Unavailable('The screenshot was not uploaded');
+
+            if (!\in_array($imageId, $desired[$screenshot['set']] ?? [], true)) {
+                $desired[$screenshot['set']][] = $imageId;
+            }
+        }
+
+        $body = $this->request(Method::GET, self::PATH_LOCALIZATIONS . '/' . rawurlencode($localizationId) . '/' . self::RELATIONSHIP_PLACEMENTS, [
+            'include' => self::RELATIONSHIP_IMAGE,
+            'sort' => self::SORT_PLACEMENTS,
+            'limit' => self::LIMIT,
+        ]);
+
+        $existing = [];
+
+        foreach ($this->resources($body) as $placement) {
+            $group = $this->attribute($placement, 'placementGroup');
+
+            if ($group !== null && isset($desired[$group]) && $this->attribute($placement, 'placementType') === self::PLACEMENT_TYPE) {
+                $existing[$group][] = [
+                    'id' => $this->identify($placement),
+                    'imageId' => $this->relationship($placement, self::RELATIONSHIP_IMAGE),
+                ];
+            }
+        }
+
+        foreach ($desired as $group => $imageIds) {
+            $this->listingPlace($localizationId, (string) $group, $imageIds, $existing[$group] ?? []);
+        }
+    }
+
+    /**
+     * @param list<string> $imageIds
+     * @param list<array{id: string, imageId: string|null}> $placements
+     */
+    private function listingPlace(string $localizationId, string $group, array $imageIds, array $placements): void
+    {
+        $kept = [];
+
+        foreach ($placements as $placement) {
+            $imageId = $placement['imageId'];
+
+            if ($imageId !== null && !isset($kept[$imageId]) && \in_array($imageId, $imageIds, true)) {
+                $kept[$imageId] = $placement['id'];
+
+                continue;
+            }
+
+            $this->request(Method::DELETE, self::PATH_PLACEMENTS . '/' . rawurlencode($placement['id']));
+        }
+
+        $current = array_values($kept);
+        $ordered = [];
+        $created = false;
+
+        foreach ($imageIds as $imageId) {
+            if (!isset($kept[$imageId])) {
+                $kept[$imageId] = $this->listingPlacement($localizationId, $group, $imageId);
+                $current[] = $kept[$imageId];
+                $created = true;
+            }
+
+            $ordered[] = $kept[$imageId];
+        }
+
+        if (\count($ordered) < 2 || (!$created && $ordered === $current)) {
+            return;
+        }
+
+        $this->request(Method::POST, self::PATH_PLACEMENT_ORDERING_REQUESTS, body: [
+            'data' => [
+                'type' => self::TYPE_PLACEMENT_ORDERING_REQUESTS,
+                'attributes' => ['placementGroup' => $group],
+                'relationships' => [
+                    'orderedPlacements' => [
+                        'data' => array_map(fn (string $placementId): array => ['type' => self::TYPE_PLACEMENTS, 'id' => $placementId], $ordered),
+                    ],
+                    'appStoreVersionLocalization' => ['data' => ['type' => self::TYPE_LOCALIZATIONS, 'id' => $localizationId]],
+                ],
+            ],
+        ]);
+    }
+
+    private function listingPlacement(string $localizationId, string $group, string $imageId): string
+    {
+        return $this->identify($this->resource($this->request(Method::POST, self::PATH_PLACEMENTS, body: [
+            'data' => [
+                'type' => self::TYPE_PLACEMENTS,
+                'attributes' => [
+                    'placementType' => self::PLACEMENT_TYPE,
+                    'placementGroup' => $group,
+                ],
+                'relationships' => [
+                    self::RELATIONSHIP_IMAGE => ['data' => ['type' => self::TYPE_ASSET_IMAGES, 'id' => $imageId]],
+                    'appStoreVersionLocalization' => ['data' => ['type' => self::TYPE_LOCALIZATIONS, 'id' => $localizationId]],
+                ],
+            ],
+        ])));
     }
 }

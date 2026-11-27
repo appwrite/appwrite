@@ -179,6 +179,47 @@ abstract class Base extends Action
     ];
     protected const array VERSION_LOCALIZATION_ATTRIBUTES = ['description', 'keywords', 'marketingUrl', 'promotionalText', 'supportUrl', 'whatsNew'];
 
+    protected const string CACHE_IMAGE_LIBRARY = 'mock:distribution:apple:image:library:';
+    protected const string CACHE_IMAGE_LIBRARY_APP = 'mock:distribution:apple:image:library-app:';
+    protected const string CACHE_IMAGE_IMAGE = 'mock:distribution:apple:image:image:';
+    protected const string CACHE_IMAGE_SEEDS = 'mock:distribution:apple:image:seeds:';
+    protected const string CACHE_IMAGE_PLACEMENTS = 'mock:distribution:apple:image:placements:';
+    protected const string CACHE_IMAGE_PLACEMENT = 'mock:distribution:apple:image:placement:';
+    protected const string CACHE_IMAGE_USES = 'mock:distribution:apple:image:uses:';
+    protected const string CACHE_INFO_INFOS = 'mock:distribution:apple:info:infos:';
+    protected const string CACHE_INFO_INFO = 'mock:distribution:apple:info:info:';
+    protected const string CACHE_INFO_LOCALIZATION = 'mock:distribution:apple:info:localization:';
+    protected const string IMAGE_TYPE = 'appAssetLibraryImages';
+    protected const string IMAGE_TYPE_LIBRARY = 'appAssetLibraries';
+    protected const string IMAGE_TYPE_PLACEMENT = 'appAssetLibraryPlacements';
+    protected const string IMAGE_TYPE_ORDERING = 'appAssetLibraryPlacementOrderingRequests';
+    protected const string IMAGE_AWAITING_UPLOAD = 'AWAITING_UPLOAD';
+    protected const string IMAGE_UPLOAD_COMPLETE = 'UPLOAD_COMPLETE';
+    protected const string IMAGE_FAILED = 'FAILED';
+    protected const string IMAGE_PREPARE_FOR_SUBMISSION = 'PREPARE_FOR_SUBMISSION';
+    protected const array IMAGE_OUTCOMES = [self::IMAGE_PREPARE_FOR_SUBMISSION, self::IMAGE_UPLOAD_COMPLETE, self::IMAGE_FAILED];
+    protected const array IMAGE_UNPLACEABLE = [self::IMAGE_AWAITING_UPLOAD, self::IMAGE_UPLOAD_COMPLETE, self::IMAGE_FAILED];
+    protected const array IMAGE_CATEGORIES = ['CREATIVE_ASSETS', 'APP_SCREENSHOTS_AND_PREVIEWS'];
+    protected const array IMAGE_PLACEMENT_TYPES = [
+        'APP_SCREENSHOT',
+        'IMESSAGE_APP_SCREENSHOT',
+        'APP_PREVIEW',
+        'PRODUCT_PAGE_HEADER_ASSET',
+        'APP_STORE_SEARCH_RESULTS_ASSET',
+        'SEARCH_RESULTS_ADS_ASSET',
+        'TODAY_TAB_ADS_ASSET',
+        'EVENT_CARD_ASSET',
+        'EVENT_DETAILS_PAGE_ASSET',
+        'RETENTION_MESSAGE_ASSET',
+    ];
+    protected const string IMAGE_PLACEMENT_STATE = 'PARENT_PREPARE_FOR_SUBMISSION';
+    protected const string IMAGE_CODE_HAS_PLACEMENTS = 'STATE_ERROR.ASSET_HAS_PLACEMENTS';
+    protected const string INFO_TYPE = 'appInfos';
+    protected const string INFO_TYPE_LOCALIZATION = 'appInfoLocalizations';
+    protected const string INFO_PREPARE_FOR_SUBMISSION = 'PREPARE_FOR_SUBMISSION';
+    protected const array INFO_EDITABLE = [self::INFO_PREPARE_FOR_SUBMISSION, 'DEVELOPER_REJECTED', 'REJECTED'];
+    protected const array INFO_LOCALIZATION_ATTRIBUTES = ['name', 'subtitle', 'privacyPolicyUrl', 'privacyChoicesUrl', 'privacyPolicyText'];
+
     /**
      * @return array{keyId: string, issuerId: string, publicKey: string, agreements: bool}|null
      */
@@ -1509,6 +1550,337 @@ abstract class Base extends Action
                 $submission['attributes']['state'] = $state;
                 $this->saveVersionSubmission($cache, $lock, $submission);
             }
+        }
+    }
+
+    protected function imageLibrary(Cache $cache, Lock $lock, string $appId): string
+    {
+        return $this->locked($lock, self::CACHE_IMAGE_LIBRARY . $appId, function () use ($cache, $appId): string {
+            $libraryId = $cache->load(self::CACHE_IMAGE_LIBRARY . $appId, self::TTL);
+
+            if (\is_string($libraryId)) {
+                return $libraryId;
+            }
+
+            $libraryId = $this->uuid();
+
+            $cache->save(self::CACHE_IMAGE_LIBRARY . $appId, $libraryId, '', self::TTL);
+            $cache->save(self::CACHE_IMAGE_LIBRARY_APP . $libraryId, $appId, '', self::TTL);
+
+            return $libraryId;
+        });
+    }
+
+    protected function imageLibraryApp(Cache $cache, string $libraryId): ?string
+    {
+        $appId = $cache->load(self::CACHE_IMAGE_LIBRARY_APP . $libraryId, self::TTL);
+
+        return \is_string($appId) ? $appId : null;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    protected function image(Cache $cache, string $imageId): ?array
+    {
+        $image = $cache->load(self::CACHE_IMAGE_IMAGE . $imageId, self::TTL);
+
+        return \is_array($image) ? $image : null;
+    }
+
+    /**
+     * @param array<string, mixed> $image
+     */
+    protected function saveImage(Cache $cache, array $image): void
+    {
+        $cache->save(self::CACHE_IMAGE_IMAGE . $image['id'], $image, '', self::TTL);
+    }
+
+    /**
+     * @param array<string, mixed> $image
+     */
+    protected function ownsImage(Cache $cache, string $issuerId, ?array $image): bool
+    {
+        return $image !== null && $this->owns($cache, $issuerId, $image[self::INTERNAL]['appId']);
+    }
+
+    /**
+     * @param array<string, mixed> $image
+     * @return array<string, mixed>
+     */
+    protected function imageSettle(Cache $cache, array $image): array
+    {
+        $seed = $this->imageSeed($cache, $image[self::INTERNAL]['appId'], $image['attributes']['referenceName'] ?? '');
+        $image['attributes']['state'] = $seed['state'] ?? self::IMAGE_PREPARE_FOR_SUBMISSION;
+        $image['attributes']['stateDetails'] = $seed['stateDetails'] ?? [];
+
+        $this->saveImage($cache, $image);
+
+        return $image;
+    }
+
+    /**
+     * @return array{state: string, stateDetails: list<array{code: string, description: string}>}|null
+     */
+    protected function imageSeed(Cache $cache, string $appId, string $referenceName): ?array
+    {
+        $seed = $cache->load(self::CACHE_IMAGE_SEEDS . $appId . ':' . $referenceName, self::TTL);
+
+        return \is_array($seed) ? $seed : null;
+    }
+
+    /**
+     * @param array<string, mixed> $image
+     * @return array<string, mixed>
+     */
+    protected function imageResource(array $image): array
+    {
+        return [
+            'type' => self::IMAGE_TYPE,
+            'id' => $image['id'],
+            'attributes' => $image['attributes'],
+            'relationships' => [
+                'assetLibrary' => ['data' => ['type' => self::IMAGE_TYPE_LIBRARY, 'id' => $image[self::INTERNAL]['libraryId']]],
+            ],
+            'links' => ['self' => self::PREFIX . '/v1/appAssetLibraryImages/' . $image['id']],
+        ];
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    protected function imagePlacements(Cache $cache, string $localizationId): array
+    {
+        $placements = $cache->load(self::CACHE_IMAGE_PLACEMENTS . $localizationId, self::TTL);
+
+        return \is_array($placements) ? \array_values($placements) : [];
+    }
+
+    /**
+     * @param list<array<string, mixed>> $placements
+     */
+    protected function saveImagePlacements(Cache $cache, string $localizationId, array $placements): void
+    {
+        $cache->save(self::CACHE_IMAGE_PLACEMENTS . $localizationId, \array_values($placements), '', self::TTL);
+
+        foreach ($placements as $placement) {
+            $cache->save(self::CACHE_IMAGE_PLACEMENT . $placement['id'], $localizationId, '', self::TTL);
+        }
+    }
+
+    /**
+     * @return list<string>
+     */
+    protected function imageUses(Cache $cache, string $imageId): array
+    {
+        $uses = $cache->load(self::CACHE_IMAGE_USES . $imageId, self::TTL);
+
+        return \is_array($uses) ? \array_values($uses) : [];
+    }
+
+    /**
+     * @param list<string> $uses
+     */
+    protected function saveImageUses(Cache $cache, string $imageId, array $uses): void
+    {
+        $cache->save(self::CACHE_IMAGE_USES . $imageId, \array_values($uses), '', self::TTL);
+    }
+
+    /**
+     * @param array<string, mixed> $placement
+     * @return array<string, mixed>
+     */
+    protected function imagePlacementResource(array $placement, bool $linkage): array
+    {
+        $image = ['links' => ['related' => self::PREFIX . '/v1/appAssetLibraryPlacements/' . $placement['id'] . '/image']];
+
+        if ($linkage) {
+            $image['data'] = ['type' => self::IMAGE_TYPE, 'id' => $placement[self::INTERNAL]['imageId']];
+        }
+
+        return [
+            'type' => self::IMAGE_TYPE_PLACEMENT,
+            'id' => $placement['id'],
+            'attributes' => $placement['attributes'],
+            'relationships' => ['image' => $image],
+            'links' => ['self' => self::PREFIX . '/v1/appAssetLibraryPlacements/' . $placement['id']],
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $version
+     */
+    protected function imageLocked(Response $response, array $version): bool
+    {
+        $state = $version['attributes']['appVersionState'];
+
+        if (\in_array($state, self::VERSION_EDITABLE, true)) {
+            return false;
+        }
+
+        $this->versionConflict($response, self::VERSION_CODE_STATE, 'The request cannot be fulfilled because of the state of another resource.', "The version is {$state} and its placements cannot be changed.");
+
+        return true;
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    protected function infos(Cache $cache, Lock $lock, string $issuerId, string $appId): array
+    {
+        return $this->locked($lock, self::CACHE_INFO_INFOS . $appId, function () use ($cache, $issuerId, $appId): array {
+            $infos = $cache->load(self::CACHE_INFO_INFOS . $appId, self::TTL);
+
+            if (\is_array($infos) && $infos !== []) {
+                return \array_values($infos);
+            }
+
+            $apps = $cache->load(self::CACHE_APPS . $issuerId, self::TTL);
+            $app = null;
+
+            foreach (\is_array($apps) ? $apps : [] as $candidate) {
+                if ($candidate['id'] === $appId) {
+                    $app = $candidate;
+                }
+            }
+
+            $info = [
+                'type' => self::INFO_TYPE,
+                'id' => $this->uuid(),
+                'attributes' => [
+                    'appStoreAgeRating' => null,
+                    'appStoreState' => self::INFO_PREPARE_FOR_SUBMISSION,
+                    'state' => self::INFO_PREPARE_FOR_SUBMISSION,
+                    'kidsAgeBand' => null,
+                ],
+                self::INTERNAL => [
+                    'appId' => $appId,
+                    'localizations' => [[
+                        'id' => $this->uuid(),
+                        'attributes' => [
+                            'locale' => $app['attributes']['primaryLocale'] ?? 'en-US',
+                            'name' => $app['attributes']['name'] ?? null,
+                            'subtitle' => null,
+                            'privacyPolicyUrl' => null,
+                            'privacyChoicesUrl' => null,
+                            'privacyPolicyText' => null,
+                        ],
+                    ]],
+                ],
+            ];
+
+            $this->storeInfo($cache, $info);
+
+            return [$info];
+        });
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    protected function info(Cache $cache, string $appInfoId): ?array
+    {
+        $appId = $cache->load(self::CACHE_INFO_INFO . $appInfoId, self::TTL);
+        $infos = \is_string($appId) ? $cache->load(self::CACHE_INFO_INFOS . $appId, self::TTL) : null;
+
+        foreach (\is_array($infos) ? $infos : [] as $info) {
+            if ($info['id'] === $appInfoId) {
+                return $info;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param array<string, mixed> $info
+     */
+    protected function saveInfo(Cache $cache, Lock $lock, array $info): void
+    {
+        $this->locked($lock, self::CACHE_INFO_INFOS . $info[self::INTERNAL]['appId'], fn () => $this->storeInfo($cache, $info));
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    protected function infoOfLocalization(Cache $cache, string $localizationId): ?array
+    {
+        $appInfoId = $cache->load(self::CACHE_INFO_LOCALIZATION . $localizationId, self::TTL);
+
+        return \is_string($appInfoId) ? $this->info($cache, $appInfoId) : null;
+    }
+
+    /**
+     * @param array<string, mixed> $info
+     * @return array<string, mixed>
+     */
+    protected function infoResource(array $info): array
+    {
+        return [
+            'type' => self::INFO_TYPE,
+            'id' => $info['id'],
+            'attributes' => $info['attributes'],
+            'relationships' => [
+                'appInfoLocalizations' => ['links' => [
+                    'self' => self::PREFIX . '/v1/appInfos/' . $info['id'] . '/relationships/appInfoLocalizations',
+                    'related' => self::PREFIX . '/v1/appInfos/' . $info['id'] . '/appInfoLocalizations',
+                ]],
+            ],
+            'links' => ['self' => self::PREFIX . '/v1/appInfos/' . $info['id']],
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $localization
+     * @return array<string, mixed>
+     */
+    protected function infoLocalizationResource(array $localization): array
+    {
+        return [
+            'type' => self::INFO_TYPE_LOCALIZATION,
+            'id' => $localization['id'],
+            'attributes' => $localization['attributes'],
+            'links' => ['self' => self::PREFIX . '/v1/appInfoLocalizations/' . $localization['id']],
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $info
+     */
+    protected function infoLocked(Response $response, array $info): bool
+    {
+        $state = $info['attributes']['state'];
+
+        if (\in_array($state, self::INFO_EDITABLE, true)) {
+            return false;
+        }
+
+        $this->versionConflict($response, self::VERSION_CODE_STATE, 'The request cannot be fulfilled because of the state of another resource.', "The app information is {$state} and its localizations cannot be edited.");
+
+        return true;
+    }
+
+    /**
+     * @param array<string, mixed> $info
+     */
+    private function storeInfo(Cache $cache, array $info): void
+    {
+        $appId = $info[self::INTERNAL]['appId'];
+        $infos = $cache->load(self::CACHE_INFO_INFOS . $appId, self::TTL);
+        $infos = \is_array($infos) ? \array_values($infos) : [];
+        $index = \array_search($info['id'], \array_column($infos, 'id'), true);
+
+        if ($index === false) {
+            $infos[] = $info;
+        } else {
+            $infos[$index] = $info;
+        }
+
+        $cache->save(self::CACHE_INFO_INFOS . $appId, $infos, '', self::TTL);
+        $cache->save(self::CACHE_INFO_INFO . $info['id'], $appId, '', self::TTL);
+
+        foreach ($info[self::INTERNAL]['localizations'] as $localization) {
+            $cache->save(self::CACHE_INFO_LOCALIZATION . $localization['id'], $info['id'], '', self::TTL);
         }
     }
 }

@@ -1,0 +1,14 @@
+{
+    "error": {
+        "code": 400,
+        "message": "Image is invalid: the screenshot dimensions are not supported.",
+        "status": "INVALID_ARGUMENT",
+        "errors": [
+            {
+                "reason": "imageInvalid",
+                "domain": "global",
+                "message": "Image is invalid: the screenshot dimensions are not supported."
+            }
+        ]
+    }
+}

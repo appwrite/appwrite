@@ -1,0 +1,36 @@
+{
+    "data": {
+        "type": "appAssetLibraryImages",
+        "id": "2b3c4d5e-9999-4999-8999-000000000001",
+        "attributes": {
+            "fileName": "screenshot.png",
+            "fileSize": 12,
+            "category": "APP_SCREENSHOTS_AND_PREVIEWS",
+            "referenceName": "2b3c4d5e-9999-4999-8999-000000000001",
+            "archived": false,
+            "state": "PREPARE_FOR_SUBMISSION",
+            "stateDetails": [],
+            "specId": "IPHONE_1320x2868",
+            "imageAsset": {
+                "templateUrl": "https://is1-ssl.mzstatic.com/image/thumb/2b3c4d5e-9999-4999-8999-000000000001/{w}x{h}bb.{f}",
+                "width": 1320,
+                "height": 2868
+            },
+            "uploadOperations": null
+        },
+        "relationships": {
+            "assetLibrary": {
+                "data": {
+                    "type": "appAssetLibraries",
+                    "id": "1a2b3c4d-8888-4888-8888-000000000001"
+                }
+            }
+        },
+        "links": {
+            "self": "https://api.appstoreconnect.apple.com/v1/appAssetLibraryImages/2b3c4d5e-9999-4999-8999-000000000001"
+        }
+    },
+    "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/appAssetLibraryImages/2b3c4d5e-9999-4999-8999-000000000001"
+    }
+}

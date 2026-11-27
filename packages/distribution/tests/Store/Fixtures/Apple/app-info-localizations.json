@@ -1,0 +1,43 @@
+{
+    "data": [
+        {
+            "type": "appInfoLocalizations",
+            "id": "e2a6b7c8-6666-4666-8666-000000000011",
+            "attributes": {
+                "locale": "en-US",
+                "name": "Example",
+                "subtitle": "Old subtitle",
+                "privacyPolicyUrl": "https://example.io/privacy",
+                "privacyChoicesUrl": null,
+                "privacyPolicyText": null
+            },
+            "links": {
+                "self": "https://api.appstoreconnect.apple.com/v1/appInfoLocalizations/e2a6b7c8-6666-4666-8666-000000000011"
+            }
+        },
+        {
+            "type": "appInfoLocalizations",
+            "id": "e2a6b7c8-6666-4666-8666-000000000012",
+            "attributes": {
+                "locale": "fr-FR",
+                "name": "Exemple",
+                "subtitle": null,
+                "privacyPolicyUrl": "https://example.io/privacy",
+                "privacyChoicesUrl": null,
+                "privacyPolicyText": null
+            },
+            "links": {
+                "self": "https://api.appstoreconnect.apple.com/v1/appInfoLocalizations/e2a6b7c8-6666-4666-8666-000000000012"
+            }
+        }
+    ],
+    "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/appInfos/e2a6b7c8-6666-4666-8666-000000000002/appInfoLocalizations"
+    },
+    "meta": {
+        "paging": {
+            "total": 2,
+            "limit": 200
+        }
+    }
+}

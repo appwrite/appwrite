@@ -1,0 +1,15 @@
+{
+    "data": {
+        "type": "appAssetLibraryPlacementOrderingRequests",
+        "id": "5e6f7a8b-cccc-4ccc-8ccc-000000000001",
+        "attributes": {
+            "placementGroup": "IPHONE_DYNAMIC_ISLAND_LARGE_PROFILE"
+        },
+        "links": {
+            "self": "https://api.appstoreconnect.apple.com/v1/appAssetLibraryPlacementOrderingRequests/5e6f7a8b-cccc-4ccc-8ccc-000000000001"
+        }
+    },
+    "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/appAssetLibraryPlacementOrderingRequests"
+    }
+}

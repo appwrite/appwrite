@@ -1,0 +1,12 @@
+{
+    "data": {
+        "type": "appAssetLibraries",
+        "id": "1a2b3c4d-8888-4888-8888-000000000001",
+        "links": {
+            "self": "https://api.appstoreconnect.apple.com/v1/appAssetLibraries/1a2b3c4d-8888-4888-8888-000000000001"
+        }
+    },
+    "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/apps/6450000001/assetLibrary"
+    }
+}

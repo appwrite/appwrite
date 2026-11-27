@@ -21,7 +21,19 @@ abstract class Base extends Action
     protected const string AUDIENCE = 'https://oauth2.googleapis.com/token';
     protected const string GRANT = 'urn:ietf:params:oauth:grant-type:jwt-bearer';
     protected const array TRACKS = ['production', 'beta', 'alpha', 'internal'];
-    protected const array CONTENT = ['tracks', 'bundles'];
+    protected const array CONTENT = ['tracks', 'bundles', 'listings'];
+    protected const array IMAGE_LIMITS = [
+        'phoneScreenshots' => 8,
+        'sevenInchScreenshots' => 8,
+        'tenInchScreenshots' => 8,
+        'tvScreenshots' => 8,
+        'wearScreenshots' => 8,
+        'icon' => 1,
+        'featureGraphic' => 1,
+        'tvBanner' => 1,
+    ];
+    protected const int IMAGE_SIZE = 15728640;
+    protected const array LISTING_FIELDS = ['title', 'shortDescription', 'fullDescription', 'video'];
     protected const int TTL = 86400;
     protected const int TOKEN_LIFETIME = 3600;
 
@@ -274,6 +286,23 @@ abstract class Base extends Action
             'id' => (string) $edit['id'],
             'expiryTimeSeconds' => (string) $edit['expiryTimeSeconds'],
         ];
+    }
+
+    /**
+     * @param array<string, mixed> $listing
+     * @return array<string, string>
+     */
+    protected function listing(string $language, array $listing): array
+    {
+        $shape = ['language' => $language];
+
+        foreach (self::LISTING_FIELDS as $field) {
+            if (\is_string($listing[$field] ?? null) && $listing[$field] !== '') {
+                $shape[$field] = $listing[$field];
+            }
+        }
+
+        return $shape;
     }
 
     protected function grantError(Response $response, string $description): void
