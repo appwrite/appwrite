@@ -3,8 +3,10 @@
 namespace Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Applications\Edits\Bundles;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Locking\Lock;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Base;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Seeds\Uploads\XList as Uploads;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Cache\Cache;
@@ -33,10 +35,11 @@ class Create extends Base
             ->inject('request')
             ->inject('response')
             ->inject('cache')
+            ->inject('lock')
             ->callback($this->action(...));
     }
 
-    public function action(string $packageName, string $editId, Request $request, Response $response, Cache $cache): void
+    public function action(string $packageName, string $editId, Request $request, Response $response, Cache $cache, Lock $lock): void
     {
         $isDevelopment = System::getEnv('_APP_ENV', 'production') === 'development';
 
@@ -73,6 +76,7 @@ class Create extends Base
         ];
 
         $cache->save($this->key(self::RESOURCE_SESSION, $session['id']), $session, '', self::TTL);
+        $this->count($lock, $cache, $packageName, Uploads::SESSIONS, 1);
 
         $location = $this->origin($request)
             . self::RESUMABLE . '/' . \rawurlencode($packageName) . '/edits/' . \rawurlencode($editId) . '/bundles'

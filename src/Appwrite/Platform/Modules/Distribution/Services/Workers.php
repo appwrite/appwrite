@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Distribution\Services;
 
 use Appwrite\Platform\Modules\Distribution\Workers\Builds;
+use Appwrite\Platform\Modules\Distribution\Workers\Submissions;
 use Utopia\Platform\Service;
 
 class Workers extends Service
@@ -11,5 +12,6 @@ class Workers extends Service
     {
         $this->type = Service::TYPE_WORKER;
         $this->addAction(Builds::getName(), Builds::class);
+        $this->addAction(Submissions::getName(), Submissions::class);
     }
 }

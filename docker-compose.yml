@@ -543,7 +543,7 @@ services:
       - _APP_STATS_RESOURCES_INTERVAL
       - _APP_WORKERS_NUM=1
       # Pool sizing only (sum of per-queue caps). Each queue keeps its own maxCoroutines in PHP; databases and maintenance stay at 1.
-      - _APP_WORKER_MAX_COROUTINES=92
+      - _APP_WORKER_MAX_COROUTINES=96
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
       - _APP_OPENSSL_KEY_V2
@@ -768,6 +768,9 @@ services:
       - _APP_MAINTENANCE_INTERVAL
       - _APP_MAINTENANCE_INACTIVE_INTERVAL
       - _APP_ALERTS_INTERVAL
+      - _APP_DISTRIBUTION
+      - _APP_DISTRIBUTION_BUILDS_QUEUE_NAME
+      - _APP_DISTRIBUTION_SUBMISSIONS_QUEUE_NAME
 
   appwrite-worker-stats-usage:
     profiles:
@@ -826,6 +829,24 @@ services:
     container_name: appwrite-worker-distribution-builds
     environment:
       - _APP_WORKER_MAX_COROUTINES=8
+
+  appwrite-worker-distribution-submissions:
+    profiles:
+      - separate
+    extends:
+      service: appwrite-worker
+    entrypoint: worker-distribution-submissions
+    container_name: appwrite-worker-distribution-submissions
+    environment:
+      - _APP_WORKER_MAX_COROUTINES=4
+
+  appwrite-task-scheduler-distribution:
+    profiles:
+      - separate
+    extends:
+      service: appwrite-task-scheduler
+    entrypoint: schedule-distribution
+    container_name: appwrite-task-scheduler-distribution
 
   appwrite-worker-maintenance:
     profiles:
@@ -1031,6 +1052,12 @@ services:
       - _APP_CERTIFICATES_PROVIDER
       - _APP_MAINTENANCE_RETENTION_AUDIT
       - _APP_MAINTENANCE_RETENTION_AUDIT_CONSOLE
+      - _APP_JOBS_HOST
+      - _APP_JOBS_SECRET
+      - _APP_DISTRIBUTION_JOBS_HOST
+      - _APP_DISTRIBUTION_JOBS_SECRET
+      - _APP_DISTRIBUTION_SIGNING_JOBS_HOST
+      - _APP_DISTRIBUTION_SIGNING_JOBS_SECRET
   appwrite-worker-databases:
     profiles:
       - separate

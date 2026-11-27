@@ -429,6 +429,9 @@ class Exception extends \Exception
     public const string DISTRIBUTION_SIGNING_IDENTITY_ALREADY_EXISTS = 'distribution_signing_identity_already_exists';
     public const string DISTRIBUTION_CONNECTION_IN_USE = 'distribution_connection_in_use';
     public const string DISTRIBUTION_SIGNING_IDENTITY_IN_USE = 'distribution_signing_identity_in_use';
+    public const string DISTRIBUTION_TARGET_IN_USE = 'distribution_target_in_use';
+    public const string DISTRIBUTION_RELEASE_IN_USE = 'distribution_release_in_use';
+    public const string DISTRIBUTION_ARTIFACT_IN_USE = 'distribution_artifact_in_use';
     public const string DISTRIBUTION_CONNECTION_INVALID = 'distribution_connection_invalid';
     public const string DISTRIBUTION_SIGNING_IDENTITY_INVALID = 'distribution_signing_identity_invalid';
     public const string DISTRIBUTION_ARTIFACT_INVALID = 'distribution_artifact_invalid';

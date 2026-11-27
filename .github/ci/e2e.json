@@ -408,7 +408,10 @@
         "src/Appwrite/Utopia/Response/Model/Distribution",
         "src/Appwrite/Utopia/Database/Validator/Queries/Distribution",
         "app/config/distribution.php",
-        "tests/resources/distribution/"
+        "tests/resources/distribution/",
+        "src/Appwrite/Schedule/Source/DistributionBuilds.php",
+        "src/Appwrite/Schedule/Source/DistributionSubmissions.php",
+        "src/Appwrite/Platform/Tasks/ScheduleDistribution.php"
       ]
     },
     {

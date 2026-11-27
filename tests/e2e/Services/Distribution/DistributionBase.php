@@ -3,6 +3,7 @@
 namespace Tests\E2E\Services\Distribution;
 
 use Appwrite\ID;
+use Appwrite\Tests\Async\Exceptions\Critical;
 use Tests\E2E\Client;
 
 trait DistributionBase
@@ -46,6 +47,16 @@ trait DistributionBase
         yield 'getArtifact' => [Client::METHOD_GET, '/distribution/apps/missing/artifacts/missing', 'distribution.read'];
         yield 'getArtifactDownload' => [Client::METHOD_GET, '/distribution/apps/missing/artifacts/missing/download', 'distribution.read'];
         yield 'deleteArtifact' => [Client::METHOD_DELETE, '/distribution/apps/missing/artifacts/missing', 'distribution.write'];
+        yield 'createRelease' => [Client::METHOD_POST, '/distribution/apps/missing/releases', 'distribution.write'];
+        yield 'listReleases' => [Client::METHOD_GET, '/distribution/apps/missing/releases', 'distribution.read'];
+        yield 'getRelease' => [Client::METHOD_GET, '/distribution/apps/missing/releases/missing', 'distribution.read'];
+        yield 'updateRelease' => [Client::METHOD_PATCH, '/distribution/apps/missing/releases/missing', 'distribution.write'];
+        yield 'deleteRelease' => [Client::METHOD_DELETE, '/distribution/apps/missing/releases/missing', 'distribution.write'];
+        yield 'createSubmission' => [Client::METHOD_POST, '/distribution/apps/missing/submissions', 'distribution.submissions.write'];
+        yield 'listSubmissions' => [Client::METHOD_GET, '/distribution/apps/missing/submissions', 'distribution.submissions.read'];
+        yield 'getSubmission' => [Client::METHOD_GET, '/distribution/apps/missing/submissions/missing', 'distribution.submissions.read'];
+        yield 'updateSubmission' => [Client::METHOD_PATCH, '/distribution/apps/missing/submissions/missing', 'distribution.submissions.write'];
+        yield 'updateSubmissionStatus' => [Client::METHOD_PATCH, '/distribution/apps/missing/submissions/missing/status', 'distribution.submissions.write'];
     }
 
     /**
@@ -98,5 +109,74 @@ trait DistributionBase
             'platform' => 'android',
             'identifier' => 'io.appwrite.t' . \uniqid(),
         ], $params));
+    }
+
+    /**
+     * @param array<string, mixed> $params
+     * @return array<string, mixed>
+     */
+    protected function createRelease(string $appId, array $params = []): array
+    {
+        return $this->client->call(Client::METHOD_POST, '/distribution/apps/' . $appId . '/releases', $this->headers(), \array_merge([
+            'releaseId' => ID::unique(),
+            'version' => '1.0.0+' . \uniqid(),
+        ], $params));
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function getRelease(string $appId, string $releaseId): array
+    {
+        return $this->client->call(Client::METHOD_GET, '/distribution/apps/' . $appId . '/releases/' . $releaseId, $this->headers());
+    }
+
+    /**
+     * @param array<string, mixed> $params
+     * @return array<string, mixed>
+     */
+    protected function createSubmission(string $appId, array $params): array
+    {
+        return $this->client->call(Client::METHOD_POST, '/distribution/apps/' . $appId . '/submissions', $this->headers(), $params);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function getSubmission(string $appId, string $submissionId): array
+    {
+        return $this->client->call(Client::METHOD_GET, '/distribution/apps/' . $appId . '/submissions/' . $submissionId, $this->headers());
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function updateSubmissionStatus(string $appId, string $submissionId, string $status): array
+    {
+        return $this->client->call(Client::METHOD_PATCH, '/distribution/apps/' . $appId . '/submissions/' . $submissionId . '/status', $this->headers(), [
+            'status' => $status,
+        ]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function awaitSubmission(string $appId, string $submissionId, string $status, int $timeoutMs = 240_000): array
+    {
+        $submission = [];
+
+        $this->assertEventually(function () use ($appId, $submissionId, $status, &$submission): void {
+            $fetched = $this->getSubmission($appId, $submissionId);
+            $this->assertSame(200, $fetched['headers']['status-code']);
+            $submission = $fetched['body'];
+
+            if ($submission['status'] !== $status && \in_array($submission['status'], ['failed', 'rejected', 'canceled'], true)) {
+                throw new Critical('Submission ' . $submissionId . ' ended ' . $submission['status'] . ' instead of ' . $status . ': ' . $submission['errorCode'] . ' ' . $submission['errorMessage']);
+            }
+
+            $this->assertSame($status, $submission['status']);
+        }, $timeoutMs, 2000);
+
+        return $submission;
     }
 }

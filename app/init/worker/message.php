@@ -4,6 +4,7 @@ use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Deployment\Deployments;
 use Appwrite\Deployment\Retention;
 use Appwrite\Distribution\Builds;
+use Appwrite\Distribution\Stores;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\ProjectContext;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
@@ -22,6 +23,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
+use Utopia\Http\Http;
 use Utopia\Pools\Group;
 use Utopia\Queue\Message;
 use Utopia\Queue\Publisher\Synchronous as Publisher;
@@ -207,6 +209,12 @@ return function (Container $container): void {
     $container->set('distributionBuilds', function (Jobs $jobsForDistribution, Jobs $jobsForDistributionSigning, Database $dbForProject, Database $dbForPlatform, Document $project, array $platform, DistributionBuildPublisher $publisherForDistributionBuilds, Cache $cache) {
         return new Builds($jobsForDistribution, $jobsForDistributionSigning, $dbForProject, $dbForPlatform, $project, $platform, $publisherForDistributionBuilds, $cache);
     }, ['jobsForDistribution', 'jobsForDistributionSigning', 'dbForProject', 'dbForPlatform', 'project', 'platform', 'publisherForDistributionBuilds', 'cache']);
+
+    $container->set('distributionStores', fn () => new Stores(
+        System::getEnv('_APP_DISTRIBUTION_APPLE_ENDPOINT', ''),
+        System::getEnv('_APP_DISTRIBUTION_GOOGLE_ENDPOINT', ''),
+        Http::isProduction(),
+    ), []);
 
     $container->set('getAudit', function (Database $dbForPlatform, callable $getProjectDB) {
         return function (Document $project) use ($dbForPlatform, $getProjectDB) {

@@ -1899,6 +1899,21 @@ return [
         'description' => 'The signing identity is used by one or more targets. Remove it from those targets before deleting it.',
         'code' => 409,
     ],
+    Exception::DISTRIBUTION_TARGET_IN_USE => [
+        'name' => Exception::DISTRIBUTION_TARGET_IN_USE,
+        'description' => 'The target has a build or submission in progress. Cancel it or wait for it to finish before deleting the target.',
+        'code' => 409,
+    ],
+    Exception::DISTRIBUTION_RELEASE_IN_USE => [
+        'name' => Exception::DISTRIBUTION_RELEASE_IN_USE,
+        'description' => 'The release has a submission in progress, in review or rolling out. Cancel it or wait for it to finish before deleting the release.',
+        'code' => 409,
+    ],
+    Exception::DISTRIBUTION_ARTIFACT_IN_USE => [
+        'name' => Exception::DISTRIBUTION_ARTIFACT_IN_USE,
+        'description' => 'The artifact has a submission in progress, in review or rolling out. Cancel it or wait for it to finish before deleting the artifact.',
+        'code' => 409,
+    ],
     Exception::DISTRIBUTION_CONNECTION_INVALID => [
         'name' => Exception::DISTRIBUTION_CONNECTION_INVALID,
         'description' => 'The store connection credentials are invalid or were rejected by the store.',

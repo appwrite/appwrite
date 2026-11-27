@@ -6,6 +6,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Locking\Lock;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Base;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Seeds\Rollouts\Create as Rollouts;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Cache\Cache;
@@ -108,6 +109,7 @@ class Update extends Base
             return;
         }
 
+        $edit = $this->stage($cache, $packageName, $edit);
         $previous = [];
 
         foreach ($application['tracks'] ?? [] as $track) {
@@ -132,6 +134,40 @@ class Update extends Base
         $cache->purge($this->current($packageName, (string) $edit['email']));
 
         $response->json($this->appEdit($edit));
+    }
+
+    /**
+     * @param array<string, mixed> $edit
+     * @return array<string, mixed>
+     */
+    private function stage(Cache $cache, string $packageName, array $edit): array
+    {
+        $key = $this->key(Rollouts::RESOURCE, $packageName);
+        $rollout = $cache->load($key, self::TTL);
+
+        if (!\is_array($rollout)) {
+            return $edit;
+        }
+
+        $index = $this->locate($edit['tracks'] ?? [], (string) ($rollout['track'] ?? ''));
+        $staged = false;
+
+        foreach ($index === null ? [] : ($edit['tracks'][$index]['releases'] ?? []) as $position => $release) {
+            if (($release['status'] ?? null) === self::STATUS_COMPLETED) {
+                $edit['tracks'][$index]['releases'][$position] = [
+                    ...$release,
+                    'status' => self::STATUS_IN_PROGRESS,
+                    'userFraction' => (float) $rollout['fraction'],
+                ];
+                $staged = true;
+            }
+        }
+
+        if ($staged) {
+            $cache->purge($key);
+        }
+
+        return $edit;
     }
 
     /**

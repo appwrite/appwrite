@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Tests\Unit\Platform\Tasks;
 
 use Appwrite\Event\Publisher\Alert as AlertPublisher;
+use Appwrite\Event\Publisher\DistributionBuild as DistributionBuildPublisher;
+use Appwrite\Event\Publisher\DistributionSubmission as DistributionSubmissionPublisher;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Maintenance as MaintenancePublisher;
 use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
@@ -65,6 +67,8 @@ final class ScheduleTest extends TestCase
                 $this->createStub(MaintenancePublisher::class),
                 $this->createStub(Group::class),
                 $this->createStub(AlertPublisher::class),
+                $this->createStub(DistributionBuildPublisher::class),
+                $this->createStub(DistributionSubmissionPublisher::class),
             );
         } catch (\InvalidArgumentException $error) {
             $refused = $error;

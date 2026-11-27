@@ -42,8 +42,20 @@ final class ScopesCustomServerTest extends Scope
         $this->assertLessThan(500, $allowed['headers']['status-code'], $method . ' ' . $path . ' failed with ' . $scope);
     }
 
-    #[DataProvider('routes')]
-    public function testSubmissionScopesGrantNoRoute(string $method, string $path, string $scope): void
+    /**
+     * @return iterable<string, array{string, string, string}>
+     */
+    public static function otherRoutes(): iterable
+    {
+        foreach (self::routes() as $name => $route) {
+            if (!\str_starts_with($route[2], 'distribution.submissions.')) {
+                yield $name => $route;
+            }
+        }
+    }
+
+    #[DataProvider('otherRoutes')]
+    public function testSubmissionScopesGrantNoOtherRoute(string $method, string $path, string $scope): void
     {
         $response = $this->callWithScopes($method, $path, [
             'distribution.submissions.read',

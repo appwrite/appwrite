@@ -34,6 +34,7 @@ abstract class Base extends Action
     protected const string RESOURCE_PART = 'part';
     protected const string RESOURCE_BUNDLE = 'bundle';
     protected const string RESOURCE_REVIEW = 'review';
+    protected const string RESOURCE_UPLOADS = 'uploads';
 
     protected const string LOCK_TARGET = 'mock';
     protected const int LOCK_TTL = 10;
@@ -179,6 +180,18 @@ abstract class Base extends Action
             ttl: self::LOCK_TTL,
             waitTimeout: self::LOCK_WAIT,
         );
+    }
+
+    protected function count(Lock $lock, Cache $cache, string $packageName, string $counter, int $amount): void
+    {
+        $this->locked($lock, $packageName, function () use ($cache, $packageName, $counter, $amount): void {
+            $key = $this->key(self::RESOURCE_UPLOADS, $packageName);
+            $uploads = $cache->load($key, self::TTL);
+            $uploads = \is_array($uploads) ? $uploads : [];
+            $uploads[$counter] = (int) ($uploads[$counter] ?? 0) + $amount;
+
+            $cache->save($key, $uploads, '', self::TTL);
+        });
     }
 
     /**

@@ -2,6 +2,9 @@
 
 namespace Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Targets;
 
+use Appwrite\Distribution\Build\Status as BuildStatus;
+use Appwrite\Distribution\Submission\Status as SubmissionStatus;
+use Appwrite\Distribution\Submissions;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
@@ -11,6 +14,8 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
@@ -41,7 +46,7 @@ class Delete extends Action
                 group: 'targets',
                 name: 'deleteTarget',
                 description: <<<EOT
-                Delete a target of an app by its unique ID.
+                Delete a target of an app by its unique ID. A target cannot be deleted while one of its builds or submissions is still in progress: cancel it or wait for it to finish first. Finished builds and submissions are kept.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
@@ -81,6 +86,10 @@ class Delete extends Action
             throw new Exception(Exception::DISTRIBUTION_TARGET_NOT_FOUND);
         }
 
+        if ($this->isInUse($dbForProject, $target)) {
+            throw new Exception(Exception::DISTRIBUTION_TARGET_IN_USE);
+        }
+
         if (!$dbForProject->deleteDocument('distributionTargets', $target->getId())) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove target from DB');
         }
@@ -91,5 +100,23 @@ class Delete extends Action
             ->setPayload($response->output($target, Response::MODEL_DISTRIBUTION_TARGET));
 
         $response->noContent();
+    }
+
+    private function isInUse(Database $dbForProject, Document $target): bool
+    {
+        $references = [Query::equal('targetInternalId', [$target->getSequence()])];
+
+        $building = \array_values(\array_diff(BuildStatus::values(), [
+            BuildStatus::Ready->value,
+            BuildStatus::Failed->value,
+            BuildStatus::Canceled->value,
+        ]));
+
+        if ($dbForProject->count('distributionBuilds', [...$references, Query::equal('status', $building)], 1) > 0) {
+            return true;
+        }
+
+        return $dbForProject->count('distributionSubmissions', [...$references, Query::equal('status', Submissions::ACTIVE)], 1) > 0
+            || $dbForProject->count('distributionSubmissions', [...$references, Query::equal('status', [SubmissionStatus::Published->value]), Query::lessThan('rollout', 1.0)], 1) > 0;
     }
 }

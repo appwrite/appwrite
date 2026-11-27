@@ -11,6 +11,7 @@ use Appwrite\Platform\Tasks\Migrate;
 use Appwrite\Platform\Tasks\QueueRetry;
 use Appwrite\Platform\Tasks\Schedule;
 use Appwrite\Platform\Tasks\ScheduleAlerts;
+use Appwrite\Platform\Tasks\ScheduleDistribution;
 use Appwrite\Platform\Tasks\ScheduleExecutions;
 use Appwrite\Platform\Tasks\ScheduleFunctions;
 use Appwrite\Platform\Tasks\ScheduleMaintenance;
@@ -43,6 +44,7 @@ class Tasks extends Service
             ->addAction('screenshot', Screenshot::class)
             ->addAction('schedule', Schedule::class)
             ->addAction('schedule-alerts', ScheduleAlerts::class)
+            ->addAction('schedule-distribution', ScheduleDistribution::class)
             ->addAction('schedule-functions', ScheduleFunctions::class)
             ->addAction('schedule-executions', ScheduleExecutions::class)
             ->addAction('schedule-maintenance', ScheduleMaintenance::class)

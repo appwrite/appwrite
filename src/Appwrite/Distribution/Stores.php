@@ -6,6 +6,7 @@ use Appwrite\Extend\Exception;
 use Psr\Http\Client\ClientInterface;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
+use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\Distribution\Account;
 use Utopia\Distribution\Credential;
@@ -15,7 +16,11 @@ use Utopia\Distribution\Exception\NotFound;
 use Utopia\Distribution\Exception\RateLimited;
 use Utopia\Distribution\Exception\Unauthorized;
 use Utopia\Distribution\Exception\Unavailable;
+use Utopia\Distribution\Issue;
+use Utopia\Distribution\Release;
 use Utopia\Distribution\Store;
+use Utopia\Distribution\Upload;
+use Utopia\Storage\Device;
 
 readonly class Stores
 {
@@ -24,6 +29,8 @@ readonly class Stores
     private const int REQUEST_TIMEOUT = 30;
 
     private const string TOKEN_PATH = '/token';
+
+    private const array REUPLOADS = ['editExpired', 'editAlreadyCommitted', 'editNotFound', 'uploadSessionEnded'];
 
     private ClientInterface $client;
 
@@ -40,6 +47,32 @@ readonly class Stores
         $this->client = $client ?? (new Client(new CurlAdapter()))
             ->withConnectTimeout(self::CONNECT_TIMEOUT)
             ->withTimeout(self::REQUEST_TIMEOUT);
+    }
+
+    public static function provider(Platform $platform): Provider
+    {
+        return match ($platform) {
+            Platform::Ios => Provider::Apple,
+            Platform::Android => Provider::Google,
+        };
+    }
+
+    public static function isExclusive(Document $connection): bool
+    {
+        return Provider::tryFrom((string) $connection->getAttribute('provider', '')) === Provider::Google;
+    }
+
+    public static function identity(Document $connection): string
+    {
+        $account = $connection->getAttribute('account', []);
+        $email = \is_array($account) && \is_string($account['email'] ?? null) ? $account['email'] : '';
+
+        return $email !== '' ? $email : "{$connection->getSequence()}:{$connection->getId()}";
+    }
+
+    public static function isReupload(NotFound $exception): bool
+    {
+        return \array_any($exception->getIssues(), static fn (Issue $issue): bool => \in_array($issue->code, self::REUPLOADS, true));
     }
 
     /**
@@ -92,6 +125,59 @@ readonly class Stores
         }
     }
 
+    /**
+     * @return list<string>
+     */
+    public function tracks(Provider $provider): array
+    {
+        return Config::getParam('distribution')['tracks'][$provider->value] ?? [];
+    }
+
+    public function release(Document $submission, Document $release, Document $target, Document $artifact): Release
+    {
+        $provider = Provider::tryFrom((string) $submission->getAttribute('provider', ''));
+        $track = (string) $submission->getAttribute('track', '');
+
+        if ($provider === null || !\in_array($track, $this->tracks($provider), true)) {
+            throw new Exception(Exception::DISTRIBUTION_TRACK_INVALID, "Track '{$track}' is not a track of the submission's store.");
+        }
+
+        try {
+            return new Release(
+                identifier: (string) $target->getAttribute('identifier', ''),
+                track: $track,
+                version: $this->version($artifact, (string) $release->getAttribute('version', '')),
+                build: $this->build($artifact),
+                fraction: (float) $submission->getAttribute('rollout', 1.0),
+                notes: $this->notes($release),
+                automatic: (bool) $submission->getAttribute('automatic', true),
+            );
+        } catch (Invalid $invalid) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $invalid->getMessage(), previous: $invalid);
+        }
+    }
+
+    public function upload(Document $artifact, Device $deviceForDistribution): Upload
+    {
+        $path = (string) $artifact->getAttribute('path', '');
+        $build = $this->build($artifact);
+
+        try {
+            return new Upload(
+                device: $deviceForDistribution,
+                path: $path,
+                name: (string) ($artifact->getAttribute('name') ?: \basename($path)),
+                size: (int) $artifact->getAttribute('size', 0),
+                identifier: (string) $artifact->getAttribute('identifier', ''),
+                version: $this->version($artifact, $build),
+                build: $build,
+                platform: (string) $artifact->getAttribute('platform', ''),
+            );
+        } catch (Invalid $invalid) {
+            throw new Exception(Exception::DISTRIBUTION_ARTIFACT_INVALID, $invalid->getMessage(), previous: $invalid);
+        }
+    }
+
     private function google(Credential\Google $credential): Store\Google
     {
         $endpoint = \rtrim($this->googleEndpoint, '/');
@@ -129,5 +215,37 @@ readonly class Stores
         }
 
         return $project;
+    }
+
+    private function version(Document $artifact, string $fallback): string
+    {
+        return (string) ($artifact->getAttribute('versionName') ?: $fallback);
+    }
+
+    private function build(Document $artifact): string
+    {
+        return match (Platform::tryFrom((string) $artifact->getAttribute('platform', ''))) {
+            Platform::Android => (string) $artifact->getAttribute('versionCode', ''),
+            Platform::Ios => (string) $artifact->getAttribute('buildNumber', ''),
+            null => '',
+        };
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function notes(Document $release): array
+    {
+        $notes = $release->getAttribute('notes', []);
+
+        if (!\is_array($notes)) {
+            return [];
+        }
+
+        return \array_filter(
+            $notes,
+            static fn (mixed $text, mixed $locale): bool => \is_string($locale) && \is_string($text) && $text !== '',
+            ARRAY_FILTER_USE_BOTH,
+        );
     }
 }

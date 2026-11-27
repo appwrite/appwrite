@@ -13,6 +13,8 @@ export const TOPOLOGY_SERVICES = {
     'appwrite-task-stats-resources',
     'appwrite-task-scheduler-maintenance',
     'appwrite-worker-distribution-builds',
+    'appwrite-worker-distribution-submissions',
+    'appwrite-task-scheduler-distribution',
     'appwrite-worker-maintenance',
     'appwrite-worker-webhooks',
     'appwrite-worker-deletes',
@@ -566,7 +568,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_STATS_RESOURCES_INTERVAL
       - _APP_WORKERS_NUM=1
       # Pool sizing only (sum of per-queue caps). Each queue keeps its own maxCoroutines in PHP; databases and maintenance stay at 1.
-      - _APP_WORKER_MAX_COROUTINES=92
+      - _APP_WORKER_MAX_COROUTINES=96
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
       - _APP_OPENSSL_KEY_V2
@@ -776,7 +778,10 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_FUNCTIONS_SCHEDULE_SPREAD
       - _APP_MAINTENANCE_INTERVAL
       - _APP_MAINTENANCE_INACTIVE_INTERVAL
-      - _APP_ALERTS_INTERVAL`,
+      - _APP_ALERTS_INTERVAL
+      - _APP_DISTRIBUTION
+      - _APP_DISTRIBUTION_BUILDS_QUEUE_NAME
+      - _APP_DISTRIBUTION_SUBMISSIONS_QUEUE_NAME`,
   },
   {
     name: 'appwrite-worker-stats-usage',
@@ -829,7 +834,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_STATS_RESOURCES_INTERVAL
       - _APP_WORKERS_NUM=1
       # Pool sizing only (sum of per-queue caps). Each queue keeps its own maxCoroutines in PHP; databases and maintenance stay at 1.
-      - _APP_WORKER_MAX_COROUTINES=92
+      - _APP_WORKER_MAX_COROUTINES=96
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
       - _APP_OPENSSL_KEY_V2
@@ -1029,7 +1034,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_STATS_RESOURCES_INTERVAL
       - _APP_WORKERS_NUM=1
       # Pool sizing only (sum of per-queue caps). Each queue keeps its own maxCoroutines in PHP; databases and maintenance stay at 1.
-      - _APP_WORKER_MAX_COROUTINES=92
+      - _APP_WORKER_MAX_COROUTINES=96
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
       - _APP_OPENSSL_KEY_V2
@@ -1229,7 +1234,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_STATS_RESOURCES_INTERVAL
       - _APP_WORKERS_NUM=1
       # Pool sizing only (sum of per-queue caps). Each queue keeps its own maxCoroutines in PHP; databases and maintenance stay at 1.
-      - _APP_WORKER_MAX_COROUTINES=92
+      - _APP_WORKER_MAX_COROUTINES=96
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
       - _APP_OPENSSL_KEY_V2
@@ -1439,7 +1444,10 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_FUNCTIONS_SCHEDULE_SPREAD
       - _APP_MAINTENANCE_INTERVAL
       - _APP_MAINTENANCE_INACTIVE_INTERVAL
-      - _APP_ALERTS_INTERVAL`,
+      - _APP_ALERTS_INTERVAL
+      - _APP_DISTRIBUTION
+      - _APP_DISTRIBUTION_BUILDS_QUEUE_NAME
+      - _APP_DISTRIBUTION_SUBMISSIONS_QUEUE_NAME`,
   },
   {
     name: 'appwrite-task-stats-resources',
@@ -1502,7 +1510,10 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_FUNCTIONS_SCHEDULE_SPREAD
       - _APP_MAINTENANCE_INTERVAL
       - _APP_MAINTENANCE_INACTIVE_INTERVAL
-      - _APP_ALERTS_INTERVAL`,
+      - _APP_ALERTS_INTERVAL
+      - _APP_DISTRIBUTION
+      - _APP_DISTRIBUTION_BUILDS_QUEUE_NAME
+      - _APP_DISTRIBUTION_SUBMISSIONS_QUEUE_NAME`,
   },
   {
     name: 'appwrite-task-scheduler-maintenance',
@@ -1565,7 +1576,10 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_FUNCTIONS_SCHEDULE_SPREAD
       - _APP_MAINTENANCE_INTERVAL
       - _APP_MAINTENANCE_INACTIVE_INTERVAL
-      - _APP_ALERTS_INTERVAL`,
+      - _APP_ALERTS_INTERVAL
+      - _APP_DISTRIBUTION
+      - _APP_DISTRIBUTION_BUILDS_QUEUE_NAME
+      - _APP_DISTRIBUTION_SUBMISSIONS_QUEUE_NAME`,
   },
   {
     name: 'appwrite-worker-distribution-builds',
@@ -1768,6 +1782,272 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_DISTRIBUTION_SUBMISSIONS_QUEUE_NAME`,
   },
   {
+    name: 'appwrite-worker-distribution-submissions',
+    block: `  appwrite-worker-distribution-submissions:
+    entrypoint: worker-distribution-submissions
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
+    container_name: appwrite-worker-distribution-submissions
+    image: appwrite/appwrite:2.7.2
+    networks:
+      - appwrite
+      - browser
+    depends_on:
+      - redis
+      - \${_APP_DB_HOST:-postgresql}
+    volumes:
+      - appwrite-uploads:/storage/uploads:rw
+      - appwrite-cache:/storage/cache:rw
+      - appwrite-functions:/storage/functions:rw
+      - appwrite-sites:/storage/sites:rw
+      - appwrite-builds:/storage/builds:rw
+      - appwrite-certificates:/storage/certificates:rw
+      - appwrite-videos:/storage/videos:rw
+      - appwrite-videos-tmp:/storage/videos-tmp:rw
+      - appwrite-distribution:/storage/distribution:rw
+      - appwrite-config:/storage/config:rw
+      - appwrite-imports:/storage/imports:rw
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    environment:
+      - _APP_DNS_EXTERNAL
+      - _APP_ALLOWED_INTERNAL_ADDRESSES
+      - _APP_ENV
+      - _APP_MEMORY_LIMIT
+      - _APP_USAGE_STATS
+      - _APP_ALERTS_USAGE_LAG
+      - _APP_USAGE_PASS
+      - _APP_CONNECTIONS_DB_USAGE
+      - _APP_POOL_SIZE_USAGE
+      - _APP_CONNECTIONS_DB_EXECUTIONS
+      - _APP_POOL_SIZE_EXECUTIONS
+      - _APP_MAINTENANCE_RETENTION_USAGE_TTL
+      - _APP_STATS_USAGE_QUEUE_NAME
+      - _APP_STATS_RESOURCES_QUEUE_NAME
+      - _APP_MAINTENANCE_QUEUE_NAME
+      - _APP_STATS_RESOURCES_INTERVAL
+      - _APP_WORKERS_NUM=1
+      # Pool sizing only (sum of per-queue caps). Each queue keeps its own maxCoroutines in PHP; databases and maintenance stay at 1.
+      - _APP_WORKER_MAX_COROUTINES=4
+      - _APP_WORKER_PER_CORE
+      - _APP_OPENSSL_KEY_V1
+      - _APP_OPENSSL_KEY_V2
+      - _APP_OPENSSL_KEY_CURRENT
+      - _APP_OPENSSL_KEY_OLDEST
+      - _APP_EMAIL_SECURITY
+      - _APP_EMAIL_CERTIFICATES
+      - _APP_CERTIFICATES_PROVIDER
+      - _APP_DB_ADAPTER
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_FORMAT
+      - _APP_QUEUE_NAME
+      - _APP_DATABASE_SHARED_TABLES
+      - _APP_CONSOLE_DOMAIN
+      - _APP_CONSOLE_URL
+      - _APP_CONSOLE_TRUSTED_PROJECTS
+      - _APP_DOMAIN
+      - _APP_DOMAIN_TARGET_CNAME
+      - _APP_DOMAIN_TARGET_AAAA
+      - _APP_DOMAIN_TARGET_A
+      - _APP_DOMAIN_TARGET_CAA
+      - _APP_DNS
+      - _APP_DOMAIN_FUNCTIONS
+      - _APP_DOMAIN_SITES
+      - _APP_OPTIONS_FORCE_HTTPS
+      - _APP_OPTIONS_ROUTER_FORCE_HTTPS
+      - _APP_WEBHOOK_MAX_FAILED_ATTEMPTS
+      - _APP_STORAGE_DEVICE
+      - _APP_STORAGE_S3_ACCESS_KEY
+      - _APP_STORAGE_S3_SECRET
+      - _APP_STORAGE_S3_REGION
+      - _APP_STORAGE_S3_BUCKET
+      - _APP_STORAGE_S3_ENDPOINT
+      - _APP_STORAGE_S3_PATH_STYLE
+      - _APP_STORAGE_DO_SPACES_ACCESS_KEY
+      - _APP_STORAGE_DO_SPACES_SECRET
+      - _APP_STORAGE_DO_SPACES_REGION
+      - _APP_STORAGE_DO_SPACES_BUCKET
+      - _APP_STORAGE_BACKBLAZE_ACCESS_KEY
+      - _APP_STORAGE_BACKBLAZE_SECRET
+      - _APP_STORAGE_BACKBLAZE_REGION
+      - _APP_STORAGE_BACKBLAZE_BUCKET
+      - _APP_STORAGE_LINODE_ACCESS_KEY
+      - _APP_STORAGE_LINODE_SECRET
+      - _APP_STORAGE_LINODE_REGION
+      - _APP_STORAGE_LINODE_BUCKET
+      - _APP_STORAGE_WASABI_ACCESS_KEY
+      - _APP_STORAGE_WASABI_SECRET
+      - _APP_STORAGE_WASABI_REGION
+      - _APP_STORAGE_WASABI_BUCKET
+      - _APP_CONNECTIONS_STORAGE_CACHE
+      - _APP_EXECUTOR_SECRET
+      - _APP_EXECUTOR_HOST
+      - _APP_DOCKER_HUB_USERNAME
+      - _APP_DOCKER_HUB_PASSWORD
+      - _APP_FUNCTIONS_TIMEOUT
+      - _APP_SITES_TIMEOUT
+      - _APP_COMPUTE_BUILD_TIMEOUT
+      - _APP_COMPUTE_CPUS
+      - _APP_COMPUTE_MEMORY
+      - _APP_OPEN_RUNTIMES_NFT
+      - _APP_COMPUTE_SIZE_LIMIT
+      - _APP_COMPUTE_BUILD_SIZE_LIMIT
+      - _APP_VCS_GITHUB_APP_NAME
+      - _APP_VCS_GITHUB_PRIVATE_KEY
+      - _APP_VCS_GITHUB_APP_ID
+      - _APP_VCS_GITEA_ENDPOINT
+      - _APP_VCS_GITEA_BROWSER_ENDPOINT
+      - _APP_VCS_GITEA_CLIENT_ID
+      - _APP_VCS_GITEA_CLIENT_SECRET
+      - _APP_VCS_GITEA_WEBHOOK_SECRET
+      - _APP_VCS_GITLAB_ENDPOINT
+      - _APP_VCS_GITLAB_CLIENT_ID
+      - _APP_VCS_GITLAB_CLIENT_SECRET
+      - _APP_VCS_GITLAB_WEBHOOK_SECRET
+      - _APP_VCS_BITBUCKET_CLIENT_ID
+      - _APP_VCS_BITBUCKET_CLIENT_SECRET
+      - _APP_VCS_BITBUCKET_WEBHOOK_SECRET
+      - _APP_VCS_ORIGIN_CLIENT_ID
+      - _APP_VCS_ORIGIN_PRIVATE_KEY
+      - _APP_VCS_ENTIRE_PLUGIN
+      - _APP_VCS_ENTIRE_PRIVATE_KEY
+      - _APP_VCS_ENTIRE_ISSUER
+      - _APP_VCS_ENTIRE_ENDPOINT
+      - _APP_VCS_WEBHOOK_URL
+      - _APP_BUILDS_VOLUME
+      - _APP_JOBS_HOST
+      - _APP_JOBS_SECRET
+      - _APP_JOBS_ENDPOINT
+      - _APP_BROWSER_HOST
+      - _APP_WORKER_SCREENSHOTS_ROUTER
+      - _APP_NOTIFICATIONS_TRACKING_SECRET
+      - _APP_NOTIFICATIONS_PUSH_APNS
+      - _APP_NOTIFICATIONS_PUSH_APNS_KEY
+      - _APP_NOTIFICATIONS_PUSH_FCM
+      - _APP_NOTIFICATIONS_PUSH_FCM_KEY
+      - _APP_SYSTEM_EMAIL_NAME
+      - _APP_SYSTEM_EMAIL_ADDRESS
+      - _APP_SMTP_HOST
+      - _APP_SMTP_PORT
+      - _APP_SMTP_SECURE
+      - _APP_SMTP_USERNAME
+      - _APP_SMTP_PASSWORD
+      - _APP_SMS_FROM
+      - _APP_SMS_PROVIDER
+      - _APP_SMS_PROJECTS_DENY_LIST
+      - _APP_MIGRATIONS_FIREBASE_CLIENT_ID
+      - _APP_MIGRATIONS_FIREBASE_CLIENT_SECRET
+      - _APP_MIGRATION_HOST
+      - _APP_MAINTENANCE_RETENTION_AUDIT
+      - _APP_MAINTENANCE_RETENTION_AUDIT_CONSOLE
+      - _APP_MAINTENANCE_RETENTION_RENDITION
+      - _APP_VIDEOS_ENCODE_TIMEOUT
+      - _APP_VIDEOS_THREADS
+      - _APP_VIDEOS_SPECIFICATION
+      - _APP_LIMIT_DATABASE_BATCH
+      - _APP_EMBEDDING
+      - _APP_DISTRIBUTION
+      - _APP_DISTRIBUTION_APPLE_ENDPOINT
+      - _APP_DISTRIBUTION_GOOGLE_ENDPOINT
+      - _APP_DISTRIBUTION_JOBS_HOST
+      - _APP_DISTRIBUTION_JOBS_SECRET
+      - _APP_DISTRIBUTION_SIGNING_JOBS_HOST
+      - _APP_DISTRIBUTION_SIGNING_JOBS_SECRET
+      - _APP_DISTRIBUTION_CALLBACK_SECRET
+      - _APP_DISTRIBUTION_SIGNING_CALLBACK_SECRET
+      - _APP_DISTRIBUTION_IMAGE_ANDROID
+      - _APP_DISTRIBUTION_IMAGE_TOOLS
+      - _APP_DISTRIBUTION_BUILD_TIMEOUT
+      - _APP_DISTRIBUTION_BUILD_SPECIFICATION
+      - _APP_DISTRIBUTION_SIZE_LIMIT
+      - _APP_DISTRIBUTION_LOGS_LIMIT
+      - _APP_DISTRIBUTION_ARTIFACT_RETENTION
+      - _APP_DISTRIBUTION_VOLUME
+      - _APP_DISTRIBUTION_RUNNER_SECRET
+      - _APP_DISTRIBUTION_IOS_SIGNING
+      - _APP_DISTRIBUTION_BUILDS_QUEUE_NAME
+      - _APP_DISTRIBUTION_SUBMISSIONS_QUEUE_NAME`,
+  },
+  {
+    name: 'appwrite-task-scheduler-distribution',
+    block: `  appwrite-task-scheduler-distribution:
+    entrypoint: schedule-distribution
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
+    container_name: appwrite-task-scheduler-distribution
+    image: appwrite/appwrite:2.7.2
+    networks:
+      - appwrite
+    depends_on:
+      - \${_APP_DB_HOST:-postgresql}
+      - redis
+    environment:
+      - _APP_ENV
+      - _APP_MEMORY_LIMIT
+      - _APP_USAGE_STATS
+      - _APP_USAGE_PASS
+      - _APP_CONNECTIONS_DB_USAGE
+      - _APP_POOL_SIZE_USAGE
+      - _APP_CONNECTIONS_DB_EXECUTIONS
+      - _APP_POOL_SIZE_EXECUTIONS
+      - _APP_MAINTENANCE_RETENTION_USAGE_TTL
+      - _APP_STATS_USAGE_QUEUE_NAME
+      - _APP_STATS_RESOURCES_QUEUE_NAME
+      - _APP_MAINTENANCE_QUEUE_NAME
+      - _APP_STATS_RESOURCES_INTERVAL
+      - _APP_LOGGING_FORMAT
+      # Combined mode runs functions/executions/messages timers + enqueue coroutines
+      # against shared console/cache pools; floor must cover concurrent ticks.
+      - _APP_WORKER_MAX_COROUTINES=8
+      - _APP_WORKER_PER_CORE
+      - _APP_OPENSSL_KEY_V1
+      - _APP_OPENSSL_KEY_V2
+      - _APP_OPENSSL_KEY_CURRENT
+      - _APP_OPENSSL_KEY_OLDEST
+      - _APP_OPTIONS_FORCE_HTTPS
+      - _APP_DOMAIN
+      - _APP_CONSOLE_DOMAIN
+      - _APP_CONSOLE_SCHEMA
+      - _APP_DOMAIN_FUNCTIONS
+      - _APP_DOMAIN_SITES
+      - _APP_MIGRATION_HOST
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+      - _APP_DATABASE_SHARED_TABLES
+      - _APP_FUNCTIONS_SCHEDULE_SPREAD
+      - _APP_MAINTENANCE_INTERVAL
+      - _APP_MAINTENANCE_INACTIVE_INTERVAL
+      - _APP_ALERTS_INTERVAL
+      - _APP_DISTRIBUTION
+      - _APP_DISTRIBUTION_BUILDS_QUEUE_NAME
+      - _APP_DISTRIBUTION_SUBMISSIONS_QUEUE_NAME`,
+  },
+  {
     name: 'appwrite-worker-maintenance',
     block: `  appwrite-worker-maintenance:
     entrypoint: worker-maintenance
@@ -1943,7 +2223,13 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_EMAIL_CERTIFICATES
       - _APP_CERTIFICATES_PROVIDER
       - _APP_MAINTENANCE_RETENTION_AUDIT
-      - _APP_MAINTENANCE_RETENTION_AUDIT_CONSOLE`,
+      - _APP_MAINTENANCE_RETENTION_AUDIT_CONSOLE
+      - _APP_JOBS_HOST
+      - _APP_JOBS_SECRET
+      - _APP_DISTRIBUTION_JOBS_HOST
+      - _APP_DISTRIBUTION_JOBS_SECRET
+      - _APP_DISTRIBUTION_SIGNING_JOBS_HOST
+      - _APP_DISTRIBUTION_SIGNING_JOBS_SECRET`,
   },
   {
     name: 'appwrite-worker-databases',

@@ -21,7 +21,10 @@ use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Applications\Tr
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Seeds\Applications\Create as CreateDistributionGoogleSeedApplication;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Seeds\Bundles\Create as CreateDistributionGoogleSeedBundle;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Seeds\Reviews\Create as CreateDistributionGoogleSeedReview;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Seeds\Rollouts\Create as CreateDistributionGoogleSeedRollout;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Seeds\ServiceAccounts\Create as CreateDistributionGoogleSeedServiceAccount;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Seeds\Stalls\Create as CreateDistributionGoogleSeedStall;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Seeds\Uploads\XList as ListDistributionGoogleSeedUploads;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Token\Create as CreateDistributionGoogleToken;
 use Appwrite\Platform\Modules\Mock\Http\Mock\GitHub\Callback\Get as GetGitHubCallback;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Tests\Avatars\BadIcon\Get as GetBadIcon;
@@ -89,6 +92,9 @@ class Http extends Service
         $this->addAction('listDistributionGoogleReleases', ListDistributionGoogleReleases::class);
         $this->addAction('createDistributionGoogleSeedReview', CreateDistributionGoogleSeedReview::class);
         $this->addAction('createDistributionGoogleSeedBundle', CreateDistributionGoogleSeedBundle::class);
+        $this->addAction('createDistributionGoogleSeedStall', CreateDistributionGoogleSeedStall::class);
+        $this->addAction('listDistributionGoogleSeedUploads', ListDistributionGoogleSeedUploads::class);
+        $this->addAction('createDistributionGoogleSeedRollout', CreateDistributionGoogleSeedRollout::class);
         $this->addAction('shutdown', Shutdown::class);
     }
 }
