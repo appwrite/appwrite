@@ -94,6 +94,8 @@ class AppwriteSdkCoverageTest extends TestCase
         'updateMockPhone' => 'not migrated yet: mock phone numbers for testing phone sign-in.',
         'updateOAuth2Server' => 'not migrated yet: the project acting as an OAuth2 server, and its clients.',
         'updateLDAP' => 'not migrated yet: LDAP sign-in settings, which hold the bind password.',
+        'createVideoProfile' => 'not migrated yet: video transcoding profiles.',
+        'updateVideoProfile' => 'not migrated yet: video transcoding profiles.',
     ];
 
     /**
