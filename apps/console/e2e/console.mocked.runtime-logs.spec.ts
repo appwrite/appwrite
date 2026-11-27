@@ -233,13 +233,38 @@ const FUNCTION_LINE = 'function says hello'
 const SITE_LINE = 'site rendered /pricing'
 const DATABASE_LINE = 'checkpoint complete'
 
+/**
+ * The project's databases as the Databases page lists them: a PostgreSQL
+ * database on dedicated compute, which logs, and a shared TablesDB, which
+ * doesn't.
+ */
+const DATABASE = {
+  $id: 'compute1',
+  $createdAt: NOW,
+  $updatedAt: NOW,
+  name: 'Warehouse',
+  description: '',
+  enabled: true,
+  type: 'postgresql',
+  engine: 'postgresql',
+  specification: 's-2vcpu-2gb',
+}
+const SHARED_DATABASE = {
+  ...DATABASE,
+  $id: 'shared1',
+  name: 'Shared',
+  type: 'tablesdb',
+  engine: null,
+  specification: null,
+}
+
 function projectLogs() {
   return [
     log('plog0', 'functions', FUNCTION.$id, ACTIVE, 'stdout', JSON_INFO, 3),
     log('plog1', 'functions', FUNCTION.$id, ACTIVE, 'stdout', FUNCTION_LINE, 5),
     log('plog4', 'sites', SITE.$id, ACTIVE, 'stdout', JSON_WARN, 8),
     log('plog2', 'sites', SITE.$id, ACTIVE, 'stderr', SITE_LINE, 10),
-    log('plog3', 'databases', 'compute1', '', 'stdout', DATABASE_LINE, 15),
+    log('plog3', 'databases', DATABASE.$id, '', 'stdout', DATABASE_LINE, 15),
   ]
 }
 
@@ -336,7 +361,11 @@ async function mockAppwriteApi(page: Page) {
         ]! * 1000
       const deploymentIds = equalValues(url, 'deploymentId')
       const rows = (
-        resourceType ? logsFor(resourceType, resourceId) : projectLogs()
+        resourceType === 'databases'
+          ? projectLogs().filter((row) => row.resourceId === resourceId)
+          : resourceType
+            ? logsFor(resourceType, resourceId)
+            : projectLogs()
       ).filter(
         (row) =>
           (!deploymentIds || deploymentIds.includes(row.deploymentId)) &&
@@ -375,6 +404,14 @@ async function mockAppwriteApi(page: Page) {
             (!types || types.includes(row.resourceType)) &&
             (!ids || ids.includes(row.resourceId)) &&
             (!streams || streams.includes(row.stream)),
+        )
+        return json(200, { total: 0, logs })
+      }
+      if (resourceType === 'databases') {
+        // A database is read by path, and needs no deployment.
+        const logs = projectLogs().filter(
+          (row) =>
+            row.resourceType === 'databases' && row.resourceId === resourceId,
         )
         return json(200, { total: 0, logs })
       }
@@ -443,6 +480,8 @@ async function mockAppwriteApi(page: Page) {
       return json(200, { total: 0, memberships: [] })
     if (apiPath === '/projects' || apiPath === '/organization/projects')
       return json(200, { total: 1, projects: [PROJECT] })
+    if (apiPath === '/console/databases')
+      return json(200, { total: 2, databases: [DATABASE, SHARED_DATABASE] })
     if (
       apiPath === '/project' ||
       apiPath === `/projects/${PROJECT.$id}` ||
@@ -751,6 +790,33 @@ test.describe('runtime logs', () => {
     await expect(resource).toContainText(FUNCTION.name)
     await expect(logs).toContainText(FUNCTION_LINE)
     await expect(logs).not.toContainText(SITE_LINE)
+
+    // Databases on dedicated compute are listed from the Databases page's
+    // own list; shared ones don't log. A picked database is read by path.
+    await resource.click()
+    await expect(
+      page.getByRole('option', { name: DATABASE.name }),
+    ).toBeVisible()
+    await expect(
+      page.getByRole('option', { name: SHARED_DATABASE.name }),
+    ).toHaveCount(0)
+    const byPath = page.waitForRequest((request) => {
+      const url = new URL(request.url())
+      return (
+        url.pathname.endsWith('/v1/logs') &&
+        url.searchParams.get('resourceType') === 'databases' &&
+        url.searchParams.get('resourceId') === DATABASE.$id
+      )
+    })
+    await page.getByRole('option', { name: DATABASE.name }).click()
+    await byPath
+    await expect(resource).toContainText(DATABASE.name)
+    await expect(logs).toContainText(DATABASE_LINE)
+    await expect(logs).not.toContainText(FUNCTION_LINE)
+    // ...and its lines carry its name
+    await expect(
+      logs.getByRole('button', { name: new RegExp(DATABASE_LINE) }),
+    ).toContainText(DATABASE.name)
 
     await resource.click()
     await page.getByRole('option', { name: 'All resources' }).click()

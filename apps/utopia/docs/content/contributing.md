@@ -62,7 +62,7 @@ bun run generate
 bun run dev
 ```
 
-The app serves on <http://localhost:3200>. `bun run generate` (`scripts/generate.ts`) reads the workspace with `cargo metadata`, downloads each crate's rustdoc JSON from docs.rs, and scans the extension, the PHP packages and the Appwrite server. Run it again after a merge.
+The app serves on <http://localhost:3200>. `bun run generate` (`scripts/generate.ts`) reads each crate's `Cargo.toml`, downloads each crate's rustdoc JSON from docs.rs, and scans the extension, the PHP packages and the Appwrite server. Run it again after a merge; the live site rebuilds itself on each merge to `main`.
 
 To change what a page says, change its source, not the app:
 

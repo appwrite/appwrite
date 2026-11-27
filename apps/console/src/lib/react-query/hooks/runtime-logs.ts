@@ -12,8 +12,12 @@ import {
   runtimeLogUsageInterval,
   type RuntimeLogUsageBucket,
 } from '@/lib/runtime-log-usage'
+import { isNativeDatabaseTypeValue } from '@/lib/databases/database-type'
 import { nextCursorAfter } from './cursor'
-import { fetchProjectDedicatedDatabases } from './databases'
+import {
+  fetchProjectConsoleDatabases,
+  fetchProjectDedicatedDatabases,
+} from './databases'
 import { fetchProjectFunctionsByIds } from './functions'
 import { fetchProjectSitesByIds } from './sites'
 
@@ -44,7 +48,10 @@ export interface RuntimeLogsFilter {
   deploymentId?: string
   /** Narrows a project-wide list to one kind of resource. */
   resourceType?: RuntimeLogResourceType
-  /** Narrows a project-wide list to one resource of `resourceType`. */
+  /**
+   * Narrows a project-wide list to one resource of `resourceType`. A database
+   * is named by its own ID, as the database list lists it.
+   */
   resourceId?: string
   stream: RuntimeLogStream
   range: RuntimeLogRange
@@ -56,6 +63,27 @@ export interface RuntimeLogsFilter {
 export interface RuntimeLogWindow {
   from: string
   to: string
+}
+
+/**
+ * What a request reads: one resource, named in the path, or the whole project
+ * with filters. A database picked on the project's Logs page is read by path:
+ * a TablesDB, DocumentsDB or VectorsDB files its lines under the compute it
+ * runs on, and only the API knows which compute that is.
+ */
+function requestScope(
+  resourceType: RuntimeLogScope,
+  resourceId: string | null | undefined,
+  filter: RuntimeLogsFilter,
+): { resourceType: RuntimeLogScope; resourceId: string | null | undefined } {
+  if (
+    resourceType === null &&
+    filter.resourceType === 'databases' &&
+    filter.resourceId
+  ) {
+    return { resourceType: 'databases', resourceId: filter.resourceId }
+  }
+  return { resourceType, resourceId }
 }
 
 function filterQueries(
@@ -146,8 +174,9 @@ export function runtimeLogsInfiniteQueryOptions(
   return infiniteQueryOptions({
     queryKey: ['runtime-logs', projectId, resourceType, resourceId, filter],
     queryFn: async ({ pageParam }) => {
+      const scope = requestScope(resourceType, resourceId, filter)
       const queries = [
-        ...filterQueries(resourceType, filter),
+        ...filterQueries(scope.resourceType, filter),
         ...rangeQuery(filter),
         Query.orderDesc('timestamp'),
         Query.limit(RUNTIME_LOGS_PAGE_LIMIT),
@@ -155,8 +184,8 @@ export function runtimeLogsInfiniteQueryOptions(
       if (pageParam) queries.push(Query.cursorAfter(pageParam))
       const logs = await listRuntimeLogs(
         projectId!,
-        resourceType,
-        resourceId,
+        scope.resourceType,
+        scope.resourceId,
         queries,
       )
       return { logs }
@@ -181,8 +210,9 @@ export async function fetchRuntimeLogsSince(
   filter: RuntimeLogsFilter,
   since: string,
 ): Promise<Models.RuntimeLog[]> {
-  return listRuntimeLogs(projectId, resourceType, resourceId, [
-    ...filterQueries(resourceType, filter),
+  const scope = requestScope(resourceType, resourceId, filter)
+  return listRuntimeLogs(projectId, scope.resourceType, scope.resourceId, [
+    ...filterQueries(scope.resourceType, filter),
     Query.greaterThanEqual('timestamp', since),
     Query.orderAsc('timestamp'),
     Query.limit(RUNTIME_LOGS_PAGE_LIMIT),
@@ -212,14 +242,15 @@ export function runtimeLogsUsageQueryOptions(
       const end = to ?? new Date()
       const span = from ? end.getTime() - from.getTime() : null
       const interval = runtimeLogUsageInterval(span)
+      const scope = requestScope(resourceType, resourceId, filter)
       const queries = [
-        ...filterQueries(resourceType, filter),
+        ...filterQueries(scope.resourceType, filter),
         ...rangeQuery(filter),
       ]
       const usage = await getRuntimeLogUsage(
         projectId!,
-        resourceType,
-        resourceId,
+        scope.resourceType,
+        scope.resourceId,
         queries,
         interval,
       )
@@ -250,10 +281,31 @@ export interface RuntimeLogSource {
   runtime?: string
   /** Sites only: `nextjs`, `astro`... */
   framework?: string
-  /** Databases only: `postgresql` or `mysql` for native engines. */
+  /** Databases only: the engine it runs on, `postgresql`, `mysql`... */
   engine?: string
-  /** Databases only: set when a TablesDB, DocumentsDB or VectorsDB runs on it. */
+  /** Databases only: `tablesdb`, `documentsdb` or `vectorsdb`; unset for a native engine. */
   api?: string
+}
+
+/** Dedicated databases listed for picking and naming; most projects have far fewer. */
+export const RUNTIME_LOG_DATABASES_LIMIT = 100
+
+/**
+ * A database from the project's database list (`console.listDatabases`, as
+ * the Databases page lists them) as a log source. Only databases on dedicated
+ * compute write logs.
+ */
+export function runtimeLogDatabaseSource(
+  database: Pick<Models.Database, '$id' | 'name' | 'type' | 'engine'>,
+): RuntimeLogSource | null {
+  if (!database.engine) return null
+  return {
+    type: 'databases',
+    id: database.$id,
+    name: database.name,
+    engine: database.engine,
+    api: isNativeDatabaseTypeValue(database.type) ? undefined : database.type,
+  }
 }
 
 /** Sources keyed `<type>:<id>`. */
@@ -265,8 +317,11 @@ export function runtimeLogSourceKey(type: string, id: string): string {
 
 /**
  * Names the functions and sites that wrote the loaded lines (one list call
- * each, by ID), and the project's dedicated databases, whose lines carry the
- * compute ID. A resource that fails to load is left unnamed, not an error.
+ * each, by ID) and the project's databases, from the list the Databases page
+ * reads. A native PostgreSQL or MySQL database shares its ID with its
+ * compute, which its lines carry; a TablesDB, DocumentsDB or VectorsDB on
+ * dedicated compute logs under the compute's own ID, named from the compute
+ * list. A resource that fails to load is left unnamed, not an error.
  */
 export function runtimeLogSourcesQueryOptions(
   projectId: string | null | undefined,
@@ -283,13 +338,20 @@ export function runtimeLogSourcesQueryOptions(
       withDatabases,
     ],
     queryFn: async (): Promise<RuntimeLogSources> => {
-      const [functions, sites, databases] = await Promise.all([
+      const [functions, sites, databases, computes] = await Promise.all([
         fetchProjectFunctionsByIds(projectId!, [...functionIds]).catch(() => ({
           functions: [],
         })),
         fetchProjectSitesByIds(projectId!, [...siteIds]).catch(() => ({
           sites: [],
         })),
+        withDatabases
+          ? fetchProjectConsoleDatabases(
+              projectId!,
+              0,
+              RUNTIME_LOG_DATABASES_LIMIT,
+            ).catch(() => ({ databases: [] }))
+          : { databases: [] },
         withDatabases
           ? fetchProjectDedicatedDatabases(projectId!).catch(() => ({
               databases: [],
@@ -313,14 +375,21 @@ export function runtimeLogSourcesQueryOptions(
           framework: site.framework,
         })
       }
-      for (const database of databases.databases) {
-        sources.set(runtimeLogSourceKey('databases', database.$id), {
+      // Computes first, so a database of the same ID names it
+      for (const compute of computes.databases) {
+        sources.set(runtimeLogSourceKey('databases', compute.$id), {
           type: 'databases',
-          id: database.$id,
-          name: database.name,
-          engine: database.engine ?? undefined,
-          api: database.api ?? undefined,
+          id: compute.$id,
+          name: compute.name,
+          engine: compute.engine ?? undefined,
+          api: compute.api ?? undefined,
         })
+      }
+      for (const database of databases.databases) {
+        const source = runtimeLogDatabaseSource(database)
+        if (source) {
+          sources.set(runtimeLogSourceKey('databases', source.id), source)
+        }
       }
       return sources
     },
