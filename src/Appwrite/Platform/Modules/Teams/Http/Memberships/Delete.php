@@ -99,6 +99,9 @@ class Delete extends Action
                 $dbForProject->getDocument('teams', $team->getId(), forUpdate: true);
             }
 
+            // Re-read under a lock, a concurrent accept may have confirmed it since the read above
+            $current = $authorization->skip(fn () => $dbForProject->getDocument('memberships', $membership->getId(), forUpdate: true));
+
             try {
                 $deleted = $dbForProject->deleteDocument('memberships', $membership->getId());
             } catch (AuthorizationException $exception) {
@@ -106,7 +109,7 @@ class Delete extends Action
             }
 
             // Only the request that removed the row uncounts it, so concurrent deletes count once
-            if ($deleted && $membership->getAttribute('confirm')) {
+            if ($deleted && $current->getAttribute('confirm')) {
                 try {
                     $authorization->skip(fn () => $dbForProject->decreaseDocumentAttribute('teams', $team->getId(), 'total', 1, 0));
                 } catch (LimitException) {
