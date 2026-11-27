@@ -80,7 +80,7 @@ class Update extends Action
             ->param('providerBranch', null, new Nullable(new Text(128, 0)), 'Production branch for the repo linked to the app.', true)
             ->param('providerSilentMode', null, new Nullable(new Boolean()), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the app? In silent mode, no checks are posted to commits.', true)
             ->param('providerRootDirectory', null, new Nullable(new Directory()), 'Path to the app code in the linked repo.', true)
-            ->param('providerBranches', null, new Nullable(new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'List of branch name patterns that trigger automatic builds. Supports wildcards. Leave empty to build on all branches.', true)
+            ->param('providerBranches', null, new Nullable(new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'List of branch name patterns that trigger automatic builds. Supports wildcards. Leave empty to build only the production branch.', true)
             ->param('providerPaths', null, new Nullable(new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'List of file path patterns that trigger automatic builds. Supports wildcards. Leave empty to build on all file changes.', true)
             ->param('providerTags', null, new Nullable(new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'List of tag name patterns that trigger automatic builds. Supports wildcards. Leave empty to build no tags.', true)
             ->param('providerComments', null, new Nullable(new Boolean()), 'Post a build summary on pull requests for the repo linked to the app. Distribution posts no pull request comments today, so the value is only stored.', true)

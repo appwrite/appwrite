@@ -25,6 +25,13 @@ final class SubmissionDatabase extends Database
 
     private int $sequence = 0;
 
+    /**
+     * Rows another writer creates between a read and the next create in the same collection.
+     *
+     * @var array<string, array<string, mixed>>
+     */
+    public array $racing = [];
+
     public function __construct()
     {
     }
@@ -59,9 +66,20 @@ final class SubmissionDatabase extends Database
     {
         $attributes = $document->getArrayCopy();
 
-        if ($collection === 'distributionSubmissions' && $this->find($collection, [
+        if (isset($this->racing[$collection])) {
+            $this->seed($collection, $this->racing[$collection]);
+            unset($this->racing[$collection]);
+        }
+
+        $unique = match ($collection) {
+            'distributionSubmissions' => 'key',
+            'distributionReleases' => 'version',
+            default => null,
+        };
+
+        if ($unique !== null && $this->find($collection, [
             Query::equal('appInternalId', [$attributes['appInternalId'] ?? '']),
-            Query::equal('key', [$attributes['key'] ?? '']),
+            Query::equal($unique, [$attributes[$unique] ?? '']),
         ]) !== []) {
             throw new Duplicate('Document already exists');
         }
@@ -105,6 +123,14 @@ final class SubmissionDatabase extends Database
         $rows = \array_slice(\array_values($rows), 0, $limit);
 
         return \array_map(static fn (array $row): Document => new Document($row), $rows);
+    }
+
+    #[\Override]
+    public function count(string $collection, array $queries = [], ?int $max = null): int
+    {
+        $count = \count($this->find($collection, $queries));
+
+        return $max === null ? $count : \min($count, $max);
     }
 
     #[\Override]

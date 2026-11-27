@@ -422,6 +422,9 @@
         "src/Appwrite/Platform/Tasks/ScheduleDistribution.php",
         "src/Appwrite/Platform/Modules/VCS/Http/Installations/",
         "src/Appwrite/Platform/Modules/VCS/Http/GitHub/Events/",
+        "src/Appwrite/Platform/Modules/VCS/Http/Gitea/Events/",
+        "src/Appwrite/Platform/Modules/VCS/Http/Gitlab/Events/",
+        "src/Appwrite/Platform/Modules/VCS/Http/Bitbucket/Events/",
         "packages/detector/"
       ]
     },

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Distribution;
 
+use Appwrite\Distribution\Checks;
 use Appwrite\Distribution\Stores;
 use Appwrite\Distribution\Submission\Checkpoint;
 use Appwrite\Distribution\Submission\Step;
@@ -310,7 +311,7 @@ final class SubmissionsTest extends TestCase
     public static function failedChecks(): \Iterator
     {
         yield 'version the store already has' => [[], [], 88, 'Build 88 is not higher than 88'];
-        yield 'unsigned artifact without a signing identity' => [['signed' => false], [], 0, 'The target has no signing identity.'];
+        yield 'unsigned artifact' => [['signed' => false], [], 0, 'The artifact is not signed.'];
         yield 'target SDK below the Play requirement' => [['manifest' => ['targetSdk' => 34]], [], 0, 'Google Play requires API level 35'];
         yield 'connection the store rejected' => [[], ['connectionId' => 'invalid-connection'], 0, 'The store rejected the credentials of the connection.'];
     }
@@ -353,7 +354,7 @@ final class SubmissionsTest extends TestCase
         $this->assertSame([], $this->store->calls);
     }
 
-    public function testValidateWarningsDoNotFailTheSubmission(): void
+    public function testValidateIgnoresTheTargetIdentityForASignedArtifact(): void
     {
         $this->database->seed('distributionSigningIdentities', [
             '$id' => 'expiring',
@@ -366,10 +367,428 @@ final class SubmissionsTest extends TestCase
         $validated = $this->submissions()->validate(
             $submission,
             new Document([...$this->target->getArrayCopy(), 'signingIdentityId' => 'expiring']),
-            new Document([...$this->artifact->getArrayCopy(), 'signed' => false]),
+            $this->artifact,
         );
 
         $this->assertStep('validated', 'validating', $validated);
+    }
+
+    public function testValidateRefusesAnUnsignedArtifact(): void
+    {
+        $submission = $this->submission();
+
+        $validated = $this->submissions()->validate(
+            $submission,
+            new Document([...$this->target->getArrayCopy(), 'signingIdentityId' => 'expiring']),
+            new Document([...$this->artifact->getArrayCopy(), 'signed' => false]),
+        );
+
+        $this->assertSame('failed', $validated->getAttribute('status'));
+        $this->assertSame(Exception::DISTRIBUTION_CHECK_FAILED, $validated->getAttribute('errorCode'));
+        $this->assertSame('The artifact is not signed.', $validated->getAttribute('errorMessage'));
+        $this->assertNotContains('upload', $this->store->calls);
+    }
+
+    public function testValidatePassesAnArtifactWithAWarning(): void
+    {
+        [, , $target] = $this->apple();
+        $artifact = $this->ios(['manifest' => ['profileExpiresAt' => $this->at(86400 * 3)]]);
+        $submission = $this->submission(['platform' => 'ios', 'provider' => 'apple', 'track' => 'testflight', 'targetId' => 'ios-target', 'targetInternalId' => $target->getSequence()]);
+
+        $check = (new Checks($this->database, new ScriptedStores($this->store)))->run($this->app, $target, 'testflight', $artifact);
+        $validated = $this->submissions()->validate($submission, $target, $artifact);
+
+        $this->assertSame([['signing_expired', 'warning']], \array_map(static fn (array $issue): array => [$issue['code'], $issue['severity']], $check['issues']));
+        $this->assertStep('validated', 'validating', $validated);
+        $this->assertNull($validated->getAttribute('errorCode'));
+    }
+
+    public function testAcceptPassesAReadyArtifactOfTheTarget(): void
+    {
+        $this->submissions()->accept($this->app, $this->target, $this->artifact, 'internal');
+
+        $this->assertSame([], $this->store->calls);
+    }
+
+    /**
+     * @return \Iterator<string, array{array<string, mixed>, array<string, mixed>, string, string, string}>
+     */
+    public static function refusals(): \Iterator
+    {
+        yield 'target of another app' => [['appInternalId' => 'other'], [], 'internal', Exception::DISTRIBUTION_TARGET_NOT_FOUND, 'Distribution target with the requested ID could not be found.'];
+        yield 'artifact of another app' => [[], ['appInternalId' => 'other'], 'internal', Exception::DISTRIBUTION_ARTIFACT_NOT_FOUND, 'Artifact with the requested ID could not be found.'];
+        yield 'artifact not ready' => [[], ['status' => 'processing'], 'internal', Exception::DISTRIBUTION_ARTIFACT_NOT_READY, "Artifact 'artifact' is 'processing'. Only a ready artifact can be submitted."];
+        yield 'artifact for another identifier' => [[], ['identifier' => 'io.example.other'], 'internal', Exception::DISTRIBUTION_ARTIFACT_INVALID, "Artifact 'artifact' was built for 'io.example.other' on android, but target 'target' ships 'io.example.app' on android."];
+        yield 'artifact for another platform' => [[], ['platform' => 'ios'], 'internal', Exception::DISTRIBUTION_ARTIFACT_INVALID, "Artifact 'artifact' was built for 'io.example.app' on ios, but target 'target' ships 'io.example.app' on android."];
+        yield 'target without connection' => [['connectionId' => ''], [], 'internal', Exception::DISTRIBUTION_CONNECTION_INVALID, "Target 'target' has no store connection. Attach one with updateTarget before submitting."];
+        yield 'deleted connection' => [['connectionId' => 'deleted'], [], 'internal', Exception::DISTRIBUTION_CONNECTION_NOT_FOUND, 'Store connection with the requested ID could not be found.'];
+        yield 'connection of another store' => [['connectionId' => 'apple-store'], [], 'internal', Exception::DISTRIBUTION_CONNECTION_INVALID, "A 'android' target needs a 'google' connection."];
+        yield 'no track' => [[], [], '', Exception::DISTRIBUTION_TRACK_INVALID, 'Pass a track or set a default track on the target. Use one of: internal, alpha, beta, production.'];
+        yield 'track of another store' => [[], [], 'testflight', Exception::DISTRIBUTION_TRACK_INVALID, "Track 'testflight' is not a valid track for android. Use one of: internal, alpha, beta, production."];
+        yield 'external testflight without groups' => [['platform' => 'ios', 'connectionId' => 'apple-store'], ['platform' => 'ios'], 'testflight-external', Exception::DISTRIBUTION_TRACK_INVALID, Checks::GROUPS_REQUIRED];
+    }
+
+    /**
+     * @param array<string, mixed> $target
+     * @param array<string, mixed> $artifact
+     */
+    #[DataProvider('refusals')]
+    public function testAcceptRefuses(array $target, array $artifact, string $track, string $type, string $message): void
+    {
+        $this->database->seed('distributionConnections', ['$id' => 'apple-store', 'provider' => 'apple', 'status' => 'active', 'credentials' => []]);
+
+        try {
+            $this->submissions()->accept(
+                $this->app,
+                new Document([...$this->target->getArrayCopy(), ...$target]),
+                new Document([...$this->artifact->getArrayCopy(), ...$artifact]),
+                $track,
+            );
+            $this->fail('The artifact must be refused.');
+        } catch (Exception $exception) {
+            $this->assertSame($type, $exception->getType());
+            $this->assertSame($message, $exception->getMessage());
+        }
+
+        $this->assertSame([], $this->store->calls);
+    }
+
+    /**
+     * @return \Iterator<string, array{array<string, mixed>, array<string, mixed>, string}>
+     */
+    public static function keys(): \Iterator
+    {
+        yield 'android version code' => [[], [], 'target:beta:88'];
+        yield 'ios build number' => [['platform' => 'ios'], ['platform' => 'ios', 'buildNumber' => '17'], 'target:beta:17'];
+        yield 'no version' => [[], ['versionCode' => null], 'target:beta:artifact'];
+    }
+
+    /**
+     * @param array<string, mixed> $target
+     * @param array<string, mixed> $artifact
+     */
+    #[DataProvider('keys')]
+    public function testKeyJoinsTargetTrackAndVersion(array $target, array $artifact, string $key): void
+    {
+        $this->assertSame($key, Submissions::key(
+            new Document([...$this->target->getArrayCopy(), ...$target]),
+            new Document([...$this->artifact->getArrayCopy(), ...$artifact]),
+            'beta',
+        ));
+    }
+
+    public function testExistingFindsTheSubmissionOfTheKeyInTheApp(): void
+    {
+        $this->submission(['key' => 'target:internal:88']);
+        $other = $this->database->seed('distributionApps', ['$id' => 'other-app', 'name' => 'Other']);
+        $submissions = $this->submissions();
+
+        $this->assertSame('submission', $submissions->existing($this->app, 'target:internal:88')->getId());
+        $this->assertTrue($submissions->existing($this->app, 'target:beta:88')->isEmpty());
+        $this->assertTrue($submissions->existing($other, 'target:internal:88')->isEmpty());
+    }
+
+    public function testAssertVersionPassesANewVersion(): void
+    {
+        $this->submission(['track' => 'internal', 'status' => 'reviewing', 'artifactId' => 'older', 'artifactInternalId' => $this->older(87)->getSequence()]);
+
+        $this->submissions()->assertVersion($this->app, $this->target, $this->artifact, 'internal');
+
+        $this->addToAssertionCount(1);
+    }
+
+    /**
+     * @return \Iterator<string, array{string, string}>
+     */
+    public static function resubmittable(): \Iterator
+    {
+        yield 'failed on the track' => ['internal', 'failed'];
+        yield 'canceled on the track' => ['internal', 'canceled'];
+        yield 'live on another track' => ['beta', 'reviewing'];
+    }
+
+    #[DataProvider('resubmittable')]
+    public function testAssertVersionPassesAVersionThatCanBeSubmittedAgain(string $track, string $status): void
+    {
+        $this->submission(['track' => $track, 'status' => $status, 'artifactId' => 'older', 'artifactInternalId' => $this->older(88)->getSequence()]);
+
+        $this->submissions()->assertVersion($this->app, $this->target, $this->artifact, 'internal');
+
+        $this->addToAssertionCount(1);
+    }
+
+    public function testAssertVersionRefusesAVersionAlreadySubmittedToTheTrack(): void
+    {
+        $this->submission(['track' => 'internal', 'status' => 'published', 'artifactId' => 'older', 'artifactInternalId' => $this->older(88)->getSequence()]);
+
+        try {
+            $this->submissions()->assertVersion($this->app, $this->target, $this->artifact, 'internal');
+            $this->fail('A version already on the track must be refused.');
+        } catch (Exception $exception) {
+            $this->assertSame(Exception::DISTRIBUTION_VERSION_INVALID, $exception->getType());
+            $this->assertSame("Version 88 was already submitted to the 'internal' track. Submit an artifact with a higher version code.", $exception->getMessage());
+        }
+    }
+
+    public function testAssertVersionSkipsAnArtifactWithoutAVersion(): void
+    {
+        $this->submission(['track' => 'internal', 'status' => 'published']);
+
+        $this->submissions()->assertVersion($this->app, $this->target, new Document([...$this->artifact->getArrayCopy(), 'versionCode' => null]), 'internal');
+
+        $this->addToAssertionCount(1);
+    }
+
+    /**
+     * @return \Iterator<string, array{array<string, mixed>, array<string, mixed>}>
+     */
+    public static function unautomated(): \Iterator
+    {
+        yield 'target not set to submit automatically' => [['automatic' => false], []];
+        yield 'target of another app' => [['appInternalId' => 'other'], []];
+        yield 'build not ready' => [[], ['status' => 'building']];
+        yield 'build failed' => [[], ['status' => 'failed']];
+        yield 'build without an artifact' => [[], ['artifactId' => '']];
+        yield 'deleted artifact' => [[], ['artifactId' => 'deleted']];
+        yield 'artifact of another app' => [[], ['artifactId' => 'foreign']];
+    }
+
+    /**
+     * @param array<string, mixed> $target
+     * @param array<string, mixed> $build
+     */
+    #[DataProvider('unautomated')]
+    public function testAutomateSkips(array $target, array $build): void
+    {
+        $this->database->seed('distributionArtifacts', [...$this->artifact->getArrayCopy(), '$id' => 'foreign', '$sequence' => null, 'appInternalId' => 'other']);
+
+        $created = $this->submissions()->automate($this->app, $this->automatic($target), $this->build($build));
+
+        $this->assertSame([], $created);
+        $this->assertSame([], $this->database->writes('distributionSubmissions'));
+        $this->assertSame([], $this->database->writes('distributionReleases'));
+    }
+
+    public function testAutomateSubmitsToTheReleaseOfTheVersion(): void
+    {
+        $created = $this->submissions()->automate($this->app, $this->automatic(), $this->build());
+
+        $this->assertCount(1, $created);
+        $submission = $created[0];
+        $this->assertSame('release', $submission->getAttribute('releaseId'));
+        $this->assertSame('artifact', $submission->getAttribute('artifactId'));
+        $this->assertSame('beta', $submission->getAttribute('track'));
+        $this->assertSame('target:beta:88', $submission->getAttribute('key'));
+        $this->assertTrue($submission->getAttribute('automatic'));
+        $this->assertSame('waiting', $submission->getAttribute('status'));
+        $this->assertSame(['release'], $this->releases());
+    }
+
+    public function testAutomateEnqueuesTheSubmission(): void
+    {
+        $created = $this->submissions()->automate($this->app, $this->automatic(), $this->build());
+
+        $events = $this->publisher->getEvents(self::QUEUE);
+        $this->assertCount(1, $events);
+        $this->assertSame('advance', $events[0]['action']);
+        $this->assertSame($created[0]->getId(), $events[0]['id']);
+        $this->assertSame([['write', $created[0]->getId(), 2]], $this->schedules->calls->getArrayCopy());
+    }
+
+    public function testAutomateRefusesAnUnsignedArtifact(): void
+    {
+        $this->database->seed('distributionArtifacts', [...$this->artifact->getArrayCopy(), 'signed' => false]);
+
+        try {
+            $this->submissions()->automate($this->app, $this->automatic(), $this->build());
+            $this->fail('An unsigned artifact must never be submitted.');
+        } catch (Exception $exception) {
+            $this->assertSame(Exception::DISTRIBUTION_CHECK_FAILED, $exception->getType());
+            $this->assertSame('The artifact is not signed.', $exception->getMessage());
+        }
+
+        $this->assertSame([], $this->database->writes('distributionSubmissions'));
+        $this->assertSame([], $this->database->writes('distributionReleases'));
+        $this->assertEmpty($this->publisher->getEvents(self::QUEUE));
+        $this->assertSame([], $this->store->calls);
+    }
+
+    public function testAutomateRefusesAVersionAlreadyOnTheTrack(): void
+    {
+        $this->submission(['key' => 'manual', 'track' => 'beta', 'status' => 'reviewing']);
+
+        try {
+            $this->submissions()->automate($this->app, $this->automatic(), $this->build());
+            $this->fail('A version already on the track must be refused.');
+        } catch (Exception $exception) {
+            $this->assertSame(Exception::DISTRIBUTION_VERSION_INVALID, $exception->getType());
+        }
+
+        $this->assertSame([], $this->database->writes('distributionSubmissions'));
+    }
+
+    /**
+     * @return \Iterator<string, array{array<string, mixed>, string}>
+     */
+    public static function drafts(): \Iterator
+    {
+        yield 'version name' => [['versionName' => '2.0.0'], '2.0.0'];
+        yield 'version code without a version name' => [['versionName' => ''], '88'];
+    }
+
+    /**
+     * @param array<string, mixed> $artifact
+     */
+    #[DataProvider('drafts')]
+    public function testAutomateDraftsAMissingRelease(array $artifact, string $version): void
+    {
+        $this->database->seed('distributionArtifacts', [...$this->artifact->getArrayCopy(), ...$artifact]);
+
+        $created = $this->submissions()->automate($this->app, $this->automatic(), $this->build());
+
+        $this->assertCount(2, $created);
+        [$release, $submission] = $created;
+        $this->assertSame($version, $release->getAttribute('version'));
+        $this->assertSame('draft', $release->getAttribute('status'));
+        $this->assertSame([], $release->getAttribute('notes'));
+        $this->assertSame("{$release->getId()} {$version}", $release->getAttribute('search'));
+        $this->assertSame($this->app->getSequence(), $release->getAttribute('appInternalId'));
+        $this->assertSame($release->getId(), $submission->getAttribute('releaseId'));
+        $this->assertSame('active', $this->stored('distributionReleases', $release->getId())->getAttribute('status'));
+    }
+
+    public function testAutomateUsesTheReleaseOfTheBuild(): void
+    {
+        $this->database->seed('distributionArtifacts', [...$this->artifact->getArrayCopy(), 'versionName' => '9.9.9']);
+
+        $created = $this->submissions()->automate($this->app, $this->automatic(), $this->build(['releaseId' => 'release']));
+
+        $this->assertCount(1, $created);
+        $this->assertSame('release', $created[0]->getAttribute('releaseId'));
+        $this->assertSame(['release'], $this->releases());
+    }
+
+    public function testAutomateRefusesAReleaseOfAnotherApp(): void
+    {
+        $this->database->seed('distributionReleases', ['$id' => 'foreign', 'appInternalId' => 'other', 'version' => '1.2.0']);
+
+        try {
+            $this->submissions()->automate($this->app, $this->automatic(), $this->build(['releaseId' => 'foreign']));
+            $this->fail('A release of another app must be refused.');
+        } catch (Exception $exception) {
+            $this->assertSame(Exception::DISTRIBUTION_RELEASE_NOT_FOUND, $exception->getType());
+        }
+
+        $this->assertSame([], $this->database->writes('distributionSubmissions'));
+    }
+
+    public function testAutomateFindsAReleaseDraftedConcurrently(): void
+    {
+        $this->database->seed('distributionArtifacts', [...$this->artifact->getArrayCopy(), 'versionName' => '3.0.0']);
+        $this->database->racing['distributionReleases'] = ['$id' => 'raced', 'appId' => 'app', 'appInternalId' => $this->app->getSequence(), 'version' => '3.0.0', 'notes' => [], 'status' => 'draft'];
+
+        $created = $this->submissions()->automate($this->app, $this->automatic(), $this->build());
+
+        $this->assertCount(1, $created);
+        $this->assertSame('raced', $created[0]->getAttribute('releaseId'));
+        $this->assertSame(['release', 'raced'], $this->releases());
+    }
+
+    public function testAutomateSubmitsABuildOnce(): void
+    {
+        $submissions = $this->submissions();
+        $this->database->seed('distributionArtifacts', [...$this->artifact->getArrayCopy(), 'versionName' => '2.0.0']);
+
+        $first = $submissions->automate($this->app, $this->automatic(), $this->build());
+        $second = $submissions->automate($this->app, $this->automatic(), $this->build());
+
+        $this->assertCount(2, $first);
+        $this->assertSame([], $second);
+        $this->assertCount(1, $this->database->writes('distributionSubmissions'));
+        $this->assertSame(['release', $first[0]->getId()], $this->releases());
+        $this->assertCount(1, $this->publisher->getEvents(self::QUEUE));
+    }
+
+    public function testAutomateSkipsAKeyAlreadySubmittedBeforeAnyCheck(): void
+    {
+        $this->submission(['key' => 'target:beta:88']);
+        $this->database->seed('distributionArtifacts', [...$this->artifact->getArrayCopy(), 'signed' => false]);
+
+        $this->assertSame([], $this->submissions()->automate($this->app, $this->automatic(), $this->build()));
+    }
+
+    public function testAutomateDefaultsToTheInternalTestingTrackOfGooglePlay(): void
+    {
+        $created = $this->submissions()->automate($this->app, $this->automatic(['track' => '']), $this->build());
+
+        $this->assertCount(1, $created);
+        $this->assertSame('internal', $created[0]->getAttribute('track'));
+        $this->assertSame('target:internal:88', $created[0]->getAttribute('key'));
+    }
+
+    public function testAutomateDefaultsToTestFlightOnTheAppStore(): void
+    {
+        [, , $target] = $this->apple();
+        $this->ios();
+        $target = $this->database->seed('distributionTargets', [...$target->getArrayCopy(), 'automatic' => true, 'track' => '']);
+
+        $created = $this->submissions()->automate($this->app, $target, $this->build(['targetId' => 'ios-target', 'targetInternalId' => $target->getSequence(), 'artifactId' => 'ios-artifact']));
+
+        $this->assertCount(1, $created);
+        $this->assertSame('testflight', $created[0]->getAttribute('track'));
+        $this->assertSame('ios-target:testflight:17', $created[0]->getAttribute('key'));
+    }
+
+    public function testAutomateSubmitsDespiteAWarning(): void
+    {
+        [, , $target] = $this->apple();
+        $this->ios(['manifest' => ['profileExpiresAt' => $this->at(86400 * 3)]]);
+        $target = $this->database->seed('distributionTargets', [...$target->getArrayCopy(), 'automatic' => true, 'track' => 'testflight']);
+
+        $created = $this->submissions()->automate($this->app, $target, $this->build(['targetId' => 'ios-target', 'targetInternalId' => $target->getSequence(), 'artifactId' => 'ios-artifact']));
+
+        $this->assertCount(1, $created);
+        $this->assertSame('waiting', $created[0]->getAttribute('status'));
+        $this->assertCount(1, $this->database->writes('distributionSubmissions'));
+    }
+
+    public function testAutomateRefusesAnExpiredProvisioningProfile(): void
+    {
+        [, , $target] = $this->apple();
+        $this->ios(['manifest' => ['profileExpiresAt' => $this->at(-60)]]);
+        $target = $this->database->seed('distributionTargets', [...$target->getArrayCopy(), 'automatic' => true, 'track' => 'testflight']);
+
+        try {
+            $this->submissions()->automate($this->app, $target, $this->build(['targetId' => 'ios-target', 'targetInternalId' => $target->getSequence(), 'artifactId' => 'ios-artifact']));
+            $this->fail('An artifact signed with an expired provisioning profile must never be submitted.');
+        } catch (Exception $exception) {
+            $this->assertSame(Exception::DISTRIBUTION_CHECK_FAILED, $exception->getType());
+            $this->assertStringStartsWith('The provisioning profile of the artifact expired on ', $exception->getMessage());
+        }
+
+        $this->assertSame([], $this->database->writes('distributionSubmissions'));
+    }
+
+    /**
+     * @return \Iterator<string, array{string}>
+     */
+    public static function releaseStatuses(): \Iterator
+    {
+        yield 'active' => ['active'];
+        yield 'published' => ['published'];
+        yield 'attention' => ['attention'];
+    }
+
+    #[DataProvider('releaseStatuses')]
+    public function testAutomateReusesTheReleaseOfTheVersionWhateverItsStatus(string $status): void
+    {
+        $this->database->seed('distributionReleases', [...$this->release->getArrayCopy(), 'status' => $status]);
+
+        $created = $this->submissions()->automate($this->app, $this->automatic(), $this->build());
+
+        $this->assertCount(1, $created);
+        $this->assertSame('release', $created[0]->getAttribute('releaseId'));
+        $this->assertSame(['release'], $this->releases());
     }
 
     /**
@@ -1611,6 +2030,64 @@ final class SubmissionsTest extends TestCase
         ]);
 
         return [new RecordingApple($privateKey), $connection, $target];
+    }
+
+    /**
+     * @param array<string, mixed> $attributes
+     */
+    private function ios(array $attributes = []): Document
+    {
+        return $this->database->seed('distributionArtifacts', [
+            ...$this->artifact->getArrayCopy(),
+            '$id' => 'ios-artifact',
+            '$sequence' => null,
+            'platform' => 'ios',
+            'type' => 'ipa',
+            'identifier' => 'io.example.ios',
+            'versionName' => '1.2.0',
+            'versionCode' => null,
+            'buildNumber' => '17',
+            ...$attributes,
+        ]);
+    }
+
+    /**
+     * @param array<string, mixed> $attributes
+     */
+    private function automatic(array $attributes = []): Document
+    {
+        return $this->database->seed('distributionTargets', [...$this->target->getArrayCopy(), 'automatic' => true, 'track' => 'beta', ...$attributes]);
+    }
+
+    /**
+     * @param array<string, mixed> $attributes
+     */
+    private function build(array $attributes = []): Document
+    {
+        return $this->database->seed('distributionBuilds', [
+            '$id' => 'build',
+            'appId' => 'app',
+            'appInternalId' => $this->app->getSequence(),
+            'targetId' => 'target',
+            'targetInternalId' => $this->target->getSequence(),
+            'status' => 'ready',
+            'artifactId' => 'artifact',
+            'releaseId' => '',
+            ...$attributes,
+        ]);
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function releases(): array
+    {
+        return \array_map(static fn (Document $release): string => $release->getId(), $this->database->find('distributionReleases'));
+    }
+
+    private function older(int $versionCode): Document
+    {
+        return $this->database->seed('distributionArtifacts', [...$this->artifact->getArrayCopy(), '$id' => 'older', '$sequence' => null, 'versionCode' => $versionCode]);
     }
 
     private function submissions(?Stores $stores = null): Submissions

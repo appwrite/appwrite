@@ -194,6 +194,11 @@ final class VCSGiteaConsoleClientTest extends Scope
         $this->gitHelper('git push origin main', $workdir);
         $this->gitHelper('git push origin main:feature', $workdir);
 
+        $branch = $this->giteaApiHelper(Client::METHOD_GET, '/api/v1/repos/' . self::GITEA_USERNAME . '/' . $repositoryName . '/branches/main');
+        $this->assertSame(200, $branch['headers']['status-code'], \json_encode($branch['body']));
+        $this->waitForPushHelper($repositoryName, 'main', $branch['body']['commit']['id']);
+        $this->waitForPushHelper($repositoryName, 'feature', $branch['body']['commit']['id']);
+
         $function = $this->client->call(Client::METHOD_POST, '/functions', $headers, [
             'functionId' => Id::unique(),
             'name' => 'Gitea retention',
@@ -876,6 +881,22 @@ final class VCSGiteaConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'authorization' => 'Basic ' . \base64_encode($username . ':' . self::GITEA_PASSWORD),
         ], $params);
+    }
+
+    /**
+     * Gitea processes a push asynchronously, so a hook created before it is processed still receives it.
+     */
+    private function waitForPushHelper(string $repositoryName, string $branch, string $commit): void
+    {
+        $this->assertEventually(function () use ($repositoryName, $branch, $commit): void {
+            $feeds = $this->giteaApiHelper(Client::METHOD_GET, '/api/v1/repos/' . self::GITEA_USERNAME . '/' . $repositoryName . '/activities/feeds');
+            $this->assertSame(200, $feeds['headers']['status-code'], \json_encode($feeds['body']));
+
+            $pushes = \array_filter($feeds['body'], fn (array $activity): bool => ($activity['op_type'] ?? '') === 'commit_repo'
+                && \in_array($activity['ref_name'] ?? '', [$branch, 'refs/heads/' . $branch], true)
+                && \str_contains((string) ($activity['content'] ?? ''), $commit));
+            $this->assertNotEmpty($pushes, "Gitea has not processed the push of {$commit} to {$branch} yet.");
+        }, 30000, 500);
     }
 
     private function gitHelper(string $command, string $directory): void

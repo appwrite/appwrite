@@ -171,6 +171,14 @@ readonly class Stores
         return Config::getParam('distribution')['tracks'][$provider->value] ?? [];
     }
 
+    public static function testing(Provider $provider): string
+    {
+        return match ($provider) {
+            Provider::Apple => Release::TRACK_TESTFLIGHT,
+            Provider::Google => Release::TRACK_INTERNAL,
+        };
+    }
+
     public function release(Document $submission, Document $release, Document $target, Document $artifact): Release
     {
         $provider = Provider::tryFrom((string) $submission->getAttribute('provider', ''));

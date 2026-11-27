@@ -3,6 +3,7 @@
 namespace Appwrite\Distribution;
 
 use Appwrite\Distribution\Artifact\Status as ArtifactStatus;
+use Appwrite\Distribution\Build\Status as BuildStatus;
 use Appwrite\Distribution\Check\Code;
 use Appwrite\Distribution\Check\Severity;
 use Appwrite\Distribution\Connection\Status as ConnectionStatus;
@@ -211,6 +212,182 @@ readonly class Submissions
     public static function isAt(Document $submission, ?Step $step): bool
     {
         return Step::tryFrom((string) $submission->getAttribute('step', '')) === $step;
+    }
+
+    public static function key(Document $target, Document $artifact, string $track): string
+    {
+        $platform = Platform::from((string) $target->getAttribute('platform', ''));
+
+        return "{$target->getId()}:{$track}:" . (self::versionOf($artifact, $platform) ?: $artifact->getId());
+    }
+
+    /**
+     * @return list<Document>
+     */
+    public function automate(Document $app, Document $target, Document $build): array
+    {
+        if (
+            $target->getAttribute('automatic', false) !== true
+            || $target->getAttribute('appInternalId') !== $app->getSequence()
+            || $build->getAttribute('status') !== BuildStatus::Ready->value
+        ) {
+            return [];
+        }
+
+        $artifactId = (string) $build->getAttribute('artifactId', '');
+        $artifact = $artifactId === '' ? new Document() : $this->dbForProject->getDocument('distributionArtifacts', $artifactId);
+
+        if ($artifact->isEmpty() || $artifact->getAttribute('appInternalId') !== $app->getSequence()) {
+            return [];
+        }
+
+        $platform = Platform::from((string) $target->getAttribute('platform', ''));
+        $track = (string) $target->getAttribute('track', '') ?: Stores::testing(Stores::provider($platform));
+        $key = self::key($target, $artifact, $track);
+
+        if (!$this->existing($app, $key)->isEmpty()) {
+            return [];
+        }
+
+        $check = (new Checks($this->dbForProject, $this->stores))->run($app, $target, $track, $artifact, store: false);
+        $errors = \array_filter($check['issues'], static fn (array $issue): bool => $issue['severity'] === Severity::Error->value);
+
+        if ($errors !== []) {
+            throw new Exception(Exception::DISTRIBUTION_CHECK_FAILED, \implode(' ', \array_column($errors, 'message')));
+        }
+
+        $this->accept($app, $target, $artifact, $track);
+        $this->assertVersion($app, $target, $artifact, $track);
+
+        $created = [];
+        $releaseId = (string) $build->getAttribute('releaseId', '');
+
+        if ($releaseId !== '') {
+            $release = $this->dbForProject->getDocument('distributionReleases', $releaseId);
+
+            if ($release->isEmpty() || $release->getAttribute('appInternalId') !== $app->getSequence()) {
+                throw new Exception(Exception::DISTRIBUTION_RELEASE_NOT_FOUND);
+            }
+        } else {
+            $version = (string) $artifact->getAttribute('versionName', '') ?: (string) ($artifact->getAttribute('versionCode') ?? $artifact->getAttribute('buildNumber', ''));
+            $release = $this->releaseNamed($app, $version);
+
+            if ($release->isEmpty()) {
+                $drafted = $this->draft($app, $version);
+
+                if ($drafted === null) {
+                    $release = $this->releaseNamed($app, $version);
+                } else {
+                    $release = $drafted;
+                    $created[] = $drafted;
+                }
+            }
+        }
+
+        $submission = $this->create($app, $release, $target, $artifact, $track, true, $key);
+
+        if ($submission !== null) {
+            $created[] = $submission;
+        }
+
+        return $created;
+    }
+
+    /**
+     * Refuses an artifact the target cannot submit to the track.
+     */
+    public function accept(Document $app, Document $target, Document $artifact, string $track): void
+    {
+        if ($target->getAttribute('appInternalId') !== $app->getSequence()) {
+            throw new Exception(Exception::DISTRIBUTION_TARGET_NOT_FOUND);
+        }
+
+        if ($artifact->getAttribute('appInternalId') !== $app->getSequence()) {
+            throw new Exception(Exception::DISTRIBUTION_ARTIFACT_NOT_FOUND);
+        }
+
+        if ($artifact->getAttribute('status') !== ArtifactStatus::Ready->value) {
+            throw new Exception(Exception::DISTRIBUTION_ARTIFACT_NOT_READY, "Artifact '{$artifact->getId()}' is '{$artifact->getAttribute('status')}'. Only a ready artifact can be submitted.");
+        }
+
+        $platform = Platform::from((string) $target->getAttribute('platform', ''));
+
+        if ($artifact->getAttribute('platform') !== $platform->value || $artifact->getAttribute('identifier') !== $target->getAttribute('identifier')) {
+            throw new Exception(Exception::DISTRIBUTION_ARTIFACT_INVALID, "Artifact '{$artifact->getId()}' was built for '{$artifact->getAttribute('identifier')}' on {$artifact->getAttribute('platform')}, but target '{$target->getId()}' ships '{$target->getAttribute('identifier')}' on {$platform->value}.");
+        }
+
+        $provider = Stores::provider($platform);
+        $connectionId = (string) $target->getAttribute('connectionId', '');
+
+        if ($connectionId === '') {
+            throw new Exception(Exception::DISTRIBUTION_CONNECTION_INVALID, "Target '{$target->getId()}' has no store connection. Attach one with updateTarget before submitting.");
+        }
+
+        $connection = $this->dbForProject->getDocument('distributionConnections', $connectionId);
+
+        if ($connection->isEmpty()) {
+            throw new Exception(Exception::DISTRIBUTION_CONNECTION_NOT_FOUND);
+        }
+
+        if ($connection->getAttribute('provider') !== $provider->value) {
+            throw new Exception(Exception::DISTRIBUTION_CONNECTION_INVALID, "A '{$platform->value}' target needs a '{$provider->value}' connection.");
+        }
+
+        $tracks = $this->stores->tracks($provider);
+
+        if ($track === '') {
+            throw new Exception(Exception::DISTRIBUTION_TRACK_INVALID, 'Pass a track or set a default track on the target. Use one of: ' . \implode(', ', $tracks) . '.');
+        }
+
+        if (!\in_array($track, $tracks, true)) {
+            throw new Exception(Exception::DISTRIBUTION_TRACK_INVALID, "Track '{$track}' is not a valid track for {$platform->value}. Use one of: " . \implode(', ', $tracks) . '.');
+        }
+
+        $configuration = $target->getAttribute('configuration', []);
+
+        if (Stores::isMissingGroups($track, \is_array($configuration) ? $configuration : [])) {
+            throw new Exception(Exception::DISTRIBUTION_TRACK_INVALID, Checks::GROUPS_REQUIRED);
+        }
+    }
+
+    /**
+     * Refuses a version the target already submitted to the track, unless that submission failed or was canceled.
+     */
+    public function assertVersion(Document $app, Document $target, Document $artifact, string $track): void
+    {
+        $platform = Platform::from((string) $target->getAttribute('platform', ''));
+        $version = self::versionOf($artifact, $platform);
+
+        if ($version === '') {
+            return;
+        }
+
+        $attribute = self::versionAttribute($platform);
+        $artifacts = $this->dbForProject->find('distributionArtifacts', [
+            Query::equal('appInternalId', [$app->getSequence()]),
+            Query::equal('identifier', [$artifact->getAttribute('identifier')]),
+            Query::equal($attribute, [$artifact->getAttribute($attribute)]),
+            Query::limit(APP_LIMIT_SUBQUERY),
+        ]);
+
+        $submitted = $this->dbForProject->count('distributionSubmissions', [
+            Query::equal('targetInternalId', [$target->getSequence()]),
+            Query::equal('track', [$track]),
+            Query::equal('artifactInternalId', \array_map(static fn (Document $document): string => (string) $document->getSequence(), $artifacts)),
+            Query::equal('status', \array_values(\array_diff(Status::values(), [Status::Failed->value, Status::Canceled->value]))),
+        ], 1);
+
+        if ($submitted > 0) {
+            throw new Exception(Exception::DISTRIBUTION_VERSION_INVALID, "Version {$version} was already submitted to the '{$track}' track. Submit an artifact with a higher version code.");
+        }
+    }
+
+    public function existing(Document $app, string $key): Document
+    {
+        return $this->dbForProject->findOne('distributionSubmissions', [
+            Query::equal('appInternalId', [$app->getSequence()]),
+            Query::equal('key', [$key]),
+        ]);
     }
 
     public function create(Document $app, Document $release, Document $target, Document $artifact, string $track, bool $automatic, string $key): ?Document
@@ -863,6 +1040,46 @@ readonly class Submissions
         $connectionId = (string) $target->getAttribute('connectionId', '');
 
         return $connectionId === '' ? new Document() : $this->dbForProject->getDocument('distributionConnections', $connectionId);
+    }
+
+    private function releaseNamed(Document $app, string $version): Document
+    {
+        return $this->dbForProject->findOne('distributionReleases', [
+            Query::equal('appInternalId', [$app->getSequence()]),
+            Query::equal('version', [$version]),
+        ]);
+    }
+
+    private function draft(Document $app, string $version): ?Document
+    {
+        $releaseId = Id::unique();
+
+        try {
+            return $this->dbForProject->createDocument('distributionReleases', new Document([
+                '$id' => $releaseId,
+                'appId' => $app->getId(),
+                'appInternalId' => $app->getSequence(),
+                'version' => $version,
+                'notes' => [],
+                'status' => ReleaseStatus::Draft->value,
+                'search' => \implode(' ', [$releaseId, $version]),
+            ]));
+        } catch (Duplicate) {
+            return null;
+        }
+    }
+
+    private static function versionOf(Document $artifact, Platform $platform): string
+    {
+        return (string) $artifact->getAttribute(self::versionAttribute($platform), '');
+    }
+
+    private static function versionAttribute(Platform $platform): string
+    {
+        return match ($platform) {
+            Platform::Ios => 'buildNumber',
+            Platform::Android => 'versionCode',
+        };
     }
 
     private function releaseOf(Document $submission): Document
