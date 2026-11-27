@@ -63,6 +63,8 @@ import { BuildSettings } from './BuildSettings'
 import { VariablesSettingsCard } from '@/components/global/shared/VariablesSettingsCard'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useT } from '@/lib/i18n/translate'
+import { useActiveEnvironmentId } from '@/lib/active-environment'
+import { EnvironmentGitNotice } from '@/components/global/shared/EnvironmentGitNotice'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { AnalyticsToggle } from './AnalyticsToggle'
 import { getVcsProvider } from '@/lib/vcs/providers'
@@ -88,6 +90,7 @@ export function RepositoryConfigView({
   const { features } = useConsoleProfile()
   const [analytics, setAnalytics] = useState(true)
   const { projectId } = useParams({ strict: false })
+  const environmentId = useActiveEnvironmentId(projectId)
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const {
@@ -571,6 +574,19 @@ export function RepositoryConfigView({
       </div>
     </div>
   )
+
+  // Git installations cannot be connected from inside an environment
+  if (environmentId) {
+    return (
+      <WizardLayout
+        title={t('Create site')}
+        fallbackPath={`/projects/${projectId}/sites`}
+        fullscreen
+      >
+        <EnvironmentGitNotice />
+      </WizardLayout>
+    )
+  }
 
   return (
     <WizardLayout
