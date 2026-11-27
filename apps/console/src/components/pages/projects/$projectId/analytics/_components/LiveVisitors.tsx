@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { Link } from '@tanstack/react-router'
+import { UserRound } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 import { useDocumentVisible } from '@/hooks/use-document-visible'
@@ -12,10 +14,97 @@ import {
   ANALYTICS_LIVE_POLL_INTERVAL_MS,
   ANALYTICS_LIVE_WINDOW_MINUTES,
   useAnalyticsLivePages,
+  useAnalyticsLiveUsers,
   useAnalyticsLiveVisitors,
 } from '@/lib/react-query/hooks'
+import { PhotoAvatar } from '@/components/global/shared/Avatar'
+import {
+  analyticsUserHref,
+  analyticsUserLabel,
+  useAnalyticsUserDirectory,
+  type AnalyticsUser,
+} from '@/lib/analytics/user-directory'
 import { formatNumber } from './format'
 import { isKnownBreakdownValue } from '@/lib/analytics/breakdown-values'
+
+/** Avatars on the header pill before the rest fold into the count. */
+const PILL_AVATARS = 3
+/** Signed-in users listed in the popover. */
+const POPOVER_USERS = 5
+
+/** A live user's photo, or a neutral person for an ID with no project user. */
+function LiveUserAvatar({
+  projectId,
+  userId,
+  user,
+  className,
+}: {
+  projectId: string
+  userId: string
+  user: AnalyticsUser | undefined
+  className?: string
+}) {
+  if (!user) {
+    return (
+      <span
+        className={cn(
+          'flex shrink-0 items-center justify-center rounded-full bg-muted',
+          className,
+        )}
+        aria-hidden
+      >
+        <UserRound className="h-3 w-3 text-muted-foreground" />
+      </span>
+    )
+  }
+  return (
+    <PhotoAvatar
+      projectId={projectId}
+      userId={userId}
+      name={analyticsUserLabel(userId, user)}
+      size="xs"
+      className={cn('shrink-0', className)}
+    />
+  )
+}
+
+/**
+ * Overlapping avatars for the people signed in right now, drawn inside the
+ * pill (a button), so they're decoration: the popover lists and links them.
+ */
+function LiveUserStack({
+  projectId,
+  userIds,
+  lookup,
+}: {
+  projectId: string
+  userIds: string[]
+  lookup: (userId: string) => AnalyticsUser | undefined
+}) {
+  if (userIds.length === 0) return null
+  const visible = userIds.slice(0, PILL_AVATARS)
+  return (
+    <span className="flex items-center" aria-hidden>
+      {visible.map((userId, index) => (
+        <span
+          key={userId}
+          className={cn(
+            'relative rounded-full ring-2 ring-background',
+            index > 0 && '-ms-1.5',
+          )}
+          style={{ zIndex: visible.length - index }}
+        >
+          <LiveUserAvatar
+            projectId={projectId}
+            userId={userId}
+            user={lookup(userId)}
+            className="h-5 w-5 text-[8px]"
+          />
+        </span>
+      ))}
+    </span>
+  )
+}
 
 function LiveDot({ active }: { active: boolean }) {
   return (
@@ -47,8 +136,7 @@ type LiveVisitorsProps = {
   mobile?: boolean
 }
 
-const LIVE_TEXT_CLASS =
-  'text-emerald-700 dark:text-emerald-400'
+const LIVE_TEXT_CLASS = 'text-emerald-700 dark:text-emerald-400'
 
 /**
  * "N online" pill: unique visitors with activity in the last few minutes,
@@ -67,11 +155,21 @@ export function LiveVisitors({
   const [open, setOpen] = useState(false)
   const polling = enabled && isDocumentVisible
 
-  const { visitors, checkedAt, error } = useAnalyticsLiveVisitors(
+  const { visitors, users, checkedAt, error } = useAnalyticsLiveVisitors(
     enabled ? projectId : null,
     propertyId,
     polling,
   )
+  const signedIn = users ?? 0
+  // Who they are: only while someone identified is live, and for the compact
+  // list variant only once the popover is open.
+  const { users: liveUsers, isLoading: usersLoading } = useAnalyticsLiveUsers(
+    projectId,
+    propertyId,
+    polling && signedIn > 0 && (variant === 'pill' || open),
+  )
+  const lookupUser = useAnalyticsUserDirectory(projectId)
+  const liveUserIds = signedIn > 0 ? liveUsers.map((row) => row.value) : []
   const { pages: livePages, isLoading: pagesLoading } = useAnalyticsLivePages(
     projectId,
     propertyId,
@@ -123,6 +221,11 @@ export function LiveVisitors({
             )}
             aria-label={t(mobile ? 'Users online now' : 'Visitors online now')}
           >
+            <LiveUserStack
+              projectId={projectId}
+              userIds={liveUserIds}
+              lookup={lookupUser}
+            />
             {hasValue ? (
               <AnimatedCounter
                 value={count}
@@ -145,6 +248,14 @@ export function LiveVisitors({
                 ? t(mobile ? 'user online' : 'visitor online')
                 : t(mobile ? 'users online' : 'visitors online')}
             </p>
+            {hasValue && signedIn > 0 ? (
+              <span className="ms-auto shrink-0 text-[11px] text-muted-foreground">
+                <span className="font-medium tabular-nums text-foreground">
+                  {formatNumber(signedIn)}
+                </span>{' '}
+                {t('signed in')}
+              </span>
+            ) : null}
           </div>
           <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
             {t(
@@ -169,6 +280,79 @@ export function LiveVisitors({
             </p>
           ) : null}
         </div>
+        {hasValue && signedIn > 0 ? (
+          <div className="border-b border-border px-3 py-2.5">
+            <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              {t('Signed in now')}
+            </p>
+            {usersLoading && liveUserIds.length === 0 ? (
+              <div className="space-y-1.5" aria-hidden>
+                {Array.from({ length: Math.min(signedIn, 3) }).map(
+                  (_, index) => (
+                    <div
+                      key={index}
+                      className="h-6 animate-pulse rounded bg-muted/50"
+                    />
+                  ),
+                )}
+              </div>
+            ) : (
+              <div className="space-y-0.5">
+                {liveUserIds.slice(0, POPOVER_USERS).map((userId) => {
+                  const user = lookupUser(userId)
+                  const label = analyticsUserLabel(userId, user)
+                  const content = (
+                    <>
+                      <LiveUserAvatar
+                        projectId={projectId}
+                        userId={userId}
+                        user={user}
+                        className="h-4 w-4 text-[7px]"
+                      />
+                      <span
+                        className={cn(
+                          'min-w-0 flex-1 truncate text-[12px] text-foreground',
+                          !user && 'font-mono text-[11px]',
+                        )}
+                        title={label}
+                      >
+                        {label}
+                      </span>
+                    </>
+                  )
+                  // Project users open in Auth; other IDs have nowhere to go.
+                  return user ? (
+                    <Link
+                      key={userId}
+                      to={analyticsUserHref(projectId, userId)}
+                      onClick={() => setOpen(false)}
+                      className="flex h-6 items-center gap-2 rounded px-1.5 transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      {content}
+                    </Link>
+                  ) : (
+                    <div
+                      key={userId}
+                      className="flex h-6 items-center gap-2 px-1.5"
+                    >
+                      {content}
+                    </div>
+                  )
+                })}
+                {signedIn > Math.min(liveUserIds.length, POPOVER_USERS) ? (
+                  <p className="px-1.5 pt-1 text-[11px] text-muted-foreground">
+                    {t('and {count} more').replace(
+                      '{count}',
+                      formatNumber(
+                        signedIn - Math.min(liveUserIds.length, POPOVER_USERS),
+                      ),
+                    )}
+                  </p>
+                ) : null}
+              </div>
+            )}
+          </div>
+        ) : null}
         <div className="px-3 py-2.5">
           <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
             {t(mobile ? 'Active screens' : 'Active pages')}

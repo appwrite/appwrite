@@ -53,10 +53,8 @@ class Create extends Base
                 namespace: 'videos',
                 group: 'renditions',
                 name: 'createRendition',
-                // Hidden until videos is generally available; preview SDK builds show it.
-                hide: System::getEnv('_APP_SDK_PREVIEW', 'disabled') !== 'enabled',
                 description: '/docs/references/videos/create-rendition.md',
-                auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_ACCEPTED,
@@ -91,8 +89,13 @@ class Create extends Base
         Event $queueForEvents,
         VideoPublisher $publisherForVideos
     ): void {
+        // Each encode spends the project's compute, so only the console and API keys may start one.
+        $roles = $authorization->getRoles();
+        if (!$user->isKey($roles) && !$user->isPrivileged($roles)) {
+            throw new Exception(Exception::USER_UNAUTHORIZED, 'Renditions can only be created from the console or with an API key.');
+        }
+
         $video = $this->getAuthorizedVideo($dbForProject, $authorization, $user, $videoId);
-        $this->assertCanUpdateVideo($authorization, $user, $video);
 
         $profile = $authorization->skip(fn () => $dbForProject->getDocument('videosProfiles', $profileId));
 

@@ -13,6 +13,12 @@ import {
   toBytes,
 } from '@/lib/alerts/metrics'
 import {
+  alertingLimits,
+  countResponders,
+  defaultProbeInterval,
+  monitorCaps,
+} from '@/lib/alerts/plan-limits'
+import {
   fillBuckets,
   firings,
   growth,
@@ -26,8 +32,11 @@ import {
   groupAlertsByDay,
 } from '@/lib/alerts/timeline'
 import {
+  DEFAULT_PROBE_CONDITION,
+  buildProbeRules,
   buildRules,
   parseMonitor,
+  parseProbeRules,
   parseRules,
   type Monitor,
 } from '@/lib/appwrite/monitors'
@@ -52,7 +61,14 @@ import {
   parseStatusCodes,
   smtpTlsMode,
 } from '@/lib/alerts/probes'
-import type { Alert, ProbeType } from '@/lib/appwrite/monitors'
+import type {
+  Alert,
+  ParsedMonitor,
+  ProbeCondition,
+  ProbeType,
+} from '@/lib/appwrite/monitors'
+
+type ParsedMonitorOf<T extends ProbeType> = ParsedMonitor & { type: T }
 
 describe('alert byte thresholds', () => {
   test.each([5e9, 1e12, 999_999_999, 1_234_567_891, 1_500, 0])(
@@ -130,6 +146,7 @@ describe('alert rule form', () => {
     const input = monitorInputFromForm(emptyRuleForm(), t)
     expect(Object.keys(input).sort()).toEqual([
       'cooldown',
+      'escalationId',
       'name',
       'notify',
       'rules',
@@ -137,6 +154,8 @@ describe('alert rule form', () => {
       'window',
     ])
     expect(input.notify).toEqual(['owner'])
+    // Empty clears an escalation, so moving a monitor back to roles stops its escalation.
+    expect(input.escalationId).toBe('')
     expect(input.severity).toBe('warning')
   })
 
@@ -355,13 +374,15 @@ describe('probe monitors', () => {
         timeout: 10,
         cooldown: 3600,
         notify: ['owner'],
+        escalationId: '',
         severity: 'warning',
         url: 'https://example.com/health',
         method: 'GET',
         headers: { Accept: 'application/json', 'X-Token': 'a:b' },
         body: '',
-        statusCodes: [200, 204],
-        certificateDays: 14,
+        rules: [
+          '{"method":"or","values":[{"method":"notEqual","attribute":"statusCode","values":[200,204]},{"method":"and","values":[{"method":"lessThan","attribute":"certificateDays","values":[14]},{"method":"lessThan","attribute":"certificateLifetime","values":[25]}]}]}',
+        ],
       },
     })
 
@@ -371,6 +392,7 @@ describe('probe monitors', () => {
     })
     expect(Object.keys(smtp.params).sort()).toEqual([
       'cooldown',
+      'escalationId',
       'host',
       'interval',
       'name',
@@ -413,21 +435,18 @@ describe('probe monitors', () => {
         method: '',
         headers: {},
         body: '',
-        statusCodes: [],
-        certificateDays: 0,
         domain: '',
         record: '',
         resolver: '',
-        answer: '',
         host: '',
         port: 0,
-        tlsMode: '',
+        tlsMode: null,
+        rules: [],
         ...params,
         $id: 'm1',
         $createdAt: '',
         $updatedAt: '',
         type,
-        rules: [],
         resourceType: 'project',
         resourceId: 'p1',
         enabled: true,
@@ -482,11 +501,101 @@ describe('probe monitors', () => {
     expect(parseStatusCodes('99')).toBeNull()
   })
 
-  test('derives the SMTP TLS mode from the port when none is set', () => {
-    expect(smtpTlsMode(465, '')).toBe('implicit')
-    expect(smtpTlsMode(587, '')).toBe('starttls')
-    expect(smtpTlsMode(25, '')).toBe('none')
+  test('derives the SMTP TLS mode from the port when it is auto', () => {
+    expect(smtpTlsMode(465, 'auto')).toBe('implicit')
+    expect(smtpTlsMode(587, 'auto')).toBe('starttls')
+    expect(smtpTlsMode(25, 'auto')).toBe('none')
     expect(smtpTlsMode(25, 'starttls')).toBe('starttls')
+  })
+
+  test('writes the rules the server reads for monitors created before rules', () => {
+    // Without rules the server fires on these defaults, so they read back as the empty form.
+    expect(buildProbeRules('http', DEFAULT_PROBE_CONDITION)).toEqual([
+      '{"method":"or","values":[{"method":"notBetween","attribute":"statusCode","values":[200,299]},{"method":"and","values":[{"method":"lessThan","attribute":"certificateDays","values":[14]},{"method":"lessThan","attribute":"certificateLifetime","values":[25]}]}]}',
+    ])
+    expect(
+      buildProbeRules('http', {
+        ...DEFAULT_PROBE_CONDITION,
+        statusCodes: [301],
+        certificateDays: 0,
+      }),
+    ).toEqual(['{"method":"notEqual","attribute":"statusCode","values":[301]}'])
+    expect(buildProbeRules('dns', DEFAULT_PROBE_CONDITION)).toEqual([
+      '{"method":"equal","attribute":"answers","values":[0]}',
+    ])
+    expect(
+      buildProbeRules('dns', {
+        ...DEFAULT_PROBE_CONDITION,
+        answer: ' "Mail.Example.com." ',
+      }),
+    ).toEqual([
+      '{"method":"or","values":[{"method":"equal","attribute":"answers","values":[0]},{"method":"notEqual","attribute":"answer","values":["mail.example.com"]}]}',
+    ])
+    expect(buildProbeRules('tcp', DEFAULT_PROBE_CONDITION)).toEqual([])
+    expect(buildProbeRules('smtp', DEFAULT_PROBE_CONDITION)).toEqual([])
+  })
+
+  test.each<ProbeCondition>([
+    {
+      ...DEFAULT_PROBE_CONDITION,
+      statusCodes: [200, 204],
+      certificateDays: 30,
+    },
+    { ...DEFAULT_PROBE_CONDITION, certificateDays: 0 },
+  ])('reads HTTP rules back into the fields that wrote them', (condition) => {
+    expect(parseProbeRules('http', buildProbeRules('http', condition))).toEqual(
+      condition,
+    )
+  })
+
+  test('reads the server floats and no rules as the fields', () => {
+    // PHP encodes the stored lifetime as 25.0, which JSON reads as 25.
+    expect(
+      parseProbeRules('http', [
+        '{"method":"or","values":[{"method":"notBetween","attribute":"statusCode","values":[200,299]},{"method":"and","values":[{"method":"lessThan","attribute":"certificateDays","values":[7]},{"method":"lessThan","attribute":"certificateLifetime","values":[25.0]}]}]}',
+      ]),
+    ).toEqual({ ...DEFAULT_PROBE_CONDITION, certificateDays: 7 })
+    expect(parseProbeRules('http', [])).toEqual(DEFAULT_PROBE_CONDITION)
+    expect(
+      parseProbeRules(
+        'dns',
+        buildProbeRules('dns', {
+          ...DEFAULT_PROBE_CONDITION,
+          answer: '203.0.113.10',
+        }),
+      ),
+    ).toEqual({ ...DEFAULT_PROBE_CONDITION, answer: '203.0.113.10' })
+  })
+
+  test('keeps rules set through the API until a field they cover changes', () => {
+    const latency =
+      '{"method":"greaterThan","attribute":"latency","values":[2000]}'
+    expect(parseProbeRules('http', [latency])).toBeNull()
+    const monitor = parseMonitor({
+      $id: 'm1',
+      $createdAt: '',
+      $updatedAt: '',
+      type: 'http',
+      url: 'https://example.com',
+      method: 'GET',
+      headers: {},
+      body: '',
+      rules: [latency],
+      interval: 60,
+      timeout: 10,
+      cooldown: 3600,
+      notify: ['owner'],
+      escalationId: '',
+      severity: 'warning',
+      name: 'Example',
+    } as unknown as Monitor) as ParsedMonitorOf<'http'>
+    const form = probeFormFromMonitor(monitor)
+    expect(probeInputFromForm(form).params.rules).toEqual([latency])
+    expect(
+      probeInputFromForm({ ...form, statusCodes: '200' }).params.rules,
+    ).toEqual([
+      '{"method":"or","values":[{"method":"notEqual","attribute":"statusCode","values":[200]},{"method":"and","values":[{"method":"lessThan","attribute":"certificateDays","values":[14]},{"method":"lessThan","attribute":"certificateLifetime","values":[25]}]}]}',
+    ])
   })
 
   test('a probe alert reads as what its check found', () => {
@@ -636,5 +745,115 @@ describe('budget alert recipients', () => {
     expect(changedBudgetRecipients(current, ['owner'])).toEqual(['owner'])
     expect(changedBudgetRecipients(current, ['billing', 'owner'])).toBeNull()
     expect(changedBudgetRecipients(current, [])).toBeNull()
+  })
+})
+
+describe('alerting plan limits', () => {
+  test('reads a missing or zero cap as uncapped, as the API does', () => {
+    expect(alertingLimits(undefined)).toEqual({
+      probesAllowed: true,
+      probes: null,
+      probeInterval: 0,
+      escalations: null,
+      escalationSteps: null,
+      escalationRepeat: null,
+    })
+    const free = {
+      probes: 1,
+      probeInterval: 300,
+      escalations: 1,
+      escalationSteps: 2,
+      escalationRepeat: 0,
+    } as unknown as Parameters<typeof alertingLimits>[0]
+    expect(alertingLimits(free)).toEqual({
+      probesAllowed: true,
+      probes: 1,
+      probeInterval: 300,
+      escalations: 1,
+      escalationSteps: 2,
+      escalationRepeat: 0,
+    })
+    const scale = {
+      probes: 0,
+      escalations: 0,
+      escalationSteps: 0,
+    } as unknown as Parameters<typeof alertingLimits>[0]
+    expect(alertingLimits(scale).probes).toBeNull()
+    expect(alertingLimits(scale).escalationSteps).toBeNull()
+  })
+
+  test('caps usage monitors and synthetic checks separately', () => {
+    const free = {
+      monitors: 3,
+      probes: 1,
+    } as unknown as Parameters<typeof monitorCaps>[0]
+    // Three usage monitors fill a Free project, yet a synthetic check can
+    // still be added, so creating a monitor stays open.
+    expect(monitorCaps(free, 3, 0)).toEqual({
+      usageLimit: 3,
+      usageAtLimit: true,
+      probeLimit: 1,
+      probesAtLimit: false,
+      probesAllowed: true,
+      allAtLimit: false,
+    })
+    expect(monitorCaps(free, 3, 1).allAtLimit).toBe(true)
+    expect(monitorCaps(free, 2, 1).usageAtLimit).toBe(false)
+    // A count not loaded yet never closes creating.
+    expect(monitorCaps(free, undefined, undefined).allAtLimit).toBe(false)
+    expect(monitorCaps(undefined, 500, 500).allAtLimit).toBe(false)
+  })
+
+  test('closes synthetic checks on a plan without them, keeping usage monitors', () => {
+    const free = {
+      monitors: 3,
+      monitorsAllowProbes: false,
+    } as unknown as Parameters<typeof monitorCaps>[0]
+    expect(monitorCaps(free, 2, 0)).toEqual({
+      usageLimit: 3,
+      usageAtLimit: false,
+      probeLimit: null,
+      probesAtLimit: false,
+      probesAllowed: false,
+      allAtLimit: false,
+    })
+    // With the usage monitors full, nothing is left to create.
+    expect(monitorCaps(free, 3, 0).allAtLimit).toBe(true)
+  })
+
+  test('starts new checks on a minute, or the plan minimum when longer', () => {
+    expect(defaultProbeInterval(0)).toBe(60)
+    expect(defaultProbeInterval(30)).toBe(60)
+    expect(defaultProbeInterval(300)).toBe(300)
+  })
+
+  test('counts each member an escalation notifies once, by role or by name', () => {
+    const members = [
+      { userId: 'ola', roles: ['owner'] },
+      { userId: 'bob', roles: ['developer'] },
+      { userId: 'cy', roles: ['developer'] },
+      { userId: 'dee', roles: ['analyst'] },
+    ]
+    expect(countResponders([], members)).toBe(0)
+    expect(
+      countResponders(
+        [
+          {
+            steps: [
+              { delay: 0, roles: ['owner'], userIds: ['ola'] },
+              { delay: 600, roles: [], userIds: ['bob'] },
+            ],
+          },
+          { steps: [{ delay: 0, roles: ['owner'], userIds: [] }] },
+        ],
+        members,
+      ),
+    ).toBe(2)
+    expect(
+      countResponders(
+        [{ steps: [{ delay: 0, roles: ['developer'], userIds: ['dee'] }] }],
+        members,
+      ),
+    ).toBe(3)
   })
 })

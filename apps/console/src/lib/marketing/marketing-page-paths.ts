@@ -21,6 +21,7 @@ export const MARKETING_PAGE_PATHS = [
   '/innovation-teams',
   '/education',
   '/for-agents',
+  '/zero',
   '/partners',
   '/enterprise',
   '/affiliates',
@@ -45,6 +46,13 @@ export const MARKETING_PAGE_PATHS = [
   '/llms/txt',
   '/llms-full/txt',
 ] as const
+
+/**
+ * Marketing pages behind a launch feature flag. They render on demand, so the
+ * flag decides per request, and stay out of prerendering and the sitemap until
+ * launch, when they leave this list.
+ */
+export const UNLAUNCHED_MARKETING_PATHS: readonly string[] = ['/zero']
 
 export function normalizeMarketingPath(pathname: string): string {
   return pathname.replace(/\/+$/, '') || '/'

@@ -3,8 +3,15 @@
  * Use for column, operator, and value droplists in filters and elsewhere.
  */
 
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { ChevronDown, Loader2, type LucideIcon } from 'lucide-react'
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentType,
+  type ReactNode,
+} from 'react'
+import { ChevronDown, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Command,
@@ -32,8 +39,13 @@ export interface SearchableSelectItem {
   description?: string
   /** When true, description is shown on the same line as the label. */
   inlineDescription?: boolean
-  /** Optional leading icon in the trigger and list. */
-  icon?: LucideIcon
+  /**
+   * Optional leading icon in the trigger and list: a Lucide icon, or any mark
+   * that takes a class, such as a Git provider's.
+   */
+  icon?: ComponentType<{ className?: string }>
+  /** Heading of the section the item is listed under; items keep their order within it. */
+  group?: string
 }
 
 export interface SearchableSelectProps {
@@ -69,6 +81,8 @@ export interface SearchableSelectProps {
   onOpenChange?: (open: boolean) => void
   /** Applied to the trigger button (e.g. for label `htmlFor`). */
   id?: string
+  /** Accessible name for the trigger when no visible label points at it. */
+  ariaLabel?: string
   /** Trigger label when `value` is not in the loaded `items` (paged lists). */
   selectedName?: string
 }
@@ -135,6 +149,19 @@ function SearchableSelectItemContent({ item }: { item: SearchableSelectItem }) {
   )
 }
 
+/** Items split into their sections, in the order each section first appears. */
+function groupItems(
+  items: SearchableSelectItem[],
+): [string | undefined, SearchableSelectItem[]][] {
+  const groups = new Map<string | undefined, SearchableSelectItem[]>()
+  for (const item of items) {
+    const group = groups.get(item.group)
+    if (group) group.push(item)
+    else groups.set(item.group, [item])
+  }
+  return [...groups]
+}
+
 export function SearchableSelect({
   value,
   onValueChange,
@@ -156,6 +183,7 @@ export function SearchableSelect({
   listFooter,
   onOpenChange,
   id,
+  ariaLabel,
   selectedName,
 }: SearchableSelectProps) {
   const t = useT()
@@ -219,6 +247,7 @@ export function SearchableSelect({
           type="button"
           variant="outline"
           role="combobox"
+          aria-label={ariaLabel}
           aria-expanded={open}
           disabled={disabled}
           className={cn(
@@ -311,8 +340,9 @@ export function SearchableSelect({
                 {t(emptyMessage)}
               </CommandEmpty>
             ) : (
-              <CommandGroup>
-                {items.map((item) => (
+              groupItems(items).map(([heading, groupedItems], index, groups) => (
+              <CommandGroup key={heading ?? ''} heading={heading ? t(heading) : undefined}>
+                {groupedItems.map((item) => (
                   <CommandItem
                     key={item.value}
                     value={`${item.value} ${item.searchText ?? item.label}`}
@@ -326,15 +356,16 @@ export function SearchableSelect({
                     <SearchableSelectItemContent item={item} />
                   </CommandItem>
                 ))}
-                {hasNextPage ? (
+                {index === groups.length - 1 && hasNextPage ? (
                   <div ref={sentinelRef} className="h-px w-full shrink-0" aria-hidden />
                 ) : null}
-                {isFetchingNextPage ? (
+                {index === groups.length - 1 && isFetchingNextPage ? (
                   <div className="flex items-center justify-center py-2">
                     <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
                   </div>
                 ) : null}
               </CommandGroup>
+              ))
             )}
           </CommandList>
           {footerItems && footerItems.length > 0 ? (

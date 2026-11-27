@@ -2,6 +2,7 @@
 
 namespace Appwrite\Utopia\Messaging\Adapter;
 
+use Appwrite\Alert\Change;
 use Appwrite\Utopia\Messaging\Messages\Console as ConsoleMessage;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -18,6 +19,11 @@ class Console extends Adapter
     protected const NAME = 'Console';
     protected const TYPE = 'console';
     protected const MESSAGE_TYPE = ConsoleMessage::class;
+
+    /**
+     * The order a subject's status moves in; it never goes back.
+     */
+    private const PROGRESS = [Change::Firing->value, Change::Acknowledged->value, Change::Resolved->value];
 
     public function __construct(protected Database $database)
     {
@@ -66,9 +72,13 @@ class Console extends Adapter
             $messageId = $message->getMessageId();
             $recipientKey = self::buildRecipientKey($recipient);
             $recipientHash = $recipient['recipientHash'] ?? \substr(\md5($recipientKey), 0, 16);
-            $documentId = $messageId !== null
-                ? ($recipient['alertId'] ?? \substr($messageId, 0, 19) . '_' . $recipientHash)
-                : Id::unique();
+            $subject = $message->getSubjectId() !== '';
+            // A recipient keeps one notification per subject, which each later message about it updates.
+            $documentId = match (true) {
+                $subject => \md5($message->getSubjectType() . ':' . $message->getSubjectId() . ':' . $recipientKey),
+                $messageId !== null => $recipient['alertId'] ?? \substr($messageId, 0, 19) . '_' . $recipientHash,
+                default => Id::unique(),
+            };
 
             try {
                 $document = new Document([
@@ -80,6 +90,7 @@ class Console extends Adapter
                     'channel' => self::TYPE,
                     'projectId' => $message->getProjectId(),
                     'projectInternalId' => $message->getProjectInternalId(),
+                    'teamId' => $message->getTeamId(),
                     'resourceType' => $resourceType,
                     'resourceId' => $resourceId,
                     'resourceInternalId' => $recipient['resourceInternalId'],
@@ -88,12 +99,24 @@ class Console extends Adapter
                     'parentResourceInternalId' => $recipient['parentResourceInternalId'],
                     'title' => $message->getTitle(),
                     'body' => $message->getBody(),
+                    'subjectType' => $message->getSubjectType(),
+                    'subjectId' => $message->getSubjectId(),
+                    'status' => $message->getStatus(),
                 ]);
 
                 $this->database->createDocument('notifications', $document);
                 $delivered++;
                 $response->addResult($key);
             } catch (DuplicateException) {
+                if ($subject) {
+                    try {
+                        $this->advance($documentId, $message);
+                    } catch (\Throwable $error) {
+                        $response->addResult($key, $error->getMessage());
+                        continue;
+                    }
+                }
+
                 // Idempotent retry: row already exists for this messageId/recipient.
                 // Treat as a successful (already-delivered) result so the worker
                 // does not throw and re-queue.
@@ -106,6 +129,36 @@ class Console extends Adapter
 
         $response->setDeliveredTo($delivered);
         return $response->toArray();
+    }
+
+    /**
+     * Updates the recipient's notification about the subject to `$message`, and marks it unread, so a
+     * resolved alert is noticed again. A redelivered message changes nothing, and neither does one that
+     * would move the status back, such as a late firing of an alert that has resolved.
+     */
+    private function advance(string $documentId, ConsoleMessage $message): void
+    {
+        $current = $this->database->getDocument('notifications', $documentId);
+        if ($current->isEmpty() || $current->getAttribute('messageId') === $message->getMessageId()) {
+            return;
+        }
+
+        $from = \array_search($current->getAttribute('status'), self::PROGRESS, true);
+        $to = \array_search($message->getStatus(), self::PROGRESS, true);
+        if ($from !== false && $to !== false && $to < $from) {
+            return;
+        }
+
+        // The recipient may change the notification, so the platform updates it as itself.
+        $this->database->getAuthorization()->skip(fn () => $this->database->updateDocument('notifications', $documentId, new Document([
+            'messageId' => $message->getMessageId(),
+            'type' => $message->getType(),
+            'teamId' => $message->getTeamId(),
+            'title' => $message->getTitle(),
+            'body' => $message->getBody(),
+            'status' => $message->getStatus(),
+            'read' => false,
+        ])));
     }
 
     /**

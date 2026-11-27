@@ -69,6 +69,18 @@ class Usage
     }
 
     /**
+     * Report where the storage differs from what migrate() leaves, without
+     * changing it. Empty when there is nothing to report.
+     *
+     * @return list<array{table: string, kind: string, name: string, detail: string}>
+     * @throws \Exception
+     */
+    public function inspect(): array
+    {
+        return $this->adapter->inspect();
+    }
+
+    /**
      * Add metrics in batch (raw append).
      *
      * Callers must explicitly pass the metric type so event and gauge

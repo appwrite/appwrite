@@ -1,6 +1,5 @@
 import { useMemo } from 'react'
 import { Link, useParams } from '@tanstack/react-router'
-import { useMutation } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import { ArrowLeft, Loader2, Store } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -12,13 +11,14 @@ import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { OrganizationBillingHeaderBanners } from '@/components/global/shared/OrganizationBillingHeaderBanners'
 import { resolveAppLogoDisplayUrl } from '@/lib/appwrite/apps-logo'
 import { mapAppToMarketplaceApp } from '@/lib/marketplace/map-app'
-import { startMarketplaceAppInstall } from '@/lib/marketplace/install-app'
 import {
   MARKETPLACE_CATEGORY_LABELS,
   MARKETPLACE_CATEGORY_ICONS,
 } from '@/lib/marketplace/types'
 import {
+  useCreateOrganizationAppInstallation,
   useOrganizationApp,
+  useOrganizationAppInstallation,
   useOrganizations,
 } from '@/lib/react-query/hooks'
 import { MarketplaceAppBadges } from '../_components/MarketplaceAppBadges'
@@ -45,6 +45,8 @@ export function View({ initialData }: ViewProps = {}) {
 
   const { app: appFromHook, isLoading, isFetching } = useOrganizationApp(appId)
   const app = appFromHook ?? initialData?.app
+  const { installation, isResolved: isInstallationResolved } =
+    useOrganizationAppInstallation(orgId, appId)
 
   const teamNamesById = useMemo(
     () =>
@@ -62,15 +64,26 @@ export function View({ initialData }: ViewProps = {}) {
     })
   }, [app, orgId, teamNamesById])
 
-  const installMutation = useMutation({
-    mutationFn: () => {
-      if (!mapped) throw new Error('App not loaded')
-      return startMarketplaceAppInstall(mapped)
-    },
-    onError: (error) => {
-      toast.error(getErrorMessage(error, t('Failed to start installation')))
-    },
-  })
+  const installMutation = useCreateOrganizationAppInstallation(orgId)
+
+  const handleInstall = async () => {
+    if (!mapped) return
+    try {
+      await installMutation.mutateAsync(mapped.$id)
+    } catch (error) {
+      toast.error(getErrorMessage(error, t('Failed to install app')))
+      return
+    }
+    // The app finishes its own setup on its installation redirect page;
+    // without one, the page switches to its Installed state.
+    // The redirect is publisher-controlled, so only a web URL is followed.
+    const redirect = URL.parse(mapped.installationRedirectUrl ?? '')
+    if (redirect?.protocol === 'https:' || redirect?.protocol === 'http:') {
+      window.location.assign(redirect.href)
+      return
+    }
+    toast.success(t('App installed'))
+  }
 
   if (!app && !initialData?.app && !isLoading) {
     return (
@@ -87,6 +100,17 @@ export function View({ initialData }: ViewProps = {}) {
               'This app may have been deleted or you do not have access.',
             )}
             variant="card"
+            action={
+              <Button variant="outline" asChild>
+                <Link
+                  to="/organizations/$orgId/marketplace"
+                  params={{ orgId: orgId! }}
+                >
+                  <ArrowLeft className="me-1.5 h-3.5 w-3.5" />
+                  {t('Back to marketplace')}
+                </Link>
+              </Button>
+            }
           />
         </div>
       </ConsoleLayout>
@@ -135,6 +159,7 @@ export function View({ initialData }: ViewProps = {}) {
               <div className="flex items-start gap-4 min-w-0">
                 {logoUrl ? (
                   <MarketplaceAppLogo
+                    alt={mapped.name}
                     src={logoUrl}
                     size="lg"
                     monochrome={mapped.isOfficial}
@@ -162,20 +187,66 @@ export function View({ initialData }: ViewProps = {}) {
                       {t(MARKETPLACE_CATEGORY_LABELS[mapped.category])}
                     </Badge>
                     <span>{t('by')} {mapped.author}</span>
+                    {mapped.installs > 0 ? (
+                      <>
+                        <span>·</span>
+                        <span>
+                          {mapped.installs === 1
+                            ? t('1 install')
+                            : t('{count} installs').replace(
+                                '{count}',
+                                mapped.installs.toLocaleString(),
+                              )}
+                        </span>
+                      </>
+                    ) : null}
                     <span>·</span>
                     <DateTooltip date={mapped.$createdAt} />
                   </div>
                 </div>
               </div>
 
-              {mapped.installationScopes.length > 0 && (
-                <Button
-                  disabled={installMutation.isPending}
-                  onClick={() => installMutation.mutate()}
-                >
-                  {t('Install app')}
-                </Button>
-              )}
+              <div className="flex shrink-0 items-center gap-2">
+                {app.teamId && teamNamesById[app.teamId] ? (
+                  <Button variant="outline" asChild>
+                    <Link
+                      to="/organizations/$orgId/apps/$appId"
+                      params={{ orgId: app.teamId, appId: app.$id }}
+                    >
+                      {t('Edit app')}
+                    </Link>
+                  </Button>
+                ) : null}
+                {installation ? (
+                  <div className="flex items-center gap-2">
+                    <Badge variant="success" className="text-[11px]">
+                      {t('Installed')}
+                    </Badge>
+                    <Button variant="outline" asChild>
+                      <Link
+                        to="/organizations/$orgId/settings/installations"
+                        params={{ orgId }}
+                      >
+                        {t('Manage')}
+                      </Link>
+                    </Button>
+                  </div>
+                ) : mapped.installationScopes.length > 0 ? (
+                  <Button
+                    disabled={
+                      !isInstallationResolved || installMutation.isPending
+                    }
+                    title={
+                      !isInstallationResolved
+                        ? t('Checking installation…')
+                        : undefined
+                    }
+                    onClick={() => void handleInstall()}
+                  >
+                    {t('Install app')}
+                  </Button>
+                ) : null}
+              </div>
             </div>
           </div>
         </div>
@@ -187,10 +258,12 @@ export function View({ initialData }: ViewProps = {}) {
               appName={mapped.name}
             />
             <div className="space-y-4 rounded-xl border border-border bg-card/50 p-6">
-              <MarkdownContent
-                content={mapped.description}
-                className="text-[13px] leading-relaxed text-muted-foreground"
-              />
+              {mapped.description ? (
+                <MarkdownContent
+                  content={mapped.description}
+                  className="text-[13px] leading-relaxed text-muted-foreground"
+                />
+              ) : null}
               <MarketplaceAppResourceLinks app={mapped} />
               <MarketplaceAppContacts contacts={mapped.contacts ?? []} />
             </div>

@@ -274,8 +274,7 @@ export function EnvironmentSwitcher({
 }: EnvironmentSwitcherProps) {
   const t = useT()
   const navigate = useNavigate()
-  const { features } = useConsoleProfile()
-  const environmentsEnabled = features.projectEnvironments
+  const { features, isCloud } = useConsoleProfile()
   // `projectId` is always the project itself: an environment has no project ID
   // of its own, and the Console is in one when the active-environment store
   // holds one for the project. The environments routes act on the project,
@@ -284,7 +283,7 @@ export function EnvironmentSwitcher({
   const activeEnvironmentId = useActiveEnvironmentId(projectId)
   const region = project?.region
   const { environments, total, isLoading, error, refetch } =
-    useProjectEnvironments(projectId, region, environmentsEnabled)
+    useProjectEnvironments(projectId, region, isCloud)
   // Environments are offered on Pro and above. Free and Start still see the
   // switcher, with the environments a project kept, and creating one leads to
   // the upgrade.
@@ -300,13 +299,13 @@ export function EnvironmentSwitcher({
     features.billing && allowance.status === 'not-offered'
   const { data: billingPlans } = useQuery({
     ...billingPlansQueryOptions(),
-    enabled: environmentsEnabled && upsellEnvironments,
+    enabled: isCloud && upsellEnvironments,
   })
   const upgradePlan = upsellEnvironments
     ? projectEnvironmentsUpgradePlan(plan, billingPlans?.plans ?? {})
     : null
   // The order members gave the list, kept in the project's prefs
-  const { prefs } = useProjectPrefs(projectId, region, environmentsEnabled)
+  const { prefs } = useProjectPrefs(projectId, region, isCloud)
   const updatePrefsMutation = useUpdateProjectPrefs(projectId, region)
 
   const [renameOpen, setRenameOpen] = useState(false)
@@ -357,7 +356,7 @@ export function EnvironmentSwitcher({
     [environmentOptions],
   )
 
-  if (!environmentsEnabled || !project) {
+  if (!isCloud || !project) {
     return null
   }
 

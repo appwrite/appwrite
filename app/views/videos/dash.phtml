@@ -35,9 +35,9 @@ echo '<?xml version="1.0" encoding="utf-8"?>'; ?>
     </AdaptationSet>
     <?php endforeach; ?>
      <?php foreach ($this->getParam('captions', []) as $caption):?>
-         <AdaptationSet id="<?php if (isset($caption['id'])): echo $this->print($caption['id'], self::FILTER_ESCAPE);  endif;?>"  lang="<?php if (isset($caption['name'])): echo $this->print($caption['name'], self::FILTER_ESCAPE);  endif;?>" mimeType="text/vtt">
+         <AdaptationSet id="<?php echo $this->print((string) (int) ($caption['adaptationId'] ?? 0), self::FILTER_ESCAPE);?>" lang="<?php if (isset($caption['name'])): echo $this->print($caption['name'], self::FILTER_ESCAPE);  endif;?>" mimeType="text/vtt">
              <Role schemeIdUri="urn:mpeg:dash:role:2011" value="subtitle" />
-             <Representation>
+             <Representation id="<?php if (isset($caption['id'])): echo $this->print($caption['id'], self::FILTER_ESCAPE); endif;?>" bandwidth="256">
                 <BaseURL><?php if (isset($caption['baseUrl'])): echo $this->print($caption['baseUrl'], self::FILTER_ESCAPE); endif;?></BaseURL>
             </Representation>
         </AdaptationSet>
