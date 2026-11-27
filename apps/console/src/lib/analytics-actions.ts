@@ -237,6 +237,7 @@ export const ANALYTICS_ACTIONS = {
   'marketing-nav-customers': 'Marketing Customers Nav Clicked',
   'marketing-nav-blog': 'Marketing Blog Nav Clicked',
   'marketing-nav-changelog': 'Marketing Changelog Nav Clicked',
+  'marketing-nav-init': 'Marketing Init Nav Clicked',
   'marketing-nav-github': 'Marketing GitHub Nav Clicked',
   'marketing-nav-github-hover': 'Marketing GitHub Nav Hovered',
   'marketing-nav-github-star': 'Marketing GitHub Star Clicked',
