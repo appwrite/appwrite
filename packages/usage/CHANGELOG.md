@@ -1,11 +1,6 @@
 # Changelog
 
-## Unreleased
-
-- Requires utopia-php/database `^10.3.1` instead of `^8.3.4`, and utopia-php/query `^0.8.0`
-  instead of `^0.7`.
-
-## 0.17.0 (unreleased) — utopia-php/database 8
+## 0.17.0 — utopia-php/database 10
 
 ### Added
 
@@ -60,7 +55,7 @@
 
 ### Breaking
 
-- Requires PHP 8.5 and utopia-php/database 8. The Docker test image builds
+- Requires PHP 8.5 and utopia-php/database 10. The Docker test image builds
   on `php:8.5.8-cli-alpine`.
 
 ### Changed
@@ -79,10 +74,8 @@
 - The Database adapter compiles `contains()` through `containsString()`
   instead of the deprecated `contains()` factory. Matching is unchanged: a
   substring match on the column.
-- `utopia-php/database` is required as `^8.1.2` (was `^7.0.0`) and
-  `utopia-php/query` as `^0.7` (was `^0.6 || ^0.7`). `minimum-stability`
-  stays `stable`: every dependency, utopia-php/database 8.1.2 included, is
-  tagged.
+- `utopia-php/database` is required as `^10.3.1` (was `^7.0.0`) and
+  `utopia-php/query` as `^0.8.0` (was `^0.6 || ^0.7`).
 
 ## Unreleased — query 0.6.x builder
 
