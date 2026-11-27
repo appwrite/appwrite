@@ -42,12 +42,13 @@ export const Route = createFileRoute('/docs/$')({
         // Match the HTML route: partners, analytics, and videos docs stay available on
         // the server until the client can apply a local override. A hard 404
         // here made `/docs/partners/...md` fail while the page itself rendered.
+        // Zero docs follow the server flag: a Markdown export has no client to
+        // apply an override, so it would publish them before launch.
         if (
           isFeatureGatedDocsSlugHidden(slug, {
             deferPartnersOnServer: true,
             deferAnalyticsOnServer: true,
             deferVideosOnServer: true,
-            deferZeroOnServer: true,
           })
         ) {
           return new Response('Not found', { status: 404 })
