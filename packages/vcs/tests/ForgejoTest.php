@@ -10,7 +10,9 @@ use Utopia\VCS\Adapter\Git\Forgejo;
 
 final class ForgejoTest extends GiteaBase
 {
+    #[\Override]
     protected static string $eventHeader = 'x-forgejo-event';
+    #[\Override]
     protected static string $signatureHeader = 'x-forgejo-signature';
 
     protected function createAdapter(): Forgejo

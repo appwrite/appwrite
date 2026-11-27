@@ -35,6 +35,7 @@ export const PUBLIC_ICON_FILENAMES = [
   'capacitor.svg',
   'chatgpt.svg',
   'claude.svg',
+  'clerk.svg',
   'cloudflare.svg',
   'code.svg',
   'codex.svg',

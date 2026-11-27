@@ -13,6 +13,7 @@ import { sdk } from '@/lib/appwrite/sdk'
 import {
   useVcsInstallations,
   useDeleteVcsInstallation,
+  useReusableVcsInstallations,
 } from '@/lib/react-query/hooks/vcs'
 import { useConsoleVariables } from '@/lib/react-query/hooks/console-variables'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -36,6 +37,7 @@ import {
 } from '@/components/global/shared/ContextMenuIcon'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { VcsProviderButtons } from '@/components/global/shared/VcsProviderButtons'
+import { GitInstallationReuseDialog } from '@/components/global/shared/GitInstallationReuseDialog'
 import { Button } from '@/components/ui/button'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
@@ -164,6 +166,11 @@ export function GitConfigurationCard({
     limit,
   )
   const deleteMutation = useDeleteVcsInstallation(projectId)
+  const { data: reusableInstallations = [] } =
+    useReusableVcsInstallations(projectId)
+  const [reuseOpen, setReuseOpen] = useState(false)
+  const reuse = (provider: VcsProviderId) =>
+    provider === 'github' && reusableInstallations.length > 0
 
   const installations = installationsData?.installations || []
   const total = installationsData?.total || 0
@@ -485,7 +492,21 @@ export function GitConfigurationCard({
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex justify-end">
             {/* One button whatever the number of providers, so the footer
                 never outgrows the card */}
-            {vcsOAuthProviders.length === 1 ? (
+            {vcsOAuthProviders.length === 1 &&
+            reuse(vcsOAuthProviders[0].id) ? (
+              <Button
+                variant="secondary"
+                size="sm"
+                className="h-9 w-full text-[13px] sm:w-auto"
+                onClick={() => setReuseOpen(true)}
+              >
+                <VcsIcon
+                  type={vcsOAuthProviders[0].id}
+                  className={vcsProviderButtonIconClassName}
+                />
+                {t(`Connect with ${vcsOAuthProviders[0].label}`)}
+              </Button>
+            ) : vcsOAuthProviders.length === 1 ? (
               <Button
                 variant="secondary"
                 size="sm"
@@ -517,22 +538,46 @@ export function GitConfigurationCard({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-[220px]">
-                  {vcsOAuthProviders.map((provider) => (
-                    <DropdownMenuItem key={provider.id} asChild>
-                      <a
-                        href={vcsAuthUrl(provider.id)}
-                        target="_blank"
-                        rel="noreferrer"
+                  {vcsOAuthProviders.map((provider) =>
+                    reuse(provider.id) ? (
+                      <DropdownMenuItem
+                        key={provider.id}
                         className={menuItemRowClassName}
+                        onSelect={() => setReuseOpen(true)}
                       >
                         <provider.Icon className="size-4 shrink-0" />
                         <span className="min-w-0 flex-1">{provider.label}</span>
-                      </a>
-                    </DropdownMenuItem>
-                  ))}
+                      </DropdownMenuItem>
+                    ) : (
+                      <DropdownMenuItem key={provider.id} asChild>
+                        <a
+                          href={vcsAuthUrl(provider.id)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className={menuItemRowClassName}
+                        >
+                          <provider.Icon className="size-4 shrink-0" />
+                          <span className="min-w-0 flex-1">
+                            {provider.label}
+                          </span>
+                        </a>
+                      </DropdownMenuItem>
+                    ),
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
+            <GitInstallationReuseDialog
+              open={reuseOpen}
+              onOpenChange={setReuseOpen}
+              projectId={projectId}
+              installations={reusableInstallations}
+              installLink={
+                <a href={vcsAuthUrl('github')} target="_blank" rel="noreferrer">
+                  {t('Install on another account')}
+                </a>
+              }
+            />
           </div>
         )}
       </div>

@@ -6,6 +6,7 @@ use Appwrite\Extend\Exception;
 use Tests\E2E\Client;
 use Utopia\Config\Config;
 use Utopia\Database\Id;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 trait StagesBase
@@ -211,9 +212,10 @@ trait StagesBase
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $project['apiKey'],
         ], [
+            'profileId' => ID::unique(),
             'name' => 'onboarding-' . ID::unique(),
-            'videoBitRate' => 1000,
-            'audioBitRate' => 64,
+            'videoBitRate' => 1000000,
+            'audioBitRate' => 64000,
             'width' => 640,
             'height' => 360,
         ]);
@@ -239,6 +241,29 @@ trait StagesBase
         $this->assertSame(201, $response['headers']['status-code']);
 
         $this->awaitStage($projectId, 'vectorsDB.create', ONBOARDING_STATUS_COMPLETED);
+    }
+
+    public function testCreateUsageMonitorCompletesStage(): void
+    {
+        $project = $this->getProject(fresh: true);
+        $projectId = $project['$id'];
+
+        $this->assertSame('pending', $this->getStage($projectId, 'monitors.createUsageMonitor')['status']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/monitors/usage', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $project['apiKey'],
+        ], [
+            'monitorId' => ID::unique(),
+            'name' => 'onboarding-' . ID::unique(),
+            'rules' => [Query::greaterThan('network.outbound', 1000000)->toString()],
+        ]);
+        $this->assertSame(201, $response['headers']['status-code']);
+
+        $stage = $this->awaitStage($projectId, 'monitors.createUsageMonitor', ONBOARDING_STATUS_COMPLETED);
+        $this->assertSame(ACTOR_TYPE_KEY_PROJECT, $stage['actorType']);
+        $this->assertSame('pending', $this->getStage($projectId, 'monitors.createHttpMonitor')['status']);
     }
 
     public function testCreateProjectKeyFromConsoleCompletesStageOnPathProject(): void

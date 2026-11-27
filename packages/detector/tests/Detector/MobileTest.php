@@ -13,7 +13,7 @@ use Utopia\Detector\Detector\Mobile;
 
 class MobileTest extends TestCase
 {
-    private const FLUTTER_PUBSPEC = <<<'YAML'
+    private const string FLUTTER_PUBSPEC = <<<'YAML'
         name: my_app
         description: A new Flutter project.
         publish_to: 'none'
@@ -36,7 +36,7 @@ class MobileTest extends TestCase
           uses-material-design: true
         YAML;
 
-    private const REACT_NATIVE_PACKAGE = <<<'JSON'
+    private const string REACT_NATIVE_PACKAGE = <<<'JSON'
         {
           "name": "MyApp",
           "version": "0.0.1",
@@ -56,7 +56,7 @@ class MobileTest extends TestCase
         }
         JSON;
 
-    private const ANDROID_GROOVY = <<<'GROOVY'
+    private const string ANDROID_GROOVY = <<<'GROOVY'
         apply plugin: "com.android.application"
         apply plugin: "org.jetbrains.kotlin.android"
         apply plugin: "com.facebook.react"
@@ -66,7 +66,7 @@ class MobileTest extends TestCase
         }
         GROOVY;
 
-    private const ANDROID_KOTLIN = <<<'KOTLIN'
+    private const string ANDROID_KOTLIN = <<<'KOTLIN'
         plugins {
             id("com.android.application")
             id("kotlin-android")
@@ -396,12 +396,81 @@ class MobileTest extends TestCase
         ];
     }
 
+    public function testDetectionDefaults(): void
+    {
+        $this->assertSame(['flutter'], new Flutter()->getPackages());
+        $this->assertSame([], new Flutter()->getFiles());
+        $this->assertSame([], new Flutter()->getFileExtensions());
+        $this->assertSame([], new Flutter()->getPlugins());
+        $this->assertSame(['com.android.application'], new Android()->getPlugins());
+        $this->assertSame(['Podfile'], new Ios()->getFiles());
+        $this->assertSame(['xcodeproj', 'xcworkspace'], new Ios()->getFileExtensions());
+        $this->assertSame(['react-native'], new ReactNative()->getPackages());
+        $this->assertSame('android', MobileDetection::PLATFORM_ANDROID);
+        $this->assertSame('ios', MobileDetection::PLATFORM_IOS);
+        $this->assertSame('gradle', Mobile::INPUT_GRADLE);
+    }
+
+    public function testCustomOptionsAreAskedThroughTheirMethods(): void
+    {
+        $expo = new class () extends MobileDetection {
+            public function getName(): string
+            {
+                return 'expo';
+            }
+
+            public function getPlatforms(): array
+            {
+                return [self::PLATFORM_ANDROID, self::PLATFORM_IOS, 'web'];
+            }
+
+            public function getFiles(): array
+            {
+                return ['app.json'];
+            }
+        };
+        $detector = $this->detector([new ReactNative(), new Android(), $expo]);
+
+        $this->addInputs($detector, ['package.json', 'app.json'], [self::REACT_NATIVE_PACKAGE], [self::ANDROID_GROOVY]);
+
+        $this->assertSame($expo, $detector->detect());
+    }
+
+    public function testSubclassedDetectionsKeepTheirOverrides(): void
+    {
+        $android = new class () extends Android {
+            public function getPlugins(): array
+            {
+                return ['com.android.library'];
+            }
+        };
+        $detector = $this->detector([$android]);
+
+        $this->addInputs($detector, [], [], ["plugins {\n    id(\"com.android.library\")\n}\n"]);
+
+        $this->assertSame($android, $detector->detect());
+    }
+
+    public function testSubclassedDetectorKeepsItsOverrides(): void
+    {
+        $commented = $this->overridingDetector();
+        $commented->addInput("// id 'com.android.application'", Mobile::INPUT_GRADLE);
+
+        $this->assertSame('android', $commented->detect()?->getName());
+
+        $listed = $this->overridingDetector();
+        $listed->addInput("// id 'com.android.application'", Mobile::INPUT_GRADLE);
+        $listed->addInput('cupertino_icons, flutter', Mobile::INPUT_PACKAGES);
+
+        $this->assertSame('flutter', $listed->detect()?->getName());
+    }
+
     public function testRejectsInvalidInputType(): void
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage("Invalid input type 'language'");
 
-        (new Mobile())->addInput('Kotlin', 'language');
+        new Mobile()->addInput('Kotlin', 'language');
     }
 
     /**
@@ -436,5 +505,31 @@ class MobileTest extends TestCase
         foreach ($scripts as $script) {
             $detector->addInput($script, Mobile::INPUT_GRADLE);
         }
+    }
+
+    /**
+     * A detector whose manifests are comma separated names and whose Gradle comments count.
+     */
+    private function overridingDetector(): Mobile
+    {
+        $detector = new class () extends Mobile {
+            protected function dependencies(string $manifest): array
+            {
+                return \array_map(trim(...), \explode(',', $manifest));
+            }
+
+            protected function statements(string $script): array
+            {
+                return \explode("\n", $script);
+            }
+
+            protected function declares(array $plugins, array $statements): bool
+            {
+                return parent::declares($plugins, $statements);
+            }
+        };
+        $detector->addOption(new Android())->addOption(new Flutter());
+
+        return $detector;
     }
 }

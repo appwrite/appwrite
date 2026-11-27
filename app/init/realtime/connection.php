@@ -109,7 +109,7 @@ return function (Container $container): void {
     // A connection names its project once and acts in it: unlike an HTTP route, it never acts on a
     // project other than the one it names, so admin mode is only ever asked for.
     $container->set('mode', function (Request $request): string {
-        return $request->getParam('mode', $request->getHeaderLine('x-appwrite-mode', APP_MODE_DEFAULT));
+        return $request->getMode();
     }, ['request']);
 
     $container->set('project', function (Request $request, Document $console, Authorization $authorization) use ($getProjectId, $getDbForPlatform) {
@@ -163,7 +163,7 @@ return function (Container $container): void {
             $allowedSchemes = [...$allowedSchemes, ...Platform::getSchemes($project->getAttribute('platforms', []))];
         }
 
-        return new Origin(\array_unique($allowedHostnames), \array_unique($allowedSchemes));
+        return new Origin(\array_unique($allowedHostnames), \array_unique($allowedSchemes), System::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled');
     }, ['platform', 'request', 'project', 'authorization', 'mode']);
 
     $container->set('proofForToken', function (): Token {

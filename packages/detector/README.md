@@ -15,7 +15,7 @@ Install using composer:
 composer require utopia-php/detector
 ```
 
-Requires the `yaml` extension — see [System Requirements](#system-requirements).
+Requires the `utopia` PHP extension — see [System Requirements](#system-requirements).
 
 Init in your application:
 ```php
@@ -189,14 +189,11 @@ Mobile Adapters:
 
 ## System Requirements
 
-Utopia Detector requires PHP 8.0 or later with the `json` and `yaml` extensions. We recommend using the latest PHP version whenever possible.
-
-`json` ships with PHP. `yaml` is a PECL extension, used to read `pubspec.yaml` manifests:
-
-```bash
-pecl install yaml
-```
-
+Utopia Detector requires PHP 8.4 or later and the `utopia` extension (`ext-utopia`, built from
+[`crates/extension`](https://github.com/appwrite/appwrite/tree/main/crates/extension) in
+appwrite/appwrite). Every class of `Utopia\Detector` comes from the extension; this package holds
+their signatures for static analysis and editors (`stubs/`) and the tests. 0.2.x is the last
+release with the classes in PHP.
 
 ## Contributing
 

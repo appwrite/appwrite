@@ -3,7 +3,7 @@
 namespace Utopia\Query\Tests\Tokenizer;
 
 use PHPUnit\Framework\TestCase;
-use ReflectionClass;
+use Utopia\Query\Exception\ValidationException;
 use Utopia\Query\Tokenizer\MySQL;
 use Utopia\Query\Tokenizer\Token;
 use Utopia\Query\Tokenizer\Tokenizer;
@@ -173,20 +173,28 @@ class MySQLTest extends TestCase
         $this->assertTrue($found, 'Escaped double-quoted identifier with # should be preserved');
     }
 
+    /**
+     * The SQL the tokenizer read, with `#` comments rewritten: its tokens cover every byte, so
+     * their values joined are that text.
+     */
+    private function rewritten(string $sql): string
+    {
+        return \implode('', \array_map(fn (Token $token): string => $token->value, $this->tokenizer->tokenize($sql)));
+    }
+
     public function testHashInsideDoubleQuotedStringWithBackslashEscapeIsNotRewritten(): void
     {
         // MySQL default mode (no ANSI_QUOTES): " opens a string literal and
         // \" is an escaped quote. The # inside must not be rewritten to --.
         $sql = 'SELECT "a\\"# not a comment" FROM t';
 
-        $reflection = new ReflectionClass(MySQL::class);
-        $method = $reflection->getMethod('replaceHashComments');
-        $rewritten = $method->invoke($this->tokenizer, $sql);
+        // The scanner itself does not read \" as an escape, so it closes the quote there and
+        // then meets the last " with nothing to close it. Had the # been rewritten to a
+        // comment, that " would be inside the comment and tokenizing would succeed.
+        $this->expectException(ValidationException::class);
+        $this->expectExceptionMessage('Unterminated quoted identifier');
 
-        $this->assertIsString($rewritten);
-        $this->assertStringContainsString('# not a comment', $rewritten);
-        $this->assertStringNotContainsString('-- not a comment', $rewritten);
-        $this->assertSame($sql, $rewritten);
+        $this->tokenizer->tokenize($sql);
     }
 
     public function testHashInsidePlainDoubleQuotedIdentifierIsNotRewritten(): void
@@ -196,11 +204,8 @@ class MySQLTest extends TestCase
         // be rewritten to a -- comment.
         $sql = 'SELECT "col#name" FROM t';
 
-        $reflection = new ReflectionClass(MySQL::class);
-        $method = $reflection->getMethod('replaceHashComments');
-        $rewritten = $method->invoke($this->tokenizer, $sql);
+        $rewritten = $this->rewritten($sql);
 
-        $this->assertIsString($rewritten);
         $this->assertStringContainsString('#name', $rewritten);
         $this->assertStringNotContainsString('--name', $rewritten);
         $this->assertSame($sql, $rewritten);
@@ -212,11 +217,8 @@ class MySQLTest extends TestCase
         // line comment and must be rewritten to --.
         $sql = "SELECT \"a\" # trailing comment\nFROM t";
 
-        $reflection = new ReflectionClass(MySQL::class);
-        $method = $reflection->getMethod('replaceHashComments');
-        $rewritten = $method->invoke($this->tokenizer, $sql);
+        $rewritten = $this->rewritten($sql);
 
-        $this->assertIsString($rewritten);
         $this->assertStringContainsString('--  trailing comment', $rewritten);
         $this->assertStringNotContainsString('# trailing comment', $rewritten);
 
@@ -234,11 +236,8 @@ class MySQLTest extends TestCase
         // comment. The replacement must be `-- ` (with trailing space).
         $sql = 'SELECT 1 #comment';
 
-        $reflection = new ReflectionClass(MySQL::class);
-        $method = $reflection->getMethod('replaceHashComments');
-        $rewritten = $method->invoke($this->tokenizer, $sql);
+        $rewritten = $this->rewritten($sql);
 
-        $this->assertIsString($rewritten);
         $this->assertStringContainsString('-- comment', $rewritten);
         $this->assertStringNotContainsString('#comment', $rewritten);
     }
@@ -247,11 +246,8 @@ class MySQLTest extends TestCase
     {
         $sql = "SELECT 'a#b' FROM t";
 
-        $reflection = new ReflectionClass(MySQL::class);
-        $method = $reflection->getMethod('replaceHashComments');
-        $rewritten = $method->invoke($this->tokenizer, $sql);
+        $rewritten = $this->rewritten($sql);
 
-        $this->assertIsString($rewritten);
         $this->assertSame($sql, $rewritten);
         $this->assertStringContainsString("'a#b'", $rewritten);
         $this->assertStringNotContainsString("'a--b'", $rewritten);

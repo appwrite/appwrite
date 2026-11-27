@@ -420,7 +420,7 @@ export function FunctionExecutionsChartPreview({
                   tooltipDisabled
                     ? false
                     : {
-                        stroke: 'hsl(var(--border))',
+                        stroke: 'var(--border)',
                         strokeWidth: 1,
                         strokeDasharray: '4 4',
                       }

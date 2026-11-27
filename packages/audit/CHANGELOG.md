@@ -2,7 +2,27 @@
 
 All notable changes to `utopia-php/audit` are documented in this file.
 
-## 5.0.0 (unreleased) — utopia-php/database 8
+## 6.0.0 — utopia-php/database 10
+
+### Breaking changes
+
+- Requires utopia-php/database `^10.3.1` instead of `^8.3.4`, and utopia-php/query `^0.8.0`
+  instead of `^0.7`.
+- The ClickHouse adapter throws on a query method it has no clause for, such as `and`, `or`
+  or `groupBy`. It used to skip it, which returned every row the other filters allowed.
+
+### Added
+
+- `reason` optional ClickHouse column, read with `Log::getReason()`: why the
+  actor took the action. Stored as `Nullable(String)`; `createBatch()` never
+  throws when a caller omits it. Newly created tables include the column via
+  `setup()`. `setup()` only issues `CREATE TABLE IF NOT EXISTS`, so **existing**
+  tables do not gain the column automatically — apply it with an
+  `ALTER TABLE ... ADD COLUMN IF NOT EXISTS reason Nullable(String)` migration
+  before deploying, on every table the adapter writes (including tables set
+  with `setTable()`), since inserts and selects name every column.
+
+## 5.0.0 — utopia-php/database 8
 
 ### Breaking changes
 
@@ -16,17 +36,6 @@ All notable changes to `utopia-php/audit` are documented in this file.
   same models (still `Document`s) instead of `Document`s built from the arrays.
 - `SQL::getAttribute()` declares `?Attribute` and returns `null` for an unknown
   ID, instead of an untyped array or `null`.
-
-### Added
-
-- `reason` optional ClickHouse column, read with `Log::getReason()`: why the
-  actor took the action. Stored as `Nullable(String)`; `createBatch()` never
-  throws when a caller omits it. Newly created tables include the column via
-  `setup()`. `setup()` only issues `CREATE TABLE IF NOT EXISTS`, so **existing**
-  tables do not gain the column automatically — apply it with an
-  `ALTER TABLE ... ADD COLUMN IF NOT EXISTS reason Nullable(String)` migration
-  before deploying, on every table the adapter writes (including tables set
-  with `setTable()`), since inserts and selects name every column.
 
 ### Changed
 
