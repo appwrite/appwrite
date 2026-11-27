@@ -28,7 +28,7 @@ This guide protects the `/admin` path of a site.
 5. Under conditions, set **Path** **Starts with** `/admin`. To protect the whole site, add no conditions.
 6. Under **Then**, choose **Challenge**.
 7. Set **Challenge type** to **Password**.
-8. Enter a **Password** of at least 8 characters.
+8. Enter a **Password** of 8 to 256 bytes. Some characters, like emoji or non-Latin letters, take more than one byte.
 9. Keep **Wrong guesses allowed** at `10` and **Counted over (seconds)** at `300`. See [Guess limits](#guess-limits).
 10. Set **TTL (seconds)** to how long a visitor stays signed in after entering the password.
 11. Click **Create rule**.
@@ -50,8 +50,10 @@ Requests that are not browser page loads, such as `fetch` calls and requests for
 Scripts, servers, cron jobs, and CI cannot fill in the password page. Send the password in the `X-Appwrite-WAF-Password` header instead:
 
 ```sh
-curl https://<YOUR_SITE_DOMAIN>/admin/report \
-  -H "X-Appwrite-WAF-Password: <PASSWORD>"
+SITE_URL="https://example.com"
+PASSWORD="your-password"
+curl "$SITE_URL/admin/report" \
+  -H "X-Appwrite-WAF-Password: $PASSWORD"
 ```
 
 - A correct password passes the request and also sets the clearance cookie.
@@ -90,7 +92,7 @@ curl -X POST https://cloud.appwrite.io/v1/waf/rules/challenge \
 
 | Field | Purpose | Limits |
 |-------|---------|--------|
-| `password` | The password visitors enter | `8` to `256` characters. Required on create |
+| `password` | The password visitors enter | `8` to `256` bytes. Required on create |
 | `attempts` | Wrong guesses allowed per visitor network | `1` to `100`, default `10` |
 | `attemptsInterval` | Seconds the wrong guesses are counted over | `60` to `86400`, default `300` |
 | `ttl` | Seconds a visitor stays cleared after entering the password | `900` to `86400` |

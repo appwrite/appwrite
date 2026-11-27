@@ -59,7 +59,7 @@ A challenge rule has one of two **challenge types**:
 |---------|---------|--------|
 | **Challenge type** | Compute or password | `compute` or `password`, Console default **Compute** |
 | **Difficulty** | Compute only. Client-side proof-of-work cost. Higher values slow automated clients more, and also slow the challenge for legitimate users | `1` (easiest) to `5` (hardest), Console default `3` |
-| **Password** | Password only. The password visitors enter | `8` to `256` characters |
+| **Password** | Password only. The password visitors enter | `8` to `256` bytes |
 | **Wrong guesses allowed** | Password only. Wrong passwords allowed per visitor network in each window | `1` to `100`, default `10` |
 | **Counted over (seconds)** | Password only. The window wrong guesses are counted over | `60` to `86400`, default `300` |
 | **TTL (seconds)** | How long a visitor stays cleared after they pass the challenge | `900` (15 minutes) to `86400` (24 hours), Console default `1800` (30 minutes) |
