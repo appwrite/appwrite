@@ -58,8 +58,6 @@ The command creates the project, links the local directory through `appwrite.con
 
 Pass `--json` to print project details as JSON for an agent, including the claim link and the access token for private previews while omitting the API key. New projects default to the nearest region. To choose a specific one, pass `--region` with `fra`, `nyc`, `sfo`, `sgp`, `syd`, or `tor`.
 
-Additional `zero` subcommands, such as `appwrite zero status`, require Appwrite CLI 28.15.0 or later. If the CLI is not installed locally, prefix them with `npx`, such as `npx appwrite-cli@latest zero status`. See [Zero CLI commands](/docs/tooling/command-line/zero) for the full list.
-
 # View the project in the Console {% #console %}
 
 {% only_dark %}
@@ -84,7 +82,7 @@ A banner at the top of the Console counts down the remaining build window and in
 
 Sites and functions deployed to a Zero project are public immediately and ready to share by URL. Each site page displays a **Powered by Appwrite Zero** banner with the build countdown, a **Claim** button, and a **Report abuse** button. Claiming the project removes this banner.
 
-Deployment preview domains remain private. Open a preview in a browser using its owner link from `appwrite zero status`. Agents can also access previews by sending the access token from `appwrite zero --json` in the `X-Appwrite-Zero-Token` header.
+Deployment previews are private. `appwrite zero status` prints an owner link for each site and function domain: open it in a browser to view that domain's previews. For requests without a browser, such as an agent testing a deployment, send the access token from `appwrite zero --json` in the `X-Appwrite-Zero-Token` header.
 
 ## Claim a project from its site {% #claim-from-site %}
 
@@ -191,5 +189,3 @@ The API key stored by the CLI remains valid with no expiry, so the agent needs n
 {% /table %}
 
 Every region caps how many Zero projects can exist at once. If a region reaches capacity, project creation fails there. Try again later, or select a different region with `--region`.
-
-While a project remains unclaimed, its temporary owner cannot create additional projects or organizations, modify the plan, or transfer the project outside the claim link.

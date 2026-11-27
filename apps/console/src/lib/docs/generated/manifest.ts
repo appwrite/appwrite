@@ -5516,7 +5516,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Appwrite Zero",
     "description": "Start an Appwrite Cloud project without an account, build with a coding agent, and claim the project to keep it.",
     "layout": "article",
-    "readingTimeMinutes": 6
+    "readingTimeMinutes": 5
   }
 ] as DocsPageMeta[]
 
