@@ -16,6 +16,15 @@ export const jaDistributionDictionary: Record<string, string> = {
   Signing: '署名中',
   Expiring: 'まもなく期限切れ',
   Revoked: '取り消し済み',
+  // Statuses
+  Validating: '検証中',
+  'In review': '審査中',
+  Published: '公開済み',
+  Rejected: '却下',
+  Halted: '一時停止中',
+  'Needs attention': '要対応',
+  Blocker: 'ブロッカー',
+  'Manual action required': '手動での対応が必要',
   // Targets
   '4 vCPU, 8 GB RAM': '4 vCPU、8 GB RAM',
   '8 vCPU, 16 GB RAM': '8 vCPU、16 GB RAM',
@@ -82,6 +91,9 @@ export const jaDistributionDictionary: Record<string, string> = {
     'このターゲットのビルドの提出先と署名方法です。',
   Workspace: 'ワークスペース',
   'Xcode project': 'Xcode プロジェクト',
+  // App tabs
+  Artifacts: 'アーティファクト',
+  Releases: 'リリース',
   // Settings
   'Variables are passed to every build of this app. App variables override project variables with the same key. Keys cannot start with DISTRIBUTION_ or APPWRITE_.':
     '変数はこのアプリのすべてのビルドに渡されます。同じキーのプロジェクト変数よりアプリ変数が優先されます。キーを DISTRIBUTION_ または APPWRITE_ で始めることはできません。',
@@ -132,6 +144,58 @@ export const jaDistributionDictionary: Record<string, string> = {
   'Use letters, numbers and glob characters, and do not include and exclude the same pattern.':
     '英数字と glob 文字を使用し、同じパターンを含めると同時に除外しないでください。',
 
+  // Builds
+  'Add a target to the app to start builds.':
+    'ビルドを開始するには、アプリにターゲットを追加してください。',
+  'Back to builds': 'ビルド一覧に戻る',
+  'Build a target from a branch, tag or commit of the connected repository.':
+    '接続済みリポジトリのブランチ、タグ、またはコミットからターゲットをビルドします。',
+  'Build canceled': 'ビルドをキャンセルしました',
+  'Build deleted': 'ビルドを削除しました',
+  'Build failed': 'ビルドに失敗しました',
+  'Build from': 'ビルド元',
+  'Build not found': 'ビルドが見つかりません',
+  'Build started': 'ビルドを開始しました',
+  'Cancel the build before you delete it.':
+    '削除する前にビルドをキャンセルしてください。',
+  'Connect a repository to the app to start builds.':
+    'ビルドを開始するには、アプリにリポジトリを接続してください。',
+  'Could not load this build': 'このビルドを読み込めませんでした',
+  'Create build': 'ビルドを作成',
+  'Delete build': 'ビルドを削除',
+  'Each build compiles one target from the repository and signs it for its store.':
+    '各ビルドはリポジトリから 1 つのターゲットをコンパイルし、ストア向けに署名します。',
+  'Failed to delete build': 'ビルドの削除に失敗しました',
+  'Failed to start build': 'ビルドの開始に失敗しました',
+  'Fetching source': 'ソースを取得中',
+  Inspecting: '検査中',
+  'Its logs are deleted, and so is its artifact when no submission uses it. This action cannot be undone.':
+    'ログは削除されます。どの提出にも使われていない場合は、アーティファクトも削除されます。この操作は元に戻せません。',
+  'Leave empty to use the version set in your project.':
+    '空欄の場合は、プロジェクトで設定されたバージョンを使用します。',
+  'Load earlier logs': '以前のログを読み込む',
+  'Loading builds...': 'ビルドを読み込み中...',
+  'No version': 'バージョンなし',
+  'Showing the most recent logs.': '最新のログを表示しています。',
+  'Start a build from the connected repository, or push to a branch that matches your triggers.':
+    '接続済みリポジトリからビルドを開始するか、トリガーに一致するブランチに push してください。',
+  'The build stops and its logs are kept. Start a new build to try again.':
+    'ビルドは停止し、ログは保持されます。もう一度試すには新しいビルドを開始してください。',
+  'This build does not exist or has been deleted.':
+    'このビルドは存在しないか、削除されています。',
+  'This build has no commit to build again.':
+    'このビルドには再ビルドできるコミットがありません。',
+  'This build has no logs.': 'このビルドにはログがありません。',
+  'Failed to load logs': 'ログを読み込めませんでした',
+  'This target sets version codes manually.':
+    'このターゲットはバージョンコードを手動で設定します。',
+  'Uploading to the store': 'ストアにアップロード中',
+  'Version code': 'バージョンコード',
+  'Version name': 'バージョン名',
+  builds: 'ビルド',
+  'Enter a whole number from 1 to 2,100,000,000.':
+    '1 から 2,100,000,000 までの整数を入力してください。',
+  'Failed to load builds': 'ビルドを読み込めませんでした',
   // Apps
   'A native Android project built with Gradle.':
     'Gradle でビルドするネイティブ Android プロジェクトです。',
@@ -187,6 +251,35 @@ export const jaDistributionDictionary: Record<string, string> = {
     '署名済みのビルドを自分でアップロードします。リポジトリは設定から接続できます。',
   "You don't have permission to create apps.":
     'アプリを作成する権限がありません。',
+  // Artifacts
+  'Upload artifact': 'アーティファクトをアップロード',
+  'Binaries built by Appwrite or uploaded from your own pipeline. A ready artifact can be submitted to the stores from a release.':
+    'Appwrite でビルドしたバイナリ、または独自のパイプラインからアップロードしたバイナリです。準備完了のアーティファクトはリリースからストアに提出できます。',
+  'Failed to load artifacts': 'アーティファクトを読み込めませんでした',
+  'No artifacts yet': 'アーティファクトがまだありません',
+  'Builds produce artifacts here. You can also upload an IPA or AAB built elsewhere.':
+    'ビルドで作成されたアーティファクトがここに表示されます。別の環境でビルドした IPA または AAB をアップロードすることもできます。',
+  artifacts: 'アーティファクト',
+  'Only a ready artifact can be downloaded.':
+    'ダウンロードできるのは準備完了のアーティファクトのみです。',
+  Signed: '署名済み',
+  Unsigned: '未署名',
+  'Upload an IPA for iOS or an AAB for Android. Appwrite inspects the binary and matches it to a target by its bundle ID or package name.':
+    'iOS 向けの IPA または Android 向けの AAB をアップロードします。Appwrite がバイナリを検査し、バンドル ID またはパッケージ名でターゲットに関連付けます。',
+  'Choose an .ipa or .aab file.':
+    '.ipa または .aab ファイルを選択してください。',
+  'The upload runs in the background while you keep working. Reloading the page stops it.':
+    'アップロードはバックグラウンドで続くため、そのまま作業を続けられます。ページを再読み込みすると停止します。',
+  'This app has no targets yet. An artifact that matches no target is marked invalid.':
+    'このアプリにはまだターゲットがありません。どのターゲットにも一致しないアーティファクトは無効になります。',
+  'Delete {name}? Its file is removed and it can no longer be submitted. This action cannot be undone.':
+    '{name} を削除しますか？ファイルが削除され、今後は提出できなくなります。この操作は元に戻せません。',
+  'Artifact deleted': 'アーティファクトを削除しました',
+  'Failed to delete artifact': 'アーティファクトを削除できませんでした',
+  'Delete artifact': 'アーティファクトを削除',
+  'Uploaded. Appwrite is inspecting the binary.':
+    'アップロードしました。Appwrite がバイナリを検査しています。',
+  'View artifacts': 'アーティファクトを表示',
   // Connections
   "You don't have permission to manage store connections.":
     'ストア接続を管理する権限がありません。',
@@ -304,6 +397,131 @@ export const jaDistributionDictionary: Record<string, string> = {
   'Drop a file here': 'ここにファイルをドロップ',
   'Add another file': '別のファイルを追加',
   'Paste contents': '内容を貼り付け',
+  // Releases
+  releases: 'リリース',
+  'A release is one version of this app. Submit it to each store from the release page.':
+    'リリースはこのアプリの 1 つのバージョンです。リリースページから各ストアに提出します。',
+  'Add a target to this app before submitting a release.':
+    'リリースを提出する前に、このアプリにターゲットを追加してください。',
+  'Add locale': 'ロケールを追加',
+  'Appwrite stops this submission and withdraws it from review. You can submit the release again later.':
+    'Appwrite はこの提出を停止し、審査から取り下げます。リリースは後で再提出できます。',
+  'Appwrite uploads the artifact to the store, then follows processing and review. Track the progress on this page.':
+    'Appwrite がアーティファクトをストアにアップロードし、処理と審査の状況を追跡します。進捗はこのページで確認できます。',
+  'Back to releases': 'リリースに戻る',
+  'Below 100% requests a staged rollout that you can raise, pause and resume. If the store applies a different percentage, you are warned after submitting.':
+    '100% 未満にすると段階的ロールアウトをリクエストし、割合の引き上げ、一時停止、再開ができます。ストアが別の割合を適用した場合は、提出後に警告が表示されます。',
+  'Bug fixes and performance improvements.': 'バグ修正とパフォーマンスの改善。',
+  'Builds for this release': 'このリリースのビルド',
+  'Builds started for this release. Submit a ready build to a store from here.':
+    'このリリース用に開始されたビルドです。準備完了のビルドはここからストアに提出できます。',
+  'Cancel submission': '提出をキャンセル',
+  'Change requested': '変更をリクエスト済み',
+  'Choose the percentage of Google Play users who receive this version. Use 100% to finish the staged rollout.':
+    'このバージョンを受け取る Google Play ユーザーの割合を選択します。100% にすると段階的ロールアウトが完了します。',
+  'Could not load this release': 'このリリースを読み込めませんでした',
+  'Create a release for the next version of this app, then submit its builds to the App Store and Google Play.':
+    'このアプリの次のバージョンのリリースを作成し、そのビルドを App Store と Google Play に提出します。',
+  'Create release': 'リリースを作成',
+  'Delete release': 'リリースを削除',
+  'Delete release {version}? Its submission history is deleted with it. Versions already in the stores stay there. This action cannot be undone.':
+    'リリース {version} を削除しますか？提出履歴も一緒に削除されます。すでにストアにあるバージョンはそのまま残ります。この操作は元に戻せません。',
+  'Each locale can have only one note.':
+    '各ロケールに設定できるノートは 1 つだけです。',
+  'Each store target gets its own submissions. The status follows the store as it processes, reviews and releases the version.':
+    'ストアのターゲットごとに個別の提出があります。ステータスは、ストアでの処理、審査、リリースの進行に合わせて更新されます。',
+  'Enter a locale for every note.':
+    'すべてのノートにロケールを入力してください。',
+  'Enter a whole number from 1 to 100.':
+    '1 から 100 までの整数を入力してください。',
+  'Failed to create release': 'リリースの作成に失敗しました',
+  'Failed to create submission': '提出の作成に失敗しました',
+  'Failed to delete release': 'リリースの削除に失敗しました',
+  'Failed to load releases': 'リリースの読み込みに失敗しました',
+  'Failed to update release': 'リリースの更新に失敗しました',
+  'Failed to update the rollout': 'ロールアウトの更新に失敗しました',
+  'Failed to update the submission': '提出の更新に失敗しました',
+  'Loading artifacts...': 'アーティファクトを読み込み中...',
+  Located: '特定済み',
+  'No builds for this release yet.': 'このリリースのビルドはまだありません。',
+  'No release notes.': 'リリースノートはありません。',
+  'No releases yet': 'リリースがまだありません',
+  'No submissions for this target yet.':
+    'このターゲットの提出はまだありません。',
+  Notes: 'ノート',
+  'Pause rollout': 'ロールアウトを一時停止',
+  Processed: '処理済み',
+  'Published on': '公開日時',
+  'Release automatically': '自動でリリース',
+  'Release created': 'リリースを作成しました',
+  'Release deleted': 'リリースを削除しました',
+  'Release mode': 'リリース方法',
+  'Release not found': 'リリースが見つかりません',
+  'Release notes': 'リリースノート',
+  'Release the version as soon as Apple approves it. Turn this off to release it yourself from this page.':
+    'Apple の承認後すぐにバージョンをリリースします。オフにすると、このページから手動でリリースできます。',
+  'Release to the store': 'ストアにリリース',
+  'Release updated': 'リリースを更新しました',
+  Released: 'リリース済み',
+  'Remove notes': 'ノートを削除',
+  'Resume rollout': 'ロールアウトを再開',
+  'Reviewed on': '審査日時',
+  Rollout: 'ロールアウト',
+  'Rollout percentage': 'ロールアウトの割合',
+  'Rollout updated': 'ロールアウトを更新しました',
+  'Search releases': 'リリースを検索',
+  'Search releases...': 'リリースを検索...',
+  Settled: '完了',
+  'Store releases cannot be rolled back. To stop a release, pause a Google Play staged rollout or an App Store phased release, or submit a previous artifact with a higher version code as a new submission.':
+    'ストアでのリリースはロールバックできません。リリースを止めるには、Google Play の段階的ロールアウトか App Store の段階的リリースを一時停止するか、以前のアーティファクトをより大きいバージョンコードで新しく提出してください。',
+  'Store status': 'ストアのステータス',
+  'Submission created': '提出を作成しました',
+  Submissions: '提出',
+  'Submissions already sent to a store keep the version and notes they were sent with.':
+    'すでにストアに送信された提出は、送信時のバージョンとノートのまま変わりません。',
+  'Submit build': 'ビルドを提出',
+  'Submit release': 'リリースを提出',
+  'Submit to Google Play': 'Google Play に提出',
+  'Submit to the App Store': 'App Store に提出',
+  'Submitted on': '提出日時',
+  'The store continues offering this version from the current rollout percentage.':
+    'ストアは現在のロールアウトの割合から、このバージョンの提供を再開します。',
+  'The store makes this approved version available to users. A released version cannot be withdrawn.':
+    '承認済みのこのバージョンがストアでユーザーに公開されます。リリースしたバージョンは取り下げられません。',
+  'The store stops offering this version to more users. Users who already updated keep it. You can resume the rollout later.':
+    'ストアはこのバージョンを新たなユーザーに提供しなくなります。すでに更新したユーザーはそのまま利用できます。ロールアウトは後で再開できます。',
+  'The version can be at most 64 characters.':
+    'バージョンは 64 文字以内で入力してください。',
+  'The version users see in the stores, for example 1.2.0.':
+    'ストアでユーザーに表示されるバージョンです (例: 1.2.0)。',
+  'This release does not exist or has been deleted.':
+    'このリリースは存在しないか、削除されています。',
+  'This target has no ready artifact. Build the release or upload a binary first.':
+    'このターゲットには準備完了のアーティファクトがありません。先にリリースをビルドするか、バイナリをアップロードしてください。',
+  'Update release': 'リリースを更新',
+  'Update rollout': 'ロールアウトを更新',
+  Validated: '検証済み',
+  'What changed in this version, per store locale. The stores show these notes to users.':
+    'このバージョンの変更内容をストアのロケールごとに入力します。ストアはこのノートをユーザーに表示します。',
+  "You don't have permission to create releases.":
+    'リリースを作成する権限がありません。',
+  "You don't have permission to manage submissions.":
+    '提出を管理する権限がありません。',
+  "You don't have permission to update releases.":
+    'リリースを更新する権限がありません。',
+  "You don't have permission to view submissions. Ask an organization owner for access.":
+    '提出を表示する権限がありません。組織のオーナーにアクセスを依頼してください。',
+  'Select an artifact': 'アーティファクトを選択',
+  'The selected artifact is not ready for this target. Choose another artifact or wait for it to finish processing.':
+    '選択したアーティファクトはこのターゲットで使用できる状態ではありません。別のアーティファクトを選択するか、処理が終わるまでお待ちください。',
+  'The store applied a {percent}% rollout instead of the requested {requested}%.':
+    'ストアはリクエストされた {requested}% ではなく {percent}% のロールアウトを適用しました。',
+  "This build's artifact is not available for submission.":
+    'このビルドのアーティファクトは提出に使用できません。',
+  "This build's artifact is still processing.":
+    'このビルドのアーティファクトはまだ処理中です。',
+  "This build's target no longer exists.":
+    'このビルドのターゲットはもう存在しません。',
   // Signing
   "You don't have permission to manage signing identities.":
     '署名 ID を管理する権限がありません。',
@@ -387,6 +605,40 @@ export const jaDistributionDictionary: Record<string, string> = {
     'プロビジョニングプロファイル (.mobileprovision)',
   'Add one App Store profile for each bundle ID, including app extensions. Each profile must contain this certificate.':
     'App Extension を含め、Bundle ID ごとに App Store プロファイルを 1 つ追加します。各プロファイルにはこの証明書が含まれている必要があります。',
+  // Overview
+  'Checking…': '確認しています…',
+  'Run checks again': 'チェックを再実行',
+  'Could not run the checks': 'チェックを実行できませんでした',
+  'Ready to submit': '提出の準備ができています',
+  'Not ready to submit': '提出の準備ができていません',
+  'Resolve the blockers below before submitting.':
+    '提出する前に、以下のブロッカーを解決してください。',
+  'Latest submission': '最新の提出',
+  'No submissions yet': '提出はまだありません',
+  'View build': 'ビルドを表示',
+  'View release': 'リリースを表示',
+  'Add an iOS or Android target to check whether this app is ready to submit to the stores.':
+    'iOS または Android のターゲットを追加すると、このアプリをストアに提出できるかどうかを確認できます。',
+  'Go to targets': 'ターゲットへ移動',
+  'Store tasks': 'ストアでの作業',
+  'Appwrite cannot do these for you. Complete them in each store before the first submission.':
+    'これらの作業は Appwrite では代行できません。最初の提出の前に、各ストアで完了してください。',
+  'Create the app record in App Store Connect with the bundle ID of the target.':
+    'ターゲットの Bundle ID で App Store Connect にアプリを登録します。',
+  'Accept the latest agreements in App Store Connect.':
+    'App Store Connect で最新の契約に同意します。',
+  'Complete the app privacy labels.': 'App のプライバシー情報を入力します。',
+  'Answer the export compliance questions.':
+    '輸出コンプライアンスに関する質問に回答します。',
+  'Create the app in Play Console with the package name of the target.':
+    'ターゲットのパッケージ名で Play Console にアプリを作成します。',
+  'Accept the latest agreements in Play Console.':
+    'Play Console で最新の契約に同意します。',
+  'Complete the data safety form.': 'データセーフティ フォームに入力します。',
+  'Upload the first build in Play Console yourself. Google Play accepts uploads from Appwrite after that.':
+    '最初のビルドは Play Console からご自身でアップロードしてください。それ以降は Google Play が Appwrite からのアップロードを受け付けます。',
+  'New personal developer accounts must run a closed test before releasing to production.':
+    '新しい個人のデベロッパー アカウントでは、本番環境にリリースする前にクローズドテストを実施する必要があります。',
   // Review fixes: signing download
   'Show signing files': '署名ファイルを表示',
   'Every download is recorded in the audit log.':
@@ -407,4 +659,72 @@ export const jaDistributionDictionary: Record<string, string> = {
   'Delete {name}? Appwrite deletes its encrypted files. Download them first if you still need them. This action cannot be undone.':
     '{name} を削除しますか？Appwrite は暗号化されたファイルを削除します。まだ必要な場合は先にダウンロードしてください。この操作は元に戻せません。',
   'Failed to load signing identities': '署名 ID の読み込みに失敗しました',
+  // Publish
+  Publish: '公開',
+  'Publish app': 'アプリを公開',
+  "You don't have permission to publish this app.":
+    'このアプリを公開する権限がありません。',
+  'Add a target to publish this app.':
+    'このアプリを公開するにはターゲットを追加してください。',
+  'Choose the targets to publish and check that each one is ready for its store.':
+    '公開するターゲットを選び、それぞれがストアに提出できる状態か確認します。',
+  'Choose the release that the builds and submissions belong to.':
+    'ビルドと提出をまとめるリリースを選びます。',
+  'Choose what to submit for each target.':
+    'ターゲットごとに提出する内容を選びます。',
+  'Review what happens for each target, then publish.':
+    'ターゲットごとの処理内容を確認してから公開します。',
+  'Release automatically after approval': '承認後に自動でリリース',
+  'This target has no store connection.':
+    'このターゲットにはストア接続がありません。',
+  'Run checks': 'チェックを実行',
+  'Running checks...': 'チェックを実行中...',
+  'Select at least one target to publish.':
+    '公開するターゲットを 1 つ以上選んでください。',
+  'Run the checks to continue.': '続行するにはチェックを実行してください。',
+  'Some checks could not run. Run them again to continue.':
+    '一部のチェックを実行できませんでした。続行するにはもう一度実行してください。',
+  'Resolve the blockers or deselect those targets to continue.':
+    '続行するには、ブロッカーを解消するか該当するターゲットの選択を外してください。',
+  'Failed to run the checks': 'チェックを実行できませんでした',
+  'Create a release': 'リリースを作成',
+  'The version people see in the stores, for example 1.4.0.':
+    'ストアに表示されるバージョンです (例: 1.4.0)。',
+  'What is new in this release': 'このリリースの新機能',
+  'Add to an open release': '進行中のリリースに追加',
+  'This app has no draft or active releases.':
+    'このアプリには下書きまたは進行中のリリースがありません。',
+  'Choose a release': 'リリースを選択',
+  'Build from {branch}': '{branch} からビルド',
+  'Build from Git': 'Git からビルド',
+  'Connect a repository in the app settings to build from Git.':
+    'Git からビルドするには、アプリの設定でリポジトリを接続してください。',
+  'Use an artifact': 'アーティファクトを使用',
+  'Appwrite builds the app for this release. Submit the build from the release page when it is ready.':
+    'Appwrite がこのリリース用にアプリをビルドします。ビルドの準備ができたら、リリースのページから提出してください。',
+  'This target sets version codes manually. Use a number higher than the last upload.':
+    'このターゲットはバージョンコードを手動で設定します。前回のアップロードより大きい数値を指定してください。',
+  'No ready artifacts for this target. Upload one from the Artifacts tab.':
+    'このターゲットには準備完了のアーティファクトがありません。アーティファクトタブからアップロードしてください。',
+  'Choose an artifact': 'アーティファクトを選択',
+  'After approval': '承認後',
+  'Wait for a manual release': '手動リリースを待つ',
+  'Submit this build from the release page when it is ready.':
+    'このビルドの準備ができたら、リリースのページから提出してください。',
+  'Starting build': 'ビルドを開始中',
+  Submitting: '提出中',
+  Submitted: '提出済み',
+  'Failed to create the release': 'リリースを作成できませんでした',
+  'Failed to publish this target': 'このターゲットを公開できませんでした',
+  'Publishing started': '公開を開始しました',
+  // Review fixes: publish
+  Artifact: 'アーティファクト',
+  'The checks use the track shown for each target. Choose the track for an artifact in the Source step.':
+    'チェックには各ターゲットに表示されているトラックが使われます。アーティファクトのトラックはソースのステップで選びます。',
+  'The checks changed since you ran them. Review the targets to publish.':
+    'チェックの実行後に結果が変わりました。ターゲットを確認してから公開してください。',
+  'Could not load the targets of this app.':
+    'このアプリのターゲットを読み込めませんでした。',
+  'Set a production branch in the app settings to build from Git.':
+    'Git からビルドするには、アプリの設定で本番ブランチを設定してください。',
 }

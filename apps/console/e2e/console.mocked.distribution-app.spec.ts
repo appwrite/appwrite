@@ -1,10 +1,14 @@
 import type { Page } from '@playwright/test'
 import {
   appsFixtures,
+  checkFixture,
+  DISTRIBUTION_IDS,
   distributionPath,
   expect,
   mockDistributionApi,
+  OWNER_SCOPES,
   screenshot,
+  screenshotElement,
   targetsFixtures,
   test,
 } from './fixtures/distribution'
@@ -34,9 +38,19 @@ test.describe('distribution app shell and targets', () => {
 
     await page.goto(distributionPath(`/${SHOP.$id}`))
 
-    await expect(page).toHaveURL(new RegExp(`${targetsPath(SHOP.$id)}$`))
+    await expect(page).toHaveURL(
+      new RegExp(`${distributionPath(`/${SHOP.$id}/overview`)}$`),
+    )
     await expect(page.getByText('Acme Shop', { exact: true })).toBeVisible()
-    for (const tab of ['Targets', 'Settings', 'Variables']) {
+    for (const tab of [
+      'Overview',
+      'Builds',
+      'Releases',
+      'Artifacts',
+      'Targets',
+      'Settings',
+      'Variables',
+    ]) {
       await expect(
         page.getByRole('tab', { name: tab, exact: true }),
       ).toBeVisible()
@@ -44,6 +58,9 @@ test.describe('distribution app shell and targets', () => {
     await expect(
       page.getByRole('link', { name: 'Back to apps' }),
     ).toHaveAttribute('href', distributionPath())
+
+    await page.getByRole('tab', { name: 'Targets', exact: true }).click()
+    await expect(page).toHaveURL(new RegExp(`${targetsPath(SHOP.$id)}$`))
 
     const ios = page.getByTestId('target-ios-card')
     await expect(ios.getByLabel('Bundle ID')).toHaveValue('com.acme.shop')
@@ -397,5 +414,223 @@ test.describe('distribution app shell and targets', () => {
 
     await page.goto(distributionPath(`/${SHOP.$id}/settings`))
     await expect(page).toHaveURL(new RegExp(`${targetsPath(SHOP.$id)}$`))
+  })
+})
+
+test.describe('distribution app overview', () => {
+  const IOS = DISTRIBUTION_IDS.targets.shopIos
+  const ANDROID = DISTRIBUTION_IDS.targets.shopAndroid
+  const SUBMISSION_SCOPES = [
+    'distribution.submissions.read',
+    'distribution.submissions.write',
+  ]
+
+  const overviewPath = (appId: string) => distributionPath(`/${appId}/overview`)
+
+  const androidBlocked = checkFixture([
+    {
+      code: 'store_app_missing',
+      severity: 'error',
+      platform: 'android',
+      field: 'identifier',
+      message: 'Google Play has no app with the package name com.acme.shop.',
+      remediation:
+        'Create the app in Play Console with this package name, then run the checks again.',
+      manualActionRequired: false,
+    },
+    {
+      code: 'privacy_labels_missing',
+      severity: 'warning',
+      platform: 'android',
+      field: '',
+      message: 'The data safety form of the app is incomplete.',
+      remediation: 'Complete the data safety form in Play Console.',
+      manualActionRequired: true,
+    },
+  ])
+
+  const checkRequests = (
+    requests: { method: string; path: string; body: Record<string, unknown> }[],
+    targetId: string,
+  ) =>
+    requests.filter(
+      (request) =>
+        request.method === 'POST' &&
+        request.path === `/distribution/apps/${SHOP.$id}/checks` &&
+        request.body.targetId === targetId,
+    )
+
+  test('shows readiness, latest build and latest submission per target', async ({
+    page,
+  }) => {
+    const { requests } = await mockDistributionApi(page, {
+      seed: { checks: { [`${ANDROID}:internal`]: androidBlocked } },
+    })
+
+    await page.goto(overviewPath(SHOP.$id))
+
+    const ios = page.getByTestId('overview-ios-card')
+    await expect(ios.getByText('com.acme.shop', { exact: true })).toBeVisible()
+    await expect(ios.getByText('Acme App Store Connect')).toBeVisible()
+    await expect(ios.getByText('Acme Distribution 2026')).toBeVisible()
+    await expect(ios.getByText('TestFlight (internal)')).toBeVisible()
+    await expect(
+      page.getByTestId('overview-ios-readiness').getByText('Ready to submit'),
+    ).toBeVisible()
+    await expect(ios.getByRole('link', { name: 'View build' })).toHaveAttribute(
+      'href',
+      distributionPath(
+        `/${SHOP.$id}/builds/${DISTRIBUTION_IDS.builds.shopReady}`,
+      ),
+    )
+    await expect(ios.getByText('1.4.0 (42)')).toBeVisible()
+    await expect(ios.getByText('Latest submission')).toBeVisible()
+    await expect(ios.getByText('Approved', { exact: true })).toBeVisible()
+    await expect(
+      ios.getByRole('link', { name: 'View release' }),
+    ).toHaveAttribute(
+      'href',
+      distributionPath(
+        `/${SHOP.$id}/releases/${DISTRIBUTION_IDS.releases.active}`,
+      ),
+    )
+
+    const android = page.getByTestId('overview-android-card')
+    const readiness = page.getByTestId('overview-android-readiness')
+    await expect(readiness.getByText('Not ready to submit')).toBeVisible()
+    await expect(
+      readiness.getByText(
+        'Create the app in Play Console with this package name, then run the checks again.',
+      ),
+    ).toBeVisible()
+    await expect(readiness.getByText('Blocker', { exact: true })).toBeVisible()
+    await expect(readiness.getByText('Warning', { exact: true })).toBeVisible()
+    await expect(readiness.getByText('Manual action required')).toBeVisible()
+    await expect(android.getByText('Upload key')).toBeVisible()
+    await expect(android.getByText('Building', { exact: true })).toBeVisible()
+    await expect(android.getByText('In review', { exact: true })).toBeVisible()
+    await expect(
+      android.getByRole('link', { name: 'View build' }),
+    ).toHaveAttribute(
+      'href',
+      distributionPath(
+        `/${SHOP.$id}/builds/${DISTRIBUTION_IDS.builds.shopActive}`,
+      ),
+    )
+
+    const tasks = page.getByTestId('overview-store-tasks')
+    await expect(
+      tasks.getByTestId('overview-store-tasks-ios').getByRole('link', {
+        name: 'Open App Store Connect',
+      }),
+    ).toHaveAttribute('href', 'https://appstoreconnect.apple.com/apps')
+    await expect(
+      tasks.getByText('Complete the data safety form.'),
+    ).toBeVisible()
+
+    expect(checkRequests(requests, IOS)).toHaveLength(1)
+    expect(checkRequests(requests, IOS)[0].body.track).toBe('testflight')
+    expect(checkRequests(requests, ANDROID)).toHaveLength(1)
+
+    await screenshotWholePage(page, 'overview.png')
+    await screenshotElement(android, 'overview-blocked.png')
+
+    await ios.getByRole('link', { name: 'View build' }).click()
+    await expect(page).toHaveURL(
+      new RegExp(
+        `${distributionPath(`/${SHOP.$id}/builds/${DISTRIBUTION_IDS.builds.shopReady}`)}$`,
+      ),
+    )
+  })
+
+  test('runs the checks again on request', async ({ page }) => {
+    const { requests, store } = await mockDistributionApi(page, {
+      seed: { checks: { [`${ANDROID}:internal`]: androidBlocked } },
+    })
+    await page.goto(overviewPath(SHOP.$id))
+
+    const readiness = page.getByTestId('overview-android-readiness')
+    await expect(readiness.getByText('Not ready to submit')).toBeVisible()
+    expect(checkRequests(requests, ANDROID)).toHaveLength(1)
+
+    let release: () => void = () => {}
+    const held = new Promise<void>((resolve) => {
+      release = resolve
+    })
+    await page.route('**/v1/distribution/apps/*/checks', async (route) => {
+      await held
+      await route.fallback()
+    })
+    store.checks[`${ANDROID}:internal`] = checkFixture()
+
+    const rerun = page
+      .getByTestId('overview-android-card')
+      .getByRole('button', { name: 'Run checks again' })
+    await rerun.click()
+    await expect(readiness.getByText('Checking…')).toBeVisible()
+    await expect(rerun).toBeDisabled()
+    release()
+
+    await expect(readiness.getByText('Ready to submit')).toBeVisible()
+    await expect(rerun).toBeEnabled()
+    expect(checkRequests(requests, ANDROID)).toHaveLength(2)
+    expect(checkRequests(requests, IOS)).toHaveLength(1)
+  })
+
+  test('links to the targets when the app has no targets', async ({ page }) => {
+    const { requests } = await mockDistributionApi(page, {
+      seed: { targets: [] },
+    })
+    await page.goto(overviewPath(SHOP.$id))
+
+    await expect(page.getByText('No targets yet')).toBeVisible()
+    const link = page.getByRole('link', { name: 'Go to targets' })
+    await expect(link).toHaveAttribute('href', targetsPath(SHOP.$id))
+    await expect(page.getByTestId('overview-store-tasks')).toHaveCount(0)
+    await screenshotWholePage(page, 'overview-empty.png')
+    expect(
+      requests.filter((request) => request.path.endsWith('/checks')),
+    ).toHaveLength(0)
+
+    await link.click()
+    await expect(page).toHaveURL(new RegExp(`${targetsPath(SHOP.$id)}$`))
+  })
+
+  test('hides the latest submission from a role without submission access', async ({
+    page,
+  }) => {
+    const { requests } = await mockDistributionApi(page, {
+      scopes: OWNER_SCOPES.filter(
+        (scope) => !SUBMISSION_SCOPES.includes(scope),
+      ),
+    })
+    await page.goto(overviewPath(SHOP.$id))
+
+    const ios = page.getByTestId('overview-ios-card')
+    const android = page.getByTestId('overview-android-card')
+    await expect(page.getByRole('tab', { name: 'Settings' })).toBeVisible()
+    await expect(
+      page.getByTestId('overview-ios-readiness').getByText('Ready to submit'),
+    ).toBeVisible()
+    await expect(ios.getByRole('link', { name: 'View build' })).toBeVisible()
+    await expect(
+      android.getByRole('link', { name: 'View build' }),
+    ).toBeVisible()
+    expect(
+      requests.filter(
+        (request) =>
+          request.method === 'GET' && request.path.endsWith('/builds'),
+      ).length,
+    ).toBeGreaterThanOrEqual(2)
+    await expect(page.getByText('Latest submission')).toHaveCount(0)
+    await expect(page.getByRole('link', { name: 'View release' })).toHaveCount(
+      0,
+    )
+    expect(
+      requests.filter(
+        (request) =>
+          request.method === 'GET' && request.path.includes('/submissions'),
+      ),
+    ).toHaveLength(0)
   })
 })

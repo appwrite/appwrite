@@ -1,3 +1,5 @@
+import type { UploadProgress } from '@appwrite.io/console'
+
 export type DistributionPlatform = 'ios' | 'android'
 
 export type DistributionFramework =
@@ -297,4 +299,280 @@ export type UpdateDistributionSigningIdentityParams = {
   signingIdentityId: string
   name?: string
   rotate?: boolean
+}
+
+export type DistributionBuildTrigger = 'manual' | 'vcs'
+
+export type DistributionBuildReferenceType = 'branch' | 'commit' | 'tag'
+
+export type DistributionArtifactType = 'ipa' | 'aab'
+
+export type DistributionArtifactSource = 'build' | 'upload'
+
+export type DistributionArtifactStatus =
+  | 'uploading'
+  | 'processing'
+  | 'ready'
+  | 'invalid'
+
+export type DistributionReleaseStatus =
+  | 'draft'
+  | 'active'
+  | 'published'
+  | 'attention'
+
+export type DistributionSubmissionStatus =
+  | 'waiting'
+  | 'validating'
+  | 'uploading'
+  | 'processing'
+  | 'pending'
+  | 'reviewing'
+  | 'approved'
+  | 'published'
+  | 'rejected'
+  | 'halted'
+  | 'failed'
+  | 'canceled'
+
+export type DistributionSubmissionStep =
+  | 'validated'
+  | 'located'
+  | 'uploaded'
+  | 'processed'
+  | 'released'
+  | 'settled'
+
+export type DistributionBuildStatusRequest = 'canceled'
+
+export type DistributionSubmissionStatusRequest =
+  | 'canceled'
+  | 'halted'
+  | 'published'
+
+export type DistributionCheckSeverity = 'error' | 'warning'
+
+export type DistributionBuild = {
+  $id: string
+  $createdAt: string
+  $updatedAt: string
+  appId: string
+  targetId: string
+  platform: DistributionPlatform
+  type: DistributionBuildTrigger
+  status: DistributionBuildStatus
+  stage: string
+  attempt: number
+  providerCommitHash: string
+  providerBranch: string
+  providerTag: string
+  providerCommitMessage: string
+  providerCommitAuthor: string
+  providerCommitAuthorUrl: string
+  providerCommitUrl: string
+  providerBranchUrl: string
+  providerRepositoryName: string
+  providerRepositoryOwner: string
+  providerRepositoryUrl: string
+  providerRootDirectory: string
+  versionName: string
+  versionCode: number
+  buildNumber: string
+  toolchain: Record<string, string>
+  specification: string
+  cpus: number
+  memory: number
+  timeout: number
+  artifactId: string
+  releaseId: string
+  logsSize: number
+  dispatchedAt: string | null
+  startedAt: string | null
+  endedAt: string | null
+  duration: number
+  errorCode: string
+  errorMessage: string
+}
+
+export type DistributionBuildList = {
+  total: number
+  builds: DistributionBuild[]
+}
+
+export type DistributionLog = {
+  $id: string
+  $createdAt: string
+  buildId: string
+  sequence: string
+  chunk: number
+  stage: string
+  content: string
+}
+
+export type DistributionLogList = {
+  total: number
+  logs: DistributionLog[]
+}
+
+export type DistributionArtifact = {
+  $id: string
+  $createdAt: string
+  $updatedAt: string
+  appId: string
+  targetId: string
+  platform: DistributionPlatform | ''
+  type: DistributionArtifactType
+  source: DistributionArtifactSource
+  buildId: string
+  status: DistributionArtifactStatus
+  name: string
+  size: number
+  chunksTotal: number
+  chunksUploaded: number
+  digest: string
+  identifier: string
+  versionName: string
+  versionCode: number
+  buildNumber: string
+  signed: boolean
+  fingerprint: string
+  manifest: Record<string, unknown>
+  errorCode: string
+  errorMessage: string
+  expiresAt: string | null
+}
+
+export type DistributionArtifactList = {
+  total: number
+  artifacts: DistributionArtifact[]
+}
+
+export type DistributionRelease = {
+  $id: string
+  $createdAt: string
+  $updatedAt: string
+  appId: string
+  version: string
+  notes: Record<string, string>
+  status: DistributionReleaseStatus
+}
+
+export type DistributionReleaseList = {
+  total: number
+  releases: DistributionRelease[]
+}
+
+export type DistributionSubmission = {
+  $id: string
+  $createdAt: string
+  $updatedAt: string
+  appId: string
+  releaseId: string
+  targetId: string
+  artifactId: string
+  platform: DistributionPlatform
+  provider: DistributionProvider
+  track: string
+  rollout: number
+  automatic: boolean
+  status: DistributionSubmissionStatus
+  storeStatus: string
+  step: DistributionSubmissionStep | ''
+  external: Record<string, unknown>
+  key: string
+  attempt: number
+  retryAt: string | null
+  submittedAt: string | null
+  reviewedAt: string | null
+  publishedAt: string | null
+  errorCode: string
+  errorMessage: string
+}
+
+export type DistributionSubmissionList = {
+  total: number
+  submissions: DistributionSubmission[]
+}
+
+export type DistributionCheckIssue = {
+  code: string
+  severity: DistributionCheckSeverity
+  platform: DistributionPlatform | ''
+  field: string
+  message: string
+  remediation: string
+  manualActionRequired: boolean
+}
+
+export type DistributionCheck = {
+  ready: boolean
+  issues: DistributionCheckIssue[]
+}
+
+export type CreateDistributionBuildParams = {
+  appId: string
+  targetId: string
+  type?: DistributionBuildReferenceType
+  reference?: string
+  versionName?: string
+  versionCode?: number
+  releaseId?: string
+  key?: string
+}
+
+export type UpdateDistributionBuildStatusParams = {
+  appId: string
+  buildId: string
+  status: DistributionBuildStatusRequest
+}
+
+export type CreateDistributionArtifactParams = {
+  appId: string
+  file: File
+  artifactId?: string
+  onProgress?: (progress: UploadProgress) => void
+}
+
+export type CreateDistributionReleaseParams = {
+  appId: string
+  releaseId: string
+  version: string
+  notes?: Record<string, string>
+}
+
+export type UpdateDistributionReleaseParams = {
+  appId: string
+  releaseId: string
+  version?: string
+  notes?: Record<string, string>
+}
+
+export type CreateDistributionSubmissionParams = {
+  appId: string
+  releaseId: string
+  targetId: string
+  artifactId: string
+  track?: string
+  rollout?: number
+  automatic?: boolean
+  key?: string
+}
+
+export type UpdateDistributionSubmissionParams = {
+  appId: string
+  submissionId: string
+  automatic?: boolean
+  rollout?: number
+}
+
+export type UpdateDistributionSubmissionStatusParams = {
+  appId: string
+  submissionId: string
+  status: DistributionSubmissionStatusRequest
+}
+
+export type CreateDistributionCheckParams = {
+  appId: string
+  targetId: string
+  track?: string
 }

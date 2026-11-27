@@ -5,6 +5,7 @@ import {
   canCreateDistributionApp,
   canManageDistributionCredentials,
   canManageDistributionSubmissions,
+  canPublishDistributionApp,
   canSeeProjectNavItem,
   canShowDistributionCredentials,
   canShowDistributionSubmissions,
@@ -231,6 +232,33 @@ describe('distribution access', () => {
         })
       }
     }
+  })
+
+  test('publishing needs both distribution.write and distribution.submissions.write', () => {
+    const owner = deriveAccessFromRolesScopes(['owner'], [...DEFAULT_SCOPES])
+    const readonly = deriveAccessFromRolesScopes(
+      ['analyst'],
+      ['projects.read', 'distribution.read', 'distribution.submissions.read'],
+    )
+    const writer = deriveAccessFromRolesScopes(
+      ['developer'],
+      ['projects.read', 'distribution.read', 'distribution.write'],
+    )
+    const submitter = deriveAccessFromRolesScopes(
+      ['developer'],
+      [
+        'projects.read',
+        'distribution.read',
+        'distribution.submissions.read',
+        'distribution.submissions.write',
+      ],
+    )
+
+    expect(canPublishDistributionApp(owner, ORG_ROLES)).toBe(true)
+    expect(canPublishDistributionApp(readonly, ORG_ROLES)).toBe(false)
+    expect(canPublishDistributionApp(writer, ORG_ROLES)).toBe(false)
+    expect(canPublishDistributionApp(submitter, ORG_ROLES)).toBe(false)
+    expect(canPublishDistributionApp(NO_SCOPES, NO_ORG_ROLES)).toBe(true)
   })
 
   test('the sidebar item follows distribution.read', () => {

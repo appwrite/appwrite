@@ -1520,7 +1520,6 @@ export const heMarketingDictionary: Record<string, string> = {
     'הסוכנים קוראים ל-MCP ול-Skills של Appwrite מאותו Composer שאתם כבר עובדים בו.',
   'Ask to chart usage, scaffold auth, or query tables...':
     'בקשו לשרטט שימוש, להקים auth או לשלוף טבלאות...',
-  'Artifact': 'Artifact',
   'Auth is up 18% week over week. Functions executions followed the same curve after the Friday deploy.':
     'Auth עלה ב-18% משבוע לשבוע. הרצות Functions עקבו אחרי אותה עקומה אחרי הפריסה ביום שישי.',
   'Auth signups vs function executions': 'הרשמות Auth מול הרצות Functions',

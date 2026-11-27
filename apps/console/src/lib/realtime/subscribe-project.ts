@@ -21,11 +21,12 @@ import {
   handleDedicatedDatabaseRealtimeEvents,
   isDedicatedDatabaseRealtimeSignal,
 } from './dedicated-database-cache'
-import { mergeMigrationPayloadIntoCache } from './migration-cache'
 import {
-  handleVideoRealtimeEvents,
-  isVideoRealtimeSignal,
-} from './video-cache'
+  handleDistributionRealtimeEvents,
+  isDistributionRealtimeSignal,
+} from './distribution-cache'
+import { mergeMigrationPayloadIntoCache } from './migration-cache'
+import { handleVideoRealtimeEvents, isVideoRealtimeSignal } from './video-cache'
 import {
   resolveDeploymentResourceId,
   type DeploymentResourceType,
@@ -137,11 +138,7 @@ function handleDeploymentRealtimeEvent(
 ): void {
   const isCreate = isDeploymentCreateEvent(events)
   const isDelete = isDeploymentDeleteEvent(events)
-  const resourceId = resolveDeploymentResourceId(
-    events,
-    resourceType,
-    payload,
-  )
+  const resourceId = resolveDeploymentResourceId(events, resourceType, payload)
   const canMerge =
     mergePayload &&
     payload != null &&
@@ -217,7 +214,9 @@ function hasEvent(events: string[], name: string): boolean {
 }
 
 /** Parse `databases.{databaseId}.tables.{tableId}.…` from realtime event names. */
-function extractDatabaseIdFromRealtimeEvents(events: string[]): string | undefined {
+function extractDatabaseIdFromRealtimeEvents(
+  events: string[],
+): string | undefined {
   for (const event of events) {
     const match = event.match(/^databases\.([^.]+)\.tables\./)
     const id = match?.[1]
@@ -226,7 +225,9 @@ function extractDatabaseIdFromRealtimeEvents(events: string[]): string | undefin
   return undefined
 }
 
-function extractTableIdFromRealtimeEvents(events: string[]): string | undefined {
+function extractTableIdFromRealtimeEvents(
+  events: string[],
+): string | undefined {
   for (const event of events) {
     const match = event.match(/^databases\.[^.]+\.tables\.([^.]+)\./)
     const id = match?.[1]
@@ -311,7 +312,8 @@ function handleRealtimeEvent(
       ? (response.payload as Record<string, unknown>)
       : null
 
-  const hasAssistantEvent = isAgentRealtimeSignal(events) || isAgentRealtimeSignal(channels)
+  const hasAssistantEvent =
+    isAgentRealtimeSignal(events) || isAgentRealtimeSignal(channels)
 
   if (hasAssistantEvent) {
     invalidateAssistantQueries(queryClient, payload)
@@ -416,6 +418,10 @@ function handleRealtimeEvent(
 
   // Project-scoped events: only invalidate if the event is for this project
   if (!isForThisProject) return
+
+  if (isDistributionRealtimeSignal(events)) {
+    handleDistributionRealtimeEvents(queryClient, projectId, events, payload)
+  }
 
   if (isVideoRealtimeSignal(events)) {
     handleVideoRealtimeEvents(queryClient, projectId, events, payload)
@@ -551,9 +557,15 @@ export async function subscribeProjectRealtime(
   }
 
   const channels = [...PROJECT_CHANNELS]
-  const unregisterMain = await registerConsoleRealtimeListener(channels, handler)
-  const unregisterRegional =
-    await registerRegionalConsoleRealtimeListener(projectId, channels, handler)
+  const unregisterMain = await registerConsoleRealtimeListener(
+    channels,
+    handler,
+  )
+  const unregisterRegional = await registerRegionalConsoleRealtimeListener(
+    projectId,
+    channels,
+    handler,
+  )
 
   return async () => {
     await Promise.all([unregisterRegional(), unregisterMain()])

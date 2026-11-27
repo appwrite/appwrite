@@ -3,6 +3,7 @@ import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { KeyboardShortcutsProvider } from '@/components/global/providers/KeyboardShortcuts'
 import { ProjectConnectDialogProvider } from '@/components/pages/projects/$projectId/shared/ProjectConnectDialogContext'
 import { CsvExportBox, CsvImportBox } from '@/components/global/csv-migrations'
+import { ArtifactUploadBox } from '@/components/global/distribution-uploads'
 import { EnvironmentCopyBox } from '@/components/global/environment-copy'
 import { GlobalUploadProgress } from '@/components/global/shared/GlobalUploadProgress'
 import { NativeOAuthPromoBanner } from '@/components/global/shared/NativeOAuthPromoBanner'
@@ -65,6 +66,7 @@ export function ProjectCliShellLayout({
           <EnvironmentCopyBox projectId={projectId} />
           <CsvImportBox projectId={projectId} />
           <CsvExportBox projectId={projectId} />
+          <ArtifactUploadBox projectId={projectId} />
         </div>
       </KeyboardShortcutsProvider>
     </ProjectConnectDialogProvider>

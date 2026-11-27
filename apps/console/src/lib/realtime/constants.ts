@@ -60,4 +60,9 @@ export const REALTIME_EVENTS = {
 
   // Domains / rules (proxy)
   RULES_UPDATE: 'rules.*.update',
+
+  // Distribution
+  DISTRIBUTION_APPS_ANY: 'distributionApps.*',
+  DISTRIBUTION_CONNECTIONS_ANY: 'distributionConnections.*',
+  DISTRIBUTION_SIGNING_IDENTITIES_ANY: 'distributionSigningIdentities.*',
 } as const

@@ -219,6 +219,17 @@ export function canManageDistributionSubmissions(
   return whenOrgRoles(access, features, access.canWriteDistributionSubmissions)
 }
 
+export function canPublishDistributionApp(
+  access: ConsoleAccess,
+  features: AccessCheckFeatures,
+): boolean {
+  return whenOrgRoles(
+    access,
+    features,
+    access.canWriteDistribution && access.canWriteDistributionSubmissions,
+  )
+}
+
 export function canShowVideoSettings(
   access: ConsoleAccess,
   features: AccessCheckFeatures,

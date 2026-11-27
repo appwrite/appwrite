@@ -5,6 +5,7 @@ import { E2E_VIEWPORT } from './e2e/config/viewport'
 
 const isCI = env.CI
 const storageState = 'e2e/.auth/auth.json'
+const port = env.E2E_PORT
 
 const desktopChrome = {
   ...devices['Desktop Chrome'],
@@ -45,7 +46,7 @@ const config: PlaywrightTestConfig = {
   outputDir: 'test-results',
   globalTeardown: './e2e/global-teardown.ts',
   use: {
-    baseURL: 'http://localhost:4173/',
+    baseURL: `http://localhost:${port}/`,
     viewport: E2E_VIEWPORT,
     screen: E2E_VIEWPORT,
     trace: 'on-first-retry',
@@ -206,9 +207,9 @@ const config: PlaywrightTestConfig = {
     // Set E2E_SKIP_BUILD=1 to reuse an existing `dist/` (faster local iteration).
     command:
       process.env.E2E_SKIP_BUILD === '1'
-        ? 'PORT=4173 bun run start'
-        : 'bun run build && PORT=4173 bun run start',
-    port: 4173,
+        ? `PORT=${port} bun run start`
+        : `bun run build && PORT=${port} bun run start`,
+    port,
   },
 }
 
