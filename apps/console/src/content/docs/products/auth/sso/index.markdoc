@@ -72,11 +72,9 @@ If your bank asks for payment authentication, the card shows **Payment pending**
 
 Once the add-on is active, you can set up SSO on each team's **Single sign-on** tab. Until then, that tab only shows the add-on.
 
-## Pricing {% #pricing %}
-
-The Single sign-on add-on is available on the Pro plan and costs $150 per project per month. When you enable it, Appwrite charges your organization's payment method the prorated amount for the days left in the current billing cycle. After that, the full monthly price is added to each invoice. Prices exclude applicable taxes and fees.
-
-One add-on covers every team in the project. Each project needs its own add-on, and [project environments](/docs/advanced/environments) use the add-on of the project they belong to.
+{% info title="Pricing" %}
+The Single sign-on add-on is available on the Pro plan and is billed monthly per project. One add-on covers every team in the project, and [project environments](/docs/advanced/environments) use the add-on of the project they belong to. When you enable it, Appwrite charges a prorated amount for the rest of the current billing cycle. See the [pricing page](/pricing) for the current price.
+{% /info %}
 
 ## Disable the add-on {% #disable %}
 

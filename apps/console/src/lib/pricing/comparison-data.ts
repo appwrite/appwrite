@@ -138,8 +138,9 @@ export const comparisonTables: ComparisonTable[] = [
                 {
                     title: 'SSO',
                     free: '-',
-                    pro: '-',
-                    enterprise: 'Coming soon'
+                    pro: { text: '$150 per project / month', href: '/docs/products/auth/sso' },
+                    enterprise: 'Custom',
+                    info: 'An add-on that lets your customers\' employees sign in to your app through their company\'s identity provider.'
                 }
             ]
         },
