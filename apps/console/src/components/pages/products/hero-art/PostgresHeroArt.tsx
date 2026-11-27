@@ -86,7 +86,7 @@ export function PostgresHeroArt() {
               dir="ltr"
               className="rounded-md bg-[rgb(var(--tone-rgb)/0.14)] px-1.5 py-0.5 font-mono text-[10px] text-[var(--tone-ink)]"
             >
-              PostgreSQL 18
+              PostgreSQL 19
             </span>
             <span
               dir="ltr"

@@ -220,7 +220,11 @@ curl -X PATCH \
 
 # Engine version upgrades {% #upgrades %}
 
-You can upgrade the MySQL version online, such as from 8.0 to 8.4. A second instance is provisioned on the target version, data streams over with logical replication, and traffic cuts over once replication has caught up, with no read or write outage. The target version must be newer than the database's current version:
+You can upgrade the MySQL version online, such as from 8.0 to 8.4. A second instance is provisioned on the target version, data streams over with logical replication, and traffic cuts over once replication has caught up, with no read or write outage. The target version must be newer than the database's current version, and an upgrade cannot be reversed.
+
+In the Console, open your database's **Settings** > **General**. The **Version** card lists the current version and every newer supported version. Click **Upgrade** next to the target version and confirm. The database must be `ready` to start an upgrade.
+
+To upgrade through the API, call `createUpgrade` with the target version:
 
 {% multicode %}
 ```server-nodejs
