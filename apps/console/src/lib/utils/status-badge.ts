@@ -343,7 +343,14 @@ export function hasWrongDnsRecord(
   domain: string,
   records: Pick<ProxyRuleRecord, 'type' | 'status' | 'regions'>[],
 ): boolean {
-  if (records.some((r) => r.type === 'CAA' && r.status === 'mismatch'))
+  if (
+    records.some(
+      (r) =>
+        r.type === 'CAA' &&
+        r.status === 'mismatch' &&
+        getLaggingRegions(r).length === 0,
+    )
+  )
     return true
   const pointingTypes = ['CNAME', 'A', 'AAAA']
   if (

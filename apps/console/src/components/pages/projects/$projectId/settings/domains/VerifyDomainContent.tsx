@@ -683,7 +683,8 @@ function getDnsBanners(
 ): DnsBanner[] {
   const verified = pointing.find((check) => check.status === 'verified')
   const banners: DnsBanner[] = []
-  if (caa?.status === 'mismatch') {
+  // A CAA record some regions already accept is still propagating, not wrong
+  if (caa?.status === 'mismatch' && getLaggingRegions(caa).length === 0) {
     banners.push({
       tone: 'error',
       prefix: t('CAA record'),
