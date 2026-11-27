@@ -2,7 +2,7 @@
 /**
  * Writes the site's data (data/index.json, data/<library>.json, data/graph.json) from the repository:
  *
- * - the crates and their dependencies: `cargo metadata`;
+ * - the crates and their dependencies: each crate's `Cargo.toml`, with the workspace's filling `.workspace = true`;
  * - each crate's API reference: the rustdoc JSON docs.rs built for its published version;
  * - guides: `guide.md` next to each crate's `Cargo.toml`;
  * - where each library is in the move from PHP: the utopia PHP extension (crates/extension), whose
@@ -218,13 +218,14 @@ interface Rustdoc {
   index: Record<string, Json>
 }
 
-/** The rustdoc JSON of a published crate, from docs.rs (its build of that version, else of the latest). */
-async function rustdoc(name: string, version: string): Promise<Rustdoc> {
+/** The rustdoc JSON of a published crate, from docs.rs (its build of that version, else of the latest); null when unpublished. */
+async function rustdoc(name: string, version: string): Promise<Rustdoc | null> {
   mkdirSync(cache, { recursive: true })
   const cached = join(cache, `${name}-${version}.json`)
   if (!existsSync(cached)) {
     let response = await fetch(`https://docs.rs/crate/${name}/${version}/json`)
     if (response.status === 404) response = await fetch(`https://docs.rs/crate/${name}/latest/json`)
+    if (response.status === 404) return null
     if (!response.ok) throw new Error(`docs.rs has no rustdoc JSON for ${name} ${version}: ${response.status}`)
     writeFileSync(cached, Bun.zstdDecompressSync(new Uint8Array(await response.arrayBuffer())))
   }
@@ -489,21 +490,86 @@ function declared(paths: string[]): string[] {
 
 // --- Assembly ---------------------------------------------------------------------------------------------
 
-interface Package {
+/** A dependency as `cargo metadata` reports it, read from the manifest: no cargo needed to build the site. */
+interface Dependency {
   name: string
-  version: string
-  description: string | null
-  manifest_path: string
-  metadata: { utopia?: { category?: string } } | null
-  features: Record<string, string[]>
-  dependencies: { name: string; rename: string | null; req: string; kind: string | null; optional: boolean; uses_default_features: boolean; features: string[]; target: string | null; path?: string }[]
+  rename: string | null
+  req: string
+  kind: string | null
+  optional: boolean
+  uses_default_features: boolean
+  features: string[]
+  target: string | null
 }
 
-const metadata = JSON.parse(await $`cargo metadata --format-version 1 --no-deps --locked --manifest-path ${join(root, 'Cargo.toml')}`.quiet().text()) as { packages: Package[] }
-const crates = metadata.packages
-  .map((p) => ({ ...p, dir: relative(root, dirname(p.manifest_path)) }))
-  .filter((p) => p.dir.startsWith('crates/utopia/'))
-  .map((p) => ({ ...p, slug: p.dir.split('/').pop()! }))
+const workspace = Bun.TOML.parse(read('Cargo.toml')) as Json
+
+/** A version requirement as cargo normalizes it: a bare version means caret. */
+const requirement = (version?: string) => (!version ? '*' : '^~=<>*'.includes(version[0]) || version.includes(',') ? version : `^${version}`)
+
+function dependencies(table: Json = {}, kind: string | null, target: string | null): Dependency[] {
+  // In key order, as cargo lists them.
+  return Object.keys(table).sort().map((key) => {
+    let spec: Json = table[key]
+    spec = typeof spec === 'string' ? { version: spec } : spec
+    const inherited = spec.workspace ? workspace.workspace.dependencies[key] : {}
+    const base = typeof inherited === 'string' ? { version: inherited } : inherited
+    const name = spec.package ?? base.package ?? key
+    return {
+      name,
+      rename: name === key ? null : key,
+      req: requirement(spec.version ?? base.version),
+      kind,
+      optional: spec.optional ?? false,
+      uses_default_features: (spec['default-features'] ?? base['default-features']) !== false,
+      features: [...(base.features ?? []), ...(spec.features ?? [])],
+      target,
+    }
+  })
+}
+
+/** A crate under crates/utopia, read from its Cargo.toml with `.workspace = true` fields filled from the root's. */
+function manifest(dir: string) {
+  const toml = Bun.TOML.parse(read(`${dir}/Cargo.toml`)) as Json
+  const field = (key: string) => (toml.package[key]?.workspace ? workspace.workspace.package[key] : toml.package[key])
+  const tables = (t: Json, target: string | null) => [
+    ...dependencies(t.dependencies, null, target),
+    ...dependencies(t['dev-dependencies'], 'dev', target),
+    ...dependencies(t['build-dependencies'], 'build', target),
+  ]
+  const deps = [...tables(toml, null), ...Object.entries(toml.target ?? {}).flatMap(([target, t]) => tables(t, target))]
+  // Cargo adds a feature for each optional dependency no feature names with `dep:`.
+  const features: Record<string, string[]> = { ...toml.features }
+  const named = Object.values(features).flat()
+  for (const d of deps) {
+    const key = d.rename ?? d.name
+    if (d.optional && !named.includes(`dep:${key}`)) features[key] ??= [`dep:${key}`]
+  }
+  return {
+    name: toml.package.name as string,
+    version: field('version') as string,
+    description: (field('description') as string | undefined) ?? null,
+    metadata: (toml.package.metadata ?? null) as { utopia?: { category?: string } } | null,
+    features,
+    dependencies: deps,
+    dir,
+    slug: dir.split('/').pop()!,
+  }
+}
+
+// Published crates only: a crate's page is its docs.rs reference, so one not yet on crates.io waits for its release.
+const docs = new Map<string, Rustdoc>()
+const crates = []
+for (const dir of readdirSync(join(root, 'crates/utopia')).map((d) => `crates/utopia/${d}`).filter((d) => exists(`${d}/Cargo.toml`)).sort()) {
+  const c = manifest(dir)
+  const doc = await rustdoc(c.name, c.version)
+  if (!doc) {
+    console.warn(`${c.name}: not on docs.rs yet, left off the site`)
+    continue
+  }
+  docs.set(c.name, doc)
+  crates.push(c)
+}
 const slugOf = new Map(crates.map((c) => [c.name, c.slug]))
 
 /** The versions `Cargo.lock` holds of each package. */
@@ -591,7 +657,7 @@ for (const c of crates)
 const summaries: LibrarySummary[] = []
 for (const c of crates) {
   const php = packages.get(c.slug)
-  const doc = await rustdoc(c.name, c.version)
+  const doc = docs.get(c.name)!
   const { modules, items, reexports } = reference(doc, c.dir)
   const guide = exists(`${c.dir}/guide.md`) ? blocks(read(`${c.dir}/guide.md`)) : []
   const overview = modules.find((m) => !m.path)
