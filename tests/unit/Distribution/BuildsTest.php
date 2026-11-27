@@ -7,8 +7,10 @@ namespace Tests\Unit\Distribution;
 use Appwrite\Auth\JobsSecret;
 use Appwrite\Distribution\Build\Status as BuildStatus;
 use Appwrite\Distribution\Builds;
+use Appwrite\Distribution\Provider;
 use Appwrite\Distribution\Schedules;
 use Appwrite\Distribution\Signing;
+use Appwrite\Distribution\Stores;
 use Appwrite\Event\Publisher\DistributionBuild as DistributionBuildPublisher;
 use Appwrite\Extend\Exception;
 use OpenRuntimes\Orchestrator\Exception\ApiException;
@@ -1532,7 +1534,7 @@ final class BuildsTest extends TestCase
 
         $this->builds(LocalBuilds::class)->create($this->storedApp(), $this->storedTarget(['track' => '']), $this->request(), new RecordingGit(), 'appwrite', 'mobile-app', checks: $checks);
 
-        $this->assertSame([[Config::getParam('distribution')['tracks']['google'][0], false]], $checks->calls->getArrayCopy());
+        $this->assertSame([[Stores::testing(Provider::Google), false]], $checks->calls->getArrayCopy());
         $this->assertSame('internal', $checks->calls[0][0]);
         $this->assertCount(1, $this->dbForProject->documents['distributionLogs']);
     }

@@ -88,6 +88,7 @@ trait BuildsBase
             'installationId' => $installationId,
             'providerRepositoryId' => (string) $repository['id'],
             'providerBranch' => self::GITEA_BRANCH,
+            'providerDeployments' => false,
             ...$app,
         ]);
         $this->assertSame(201, $created['headers']['status-code'], \json_encode($created['body']));

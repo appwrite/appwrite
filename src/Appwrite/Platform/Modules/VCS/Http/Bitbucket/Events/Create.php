@@ -2,6 +2,12 @@
 
 namespace Appwrite\Platform\Modules\VCS\Http\Bitbucket\Events;
 
+use Appwrite\Distribution\Build\Push;
+use Appwrite\Distribution\Build\Trigger;
+use Appwrite\Distribution\Checks;
+use Appwrite\Distribution\Stores;
+use Appwrite\Distribution\Submissions;
+use Appwrite\Distribution\VersionStrategy;
 use Appwrite\Event\Publisher\Review as ReviewPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
@@ -10,6 +16,7 @@ use Appwrite\Platform\Modules\VCS\Http\GitHub\Reviews;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
+use Appwrite\Vcs\InstallationRepositories;
 use Appwrite\Vcs\InstallationTokens;
 use Appwrite\Vcs\RepositoryPullRequestCleanup;
 use Utopia\Bus\Bus;
@@ -17,6 +24,7 @@ use Utopia\Config\Config;
 use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DSN\DSN;
@@ -25,12 +33,18 @@ use Utopia\Span\Span;
 use Utopia\System\System;
 use Utopia\VCS\Adapter\Git;
 use Utopia\VCS\Adapter\Git\Bitbucket as BitbucketAdapter;
+use Utopia\VCS\Exception\OwnerNotFound;
+use Utopia\VCS\Exception\RepositoryNotFound;
 
 class Create extends Action
 {
     use HTTP;
     use Deployment;
     use Reviews;
+
+    private const int LOCK_TTL = 120;
+
+    private const float LOCK_TIMEOUT = 5.0;
 
     public static function getName()
     {
@@ -57,6 +71,10 @@ class Create extends Action
             ->inject('deploymentsFactory')
             ->inject('platform')
             ->inject('publisherForReviews')
+            ->inject('distributionBuildsFactory')
+            ->inject('distributionStores')
+            ->inject('installationRepositories')
+            ->inject('locks')
             ->callback($this->action(...));
     }
 
@@ -73,6 +91,10 @@ class Create extends Action
         callable $deploymentsFactory,
         array $platform,
         ReviewPublisher $publisherForReviews,
+        callable $distributionBuildsFactory,
+        Stores $distributionStores,
+        InstallationRepositories $installationRepositories,
+        callable $locks,
     ) {
         $vcs = $vcsFactory->fromProvider('bitbucket');
 
@@ -105,7 +127,7 @@ class Create extends Action
             }
 
             match ($event) {
-                'repo:push' => $this->handlePushEvent($parsedPayload, $vcsFactory, $installationTokens, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory),
+                'repo:push' => $this->handlePushEvent($parsedPayload, $vcsFactory, $installationTokens, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory, $distributionBuildsFactory, $distributionStores, $installationRepositories, $locks),
                 'pullrequest:created', 'pullrequest:updated', 'pullrequest:fulfilled', 'pullrequest:rejected' => $this->handlePullRequestEvent($parsedPayload, $vcsFactory, $installationTokens, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory),
                 default => null,
             };
@@ -125,10 +147,6 @@ class Create extends Action
         return $installation;
     }
 
-    /**
-     * A refresh/adapter failure is pushed onto $errors instead of swallowed, so the
-     * caller can surface a non-2xx response and Bitbucket logs it as a failed delivery.
-     */
     private function resolveAdapterForRepository(Document $repository, VcsFactory $vcsFactory, InstallationTokens $installationTokens, Database $dbForPlatform, Authorization $authorization, array &$errors): ?Git
     {
         $installation = $this->resolveBitbucketInstallation($repository, $dbForPlatform, $authorization);
@@ -137,6 +155,15 @@ class Create extends Action
             return null;
         }
 
+        return $this->resolveAdapter($installation, $vcsFactory, $installationTokens, $dbForPlatform, $errors);
+    }
+
+    /**
+     * A refresh/adapter failure is pushed onto $errors instead of swallowed, so the
+     * caller can surface a non-2xx response and Bitbucket logs it as a failed delivery.
+     */
+    private function resolveAdapter(Document $installation, VcsFactory $vcsFactory, InstallationTokens $installationTokens, Database $dbForPlatform, array &$errors): ?Git
+    {
         try {
             $installation = $installationTokens->refreshForInstallation($installation, $dbForPlatform, $vcsFactory);
 
@@ -160,6 +187,10 @@ class Create extends Action
         callable $getProjectDB,
         array $platform,
         callable $deploymentsFactory,
+        callable $distributionBuildsFactory,
+        Stores $distributionStores,
+        InstallationRepositories $installationRepositories,
+        callable $locks,
     ) {
         $providerBranchDeleted = $parsedPayload['branchDeleted'] ?? false;
         $providerBranch = $parsedPayload['branch'] ?? '';
@@ -190,8 +221,16 @@ class Create extends Action
 
         $providerAffectedFiles = $parsedPayload['affectedFiles'] ?? [];
 
+        $apps = \array_filter($repositories, fn (Document $repository): bool => $repository->getAttribute('resourceType', '') === RESOURCE_TYPE_DISTRIBUTION_APPS);
+
         $errors = [];
-        foreach ($repositories as $repository) {
+
+        // Read per delivery. Before the deployments, because a failed deployment throws out of their loop and must not cost the builds.
+        if (System::getEnv('_APP_DISTRIBUTION', 'disabled') === 'enabled' && $apps !== []) {
+            $this->handleDistributionPush($apps, $parsedPayload, $vcsFactory, $installationTokens, $dbForPlatform, $authorization, $getProjectDB, $distributionBuildsFactory, $distributionStores, $installationRepositories, $locks, $errors);
+        }
+
+        foreach (\array_diff_key($repositories, $apps) as $repository) {
             $adapter = $this->resolveAdapterForRepository($repository, $vcsFactory, $installationTokens, $dbForPlatform, $authorization, $errors);
 
             if ($adapter === null) {
@@ -205,6 +244,207 @@ class Create extends Action
 
         if (!empty($errors)) {
             throw new Exception(Exception::GENERAL_UNKNOWN, \implode("\n", $errors));
+        }
+    }
+
+    /**
+     * @param array<Document> $rows
+     * @param array<string, mixed> $parsedPayload
+     */
+    private function handleDistributionPush(
+        array $rows,
+        array $parsedPayload,
+        VcsFactory $vcsFactory,
+        InstallationTokens $installationTokens,
+        Database $dbForPlatform,
+        Authorization $authorization,
+        callable $getProjectDB,
+        callable $distributionBuildsFactory,
+        Stores $distributionStores,
+        InstallationRepositories $installationRepositories,
+        callable $locks,
+        array &$errors,
+    ): void {
+        $push = Push::fromPayload($parsedPayload);
+
+        // The Bitbucket adapter drops tag changes from a push, so a tag never builds here (RFC §13.2).
+        if ($push->isTag()) {
+            return;
+        }
+
+        $adapters = [];
+        $resolved = [];
+        $heads = [];
+
+        foreach ($rows as $row) {
+            $logBase = "vcs.bitbucket.event.distribution.{$row->getId()}";
+
+            try {
+                $installation = $this->resolveBitbucketInstallation($row, $dbForPlatform, $authorization);
+
+                if ($installation === null) {
+                    continue;
+                }
+
+                $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', (string) $row->getAttribute('projectId', '')));
+
+                if ($project->isEmpty() || !$this->isProjectInCurrentRegion($project)) {
+                    continue;
+                }
+
+                $dbForProject = $getProjectDB($project);
+
+                [$app, $targets, $built] = $authorization->skip(fn () => $this->load($dbForProject, $row, $push));
+
+                $reason = $push->skip($app, $row);
+
+                if ($reason !== null) {
+                    Span::add("{$logBase}.skipped", $reason);
+                    continue;
+                }
+
+                $vcs = $adapters[$installation->getId()] ??= $this->resolveAdapter($installation, $vcsFactory, $installationTokens, $dbForPlatform, $errors);
+
+                if ($vcs === null) {
+                    continue;
+                }
+
+                $providerRepositoryId = (string) $row->getAttribute('providerRepositoryId', '');
+                [$owner, $repository] = $resolved["{$installation->getId()}/{$providerRepositoryId}"] ??= $installationRepositories->resolve($vcs, $installation, $providerRepositoryId);
+                $key = "{$owner}/{$repository}";
+
+                try {
+                    $commit = $heads[$key] ??= $vcs->getLatestCommit($owner, $repository, $push->name());
+                } catch (RepositoryNotFound) {
+                    $commit = $heads[$key] = [];
+                }
+
+                $head = (string) ($commit['commitHash'] ?? '');
+
+                // The webhook secret is instance-wide, so a pushed branch, commit and message are trusted only as the provider's own branch head.
+                if ($head === '' || $head !== $push->commitHash) {
+                    Span::add("{$logBase}.skipped", 'not the branch head');
+                    continue;
+                }
+
+                $trigger = $push->withCommit($head, (string) ($commit['commitMessage'] ?? ''));
+                $reason = $trigger->skip($app, $row);
+
+                if ($reason !== null) {
+                    Span::add("{$logBase}.skipped", $reason);
+                    continue;
+                }
+
+                foreach ($targets as $target) {
+                    if ($target->getAttribute('versionStrategy', VersionStrategy::Automatic->value) === VersionStrategy::Manual->value) {
+                        Span::add("{$logBase}.{$target->getId()}.skipped", 'manual version');
+                        continue;
+                    }
+
+                    $buildId = $trigger->buildId($target);
+
+                    if (\in_array($buildId, $built, true)) {
+                        continue;
+                    }
+
+                    try {
+                        $build = new Document([
+                            '$id' => $buildId,
+                            'type' => Trigger::Vcs->value,
+                            'versionName' => '',
+                            ...$trigger->attributes(),
+                        ]);
+                        $latest = $authorization->skip(fn () => $this->latest($locks, $distributionStores, $dbForProject, $target));
+
+                        $authorization->skip(fn () => $distributionBuildsFactory($dbForProject, $project)->create($app, $target, $build, $vcs, $owner, $repository, $latest, new Checks($dbForProject, $distributionStores)));
+                    } catch (Duplicate) {
+                        // A concurrent delivery of the same push created it first.
+                    } catch (Exception $error) {
+                        if ($error->getCode() >= 500) {
+                            $errors[] = $error->getMessage();
+                            continue;
+                        }
+
+                        Console::warning("Skipping distribution target '{$target->getId()}' ({$error->getType()}): {$error->getMessage()}");
+                    } catch (\Throwable $error) {
+                        $errors[] = $error->getMessage();
+                    }
+                }
+            } catch (OwnerNotFound $error) {
+                Span::add("{$logBase}.skipped", 'owner not found');
+                Console::warning("Skipping repository '{$row->getId()}': {$error->getMessage()}");
+            } catch (Exception $error) {
+                Span::add("{$logBase}.error", $error->getMessage());
+
+                if ($error->getCode() >= 500) {
+                    $errors[] = $error->getMessage();
+                    continue;
+                }
+
+                Console::warning("Skipping repository '{$row->getId()}' ({$error->getType()}): {$error->getMessage()}");
+            } catch (\Throwable $error) {
+                Span::add("{$logBase}.error", $error->getMessage());
+                $errors[] = $error->getMessage();
+            }
+        }
+    }
+
+    /**
+     * The app a push builds, its targets, and the ids of the builds that push already made.
+     * Webhook callers have no session, so it runs under an authorization skip, and only after
+     * the webhook signature is verified, and every id comes from the platform repository row.
+     *
+     * @return array{0: Document, 1: array<Document>, 2: array<string>}
+     */
+    private function load(Database $dbForProject, Document $repository, Push $push): array
+    {
+        $app = $dbForProject->getDocument('distributionApps', (string) $repository->getAttribute('resourceId', ''));
+
+        if ($app->isEmpty()) {
+            return [$app, [], []];
+        }
+
+        $targets = $dbForProject->find('distributionTargets', [
+            Query::equal('appInternalId', [(string) $app->getSequence()]),
+            Query::limit(APP_LIMIT_SUBQUERY),
+        ]);
+        $ids = \array_map(fn (Document $target): string => $push->buildId($target), $targets);
+        $built = $ids === [] ? [] : \array_map(fn (Document $build): string => $build->getId(), $dbForProject->find('distributionBuilds', [
+            Query::equal('$id', $ids),
+            Query::limit(\count($ids)),
+        ]));
+
+        return [$app, $targets, $built];
+    }
+
+    /**
+     * The store's latest version code, so an automatic code never repeats one the store already has.
+     * The lock is the one submissions take, because opening a Google edit invalidates the others.
+     */
+    private function latest(callable $locks, Stores $stores, Database $dbForProject, Document $target): ?int
+    {
+        $connectionId = (string) $target->getAttribute('connectionId', '');
+
+        if ($connectionId === '') {
+            return null;
+        }
+
+        try {
+            $connection = $dbForProject->getDocument('distributionConnections', $connectionId);
+            $identifier = (string) $target->getAttribute('identifier', '');
+
+            if ($connection->isEmpty() || Submissions::isContended($dbForProject, $connection, $identifier)) {
+                return null;
+            }
+
+            return $locks(
+                Submissions::storeLock($connection, $identifier),
+                self::LOCK_TTL,
+                fn (): int => $stores->connection($connection)->latestVersionCode($identifier),
+                self::LOCK_TIMEOUT,
+            );
+        } catch (\Throwable) {
+            return null;
         }
     }
 

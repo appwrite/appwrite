@@ -82,7 +82,7 @@ class DistributionApp extends Model
             ])
             ->addRule('providerBranches', [
                 'type' => self::TYPE_STRING,
-                'description' => 'List of branch name patterns that trigger automatic builds. Supports glob wildcards. Empty list builds on all branches.',
+                'description' => 'List of branch name patterns that trigger automatic builds. Supports glob wildcards. Empty list builds only the production branch.',
                 'default' => [],
                 'example' => ['main', 'release/*'],
                 'array' => true,
@@ -96,7 +96,7 @@ class DistributionApp extends Model
             ])
             ->addRule('providerTags', [
                 'type' => self::TYPE_STRING,
-                'description' => 'List of tag name patterns that trigger automatic builds. Supports glob wildcards.',
+                'description' => 'List of tag name patterns that trigger automatic builds. Supports glob wildcards. Empty list builds no tags.',
                 'default' => [],
                 'example' => ['v*'],
                 'array' => true,

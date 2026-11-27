@@ -156,7 +156,7 @@ final class ChecksTest extends TestCase
         yield 'version_not_increasing for an equal version code' => [[], null, null, [], 7, ['versionCode' => 7], Code::VersionNotIncreasing, Severity::Error, 'versionCode', false];
         yield 'version_not_increasing for a lower version code' => [[], null, null, [], 9, ['versionCode' => 1], Code::VersionNotIncreasing, Severity::Error, 'versionCode', false];
         yield 'target_sdk_too_low' => [[], null, null, [], 0, ['manifest' => ['targetSdk' => Checks::TARGET_SDK - 1]], Code::TargetSdkTooLow, Severity::Error, 'targetSdk', false];
-        yield 'signing_missing for an unsigned artifact without an identity' => [['signingIdentityId' => ''], null, null, [], 0, ['versionCode' => 2], Code::SigningMissing, Severity::Error, 'signingIdentityId', false];
+        yield 'signing_missing once for an unsigned artifact without an identity' => [['signingIdentityId' => ''], null, null, [], 0, ['versionCode' => 2, 'signed' => false], Code::SigningMissing, Severity::Error, 'artifactId', false];
     }
 
     /**
@@ -349,13 +349,48 @@ final class ChecksTest extends TestCase
         $this->assertTrue($check['ready'], \json_encode($check['issues']) ?: '');
     }
 
+    /**
+     * @return \Iterator<string, array{int, list<array{string, string}>, bool}>
+     */
+    public static function profiles(): \Iterator
+    {
+        yield 'expired' => [-60, [[Code::SigningExpired->value, Severity::Error->value]], false];
+        yield 'expiring within a week' => [86400 * 3, [[Code::SigningExpired->value, Severity::Warning->value]], true];
+        yield 'valid for longer than a week' => [86400 * 30, [], true];
+    }
+
+    /**
+     * @param list<array{string, string}> $issues
+     */
+    #[DataProvider('profiles')]
+    public function testProvisioningProfileOfAnIosArtifactIsChecked(int $seconds, array $issues, bool $ready): void
+    {
+        $check = $this->checks->run(
+            $this->app,
+            $this->target(['platform' => Platform::Ios->value]),
+            'testflight',
+            $this->artifact(['platform' => Platform::Ios->value, 'manifest' => ['profileExpiresAt' => DateTime::addSeconds(new \DateTime(), $seconds)]]),
+        );
+
+        $this->assertSame($issues, \array_map(static fn (array $issue): array => [$issue['code'], $issue['severity']], $check['issues']));
+        $this->assertSame($ready, $check['ready']);
+        $this->assertSame(\array_fill(0, \count($issues), 'profileExpiresAt'), \array_column($check['issues'], 'field'));
+    }
+
+    public function testProvisioningProfileIsCheckedOnlyForIos(): void
+    {
+        $check = $this->checks->run($this->app, $this->target(), self::TRACK, $this->artifact(['manifest' => ['profileExpiresAt' => DateTime::addSeconds(new \DateTime(), -60)]]));
+
+        $this->assertTrue($check['ready'], \json_encode($check['issues']) ?: '');
+    }
+
     public function testUnsignedIosArtifactIsNotReady(): void
     {
         $check = $this->checks->run(
             $this->app,
             $this->target(['platform' => Platform::Ios->value]),
             'testflight',
-            $this->artifact(['platform' => Platform::Ios->value]),
+            $this->artifact(['platform' => Platform::Ios->value, 'signed' => false]),
         );
 
         $this->assertFalse($check['ready']);
@@ -364,11 +399,29 @@ final class ChecksTest extends TestCase
         $this->assertSame(Platform::Ios->value, $check['issues'][0]['platform']);
     }
 
-    public function testUnsignedAndroidArtifactIsSignedWithTheTargetIdentity(): void
+    public function testUnsignedAndroidArtifactIsNotReady(): void
     {
         $check = $this->checks->run($this->app, $this->target(), self::TRACK, $this->artifact(['signed' => false]));
 
-        $this->assertTrue($check['ready'], \json_encode($check['issues']) ?: '');
+        $this->assertFalse($check['ready']);
+        $this->assertSame([Code::SigningMissing->value], \array_column($check['issues'], 'code'));
+        $this->assertSame('artifactId', $check['issues'][0]['field']);
+        $this->assertSame(Platform::Android->value, $check['issues'][0]['platform']);
+        $this->assertSame('The artifact is not signed.', $check['issues'][0]['message']);
+        $this->assertSame('Set a signing identity on the target and build again, or upload a bundle signed with your upload key.', $check['issues'][0]['remediation']);
+    }
+
+    public function testArtifactCheckSkipsTheTargetIdentity(): void
+    {
+        $this->database->seed('distributionSigningIdentities', ['$id' => 'revoked', 'platform' => Platform::Android->value, 'status' => SigningStatus::Revoked->value, 'identifiers' => ['io.example.other']]);
+
+        $missing = $this->checks->run($this->app, $this->target(['signingIdentityId' => '']), self::TRACK, $this->artifact(['versionCode' => 1]));
+        $revoked = $this->checks->run($this->app, $this->target(['signingIdentityId' => 'revoked']), self::TRACK, $this->artifact(['versionCode' => 1]));
+
+        $this->assertTrue($missing['ready']);
+        $this->assertSame([], $missing['issues'], 'A signed artifact is already signed, so the identity of the target is not needed.');
+        $this->assertTrue($revoked['ready']);
+        $this->assertSame([], $revoked['issues']);
     }
 
     /**
@@ -390,10 +443,11 @@ final class ChecksTest extends TestCase
         $this->sibling('connection', $external);
         $this->store->latest = 99;
 
-        $check = $this->checks->run($this->app, $this->target(['signingIdentityId' => '']), self::TRACK, $this->artifact(['versionCode' => 1]));
+        $check = $this->checks->run($this->app, $this->target(['signingIdentityId' => '']), self::TRACK, $this->artifact(['versionCode' => 1, 'signed' => false]));
 
         $this->assertSame([], $this->store->calls, 'Opening an edit would invalidate the edit the other submission holds.');
         $this->assertSame([Code::SigningMissing->value], \array_column($check['issues'], 'code'), 'Local issues are still reported.');
+        $this->assertSame('artifactId', $check['issues'][0]['field']);
     }
 
     /**
@@ -546,7 +600,7 @@ final class ChecksTest extends TestCase
             '$id' => 'artifact',
             'platform' => Platform::Android->value,
             'identifier' => self::PACKAGE,
-            'signed' => false,
+            'signed' => true,
             ...$attributes,
         ]);
     }

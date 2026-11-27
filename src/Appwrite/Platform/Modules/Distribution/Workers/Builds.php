@@ -14,10 +14,13 @@ use Appwrite\Distribution\Logs;
 use Appwrite\Distribution\Platform;
 use Appwrite\Distribution\Schedules;
 use Appwrite\Distribution\Signing;
+use Appwrite\Distribution\Stores;
+use Appwrite\Distribution\Submissions as DistributionSubmissions;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\DistributionBuild as DistributionBuildMessage;
 use Appwrite\Event\Message\DistributionBuildAction;
 use Appwrite\Event\Message\Func as FunctionMessage;
+use Appwrite\Event\Publisher\DistributionSubmission as DistributionSubmissionPublisher;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
@@ -28,6 +31,8 @@ use Appwrite\Usage\Distribution as DistributionUsage;
 use Appwrite\Utopia\Response\Model\DistributionArtifact;
 use Appwrite\Utopia\Response\Model\DistributionBuild;
 use Appwrite\Utopia\Response\Model\DistributionLog;
+use Appwrite\Utopia\Response\Model\DistributionRelease;
+use Appwrite\Utopia\Response\Model\DistributionSubmission;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\InstallationTokens;
 use OpenRuntimes\Orchestrator\Callback\JobArtifact;
@@ -41,6 +46,7 @@ use OpenRuntimes\Orchestrator\Exception\ClientException;
 use OpenRuntimes\Orchestrator\Jobs;
 use OpenRuntimes\Orchestrator\Model\JobStatus;
 use Utopia\Cache\Cache;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -80,6 +86,8 @@ class Builds extends Action
     private const string ARTIFACT_CREATE = 'distributionApps.[appId].artifacts.[artifactId].create';
     private const string BUILD_EVENT = 'distributionApps.[appId].builds.[buildId].update';
     private const string LOG_EVENT = 'distributionApps.[appId].builds.[buildId].logs.[logId].create';
+    private const string RELEASE_CREATE = 'distributionApps.[appId].releases.[releaseId].create';
+    private const string SUBMISSION_CREATE = 'distributionApps.[appId].submissions.[submissionId].create';
 
     private const string RESULT = 'result';
     private const string SIGNING = 'signing';
@@ -158,6 +166,8 @@ class Builds extends Action
             ->inject('jobsForDistribution')
             ->inject('vcsFactory')
             ->inject('installationTokens')
+            ->inject('distributionStores')
+            ->inject('publisherForDistributionSubmissions')
             ->callback($this->action(...));
     }
 
@@ -180,6 +190,8 @@ class Builds extends Action
         Jobs $jobsForDistribution,
         VcsFactory $vcsFactory,
         InstallationTokens $installationTokens,
+        Stores $distributionStores,
+        DistributionSubmissionPublisher $publisherForDistributionSubmissions,
     ): void {
         $payload = DistributionBuildMessage::fromArray($message->getPayload());
         Span::add('distribution.action', $payload->action->value);
@@ -190,19 +202,20 @@ class Builds extends Action
 
         $schedules = new Schedules($dbForPlatform);
         $signing = new Signing($cache);
+        $submissions = new DistributionSubmissions($dbForProject, $project, $distributionStores, $schedules, $deviceForDistribution, $publisherForDistributionSubmissions);
 
         switch ($payload->action) {
             case DistributionBuildAction::Inspect:
                 $this->inspect($project, $dbForProject, $distributionBuilds, $locks, $payload->id);
                 break;
             case DistributionBuildAction::Event:
-                $this->event($payload, $project, $dbForProject, $dbForPlatform, $distributionBuilds, $deviceForDistribution, $schedules, $signing, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $cache, $locks, $usage, $publisherForUsage);
+                $this->event($payload, $project, $dbForProject, $dbForPlatform, $distributionBuilds, $deviceForDistribution, $schedules, $signing, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $cache, $locks, $usage, $publisherForUsage, $submissions);
                 break;
             case DistributionBuildAction::Reconcile:
-                $this->reconcile($payload->id, $project, $dbForProject, $dbForPlatform, $distributionBuilds, $jobsForDistributionSigning, $jobsForDistribution, $deviceForDistribution, $schedules, $signing, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $locks, $usage, $publisherForUsage);
+                $this->reconcile($payload->id, $project, $dbForProject, $dbForPlatform, $distributionBuilds, $jobsForDistributionSigning, $jobsForDistribution, $deviceForDistribution, $schedules, $signing, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $locks, $usage, $publisherForUsage, $submissions);
                 break;
             case DistributionBuildAction::Dispatch:
-                $this->dispatch($payload->id, $project, $dbForProject, $dbForPlatform, $distributionBuilds, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $locks, $usage, $publisherForUsage);
+                $this->dispatch($payload->id, $project, $dbForProject, $dbForPlatform, $distributionBuilds, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $locks, $usage, $publisherForUsage, $submissions);
                 break;
         }
     }
@@ -246,6 +259,7 @@ class Builds extends Action
         callable $locks,
         Context $usage,
         UsagePublisher $publisherForUsage,
+        DistributionSubmissions $submissions,
     ): void {
         $meta = $payload->data['meta'] ?? [];
         $artifactId = (string) ($meta['artifactId'] ?? '');
@@ -256,7 +270,7 @@ class Builds extends Action
 
         if ($artifactId === '') {
             if ((string) ($meta['buildId'] ?? '') !== '' && ($meta['stage'] ?? '') === DistributionBuilds::STAGE_BUILD) {
-                $this->progress($payload, $meta, $callback, $project, $dbForProject, $dbForPlatform, $distributionBuilds, $deviceForDistribution, $schedules, $signing, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $cache, $locks, $usage, $publisherForUsage);
+                $this->progress($payload, $meta, $callback, $project, $dbForProject, $dbForPlatform, $distributionBuilds, $deviceForDistribution, $schedules, $signing, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $cache, $locks, $usage, $publisherForUsage, $submissions);
             }
 
             return;
@@ -269,7 +283,7 @@ class Builds extends Action
         Span::add('artifact.id', $artifactId);
         Span::add('job.stage', (string) ($meta['stage'] ?? ''));
 
-        $locks(DistributionBuilds::lock((string) $project->getSequence(), $artifactId), self::LOCK_TTL, function () use ($payload, $meta, $artifactId, $callback, $project, $dbForProject, $dbForPlatform, $distributionBuilds, $deviceForDistribution, $schedules, $signing, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $cache, $usage, $publisherForUsage): void {
+        $locks(DistributionBuilds::lock((string) $project->getSequence(), $artifactId), self::LOCK_TTL, function () use ($payload, $meta, $artifactId, $callback, $project, $dbForProject, $dbForPlatform, $distributionBuilds, $deviceForDistribution, $schedules, $signing, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $cache, $usage, $publisherForUsage, $submissions): void {
             $key = 'distribution-event-' . $project->getSequence() . '-' . $payload->id;
             if ($payload->id !== '' && $cache->load($key, self::DEDUPE_TTL) !== false) {
                 return;
@@ -306,7 +320,7 @@ class Builds extends Action
                 default => $artifact,
             };
 
-            $this->follow($dbForProject, $project, $artifactId, $dbForPlatform, $distributionBuilds, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage);
+            $this->follow($dbForProject, $project, $artifactId, $dbForPlatform, $distributionBuilds, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage, $submissions);
 
             if ($payload->id !== '' && $cache->save($key, true, ttl: self::DEDUPE_TTL) === false) {
                 throw new \RuntimeException('Failed to record processed distribution callback.');
@@ -334,19 +348,20 @@ class Builds extends Action
         callable $locks,
         Context $usage,
         UsagePublisher $publisherForUsage,
+        DistributionSubmissions $submissions,
     ): void {
         if (!$dbForProject->getDocument('distributionBuilds', $id)->isEmpty()) {
-            $this->reconcileBuild($id, $project, $dbForProject, $dbForPlatform, $distributionBuilds, $jobsForDistribution, $deviceForDistribution, $schedules, $signing, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $locks, $usage, $publisherForUsage);
+            $this->reconcileBuild($id, $project, $dbForProject, $dbForPlatform, $distributionBuilds, $jobsForDistribution, $deviceForDistribution, $schedules, $signing, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $locks, $usage, $publisherForUsage, $submissions);
 
             return;
         }
 
         Span::add('artifact.id', $id);
 
-        $locks(DistributionBuilds::lock((string) $project->getSequence(), $id), self::LOCK_TTL, function () use ($id, $project, $dbForProject, $dbForPlatform, $distributionBuilds, $jobsForDistributionSigning, $deviceForDistribution, $schedules, $signing, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage): void {
+        $locks(DistributionBuilds::lock((string) $project->getSequence(), $id), self::LOCK_TTL, function () use ($id, $project, $dbForProject, $dbForPlatform, $distributionBuilds, $jobsForDistributionSigning, $deviceForDistribution, $schedules, $signing, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage, $submissions): void {
             $this->reconcileArtifact($id, $project, $dbForProject, $distributionBuilds, $jobsForDistributionSigning, $deviceForDistribution, $schedules, $signing, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage);
 
-            $this->follow($dbForProject, $project, $id, $dbForPlatform, $distributionBuilds, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage);
+            $this->follow($dbForProject, $project, $id, $dbForPlatform, $distributionBuilds, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage, $submissions);
         }, self::LOCK_TIMEOUT);
     }
 
@@ -919,9 +934,14 @@ class Builds extends Action
      */
     private function params(Document $subject): array
     {
-        return $subject->getCollection() === 'distributionBuilds'
-            ? ['appId' => (string) $subject->getAttribute('appId', ''), 'buildId' => $subject->getId()]
-            : ['appId' => (string) $subject->getAttribute('appId', ''), 'artifactId' => $subject->getId()];
+        $key = match ($subject->getCollection()) {
+            'distributionBuilds' => 'buildId',
+            'distributionSubmissions' => 'submissionId',
+            'distributionReleases' => 'releaseId',
+            default => 'artifactId',
+        };
+
+        return ['appId' => (string) $subject->getAttribute('appId', ''), $key => $subject->getId()];
     }
 
     /**
@@ -929,9 +949,14 @@ class Builds extends Action
      */
     private function payload(Document $subject): array
     {
-        return $subject->getCollection() === 'distributionBuilds'
-            ? (new DistributionBuild())->payload($subject)
-            : (new DistributionArtifact())->payload($subject);
+        $model = match ($subject->getCollection()) {
+            'distributionBuilds' => new DistributionBuild(),
+            'distributionSubmissions' => new DistributionSubmission(),
+            'distributionReleases' => new DistributionRelease(),
+            default => new DistributionArtifact(),
+        };
+
+        return $model->payload($subject);
     }
 
     private function dispatch(
@@ -949,16 +974,17 @@ class Builds extends Action
         callable $locks,
         Context $usage,
         UsagePublisher $publisherForUsage,
+        DistributionSubmissions $submissions,
     ): void {
         Span::add('build.id', $id);
 
-        $locks(DistributionBuilds::lock((string) $project->getSequence(), $id), self::LOCK_TTL, function () use ($id, $project, $dbForProject, $dbForPlatform, $distributionBuilds, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage): void {
+        $locks(DistributionBuilds::lock((string) $project->getSequence(), $id), self::LOCK_TTL, function () use ($id, $project, $dbForProject, $dbForPlatform, $distributionBuilds, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage, $submissions): void {
             $build = $dbForProject->getDocument('distributionBuilds', $id);
             if ($build->isEmpty() || $build->getAttribute('status') !== BuildStatus::Waiting->value) {
                 return;
             }
 
-            $this->submit($dbForProject, $project, $build, $dbForPlatform, $distributionBuilds, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage);
+            $this->submit($dbForProject, $project, $build, $dbForPlatform, $distributionBuilds, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage, $submissions);
         }, self::LOCK_TIMEOUT);
     }
 
@@ -979,12 +1005,13 @@ class Builds extends Action
         FunctionPublisher $publisherForFunctions,
         Context $usage,
         UsagePublisher $publisherForUsage,
+        DistributionSubmissions $submissions,
     ): Document {
-        $settle = fn (Document $build): Document => $this->settle($dbForProject, $project, $build, $dbForPlatform, $distributionBuilds, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage);
+        $settle = fn (Document $build): Document => $this->settle($dbForProject, $project, $build, $dbForPlatform, $distributionBuilds, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage, $submissions);
 
         $app = $dbForProject->getDocument('distributionApps', (string) $build->getAttribute('appId', ''));
         if ($app->isEmpty()) {
-            return $this->conclude($dbForProject, $project, $build, false, DistributionBuilds::ERROR_BUILD_FAILED, $dbForPlatform, $distributionBuilds, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage);
+            return $this->conclude($dbForProject, $project, $build, false, DistributionBuilds::ERROR_BUILD_FAILED, $dbForPlatform, $distributionBuilds, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage, $submissions);
         }
 
         try {
@@ -994,7 +1021,7 @@ class Builds extends Action
         }
 
         if ($vcs === null) {
-            return $this->conclude($dbForProject, $project, $build, false, DistributionBuilds::ERROR_BUILD_SOURCE_FAILED, $dbForPlatform, $distributionBuilds, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage);
+            return $this->conclude($dbForProject, $project, $build, false, DistributionBuilds::ERROR_BUILD_SOURCE_FAILED, $dbForPlatform, $distributionBuilds, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage, $submissions);
         }
 
         try {
@@ -1053,12 +1080,13 @@ class Builds extends Action
         callable $locks,
         Context $usage,
         UsagePublisher $publisherForUsage,
+        DistributionSubmissions $submissions,
     ): void {
         $buildId = (string) $meta['buildId'];
         Span::add('build.id', $buildId);
         Span::add('job.stage', DistributionBuilds::STAGE_BUILD);
 
-        $locks(DistributionBuilds::lock((string) $project->getSequence(), $buildId), self::LOCK_TTL, function () use ($payload, $meta, $buildId, $callback, $project, $dbForProject, $dbForPlatform, $distributionBuilds, $deviceForDistribution, $schedules, $signing, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $cache, $usage, $publisherForUsage): void {
+        $locks(DistributionBuilds::lock((string) $project->getSequence(), $buildId), self::LOCK_TTL, function () use ($payload, $meta, $buildId, $callback, $project, $dbForProject, $dbForPlatform, $distributionBuilds, $deviceForDistribution, $schedules, $signing, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $cache, $usage, $publisherForUsage, $submissions): void {
             $key = 'distribution-event-' . $project->getSequence() . '-' . $payload->id;
             if ($payload->id !== '' && $cache->load($key, self::DEDUPE_TTL) !== false) {
                 return;
@@ -1093,9 +1121,9 @@ class Builds extends Action
             match (true) {
                 $callback === CallbackEvent::Start => $this->onBuildStart($dbForProject, $project, $build, $dbForPlatform, $distributionBuilds, $vcsFactory, $installationTokens, $queueForRealtime),
                 $event instanceof JobLog => $this->onLog($dbForProject, $project, $build, $event, $payload->id, $queueForRealtime),
-                $event instanceof JobArtifact => $this->onBuildArtifact($dbForProject, $project, $build, $event, $dbForPlatform, $distributionBuilds, $deviceForDistribution, $schedules, $signing, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage),
-                $event instanceof JobExit => $this->onBuildExit($dbForProject, $project, $build, $event, $dbForPlatform, $distributionBuilds, $deviceForDistribution, $schedules, $signing, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage),
-                $callback === CallbackEvent::Complete => $this->onBuildComplete($dbForProject, $project, $build, $dbForPlatform, $distributionBuilds, $deviceForDistribution, $schedules, $signing, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage),
+                $event instanceof JobArtifact => $this->onBuildArtifact($dbForProject, $project, $build, $event, $dbForPlatform, $distributionBuilds, $deviceForDistribution, $schedules, $signing, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage, $submissions),
+                $event instanceof JobExit => $this->onBuildExit($dbForProject, $project, $build, $event, $dbForPlatform, $distributionBuilds, $deviceForDistribution, $schedules, $signing, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage, $submissions),
+                $callback === CallbackEvent::Complete => $this->onBuildComplete($dbForProject, $project, $build, $dbForPlatform, $distributionBuilds, $deviceForDistribution, $schedules, $signing, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage, $submissions),
                 default => $build,
             };
 
@@ -1206,8 +1234,9 @@ class Builds extends Action
         FunctionPublisher $publisherForFunctions,
         Context $usage,
         UsagePublisher $publisherForUsage,
+        DistributionSubmissions $submissions,
     ): Document {
-        $conclude = fn (Document $build, string $code): Document => $this->conclude($dbForProject, $project, $build, false, $code, $dbForPlatform, $distributionBuilds, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage);
+        $conclude = fn (Document $build, string $code): Document => $this->conclude($dbForProject, $project, $build, false, $code, $dbForPlatform, $distributionBuilds, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage, $submissions);
 
         $failed = $event->status === self::ARTIFACT_FAILED;
         if (!$failed && $event->status !== self::ARTIFACT_SUCCESS) {
@@ -1216,7 +1245,7 @@ class Builds extends Action
 
         if (!$failed) {
             return \in_array($event->artifactId, self::OUTPUTS, true)
-                ? $this->built($dbForProject, $project, $build, $dbForPlatform, $distributionBuilds, $deviceForDistribution, $schedules, $signing, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage)
+                ? $this->built($dbForProject, $project, $build, $dbForPlatform, $distributionBuilds, $deviceForDistribution, $schedules, $signing, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage, $submissions)
                 : $build;
         }
 
@@ -1253,6 +1282,7 @@ class Builds extends Action
         FunctionPublisher $publisherForFunctions,
         Context $usage,
         UsagePublisher $publisherForUsage,
+        DistributionSubmissions $submissions,
     ): Document {
         Span::add('job.exit', $exit->exitCode);
 
@@ -1261,7 +1291,7 @@ class Builds extends Action
         if ($exit->exitCode === 0) {
             $build = $this->stamp($dbForProject, $build, ['duration' => $duration]);
 
-            return $this->built($dbForProject, $project, $build, $dbForPlatform, $distributionBuilds, $deviceForDistribution, $schedules, $signing, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage);
+            return $this->built($dbForProject, $project, $build, $dbForPlatform, $distributionBuilds, $deviceForDistribution, $schedules, $signing, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage, $submissions);
         }
 
         $timeout = (int) $build->getAttribute('timeout', 0);
@@ -1292,7 +1322,7 @@ class Builds extends Action
 
         $build = $this->stamp($dbForProject, $build, ['duration' => $duration]);
 
-        return $this->conclude($dbForProject, $project, $build, false, $code, $dbForPlatform, $distributionBuilds, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage);
+        return $this->conclude($dbForProject, $project, $build, false, $code, $dbForPlatform, $distributionBuilds, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage, $submissions);
     }
 
     protected function onBuildComplete(
@@ -1312,10 +1342,11 @@ class Builds extends Action
         FunctionPublisher $publisherForFunctions,
         Context $usage,
         UsagePublisher $publisherForUsage,
+        DistributionSubmissions $submissions,
     ): Document {
         $build = $this->stamp($dbForProject, $build, ['endedAt' => DateTime::now()]);
 
-        return $this->built($dbForProject, $project, $build, $dbForPlatform, $distributionBuilds, $deviceForDistribution, $schedules, $signing, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage);
+        return $this->built($dbForProject, $project, $build, $dbForPlatform, $distributionBuilds, $deviceForDistribution, $schedules, $signing, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage, $submissions);
     }
 
     /**
@@ -1339,6 +1370,7 @@ class Builds extends Action
         FunctionPublisher $publisherForFunctions,
         Context $usage,
         UsagePublisher $publisherForUsage,
+        DistributionSubmissions $submissions,
     ): Document {
         $build = $dbForProject->getDocument('distributionBuilds', $build->getId());
         if ($build->isEmpty()) {
@@ -1361,13 +1393,13 @@ class Builds extends Action
             Span::add('build.error', $code);
         }
 
-        return $this->settle($dbForProject, $project, $build, $dbForPlatform, $distributionBuilds, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage);
+        return $this->settle($dbForProject, $project, $build, $dbForPlatform, $distributionBuilds, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage, $submissions);
     }
 
     /**
-     * Applies once per terminal build, through the `meteredAt` filter, whoever made it
-     * terminal. Never stops the schedule: reconcile does that once the job is gone.
-     * A missing app skips only the steps scoped to it.
+     * Meters, reports and announces a terminal build once, through the `meteredAt` filter,
+     * whoever made it terminal, then submits a ready one. Never stops the schedule:
+     * reconcile does that once the job is gone. A missing app skips only the steps scoped to it.
      */
     private function settle(
         Database $dbForProject,
@@ -1383,6 +1415,7 @@ class Builds extends Action
         FunctionPublisher $publisherForFunctions,
         Context $usage,
         UsagePublisher $publisherForUsage,
+        DistributionSubmissions $submissions,
     ): Document {
         $build = $dbForProject->getDocument('distributionBuilds', $build->getId());
         if ($build->isEmpty() || !\in_array($build->getAttribute('status'), DistributionBuilds::TERMINAL, true)) {
@@ -1395,36 +1428,75 @@ class Builds extends Action
             Query::equal('$id', [$build->getId()]),
             Query::equal('status', DistributionBuilds::TERMINAL),
             Query::isNull('meteredAt'),
-        ]);
-        if ($metered === 0) {
-            return $build;
+        ]) > 0;
+
+        if ($metered) {
+            $build = $dbForProject->getDocument('distributionBuilds', $build->getId());
+            $status = (string) $build->getAttribute('status', '');
+            Span::add('build.status', $status);
+
+            $app = $dbForProject->getDocument('distributionApps', (string) $build->getAttribute('appId', ''));
+            if (!$app->isEmpty()) {
+                DistributionUsage::publishBuild($usage, $app, $build, $project, $publisherForUsage);
+
+                $dbForProject->updateDocuments('distributionApps', new Document([
+                    'latestBuildStatus' => $status,
+                ]), [
+                    Query::equal('$id', [$app->getId()]),
+                    Query::equal('latestBuildId', [$build->getId()]),
+                ]);
+
+                $this->report($dbForProject, $build, $dbForPlatform, $distributionBuilds, $vcsFactory, $installationTokens);
+            }
+
+            if ($status === BuildStatus::Canceled->value) {
+                $this->broadcast($queueForRealtime, $project, $build, self::BUILD_EVENT);
+            } else {
+                $this->dispatchUpdate($queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $project, $build, self::BUILD_EVENT);
+            }
         }
 
-        $build = $dbForProject->getDocument('distributionBuilds', $build->getId());
-        $status = (string) $build->getAttribute('status', '');
-        Span::add('build.status', $status);
-
-        $app = $dbForProject->getDocument('distributionApps', (string) $build->getAttribute('appId', ''));
-        if (!$app->isEmpty()) {
-            DistributionUsage::publishBuild($usage, $app, $build, $project, $publisherForUsage);
-
-            $dbForProject->updateDocuments('distributionApps', new Document([
-                'latestBuildStatus' => $status,
-            ]), [
-                Query::equal('$id', [$app->getId()]),
-                Query::equal('latestBuildId', [$build->getId()]),
-            ]);
-
-            $this->report($dbForProject, $build, $dbForPlatform, $distributionBuilds, $vcsFactory, $installationTokens);
-        }
-
-        if ($status === BuildStatus::Canceled->value) {
-            $this->broadcast($queueForRealtime, $project, $build, self::BUILD_EVENT);
-        } else {
-            $this->dispatchUpdate($queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $project, $build, self::BUILD_EVENT);
+        if ($build->getAttribute('status') === BuildStatus::Ready->value) {
+            $this->automate($dbForProject, $project, $build, $metered, $submissions, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions);
         }
 
         return $build;
+    }
+
+    /**
+     * Runs on every settle of a ready build, outside the `meteredAt` filter, so writes an
+     * interrupted settle left undone complete on the next one. A refusal is logged only by
+     * the settle that metered the build, not on every reconcile tick.
+     */
+    private function automate(
+        Database $dbForProject,
+        Document $project,
+        Document $build,
+        bool $metered,
+        DistributionSubmissions $submissions,
+        Realtime $queueForRealtime,
+        Event $queueForEvents,
+        Webhook $queueForWebhooks,
+        FunctionPublisher $publisherForFunctions,
+    ): void {
+        try {
+            $app = $dbForProject->getDocument('distributionApps', (string) $build->getAttribute('appId', ''));
+            $target = $dbForProject->getDocument('distributionTargets', (string) $build->getAttribute('targetId', ''));
+            if ($app->isEmpty() || $target->isEmpty()) {
+                return;
+            }
+
+            foreach ($submissions->automate($app, $target, $build) as $document) {
+                $event = $document->getCollection() === 'distributionReleases' ? self::RELEASE_CREATE : self::SUBMISSION_CREATE;
+                $this->dispatchUpdate($queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $project, $document, $event);
+            }
+        } catch (\Throwable $error) {
+            Span::add('build.submission.error', $error->getMessage());
+
+            if ($metered) {
+                Console::warning("Automatic submission of build '{$build->getId()}' skipped: {$error->getMessage()}");
+            }
+        }
     }
 
     /**
@@ -1450,8 +1522,9 @@ class Builds extends Action
         FunctionPublisher $publisherForFunctions,
         Context $usage,
         UsagePublisher $publisherForUsage,
+        DistributionSubmissions $submissions,
     ): Document {
-        $conclude = fn (Document $build, bool $success, string $code = ''): Document => $this->conclude($dbForProject, $project, $build, $success, $code, $dbForPlatform, $distributionBuilds, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage);
+        $conclude = fn (Document $build, bool $success, string $code = ''): Document => $this->conclude($dbForProject, $project, $build, $success, $code, $dbForPlatform, $distributionBuilds, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage, $submissions);
 
         $build = $dbForProject->getDocument('distributionBuilds', $build->getId());
         if ($build->isEmpty()
@@ -1592,6 +1665,7 @@ class Builds extends Action
         FunctionPublisher $publisherForFunctions,
         Context $usage,
         UsagePublisher $publisherForUsage,
+        DistributionSubmissions $submissions,
     ): void {
         $artifact = $dbForProject->getDocument('distributionArtifacts', $artifactId);
         $buildId = (string) $artifact->getAttribute('buildId', '');
@@ -1609,7 +1683,7 @@ class Builds extends Action
         }
 
         $ready = $status === Status::Ready->value;
-        $this->conclude($dbForProject, $project, $build, $ready, $ready ? '' : ((string) $artifact->getAttribute('errorCode', '') ?: DistributionBuilds::ERROR_BUILD_FAILED), $dbForPlatform, $distributionBuilds, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage);
+        $this->conclude($dbForProject, $project, $build, $ready, $ready ? '' : ((string) $artifact->getAttribute('errorCode', '') ?: DistributionBuilds::ERROR_BUILD_FAILED), $dbForPlatform, $distributionBuilds, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage, $submissions);
     }
 
     /**
@@ -1635,13 +1709,14 @@ class Builds extends Action
         callable $locks,
         Context $usage,
         UsagePublisher $publisherForUsage,
+        DistributionSubmissions $submissions,
     ): void {
         Span::add('build.id', $id);
 
-        $locks(DistributionBuilds::lock((string) $project->getSequence(), $id), self::LOCK_TTL, function () use ($id, $project, $dbForProject, $dbForPlatform, $distributionBuilds, $jobsForDistribution, $deviceForDistribution, $schedules, $signing, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage): void {
-            $conclude = fn (Document $build, bool $success, string $code = ''): Document => $this->conclude($dbForProject, $project, $build, $success, $code, $dbForPlatform, $distributionBuilds, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage);
-            $built = fn (Document $build): Document => $this->built($dbForProject, $project, $build, $dbForPlatform, $distributionBuilds, $deviceForDistribution, $schedules, $signing, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage);
-            $submit = fn (Document $build): Document => $this->submit($dbForProject, $project, $build, $dbForPlatform, $distributionBuilds, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage);
+        $locks(DistributionBuilds::lock((string) $project->getSequence(), $id), self::LOCK_TTL, function () use ($id, $project, $dbForProject, $dbForPlatform, $distributionBuilds, $jobsForDistribution, $deviceForDistribution, $schedules, $signing, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage, $submissions): void {
+            $conclude = fn (Document $build, bool $success, string $code = ''): Document => $this->conclude($dbForProject, $project, $build, $success, $code, $dbForPlatform, $distributionBuilds, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage, $submissions);
+            $built = fn (Document $build): Document => $this->built($dbForProject, $project, $build, $dbForPlatform, $distributionBuilds, $deviceForDistribution, $schedules, $signing, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage, $submissions);
+            $submit = fn (Document $build): Document => $this->submit($dbForProject, $project, $build, $dbForPlatform, $distributionBuilds, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage, $submissions);
 
             $build = $dbForProject->getDocument('distributionBuilds', $id);
             if ($build->isEmpty()) {
@@ -1649,7 +1724,7 @@ class Builds extends Action
             }
 
             if (\in_array($build->getAttribute('status'), DistributionBuilds::TERMINAL, true)) {
-                $build = $this->settle($dbForProject, $project, $build, $dbForPlatform, $distributionBuilds, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage);
+                $build = $this->settle($dbForProject, $project, $build, $dbForPlatform, $distributionBuilds, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage, $submissions);
 
                 $ended = (string) ($build->getAttribute('endedAt') ?? '') ?: (string) $build->getUpdatedAt();
                 $expired = $this->elapsed($ended, DistributionBuilds::BUILD_POST_BUDGET + self::GRACE);
@@ -1697,7 +1772,7 @@ class Builds extends Action
             }
 
             if (!empty($build->getAttribute('redispatchAt'))) {
-                $this->redispatch($build, $dbForProject, $project, $dbForPlatform, $distributionBuilds, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage);
+                $this->redispatch($build, $dbForProject, $project, $dbForPlatform, $distributionBuilds, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage, $submissions);
 
                 return;
             }
@@ -1777,8 +1852,9 @@ class Builds extends Action
         FunctionPublisher $publisherForFunctions,
         Context $usage,
         UsagePublisher $publisherForUsage,
+        DistributionSubmissions $submissions,
     ): Document {
-        $conclude = fn (Document $build, string $code): Document => $this->conclude($dbForProject, $project, $build, false, $code, $dbForPlatform, $distributionBuilds, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage);
+        $conclude = fn (Document $build, string $code): Document => $this->conclude($dbForProject, $project, $build, false, $code, $dbForPlatform, $distributionBuilds, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage, $submissions);
 
         $app = $dbForProject->getDocument('distributionApps', (string) $build->getAttribute('appId', ''));
         try {
@@ -1801,13 +1877,13 @@ class Builds extends Action
         try {
             $next = $distributionBuilds->redispatch($build, $vcs);
         } catch (\Throwable $error) {
-            $this->settle($dbForProject, $project, $build, $dbForPlatform, $distributionBuilds, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage);
+            $this->settle($dbForProject, $project, $build, $dbForPlatform, $distributionBuilds, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage, $submissions);
 
             throw $error;
         }
 
         if (\in_array($next->getAttribute('status'), DistributionBuilds::TERMINAL, true)) {
-            return $this->settle($dbForProject, $project, $next, $dbForPlatform, $distributionBuilds, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage);
+            return $this->settle($dbForProject, $project, $next, $dbForPlatform, $distributionBuilds, $vcsFactory, $installationTokens, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage, $submissions);
         }
 
         if ((int) $next->getAttribute('attempt', 1) === $attempt) {

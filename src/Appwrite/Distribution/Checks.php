@@ -14,9 +14,9 @@ use Utopia\Distribution\Exception\Unauthorized;
 use Utopia\Distribution\Issue;
 
 /**
- * Preflight for a target: whether its track, connection, store app, signing identity
- * and, given an artifact, the artifact and its version would let a build or submission
- * go through. Store errors other than rejections (rate limits, outages, malformed
+ * Preflight for a target: whether its track, connection and store app, plus its signing
+ * identity or, given an artifact, the artifact's signature, profile and version, would let a build
+ * or submission go through. Store errors other than rejections (rate limits, outages, malformed
  * requests) are not issues and propagate to the caller.
  *
  * @phpstan-type CheckIssue array{code: string, severity: string, platform: string, field: string, message: string, remediation: string, manualActionRequired: bool}
@@ -62,7 +62,7 @@ readonly class Checks
             \array_push($issues, ...$this->artifact($artifact, $platform));
         }
 
-        if ($artifact?->getAttribute('signed') !== true) {
+        if ($artifact === null) {
             \array_push($issues, ...$this->signing($target, $platform));
         }
 
@@ -166,13 +166,15 @@ readonly class Checks
     {
         $issues = [];
 
-        if ($platform === Platform::Ios->value && $artifact->getAttribute('signed') !== true) {
+        if ($artifact->getAttribute('signed') !== true) {
             $issues[] = $this->issue(
                 Code::SigningMissing,
                 $platform,
                 'artifactId',
                 'The artifact is not signed.',
-                'Upload an archive signed with a distribution certificate and provisioning profile, or build it with the signing identity of the target.',
+                $platform === Platform::Ios->value
+                    ? 'Upload an archive signed with a distribution certificate and provisioning profile, or build it with the signing identity of the target.'
+                    : 'Set a signing identity on the target and build again, or upload a bundle signed with your upload key.',
             );
         }
 
@@ -189,7 +191,44 @@ readonly class Checks
             );
         }
 
+        $profileExpiresAt = $this->expiry(\is_array($manifest) ? ($manifest['profileExpiresAt'] ?? null) : null);
+
+        if ($platform === Platform::Ios->value && $profileExpiresAt !== null) {
+            \array_push($issues, ...$this->profile($profileExpiresAt, $platform));
+        }
+
         return $issues;
+    }
+
+    /**
+     * @return list<CheckIssue>
+     */
+    private function profile(\DateTimeImmutable $expiresAt, string $platform): array
+    {
+        $now = new \DateTimeImmutable();
+
+        if ($expiresAt <= $now) {
+            return [$this->issue(
+                Code::SigningExpired,
+                $platform,
+                'profileExpiresAt',
+                'The provisioning profile of the artifact expired on ' . $expiresAt->format(\DATE_ATOM) . '.',
+                'Renew the provisioning profile, then build or upload the archive again.',
+            )];
+        }
+
+        if ($expiresAt->getTimestamp() - $now->getTimestamp() > self::SIGNING_EXPIRY_WARNING) {
+            return [];
+        }
+
+        return [$this->issue(
+            Code::SigningExpired,
+            $platform,
+            'profileExpiresAt',
+            'The provisioning profile of the artifact expires on ' . $expiresAt->format(\DATE_ATOM) . '.',
+            'Renew the provisioning profile before it expires.',
+            severity: Severity::Warning,
+        )];
     }
 
     /**
@@ -214,7 +253,7 @@ readonly class Checks
 
         $issues = [];
         $status = (string) $signingIdentity->getAttribute('status', SigningStatus::Active->value);
-        $expiresAt = $this->expiresAt($signingIdentity);
+        $expiresAt = $this->expiry($signingIdentity->getAttribute('expiresAt'));
         $now = new \DateTimeImmutable();
 
         if (\in_array($status, self::SIGNING_UNUSABLE, true) || ($expiresAt !== null && $expiresAt <= $now)) {
@@ -323,11 +362,17 @@ readonly class Checks
         return $connectionId === '' ? new Document() : $this->dbForProject->getDocument('distributionConnections', $connectionId);
     }
 
-    private function expiresAt(Document $signingIdentity): ?\DateTimeImmutable
+    private function expiry(mixed $value): ?\DateTimeImmutable
     {
-        $expiresAt = $signingIdentity->getAttribute('expiresAt');
+        if (!\is_string($value) || $value === '') {
+            return null;
+        }
 
-        return \is_string($expiresAt) && $expiresAt !== '' ? new \DateTimeImmutable($expiresAt) : null;
+        try {
+            return new \DateTimeImmutable($value);
+        } catch (\Exception) {
+            return null;
+        }
     }
 
     private function build(Document $artifact): string

@@ -1152,7 +1152,7 @@ readonly class Builds
 
         try {
             $platform = Platform::tryFrom((string) $target->getAttribute('platform', ''));
-            $track = (string) $target->getAttribute('track', '') ?: ($platform === null ? '' : (Config::getParam('distribution')['tracks'][Stores::provider($platform)->value][0] ?? ''));
+            $track = (string) $target->getAttribute('track', '') ?: ($platform === null ? '' : Stores::testing(Stores::provider($platform)));
             $issues = $checks->run($app, $target, $track, null, store: false)['issues'];
 
             $size = 0;

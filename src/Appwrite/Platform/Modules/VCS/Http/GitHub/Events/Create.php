@@ -2,6 +2,12 @@
 
 namespace Appwrite\Platform\Modules\VCS\Http\GitHub\Events;
 
+use Appwrite\Distribution\Build\Push;
+use Appwrite\Distribution\Build\Trigger;
+use Appwrite\Distribution\Checks;
+use Appwrite\Distribution\Stores;
+use Appwrite\Distribution\Submissions;
+use Appwrite\Distribution\VersionStrategy;
 use Appwrite\Event\Publisher\Review as ReviewPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
@@ -12,6 +18,7 @@ use Appwrite\Reviews\Strength;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
+use Appwrite\Vcs\InstallationRepositories;
 use Appwrite\Vcs\InstallationTokens;
 use Utopia\Bus\Bus;
 use Utopia\Config\Config;
@@ -27,6 +34,7 @@ use Utopia\Platform\Scope\HTTP;
 use Utopia\Span\Span;
 use Utopia\System\System;
 use Utopia\VCS\Adapter\Git\GitHub;
+use Utopia\VCS\Exception\OwnerNotFound;
 
 class Create extends Action
 {
@@ -34,6 +42,10 @@ class Create extends Action
     use Deployment;
     use Reviews;
     use Permission;
+
+    private const int LOCK_TTL = 120;
+
+    private const float LOCK_TIMEOUT = 5.0;
 
     public static function getName()
     {
@@ -60,6 +72,10 @@ class Create extends Action
             ->inject('platform')
             ->inject('publisherForReviews')
             ->inject('installationTokens')
+            ->inject('distributionBuildsFactory')
+            ->inject('distributionStores')
+            ->inject('installationRepositories')
+            ->inject('locks')
             ->callback($this->action(...));
     }
 
@@ -76,6 +92,10 @@ class Create extends Action
         array $platform,
         ReviewPublisher $publisherForReviews,
         InstallationTokens $installationTokens,
+        callable $distributionBuildsFactory,
+        Stores $distributionStores,
+        InstallationRepositories $installationRepositories,
+        callable $locks,
     ) {
         $vcs = $vcsFactory->fromProvider('github');
 
@@ -99,6 +119,7 @@ class Create extends Action
         $this->preprocessEvent($request);
 
         $parsedPayloads = $vcs->getEvents($event, $payload);
+        $failures = [];
 
         foreach ($parsedPayloads as $parsedPayload) {
             // Before the deployments, which may throw; queueing a review never does.
@@ -112,12 +133,34 @@ class Create extends Action
                 };
             }
 
-            match ($event) {
-                GitHub::EVENT_INSTALLATION => $this->handleInstallationEvent($parsedPayload, $dbForPlatform, $authorization, $getProjectDB),
-                GitHub::EVENT_PUSH => $this->handlePushEvent($parsedPayload, $vcsFactory, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory),
-                GitHub::EVENT_PULL_REQUEST => $this->handlePullRequestEvent($parsedPayload, $vcsFactory, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory),
-                default => null,
-            };
+            // A separate block: a second EVENT_PUSH arm in the match below would never run, and a failure here must not stop deployments.
+            if (System::getEnv('_APP_DISTRIBUTION', 'disabled') === 'enabled' && $event === GitHub::EVENT_PUSH) {
+                try {
+                    $this->handleDistributionPush($parsedPayload, $vcsFactory, $dbForPlatform, $authorization, $getProjectDB, $distributionBuildsFactory, $distributionStores, $installationRepositories, $locks);
+                } catch (\Throwable $error) {
+                    $failures[] = $error->getMessage();
+                }
+            }
+
+            try {
+                match ($event) {
+                    GitHub::EVENT_INSTALLATION => $this->handleInstallationEvent($parsedPayload, $dbForPlatform, $authorization, $getProjectDB),
+                    GitHub::EVENT_PUSH => $this->handlePushEvent($parsedPayload, $vcsFactory, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory),
+                    GitHub::EVENT_PULL_REQUEST => $this->handlePullRequestEvent($parsedPayload, $vcsFactory, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory),
+                    default => null,
+                };
+            } catch (\Throwable $error) {
+                if ($failures === []) {
+                    throw $error;
+                }
+
+                $failures[] = $error->getMessage();
+                break;
+            }
+        }
+
+        if ($failures !== []) {
+            throw new Exception(Exception::GENERAL_UNKNOWN, \implode("\n", $failures));
         }
 
         $response->json(['events' => $parsedPayloads]);
@@ -397,6 +440,233 @@ class Create extends Action
         if ($providerCommitAuthorEmail !== APP_VCS_GITHUB_EMAIL && !$providerBranchDeleted) {
             $providerAffectedFiles = $parsedPayload['affectedFiles'] ?? [];
             $this->createGitDeployments($vcs, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthorName, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, '', $providerAffectedFiles, false, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory);
+        }
+    }
+
+    /**
+     * Builds every target of each Distribution app linked to the pushed repository. Ids come from the
+     * platform repository rows, never from the payload, and the payload was signed by the provider.
+     */
+    private function handleDistributionPush(
+        array $parsedPayload,
+        VcsFactory $vcsFactory,
+        Database $dbForPlatform,
+        Authorization $authorization,
+        callable $getProjectDB,
+        callable $distributionBuildsFactory,
+        Stores $distributionStores,
+        InstallationRepositories $installationRepositories,
+        callable $locks,
+    ): void {
+        $push = Push::fromPayload($parsedPayload);
+
+        if ($push->deleted) {
+            return;
+        }
+
+        $providerInstallationId = (string) ($parsedPayload['installationId'] ?? '');
+        $rows = $this->findRepositories((string) ($parsedPayload['repositoryId'] ?? ''), $providerInstallationId, [Query::equal('resourceType', [RESOURCE_TYPE_DISTRIBUTION_APPS])], $dbForPlatform, $authorization, limit: null);
+
+        if ($rows === []) {
+            return;
+        }
+
+        $installation = new Document([
+            'provider' => 'github',
+            'providerInstallationId' => $providerInstallationId,
+        ]);
+        // Built on the first row that builds, so a region hosting none of the apps never requests an installation token.
+        $vcs = null;
+        $resolved = [];
+        $commits = [];
+        $errors = [];
+
+        foreach ($rows as $row) {
+            $logBase = "vcs.github.event.distribution.{$row->getId()}";
+
+            try {
+                $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', (string) $row->getAttribute('projectId', '')));
+
+                if ($project->isEmpty() || !$this->isProjectInCurrentRegion($project)) {
+                    continue;
+                }
+
+                $dbForProject = $getProjectDB($project);
+
+                [$app, $targets, $built] = $authorization->skip(fn () => $this->load($dbForProject, $row, $push));
+
+                $reason = $push->skip($app, $row);
+
+                if ($reason !== null) {
+                    Span::add("{$logBase}.skipped", $reason);
+                    continue;
+                }
+
+                $vcs ??= $vcsFactory->fromInstallation($installation);
+                $providerRepositoryId = (string) $row->getAttribute('providerRepositoryId', '');
+                [$owner, $repository] = $resolved[$providerRepositoryId] ??= $installationRepositories->resolve($vcs, $installation, $providerRepositoryId);
+
+                $trigger = $push;
+
+                if ($push->isTag()) {
+                    $key = "{$owner}/{$repository}";
+
+                    try {
+                        $commit = $commits[$key] ??= $vcs->getCommit($owner, $repository, $push->name());
+                    } catch (\Exception) {
+                        $commit = $commits[$key] = [];
+                    }
+
+                    $hash = (string) ($commit['commitHash'] ?? '');
+
+                    if ($hash === '') {
+                        Span::add("{$logBase}.skipped", 'tag not found');
+                        continue;
+                    }
+
+                    // An annotated tag's push names the tag object, so the build is keyed on the commit the tag resolves to, which a forged delivery cannot vary.
+                    $trigger = $push->withCommit($hash, (string) ($commit['commitMessage'] ?? ''));
+
+                    if ($hash !== $push->commitHash) {
+                        $built = $authorization->skip(fn () => $this->load($dbForProject, $row, $trigger))[2];
+                    }
+
+                    $reason = $trigger->skip($app, $row);
+
+                    if ($reason !== null) {
+                        Span::add("{$logBase}.skipped", $reason);
+                        continue;
+                    }
+                } elseif ($push->commitHash === '') {
+                    Span::add("{$logBase}.skipped", 'commit not found');
+                    continue;
+                }
+
+                foreach ($targets as $target) {
+                    if ($target->getAttribute('versionStrategy', VersionStrategy::Automatic->value) === VersionStrategy::Manual->value) {
+                        Span::add("{$logBase}.{$target->getId()}.skipped", 'manual version');
+                        continue;
+                    }
+
+                    $buildId = $trigger->buildId($target);
+
+                    if (\in_array($buildId, $built, true)) {
+                        continue;
+                    }
+
+                    try {
+                        $build = new Document([
+                            '$id' => $buildId,
+                            'type' => Trigger::Vcs->value,
+                            'versionName' => '',
+                            ...$trigger->attributes(),
+                        ]);
+                        $latest = $authorization->skip(fn () => $this->latest($locks, $distributionStores, $dbForProject, $target));
+
+                        $authorization->skip(fn () => $distributionBuildsFactory($dbForProject, $project)->create(
+                            $app,
+                            $target,
+                            $build,
+                            $vcs,
+                            $owner,
+                            $repository,
+                            $latest,
+                            new Checks($dbForProject, $distributionStores),
+                        ));
+
+                        Span::add("{$logBase}.{$target->getId()}.build.id", $buildId);
+                    } catch (DuplicateException) {
+                        continue;
+                    } catch (Exception $error) {
+                        if ($error->getCode() < 500) {
+                            Console::warning("Skipping target '{$target->getId()}' ({$error->getType()}): {$error->getMessage()}");
+                            continue;
+                        }
+
+                        $errors[] = $error->getMessage();
+                    } catch (\Throwable $error) {
+                        $errors[] = $error->getMessage();
+                    }
+                }
+            } catch (OwnerNotFound $error) {
+                Span::add("{$logBase}.skipped", 'owner not found');
+                Console::warning("Skipping repository '{$row->getId()}': {$error->getMessage()}");
+            } catch (Exception $error) {
+                Span::add("{$logBase}.error", $error->getMessage());
+
+                if ($error->getCode() < 500) {
+                    Console::warning("Skipping repository '{$row->getId()}' ({$error->getType()}): {$error->getMessage()}");
+                    continue;
+                }
+
+                $errors[] = $error->getMessage();
+            } catch (\Throwable $error) {
+                Span::add("{$logBase}.error", $error->getMessage());
+                $errors[] = $error->getMessage();
+            }
+        }
+
+        if ($errors !== []) {
+            throw new Exception(Exception::GENERAL_UNKNOWN, \implode("\n", $errors));
+        }
+    }
+
+    /**
+     * The app a push builds, its targets, and the ids of the builds that push already made.
+     * Webhook callers have no session, so it runs under an authorization skip, and only after
+     * the webhook signature is verified, and every id comes from the platform repository row.
+     *
+     * @return array{0: Document, 1: array<Document>, 2: array<string>}
+     */
+    private function load(Database $dbForProject, Document $repository, Push $push): array
+    {
+        $app = $dbForProject->getDocument('distributionApps', (string) $repository->getAttribute('resourceId', ''));
+
+        if ($app->isEmpty()) {
+            return [$app, [], []];
+        }
+
+        $targets = $dbForProject->find('distributionTargets', [
+            Query::equal('appInternalId', [(string) $app->getSequence()]),
+            Query::limit(APP_LIMIT_SUBQUERY),
+        ]);
+        $ids = \array_map(fn (Document $target): string => $push->buildId($target), $targets);
+        $built = $ids === [] ? [] : \array_map(fn (Document $build): string => $build->getId(), $dbForProject->find('distributionBuilds', [
+            Query::equal('$id', $ids),
+            Query::limit(\count($ids)),
+        ]));
+
+        return [$app, $targets, $built];
+    }
+
+    /**
+     * The store's latest version code, so an automatic code never repeats one the store already has.
+     * The lock is the one submissions take, because opening a Google edit invalidates the others.
+     */
+    private function latest(callable $locks, Stores $stores, Database $dbForProject, Document $target): ?int
+    {
+        $connectionId = (string) $target->getAttribute('connectionId', '');
+
+        if ($connectionId === '') {
+            return null;
+        }
+
+        try {
+            $connection = $dbForProject->getDocument('distributionConnections', $connectionId);
+            $identifier = (string) $target->getAttribute('identifier', '');
+
+            if ($connection->isEmpty() || Submissions::isContended($dbForProject, $connection, $identifier)) {
+                return null;
+            }
+
+            return $locks(
+                Submissions::storeLock($connection, $identifier),
+                self::LOCK_TTL,
+                fn (): int => $stores->connection($connection)->latestVersionCode($identifier),
+                self::LOCK_TIMEOUT,
+            );
+        } catch (\Throwable) {
+            return null;
         }
     }
 
