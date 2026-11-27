@@ -427,6 +427,7 @@ export function ConsoleSidebar({
             return (
               features.reviews &&
               reviewsEnabled &&
+              !projectData?.parentId &&
               canSeeProjectNavItem(access, features, item.id)
             )
           if (item.id === 'agents')
@@ -445,6 +446,7 @@ export function ConsoleSidebar({
     sidebarCopy,
     showProjectAgents,
     reviewsEnabled,
+    projectData?.parentId,
   ])
 
   const showOverview = canSeeProjects(access, features)
