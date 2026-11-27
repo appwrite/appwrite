@@ -76,7 +76,7 @@ class ClickHouseInspectTest extends ClickHouseTestCase
         $usage = new Usage($adapter);
         $usage->migrate();
         $this->seed($usage);
-        $partition = (new \DateTime('now', new \DateTimeZone('UTC')))->format('Ym');
+        $partition = new \DateTime('now', new \DateTimeZone('UTC'))->format('Ym');
 
         $this->queryRaw($adapter, "ALTER TABLE {$events} DROP PROJECTION p_by_path SETTINGS mutations_sync = 2");
         $this->assertSame(["{$eventsName} projection.missing p_by_path"], $this->summarize($usage->inspect()));
