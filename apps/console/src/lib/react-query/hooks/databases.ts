@@ -1282,7 +1282,6 @@ type CreateProductDatabaseParams = {
   specification?: string
   replicas?: number
   pitr?: boolean
-  pitrRetentionDays?: number
 }
 
 async function createProductDatabase(
@@ -1298,9 +1297,6 @@ async function createProductDatabase(
       ? { replicas: params.replicas }
       : {}),
     ...(params.pitr !== undefined ? { pitr: params.pitr } : {}),
-    ...(params.pitrRetentionDays !== undefined
-      ? { pitrRetentionDays: params.pitrRetentionDays }
-      : {}),
   }
 
   if (backend === DatabaseType.Documentsdb) {

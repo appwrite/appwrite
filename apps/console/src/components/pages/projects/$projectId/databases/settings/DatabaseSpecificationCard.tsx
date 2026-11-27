@@ -311,12 +311,13 @@ export function DatabaseSpecificationCard({
               !locked &&
               !isCurrent &&
               !isServerlessDatabaseSpecId(spec.id)
-            const keptStorage = isCurrent
-              ? null
-              : calculateKeptStorageCharge(
-                  database.storage,
-                  specificationsBySlug.get(spec.id),
-                )
+            const keptStorage =
+              isCurrent || locked
+                ? null
+                : calculateKeptStorageCharge(
+                    database.storage,
+                    specificationsBySlug.get(spec.id),
+                  )
 
             return (
               <TableRow

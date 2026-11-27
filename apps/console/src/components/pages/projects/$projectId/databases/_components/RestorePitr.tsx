@@ -3,7 +3,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { History } from 'lucide-react'
-import { DatabaseType } from '@/lib/databases/database-type'
 import type { DedicatedDatabaseSource } from '@/lib/databases/dedicated-database-source'
 import {
   isEligiblePitrRestoreTarget,
@@ -13,6 +12,7 @@ import {
 } from '@/lib/databases/dedicated-pitr'
 import {
   createDedicatedDatabasePitrRestoration,
+  resolveProjectDatabaseType,
   useDedicatedDatabasePitrWindows,
   useDedicatedDatabaseRestorations,
   useProjectDedicatedDatabases,
@@ -130,16 +130,6 @@ type RestorePitrSharedProps = {
 
 const PRODUCT_RESTORE_TARGETS_LIMIT = 100
 
-function productDatabaseType(source: DedicatedDatabaseSource): DatabaseType {
-  if (source.type === 'product' && source.api === 'documentsdb') {
-    return DatabaseType.Documentsdb
-  }
-  if (source.type === 'product' && source.api === 'vectorsdb') {
-    return DatabaseType.Vectorsdb
-  }
-  return DatabaseType.Tablesdb
-}
-
 /**
  * Databases a restore can write into: for an engine source, other ready
  * databases on the same engine and version; for a product source, other
@@ -157,7 +147,7 @@ function usePitrRestoreTargets(
   )
   const { databases: productDatabases } = useProjectProductDatabases(
     enabled && isProduct ? projectId : undefined,
-    productDatabaseType(source),
+    resolveProjectDatabaseType(isProduct ? source.api : 'tablesdb'),
     0,
     PRODUCT_RESTORE_TARGETS_LIMIT,
   )
