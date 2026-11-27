@@ -3,6 +3,21 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "how-we-made-account-less-appwrite-cloud-safe-to-run",
+    "href": "/blog/post/how-we-made-account-less-appwrite-cloud-safe-to-run",
+    "title": "How we made account-less Appwrite Cloud safe to run",
+    "description": "Appwrite Zero provisions real Appwrite Cloud projects without signup. Here is how Appwrite models, bounds, isolates, and cleans up unclaimed projects safely.",
+    "date": "2026-12-01",
+    "lastUpdated": "2026-12-01",
+    "timeToRead": 7,
+    "author": "chirag-aggarwal",
+    "category": "architectures, security",
+    "featured": false,
+    "draft": true,
+    "cover": "/images/blog/how-we-made-account-less-appwrite-cloud-safe-to-run/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "introducing-appwrite-zero",
     "href": "/blog/post/introducing-appwrite-zero",
     "title": "Introducing Appwrite Zero",
@@ -15,6 +30,21 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "featured": false,
     "draft": true,
     "cover": "/images/blog/introducing-appwrite-zero/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "take-a-claimed-appwrite-zero-project-to-production",
+    "href": "/blog/post/take-a-claimed-appwrite-zero-project-to-production",
+    "title": "Take a claimed Appwrite Zero project to production",
+    "description": "Turn a claimed Appwrite Zero prototype into a production-ready project by renaming it, replacing the starter API key, tightening permissions, connecting Git, and adding a custom domain.",
+    "date": "2026-12-01",
+    "lastUpdated": "2026-12-01",
+    "timeToRead": 4,
+    "author": "chirag-aggarwal",
+    "category": "tutorials, ai",
+    "featured": false,
+    "draft": true,
+    "cover": "/images/blog/take-a-claimed-appwrite-zero-project-to-production/cover.avif",
     "hasCover": true
   },
   {

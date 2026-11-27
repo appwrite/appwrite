@@ -1,0 +1,122 @@
+---
+layout: post
+title: "Take a claimed Appwrite Zero project to production"
+description: Turn a claimed Appwrite Zero prototype into a production-ready project by renaming it, replacing the starter API key, tightening permissions, connecting Git, and adding a custom domain.
+date: 2026-12-01
+cover: /images/blog/take-a-claimed-appwrite-zero-project-to-production/cover.avif
+timeToRead: 4
+author: chirag-aggarwal
+category: tutorials, ai
+featured: false
+draft: true
+callToAction: true
+faqs:
+  - question: "Does claiming a Zero project break the coding agent's CLI setup?"
+    answer: "No. Claiming keeps the project ID, regional endpoint, and starter API key active and removes the key's expiration date, so the agent can keep pushing changes right away. To stop using that full-scope key locally, run `appwrite login` (or `appwrite login --switch`) and delete the **Zero** key under **API Keys**."
+  - question: "Why does a claimed Zero project have an API key named Zero with every scope?"
+    answer: "Appwrite creates that key so the CLI and any coding agent can manage tables, functions, and sites without an account during the build window. Claiming removes its expiration date to avoid interrupting the running app. Replace it with a scoped key if server code needs API access, then delete the **Zero** key."
+  - question: "Can an existing CLI-deployed Zero site switch to automatic Git deployments?"
+    answer: "Yes. Push the project's code to GitHub, GitLab, or Bitbucket, open the site in the Appwrite Console, and connect the repository under **Settings** > **Version control (Git)**. New pushes to the production branch deploy automatically while keeping the existing site and domains."
+  - question: "Does adding a custom domain to an Appwrite Site require registering a Web platform?"
+    answer: "No. Domains verified on an Appwrite Site are allowed as API origins for that project automatically. Register a hostname under **Apps** only when a separate frontend outside Appwrite Sites calls the project's API."
+---
+
+Claiming an Appwrite Zero project moves it straight into an organization with its ID, regional endpoint, data, deployments, and live site intact. The Console countdown disappears, the site banner drops off, and the receiving organization's plan takes over.
+
+What arrives in the organization still reflects a fast prototype: a generic project name, an all-scopes API key without an expiration date, broad permissions, CLI-pushed deployments, and a generated domain. Five steps turn that claimed backend into a project ready for real users.
+
+# Step 1: Rename the project {% #rename-project %}
+
+{% only_dark %}
+![Claimed Zero project open in the Appwrite Console showing the default Zero project name and Settings in the sidebar](/images/docs/zero/dark/claimed-project.avif)
+{% /only_dark %}
+{% only_light %}
+![Claimed Zero project open in the Appwrite Console showing the default Zero project name and Settings in the sidebar](/images/docs/zero/claimed-project.avif)
+{% /only_light %}
+
+Every Zero project arrives with the default name **Zero project**. Rename it before other projects join the organization:
+
+1. Open **Settings** at the bottom of the project sidebar.
+2. In the **Name** card, replace `Zero project` with the app's name.
+3. Click **Update**.
+
+Renaming changes only the display name. The project ID and regional endpoint stay the same, so deployed code keeps running untouched.
+
+# Step 2: Sign in to the CLI and replace the Zero API key {% #replace-api-key %}
+
+{% only_dark %}
+![API keys page in the Appwrite Console listing scoped keys next to the Create API key button](/images/docs/project/dark/create-api-key.avif)
+{% /only_dark %}
+{% only_light %}
+![API keys page in the Appwrite Console listing scoped keys next to the Create API key button](/images/docs/project/create-api-key.avif)
+{% /only_light %}
+
+Every Zero project starts with an API key named **Zero** that holds every project scope. Claiming clears that key's expiration date so local commands keep running. Switch the CLI from that key to an Appwrite account before removing it:
+
+```sh
+appwrite login
+```
+
+If the account is already signed in on the machine, run `appwrite login --switch` instead. Next, open **API Keys** in the project sidebar. If server-side code uses the starter key, click **Create API key**, select only the scopes that code needs with an **Expiration date**, and update those environment variables first. Then open the three-dots menu on the **Zero** key and click **Delete**.
+
+# Step 3: Tighten table and bucket permissions {% #tighten-permissions %}
+
+{% only_dark %}
+![Security tab of a TablesDB table in the Appwrite Console with Permissions and Row level security (RLS)](/images/docs/tutorials/dark/idea-tracker-permissions.avif)
+{% /only_dark %}
+{% only_light %}
+![Security tab of a TablesDB table in the Appwrite Console with Permissions and Row level security (RLS)](/images/docs/tutorials/idea-tracker-permissions.avif)
+{% /only_light %}
+
+During a quick build, an agent can grant broad **Any** access on tables or buckets and leave test records behind. Check every table and bucket before opening the app to users:
+
+1. Open **Databases**, select each table, and open its **Security** tab.
+2. Replace broad **Any** write permissions with **All users** or specific roles, and click **Update**. Where each user should access only their own rows, turn on **Row level security (RLS)** and click **Update**.
+3. Repeat that check on the **Security** tab of each bucket in **Storage** with **File level security**, then delete test rows from **Databases** and test accounts from **Auth** > **Users**.
+
+Appwrite denies access unless a permission grants it, so each change takes effect on the next request. See the [permissions documentation](/docs/advanced/security/permissions) for role and team patterns.
+
+# Step 4: Connect the site to Git {% #connect-git %}
+
+{% only_dark %}
+![Site Settings open to Version control (Git) with Connect GitHub, Connect GitLab, and Connect Bitbucket buttons](/images/docs/sites/dark/git-repo.avif)
+{% /only_dark %}
+{% only_light %}
+![Site Settings open to Version control (Git) with Connect GitHub, Connect GitLab, and Connect Bitbucket buttons](/images/docs/sites/git-repo.avif)
+{% /only_light %}
+
+Sites and functions deployed on Zero upload through the CLI, so pushing code to Git does not trigger a build yet. Push the local repository to GitHub, GitLab, or Bitbucket, then connect it to the existing site:
+
+1. Open **Sites**, select the site, and go to **Settings** > **Version control (Git)**.
+2. In the **Repository** card, connect the Git provider, pick the repository, and click **Connect**.
+3. If the app lives in a subfolder, set **Root directory** and click **Update**.
+
+Pushes to the production branch now build and go live automatically, and other branches create private [preview deployments](/docs/products/sites/previews) for organization members. Follow the same **Settings** > **Version control (Git)** path on any backend function under **Functions**.
+
+# Step 5: Add a custom domain {% #add-custom-domain %}
+
+{% only_dark %}
+![Add domain screen for an Appwrite Site with Domain name set to app.example.com and Target set to Active deployment](/images/docs/sites/dark/add-domain.avif)
+{% /only_dark %}
+{% only_light %}
+![Add domain screen for an Appwrite Site with Domain name set to app.example.com and Target set to Active deployment](/images/docs/sites/add-domain.avif)
+{% /only_light %}
+
+Claiming removes the Zero banner from the site's generated `appwrite.network` address. Add a custom domain from the site's **Domains** tab to serve the app with automatic HTTPS:
+
+1. Open the site's **Domains** tab and click **Add domain**.
+2. Enter the **Domain name** (such as `app.example.com`), keep **Active deployment** selected under **Target**, and click **Add**.
+3. Add the DNS records shown by Appwrite at the DNS provider, then return to the Console and click **Verify**.
+
+Once verified, Appwrite issues a TLS certificate, serves the active deployment on the custom domain, and allows that hostname as an API origin for the project. If a separate frontend outside Appwrite Sites also calls the backend, register its hostname under **Apps** in the project sidebar.
+
+# Keep building {% #keep-building %}
+
+The app the agent started now runs with its own name, scoped credentials, reviewed permissions, automatic Git deployments, and a custom domain, while keeping every table, file, and user from the original build. Because the project now lives in an Appwrite account, coding agents can keep shipping features through the signed-in CLI or the hosted [Appwrite MCP server](/docs/tooling/ai/mcp-servers). We would love to see what goes live from Zero, so share a link or bring questions to the [Appwrite Discord](https://appwrite.io/discord).
+
+- [Introducing Appwrite Zero](/blog/post/introducing-appwrite-zero)
+- [Appwrite Zero documentation](/docs/zero)
+- [Zero commands in the Appwrite CLI](/docs/tooling/command-line/zero)
+- [API keys](/docs/partners/project/api-keys)
+- [Appwrite Sites domains](/docs/products/sites/domains)
+- [How to connect your AI coding agent to Appwrite](/blog/post/connect-ai-coding-assistant-to-appwrite)
