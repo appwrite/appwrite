@@ -552,7 +552,13 @@ jobs:
     name: Extension
     needs: changes
     if: needs.changes.outputs.extension == 'true'
-    runs-on: ubuntu-24.04
+    # On gcrunner the image builds read the Build job's layer cache, so ffmpeg and the toolchain are
+    # not compiled again. Fork pull requests run on GitHub's runners without it, as Build does.
+    runs-on: >-
+      ${{ (github.event_name != 'pull_request'
+      || github.event.pull_request.head.repo.full_name == github.repository)
+      && format('gcrunner={0}-extension/runner=build', github.run_id)
+      || 'ubuntu-24.04' }}
     timeout-minutes: 45
     steps:
       - name: Checkout repository
@@ -560,8 +566,28 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Login to Docker Hub
+        if: ${{ env.DOCKERHUB_AUTH_AVAILABLE == 'true' }}
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Expose the runner registry to workflow expressions
+        if: runner.environment == 'self-hosted'
+        run: echo "GCRUNNER_REGISTRY=${GCRUNNER_REGISTRY}" >> "${GITHUB_ENV}"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
+
       - name: Build the toolchain image
-        run: docker build --target extension-build --tag utopia-extension-build .
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
+        with:
+          context: .
+          load: true
+          tags: utopia-extension-toolchain
+          target: extension-toolchain
+          cache-from: ${{ env.GCRUNNER_REGISTRY && format('type=registry,ref={0}/appwrite:buildcache', env.GCRUNNER_REGISTRY) || '' }}
 
       # kache (https://github.com/kunobi-ninja/kache) caches each crate's compiled output, so
       # clippy and the tests rebuild only the crates a change touches instead of all 340. Its
@@ -590,19 +616,27 @@ jobs:
             kache-extension-${{ hashFiles('Cargo.lock', 'rust-toolchain.toml') }}-
             kache-extension-
 
-      - name: Check crates
+      # The extension is built here, under kache, rather than by the Dockerfile: the release profile's
+      # fat LTO and single codegen unit cost ~5 minutes on one core and change nothing the tests see.
+      # The published image (extension.yml) and Build keep them.
+      - name: Check crates and build the extension
         run: |
+          mkdir -p "$RUNNER_TEMP/extension"
           docker run --rm --volume "$PWD:/usr/local/src" --env CARGO_TARGET_DIR=/tmp/target \
+            --volume "$RUNNER_TEMP/extension:/extension" \
             --env RUSTDOCFLAGS="-C target-feature=-crt-static" \
             --volume "$RUNNER_TEMP/kache-bin:/opt/kache:ro" --volume "$RUNNER_TEMP/kache:/kache" \
             --env RUSTC_WRAPPER=/opt/kache/kache --env KACHE_CACHE_DIR=/kache --env KACHE_LOCAL_ONLY=true \
             --env KACHE_DEFERRED_DURABILITY=0 --env CARGO_PROFILE_DEV_DEBUG=line-tables-only \
-            --env CARGO_PROFILE_TEST_DEBUG=line-tables-only utopia-extension-build sh -c '
+            --env CARGO_PROFILE_TEST_DEBUG=line-tables-only utopia-extension-toolchain sh -c '
             . "$HOME/.cargo/env" &&
             rustup component add clippy rustfmt &&
             cargo fmt --all --check &&
             cargo clippy --workspace --all-targets --all-features --locked -- -D warnings &&
-            cargo test --locked --workspace --exclude utopia-extension --all-features
+            cargo test --locked --workspace --exclude utopia-extension --all-features &&
+            ZSTD_SYS_USE_PKG_CONFIG=1 CARGO_PROFILE_RELEASE_LTO=off CARGO_PROFILE_RELEASE_CODEGEN_UNITS=16 \
+              cargo build --release --locked -p utopia-extension &&
+            cp /tmp/target/release/libutopia.so /extension/utopia.so
             status=$?
             /opt/kache/kache stats || true
             /opt/kache/kache daemon stop || true
@@ -618,7 +652,15 @@ jobs:
           key: kache-extension-${{ hashFiles('Cargo.lock', 'rust-toolchain.toml') }}-${{ steps.kache.outputs.week }}
 
       - name: Build the image
-        run: docker build --target development --tag appwrite-utopia --build-arg TESTING=true .
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
+        with:
+          context: .
+          load: true
+          tags: appwrite-utopia
+          target: development
+          build-args: TESTING=true
+          build-contexts: extension=${{ runner.temp }}/extension
+          cache-from: ${{ env.GCRUNNER_REGISTRY && format('type=registry,ref={0}/appwrite:buildcache', env.GCRUNNER_REGISTRY) || '' }}
 
       - name: Test the extension
         run: |
