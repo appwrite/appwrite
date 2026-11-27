@@ -62,6 +62,17 @@ final class Distribution
         self::publish($usage, $project, $publisherForUsage);
     }
 
+    public static function publishListingSync(
+        Context $usage,
+        Document $app,
+        Document $project,
+        UsagePublisher $publisherForUsage,
+    ): void {
+        self::scope($usage, $app)->addMetric(METRIC_DISTRIBUTION_LISTINGS_SYNCS, 1);
+
+        self::publish($usage, $project, $publisherForUsage);
+    }
+
     public static function publishSubmission(
         Context $usage,
         Document $app,

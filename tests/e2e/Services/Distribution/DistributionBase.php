@@ -53,6 +53,13 @@ trait DistributionBase
         yield 'getRelease' => [Client::METHOD_GET, '/distribution/apps/missing/releases/missing', 'distribution.read'];
         yield 'updateRelease' => [Client::METHOD_PATCH, '/distribution/apps/missing/releases/missing', 'distribution.write'];
         yield 'deleteRelease' => [Client::METHOD_DELETE, '/distribution/apps/missing/releases/missing', 'distribution.write'];
+        yield 'createListing' => [Client::METHOD_POST, '/distribution/apps/missing/listings', 'distribution.write'];
+        yield 'listListings' => [Client::METHOD_GET, '/distribution/apps/missing/listings', 'distribution.read'];
+        yield 'getListing' => [Client::METHOD_GET, '/distribution/apps/missing/listings/missing', 'distribution.read'];
+        yield 'updateListing' => [Client::METHOD_PATCH, '/distribution/apps/missing/listings/missing', 'distribution.write'];
+        yield 'deleteListing' => [Client::METHOD_DELETE, '/distribution/apps/missing/listings/missing', 'distribution.write'];
+        yield 'createListingScreenshot' => [Client::METHOD_POST, '/distribution/apps/missing/listings/missing/screenshots', 'distribution.write'];
+        yield 'deleteListingScreenshot' => [Client::METHOD_DELETE, '/distribution/apps/missing/listings/missing/screenshots/missing', 'distribution.write'];
         yield 'createSubmission' => [Client::METHOD_POST, '/distribution/apps/missing/submissions', 'distribution.submissions.write'];
         yield 'listSubmissions' => [Client::METHOD_GET, '/distribution/apps/missing/submissions', 'distribution.submissions.read'];
         yield 'getSubmission' => [Client::METHOD_GET, '/distribution/apps/missing/submissions/missing', 'distribution.submissions.read'];

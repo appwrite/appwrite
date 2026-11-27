@@ -108,6 +108,17 @@ final class DistributionTest extends TestCase
         $this->assertSame([], $this->publisher->published);
     }
 
+    public function testListingSyncPublishesOneSyncOnTheApp(): void
+    {
+        Distribution::publishListingSync($this->usage, $this->app, $this->project, $this->publisherForUsage);
+
+        $metrics = $this->published();
+        $this->assertSame([METRIC_DISTRIBUTION_LISTINGS_SYNCS => 1], $this->values($metrics));
+        $this->assertSame('distribution.listings.syncs', $metrics[0]['key']);
+        $this->assertScopedToApp($metrics);
+        $this->assertTrue($this->usage->isEmpty(), 'the context is reset after publishing');
+    }
+
     public function testPublishedSubmissionCountsSuccess(): void
     {
         $this->publishSubmission(SubmissionStatus::Published);

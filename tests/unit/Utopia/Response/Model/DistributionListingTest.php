@@ -25,6 +25,19 @@ final class DistributionListingTest extends TestCase
         ], $listing->getAttribute('screenshots'));
     }
 
+    public function testStoredScreenshotPathsAreRemoved(): void
+    {
+        $listing = (new DistributionListing())->filter(new Document([
+            'screenshots' => [
+                ['$id' => 'first', 'set' => 'phoneScreenshots', 'path' => 'listings/5e5ea5c16897e/first.png', 'size' => 204800, 'width' => 1080, 'height' => 1920, 'digest' => 'abc', 'aiGeneratedState' => 'aiGeneratedStateNotAiGenerated'],
+            ],
+        ]));
+
+        $this->assertSame([
+            ['$id' => 'first', 'set' => 'phoneScreenshots', 'size' => 204800, 'width' => 1080, 'height' => 1920, 'digest' => 'abc', 'aiGeneratedState' => 'aiGeneratedStateNotAiGenerated'],
+        ], $listing->getAttribute('screenshots'));
+    }
+
     public function testMissingScreenshotsStayUnset(): void
     {
         $listing = (new DistributionListing())->filter(new Document([]));

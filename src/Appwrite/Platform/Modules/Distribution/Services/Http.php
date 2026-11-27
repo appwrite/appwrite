@@ -18,6 +18,13 @@ use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Checks\Create 
 use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Create as CreateApp;
 use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Delete as DeleteApp;
 use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Get as GetApp;
+use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Listings\Create as CreateListing;
+use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Listings\Delete as DeleteListing;
+use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Listings\Get as GetListing;
+use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Listings\Screenshots\Create as CreateListingScreenshot;
+use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Listings\Screenshots\Delete as DeleteListingScreenshot;
+use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Listings\Update as UpdateListing;
+use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Listings\XList as ListListings;
 use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Releases\Create as CreateRelease;
 use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Releases\Delete as DeleteRelease;
 use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Releases\Get as GetRelease;
@@ -130,5 +137,13 @@ class Http extends Service
         $this->addAction(UpdateSubmissionStatus::getName(), UpdateSubmissionStatus::class);
 
         $this->addAction(CreateCheck::getName(), CreateCheck::class);
+
+        $this->addAction(CreateListing::getName(), CreateListing::class);
+        $this->addAction(ListListings::getName(), ListListings::class);
+        $this->addAction(GetListing::getName(), GetListing::class);
+        $this->addAction(UpdateListing::getName(), UpdateListing::class);
+        $this->addAction(DeleteListing::getName(), DeleteListing::class);
+        $this->addAction(CreateListingScreenshot::getName(), CreateListingScreenshot::class);
+        $this->addAction(DeleteListingScreenshot::getName(), DeleteListingScreenshot::class);
     }
 }

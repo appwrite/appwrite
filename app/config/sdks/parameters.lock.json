@@ -2035,6 +2035,21 @@
             "password",
             "profiles"
         ],
+        "distribution.createListing": [
+            "appId",
+            "listingId",
+            "platform",
+            "locale",
+            "fields"
+        ],
+        "distribution.createListingScreenshot": [
+            "appId",
+            "listingId",
+            "screenshotId",
+            "file",
+            "set",
+            "aiGeneratedState"
+        ],
         "distribution.createRelease": [
             "appId",
             "releaseId",
@@ -2089,6 +2104,15 @@
         "distribution.deleteConnection": [
             "connectionId"
         ],
+        "distribution.deleteListing": [
+            "appId",
+            "listingId"
+        ],
+        "distribution.deleteListingScreenshot": [
+            "appId",
+            "listingId",
+            "screenshotId"
+        ],
         "distribution.deleteRelease": [
             "appId",
             "releaseId"
@@ -2121,6 +2145,10 @@
         ],
         "distribution.getConnection": [
             "connectionId"
+        ],
+        "distribution.getListing": [
+            "appId",
+            "listingId"
         ],
         "distribution.getRelease": [
             "appId",
@@ -2165,6 +2193,11 @@
             "total"
         ],
         "distribution.listConnections": [
+            "queries",
+            "total"
+        ],
+        "distribution.listListings": [
+            "appId",
             "queries",
             "total"
         ],
@@ -2225,6 +2258,11 @@
             "connectionId",
             "name",
             "serviceAccount"
+        ],
+        "distribution.updateListing": [
+            "appId",
+            "listingId",
+            "fields"
         ],
         "distribution.updateRelease": [
             "appId",
@@ -6935,6 +6973,21 @@
             "password",
             "profiles"
         ],
+        "distribution.createListing": [
+            "appId",
+            "listingId",
+            "platform",
+            "locale",
+            "fields"
+        ],
+        "distribution.createListingScreenshot": [
+            "appId",
+            "listingId",
+            "screenshotId",
+            "file",
+            "set",
+            "aiGeneratedState"
+        ],
         "distribution.createRelease": [
             "appId",
             "releaseId",
@@ -6989,6 +7042,15 @@
         "distribution.deleteConnection": [
             "connectionId"
         ],
+        "distribution.deleteListing": [
+            "appId",
+            "listingId"
+        ],
+        "distribution.deleteListingScreenshot": [
+            "appId",
+            "listingId",
+            "screenshotId"
+        ],
         "distribution.deleteRelease": [
             "appId",
             "releaseId"
@@ -7021,6 +7083,10 @@
         ],
         "distribution.getConnection": [
             "connectionId"
+        ],
+        "distribution.getListing": [
+            "appId",
+            "listingId"
         ],
         "distribution.getRelease": [
             "appId",
@@ -7065,6 +7131,11 @@
             "total"
         ],
         "distribution.listConnections": [
+            "queries",
+            "total"
+        ],
+        "distribution.listListings": [
+            "appId",
             "queries",
             "total"
         ],
@@ -7125,6 +7196,11 @@
             "connectionId",
             "name",
             "serviceAccount"
+        ],
+        "distribution.updateListing": [
+            "appId",
+            "listingId",
+            "fields"
         ],
         "distribution.updateRelease": [
             "appId",
