@@ -3,6 +3,20 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-firewall-password-challenge",
+    "href": "/blog/post/announcing-firewall-password-challenge",
+    "title": "Announcing the Firewall password challenge: password protect sites and functions",
+    "description": "Appwrite Firewall can now ask for a password before a site or function responds. Browsers get a password page, scripts send a header, and guesses are limited per network.",
+    "date": "2026-11-27",
+    "lastUpdated": "2026-11-27",
+    "timeToRead": 5,
+    "author": "arnab-chatterjee",
+    "category": "announcements, security",
+    "featured": false,
+    "cover": "/images/blog/announcing-firewall-password-challenge/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-automatic-image-format",
     "href": "/blog/post/announcing-automatic-image-format",
     "title": "Announcing automatic image formats based on browser support",
