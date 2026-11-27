@@ -13,9 +13,12 @@ use Appwrite\Event\Message\DistributionBuild as DistributionBuildMessage;
 use Appwrite\Event\Message\DistributionBuildAction;
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
+use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Platform\Action;
+use Appwrite\Usage\Context;
+use Appwrite\Usage\Distribution as DistributionUsage;
 use Appwrite\Utopia\Response\Model\DistributionArtifact;
 use OpenRuntimes\Orchestrator\Callback\JobArtifact;
 use OpenRuntimes\Orchestrator\Callback\JobExit;
@@ -101,6 +104,8 @@ class Builds extends Action
             ->inject('publisherForFunctions')
             ->inject('cache')
             ->inject('locks')
+            ->inject('usage')
+            ->inject('publisherForUsage')
             ->callback($this->action(...));
     }
 
@@ -118,6 +123,8 @@ class Builds extends Action
         FunctionPublisher $publisherForFunctions,
         Cache $cache,
         callable $locks,
+        Context $usage,
+        UsagePublisher $publisherForUsage,
     ): void {
         $payload = DistributionBuildMessage::fromArray($message->getPayload());
         Span::add('distribution.action', $payload->action->value);
@@ -134,10 +141,10 @@ class Builds extends Action
                 $this->inspect($project, $dbForProject, $distributionBuilds, $locks, $payload->id);
                 break;
             case DistributionBuildAction::Event:
-                $this->event($payload, $project, $dbForProject, $distributionBuilds, $deviceForDistribution, $schedules, $signing, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $cache, $locks);
+                $this->event($payload, $project, $dbForProject, $distributionBuilds, $deviceForDistribution, $schedules, $signing, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $cache, $locks, $usage, $publisherForUsage);
                 break;
             case DistributionBuildAction::Reconcile:
-                $this->reconcile($payload->id, $project, $dbForProject, $distributionBuilds, $jobsForDistributionSigning, $deviceForDistribution, $schedules, $signing, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $locks);
+                $this->reconcile($payload->id, $project, $dbForProject, $distributionBuilds, $jobsForDistributionSigning, $deviceForDistribution, $schedules, $signing, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $locks, $usage, $publisherForUsage);
                 break;
             case DistributionBuildAction::Dispatch:
                 break;
@@ -178,6 +185,8 @@ class Builds extends Action
         FunctionPublisher $publisherForFunctions,
         Cache $cache,
         callable $locks,
+        Context $usage,
+        UsagePublisher $publisherForUsage,
     ): void {
         $meta = $payload->data['meta'] ?? [];
         $artifactId = (string) ($meta['artifactId'] ?? '');
@@ -189,7 +198,7 @@ class Builds extends Action
         Span::add('artifact.id', $artifactId);
         Span::add('job.stage', (string) ($meta['stage'] ?? ''));
 
-        $locks(DistributionBuilds::lock((string) $project->getSequence(), $artifactId), self::LOCK_TTL, function () use ($payload, $meta, $artifactId, $callback, $project, $dbForProject, $distributionBuilds, $deviceForDistribution, $schedules, $signing, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $cache): void {
+        $locks(DistributionBuilds::lock((string) $project->getSequence(), $artifactId), self::LOCK_TTL, function () use ($payload, $meta, $artifactId, $callback, $project, $dbForProject, $distributionBuilds, $deviceForDistribution, $schedules, $signing, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $cache, $usage, $publisherForUsage): void {
             $key = 'distribution-event-' . $project->getSequence() . '-' . $payload->id;
             if ($payload->id !== '' && $cache->load($key, self::DEDUPE_TTL) !== false) {
                 return;
@@ -220,9 +229,9 @@ class Builds extends Action
 
             match (true) {
                 $callback === CallbackEvent::Start => $this->onStart($dbForProject, $project, $artifact, $signing, $deviceForDistribution),
-                $event instanceof JobArtifact => $this->onArtifact($dbForProject, $project, $artifact, $event, $distributionBuilds, $deviceForDistribution, $schedules, $signing, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions),
-                $event instanceof JobExit => $this->onExit($dbForProject, $project, $artifact, $event, $distributionBuilds, $deviceForDistribution, $schedules, $signing, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions),
-                $callback === CallbackEvent::Complete => $this->onComplete($dbForProject, $project, $artifact, $distributionBuilds, $deviceForDistribution, $schedules, $signing, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions),
+                $event instanceof JobArtifact => $this->onArtifact($dbForProject, $project, $artifact, $event, $distributionBuilds, $deviceForDistribution, $schedules, $signing, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage),
+                $event instanceof JobExit => $this->onExit($dbForProject, $project, $artifact, $event, $distributionBuilds, $deviceForDistribution, $schedules, $signing, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage),
+                $callback === CallbackEvent::Complete => $this->onComplete($dbForProject, $project, $artifact, $distributionBuilds, $deviceForDistribution, $schedules, $signing, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage),
                 default => $artifact,
             };
 
@@ -246,6 +255,8 @@ class Builds extends Action
         Webhook $queueForWebhooks,
         FunctionPublisher $publisherForFunctions,
         callable $locks,
+        Context $usage,
+        UsagePublisher $publisherForUsage,
     ): void {
         if (!$dbForProject->getDocument('distributionBuilds', $id)->isEmpty()) {
             return;
@@ -253,7 +264,7 @@ class Builds extends Action
 
         Span::add('artifact.id', $id);
 
-        $locks(DistributionBuilds::lock((string) $project->getSequence(), $id), self::LOCK_TTL, function () use ($id, $project, $dbForProject, $distributionBuilds, $jobsForDistributionSigning, $deviceForDistribution, $schedules, $signing, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions): void {
+        $locks(DistributionBuilds::lock((string) $project->getSequence(), $id), self::LOCK_TTL, function () use ($id, $project, $dbForProject, $distributionBuilds, $jobsForDistributionSigning, $deviceForDistribution, $schedules, $signing, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage): void {
             $artifact = $dbForProject->getDocument('distributionArtifacts', $id);
             if ($artifact->isEmpty() || $artifact->getAttribute('status') !== Status::Processing->value) {
                 $this->revoke($project, $artifact, $signing, $deviceForDistribution);
@@ -281,31 +292,31 @@ class Builds extends Action
             $artifact = $this->recover($dbForProject, $artifact, $status, $deviceForDistribution);
             $join = $this->join($artifact);
             if (($join['failed'] ?? false) === true && ($join['exitCode'] ?? null) === 0) {
-                $this->finalize($dbForProject, $project, $artifact, false, DistributionBuilds::ERROR_JOB_FAILED, $deviceForDistribution, $schedules, $signing, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions);
+                $this->finalize($dbForProject, $project, $artifact, false, DistributionBuilds::ERROR_JOB_FAILED, $deviceForDistribution, $schedules, $signing, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage);
                 return;
             }
 
             if (\is_array($join[self::RESULT] ?? null) && ($join['exitCode'] ?? null) === 0 && ($join['completed'] ?? false) === true) {
-                $this->ready($dbForProject, $project, $artifact, $distributionBuilds, $deviceForDistribution, $schedules, $signing, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions);
+                $this->ready($dbForProject, $project, $artifact, $distributionBuilds, $deviceForDistribution, $schedules, $signing, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage);
                 return;
             }
 
             if ($status === null) {
                 if ($this->expired($artifact)) {
-                    $this->finalize($dbForProject, $project, $artifact, false, DistributionBuilds::ERROR_JOB_LOST, $deviceForDistribution, $schedules, $signing, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions);
+                    $this->finalize($dbForProject, $project, $artifact, false, DistributionBuilds::ERROR_JOB_LOST, $deviceForDistribution, $schedules, $signing, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage);
                 }
                 return;
             }
 
             if ($status->status === JobState::Failed || $status->status === JobState::Cancelled) {
-                $this->finalize($dbForProject, $project, $artifact, false, $this->failure($artifact, $status), $deviceForDistribution, $schedules, $signing, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions);
+                $this->finalize($dbForProject, $project, $artifact, false, $this->failure($artifact, $status), $deviceForDistribution, $schedules, $signing, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage);
                 return;
             }
 
             if ($this->expired($artifact)) {
                 $code = $status->status === JobState::Completed ? DistributionBuilds::ERROR_JOB_FAILED : DistributionBuilds::ERROR_JOB_TIMEOUT;
                 $distributionBuilds->cancel($artifact);
-                $this->finalize($dbForProject, $project, $artifact, false, $code, $deviceForDistribution, $schedules, $signing, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions);
+                $this->finalize($dbForProject, $project, $artifact, false, $code, $deviceForDistribution, $schedules, $signing, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage);
             }
         }, self::LOCK_TIMEOUT);
     }
@@ -391,6 +402,8 @@ class Builds extends Action
         Event $queueForEvents,
         Webhook $queueForWebhooks,
         FunctionPublisher $publisherForFunctions,
+        Context $usage,
+        UsagePublisher $publisherForUsage,
     ): Document {
         if ($event->artifactId === self::SIGNING) {
             $this->revoke($project, $artifact, $signing, $deviceForDistribution);
@@ -409,14 +422,14 @@ class Builds extends Action
             Span::add('job.artifact.id', $event->artifactId);
             Span::add('job.artifact.error', $event->error?->code->value ?? '');
 
-            return $this->finalize($dbForProject, $project, $artifact, false, DistributionBuilds::ERROR_JOB_FAILED, $deviceForDistribution, $schedules, $signing, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions);
+            return $this->finalize($dbForProject, $project, $artifact, false, DistributionBuilds::ERROR_JOB_FAILED, $deviceForDistribution, $schedules, $signing, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage);
         }
 
         if ($failed || !\is_array($event->content)) {
             $artifact = $this->record($dbForProject, $artifact, ['failed' => true]);
 
             if (($this->join($artifact)['exitCode'] ?? null) === 0) {
-                return $this->finalize($dbForProject, $project, $artifact, false, DistributionBuilds::ERROR_JOB_FAILED, $deviceForDistribution, $schedules, $signing, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions);
+                return $this->finalize($dbForProject, $project, $artifact, false, DistributionBuilds::ERROR_JOB_FAILED, $deviceForDistribution, $schedules, $signing, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage);
             }
 
             return $artifact;
@@ -424,7 +437,7 @@ class Builds extends Action
 
         $artifact = $this->record($dbForProject, $artifact, [self::RESULT => $event->content]);
 
-        return $this->ready($dbForProject, $project, $artifact, $distributionBuilds, $deviceForDistribution, $schedules, $signing, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions);
+        return $this->ready($dbForProject, $project, $artifact, $distributionBuilds, $deviceForDistribution, $schedules, $signing, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage);
     }
 
     /**
@@ -444,6 +457,8 @@ class Builds extends Action
         Event $queueForEvents,
         Webhook $queueForWebhooks,
         FunctionPublisher $publisherForFunctions,
+        Context $usage,
+        UsagePublisher $publisherForUsage,
     ): Document {
         $this->revoke($project, $artifact, $signing, $deviceForDistribution);
 
@@ -455,14 +470,14 @@ class Builds extends Action
                 ? DistributionBuilds::ERROR_JOB_TIMEOUT
                 : (DistributionBuilds::error((string) ($this->job($artifact)['stage'] ?? ''), $exit->exitCode) ?? DistributionBuilds::ERROR_JOB_FAILED);
 
-            return $this->finalize($dbForProject, $project, $artifact, false, $code, $deviceForDistribution, $schedules, $signing, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions);
+            return $this->finalize($dbForProject, $project, $artifact, false, $code, $deviceForDistribution, $schedules, $signing, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage);
         }
 
         if (($this->join($artifact)['failed'] ?? false) === true) {
-            return $this->finalize($dbForProject, $project, $artifact, false, DistributionBuilds::ERROR_JOB_FAILED, $deviceForDistribution, $schedules, $signing, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions);
+            return $this->finalize($dbForProject, $project, $artifact, false, DistributionBuilds::ERROR_JOB_FAILED, $deviceForDistribution, $schedules, $signing, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage);
         }
 
-        return $this->ready($dbForProject, $project, $artifact, $distributionBuilds, $deviceForDistribution, $schedules, $signing, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions);
+        return $this->ready($dbForProject, $project, $artifact, $distributionBuilds, $deviceForDistribution, $schedules, $signing, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage);
     }
 
     protected function onComplete(
@@ -477,10 +492,12 @@ class Builds extends Action
         Event $queueForEvents,
         Webhook $queueForWebhooks,
         FunctionPublisher $publisherForFunctions,
+        Context $usage,
+        UsagePublisher $publisherForUsage,
     ): Document {
         $artifact = $this->record($dbForProject, $artifact, ['completed' => true]);
 
-        return $this->ready($dbForProject, $project, $artifact, $distributionBuilds, $deviceForDistribution, $schedules, $signing, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions);
+        return $this->ready($dbForProject, $project, $artifact, $distributionBuilds, $deviceForDistribution, $schedules, $signing, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage);
     }
 
     /**
@@ -499,6 +516,8 @@ class Builds extends Action
         Event $queueForEvents,
         Webhook $queueForWebhooks,
         FunctionPublisher $publisherForFunctions,
+        Context $usage,
+        UsagePublisher $publisherForUsage,
     ): Document {
         if ($artifact->getAttribute('status') !== Status::Processing->value) {
             return $artifact;
@@ -511,8 +530,8 @@ class Builds extends Action
         }
 
         return match ($this->job($artifact)['stage'] ?? '') {
-            DistributionBuilds::STAGE_INSPECT => $this->inspected($dbForProject, $project, $artifact, $result, $distributionBuilds, $deviceForDistribution, $schedules, $signing, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions),
-            DistributionBuilds::STAGE_SIGN => $this->signed($dbForProject, $project, $artifact, $result, $deviceForDistribution, $schedules, $signing, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions),
+            DistributionBuilds::STAGE_INSPECT => $this->inspected($dbForProject, $project, $artifact, $result, $distributionBuilds, $deviceForDistribution, $schedules, $signing, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage),
+            DistributionBuilds::STAGE_SIGN => $this->signed($dbForProject, $project, $artifact, $result, $deviceForDistribution, $schedules, $signing, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage),
             default => $artifact,
         };
     }
@@ -533,8 +552,10 @@ class Builds extends Action
         Event $queueForEvents,
         Webhook $queueForWebhooks,
         FunctionPublisher $publisherForFunctions,
+        Context $usage,
+        UsagePublisher $publisherForUsage,
     ): Document {
-        $finalize = fn (Document $artifact, bool $success, string $code = ''): Document => $this->finalize($dbForProject, $project, $artifact, $success, $code, $deviceForDistribution, $schedules, $signing, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions);
+        $finalize = fn (Document $artifact, bool $success, string $code = ''): Document => $this->finalize($dbForProject, $project, $artifact, $success, $code, $deviceForDistribution, $schedules, $signing, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage);
 
         if ((int) ($result['size'] ?? -1) !== (int) $artifact->getAttribute('size', 0)) {
             return $finalize($artifact, false, DistributionBuilds::ERROR_ARTIFACT_SIZE_MISMATCH);
@@ -615,8 +636,10 @@ class Builds extends Action
         Event $queueForEvents,
         Webhook $queueForWebhooks,
         FunctionPublisher $publisherForFunctions,
+        Context $usage,
+        UsagePublisher $publisherForUsage,
     ): Document {
-        $finalize = fn (Document $artifact, bool $success, string $code = ''): Document => $this->finalize($dbForProject, $project, $artifact, $success, $code, $deviceForDistribution, $schedules, $signing, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions);
+        $finalize = fn (Document $artifact, bool $success, string $code = ''): Document => $this->finalize($dbForProject, $project, $artifact, $success, $code, $deviceForDistribution, $schedules, $signing, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $usage, $publisherForUsage);
 
         $digest = (string) ($result['digest'] ?? '');
         $source = $deviceForDistribution->getPath('signed/' . $artifact->getId() . '/app.aab');
@@ -693,6 +716,8 @@ class Builds extends Action
         Event $queueForEvents,
         Webhook $queueForWebhooks,
         FunctionPublisher $publisherForFunctions,
+        Context $usage,
+        UsagePublisher $publisherForUsage,
     ): Document {
         if ($artifact->isEmpty()) {
             return $artifact;
@@ -707,7 +732,8 @@ class Builds extends Action
             Query::equal('status', [Status::Processing->value]),
         ]);
 
-        if (($this->job($artifact)['stage'] ?? '') === DistributionBuilds::STAGE_SIGN) {
+        $sign = ($this->job($artifact)['stage'] ?? '') === DistributionBuilds::STAGE_SIGN;
+        if ($sign) {
             $this->revoke($project, $artifact, $signing, $deviceForDistribution);
             $deviceForDistribution->deletePath('signed/' . $artifact->getId());
         }
@@ -720,8 +746,17 @@ class Builds extends Action
             Span::add('artifact.error', $code);
         }
 
-        if ($applied > 0 && !$artifact->isEmpty()) {
-            $this->dispatchUpdate($queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $project, $artifact);
+        if ($applied === 0 || $artifact->isEmpty()) {
+            return $artifact;
+        }
+
+        $this->dispatchUpdate($queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $project, $artifact);
+
+        if ($success && $sign) {
+            $app = $dbForProject->getDocument('distributionApps', (string) $artifact->getAttribute('appId', ''));
+            if (!$app->isEmpty()) {
+                DistributionUsage::publishSigning($usage, $app, $project, $publisherForUsage);
+            }
         }
 
         return $artifact;
