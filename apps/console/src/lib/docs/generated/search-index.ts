@@ -2659,6 +2659,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "products/auth/sso",
+    "title": "Single sign-on (SSO)",
+    "description": "Let your customers' employees sign in to your app through their company's identity provider, such as Okta or Microsoft Entra ID, with OpenID Connect.",
+    "excerpt": "Single sign-on (SSO) lets the people at your customers' companies sign in to your app with the accounts their company manages in an identity provider, such as Okta, Microsoft Entra ID, Google Workspace, or Keycloak. Each customer is a team in your project. A team proves it owns its email domains with a DNS record and connects its own identity providers over OpenID Connect. When someone enters a work email on one of those domains, your app sends them to…",
+    "breadcrumbs": [
+      "Auth",
+      "Guides",
+      "Single sign-on (SSO)"
+    ]
+  },
+  {
     "slug": "products/auth/team-invites",
     "title": "Team invites",
     "description": "Learn how to manage team invites in Appwrite. Implement both client-side email invites and server-side custom flows for team memberships.",

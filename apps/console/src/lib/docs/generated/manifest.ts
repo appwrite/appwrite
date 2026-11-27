@@ -1715,6 +1715,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 3
   },
   {
+    "slug": "products/auth/sso",
+    "title": "Single sign-on (SSO)",
+    "description": "Let your customers' employees sign in to your app through their company's identity provider, such as Okta or Microsoft Entra ID, with OpenID Connect.",
+    "layout": "article",
+    "readingTimeMinutes": 20
+  },
+  {
     "slug": "products/auth/team-invites",
     "title": "Team invites",
     "description": "Learn how to manage team invites in Appwrite. Implement both client-side email invites and server-side custom flows for team memberships.",

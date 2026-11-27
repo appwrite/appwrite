@@ -47,6 +47,9 @@ Let users sign up and sign in with Face ID, Touch ID, or a fingerprint instead o
 {% cards_item href="/docs/products/auth/ldap" title="LDAP" %}
 Let users sign in with the username and password from your LDAP directory, such as Active Directory or OpenLDAP.
 {% /cards_item %}
+{% cards_item href="/docs/products/auth/sso" title="Single sign-on (SSO)" %}
+Let your customers' employees sign in through their company's identity provider, such as Okta or Microsoft Entra ID, and join their company's team.
+{% /cards_item %}
 {% cards_item href="/docs/products/auth/custom-token" title="Custom token" %}
 Implement custom authentication methods by generating custom tokens.
 {% /cards_item %}

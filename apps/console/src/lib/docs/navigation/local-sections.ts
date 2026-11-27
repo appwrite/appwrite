@@ -321,6 +321,10 @@ export const DOCS_LOCAL_SECTION_NAVS: DocsSectionNavConfig[] = [
             href: '/docs/products/auth/ldap',
           },
           {
+            label: 'Single sign-on (SSO)',
+            href: '/docs/products/auth/sso',
+          },
+          {
             label: 'Sign in with Appwrite',
             href: '/docs/products/auth/sign-in-with-appwrite',
           },

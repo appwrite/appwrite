@@ -70,6 +70,10 @@ Learn how Appwrite meters and bills text embedding tokens per model.
 {% cards_item href="/docs/advanced/billing/premium-geo-db" title="Premium Geo DB" %}
 Add city, ISP, and connection type data to IP geolocation in a project.
 {% /cards_item %}
+
+{% cards_item href="/docs/products/auth/sso#add-on" title="Single sign-on" %}
+Let your app's users sign in through their company's identity provider, for every team in a project.
+{% /cards_item %}
 {% /cards %}
 
 # Service level agreements {% #slas %}
