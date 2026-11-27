@@ -61,7 +61,7 @@ On Appwrite Cloud, the Free plan includes 1 escalation of up to 2 steps, without
 
 # Acknowledge with a server SDK {% #acknowledge-with-a-server-sdk %}
 
-To acknowledge alerts from your own tools, such as a chat command or an on-call integration, create an [API key](/docs/partners/project/api-keys) with the `alerts.write` scope and call `update`. Pass `acknowledged: false` to undo an acknowledgement. An alert acknowledged with an API key has an empty `acknowledgedBy`.
+To acknowledge alerts from your own tools, such as a chat command or an on-call integration, create an API key with the `alerts.write` scope under **Connect** > **API Keys** in your project, and call `update`. Pass `acknowledged: false` to undo an acknowledgement. An alert acknowledged with an API key has an empty `acknowledgedBy`.
 
 {% multicode %}
 ```server-nodejs

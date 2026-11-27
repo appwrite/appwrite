@@ -60,7 +60,7 @@ On self-hosted Appwrite, each usage monitor is checked every 60 seconds. Set the
 
 # Create with a server SDK {% #create-with-a-server-sdk %}
 
-Create an [API key](/docs/partners/project/api-keys) with the `monitors.write` scope, then call `createUsageMonitor`. This monitor opens an alert when the project sends more than 1 GB of outbound bandwidth in an hour, and notifies owners and developers at **Error** severity.
+In your project, open **Connect** > **API Keys** and create an API key with the `monitors.write` scope. Then call `createUsageMonitor`. This monitor opens an alert when the project sends more than 1 GB of outbound bandwidth in an hour, and notifies owners and developers at **Error** severity.
 
 {% multicode %}
 ```server-nodejs

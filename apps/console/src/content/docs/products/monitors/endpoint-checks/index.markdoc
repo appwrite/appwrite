@@ -58,7 +58,7 @@ Enter the mail server's host and port. Appwrite reads the server's greeting, sen
 
 # Create with a server SDK {% #create-with-a-server-sdk %}
 
-Each type has its own method: `createHttpMonitor`, `createDnsMonitor`, `createTcpMonitor`, and `createSmtpMonitor`. Create an [API key](/docs/partners/project/api-keys) with the `monitors.write` scope to call them. This example checks `https://api.example.com/health` every minute and opens a **Critical** alert when the response isn't a 2xx status or takes longer than 2 seconds.
+Each type has its own method: `createHttpMonitor`, `createDnsMonitor`, `createTcpMonitor`, and `createSmtpMonitor`. To call them, create an API key with the `monitors.write` scope under **Connect** > **API Keys** in your project. This example checks `https://api.example.com/health` every minute and opens a **Critical** alert when the response isn't a 2xx status or takes longer than 2 seconds.
 
 {% multicode %}
 ```server-nodejs
