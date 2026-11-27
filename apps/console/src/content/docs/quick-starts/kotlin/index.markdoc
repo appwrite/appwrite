@@ -25,6 +25,8 @@ If this is your first time using Appwrite, create an account and create your fir
 ![Create project screen](/images/docs/quick-starts/create-project.avif)
 {% /only_light %}
 
+{% partial file="zero-no-account.md" /%}
+
 Then, under **Integrate with your server**, add an **API Key** with the following scopes.
 
 {% only_dark %}

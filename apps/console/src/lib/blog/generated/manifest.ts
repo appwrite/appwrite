@@ -3,6 +3,51 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "how-we-made-account-less-appwrite-cloud-safe-to-run",
+    "href": "/blog/post/how-we-made-account-less-appwrite-cloud-safe-to-run",
+    "title": "How we made account-less Appwrite Cloud safe to run",
+    "description": "Appwrite Zero creates real Appwrite Cloud projects before signup. Here is how we limit usage, lock down temporary accounts, and clean up expired projects.",
+    "date": "2026-12-02",
+    "lastUpdated": "2026-12-02",
+    "timeToRead": 4,
+    "author": "chirag-aggarwal",
+    "category": "architectures, security",
+    "featured": false,
+    "draft": true,
+    "cover": "/images/blog/how-we-made-account-less-appwrite-cloud-safe-to-run/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "introducing-appwrite-zero",
+    "href": "/blog/post/introducing-appwrite-zero",
+    "title": "Introducing Appwrite Zero",
+    "description": "Appwrite Zero creates a real Appwrite Cloud project for a developer or coding agent upfront, skipping signup and card entry. Projects run for an hour, and claiming one keeps everything already built inside.",
+    "date": "2026-12-02",
+    "lastUpdated": "2026-12-02",
+    "timeToRead": 6,
+    "author": "chirag-aggarwal",
+    "category": "announcements, ai",
+    "featured": false,
+    "draft": true,
+    "cover": "/images/blog/introducing-appwrite-zero/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "take-a-claimed-appwrite-zero-project-to-production",
+    "href": "/blog/post/take-a-claimed-appwrite-zero-project-to-production",
+    "title": "Take a claimed Appwrite Zero project to production",
+    "description": "Get a claimed Appwrite Zero project ready for users: rename it, replace the Zero API key, tighten permissions, connect Git, and add a custom domain.",
+    "date": "2026-12-02",
+    "lastUpdated": "2026-12-02",
+    "timeToRead": 4,
+    "author": "chirag-aggarwal",
+    "category": "tutorials, ai",
+    "featured": false,
+    "draft": true,
+    "cover": "/images/blog/take-a-claimed-appwrite-zero-project-to-production/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-postgresql-19",
     "href": "/blog/post/announcing-postgresql-19",
     "title": "Managed PostgreSQL 19 is now available on Appwrite Cloud",

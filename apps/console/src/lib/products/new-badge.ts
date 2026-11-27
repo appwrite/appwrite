@@ -27,6 +27,7 @@ const DOCS_PRODUCT_NEW_HREFS: Partial<Record<string, ProductNavItemId>> = {
   '/docs/products/firewall': 'firewall',
   '/docs/products/agent': 'agent',
   '/docs/products/analytics': 'analytics',
+  '/docs/zero': 'zero',
 }
 
 function parseUtcDate(isoDate: string): Date {
