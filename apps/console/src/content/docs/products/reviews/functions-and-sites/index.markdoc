@@ -1,0 +1,34 @@
+---
+layout: article
+title: Review functions and sites
+description: Turn on Appwrite Reviews for the repository a function or site deploys from, and see the reviews of pull requests that change its code.
+---
+
+A [function](/docs/products/functions/deploy-from-git) or [site](/docs/products/sites/deploy-from-git) that deploys from a Git repository can have that repository's pull requests reviewed. You turn it on from the function or site, and its **Reviews** tab shows the reviews that change its code.
+
+Code review is a setting of the repository, not of the function or site. Turning it on reviews every pull request in the repository, and applies to every function and site in the project that deploys from it.
+
+# When you create a function or site {% #create %}
+
+When you create a function or site from a Git repository, **Review pull requests** is on by default, so the repository is reviewed from the start. If code review is already on for the repository, the switch says so.
+
+# For an existing function or site {% #existing %}
+
+1. Open the function or site and go to its **Reviews** tab, or to **Settings** > **Git**.
+2. In the **Code review** card, turn **Review pull requests** on or off.
+3. Pick a **Review strength**. See [Review strength](/docs/products/reviews/strength).
+
+Under **Settings** > **Git**, click **View reviews** to open the function's or site's **Reviews** tab.
+
+# The Reviews tab {% #reviews-tab %}
+
+The **Reviews** tab of a function or site has the **Code review** card at the top, and lists the reviews of pull requests that change files in its root directory. Reviews of pull requests that only change other parts of the repository aren't listed, so a function in `functions/api` and a site in `apps/web` each see their own.
+
+{% only_dark %}
+![Reviews tab of a function with the Code review card and the reviews of pull requests that change files in its root directory](/images/docs/reviews/dark/function-reviews.avif)
+{% /only_dark %}
+{% only_light %}
+![Reviews tab of a function with the Code review card and the reviews of pull requests that change files in its root directory](/images/docs/reviews/function-reviews.avif)
+{% /only_light %}
+
+Open a review to see its summary, findings, and trace. See [Review results](/docs/products/reviews/results).

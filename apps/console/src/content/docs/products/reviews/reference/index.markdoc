@@ -1,0 +1,44 @@
+---
+layout: article
+title: Configuration reference
+description: Every setting of the Appwrite Reviews repository configuration file, with its default value and what it changes.
+---
+
+Add these settings to a `.hansi.json` file in the root of the repository. Every setting is optional. See [Configure a repository](/docs/products/reviews/configuration) for how the file is read and for examples.
+
+# Reviews {% #reviews %}
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `reviews.enabled` | `true` | Review pull requests in this repository. Answers to mentions follow this too. |
+| `reviews.auto` | `true` | Review when a pull request is opened or gets new commits. Mentions work either way. |
+| `reviews.drafts` | `false` | Review draft pull requests too. |
+| `reviews.baseBranches` | `[]` | Only review pull requests into these branches. Empty means every branch. |
+| `reviews.pathFilters` | `[]` | Glob patterns of files to review. A leading `!` excludes, such as `"!docs/**"`. |
+| `reviews.generated` | `[]` | Glob patterns of generated files, such as `"src/sdk/**"`. Still reviewed, but one too large to show doesn't stop an approval. |
+| `reviews.profile` | `balanced` | How picky the reviewer is. `chill` reports only bugs it can confirm in the code. `balanced` also flags risky patterns, weak or missing tests, and broken documentation examples. `strict` also flags naming, style, and maintainability problems. |
+| `reviews.minSeverity` | `minor` | Findings below this severity aren't posted: `info`, `minor`, `major`, or `critical`. |
+| `reviews.maxComments` | `15` | The most inline comments one review posts, up to `100`. |
+
+# Verdicts {% #verdicts %}
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `reviews.approve` | `true` | Approve pull requests with no blocking findings and no open bugs. |
+| `reviews.requestChanges` | `major` | Findings at or above this severity request changes. `never` only comments, and still never approves a pull request with a major or critical finding. |
+| `reviews.approveOutsideContributors` | `false` | Approve pull requests from people without write access, such as pull requests from forks. Off by default, because their changes could try to talk the model into an approval. |
+
+# Instructions {% #instructions %}
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `instructions` | `""` | Extra review instructions for the repository, in plain language. |
+| `pathInstructions` | `[]` | Review instructions for files that match a glob pattern, as `{ "path", "instructions" }` objects. |
+| `language` | `en` | The language of review comments, such as `"de"`. |
+
+# Sandbox {% #sandbox %}
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `sandbox.setup` | `""` | A shell command that runs in the sandbox before the review starts, such as `"npm ci"`. |
+| `sandbox.network` | `public` | `public` allows HTTP and HTTPS to public hosts, never private networks. `none` removes network access. |

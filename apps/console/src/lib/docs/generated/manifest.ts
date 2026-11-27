@@ -3411,9 +3411,86 @@ export const DOCS_PAGES: DocsPageMeta[] = [
   {
     "slug": "products/reviews",
     "title": "Reviews",
-    "description": "Review pull requests with AI using Appwrite Reviews. Turn it on for GitHub, GitLab, Gitea, and Bitbucket repositories, choose what gets reviewed, and see how review credits are billed.",
+    "description": "Review pull requests with AI using Appwrite Reviews. Turn it on for GitHub, GitLab, Gitea, and Bitbucket repositories and get findings, a verdict, and a merge confidence grade on every pull request.",
     "layout": "article",
-    "readingTimeMinutes": 11
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "products/reviews/billing",
+    "title": "Credits and billing",
+    "description": "Learn how Appwrite Reviews is billed in credits, how many credits each plan includes every month, and what extra credits cost.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "products/reviews/configuration",
+    "title": "Configure a repository",
+    "description": "Configure Appwrite Reviews for a repository with a file in its root. Choose which branches and files get reviewed, add instructions for the reviewer, and set up the sandbox.",
+    "layout": "article",
+    "readingTimeMinutes": 3
+  },
+  {
+    "slug": "products/reviews/functions-and-sites",
+    "title": "Review functions and sites",
+    "description": "Turn on Appwrite Reviews for the repository a function or site deploys from, and see the reviews of pull requests that change its code.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "products/reviews/how-it-works",
+    "title": "How reviews work",
+    "description": "Learn what starts an Appwrite review, what the reviewer reads, how it checks its findings, and when it reviews a pull request again.",
+    "layout": "article",
+    "readingTimeMinutes": 3
+  },
+  {
+    "slug": "products/reviews/learnings",
+    "title": "Learnings",
+    "description": "Teach Appwrite Reviews how your team works. Learnings are preferences the reviewer remembers from pull request conversations and follows in later reviews.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "products/reviews/mentions",
+    "title": "Mention the reviewer",
+    "description": "Mention Appwrite Reviews in a pull request comment to request a new review, ask about a change, or teach it a preference, on GitHub, GitLab, Gitea, and Bitbucket.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "products/reviews/performance",
+    "title": "Track performance",
+    "description": "Track how Appwrite Reviews performs for each repository and author. See approval rates, findings per pull request, how many findings get fixed, and the median review time.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "products/reviews/quick-start",
+    "title": "Start with Reviews",
+    "description": "Turn on Appwrite Reviews for a Git repository and get your first AI review on a pull request.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "products/reviews/reference",
+    "title": "Configuration reference",
+    "description": "Every setting of the Appwrite Reviews repository configuration file, with its default value and what it changes.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "products/reviews/results",
+    "title": "Review results",
+    "description": "Understand what an Appwrite review posts on a pull request, a summary, findings by severity, a verdict, and a merge confidence grade from S to F, and where to find it in the Console.",
+    "layout": "article",
+    "readingTimeMinutes": 3
+  },
+  {
+    "slug": "products/reviews/strength",
+    "title": "Review strength",
+    "description": "Choose how hard Appwrite Reviews reviews each repository. Compare Basic, Normal, and Expert strength, the models and tools each uses, and what each costs in credits.",
+    "layout": "article",
+    "readingTimeMinutes": 2
   },
   {
     "slug": "products/sites",

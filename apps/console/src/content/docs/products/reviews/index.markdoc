@@ -1,7 +1,7 @@
 ---
 layout: article
 title: Reviews
-description: Review pull requests with AI using Appwrite Reviews. Turn it on for GitHub, GitLab, Gitea, and Bitbucket repositories, choose what gets reviewed, and see how review credits are billed.
+description: Review pull requests with AI using Appwrite Reviews. Turn it on for GitHub, GitLab, Gitea, and Bitbucket repositories and get findings, a verdict, and a merge confidence grade on every pull request.
 ---
 
 Appwrite **Reviews** reviews the pull requests in your Git repositories with AI. Turn it on for a repository, and each pull request gets a review where it was opened: a summary, findings on the lines they concern, a verdict, and a merge confidence grade. Mention the reviewer in a comment to ask about a change, request another review, or teach it how your team works.
@@ -12,205 +12,79 @@ You turn on reviews and follow them under **Review** in your project.
 Reviews is available on Appwrite Cloud.
 {% /info %}
 
+{% only_dark %}
+![Review page in the Console with an approved review graded A, its summary, and its findings](/images/docs/reviews/dark/review.avif)
+{% /only_dark %}
+{% only_light %}
+![Review page in the Console with an approved review graded A, its summary, and its findings](/images/docs/reviews/review.avif)
+{% /only_light %}
+
 # How it works {% #how-it-works %}
 
-1. **A pull request changes**: Appwrite queues a review when a pull request is opened, reopened, or marked ready for review, and when new commits are pushed to it. If several pushes arrive before the review starts, only the latest commit is reviewed.
-2. **The reviewer reads the code**: It checks out the pull request and reads the repository, not only the diff, so a finding can point at the code a change breaks. It also reads the issues the pull request links to and the checks that failed on it. Depending on the [strength](#strength), it can run tests, type checkers, and short scripts in an isolated sandbox.
-3. **Findings are verified**: A second pass checks every finding against the code before anything is posted.
-4. **The review is posted**: Findings appear as inline comments on the pull request, together with a summary and a verdict. On GitHub, the review also adds a check run to the commit.
+When a pull request is opened or gets new commits, Appwrite queues a review. The reviewer checks out the pull request and reads the repository, not only the diff. At Normal and Expert [strength](/docs/products/reviews/strength), it can also run your tests and type checkers in a sandbox. A second pass checks every finding against the code before the review is posted.
 
-After new commits, the reviewer reviews only what changed since its last review and updates its summary. Commits that only merge the base branch into the pull request don't start a new review.
-
-# What a review contains {% #review-contents %}
+Each review has four parts:
 
 - **Summary**: What the pull request changes.
-- **Findings**: Problems the reviewer found, each on the line it concerns, with a severity of **Critical**, **Major**, **Minor**, or **Info**.
-- **Verdict**: **Approved**, **Changes requested**, or **Commented**. Your [repository settings](#settings) decide the verdict from the findings, not the model. By default, a Major or Critical finding requests changes, and a pull request with no blocking findings and no open bugs is approved.
-- **Merge confidence**: A grade from **S** to **F**. Open findings cap the grade.
+- **Findings**: Problems on the lines they concern, each with a severity of **Critical**, **Major**, **Minor**, or **Info**.
+- **Verdict**: **Approved**, **Changes requested**, or **Commented**.
+- **Merge confidence**: A grade from **S**, ready to merge, down to **F**, do not merge.
 
-| Grade | Meaning |
-|-------|---------|
-| S | Ready to merge |
-| A | Mergeable after minor fixes |
-| B | Needs changes before merging |
-| C | Significant problems |
-| D | Serious problems |
-| F | Do not merge |
+# Get started {% #getting-started %}
 
-A review is **Skipped** when there is nothing to review, for example when every changed file is excluded by a [path filter](#choose-what-gets-reviewed) or the diff is too large.
+Connect a repository, turn on reviews, and get your first review on a pull request.
 
-# Turn on reviews {% #turn-on-reviews %}
+{% arrow_link href="/docs/products/reviews/quick-start" %}
+Quick start
+{% /arrow_link %}
 
-1. In the Appwrite Console, open your project and go to **Review**.
-2. Click **Choose repositories**.
-3. If your project isn't connected to a Git provider yet, click **Add installation** and connect GitHub, GitLab, Gitea, or Bitbucket. On GitHub, this installs the [Appwrite GitHub App](https://github.com/apps/appwrite) on the account or organization you pick.
-4. Turn on review for each repository you want reviewed, or click **Review all** to turn it on for every repository in the installation.
+# Concepts {% #concepts %}
 
-New pull requests in those repositories are reviewed from then on. To also review repositories you add to the installation later, turn on **Review new repositories**.
+What a review does, what it posts, and what it costs.
 
-## From a function or site {% #functions-and-sites %}
+{% cards %}
+{% cards_item href="/docs/products/reviews/how-it-works" title="How reviews work" %}
+What starts a review, what the reviewer reads, and when it reviews a pull request again.
+{% /cards_item %}
+{% cards_item href="/docs/products/reviews/results" title="Review results" %}
+Summaries, findings and their severities, verdicts, and merge confidence grades.
+{% /cards_item %}
+{% cards_item href="/docs/products/reviews/strength" title="Review strength" %}
+Basic, Normal, and Expert reviews, the models and tools each one uses, and their cost.
+{% /cards_item %}
+{% cards_item href="/docs/products/reviews/billing" title="Credits and billing" %}
+The credits each plan includes every month, extra credits, and where to see usage.
+{% /cards_item %}
+{% cards_item href="/docs/products/reviews/learnings" title="Learnings" %}
+Preferences the reviewer remembers from pull request conversations.
+{% /cards_item %}
+{% /cards %}
 
-When you create a [function](/docs/products/functions/deploy-from-git) or a [site](/docs/products/sites/deploy-from-git) from a Git repository, **Review pull requests** is on by default, so the repository is reviewed from the start. For an existing function or site, turn reviews on or off and pick a strength under **Settings** > **Git**.
+# Guides {% #guides %}
 
-The **Reviews** tab of a function or site lists the reviews of pull requests that change files in its root directory.
+Work with the reviewer on your pull requests and in the Console.
 
-# Follow reviews in the Console {% #console %}
+{% cards %}
+{% cards_item href="/docs/products/reviews/mentions" title="Mention the reviewer" %}
+Request a review, ask a question, or teach a preference from a pull request comment.
+{% /cards_item %}
+{% cards_item href="/docs/products/reviews/functions-and-sites" title="Review functions and sites" %}
+Review the pull requests of a function or site, and see the reviews that change its code.
+{% /cards_item %}
+{% cards_item href="/docs/products/reviews/performance" title="Track performance" %}
+Approvals, findings per pull request, useful findings, and review time by repository and author.
+{% /cards_item %}
+{% /cards %}
 
-The **Review** page of your project has four tabs:
+# Configuration {% #configuration %}
 
-- **Reviews**: Every review with its status, verdict, and grade. Open one to see its summary, findings, trigger, strength, and duration, or jump to it on your Git provider.
-- **Repositories**: The repositories that are reviewed, with the [strength](#strength) of each.
-- **Learnings**: The preferences the reviewer was asked to [remember](#learnings).
-- **Performance**: Pull requests reviewed, how many were approved on the first try, findings per pull request, how many findings were fixed, and the median review time, for each repository and author.
+Change how a repository is reviewed with a file in the repository.
 
-# Review strength {% #strength %}
-
-Each repository is reviewed at a strength. Higher strengths use stronger models and more tools, and cost more [credits](#billing). Change a repository's strength on the **Repositories** tab. Reviews that are already queued keep the strength they were queued with.
-
-| Strength | How it reviews | Credits per review |
-|----------|----------------|--------------------|
-| Basic | Cheaper models that read the code without running it | 10 |
-| Normal | The default models, running commands in a sandbox | 50 |
-| Expert | Stronger models that split the work across subagents and run commands in a sandbox | 500 |
-
-Repositories are reviewed at **Normal** strength unless you change it.
-
-# Talk to the reviewer {% #mentions %}
-
-Mention the reviewer in a comment on the pull request:
-
-- **Request a review**: `@appwrite review` reviews the whole pull request again, at its latest commit.
-- **Ask a question**: Any other mention, such as `@appwrite could this query run without an index?`, gets one answer in the thread. The reviewer reads the code to answer, but doesn't change it.
-- **Teach it a preference**: Ask it to remember how your team works, such as `@appwrite remember that we use early returns instead of nested conditions`. The preference becomes a [learning](#learnings).
-
-To discuss a finding, reply in its thread. You don't need to mention the reviewer there.
-
-Answers are free. A review you request costs [credits](#billing) like any other review.
-
-The reviewer only acts on comments from people with access to the repository, such as its owners, members, and collaborators. Mentions inside code blocks and quoted lines are ignored.
-
-How you mention the reviewer depends on your Git provider:
-
-| Provider | Mention |
-|----------|---------|
-| GitHub | `@appwrite`, the Appwrite GitHub App |
-| GitLab | The account that connected GitLab to Appwrite. Reviews are posted as that account |
-| Gitea | The account that connected Gitea to Appwrite. Reviews are posted as that account |
-| Bitbucket | `@appwrite`, typed as plain text. Reviews are posted as the account that connected Bitbucket |
-
-On GitLab, Gitea, and Bitbucket, connect with a dedicated account if you don't want reviews posted under a teammate's name.
-
-## Learnings {% #learnings %}
-
-A learning is a preference someone asked the reviewer to remember in a pull request conversation. Later reviews and answers in the same repository follow it.
-
-The **Learnings** tab lists each learning with the repository, who asked for it, and a link to the conversation. Delete a learning there to stop the reviewer from following it.
-
-# Configure a repository {% #configure %}
-
-Every setting is optional. To change one, add a `.hansi.json` file to the root of the repository.
-
-The file is read from each pull request's base branch, so a pull request can't change how it's reviewed. Edits to the file apply once they're merged. If the file has invalid JSON or an invalid setting, the review uses the defaults and says why.
-
-```json
-{
-  "$schema": "https://hansi.codes/schema.json",
-  "reviews": {
-    "profile": "balanced",
-    "baseBranches": ["main"],
-    "pathFilters": ["src/**", "!src/generated/**"],
-    "minSeverity": "minor",
-    "requestChanges": "major"
-  },
-  "instructions": "We target Node 22. Flag any use of synchronous filesystem APIs.",
-  "pathInstructions": [
-    { "path": "migrations/**", "instructions": "Migrations must be reversible." }
-  ],
-  "sandbox": { "setup": "npm ci" }
-}
-```
-
-The `$schema` line is optional. It gives your editor autocompletion and a description of every setting.
-
-## Choose what gets reviewed {% #choose-what-gets-reviewed %}
-
-- **Branches**: `reviews.baseBranches` limits reviews to pull requests into the branches you list, such as `["main", "release"]`. Leave it empty to review pull requests into any branch.
-- **Files**: `reviews.pathFilters` takes glob patterns. Patterns without `!` list the only files to review. Patterns that start with `!` exclude files.
-- **Drafts**: Draft pull requests are reviewed once they're marked ready for review. Set `reviews.drafts` to `true` to review drafts too.
-- **Automatic reviews**: Set `reviews.auto` to `false` to review only when someone asks with `@appwrite review`.
-- **Generated files**: List generated code, such as an SDK, in `reviews.generated`. These files are still reviewed, but one that is too large to show doesn't stop an approval.
-
-For example, to skip changes to Markdown files and the `docs` directory:
-
-```json
-{
-  "reviews": {
-    "pathFilters": ["!**/*.md", "!docs/**"]
-  }
-}
-```
-
-When a filter excludes every changed file in a pull request, its review is skipped.
-
-Some files are skipped by default: binary files, lockfiles, test snapshots, generated output, build output (`dist`, `build`), vendored code (`vendor`, `node_modules`), minified files, source maps, images, PDFs, and fonts. At strengths that run commands, lockfiles, snapshots, and generated output are reviewed too, since the reviewer can install, build, and test to check them. A path you list in `reviews.pathFilters` without `!` is reviewed even if it's skipped by default.
-
-## Add instructions {% #instructions %}
-
-`instructions` adds guidance for the whole repository, in plain language. `pathInstructions` adds guidance for files that match a glob pattern:
-
-```json
-{
-  "instructions": "We target Node 22. Flag any use of synchronous filesystem APIs.",
-  "pathInstructions": [
-    { "path": "migrations/**", "instructions": "Migrations must be reversible." },
-    { "path": "src/api/**", "instructions": "Every endpoint needs an authorization check." }
-  ]
-}
-```
-
-For preferences that come up in a conversation, a [learning](#learnings) is quicker: ask the reviewer to remember it in a comment.
-
-## Set up the sandbox {% #sandbox %}
-
-At Normal and Expert strength, the reviewer can run commands in an isolated sandbox that holds the pull request's code. Nothing from the repository runs outside the sandbox, and no credentials reach it.
-
-Set `sandbox.setup` to a command that prepares the code, such as `npm ci` or `composer install`, so the reviewer can run your tests and type checkers. Set `sandbox.network` to `none` to remove network access from the sandbox.
-
-## All settings {% #settings %}
-
-| Setting | Default | Description |
-|---------|---------|-------------|
-| `reviews.enabled` | `true` | Review pull requests in this repository. Answers to mentions follow this too. |
-| `reviews.auto` | `true` | Review when a pull request is opened or gets new commits. Mentions work either way. |
-| `reviews.drafts` | `false` | Review draft pull requests too. |
-| `reviews.baseBranches` | `[]` | Only review pull requests into these branches. Empty means every branch. |
-| `reviews.pathFilters` | `[]` | Glob patterns of files to review. A leading `!` excludes, such as `"!docs/**"`. |
-| `reviews.generated` | `[]` | Glob patterns of generated files, such as `"src/sdk/**"`. Still reviewed, but one too large to show doesn't stop an approval. |
-| `reviews.profile` | `balanced` | How picky the reviewer is. `chill` reports only bugs it can confirm in the code. `balanced` also flags risky patterns, weak or missing tests, and broken documentation examples. `strict` also flags naming, style, and maintainability problems. |
-| `reviews.minSeverity` | `minor` | Findings below this severity aren't posted: `info`, `minor`, `major`, or `critical`. |
-| `reviews.maxComments` | `15` | The most inline comments one review posts, up to `100`. |
-| `reviews.approve` | `true` | Approve pull requests with no blocking findings and no open bugs. |
-| `reviews.requestChanges` | `major` | Findings at or above this severity request changes. `never` only comments, and still never approves a pull request with a major or critical finding. |
-| `reviews.approveOutsideContributors` | `false` | Approve pull requests from people without write access, such as pull requests from forks. Off by default, because their changes could try to talk the model into an approval. |
-| `instructions` | `""` | Extra review instructions for the repository, in plain language. |
-| `pathInstructions` | `[]` | Review instructions for files that match a glob pattern, as `{ "path", "instructions" }` objects. |
-| `language` | `en` | The language of review comments, such as `"de"`. |
-| `sandbox.setup` | `""` | A shell command that runs in the sandbox before the review starts, such as `"npm ci"`. |
-| `sandbox.network` | `public` | `public` allows HTTP and HTTPS to public hosts, never private networks. `none` removes network access. |
-
-# Credits and billing {% #billing %}
-
-Reviews are billed in credits, and there are no per-seat fees. A review costs credits by its [strength](#strength): 10 for Basic, 50 for Normal, and 500 for Expert. Answers to comments are free.
-
-Each plan includes credits every month:
-
-| Plan | Credits per month | Allowance | Past the allowance |
-|------|-------------------|-----------|--------------------|
-| Free | 100 | Shared by the organization's projects | Reviews stop until the next billing cycle |
-| Start | 500 | Shared by the organization's projects | Extra credits |
-| Pro | 2,000 | Per project | Extra credits |
-| Scale | 20,000 | Per project | Extra credits |
-
-Extra credits cost $1 per 100, so a Normal review past the allowance costs $0.50. They're billed with the rest of your usage, up to your organization's [budget cap](/docs/advanced/billing/payments#budget-cap). On Free, reviews stop when the included credits are used, until the next billing cycle or an [upgrade](/pricing).
-
-The **Review** page shows the credits used this billing cycle. On Pro and Scale, it shows the credits of the current project. Click **View usage** to see them in your organization's billing settings.
+{% cards %}
+{% cards_item href="/docs/products/reviews/configuration" title="Configure a repository" %}
+Choose which branches and files get reviewed, add instructions, and set up the sandbox.
+{% /cards_item %}
+{% cards_item href="/docs/products/reviews/reference" title="Configuration reference" %}
+Every setting in the configuration file, with its default.
+{% /cards_item %}
+{% /cards %}

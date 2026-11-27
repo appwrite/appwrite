@@ -1,0 +1,96 @@
+---
+layout: article
+title: Configure a repository
+description: Configure Appwrite Reviews for a repository with a file in its root. Choose which branches and files get reviewed, add instructions for the reviewer, and set up the sandbox.
+---
+
+Every setting is optional. To change one, add a `.hansi.json` file to the root of the repository.
+
+The file is read from each pull request's base branch, so a pull request can't change how it's reviewed. Edits to the file apply once they're merged. If the file has invalid JSON or an invalid setting, the review uses the defaults and says why.
+
+```json
+{
+  "$schema": "https://hansi.codes/schema.json",
+  "reviews": {
+    "profile": "balanced",
+    "baseBranches": ["main"],
+    "pathFilters": ["src/**", "!src/generated/**"],
+    "minSeverity": "minor",
+    "requestChanges": "major"
+  },
+  "instructions": "We target Node 22. Flag any use of synchronous filesystem APIs.",
+  "pathInstructions": [
+    { "path": "migrations/**", "instructions": "Migrations must be reversible." }
+  ],
+  "sandbox": { "setup": "npm ci" }
+}
+```
+
+The `$schema` line is optional. It gives your editor autocompletion and a description of every setting. The [configuration reference](/docs/products/reviews/reference) lists every setting with its default.
+
+# Choose what gets reviewed {% #choose-what-gets-reviewed %}
+
+- **Branches**: `reviews.baseBranches` limits reviews to pull requests into the branches you list, such as `["main", "release"]`. Leave it empty to review pull requests into any branch.
+- **Files**: `reviews.pathFilters` takes glob patterns. Patterns without `!` list the only files to review. Patterns that start with `!` exclude files.
+- **Drafts**: Draft pull requests are reviewed once they're marked ready for review. Set `reviews.drafts` to `true` to review drafts too.
+- **Automatic reviews**: Set `reviews.auto` to `false` to review only when someone asks with [`@appwrite review`](/docs/products/reviews/mentions#request-a-review).
+- **Generated files**: List generated code, such as an SDK, in `reviews.generated`. These files are still reviewed, but one that is too large to show doesn't stop an approval.
+
+For example, to skip changes to Markdown files and the `docs` directory:
+
+```json
+{
+  "reviews": {
+    "pathFilters": ["!**/*.md", "!docs/**"]
+  }
+}
+```
+
+When a filter excludes every changed file in a pull request, its review is skipped.
+
+Some files are [skipped by default](/docs/products/reviews/how-it-works#skipped-files), such as lockfiles, build output, and vendored code. A path you list in `reviews.pathFilters` without `!` is reviewed even if it's skipped by default.
+
+# Set how picky the reviewer is {% #profile %}
+
+`reviews.profile` sets what the reviewer reports:
+
+- `chill` reports only bugs it can confirm in the code.
+- `balanced`, the default, also flags risky patterns, weak or missing tests, and broken documentation examples.
+- `strict` also flags naming, style, and maintainability problems.
+
+To post fewer comments without changing what the reviewer looks for, raise `reviews.minSeverity` or lower `reviews.maxComments`.
+
+# Add instructions {% #instructions %}
+
+`instructions` adds guidance for the whole repository, in plain language. `pathInstructions` adds guidance for files that match a glob pattern:
+
+```json
+{
+  "instructions": "We target Node 22. Flag any use of synchronous filesystem APIs.",
+  "pathInstructions": [
+    { "path": "migrations/**", "instructions": "Migrations must be reversible." },
+    { "path": "src/api/**", "instructions": "Every endpoint needs an authorization check." }
+  ]
+}
+```
+
+For preferences that come up in a conversation, a [learning](/docs/products/reviews/learnings) is quicker: ask the reviewer to remember it in a comment.
+
+Set `language` to write review comments in another language, such as `"de"`.
+
+# Set up the sandbox {% #sandbox %}
+
+At Normal and Expert [strength](/docs/products/reviews/strength), the reviewer can run commands in an isolated sandbox that holds the pull request's code. Nothing from the repository runs outside the sandbox, and no credentials reach it.
+
+Set `sandbox.setup` to a command that prepares the code, such as `npm ci` or `composer install`, so the reviewer can run your tests and type checkers:
+
+```json
+{
+  "sandbox": {
+    "setup": "npm ci",
+    "network": "public"
+  }
+}
+```
+
+By default, the sandbox can reach public hosts over HTTP and HTTPS, never private networks. Set `sandbox.network` to `none` to remove network access.

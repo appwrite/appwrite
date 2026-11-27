@@ -798,6 +798,83 @@ export const DOCS_LOCAL_SECTION_NAVS: DocsSectionNavConfig[] = [
     ],
   },
   {
+    prefix: 'products/reviews',
+    parent: {
+      href: '/docs',
+      label: 'Reviews',
+    },
+    navigation: [
+      {
+        label: 'Getting started',
+        items: [
+          {
+            label: 'Overview',
+            href: '/docs/products/reviews',
+          },
+          {
+            label: 'Quick start',
+            href: '/docs/products/reviews/quick-start',
+          },
+        ],
+      },
+      {
+        label: 'Concepts',
+        items: [
+          {
+            label: 'How reviews work',
+            href: '/docs/products/reviews/how-it-works',
+          },
+          {
+            label: 'Review results',
+            href: '/docs/products/reviews/results',
+          },
+          {
+            label: 'Review strength',
+            href: '/docs/products/reviews/strength',
+          },
+          {
+            label: 'Credits and billing',
+            href: '/docs/products/reviews/billing',
+          },
+          {
+            label: 'Learnings',
+            href: '/docs/products/reviews/learnings',
+          },
+        ],
+      },
+      {
+        label: 'Guides',
+        items: [
+          {
+            label: 'Mention the reviewer',
+            href: '/docs/products/reviews/mentions',
+          },
+          {
+            label: 'Review functions and sites',
+            href: '/docs/products/reviews/functions-and-sites',
+          },
+          {
+            label: 'Track performance',
+            href: '/docs/products/reviews/performance',
+          },
+        ],
+      },
+      {
+        label: 'Configuration',
+        items: [
+          {
+            label: 'Configure a repository',
+            href: '/docs/products/reviews/configuration',
+          },
+          {
+            label: 'Configuration reference',
+            href: '/docs/products/reviews/reference',
+          },
+        ],
+      },
+    ],
+  },
+  {
     prefix: 'products/agent',
     parent: {
       href: '/docs',

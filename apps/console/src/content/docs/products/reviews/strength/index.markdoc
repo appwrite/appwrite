@@ -1,0 +1,35 @@
+---
+layout: article
+title: Review strength
+description: Choose how hard Appwrite Reviews reviews each repository. Compare Basic, Normal, and Expert strength, the models and tools each uses, and what each costs in credits.
+---
+
+Each repository is reviewed at a strength. Higher strengths use stronger models and more tools, and cost more [credits](/docs/products/reviews/billing).
+
+| Strength | How it reviews | Credits per review |
+|----------|----------------|--------------------|
+| Basic | Cheaper models that read the code without running it | 10 |
+| Normal | The default models, running commands in a sandbox | 50 |
+| Expert | Stronger models that split the work across subagents and run commands in a sandbox | 500 |
+
+Repositories are reviewed at **Normal** strength unless you change it.
+
+# Change the strength {% #change-strength %}
+
+1. In the Appwrite Console, open your project and go to **Review**.
+2. Select the **Repositories** tab.
+3. Pick a strength in the repository's **Strength** column.
+
+For a repository that a function or site deploys from, you can also pick the strength on that function's or site's **Reviews** tab, or under **Settings** > **Git**. See [Review functions and sites](/docs/products/reviews/functions-and-sites).
+
+Reviews that are already queued keep the strength they were queued with.
+
+# Choose a strength {% #choose-a-strength %}
+
+Normal is the right strength for most repositories. Basic and Expert trade cost against depth:
+
+- **Basic** never runs your code, so it can't run a test to confirm a finding. It suits repositories with many small pull requests, or code without tests to run.
+- **Normal** runs commands in a [sandbox](/docs/products/reviews/configuration#sandbox), so it can install dependencies, build, and run your tests and type checkers. Set `sandbox.setup` so the reviewer knows how to prepare the code.
+- **Expert** costs ten times as much as Normal. Keep it for repositories where a missed bug is expensive, such as payments, authentication, or database migrations.
+
+At Normal and Expert strength, lockfiles, test snapshots, and generated output are reviewed too, since the reviewer can install, build, and test to check them.

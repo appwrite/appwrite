@@ -5319,11 +5319,132 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "products/reviews",
     "title": "Reviews",
-    "description": "Review pull requests with AI using Appwrite Reviews. Turn it on for GitHub, GitLab, Gitea, and Bitbucket repositories, choose what gets reviewed, and see how review credits are billed.",
+    "description": "Review pull requests with AI using Appwrite Reviews. Turn it on for GitHub, GitLab, Gitea, and Bitbucket repositories and get findings, a verdict, and a merge confidence grade on every pull request.",
     "excerpt": "Appwrite **Reviews** reviews the pull requests in your Git repositories with AI. Turn it on for a repository, and each pull request gets a review where it was opened: a summary, findings on the lines they concern, a verdict, and a merge confidence grade. Mention the reviewer in a comment to ask about a change, request another review, or teach it how your team works. You turn on reviews and follow them under **Review** in your project. Reviews is available…",
     "breadcrumbs": [
       "products",
       "Reviews"
+    ]
+  },
+  {
+    "slug": "products/reviews/billing",
+    "title": "Credits and billing",
+    "description": "Learn how Appwrite Reviews is billed in credits, how many credits each plan includes every month, and what extra credits cost.",
+    "excerpt": "Reviews are billed in credits, and there are no per-seat fees. A review costs credits by its strength: 10 for Basic, 50 for Normal, and 500 for Expert. Answers to mentions are free. A review you request in a comment costs credits like any other review. Credits by plan Each plan includes credits every month: | Plan | Credits per month | Allowance | Past the allowance | |------|-------------------|-----------|--------------------| | Free | 100 | Shared by the organization's projects |…",
+    "breadcrumbs": [
+      "products",
+      "Reviews",
+      "Credits and billing"
+    ]
+  },
+  {
+    "slug": "products/reviews/configuration",
+    "title": "Configure a repository",
+    "description": "Configure Appwrite Reviews for a repository with a file in its root. Choose which branches and files get reviewed, add instructions for the reviewer, and set up the sandbox.",
+    "excerpt": "Every setting is optional. To change one, add a file to the root of the repository. The file is read from each pull request's base branch, so a pull request can't change how it's reviewed. Edits to the file apply once they're merged. If the file has invalid JSON or an invalid setting, the review uses the defaults and says why. The line is optional. It gives your editor autocompletion and a description of every setting. The configuration reference lists…",
+    "breadcrumbs": [
+      "products",
+      "Reviews",
+      "Configure a repository"
+    ]
+  },
+  {
+    "slug": "products/reviews/functions-and-sites",
+    "title": "Review functions and sites",
+    "description": "Turn on Appwrite Reviews for the repository a function or site deploys from, and see the reviews of pull requests that change its code.",
+    "excerpt": "A function or site that deploys from a Git repository can have that repository's pull requests reviewed. You turn it on from the function or site, and its **Reviews** tab shows the reviews that change its code. Code review is a setting of the repository, not of the function or site. Turning it on reviews every pull request in the repository, and applies to every function and site in the project that deploys from it. When you create a function…",
+    "breadcrumbs": [
+      "products",
+      "Reviews",
+      "Review functions and sites"
+    ]
+  },
+  {
+    "slug": "products/reviews/how-it-works",
+    "title": "How reviews work",
+    "description": "Learn what starts an Appwrite review, what the reviewer reads, how it checks its findings, and when it reviews a pull request again.",
+    "excerpt": "Every review goes through the same four steps, from the change on the pull request to the comments posted on it. 1. **A pull request changes**: Appwrite queues a review when a pull request is opened, reopened, or marked ready for review, and when new commits are pushed to it. If several pushes arrive before the review starts, only the latest commit is reviewed. 2. **The reviewer reads the code**: It checks out the pull request and reads the repository,…",
+    "breadcrumbs": [
+      "products",
+      "Reviews",
+      "How reviews work"
+    ]
+  },
+  {
+    "slug": "products/reviews/learnings",
+    "title": "Learnings",
+    "description": "Teach Appwrite Reviews how your team works. Learnings are preferences the reviewer remembers from pull request conversations and follows in later reviews.",
+    "excerpt": "A learning is a preference someone asked the reviewer to remember in a pull request conversation. Later reviews and answers in the same repository follow it. Add a learning Ask the reviewer to remember the preference in a comment on a pull request: On GitLab and Gitea, mention the account that connected the provider instead of . See Mention the reviewer. The reviewer only acts on comments from people with access to the repository, so people outside your team can't…",
+    "breadcrumbs": [
+      "products",
+      "Reviews",
+      "Learnings"
+    ]
+  },
+  {
+    "slug": "products/reviews/mentions",
+    "title": "Mention the reviewer",
+    "description": "Mention Appwrite Reviews in a pull request comment to request a new review, ask about a change, or teach it a preference, on GitHub, GitLab, Gitea, and Bitbucket.",
+    "excerpt": "Mention the reviewer in a comment on a pull request to talk to it. What it does depends on what you ask. Request a review reviews the whole pull request again, at its latest commit. Use it for a pull request that was open before you turned on reviews, or in a repository where automatic reviews are off. A review you request costs credits like any other review. Ask a question Any other mention gets one answer in the thread:…",
+    "breadcrumbs": [
+      "products",
+      "Reviews",
+      "Mention the reviewer"
+    ]
+  },
+  {
+    "slug": "products/reviews/performance",
+    "title": "Track performance",
+    "description": "Track how Appwrite Reviews performs for each repository and author. See approval rates, findings per pull request, how many findings get fixed, and the median review time.",
+    "excerpt": "The **Performance** tab of the **Review** page shows how pull requests fared in review over the last 7, 30, or 90 days. Pick a range at the top of the tab, and a repository to narrow everything to it. Summary The tiles at the top compare the range with the same number of days before it. | Tile | What it shows | |------|---------------| | Pull requests | Pull requests reviewed, and how many reviews they got | | Approved…",
+    "breadcrumbs": [
+      "products",
+      "Reviews",
+      "Track performance"
+    ]
+  },
+  {
+    "slug": "products/reviews/quick-start",
+    "title": "Start with Reviews",
+    "description": "Turn on Appwrite Reviews for a Git repository and get your first AI review on a pull request.",
+    "excerpt": "In this quick start you connect a Git repository, turn on reviews for it, and open a pull request to get your first review. Choose repositories 1. Sign in to Appwrite Cloud and open a project. 2. Open **Review** in the sidebar. 3. Click **Choose repositories**. If your project isn't connected to a Git provider yet, click **Add installation** and connect GitHub, GitLab, Gitea, or Bitbucket. On GitHub, this installs the Appwrite GitHub App on the account or organization you…",
+    "breadcrumbs": [
+      "products",
+      "Reviews",
+      "Start with Reviews"
+    ]
+  },
+  {
+    "slug": "products/reviews/reference",
+    "title": "Configuration reference",
+    "description": "Every setting of the Appwrite Reviews repository configuration file, with its default value and what it changes.",
+    "excerpt": "Add these settings to a file in the root of the repository. Every setting is optional. See Configure a repository for how the file is read and for examples. Reviews | Setting | Default | Description | |---------|---------|-------------| | | | Review pull requests in this repository. Answers to mentions follow this too. | | | | Review when a pull request is opened or gets new commits. Mentions work either way. | | | | Review draft pull requests…",
+    "breadcrumbs": [
+      "products",
+      "Reviews",
+      "Configuration reference"
+    ]
+  },
+  {
+    "slug": "products/reviews/results",
+    "title": "Review results",
+    "description": "Understand what an Appwrite review posts on a pull request, a summary, findings by severity, a verdict, and a merge confidence grade from S to F, and where to find it in the Console.",
+    "excerpt": "A completed review posts a summary, findings, and a verdict on the pull request, and grades how ready the pull request is to merge. The Console keeps every review with its findings and the steps the reviewer took. Summary The summary says what the pull request changes. After new commits, the reviewer updates its summary instead of posting a new one. Findings A finding is a problem the reviewer found, posted as an inline comment on the line it concerns.…",
+    "breadcrumbs": [
+      "products",
+      "Reviews",
+      "Review results"
+    ]
+  },
+  {
+    "slug": "products/reviews/strength",
+    "title": "Review strength",
+    "description": "Choose how hard Appwrite Reviews reviews each repository. Compare Basic, Normal, and Expert strength, the models and tools each uses, and what each costs in credits.",
+    "excerpt": "Each repository is reviewed at a strength. Higher strengths use stronger models and more tools, and cost more credits. | Strength | How it reviews | Credits per review | |----------|----------------|--------------------| | Basic | Cheaper models that read the code without running it | 10 | | Normal | The default models, running commands in a sandbox | 50 | | Expert | Stronger models that split the work across subagents and run commands in a sandbox | 500 |…",
+    "breadcrumbs": [
+      "products",
+      "Reviews",
+      "Review strength"
     ]
   },
   {

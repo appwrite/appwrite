@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'bun:test'
 import { setExperimentEnabled } from '@/lib/experiments'
 import { isFeatureGatedDocsSlugHidden } from '@/lib/docs/feature-gated-docs'
 import { getDocsGlobalNav } from '@/lib/docs/navigation'
+import { getAllDocsSectionNavs } from '@/lib/docs/navigation/section-navs'
 import {
   isReviewsDocsHref,
   isReviewsDocsPathname,
@@ -13,6 +14,9 @@ const globals = globalThis as { window?: unknown; localStorage?: unknown }
 const originalWindow = globals.window
 const originalLocalStorage = globals.localStorage
 
+const hasReviewsSectionNav = () =>
+  getAllDocsSectionNavs().some((config) => config.prefix === 'products/reviews')
+
 function hrefs(navigation: DocsNavTree): string[] {
   return navigation.flatMap((entry) =>
     'items' in entry ? entry.items.map((item) => item.href) : [entry.href],
@@ -23,6 +27,9 @@ describe('reviews docs paths', () => {
   test('match the Reviews page and its anchors only', () => {
     expect(isReviewsDocsPathname('/docs/products/reviews')).toBe(true)
     expect(isReviewsDocsPathname('/docs/products/reviews/')).toBe(true)
+    expect(isReviewsDocsPathname('/docs/products/reviews/quick-start')).toBe(
+      true,
+    )
     expect(isReviewsDocsPathname('/docs/products/reviews-guide')).toBe(false)
     expect(isReviewsDocsHref('/docs/products/reviews#billing')).toBe(true)
     expect(isReviewsDocsHref('/docs/products/reviews?view=menu')).toBe(true)
@@ -53,6 +60,7 @@ describe('reviews docs', () => {
 
   test('stay hidden while the reviews flag is off', () => {
     expect(isFeatureGatedDocsSlugHidden('products/reviews')).toBe(true)
+    expect(isFeatureGatedDocsSlugHidden('products/reviews/billing')).toBe(true)
     expect(
       isFeatureGatedDocsSlugHidden('products/reviews', {
         deferReviewsOnServer: true,
@@ -64,6 +72,7 @@ describe('reviews docs', () => {
     expect(hrefs(getDocsGlobalNav('developers')).some(isReviewsDocsHref)).toBe(
       false,
     )
+    expect(hasReviewsSectionNav()).toBe(false)
     expect(
       getDocsSitemapEntries().some((entry) =>
         isReviewsDocsPathname(entry.path),
@@ -78,6 +87,7 @@ describe('reviews docs', () => {
     expect(hrefs(getDocsGlobalNav('developers'))).toContain(
       '/docs/products/reviews',
     )
+    expect(hasReviewsSectionNav()).toBe(true)
 
     setExperimentEnabled('reviews', false)
     expect(isFeatureGatedDocsSlugHidden('products/reviews')).toBe(true)

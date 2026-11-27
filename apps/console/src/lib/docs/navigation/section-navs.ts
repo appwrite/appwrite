@@ -1,5 +1,6 @@
 import { isAgentDocsEnabled, isAgentDocsHref } from '../agent-docs-feature'
 import { isAnalyticsDocsEnabled } from '../analytics-docs-feature'
+import { isReviewsDocsEnabled } from '../reviews-docs-feature'
 import { isVideosDocsEnabled } from '../videos-docs-feature'
 import type { DocsNavGroup, DocsNavTree } from '../types'
 import { DOCS_LOCAL_SECTION_NAVS } from './local-sections'
@@ -54,6 +55,10 @@ export function getAllDocsSectionNavs(): DocsSectionNavConfig[] {
 
   if (!isVideosDocsEnabled()) {
     configs = configs.filter((config) => config.prefix !== 'products/videos')
+  }
+
+  if (!isReviewsDocsEnabled()) {
+    configs = configs.filter((config) => config.prefix !== 'products/reviews')
   }
 
   return configs

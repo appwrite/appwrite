@@ -1,0 +1,40 @@
+---
+layout: article
+title: Track performance
+description: Track how Appwrite Reviews performs for each repository and author. See approval rates, findings per pull request, how many findings get fixed, and the median review time.
+---
+
+The **Performance** tab of the **Review** page shows how pull requests fared in review over the last 7, 30, or 90 days. Pick a range at the top of the tab, and a repository to narrow everything to it.
+
+{% only_dark %}
+![Performance tab with the summary tiles for the last 30 days and a chart of verdicts per day](/images/docs/reviews/dark/performance.avif)
+{% /only_dark %}
+{% only_light %}
+![Performance tab with the summary tiles for the last 30 days and a chart of verdicts per day](/images/docs/reviews/performance.avif)
+{% /only_light %}
+
+# Summary {% #summary %}
+
+The tiles at the top compare the range with the same number of days before it.
+
+| Tile | What it shows |
+|------|---------------|
+| Pull requests | Pull requests reviewed, and how many reviews they got |
+| Approved | The share of pull requests that were approved, and the share approved on their first review |
+| Findings / PR | Findings per pull request, and how many were critical |
+| Useful | The share of settled findings that were fixed rather than dismissed. Findings still open count for neither |
+| Review time | The median time a review took |
+
+Below the tiles, a chart shows the verdicts of each day's reviews. Switch it to **Findings** to see each day's findings by severity.
+
+# Authors and repositories {% #authors-and-repositories %}
+
+The **Authors** and **Repositories** tables break the same figures down for each pull request author and each repository: pull requests, approvals, findings per pull request, critical and major findings, fixed findings, useful findings, and the last review. The authors table also shows each author's merge confidence grade.
+
+Click a column to sort by it, or search when a table has more than one page. Select a row to open its reviews in the **Reviews** tab.
+
+# Findings by category {% #categories %}
+
+**Findings by category** lists the kinds of problems the reviewer found, with how many of each were fixed, are still open, and were dismissed.
+
+A category is marked **Noisy** when at least half of its settled findings were dismissed, once it has at least three. A [learning](/docs/products/reviews/learnings) can tell the reviewer to flag fewer of them.

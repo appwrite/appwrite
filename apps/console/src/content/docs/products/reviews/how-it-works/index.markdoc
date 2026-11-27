@@ -1,0 +1,38 @@
+---
+layout: article
+title: How reviews work
+description: Learn what starts an Appwrite review, what the reviewer reads, how it checks its findings, and when it reviews a pull request again.
+---
+
+Every review goes through the same four steps, from the change on the pull request to the comments posted on it.
+
+1. **A pull request changes**: Appwrite queues a review when a pull request is opened, reopened, or marked ready for review, and when new commits are pushed to it. If several pushes arrive before the review starts, only the latest commit is reviewed.
+2. **The reviewer reads the code**: It checks out the pull request and reads the repository, not only the diff, so a finding can point at the code a change breaks. It also reads the issues the pull request links to and the checks that failed on it. Depending on the [strength](/docs/products/reviews/strength), it can run tests, type checkers, and short scripts in an isolated [sandbox](/docs/products/reviews/configuration#sandbox).
+3. **Findings are verified**: A second pass checks every finding against the code before anything is posted.
+4. **The review is posted**: Findings appear as inline comments on the pull request, together with a summary and a verdict. On GitHub, the review also adds a check run to the commit.
+
+To review only when someone asks, turn off automatic reviews with [`reviews.auto`](/docs/products/reviews/configuration#choose-what-gets-reviewed). Draft pull requests wait until they're marked ready for review, unless you turn on `reviews.drafts`.
+
+# New commits {% #new-commits %}
+
+After new commits, the reviewer reviews only what changed since its last review and updates its summary. Commits that only merge the base branch into the pull request don't start a new review.
+
+To review the whole pull request again at its latest commit, [request a review](/docs/products/reviews/mentions) in a comment.
+
+# Statuses {% #statuses %}
+
+| Status | Meaning |
+|--------|---------|
+| Queued | The review is waiting to start. |
+| Reviewing | The reviewer is reading the code. |
+| Completed | The review was posted on the pull request. |
+| Skipped | There was nothing to review. |
+| Failed | The review couldn't finish. Its page in the Console says why. |
+
+A review is **Skipped** when every changed file is excluded by a [path filter](/docs/products/reviews/configuration#choose-what-gets-reviewed), or when the diff is too large to review. Its page in the Console says which.
+
+# Files skipped by default {% #skipped-files %}
+
+Some files are left out of every review: binary files, lockfiles, test snapshots, generated output, build output (`dist`, `build`), vendored code (`vendor`, `node_modules`), minified files, source maps, images, PDFs, and fonts.
+
+At strengths that run commands, lockfiles, snapshots, and generated output are reviewed too, since the reviewer can install, build, and test to check them. A path you list in `reviews.pathFilters` without `!` is reviewed even if it's skipped by default.

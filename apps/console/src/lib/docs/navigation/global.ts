@@ -112,6 +112,7 @@ export const DOCS_GLOBAL_NAV: DocsNavTree = [
         label: 'Reviews',
         href: '/docs/products/reviews',
         icon: 'git-pull-request',
+        isParent: true,
       },
     ],
   },
