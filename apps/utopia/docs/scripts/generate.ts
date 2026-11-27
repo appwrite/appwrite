@@ -239,8 +239,9 @@ async function rustdoc(name: string, version: string): Promise<Rustdoc | null> {
 
 /** The day crates.io published this version of a crate. */
 async function released(name: string, version: string): Promise<string | null> {
-  const response = await fetch(`https://crates.io/api/v1/crates/${name}/${version}`, { headers: { 'User-Agent': 'utopia-docs (https://github.com/appwrite/appwrite)' } })
-  return response.ok ? ((await response.json()) as Json).version.created_at.slice(0, 10) : null
+  // The date is optional: a crates.io outage leaves it off rather than failing the build.
+  const response = await fetch(`https://crates.io/api/v1/crates/${name}/${version}`, { headers: { 'User-Agent': 'utopia-docs (https://github.com/appwrite/appwrite)' } }).catch(() => null)
+  return response?.ok ? ((await response.json()) as Json).version.created_at.slice(0, 10) : null
 }
 
 const path = (p: Json) => `${p.path.split('::').pop()}${args(p.args)}`
