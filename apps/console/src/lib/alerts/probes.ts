@@ -68,15 +68,15 @@ export const DNS_RECORDS: DnsRecord[] = [
 ]
 
 export const TLS_MODES: { value: SmtpTlsMode; label: string }[] = [
-  { value: '', label: 'From the port' },
+  { value: 'auto', label: 'From the port' },
   { value: 'none', label: 'None' },
   { value: 'starttls', label: 'Upgrade with STARTTLS' },
   { value: 'implicit', label: 'Implicit TLS' },
 ]
 
-/** The mode the server uses for an SMTP monitor that leaves it empty. */
+/** The mode the server uses for an SMTP monitor set to `auto`. */
 export function smtpTlsMode(port: number, mode: SmtpTlsMode): SmtpTlsMode {
-  if (mode) return mode
+  if (mode !== 'auto') return mode
   return port === 465 ? 'implicit' : port === 587 ? 'starttls' : 'none'
 }
 
@@ -109,6 +109,7 @@ export const RESULT_LABELS: Record<MonitorResult, string> = {
   smtp_rejected: 'Server refused the session',
   target_denied: 'Target is in a denied network',
   timeout: 'Timed out',
+  rule_matched: 'A rule matched',
 }
 
 export function resultLabel(result: MonitorResult): string {

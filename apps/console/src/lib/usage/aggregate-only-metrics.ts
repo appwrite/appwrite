@@ -46,6 +46,12 @@ export function canShowUsageCategoryBreakdowns(
 ): boolean {
   if (categoryId === 'requests') return canShowRequestsUsageBreakdown(plan)
   if (categoryId === 'bandwidth') return canShowBandwidthUsageBreakdown(plan)
+  if (categoryId === 'videos') {
+    return (
+      canShowRequestsUsageBreakdown(plan) &&
+      canShowBandwidthUsageBreakdown(plan)
+    )
+  }
   return true
 }
 

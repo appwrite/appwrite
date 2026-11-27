@@ -227,6 +227,45 @@ final class ClickHouseTest extends TestCase
         $this->assertStringContainsString('id = {logId:String}', (string) $client->requests[0]->getBody());
     }
 
+    public function testCountsLinesPerInterval(): void
+    {
+        $client = new CapturingClient([
+            $this->jsonResponse([
+                ['bucket' => '2026-08-25 10:00:00', 'total' => '12', 'stderr' => '3'],
+                ['bucket' => '2026-08-25 10:05:00', 'total' => '4', 'stderr' => '0'],
+            ]),
+        ]);
+
+        $buckets = $this->store($client)->histogram('project', [
+            Query::equal('deploymentId', ['dep']),
+            Query::greaterThanEqual('timestamp', '2026-08-25T10:00:00.000+00:00'),
+            Query::orderDesc('timestamp'),
+            Query::limit(10),
+        ], 300);
+
+        $this->assertSame([
+            ['time' => '2026-08-25T10:00:00.000+00:00', 'total' => 12, 'stderr' => 3],
+            ['time' => '2026-08-25T10:05:00.000+00:00', 'total' => 4, 'stderr' => 0],
+        ], $buckets);
+
+        $body = (string) $client->requests[0]->getBody();
+        $this->assertStringContainsString('toStartOfInterval(timestamp, INTERVAL {interval:UInt32} SECOND)', $body);
+        $this->assertStringContainsString("countIf(stream = 'stderr')", $body);
+        $this->assertStringContainsString('GROUP BY bucket ORDER BY bucket', $body);
+        $this->assertStringContainsString('projectId = {projectId:String}', $body);
+        $this->assertStringContainsString('deploymentId IN', $body);
+        // Order and limit don't apply to a histogram
+        $this->assertStringNotContainsString('LIMIT', $body);
+        $this->assertStringContainsString('max_execution_time=2', $client->requests[0]->getUri()->getQuery());
+    }
+
+    public function testRejectsEmptyHistogramInterval(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        $this->store(new CapturingClient())->histogram('project', [], 0);
+    }
+
     public function testCompilesContainsFilters(): void
     {
         $client = new CapturingClient([$this->jsonResponse([])]);

@@ -59,4 +59,13 @@ class Logs
     {
         return $this->adapter->count($projectId, $queries, $max);
     }
+
+    /**
+     * @param array<Query> $queries
+     * @return list<array{time: string, total: int, stderr: int}>
+     */
+    public function histogram(string $projectId, array $queries, int $interval): array
+    {
+        return $this->adapter->histogram($projectId, $queries, $interval);
+    }
 }

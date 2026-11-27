@@ -21,4 +21,24 @@ return [
             "Access to create, update, and delete organization projects' API keys",
         "category" => "Projects",
     ],
+    "monitors.read" => [
+        "description" =>
+            "Access to read the organization's escalations. Replaced by 'escalations.read'",
+        "category" => "Alerts",
+        'deprecated' => true,
+    ],
+    "monitors.write" => [
+        "description" =>
+            "Access to create, update, and delete the organization's escalations. Replaced by 'escalations.write'",
+        "category" => "Alerts",
+        'deprecated' => true,
+    ],
+    'escalations.read' => [
+        'description' => "Access to read the organization's escalations",
+        'category' => 'Alerts',
+    ],
+    'escalations.write' => [
+        'description' => "Access to create, update, and delete the organization's escalations",
+        'category' => 'Alerts',
+    ],
 ];

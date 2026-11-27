@@ -12,6 +12,18 @@ class DNS extends BaseDNS
     protected array $dnsServers = [];
 
     /**
+     * What each region saw, when the record was checked from several: its ID, name,
+     * status (verified, missing, mismatch or failed) and the values it found.
+     *
+     * This validator checks from one place, so it leaves the list empty and checks
+     * store none. A validator that also checks from other regions extends this one
+     * and fills it; checkRecords() stores and returns whatever it holds.
+     *
+     * @var array<array{id: string, name: string, status: string, current: array<string>}>
+     */
+    public array $regions = [];
+
+    /**
      * @param string $target Expected value for the DNS record
      * @param int $type Type of DNS record to validate
      *  For value, use const from Record, such as Record::TYPE_A

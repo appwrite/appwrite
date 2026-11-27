@@ -13,6 +13,7 @@ use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
@@ -45,7 +46,7 @@ class Get extends Base
                 namespace: 'videos',
                 group: 'playback',
                 name: 'getCaptionSegment',
-                // Hidden until videos is generally available; preview SDK builds show it.
+                // Players follow this URL from the manifest; apps never call it directly. Preview SDK builds show it.
                 hide: System::getEnv('_APP_SDK_PREVIEW', 'disabled') !== 'enabled',
                 description: '/docs/references/videos/get-caption-segment.md',
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -57,7 +58,7 @@ class Get extends Base
                 ],
                 contentType: ContentType::ANY,
                 type: MethodType::LOCATION,
-                locationAuth: ['Project', 'ImpersonateUserId'],
+                locationAuth: ['Project', 'Environment', 'ImpersonateUserId'],
             ))
             ->param('videoId', '', new UID(), 'Video unique ID.')
             ->param('output', '', new WhiteList(self::OUTPUTS, true), 'Streaming output format.', enum: new Enum(name: 'VideoOutput'))
@@ -66,6 +67,7 @@ class Get extends Base
             ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('project')
             ->inject('user')
             ->inject('authorization')
             ->inject('deviceForVideos')
@@ -80,6 +82,7 @@ class Get extends Base
         Request $request,
         Response $response,
         Database $dbForProject,
+        Document $project,
         User $user,
         Authorization $authorization,
         Device $deviceForVideos
@@ -104,12 +107,18 @@ class Get extends Base
             throw new Exception(Exception::VIDEO_CAPTION_SEGMENT_NOT_FOUND);
         }
 
-        if ($this->captionBytesNotModified($request, $response, $caption)) {
+        // A public video may sit at Fastly under the video Surrogate-Key.
+        // A private one stays on the short revalidation window: the browser
+        // cache is not cleared by a Fastly purge, so a year-long immutable
+        // copy would keep playing after read access is revoked. The stable
+        // DASH WebVTT path uses that same short policy.
+        $response->setContentType('text/vtt');
+        if ($this->isPublicRead($video)) {
+            $this->cachePlaybackSegment($response, $project, $video);
+        } elseif ($this->captionBytesNotModified($request, $response, $caption)) {
             return;
         }
 
-        $response
-            ->setContentType('text/vtt')
-            ->send((string) $deviceForVideos->read($path));
+        $response->send((string) $deviceForVideos->read($path));
     }
 }

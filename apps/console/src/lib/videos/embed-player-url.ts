@@ -1,4 +1,8 @@
 import { buildConsoleUrl } from '@/lib/utils/context-menu'
+import {
+  embedPlayerSearchParams,
+  type EmbedPlayerOptions,
+} from './embed-player-options'
 
 /** Public embed player (`/player` and `/player/:videoId`). */
 export function isEmbedPlayerPath(
@@ -8,19 +12,26 @@ export function isEmbedPlayerPath(
   return pathname === '/player' || pathname.startsWith('/player/')
 }
 
+/** Query string of the public embed player: the project, then its options. */
+export function getVideoEmbedPlayerQuery(
+  projectId: string,
+  options: EmbedPlayerOptions = {},
+): string {
+  const params = new URLSearchParams()
+  params.set('project', projectId)
+  for (const [key, value] of embedPlayerSearchParams(options)) {
+    params.set(key, value)
+  }
+  return `?${params.toString()}`
+}
+
 /** Full console URL for the public embed player (`/player/:videoId?project=…`). */
 export function getVideoEmbedPlayerUrl(
   projectId: string,
   videoId: string,
-  options?: { startSeconds?: number },
+  options?: EmbedPlayerOptions,
 ): string {
-  const params = new URLSearchParams()
-  params.set('project', projectId)
-  const start = options?.startSeconds
-  if (start != null && Number.isFinite(start) && start > 0) {
-    params.set('start', String(start))
-  }
-  const path = `/player/${encodeURIComponent(videoId)}?${params.toString()}`
+  const path = `/player/${encodeURIComponent(videoId)}${getVideoEmbedPlayerQuery(projectId, options)}`
   return buildConsoleUrl(path)
 }
 

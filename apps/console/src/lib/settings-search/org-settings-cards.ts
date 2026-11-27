@@ -173,4 +173,16 @@ export const ORG_SETTINGS_CARD_INDEX: SettingsCardIndexEntry[] = [
       'partners',
     ],
   },
+  {
+    sectionId: 'escalations',
+    title: 'Escalations',
+    keywords: [
+      'escalation',
+      'on-call',
+      'alerts',
+      'monitors',
+      'notify',
+      'acknowledge',
+    ],
+  },
 ]

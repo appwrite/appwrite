@@ -86,12 +86,12 @@ fn derive(password: &[u8], salt: &[u8], n: u64, r: u32, p: u32, key: &mut [u8]) 
     // 2: for i = 0 to p - 1, B_i <-- ROMix(B_i, N)
     let mut x = vec![0u32; block];
     for chunk in b.chunks_exact_mut(128 * r) {
-        for (word, bytes) in x.iter_mut().zip(chunk.chunks_exact(4)) {
-            *word = u32::from_le_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]);
+        for (word, bytes) in x.iter_mut().zip(chunk.as_chunks::<4>().0) {
+            *word = u32::from_le_bytes(*bytes);
         }
         romix(&mut x, &mut v, &mut xy, r, n);
-        for (word, bytes) in x.iter().zip(chunk.chunks_exact_mut(4)) {
-            bytes.copy_from_slice(&word.to_le_bytes());
+        for (word, bytes) in x.iter().zip(chunk.as_chunks_mut::<4>().0) {
+            *bytes = word.to_le_bytes();
         }
     }
     // 3: DK <-- PBKDF2(P, B, 1, dkLen)

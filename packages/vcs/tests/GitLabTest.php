@@ -4,15 +4,20 @@ declare(strict_types=1);
 
 namespace Utopia\VCS\Tests;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Cache;
 use Utopia\VCS\Adapter\Git\GitLab;
 
 final class GitLabTest extends Base
 {
+    #[\Override]
     protected static string $eventHeader = 'x-gitlab-event';
+    #[\Override]
     protected static string $signatureHeader = 'x-gitlab-token';
+    #[\Override]
     protected static string $pushEventName = 'Push Hook';
+    #[\Override]
     protected static string $pullRequestEventName = 'Merge Request Hook';
 
     protected function createAdapter(): GitLab
@@ -144,5 +149,157 @@ final class GitLabTest extends Base
             $result = $events[0];
             $this->assertSame($mapped, $result['action'], "native action '{$native}' should map to '{$mapped}'");
         }
+    }
+
+    /**
+     * @param array<string, mixed> $note
+     */
+    private function notePayload(array $note): string
+    {
+        return (string) json_encode([
+            'object_kind' => 'note',
+            'user' => ['id' => 7, 'username' => 'octo'],
+            'project' => [
+                'id' => (int) self::EVENT_REPOSITORY_ID,
+                'name' => self::EVENT_REPOSITORY_NAME,
+                'namespace' => self::EVENT_OWNER,
+                'web_url' => 'http://example.com/' . self::EVENT_OWNER . '/' . self::EVENT_REPOSITORY_NAME,
+            ],
+            'object_attributes' => [
+                'id' => 1244,
+                'note' => '@appwrite review',
+                'noteable_type' => 'MergeRequest',
+                'system' => false,
+                'discussion_id' => 'd0c1e2f3',
+                'type' => null,
+                'action' => 'create',
+                'url' => 'http://example.com/mr/42#note_1244',
+                ...$note,
+            ],
+            'merge_request' => ['iid' => self::EVENT_PULL_REQUEST_NUMBER, 'author_id' => 7],
+        ]);
+    }
+
+    public function testGetEventMergeRequestComment(): void
+    {
+        $events = $this->vcsAdapter->getEvents('Note Hook', $this->notePayload([]));
+
+        $this->assertCount(1, $events);
+        $event = $events[0];
+        $this->assertSame('created', $event['action']);
+        $this->assertSame(self::EVENT_REPOSITORY_ID, $event['repositoryId']);
+        $this->assertSame(self::EVENT_OWNER, $event['owner']);
+        $this->assertSame(self::EVENT_PULL_REQUEST_NUMBER, $event['pullRequestNumber']);
+        $this->assertSame('octo', $event['pullRequestAuthor']);
+        $this->assertSame('1244', $event['commentId']);
+        $this->assertSame('issue', $event['commentKind']);
+        $this->assertSame('', $event['commentThreadId']);
+        $this->assertSame('', $event['commentReplyToId']);
+        $this->assertSame('@appwrite review', $event['commentBody']);
+        $this->assertSame('http://example.com/mr/42#note_1244', $event['commentUrl']);
+        $this->assertSame('octo', $event['commentAuthor']);
+        $this->assertSame('7', $event['commentAuthorId']);
+        $this->assertSame('User', $event['commentAuthorType']);
+    }
+
+    public function testGetEventMergeRequestDiffComment(): void
+    {
+        $events = $this->vcsAdapter->getEvents('Note Hook', $this->notePayload(['type' => 'DiffNote']));
+
+        // GitLab keys a diff thread by its discussion, and does not say which note opened it
+        $this->assertSame('review', $events[0]['commentKind']);
+        $this->assertSame('d0c1e2f3', $events[0]['commentThreadId']);
+        $this->assertSame('d0c1e2f3', $events[0]['commentReplyToId']);
+    }
+
+    public function testGetEventIgnoresOtherNotes(): void
+    {
+        $this->assertSame([], $this->vcsAdapter->getEvents('Note Hook', $this->notePayload(['noteable_type' => 'Issue'])));
+        $this->assertSame([], $this->vcsAdapter->getEvents('Note Hook', $this->notePayload(['system' => true])));
+        $this->assertSame([], $this->vcsAdapter->getEvents('Note Hook', $this->notePayload(['action' => 'update'])));
+    }
+
+    public function testGetEventMergeRequestAuthor(): void
+    {
+        $payload = (string) json_encode([
+            'object_kind' => 'merge_request',
+            'user' => ['id' => 7, 'username' => 'octo'],
+            'project' => ['id' => 1, 'name' => 'r', 'namespace' => 'o', 'web_url' => 'http://example.com/o/r'],
+            'object_attributes' => ['iid' => 1, 'action' => 'update', 'author_id' => 8],
+        ]);
+
+        // The hook names the author by id only, so someone else's update leaves it unknown
+        $this->assertSame('', $this->vcsAdapter->getEvents('Merge Request Hook', $payload)[0]['pullRequestAuthor']);
+    }
+
+    /**
+     * @return \Iterator<string, array{string, array<string, mixed>}>
+     */
+    public static function providerProjectPaths(): \Iterator
+    {
+        $project = [
+            'id' => 89442539,
+            'name' => 'Magic Portfolio',
+            'namespace' => 'Jane Doe',
+            'path_with_namespace' => 'jane-doe/magic-portfolio',
+            'web_url' => 'https://gitlab.com/jane-doe/magic-portfolio',
+        ];
+
+        yield 'push' => ['Push Hook', [
+            'object_kind' => 'push',
+            'ref' => 'refs/heads/main',
+            'checkout_sha' => 'abc123',
+            'project' => $project,
+            'commits' => [],
+        ]];
+        yield 'merge request' => ['Merge Request Hook', [
+            'object_kind' => 'merge_request',
+            'project' => $project,
+            'object_attributes' => ['iid' => 1, 'action' => 'open', 'source_branch' => 'feature', 'target_branch' => 'main'],
+        ]];
+        yield 'note' => ['Note Hook', [
+            'object_kind' => 'note',
+            'project' => $project,
+            'object_attributes' => ['id' => 1, 'note' => '@appwrite review', 'noteable_type' => 'MergeRequest', 'action' => 'create'],
+            'merge_request' => ['iid' => 1],
+        ]];
+    }
+
+    /**
+     * The API addresses a project by its paths, not the display names a webhook also carries.
+     *
+     * @param array<string, mixed> $body
+     */
+    #[DataProvider('providerProjectPaths')]
+    public function testGetEventProjectPaths(string $event, array $body): void
+    {
+        $payload = json_encode($body);
+
+        if ($payload === false) {
+            $this->fail('Failed to encode JSON payload');
+        }
+
+        $result = $this->vcsAdapter->getEvents($event, $payload)[0];
+
+        $this->assertSame('jane-doe', $result['owner']);
+        $this->assertSame('magic-portfolio', $result['repositoryName']);
+    }
+
+    public function testGetEventSubgroupProjectPath(): void
+    {
+        $payload = json_encode([
+            'object_kind' => 'merge_request',
+            'project' => ['id' => 1, 'name' => 'App', 'namespace' => 'Sub', 'path_with_namespace' => 'group/sub/app'],
+            'object_attributes' => ['iid' => 1, 'action' => 'open', 'source_branch' => 'feature', 'target_branch' => 'main'],
+        ]);
+
+        if ($payload === false) {
+            $this->fail('Failed to encode JSON payload');
+        }
+
+        $result = $this->vcsAdapter->getEvents('Merge Request Hook', $payload)[0];
+
+        $this->assertSame('group/sub', $result['owner']);
+        $this->assertSame('app', $result['repositoryName']);
     }
 }

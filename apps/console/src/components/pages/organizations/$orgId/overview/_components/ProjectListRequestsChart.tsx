@@ -46,8 +46,8 @@ const SKELETON_CHART_STROKE_WIDTH = 0.75
  */
 const CHART_BASELINE_INSET = Math.ceil(CHART_STROKE_WIDTH)
 /** Soft greyscale placeholder - border-toned line, whisper-light fill. */
-const SKELETON_CHART_STROKE = 'hsl(var(--border))'
-const SKELETON_CHART_FILL = 'hsl(var(--muted-foreground))'
+const SKELETON_CHART_STROKE = 'var(--border)'
+const SKELETON_CHART_FILL = 'var(--muted-foreground)'
 const SKELETON_CHART_FILL_TOP_OPACITY = 0.06
 const SKELETON_CHART_FILL_BOTTOM_OPACITY = 0
 
@@ -343,7 +343,7 @@ function RequestsChartArea({
               tooltipDisabled
                 ? false
                 : {
-                    stroke: 'hsl(var(--border))',
+                    stroke: 'var(--border)',
                     strokeWidth: 1,
                     strokeDasharray: '4 4',
                   }
