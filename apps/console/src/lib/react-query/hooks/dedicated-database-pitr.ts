@@ -64,8 +64,8 @@ export async function fetchDedicatedDatabaseRestorations(
 
 /**
  * Start a point-in-time restoration. Without a target it replays over the
- * database in place; with one it restores into that database, which for a
- * product source is a product database id of the same type.
+ * database in place; with one it restores into that database. Product sources
+ * restore in place only.
  */
 export async function createDedicatedDatabasePitrRestoration(
   projectId: string,

@@ -2319,8 +2319,4 @@ export const heDatabasesDictionary: Record<string, string> = {
     'אחסון נוסף למסד נתונים ייעודי',
   'Storage provisioned beyond the tier allowance, such as storage kept after a downgrade.':
     'אחסון שהוקצה מעבר למכסת השכבה, למשל אחסון שנשמר אחרי שנמוך.',
-  'Restore into another ready dedicated database of the same type.':
-    'שחזור לתוך מסד נתונים ייעודי אחר מאותו סוג שמוכן לשימוש.',
-  'No other ready dedicated database of the same type is available.':
-    'אין מסד נתונים ייעודי אחר מאותו סוג שמוכן לשימוש.',
 }

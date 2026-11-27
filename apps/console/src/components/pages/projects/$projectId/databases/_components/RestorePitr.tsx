@@ -6,17 +6,14 @@ import { History } from 'lucide-react'
 import type { DedicatedDatabaseSource } from '@/lib/databases/dedicated-database-source'
 import {
   isEligiblePitrRestoreTarget,
-  isEligibleProductPitrRestoreTarget,
   isTimeInPitrWindow,
   pitrWindowFromResponse,
 } from '@/lib/databases/dedicated-pitr'
 import {
   createDedicatedDatabasePitrRestoration,
-  resolveProjectDatabaseType,
   useDedicatedDatabasePitrWindows,
   useDedicatedDatabaseRestorations,
   useProjectDedicatedDatabases,
-  useProjectProductDatabases,
 } from '@/lib/react-query/hooks'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -128,42 +125,6 @@ type RestorePitrSharedProps = {
   canWrite: boolean
 }
 
-const PRODUCT_RESTORE_TARGETS_LIMIT = 100
-
-/**
- * Databases a restore can write into: for an engine source, other ready
- * databases on the same engine and version; for a product source, other
- * ready dedicated databases of the same product.
- */
-function usePitrRestoreTargets(
-  projectId: string,
-  database: Models.DedicatedDatabase,
-  source: DedicatedDatabaseSource,
-  enabled: boolean,
-): { $id: string; name: string }[] {
-  const isProduct = source.type === 'product'
-  const { databases: dedicatedDatabases } = useProjectDedicatedDatabases(
-    enabled && !isProduct ? projectId : undefined,
-  )
-  const { databases: productDatabases } = useProjectProductDatabases(
-    enabled && isProduct ? projectId : undefined,
-    resolveProjectDatabaseType(isProduct ? source.api : 'tablesdb'),
-    0,
-    PRODUCT_RESTORE_TARGETS_LIMIT,
-  )
-  return useMemo(
-    () =>
-      isProduct
-        ? productDatabases.filter((candidate) =>
-            isEligibleProductPitrRestoreTarget(database.$id, candidate),
-          )
-        : dedicatedDatabases.filter((candidate) =>
-            isEligiblePitrRestoreTarget(database, candidate),
-          ),
-    [isProduct, database, dedicatedDatabases, productDatabases],
-  )
-}
-
 export function RestorePitrDialog({
   open,
   onOpenChange,
@@ -187,11 +148,21 @@ export function RestorePitrDialog({
     source,
     open && pitrEnabled,
   )
+  const inPlaceOnly = source.type === 'product'
+  const { databases: dedicatedDatabases } = useProjectDedicatedDatabases(
+    open && !inPlaceOnly ? projectId : undefined,
+  )
   const recoveryWindow = useMemo(
     () => pitrWindowFromResponse(windowsData),
     [windowsData],
   )
-  const targets = usePitrRestoreTargets(projectId, database, source, open)
+  const targets = useMemo(
+    () =>
+      dedicatedDatabases.filter((candidate) =>
+        isEligiblePitrRestoreTarget(database, candidate),
+      ),
+    [database, dedicatedDatabases],
+  )
 
   const [targetTime, setTargetTime] = useState<string | null>(null)
   const [timeZone, setTimeZone] = useState(getUserTimeZone)
@@ -315,78 +286,76 @@ export function RestorePitrDialog({
                 disabled={writeDisabled}
               />
 
-              <div>
-                <h3 className="text-[15px] font-semibold text-foreground mb-4">
-                  {t('Restore target')}
-                </h3>
-                <RadioGroup
-                  value={restoreTarget}
-                  onValueChange={(value) =>
-                    setRestoreTarget(value as RestoreTarget)
-                  }
-                  className="grid grid-cols-2 gap-3"
-                  disabled={writeDisabled}
-                >
-                  <Label
-                    htmlFor="pitr-restore-same"
-                    className={cn(
-                      'flex cursor-pointer items-start gap-3 rounded-lg border p-4 transition-colors',
-                      restoreTarget === 'same'
-                        ? 'border-primary/50 bg-muted/50'
-                        : 'border-border bg-card/50 hover:bg-muted/30',
-                    )}
+              {inPlaceOnly ? null : (
+                <div>
+                  <h3 className="text-[15px] font-semibold text-foreground mb-4">
+                    {t('Restore target')}
+                  </h3>
+                  <RadioGroup
+                    value={restoreTarget}
+                    onValueChange={(value) =>
+                      setRestoreTarget(value as RestoreTarget)
+                    }
+                    className="grid grid-cols-2 gap-3"
+                    disabled={writeDisabled}
                   >
-                    <RadioGroupItem
-                      value="same"
-                      id="pitr-restore-same"
-                      className="mt-0.5 shrink-0"
-                    />
-                    <div className="min-w-0 flex-1 space-y-2">
-                      <span className="text-[13px] font-semibold text-foreground">
-                        {t('Current database')}
-                      </span>
-                      <p className="text-[12px] text-muted-foreground leading-snug">
-                        {t(
-                          'Overwrite this database in place. This cannot be undone.',
-                        )}
-                      </p>
-                    </div>
-                  </Label>
-                  <Label
-                    htmlFor="pitr-restore-other"
-                    className={cn(
-                      'flex items-start gap-3 rounded-lg border p-4 transition-colors',
-                      targets.length === 0
-                        ? 'cursor-not-allowed opacity-60'
-                        : 'cursor-pointer',
-                      restoreTarget === 'other'
-                        ? 'border-primary/50 bg-muted/50'
-                        : 'border-border bg-card/50 hover:bg-muted/30',
-                    )}
-                  >
-                    <RadioGroupItem
-                      value="other"
-                      id="pitr-restore-other"
-                      className="mt-0.5 shrink-0"
-                      disabled={targets.length === 0}
-                    />
-                    <div className="min-w-0 flex-1 space-y-2">
-                      <span className="text-[13px] font-semibold text-foreground">
-                        {t('Another database')}
-                      </span>
-                      <p className="text-[12px] text-muted-foreground leading-snug">
-                        {source.type === 'product'
-                          ? t(
-                              'Restore into another ready dedicated database of the same type.',
-                            )
-                          : t(
-                              'Restore into a ready database with the same engine and version.',
-                            )}
-                      </p>
-                    </div>
-                  </Label>
-                </RadioGroup>
-              </div>
+                    <Label
+                      htmlFor="pitr-restore-same"
+                      className={cn(
+                        'flex cursor-pointer items-start gap-3 rounded-lg border p-4 transition-colors',
+                        restoreTarget === 'same'
+                          ? 'border-primary/50 bg-muted/50'
+                          : 'border-border bg-card/50 hover:bg-muted/30',
+                      )}
+                    >
+                      <RadioGroupItem
+                        value="same"
+                        id="pitr-restore-same"
+                        className="mt-0.5 shrink-0"
+                      />
+                      <div className="min-w-0 flex-1 space-y-2">
+                        <span className="text-[13px] font-semibold text-foreground">
+                          {t('Current database')}
+                        </span>
+                        <p className="text-[12px] text-muted-foreground leading-snug">
+                          {t(
+                            'Overwrite this database in place. This cannot be undone.',
+                          )}
+                        </p>
+                      </div>
+                    </Label>
+                    <Label
+                      htmlFor="pitr-restore-other"
+                      className={cn(
+                        'flex items-start gap-3 rounded-lg border p-4 transition-colors',
+                        targets.length === 0
+                          ? 'cursor-not-allowed opacity-60'
+                          : 'cursor-pointer',
+                        restoreTarget === 'other'
+                          ? 'border-primary/50 bg-muted/50'
+                          : 'border-border bg-card/50 hover:bg-muted/30',
+                      )}
+                    >
+                      <RadioGroupItem
+                        value="other"
+                        id="pitr-restore-other"
+                        className="mt-0.5 shrink-0"
+                        disabled={targets.length === 0}
+                      />
+                      <div className="min-w-0 flex-1 space-y-2">
+                        <span className="text-[13px] font-semibold text-foreground">
+                          {t('Another database')}
+                        </span>
+                        <p className="text-[12px] text-muted-foreground leading-snug">
+                          {t(
+                            'Restore into a ready database with the same engine and version.',
+                          )}
+                        </p>
+                      </div>
+                    </Label>
+                  </RadioGroup>
+                </div>
+              )}
 
               {restoreTarget === 'other' ? (
                 <div className="space-y-2">
@@ -395,13 +364,9 @@ export function RestorePitrDialog({
                   </Label>
                   {targets.length === 0 ? (
                     <p className="text-[13px] text-muted-foreground">
-                      {source.type === 'product'
-                        ? t(
-                            'No other ready dedicated database of the same type is available.',
-                          )
-                        : t(
-                            'No other ready database with the same engine and version is available.',
-                          )}
+                      {t(
+                        'No other ready database with the same engine and version is available.',
+                      )}
                     </p>
                   ) : (
                     <Select

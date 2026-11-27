@@ -1,6 +1,5 @@
 import { afterAll, describe, expect, mock, test } from 'bun:test'
 import * as actualSdk from '@/lib/appwrite/sdk'
-import { isEligibleProductPitrRestoreTarget } from '@/lib/databases/dedicated-pitr'
 import {
   createDedicatedDatabasePitrRestoration,
   dedicatedDatabasePitrWindowsQueryOptions,
@@ -106,14 +105,14 @@ describe('dedicated database PITR routing', () => {
     ])
   })
 
-  test('restores a product database into another product database', async () => {
+  test('restores a product database in place on its product API', async () => {
     const calls = mockSdk()
 
     await createDedicatedDatabasePitrRestoration(
       PROJECT_ID,
       DATABASE_ID,
       { type: 'product', api: 'documentsdb' },
-      { targetTime: TARGET_TIME, targetDatabaseId: 'catalog2' },
+      { targetTime: TARGET_TIME },
     )
 
     expect(calls).toEqual([
@@ -124,7 +123,30 @@ describe('dedicated database PITR routing', () => {
           databaseId: DATABASE_ID,
           type: 'pitr',
           targetTime: TARGET_TIME,
-          targetDatabaseId: 'catalog2',
+        },
+      },
+    ])
+  })
+
+  test('restores a native database into another database', async () => {
+    const calls = mockSdk()
+
+    await createDedicatedDatabasePitrRestoration(
+      PROJECT_ID,
+      DATABASE_ID,
+      { type: 'engine', engine: 'postgresql' },
+      { targetTime: TARGET_TIME, targetDatabaseId: 'replica2' },
+    )
+
+    expect(calls).toEqual([
+      {
+        service: 'postgresql',
+        method: 'createRestoration',
+        params: {
+          databaseId: DATABASE_ID,
+          type: 'pitr',
+          targetTime: TARGET_TIME,
+          targetDatabaseId: 'replica2',
         },
       },
     ])
@@ -165,26 +187,6 @@ describe('dedicated database PITR routing', () => {
     )
     expect(key({ type: 'engine', engine: 'mariadb' })).toEqual(
       key({ type: 'engine', engine: 'mysql' }),
-    )
-  })
-})
-
-describe('isEligibleProductPitrRestoreTarget', () => {
-  test.each([
-    [{ $id: 'other', status: 'ready', specification: 's-2vcpu-4gb' }, true],
-    [
-      { $id: DATABASE_ID, status: 'ready', specification: 's-2vcpu-4gb' },
-      false,
-    ],
-    [
-      { $id: 'other', status: 'provisioning', specification: 's-2vcpu-4gb' },
-      false,
-    ],
-    [{ $id: 'other', status: 'ready', specification: 'shared' }, false],
-    [{ $id: 'other', status: 'ready', specification: null }, false],
-  ])('%p is a target: %p', (candidate, expected) => {
-    expect(isEligibleProductPitrRestoreTarget(DATABASE_ID, candidate)).toBe(
-      expected,
     )
   })
 })

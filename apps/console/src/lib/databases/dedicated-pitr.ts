@@ -1,5 +1,4 @@
 import type { Models } from '@appwrite.io/console'
-import { hasDedicatedSpecification } from '@/lib/databases/database-compute'
 import { isNativeDatabaseTypeValue } from '@/lib/databases/database-type'
 import {
   matchesNativeEngine,
@@ -134,20 +133,6 @@ export function isEligiblePitrRestoreTarget(
     return false
   }
   return true
-}
-
-/** A product restore target is another ready, dedicated database of the same product. */
-export function isEligibleProductPitrRestoreTarget(
-  sourceDatabaseId: string,
-  candidate: {
-    $id: string
-    status?: string | null
-    specification?: string | null
-  },
-): boolean {
-  if (candidate.$id === sourceDatabaseId) return false
-  if (candidate.status !== 'ready') return false
-  return hasDedicatedSpecification(candidate.specification)
 }
 
 export function dedicatedPitrRestorationIsActive(

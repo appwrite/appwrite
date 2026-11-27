@@ -909,7 +909,7 @@ $windows = $documentsDB->getPitr(
 {% /multicode %}
 
 ## Restore to a point in time {% #pitr-restore %}
-Use the `createRestoration` method with `type` set to `pitr` and an ISO 8601 `targetTime` inside the recovery window. By default the database is restored in place: it is unavailable while it restores, and every change after `targetTime` is discarded. To leave this database untouched, pass `targetDatabaseId` with the ID of another ready, dedicated DocumentsDB database, which is replaced with the data from that moment instead.
+Use the `createRestoration` method with `type` set to `pitr` and an ISO 8601 `targetTime` inside the recovery window. The database is restored in place: it is unavailable while it restores, and every change after `targetTime` is discarded.
 
 {% multicode %}
 ```server-nodejs
