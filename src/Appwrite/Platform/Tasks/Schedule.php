@@ -3,6 +3,8 @@
 namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Publisher\Alert as AlertPublisher;
+use Appwrite\Event\Publisher\DistributionBuild as DistributionBuildPublisher;
+use Appwrite\Event\Publisher\DistributionSubmission as DistributionSubmissionPublisher;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Maintenance as MaintenancePublisher;
 use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
@@ -28,7 +30,7 @@ class Schedule extends Action
     public function __construct()
     {
         $this
-            ->desc('Run the function, execution, message, alert rule, project maintenance and, when self-hosted, resource stats schedulers in one process')
+            ->desc('Run the function, execution, message, alert rule, distribution reconcile, project maintenance and, when self-hosted, resource stats schedulers in one process')
             ->inject('publisherForFunctions')
             ->inject('publisherForMessaging')
             ->inject('getIsResourceBlocked')
@@ -38,7 +40,9 @@ class Schedule extends Action
             ->inject('locks')
             ->inject('publisherForMaintenance')
             ->inject('pools')
-            ->inject('publisherForAlerts');
+            ->inject('publisherForAlerts')
+            ->inject('publisherForDistributionBuilds')
+            ->inject('publisherForDistributionSubmissions');
 
         if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
             $this
@@ -62,8 +66,10 @@ class Schedule extends Action
         MaintenancePublisher $publisherForMaintenance,
         Group $pools,
         AlertPublisher $publisherForAlerts,
+        DistributionBuildPublisher $publisherForDistributionBuilds,
+        DistributionSubmissionPublisher $publisherForDistributionSubmissions,
     ): never {
-        $this->start($publisherForFunctions, $publisherForMessaging, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry, $locks, $publisherForMaintenance, $pools, $publisherForAlerts);
+        $this->start($publisherForFunctions, $publisherForMessaging, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry, $locks, $publisherForMaintenance, $pools, $publisherForAlerts, $publisherForDistributionBuilds, $publisherForDistributionSubmissions);
     }
 
     public function actionWithUsage(
@@ -77,6 +83,8 @@ class Schedule extends Action
         MaintenancePublisher $publisherForMaintenance,
         Group $pools,
         AlertPublisher $publisherForAlerts,
+        DistributionBuildPublisher $publisherForDistributionBuilds,
+        DistributionSubmissionPublisher $publisherForDistributionSubmissions,
         StatsResourcesPublisher $publisherForStatsResources,
         Connection $usageConnection,
     ): never {
@@ -91,6 +99,8 @@ class Schedule extends Action
             $publisherForMaintenance,
             $pools,
             $publisherForAlerts,
+            $publisherForDistributionBuilds,
+            $publisherForDistributionSubmissions,
             $publisherForStatsResources,
             $usageConnection,
         );
@@ -107,6 +117,8 @@ class Schedule extends Action
         MaintenancePublisher $publisherForMaintenance,
         Group $pools,
         AlertPublisher $publisherForAlerts,
+        DistributionBuildPublisher $publisherForDistributionBuilds,
+        DistributionSubmissionPublisher $publisherForDistributionSubmissions,
         ?StatsResourcesPublisher $publisherForStatsResources = null,
         ?Connection $usageConnection = null,
     ): never {
@@ -121,6 +133,8 @@ class Schedule extends Action
         $this->loop(ScheduleExecutions::getName(), fn () => (new ScheduleExecutions())->action($publisherForFunctions, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry, $pools));
         $this->loop(ScheduleMessages::getName(), fn () => (new ScheduleMessages())->action($publisherForMessaging, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry, $locks, $pools));
         $this->loop(ScheduleAlerts::getName(), fn () => (new ScheduleAlerts())->action($publisherForAlerts, $dbForPlatform, $telemetry, $pools));
+        $this->loop(ScheduleDistribution::getName() . ':builds', fn () => (new ScheduleDistribution())->builds($publisherForDistributionBuilds, $dbForPlatform, $telemetry, $pools));
+        $this->loop(ScheduleDistribution::getName() . ':submissions', fn () => (new ScheduleDistribution())->submissions($publisherForDistributionSubmissions, $dbForPlatform, $telemetry, $pools));
         foreach ($cycles as [$cohort, $cycle]) {
             $this->loop(ScheduleMaintenance::getName() . ':' . $cohort->value, fn () => (new ScheduleMaintenance())->run(ScheduleMaintenance::loop($cohort, $cycle, $publisherForMaintenance, $telemetry), $cohort, $pools));
         }

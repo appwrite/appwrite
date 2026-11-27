@@ -2,6 +2,8 @@
 
 namespace Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Artifacts;
 
+use Appwrite\Distribution\Submission\Status as SubmissionStatus;
+use Appwrite\Distribution\Submissions;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
@@ -14,6 +16,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
 use Utopia\Lock\Exception\Contention;
 use Utopia\Platform\Scope\HTTP;
@@ -45,7 +48,7 @@ class Delete extends Action
                 group: 'artifacts',
                 name: 'deleteArtifact',
                 description: <<<EOT
-                Delete an artifact of an app by its unique ID. The binary is removed from storage with it.
+                Delete an artifact of an app by its unique ID. The binary is removed from storage with it. An artifact cannot be deleted while a submission of it is still in progress, in review or rolling out: cancel it or wait for it to finish first.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
@@ -96,6 +99,10 @@ class Delete extends Action
                     throw new Exception(Exception::DISTRIBUTION_ARTIFACT_NOT_FOUND);
                 }
 
+                if ($this->isInUse($dbForProject, $artifact)) {
+                    throw new Exception(Exception::DISTRIBUTION_ARTIFACT_IN_USE);
+                }
+
                 if (!$dbForProject->deleteDocument('distributionArtifacts', $artifact->getId())) {
                     throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove artifact from DB');
                 }
@@ -119,5 +126,13 @@ class Delete extends Action
             ->setPayload($response->output($artifact, Response::MODEL_DISTRIBUTION_ARTIFACT));
 
         $response->noContent();
+    }
+
+    private function isInUse(Database $dbForProject, Document $artifact): bool
+    {
+        $reference = Query::equal('artifactInternalId', [$artifact->getSequence()]);
+
+        return $dbForProject->count('distributionSubmissions', [$reference, Query::equal('status', Submissions::ACTIVE)], 1) > 0
+            || $dbForProject->count('distributionSubmissions', [$reference, Query::equal('status', [SubmissionStatus::Published->value]), Query::lessThan('rollout', 1.0)], 1) > 0;
     }
 }

@@ -119,4 +119,9 @@ return [
         'queueEnv' => '_APP_DISTRIBUTION_BUILDS_QUEUE_NAME',
         'coroutines' => 8,
     ],
+    'distribution-submissions' => [
+        'queue' => Event::DISTRIBUTION_SUBMISSIONS_QUEUE_NAME,
+        'queueEnv' => '_APP_DISTRIBUTION_SUBMISSIONS_QUEUE_NAME',
+        'coroutines' => 4,
+    ],
 ];

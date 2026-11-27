@@ -161,6 +161,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/mqtt && \
     chmod +x /usr/local/bin/schedule && \
     chmod +x /usr/local/bin/schedule-alerts && \
+    chmod +x /usr/local/bin/schedule-distribution && \
     chmod +x /usr/local/bin/schedule-functions && \
     chmod +x /usr/local/bin/schedule-executions && \
     chmod +x /usr/local/bin/schedule-messages && \
@@ -187,6 +188,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/worker-databases && \
     chmod +x /usr/local/bin/worker-deletes && \
     chmod +x /usr/local/bin/worker-distribution-builds && \
+    chmod +x /usr/local/bin/worker-distribution-submissions && \
     chmod +x /usr/local/bin/worker-executions && \
     chmod +x /usr/local/bin/worker-functions && \
     chmod +x /usr/local/bin/worker-mails && \

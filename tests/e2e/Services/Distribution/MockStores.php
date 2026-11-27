@@ -3,11 +3,31 @@
 namespace Tests\E2E\Services\Distribution;
 
 use Appwrite\ID;
+use CURLFile;
 use Tests\E2E\Client;
+use Utopia\Distribution\Signing\Keystore;
 
 trait MockStores
 {
     abstract protected function headers(): array;
+
+    /**
+     * @param array<string, mixed> $params
+     * @return array<string, mixed>
+     */
+    abstract protected function createApp(array $params = []): array;
+
+    /**
+     * @param array<string, mixed> $params
+     * @return array<string, mixed>
+     */
+    abstract protected function createTarget(string $appId, array $params = []): array;
+
+    /**
+     * @param array<string, mixed> $params
+     * @return array<string, mixed>
+     */
+    abstract protected function createRelease(string $appId, array $params = []): array;
 
     /**
      * @return array{type: string, project_id: string, private_key: string, client_email: string, token_uri: string}
@@ -97,6 +117,141 @@ trait MockStores
             'issuerId' => $key['issuerId'],
             'privateKey' => $key['privateKey'],
         ], $params));
+    }
+
+    protected function seedGoogleApplication(string $packageName, string $email): void
+    {
+        $seeded = $this->client->call(Client::METHOD_POST, '/mock/distribution/google/seeds/applications', $this->mockHeaders(), [
+            'packageName' => $packageName,
+            'emails' => [$email],
+            'tracks' => \array_map(fn (string $track): array => ['track' => $track, 'releases' => []], ['production', 'beta', 'alpha', 'internal']),
+        ]);
+        $this->assertSame(201, $seeded['headers']['status-code'], 'Seeding a Google Play application requires _APP_ENV=development.');
+    }
+
+    /**
+     * @return array{sessions: int, completed: int, bytes: int}
+     */
+    protected function googleUploads(string $packageName): array
+    {
+        $uploads = $this->client->call(Client::METHOD_GET, '/mock/distribution/google/seeds/uploads', $this->mockHeaders(), [
+            'packageName' => $packageName,
+        ]);
+        $this->assertSame(200, $uploads['headers']['status-code'], 'Reading Google Play upload counters requires _APP_ENV=development.');
+
+        return [
+            'sessions' => $uploads['body']['sessions'],
+            'completed' => $uploads['body']['completed'],
+            'bytes' => $uploads['body']['bytes'],
+        ];
+    }
+
+    protected function stallGoogleUpload(string $packageName, int $seconds): void
+    {
+        $stalled = $this->client->call(Client::METHOD_POST, '/mock/distribution/google/seeds/stalls', $this->mockHeaders(), [
+            'packageName' => $packageName,
+            'seconds' => $seconds,
+        ]);
+        $this->assertSame(201, $stalled['headers']['status-code'], 'Seeding a Google Play upload stall requires _APP_ENV=development.');
+    }
+
+    protected function stageGoogleRollout(string $packageName, string $track, float $fraction): void
+    {
+        $staged = $this->client->call(Client::METHOD_POST, '/mock/distribution/google/seeds/rollouts', $this->mockHeaders(), [
+            'packageName' => $packageName,
+            'track' => $track,
+            'fraction' => $fraction,
+        ]);
+        $this->assertSame(201, $staged['headers']['status-code'], 'Seeding a Google Play staged rollout requires _APP_ENV=development.');
+    }
+
+    /**
+     * @return array{appId: string, targetId: string, artifactId: string, releaseId: string, identifier: string, size: int, signedSize: int}
+     */
+    protected function prepareGoogleRelease(int $variant): array
+    {
+        $identifier = 'io.appwrite.distribution.e2e' . $variant;
+        $path = __DIR__ . '/../../../resources/distribution/' . $identifier . '.aab';
+        $this->assertFileExists($path);
+
+        $serviceAccount = $this->seedGoogleServiceAccount();
+        $this->seedGoogleApplication($identifier, $serviceAccount['client_email']);
+        $connection = $this->createGoogleConnection(['serviceAccount' => $serviceAccount]);
+        $this->assertSame(201, $connection['headers']['status-code']);
+
+        $keystore = Keystore::generate('upload', ['CN' => 'Appwrite Test']);
+        $signingIdentity = $this->client->call(Client::METHOD_POST, '/distribution/signing-identities/android', $this->headers(), [
+            'signingIdentityId' => ID::unique(),
+            'name' => 'Keystore ' . \uniqid(),
+            'keystore' => \base64_encode($keystore->archive),
+            'storePassword' => $keystore->password,
+            'keyAlias' => 'upload',
+            'keyPassword' => $keystore->password,
+        ]);
+        $this->assertSame(201, $signingIdentity['headers']['status-code']);
+
+        $app = $this->createApp(['framework' => 'android']);
+        $this->assertSame(201, $app['headers']['status-code']);
+        $appId = $app['body']['$id'];
+
+        $target = $this->createTarget($appId, [
+            'platform' => 'android',
+            'identifier' => $identifier,
+            'connectionId' => $connection['body']['$id'],
+            'signingIdentityId' => $signingIdentity['body']['$id'],
+            'track' => 'internal',
+        ]);
+        $this->assertSame(201, $target['headers']['status-code']);
+
+        $artifact = $this->uploadBundle($appId, $path);
+        $this->assertSame(202, $artifact['headers']['status-code']);
+        $ready = $this->awaitBundle($appId, $artifact['body']['$id']);
+        $this->assertSame('ready', $ready['status'], 'Artifact ' . $ready['$id'] . ' is ' . $ready['status'] . ': ' . $ready['errorCode'] . ' ' . $ready['errorMessage']);
+        $this->assertTrue($ready['signed']);
+        $this->assertSame($identifier, $ready['identifier']);
+        $this->assertSame(1, $ready['versionCode']);
+
+        $release = $this->createRelease($appId);
+        $this->assertSame(201, $release['headers']['status-code']);
+
+        return [
+            'appId' => $appId,
+            'targetId' => $target['body']['$id'],
+            'artifactId' => $ready['$id'],
+            'releaseId' => $release['body']['$id'],
+            'identifier' => $identifier,
+            'size' => (int) \filesize($path),
+            'signedSize' => (int) $ready['size'],
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function uploadBundle(string $appId, string $path): array
+    {
+        return $this->client->call(Client::METHOD_POST, '/distribution/apps/' . $appId . '/artifacts', \array_merge($this->headers(), [
+            'content-type' => 'multipart/form-data',
+        ]), [
+            'file' => new CURLFile($path, 'application/octet-stream', \basename($path)),
+        ]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function awaitBundle(string $appId, string $artifactId, int $timeoutMs = 180_000): array
+    {
+        $artifact = [];
+
+        $this->assertEventually(function () use ($appId, $artifactId, &$artifact): void {
+            $fetched = $this->client->call(Client::METHOD_GET, '/distribution/apps/' . $appId . '/artifacts/' . $artifactId, $this->headers());
+            $this->assertSame(200, $fetched['headers']['status-code']);
+            $artifact = $fetched['body'];
+            $this->assertContains($artifact['status'], ['ready', 'invalid']);
+        }, $timeoutMs, 2000);
+
+        return $artifact;
     }
 
     /**

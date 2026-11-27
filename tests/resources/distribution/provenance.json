@@ -1,0 +1,115 @@
+{
+    "image": {
+        "tag": "appwrite/distribution-fixture:dev",
+        "build": "docker build -t appwrite/distribution-fixture:dev https://github.com/appwrite/distribution-runner.git#8030402016ad3ccbb996a8b229939518a02ed5e9:images/fixture",
+        "repository": "https://github.com/appwrite/distribution-runner",
+        "commit": "8030402016ad3ccbb996a8b229939518a02ed5e9",
+        "source": {
+            "file": "images/fixture/app-unsigned.aab",
+            "sha256": "51627b51c597a259f79f1276f549aa81bbd64f1bd4b0058caec48b28bf775be8"
+        },
+        "platform": "linux/arm64"
+    },
+    "output": "out/output/app-unsigned.aab",
+    "bundles": [
+        {
+            "file": "io.appwrite.distribution.e2e1.aab",
+            "sha256": "fdc0ada9590b04029b2e307fe16039281457a0044def388899cd092969f2ce17",
+            "size": 830,
+            "identifier": "io.appwrite.distribution.e2e1",
+            "versionName": "1.0.0",
+            "versionCode": 1,
+            "command": "docker run --rm --network none -v \"$PWD/out:/mnt/code\" -e DISTRIBUTION_IDENTIFIER=io.appwrite.distribution.e2e1 -e DISTRIBUTION_VERSION_CODE=1 appwrite/distribution-fixture:dev"
+        },
+        {
+            "file": "io.appwrite.distribution.e2e2.aab",
+            "sha256": "a4ee838708a7a52a75d2fbae72020c4c7489cc026662167c4793c64e9a563903",
+            "size": 830,
+            "identifier": "io.appwrite.distribution.e2e2",
+            "versionName": "1.0.0",
+            "versionCode": 1,
+            "command": "docker run --rm --network none -v \"$PWD/out:/mnt/code\" -e DISTRIBUTION_IDENTIFIER=io.appwrite.distribution.e2e2 -e DISTRIBUTION_VERSION_CODE=1 appwrite/distribution-fixture:dev"
+        },
+        {
+            "file": "io.appwrite.distribution.e2e3.aab",
+            "sha256": "9cc49906c0f4749a9b196fd14a63c949f50c0da35b5254112cc91082a3290e15",
+            "size": 830,
+            "identifier": "io.appwrite.distribution.e2e3",
+            "versionName": "1.0.0",
+            "versionCode": 1,
+            "command": "docker run --rm --network none -v \"$PWD/out:/mnt/code\" -e DISTRIBUTION_IDENTIFIER=io.appwrite.distribution.e2e3 -e DISTRIBUTION_VERSION_CODE=1 appwrite/distribution-fixture:dev"
+        },
+        {
+            "file": "io.appwrite.distribution.e2e4.aab",
+            "sha256": "3f6f3a0a25e3f5e4d46d8f674dcb74d3e1b5c1045e822f0bb3e6fe987082a067",
+            "size": 830,
+            "identifier": "io.appwrite.distribution.e2e4",
+            "versionName": "1.0.0",
+            "versionCode": 1,
+            "command": "docker run --rm --network none -v \"$PWD/out:/mnt/code\" -e DISTRIBUTION_IDENTIFIER=io.appwrite.distribution.e2e4 -e DISTRIBUTION_VERSION_CODE=1 appwrite/distribution-fixture:dev"
+        },
+        {
+            "file": "io.appwrite.distribution.e2e5.aab",
+            "sha256": "9b5d3746c06ae4cae8511cfb06e9ccbd3e6e5bb3992a545f9f1d8301654719b0",
+            "size": 831,
+            "identifier": "io.appwrite.distribution.e2e5",
+            "versionName": "1.0.0",
+            "versionCode": 1,
+            "command": "docker run --rm --network none -v \"$PWD/out:/mnt/code\" -e DISTRIBUTION_IDENTIFIER=io.appwrite.distribution.e2e5 -e DISTRIBUTION_VERSION_CODE=1 appwrite/distribution-fixture:dev"
+        },
+        {
+            "file": "io.appwrite.distribution.e2e6.aab",
+            "sha256": "01f67f8ab41fcc692decf275f97cbc0f18cccbd87c194e21e0103d3533bbc815",
+            "size": 830,
+            "identifier": "io.appwrite.distribution.e2e6",
+            "versionName": "1.0.0",
+            "versionCode": 1,
+            "command": "docker run --rm --network none -v \"$PWD/out:/mnt/code\" -e DISTRIBUTION_IDENTIFIER=io.appwrite.distribution.e2e6 -e DISTRIBUTION_VERSION_CODE=1 appwrite/distribution-fixture:dev"
+        },
+        {
+            "file": "io.appwrite.distribution.e2e7.aab",
+            "sha256": "9a6e1244f9828b7cadb087f7e197940f5b8f52131d000830f0e0ad36c0bfd68d",
+            "size": 831,
+            "identifier": "io.appwrite.distribution.e2e7",
+            "versionName": "1.0.0",
+            "versionCode": 1,
+            "command": "docker run --rm --network none -v \"$PWD/out:/mnt/code\" -e DISTRIBUTION_IDENTIFIER=io.appwrite.distribution.e2e7 -e DISTRIBUTION_VERSION_CODE=1 appwrite/distribution-fixture:dev"
+        },
+        {
+            "file": "io.appwrite.distribution.e2e8.aab",
+            "sha256": "36de8f012eac7db8ff64e30b39ec51e5c3f830cf8fdd8158fc30adcce8a4a25e",
+            "size": 831,
+            "identifier": "io.appwrite.distribution.e2e8",
+            "versionName": "1.0.0",
+            "versionCode": 1,
+            "command": "docker run --rm --network none -v \"$PWD/out:/mnt/code\" -e DISTRIBUTION_IDENTIFIER=io.appwrite.distribution.e2e8 -e DISTRIBUTION_VERSION_CODE=1 appwrite/distribution-fixture:dev"
+        },
+        {
+            "file": "io.appwrite.distribution.e2e9.aab",
+            "sha256": "959c88440f14ef4edc7f67057ddaf5703d2390553c286b7aee5abd192b04a93e",
+            "size": 830,
+            "identifier": "io.appwrite.distribution.e2e9",
+            "versionName": "1.0.0",
+            "versionCode": 1,
+            "command": "docker run --rm --network none -v \"$PWD/out:/mnt/code\" -e DISTRIBUTION_IDENTIFIER=io.appwrite.distribution.e2e9 -e DISTRIBUTION_VERSION_CODE=1 appwrite/distribution-fixture:dev"
+        },
+        {
+            "file": "io.appwrite.distribution.e2e10.aab",
+            "sha256": "471fd5665336152cd1d08510e3ce4ef32d85e957be6d097adc6046d69ea39422",
+            "size": 831,
+            "identifier": "io.appwrite.distribution.e2e10",
+            "versionName": "1.0.0",
+            "versionCode": 1,
+            "command": "docker run --rm --network none -v \"$PWD/out:/mnt/code\" -e DISTRIBUTION_IDENTIFIER=io.appwrite.distribution.e2e10 -e DISTRIBUTION_VERSION_CODE=1 appwrite/distribution-fixture:dev"
+        },
+        {
+            "file": "io.appwrite.distribution.e2e15.aab",
+            "sha256": "7a9c542b838fba8d2d96d209dd3d924fa901559a5437ff904f08256de18ec9f3",
+            "size": 832,
+            "identifier": "io.appwrite.distribution.e2e15",
+            "versionName": "1.0.0",
+            "versionCode": 1,
+            "command": "docker run --rm --network none -v \"$PWD/out:/mnt/code\" -e DISTRIBUTION_IDENTIFIER=io.appwrite.distribution.e2e15 -e DISTRIBUTION_VERSION_CODE=1 appwrite/distribution-fixture:dev"
+        }
+    ]
+}

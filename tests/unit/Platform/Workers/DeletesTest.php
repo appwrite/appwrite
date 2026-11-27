@@ -17,6 +17,7 @@ use Executor\Executor;
 use PHPUnit\Framework\AssertionFailedError;
 use PHPUnit\Framework\TestCase;
 use Tests\Unit\Appwrite\Messaging\Adapter\Fakes\RecordingPubSub;
+use Tests\Unit\Platform\Workers\Fakes\RecordingBuilds;
 use Utopia\Bus\Bus;
 use Utopia\Cache\Adapter\Memory as MemoryCache;
 use Utopia\Cache\Cache;
@@ -27,6 +28,7 @@ use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Lock\Distributed;
 use Utopia\Queue\Message;
@@ -48,6 +50,11 @@ final class DeletesTest extends TestCase
 
     private string $idle;
 
+    /**
+     * @var \ArrayObject<int, string>
+     */
+    private \ArrayObject $canceled;
+
     protected function setUp(): void
     {
         // Projects default smtp and oAuthProviders through the encrypt filter on every write and read.
@@ -64,6 +71,8 @@ final class DeletesTest extends TestCase
             ->setAuthorization($authorization);
 
         $this->database->create();
+
+        $this->canceled = new \ArrayObject();
 
         $collections = Config::getParam('collections', []);
         foreach (['projects' => $collections['console']['projects'], 'schedules' => $collections['console']['schedules'], 'functions' => $collections['projects']['functions']] as $id => $collection) {
@@ -123,6 +132,7 @@ final class DeletesTest extends TestCase
                     bus: new Bus(),
                     executionStore: $this->createStub(ExecutionStore::class),
                     queueForRealtime: $this->createStub(Realtime::class),
+                    distributionBuilds: new RecordingBuilds($this->canceled),
                 );
                 $this->assertFileDoesNotExist($oldPath);
                 $this->assertSame('replacement', file_get_contents($currentPath));
@@ -192,6 +202,7 @@ final class DeletesTest extends TestCase
                 bus: new Bus(),
                 executionStore: $executionStore,
                 queueForRealtime: $this->createStub(Realtime::class),
+                distributionBuilds: new RecordingBuilds($this->canceled),
             );
         } catch (AssertionFailedError $failure) {
             // An unexpected call on a double is the failure under test, not the refusal.
@@ -261,6 +272,7 @@ final class DeletesTest extends TestCase
             bus: new Bus(),
             executionStore: $this->createStub(ExecutionStore::class),
             queueForRealtime: $this->createStub(Realtime::class),
+            distributionBuilds: new RecordingBuilds($this->canceled),
         );
 
         $session = $this->database->skipFilters(fn () => $this->database->getDocument('sessions', 'platform-session'));
@@ -396,6 +408,388 @@ final class DeletesTest extends TestCase
         }
     }
 
+    public function testArtifactDeleteCancelsItsJobAndStopsItsSchedule(): void
+    {
+        $this->addDistributionSchedule(SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_BUILD, 'artifact');
+        $directory = $this->createDirectory('artifacts');
+        \file_put_contents($directory . '/artifact.aab', 'unsigned');
+        \mkdir($directory . '/signed/artifact', recursive: true);
+        \file_put_contents($directory . '/signed/artifact/app.aab', 'signed');
+        \mkdir($directory . '/signing/artifact', recursive: true);
+        \file_put_contents($directory . '/signing/artifact/1-bundle.json', 'bundle');
+
+        try {
+            $this->deleteDocument(new Document([
+                '$id' => 'artifact',
+                '$collection' => DELETE_TYPE_DISTRIBUTION_ARTIFACTS,
+                'status' => 'processing',
+                'path' => $directory . '/artifact.aab',
+            ]), new Local($directory));
+
+            $this->assertSame(['artifact'], $this->canceled->getArrayCopy(), 'the inspect or sign job is canceled');
+            $this->assertSame([false], $this->scheduleStates(SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_BUILD, 'artifact'), 'reconcile stops for the artifact');
+            $this->assertFileDoesNotExist($directory . '/artifact.aab');
+            $this->assertDirectoryDoesNotExist($directory . '/signed/artifact', 'a sign job\'s output goes too');
+            $this->assertDirectoryDoesNotExist($directory . '/signing/artifact', 'a sign job\'s one-time signing bundle goes too');
+        } finally {
+            (new Local($directory))->delete($directory, true);
+        }
+    }
+
+    public function testAppDeleteRemovesWhatTheAppOwns(): void
+    {
+        $this->createCollections(['distributionBuilds', 'distributionLogs', 'distributionArtifacts', 'distributionTargets', 'distributionReleases', 'distributionSubmissions', 'distributionListings', 'variables', 'repositories', 'distributionLeases']);
+        $directory = $this->createDirectory('distribution');
+        foreach ([['5', ''], ['6', 'other-']] as [$appInternalId, $prefix]) {
+            $this->seedDistributionApp($appInternalId, $prefix, $directory);
+        }
+        $this->addDistributionSchedule(SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_BUILD, 'build');
+        $this->addDistributionSchedule(SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_BUILD, 'artifact');
+        $this->addDistributionSchedule(SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_SUBMISSION, 'submission');
+        $this->addDistributionSchedule(SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_SUBMISSION, 'other-submission');
+
+        foreach (['artifact.aab', 'other-artifact.aab', 'builds/build/app.aab', 'signed/artifact/app.aab', 'listings/listing/phone.png', 'listings/other-listing/phone.png'] as $file) {
+            @\mkdir(\dirname($directory . '/' . $file), recursive: true);
+            \file_put_contents($directory . '/' . $file, $file);
+        }
+
+        try {
+            $this->deleteDocument(new Document([
+                '$id' => 'app',
+                '$sequence' => '5',
+                '$collection' => DELETE_TYPE_DISTRIBUTION_APPS,
+            ]), new Local($directory));
+
+            $rows = [
+                'distributionBuilds' => 'other-build',
+                'distributionLogs' => 'other-log',
+                'distributionLeases' => 'other-lease',
+                'distributionArtifacts' => 'other-artifact',
+                'distributionTargets' => 'other-target',
+                'distributionReleases' => 'other-release',
+                'distributionSubmissions' => 'other-submission',
+                'distributionListings' => 'other-listing',
+                'variables' => 'other-variable',
+                'repositories' => 'other-repository',
+            ];
+            foreach ($rows as $collection => $kept) {
+                $remaining = \array_map(fn (Document $document): string => $document->getId(), $this->database->find($collection));
+                $this->assertSame([$kept], $remaining, $collection . ' keeps only the other app\'s row');
+            }
+
+            $canceled = $this->canceled->getArrayCopy();
+            \sort($canceled);
+            $this->assertSame(['artifact', 'build'], $canceled, 'every job the app started is canceled');
+            $this->assertSame([false], $this->scheduleStates(SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_BUILD, 'build'));
+            $this->assertSame([false], $this->scheduleStates(SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_BUILD, 'artifact'));
+            $this->assertSame([false], $this->scheduleStates(SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_SUBMISSION, 'submission'));
+            $this->assertSame([true], $this->scheduleStates(SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_SUBMISSION, 'other-submission'), 'another app keeps reconciling');
+
+            foreach (['artifact.aab', 'builds/build', 'signed/artifact', 'listings/listing'] as $path) {
+                $this->assertFileDoesNotExist($directory . '/' . $path);
+            }
+            $this->assertFileExists($directory . '/other-artifact.aab');
+            $this->assertFileExists($directory . '/listings/other-listing/phone.png');
+        } finally {
+            (new Local($directory))->delete($directory, true);
+        }
+    }
+
+    public function testReleaseDeleteKeepsSubmissionsStillInFlight(): void
+    {
+        $this->createCollections(['distributionSubmissions']);
+        foreach (['failed' => ['failed', 1.0], 'reviewing' => ['reviewing', 1.0], 'rolling' => ['published', 0.5], 'published' => ['published', 1.0]] as $submissionId => [$status, $rollout]) {
+            $this->createSubmission($submissionId, '5', 'artifact', $status, $rollout);
+            $this->addDistributionSchedule(SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_SUBMISSION, $submissionId);
+        }
+
+        $this->deleteDocument(new Document([
+            '$id' => 'release',
+            '$sequence' => '7',
+            '$collection' => DELETE_TYPE_DISTRIBUTION_RELEASES,
+        ]), $this->createStub(Device::class));
+
+        $remaining = \array_map(fn (Document $submission): string => $submission->getId(), $this->database->find('distributionSubmissions'));
+        \sort($remaining);
+        $this->assertSame(['reviewing', 'rolling'], $remaining, 'only finished submissions go with their release');
+        $this->assertSame([false], $this->scheduleStates(SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_SUBMISSION, 'failed'));
+        $this->assertSame([true], $this->scheduleStates(SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_SUBMISSION, 'rolling'), 'a staged rollout keeps reconciling');
+    }
+
+    /**
+     * Stopped Distribution rows used to reach the resource lookup, which knows
+     * only functions and messages, so the sweep logged an error and kept them.
+     */
+    public function testScheduleSweepRemovesStoppedDistributionRows(): void
+    {
+        $this->addSchedule('project', 'cleanup');
+        $this->addDistributionSchedule(SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_BUILD, 'artifact', active: false);
+        $this->addDistributionSchedule(SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_SUBMISSION, 'submission', active: false);
+        $this->addDistributionSchedule(SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_SUBMISSION, 'reviewing');
+
+        (new Deletes())->action(
+            message: (new Message())->setPayload((new DeleteMessage(type: DELETE_TYPE_SCHEDULES, datetime: DateTime::now()))->toArray()),
+            project: new Document(),
+            dbForPlatform: $this->database,
+            getProjectDB: fn () => $this->database,
+            getDatabasesDB: fn () => $this->database,
+            deviceForFiles: $this->createStub(Device::class),
+            deviceForFunctions: $this->createStub(Device::class),
+            deviceForSites: $this->createStub(Device::class),
+            deviceForBuilds: $this->createStub(Device::class),
+            deviceForVideos: $this->createStub(Device::class),
+            deviceForDistribution: $this->createStub(Device::class),
+            telemetry: new NoTelemetry(),
+            mqtt: $this->mqtt(),
+            certificates: $this->createStub(Certificates::class),
+            executor: $this->createStub(Executor::class),
+            executionRetention: '',
+            executionsRetentionCount: 0,
+            deploymentRetention: new Retention(),
+            publisherForDeletes: $this->createStub(DeletePublisher::class),
+            publisherForUsage: $this->createStub(UsagePublisher::class),
+            bus: new Bus(),
+            executionStore: $this->createStub(ExecutionStore::class),
+            queueForRealtime: $this->createStub(Realtime::class),
+            distributionBuilds: new RecordingBuilds($this->canceled),
+        );
+
+        $this->assertSame([], $this->scheduleStates(SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_BUILD, 'artifact'));
+        $this->assertSame([], $this->scheduleStates(SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_SUBMISSION, 'submission'));
+        $this->assertSame([true], $this->scheduleStates(SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_SUBMISSION, 'reviewing'), 'a running submission keeps its row');
+    }
+
+    public function testMaintenanceRemovesExpiredAndAbandonedArtifacts(): void
+    {
+        $this->createIdleUploads([]);
+        $this->createCollections(['distributionArtifacts', 'distributionSubmissions']);
+        $directory = $this->createDirectory('distribution');
+        $yesterday = DateTime::format(new \DateTime('-1 day'));
+        $artifacts = [
+            'expired' => ['status' => 'ready', 'expiresAt' => $yesterday],
+            'submitted' => ['status' => 'ready', 'expiresAt' => $yesterday],
+            'retained' => ['status' => 'ready', 'expiresAt' => DateTime::format(new \DateTime('+1 day'))],
+            'abandoned' => ['status' => 'uploading', '$updatedAt' => DateTime::format(new \DateTime('-8 days'))],
+            'resuming' => ['status' => 'uploading'],
+        ];
+        foreach ($artifacts as $artifactId => $attributes) {
+            \file_put_contents($directory . '/' . $artifactId . '.aab', $artifactId);
+            $artifact = $this->database->withPreserveDates(true, fn () => $this->database->createDocument('distributionArtifacts', new Document([
+                '$id' => $artifactId,
+                'appId' => 'app',
+                'appInternalId' => '5',
+                'type' => 'aab',
+                'source' => 'upload',
+                'path' => $directory . '/' . $artifactId . '.aab',
+                'metadata' => [],
+                ...$attributes,
+            ])));
+            if ($artifactId === 'submitted') {
+                $this->createSubmission('reviewing', '5', $artifact->getSequence(), 'reviewing', 1.0);
+            }
+        }
+        $keys = [];
+        $locks = function (string $key, int $ttl, callable $callback) use (&$keys): mixed {
+            $keys[] = $key;
+
+            return $callback(null);
+        };
+
+        try {
+            $this->runMaintenance($this->createStub(Device::class), $locks, new Local($directory));
+
+            $remaining = \array_map(fn (Document $artifact): string => $artifact->getId(), $this->database->find('distributionArtifacts'));
+            \sort($remaining);
+            $this->assertSame(['resuming', 'retained', 'submitted'], $remaining);
+            $this->assertFileDoesNotExist($directory . '/expired.aab');
+            $this->assertFileDoesNotExist($directory . '/abandoned.aab');
+            $this->assertFileExists($directory . '/submitted.aab', 'an artifact a store submission still reads is kept');
+            $this->assertSame(['distribution:artifact:project:app:abandoned'], $keys, 'the cleanup takes the upload endpoint\'s lock');
+        } finally {
+            (new Local($directory))->delete($directory, true);
+        }
+    }
+
+    public function testInstallationDeleteUnlinksDistributionApps(): void
+    {
+        $this->createCollections(['sites', 'distributionApps', 'repositories']);
+        $this->database->createDocument('repositories', new Document([
+            '$id' => 'repository',
+            'installationId' => 'installation',
+            'projectId' => 'project',
+            'projectInternalId' => '1',
+            'providerRepositoryId' => 'provider-repository',
+            'resourceId' => 'app',
+            'resourceType' => RESOURCE_TYPE_DISTRIBUTION_APPS,
+        ]));
+        $this->database->createDocument('distributionApps', new Document([
+            '$id' => 'app',
+            'name' => 'App',
+            'framework' => 'flutter',
+            'installationId' => 'installation',
+            'installationInternalId' => '9',
+            'providerRepositoryId' => 'provider-repository',
+            'repositoryId' => 'repository',
+            'repositoryInternalId' => '3',
+            'providerBranch' => 'main',
+            'providerBranches' => ['release/*'],
+            'providerPaths' => ['apps/mobile/**'],
+            'providerTags' => ['v*'],
+        ]));
+
+        $this->deleteDocument(new Document([
+            '$id' => 'installation',
+            '$sequence' => '9',
+            '$collection' => DELETE_TYPE_INSTALLATIONS,
+        ]), $this->createStub(Device::class));
+
+        $app = $this->database->getDocument('distributionApps', 'app');
+        $this->assertSame('', $app->getAttribute('installationId'));
+        $this->assertSame('', $app->getAttribute('repositoryId'));
+        $this->assertSame([], $app->getAttribute('providerBranches'), 'push triggers go with the repository');
+        $this->assertSame([], $app->getAttribute('providerPaths'));
+        $this->assertSame([], $app->getAttribute('providerTags'));
+        $this->assertSame('App', $app->getAttribute('name'), 'the app itself stays');
+        $this->assertTrue($this->database->getDocument('repositories', 'repository')->isEmpty());
+    }
+
+    /**
+     * @param list<string> $ids
+     */
+    private function createCollections(array $ids): void
+    {
+        $collections = Config::getParam('collections', []);
+        foreach ($ids as $id) {
+            $schema = $collections['console'][$id] ?? $collections['projects'][$id];
+            $this->database->createCollection(Collection::create(id: $id, attributes: $schema['attributes'], indexes: $schema['indexes']));
+        }
+    }
+
+    /**
+     * One of each row an app owns, every ID starting with the prefix, its artifact file in the directory.
+     */
+    private function seedDistributionApp(string $appInternalId, string $prefix, string $directory): void
+    {
+        $owner = ['appId' => $prefix . 'app', 'appInternalId' => $appInternalId];
+        $build = $this->database->createDocument('distributionBuilds', new Document([
+            '$id' => $prefix . 'build',
+            ...$owner,
+            'targetId' => 'target',
+            'targetInternalId' => '1',
+            'platform' => 'android',
+            'type' => 'release',
+            'providerCommitHash' => 'commit',
+        ]));
+        $this->database->createDocument('distributionLogs', new Document([
+            '$id' => $prefix . 'log',
+            'buildId' => $build->getId(),
+            'buildInternalId' => $build->getSequence(),
+            'sequence' => 1,
+            'chunk' => 0,
+        ]));
+        $this->database->createDocument('distributionLeases', new Document([
+            '$id' => $prefix . 'lease',
+            'projectId' => 'project',
+            'projectInternalId' => '1',
+            'buildId' => $build->getId(),
+            'platform' => 'android',
+            'runnerPlatform' => 'linux',
+            'region' => System::getEnv('_APP_REGION', 'default'),
+            'endpoint' => 'https://runner.test',
+        ]));
+        $artifact = $this->database->createDocument('distributionArtifacts', new Document([
+            '$id' => $prefix . 'artifact',
+            ...$owner,
+            'type' => 'aab',
+            'source' => 'upload',
+            'status' => 'ready',
+            'path' => $directory . '/' . $prefix . 'artifact.aab',
+        ]));
+        $this->database->createDocument('distributionTargets', new Document([
+            '$id' => $prefix . 'target',
+            ...$owner,
+            'platform' => 'android',
+            'identifier' => 'io.appwrite.' . $appInternalId,
+        ]));
+        $this->database->createDocument('distributionReleases', new Document([
+            '$id' => $prefix . 'release',
+            ...$owner,
+            'version' => '1.0.0',
+        ]));
+        $this->createSubmission($prefix . 'submission', $appInternalId, $artifact->getSequence(), 'published', 1.0);
+        $this->database->createDocument('distributionListings', new Document([
+            '$id' => $prefix . 'listing',
+            ...$owner,
+            'platform' => 'android',
+            'locale' => 'en-US',
+        ]));
+        $this->database->createDocument('variables', new Document([
+            '$id' => $prefix . 'variable',
+            'resourceType' => RESOURCE_TYPE_DISTRIBUTION_APPS,
+            'resourceInternalId' => $appInternalId,
+            'resourceId' => $prefix . 'app',
+            'key' => 'API_URL',
+            'value' => 'https://api.test',
+        ]));
+        $this->database->createDocument('repositories', new Document([
+            '$id' => $prefix . 'repository',
+            'installationId' => 'installation',
+            'projectId' => 'project',
+            'projectInternalId' => '1',
+            'providerRepositoryId' => 'provider-repository',
+            'resourceId' => $prefix . 'app',
+            'resourceInternalId' => $appInternalId,
+            'resourceType' => RESOURCE_TYPE_DISTRIBUTION_APPS,
+        ]));
+    }
+
+    private function createSubmission(string $submissionId, string $appInternalId, string $artifactInternalId, string $status, float $rollout): void
+    {
+        $this->database->createDocument('distributionSubmissions', new Document([
+            '$id' => $submissionId,
+            'appId' => 'app',
+            'appInternalId' => $appInternalId,
+            'releaseId' => 'release',
+            'releaseInternalId' => '7',
+            'targetId' => 'target',
+            'targetInternalId' => '1',
+            'artifactId' => 'artifact',
+            'artifactInternalId' => $artifactInternalId,
+            'platform' => 'android',
+            'provider' => 'google',
+            'track' => 'internal',
+            'rollout' => $rollout,
+            'status' => $status,
+            'key' => $submissionId,
+        ]));
+    }
+
+    private function addDistributionSchedule(string $type, string $resourceId, bool $active = true): void
+    {
+        $this->database->createDocument('schedules', new Document([
+            'region' => System::getEnv('_APP_REGION', 'default'),
+            'resourceType' => $type,
+            'resourceId' => $resourceId,
+            'resourceInternalId' => '1',
+            'resourceUpdatedAt' => DateTime::addSeconds(new \DateTime(), -3600),
+            'projectId' => 'project',
+            'projectInternalId' => '1',
+            'schedule' => '',
+            'active' => $active,
+        ]));
+    }
+
+    /**
+     * @return list<bool>
+     */
+    private function scheduleStates(string $type, string $resourceId): array
+    {
+        return \array_map(fn (Document $schedule): bool => $schedule->getAttribute('active'), $this->database->find('schedules', [
+            Query::equal('resourceType', [$type]),
+            Query::equal('resourceId', [$resourceId]),
+        ]));
+    }
+
     private function createDirectory(string $prefix): string
     {
         $directory = \sys_get_temp_dir() . '/' . $prefix . '-' . \bin2hex(\random_bytes(8));
@@ -408,7 +802,7 @@ final class DeletesTest extends TestCase
     {
         (new Deletes())->action(
             message: (new Message())->setPayload((new DeleteMessage(type: DELETE_TYPE_DOCUMENT, document: $document))->toArray()),
-            project: new Document(['$id' => 'project', '$sequence' => '1']),
+            project: new Document(['$id' => 'project', '$sequence' => '1', 'region' => System::getEnv('_APP_REGION', 'default')]),
             dbForPlatform: $this->database,
             getProjectDB: fn () => $this->database,
             getDatabasesDB: fn () => $this->database,
@@ -430,6 +824,7 @@ final class DeletesTest extends TestCase
             bus: new Bus(),
             executionStore: $this->createStub(ExecutionStore::class),
             queueForRealtime: $this->createStub(Realtime::class),
+            distributionBuilds: new RecordingBuilds($this->canceled),
         );
     }
 
@@ -478,9 +873,9 @@ final class DeletesTest extends TestCase
         return $collection;
     }
 
-    private function runMaintenance(Device $deviceForFiles, ?callable $locks = null): void
+    private function runMaintenance(Device $deviceForFiles, ?callable $locks = null, ?Device $deviceForDistribution = null): void
     {
-        $project = new Document(['$id' => 'project', '$sequence' => '1']);
+        $project = new Document(['$id' => 'project', '$sequence' => '1', 'region' => System::getEnv('_APP_REGION', 'default')]);
         (new Deletes())->action(
             message: (new Message())->setPayload([
                 'type' => DELETE_TYPE_MAINTENANCE,
@@ -495,7 +890,7 @@ final class DeletesTest extends TestCase
             deviceForSites: $this->createStub(Device::class),
             deviceForBuilds: $this->createStub(Device::class),
             deviceForVideos: $this->createStub(Device::class),
-            deviceForDistribution: $this->createStub(Device::class),
+            deviceForDistribution: $deviceForDistribution ?? $this->createStub(Device::class),
             telemetry: new NoTelemetry(),
             mqtt: $this->mqtt(),
             certificates: $this->createStub(Certificates::class),
@@ -508,6 +903,7 @@ final class DeletesTest extends TestCase
             bus: new Bus(),
             executionStore: $this->createStub(ExecutionStore::class),
             queueForRealtime: $this->createStub(Realtime::class),
+            distributionBuilds: new RecordingBuilds($this->canceled),
             locks: $locks,
         );
     }

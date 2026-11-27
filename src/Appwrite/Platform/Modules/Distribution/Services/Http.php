@@ -11,6 +11,16 @@ use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Builds\Signing
 use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Create as CreateApp;
 use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Delete as DeleteApp;
 use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Get as GetApp;
+use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Releases\Create as CreateRelease;
+use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Releases\Delete as DeleteRelease;
+use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Releases\Get as GetRelease;
+use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Releases\Update as UpdateRelease;
+use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Releases\XList as ListReleases;
+use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Submissions\Create as CreateSubmission;
+use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Submissions\Get as GetSubmission;
+use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Submissions\Status\Update as UpdateSubmissionStatus;
+use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Submissions\Update as UpdateSubmission;
+use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Submissions\XList as ListSubmissions;
 use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Targets\Create as CreateTarget;
 use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Targets\Delete as DeleteTarget;
 use Appwrite\Platform\Modules\Distribution\Http\Distribution\Apps\Targets\Get as GetTarget;
@@ -91,5 +101,17 @@ class Http extends Service
 
         $this->addAction(CreateEvent::getName(), CreateEvent::class);
         $this->addAction(GetBuildSigning::getName(), GetBuildSigning::class);
+
+        $this->addAction(CreateRelease::getName(), CreateRelease::class);
+        $this->addAction(ListReleases::getName(), ListReleases::class);
+        $this->addAction(GetRelease::getName(), GetRelease::class);
+        $this->addAction(UpdateRelease::getName(), UpdateRelease::class);
+        $this->addAction(DeleteRelease::getName(), DeleteRelease::class);
+
+        $this->addAction(CreateSubmission::getName(), CreateSubmission::class);
+        $this->addAction(ListSubmissions::getName(), ListSubmissions::class);
+        $this->addAction(GetSubmission::getName(), GetSubmission::class);
+        $this->addAction(UpdateSubmission::getName(), UpdateSubmission::class);
+        $this->addAction(UpdateSubmissionStatus::getName(), UpdateSubmissionStatus::class);
     }
 }

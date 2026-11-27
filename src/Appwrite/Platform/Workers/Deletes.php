@@ -10,6 +10,10 @@ use Appwrite\Deployment\Deployments;
 use Appwrite\Deployment\Retention;
 use Appwrite\Deployment\Retention\Reason;
 use Appwrite\Distribution\Artifact\Status as ArtifactStatus;
+use Appwrite\Distribution\Builds;
+use Appwrite\Distribution\Schedules;
+use Appwrite\Distribution\Submission\Status as SubmissionStatus;
+use Appwrite\Distribution\Submissions;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Message\Usage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
@@ -102,6 +106,7 @@ class Deletes extends Action
             ->inject('bus')
             ->inject('executionStore')
             ->inject('queueForRealtime')
+            ->inject('distributionBuilds')
             ->inject('locks')
             ->inject('logs')
             ->inject('uploads');
@@ -140,6 +145,7 @@ class Deletes extends Action
         Bus $bus,
         Store $executionStore,
         Realtime $queueForRealtime,
+        Builds $distributionBuilds,
         callable $locks,
         Logs $logs,
         Uploads $uploads,
@@ -181,6 +187,7 @@ class Deletes extends Action
             $bus,
             $executionStore,
             $queueForRealtime,
+            $distributionBuilds,
             $locks,
             $logs,
             $uploads,
@@ -282,6 +289,7 @@ class Deletes extends Action
         Bus $bus,
         Store $executionStore,
         Realtime $queueForRealtime,
+        Builds $distributionBuilds,
         ?callable $locks = null,
         ?Logs $logs = null,
         ?Uploads $uploads = null,
@@ -351,8 +359,17 @@ class Deletes extends Action
                     case DELETE_TYPE_TRANSACTIONS:
                         $this->deleteTransactionLogs($getProjectDB, $document, $project);
                         break;
+                    case DELETE_TYPE_DISTRIBUTION_APPS:
+                        $this->deleteDistributionApp($dbForPlatform, $getProjectDB, $deviceForDistribution, $distributionBuilds, $document, $project);
+                        break;
+                    case DELETE_TYPE_DISTRIBUTION_BUILDS:
+                        $this->deleteDistributionBuild($dbForPlatform, $getProjectDB, $deviceForDistribution, $distributionBuilds, $document, $project);
+                        break;
                     case DELETE_TYPE_DISTRIBUTION_ARTIFACTS:
-                        $this->deleteDistributionArtifact($deviceForDistribution, $document);
+                        $this->deleteDistributionArtifact($dbForPlatform, $deviceForDistribution, $distributionBuilds, $document, $project);
+                        break;
+                    case DELETE_TYPE_DISTRIBUTION_RELEASES:
+                        $this->deleteDistributionRelease($dbForPlatform, $getProjectDB, $document, $project);
                         break;
                     default:
                         Console::error('No lazy delete operation available for document of type: ' . $document->getCollection());
@@ -430,6 +447,7 @@ class Deletes extends Action
                 $this->deleteExpiredPresences($project, $getProjectDB, $publisherForUsage);
                 $this->deleteExpiredPushLedger($project, $getProjectDB);
                 $this->deleteExpiredUploads($project, $getProjectDB, $deviceForFiles, $locks, $uploads);
+                $this->deleteExpiredDistributionArtifacts($dbForPlatform, $project, $getProjectDB, $deviceForDistribution, $distributionBuilds, $locks);
                 $this->deleteOldDeployments($dbForPlatform, $publisherForDeletes, $project, $getProjectDB, $deploymentRetention);
                 $this->updateProcessingMigrations($project, $getProjectDB);
                 $this->abortStaleRenditions($project, $getProjectDB, $telemetry);
@@ -587,6 +605,13 @@ class Deletes extends Action
                         $dbForPlatform->deleteDocument('schedules', $document->getId());
                         Console::success('Deleting schedule for monitor ' . $resourceId);
                     }
+                    return;
+                }
+
+                // Stopped once their artifact, build or submission settles; the next write recreates the row.
+                if (\in_array($resourceType, [SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_BUILD, SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_SUBMISSION], true)) {
+                    $dbForPlatform->deleteDocument('schedules', $document->getId());
+                    Console::success('Deleting schedule for ' . $resourceType . ' ' . $resourceId);
                     return;
                 }
 
@@ -1399,6 +1424,15 @@ class Deletes extends Action
             Console::error('Failed to delete VCS comments: ' . $th->getMessage());
         }
 
+        try {
+            $this->deleteByGroup('distributionLeases', [
+                Query::equal('projectInternalId', [$projectInternalId]),
+                Query::orderAsc()
+            ], $dbForPlatform);
+        } catch (Throwable $th) {
+            Console::error('Failed to delete distribution leases: ' . $th->getMessage());
+        }
+
         // Stop Schedules
         try {
             $this->deactivateSchedules($dbForPlatform, $projectId);
@@ -1584,6 +1618,13 @@ class Deletes extends Action
                 $deviceForVideos->delete($deviceForVideos->getRoot(), true);
             } catch (Throwable $th) {
                 Console::error('Failed to delete videos storage directory: ' . $th->getMessage());
+            }
+
+            try {
+                $deviceForDistribution = new TelemetryDevice($telemetry, getDevice(APP_STORAGE_DISTRIBUTION . '/app-' . $projectId));
+                $deviceForDistribution->delete($deviceForDistribution->getRoot(), true);
+            } catch (Throwable $th) {
+                Console::error('Failed to delete distribution storage directory: ' . $th->getMessage());
             }
 
             try {
@@ -2648,11 +2689,99 @@ class Deletes extends Action
         }
     }
 
-    /**
-     * Removes an artifact's file, aborting the multipart upload of one that never finished.
-     */
-    private function deleteDistributionArtifact(Device $deviceForDistribution, Document $artifact): void
+    private function deleteDistributionApp(Database $dbForPlatform, callable $getProjectDB, Device $deviceForDistribution, Builds $distributionBuilds, Document $app, Document $project): void
     {
+        $dbForProject = $getProjectDB($project);
+        $schedules = new Schedules($dbForPlatform);
+        $appInternalId = $app->getSequence();
+
+        $this->listByGroup('distributionBuilds', [
+            Query::equal('appInternalId', [$appInternalId]),
+        ], $dbForProject, function (Document $build) use ($dbForPlatform, $getProjectDB, $deviceForDistribution, $distributionBuilds, $project) {
+            $this->deleteDistributionBuild($dbForPlatform, $getProjectDB, $deviceForDistribution, $distributionBuilds, $build, $project);
+        });
+        $this->deleteByGroup('distributionBuilds', [
+            Query::equal('appInternalId', [$appInternalId]),
+            Query::orderAsc(),
+        ], $dbForProject);
+
+        $this->listByGroup('distributionSubmissions', [
+            Query::equal('appInternalId', [$appInternalId]),
+        ], $dbForProject, function (Document $submission) use ($schedules, $project) {
+            $schedules->stop($project, SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_SUBMISSION, $submission->getId());
+        });
+        $this->deleteByGroup('distributionSubmissions', [
+            Query::equal('appInternalId', [$appInternalId]),
+            Query::orderAsc(),
+        ], $dbForProject);
+
+        $this->listByGroup('distributionArtifacts', [
+            Query::equal('appInternalId', [$appInternalId]),
+        ], $dbForProject, function (Document $artifact) use ($dbForPlatform, $deviceForDistribution, $distributionBuilds, $project) {
+            $this->deleteDistributionArtifact($dbForPlatform, $deviceForDistribution, $distributionBuilds, $artifact, $project);
+        });
+        $this->deleteByGroup('distributionArtifacts', [
+            Query::equal('appInternalId', [$appInternalId]),
+            Query::orderAsc(),
+        ], $dbForProject);
+
+        $this->listByGroup('distributionListings', [
+            Query::equal('appInternalId', [$appInternalId]),
+        ], $dbForProject, function (Document $listing) use ($deviceForDistribution) {
+            $this->deleteDistributionPath($deviceForDistribution, 'listings/' . $listing->getId());
+        });
+
+        foreach (['distributionListings', 'distributionReleases', 'distributionTargets'] as $collection) {
+            $this->deleteByGroup($collection, [
+                Query::equal('appInternalId', [$appInternalId]),
+                Query::orderAsc(),
+            ], $dbForProject);
+        }
+
+        $this->deleteByGroup('variables', [
+            Query::equal('resourceType', [RESOURCE_TYPE_DISTRIBUTION_APPS]),
+            Query::equal('resourceInternalId', [$appInternalId]),
+            Query::orderAsc(),
+        ], $dbForProject);
+
+        // The link row only: vcsComments are keyed by repository, and Distribution writes none.
+        $this->deleteByGroup('repositories', [
+            Query::equal('projectInternalId', [$project->getSequence()]),
+            Query::equal('resourceInternalId', [$appInternalId]),
+            Query::equal('resourceType', [RESOURCE_TYPE_DISTRIBUTION_APPS]),
+            Query::orderAsc(),
+        ], $dbForPlatform);
+    }
+
+    private function deleteDistributionBuild(Database $dbForPlatform, callable $getProjectDB, Device $deviceForDistribution, Builds $distributionBuilds, Document $build, Document $project): void
+    {
+        $this->cancelDistributionJob($distributionBuilds, $build);
+
+        $this->deleteByGroup('distributionLeases', [
+            Query::equal('projectInternalId', [$project->getSequence()]),
+            Query::equal('buildId', [$build->getId()]),
+            Query::orderAsc(),
+        ], $dbForPlatform);
+
+        (new Schedules($dbForPlatform))->stop($project, SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_BUILD, $build->getId());
+
+        $this->deleteByGroup('distributionLogs', [
+            Query::equal('buildInternalId', [$build->getSequence()]),
+            Query::orderAsc(),
+        ], $getProjectDB($project));
+
+        $this->deleteDistributionPath($deviceForDistribution, 'builds/' . $build->getId());
+    }
+
+    private function deleteDistributionArtifact(Database $dbForPlatform, Device $deviceForDistribution, Builds $distributionBuilds, Document $artifact, Document $project): void
+    {
+        $this->cancelDistributionJob($distributionBuilds, $artifact);
+
+        (new Schedules($dbForPlatform))->stop($project, SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_BUILD, $artifact->getId());
+
+        $this->deleteDistributionPath($deviceForDistribution, 'signed/' . $artifact->getId());
+        $this->deleteDistributionPath($deviceForDistribution, 'signing/' . $artifact->getId());
+
         $path = $artifact->getAttribute('path', '');
 
         if ($path === '') {
@@ -2674,6 +2803,108 @@ class Deletes extends Action
         }
     }
 
+    private function deleteDistributionRelease(Database $dbForPlatform, callable $getProjectDB, Document $release, Document $project): void
+    {
+        $dbForProject = $getProjectDB($project);
+        $schedules = new Schedules($dbForPlatform);
+
+        $this->listByGroup('distributionSubmissions', [
+            Query::equal('releaseInternalId', [$release->getSequence()]),
+        ], $dbForProject, function (Document $submission) use ($dbForProject, $schedules, $project) {
+            if (Submissions::isActive($submission->getAttribute('status', ''), (float) $submission->getAttribute('rollout', 1))) {
+                Console::warning('Keeping active submission ' . $submission->getId() . ' of a deleted release');
+                return;
+            }
+
+            $schedules->stop($project, SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_SUBMISSION, $submission->getId());
+            $dbForProject->deleteDocument('distributionSubmissions', $submission->getId());
+        });
+    }
+
+    private function deleteExpiredDistributionArtifacts(Database $dbForPlatform, Document $project, callable $getProjectDB, Device $deviceForDistribution, Builds $distributionBuilds, ?callable $locks): void
+    {
+        $dbForProject = $getProjectDB($project);
+        if ($dbForProject->findCollection('distributionArtifacts') === null) {
+            return;
+        }
+
+        Console::info('Delete expired distribution artifacts');
+
+        $abandoned = DateTime::addSeconds(new \DateTime(), -APP_STORAGE_UPLOAD_RETENTION);
+
+        $this->listByGroup('distributionArtifacts', [
+            Query::select(['$id', 'appId']),
+            Query::equal('status', [ArtifactStatus::Uploading->value]),
+            Query::updatedBefore($abandoned),
+        ], $dbForProject, function (Document $artifact) use ($dbForPlatform, $dbForProject, $project, $deviceForDistribution, $distributionBuilds, $locks, $abandoned) {
+            $deleteUpload = function (?Distributed $lock = null) use ($dbForPlatform, $dbForProject, $project, $deviceForDistribution, $distributionBuilds, $artifact, $abandoned): void {
+                // Re-read under the lock: a chunk may have landed since the listing.
+                $artifact = $dbForProject->getDocument('distributionArtifacts', $artifact->getId());
+                if (
+                    $artifact->isEmpty()
+                    || $artifact->getAttribute('status') !== ArtifactStatus::Uploading->value
+                    || \strtotime($artifact->getUpdatedAt()) >= \strtotime($abandoned)
+                ) {
+                    return;
+                }
+
+                if ($lock !== null && !$lock->refresh()) {
+                    return;
+                }
+
+                $this->deleteDistributionArtifact($dbForPlatform, $deviceForDistribution, $distributionBuilds, $artifact, $project);
+                $dbForProject->deleteDocument('distributionArtifacts', $artifact->getId());
+            };
+
+            if (\is_null($locks)) {
+                $deleteUpload();
+                return;
+            }
+
+            try {
+                // Same key as the upload endpoint, so a resuming chunk and the cleanup never interleave.
+                $locks('distribution:artifact:' . $project->getId() . ':' . $artifact->getAttribute('appId', '') . ':' . $artifact->getId(), 600, $deleteUpload);
+            } catch (LockContention) {
+                Console::info('Artifact upload in progress, skipping cleanup: ' . $artifact->getId());
+            }
+        });
+
+        $this->listByGroup('distributionArtifacts', [
+            Query::lessThan('expiresAt', DateTime::now()),
+            Query::notEqual('status', ArtifactStatus::Uploading->value),
+        ], $dbForProject, function (Document $artifact) use ($dbForPlatform, $dbForProject, $project, $deviceForDistribution, $distributionBuilds) {
+            $reference = Query::equal('artifactInternalId', [$artifact->getSequence()]);
+
+            if (
+                $dbForProject->count('distributionSubmissions', [$reference, Query::equal('status', Submissions::ACTIVE)], 1) > 0
+                || $dbForProject->count('distributionSubmissions', [$reference, Query::equal('status', [SubmissionStatus::Published->value]), Query::lessThan('rollout', 1.0)], 1) > 0
+            ) {
+                return;
+            }
+
+            $this->deleteDistributionArtifact($dbForPlatform, $deviceForDistribution, $distributionBuilds, $artifact, $project);
+            $dbForProject->deleteDocument('distributionArtifacts', $artifact->getId());
+        });
+    }
+
+    private function cancelDistributionJob(Builds $distributionBuilds, Document $subject): void
+    {
+        try {
+            $distributionBuilds->cancel($subject);
+        } catch (Throwable $th) {
+            Console::error('Failed to cancel distribution job of ' . $subject->getId() . ': ' . $th->getMessage());
+        }
+    }
+
+    private function deleteDistributionPath(Device $deviceForDistribution, string $path): void
+    {
+        try {
+            $deviceForDistribution->deletePath($path);
+        } catch (Throwable $th) {
+            Console::error('Failed to delete distribution path ' . $path . ': ' . $th->getMessage());
+        }
+    }
+
     /**
      * @param Database $dbForPlatform
      * @param callable $getProjectDB
@@ -2686,26 +2917,33 @@ class Deletes extends Action
     {
         $dbForProject = $getProjectDB($project);
 
-        // Cleanup sites and functions
-        foreach (['sites', 'functions'] as $collection) {
+        foreach (['sites', 'functions', 'distributionApps'] as $collection) {
             $this->listByGroup($collection, [
                 Query::equal('installationInternalId', [$installation->getSequence()])
-            ], $dbForProject, function ($document) use ($collection, $dbForProject, $dbForPlatform) {
+            ], $dbForProject, function (Document $document) use ($collection, $dbForProject, $dbForPlatform) {
                 $repositoryId = $document->getAttribute('repositoryId', '');
                 if (!empty($repositoryId)) {
                     $dbForPlatform->deleteDocument('repositories', $repositoryId);
                 }
 
-                $document = $document
-                    ->setAttribute('installationId', '')
-                    ->setAttribute('installationInternalId', '')
-                    ->setAttribute('providerRepositoryId', '')
-                    ->setAttribute('providerBranch', '')
-                    ->setAttribute('providerSilentMode', false)
-                    ->setAttribute('providerRootDirectory', '')
-                    ->setAttribute('repositoryId', '')
-                    ->setAttribute('repositoryInternalId', '');
-                $dbForProject->updateDocument($collection, $document->getId(), $document);
+                $changes = [
+                    'installationId' => '',
+                    'installationInternalId' => '',
+                    'providerRepositoryId' => '',
+                    'providerBranch' => '',
+                    'providerSilentMode' => false,
+                    'providerRootDirectory' => '',
+                    'repositoryId' => '',
+                    'repositoryInternalId' => '',
+                ];
+
+                if ($collection === 'distributionApps') {
+                    $changes['providerBranches'] = [];
+                    $changes['providerPaths'] = [];
+                    $changes['providerTags'] = [];
+                }
+
+                $dbForProject->updateDocument($collection, $document->getId(), new Document($changes));
             });
         }
     }

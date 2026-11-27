@@ -3,10 +3,14 @@
 namespace Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Applications\Edits\Bundles;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Locking\Lock;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Base;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Seeds\Stalls\Create as Stalls;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Seeds\Uploads\XList as Uploads;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use Swoole\Coroutine;
 use Utopia\Cache\Cache;
 use Utopia\System\System;
 use Utopia\Validator\Text;
@@ -37,10 +41,11 @@ class Update extends Base
             ->inject('request')
             ->inject('response')
             ->inject('cache')
+            ->inject('lock')
             ->callback($this->action(...));
     }
 
-    public function action(string $packageName, string $editId, Request $request, Response $response, Cache $cache): void
+    public function action(string $packageName, string $editId, Request $request, Response $response, Cache $cache, Lock $lock): void
     {
         $isDevelopment = System::getEnv('_APP_ENV', 'production') === 'development';
 
@@ -79,6 +84,7 @@ class Update extends Base
             $session['parts']++;
             $session['received'] += \strlen($body);
             $cache->save($key, $session, '', self::TTL);
+            $this->count($lock, $cache, $packageName, Uploads::BYTES, \strlen($body));
         }
 
         if ($session['received'] < $session['length']) {
@@ -130,7 +136,23 @@ class Update extends Base
             $cache->purge($this->key(self::RESOURCE_PART, $session['id'] . ':' . $part));
         }
 
+        $this->count($lock, $cache, $packageName, Uploads::COMPLETED, 1);
+        $this->stall($cache, $packageName);
+
         $response->json($bundle);
+    }
+
+    private function stall(Cache $cache, string $packageName): void
+    {
+        $key = $this->key(Stalls::RESOURCE, $packageName);
+        $seconds = $cache->load($key, self::TTL);
+
+        if (!\is_string($seconds) || !\ctype_digit($seconds)) {
+            return;
+        }
+
+        $cache->purge($key);
+        Coroutine::sleep((int) $seconds);
     }
 
     /**

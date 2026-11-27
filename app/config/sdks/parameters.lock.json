@@ -2009,6 +2009,21 @@
             "password",
             "profiles"
         ],
+        "distribution.createRelease": [
+            "appId",
+            "releaseId",
+            "version",
+            "notes"
+        ],
+        "distribution.createSubmission": [
+            "appId",
+            "releaseId",
+            "targetId",
+            "artifactId",
+            "track",
+            "automatic",
+            "key"
+        ],
         "distribution.createTarget": [
             "appId",
             "targetId",
@@ -2044,6 +2059,10 @@
         "distribution.deleteConnection": [
             "connectionId"
         ],
+        "distribution.deleteRelease": [
+            "appId",
+            "releaseId"
+        ],
         "distribution.deleteSigningIdentity": [
             "signingIdentityId"
         ],
@@ -2069,11 +2088,19 @@
         "distribution.getConnection": [
             "connectionId"
         ],
+        "distribution.getRelease": [
+            "appId",
+            "releaseId"
+        ],
         "distribution.getSigningIdentity": [
             "signingIdentityId"
         ],
         "distribution.getSigningIdentityDownload": [
             "signingIdentityId"
+        ],
+        "distribution.getSubmission": [
+            "appId",
+            "submissionId"
         ],
         "distribution.getTarget": [
             "appId",
@@ -2096,7 +2123,17 @@
             "queries",
             "total"
         ],
+        "distribution.listReleases": [
+            "appId",
+            "queries",
+            "total"
+        ],
         "distribution.listSigningIdentities": [
+            "queries",
+            "total"
+        ],
+        "distribution.listSubmissions": [
+            "appId",
             "queries",
             "total"
         ],
@@ -2128,10 +2165,26 @@
             "name",
             "serviceAccount"
         ],
+        "distribution.updateRelease": [
+            "appId",
+            "releaseId",
+            "version",
+            "notes"
+        ],
         "distribution.updateSigningIdentity": [
             "signingIdentityId",
             "name",
             "rotate"
+        ],
+        "distribution.updateSubmission": [
+            "appId",
+            "submissionId",
+            "automatic"
+        ],
+        "distribution.updateSubmissionStatus": [
+            "appId",
+            "submissionId",
+            "status"
         ],
         "distribution.updateTarget": [
             "appId",
@@ -6795,6 +6848,21 @@
             "password",
             "profiles"
         ],
+        "distribution.createRelease": [
+            "appId",
+            "releaseId",
+            "version",
+            "notes"
+        ],
+        "distribution.createSubmission": [
+            "appId",
+            "releaseId",
+            "targetId",
+            "artifactId",
+            "track",
+            "automatic",
+            "key"
+        ],
         "distribution.createTarget": [
             "appId",
             "targetId",
@@ -6830,6 +6898,10 @@
         "distribution.deleteConnection": [
             "connectionId"
         ],
+        "distribution.deleteRelease": [
+            "appId",
+            "releaseId"
+        ],
         "distribution.deleteSigningIdentity": [
             "signingIdentityId"
         ],
@@ -6855,11 +6927,19 @@
         "distribution.getConnection": [
             "connectionId"
         ],
+        "distribution.getRelease": [
+            "appId",
+            "releaseId"
+        ],
         "distribution.getSigningIdentity": [
             "signingIdentityId"
         ],
         "distribution.getSigningIdentityDownload": [
             "signingIdentityId"
+        ],
+        "distribution.getSubmission": [
+            "appId",
+            "submissionId"
         ],
         "distribution.getTarget": [
             "appId",
@@ -6882,7 +6962,17 @@
             "queries",
             "total"
         ],
+        "distribution.listReleases": [
+            "appId",
+            "queries",
+            "total"
+        ],
         "distribution.listSigningIdentities": [
+            "queries",
+            "total"
+        ],
+        "distribution.listSubmissions": [
+            "appId",
             "queries",
             "total"
         ],
@@ -6914,10 +7004,26 @@
             "name",
             "serviceAccount"
         ],
+        "distribution.updateRelease": [
+            "appId",
+            "releaseId",
+            "version",
+            "notes"
+        ],
         "distribution.updateSigningIdentity": [
             "signingIdentityId",
             "name",
             "rotate"
+        ],
+        "distribution.updateSubmission": [
+            "appId",
+            "submissionId",
+            "automatic"
+        ],
+        "distribution.updateSubmissionStatus": [
+            "appId",
+            "submissionId",
+            "status"
         ],
         "distribution.updateTarget": [
             "appId",
