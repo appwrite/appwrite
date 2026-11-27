@@ -34,10 +34,10 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { analyticsAttrs } from '@/lib/analytics-actions'
-import type { SSOProvider } from '@/lib/appwrite/team-sso'
+import { ssoRedirectURL, type SSOProvider } from '@/lib/appwrite/team-sso'
 import { useT } from '@/lib/i18n/translate'
 import {
-  teamSSOFor,
+  teamsFor,
   useDeleteSSOProvider,
   useSaveSSOProvider,
   useSSODomains,
@@ -518,7 +518,7 @@ function ProviderForm({
   const [submitted, setSubmitted] = useState(false)
 
   // The Console's callback, or the project's with its ID in it.
-  const redirectURL = teamSSOFor(target).redirectURL()
+  const redirectURL = ssoRedirectURL(teamsFor(target).client)
   // A team's role typed but not added yet goes with the save, when it is one.
   const pendingRole = forTeam ? roleDraft.trim() : ''
   const pendingRoleValid =

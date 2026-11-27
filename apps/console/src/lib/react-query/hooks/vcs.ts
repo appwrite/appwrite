@@ -69,15 +69,12 @@ export async function fetchReusableVcsInstallations(
   projectId: string,
 ): Promise<Models.Installation[]> {
   const projectSdk = sdk.forProject(projectId)
-  const { client } = projectSdk
   try {
     const [shared, own] = await Promise.all([
-      client.call(
-        'get',
-        new URL(`${client.config.endpoint}/vcs/installations`),
-        {},
-        { shared: true, queries: [Query.limit(100)] },
-      ) as Promise<Models.InstallationList>,
+      projectSdk.vcs.listInstallations({
+        shared: true,
+        queries: [Query.limit(100)],
+      }),
       projectSdk.vcs.listInstallations({ queries: [Query.limit(100)] }),
     ])
     // Only GitHub installations are shared. One account can be installed from several
@@ -504,13 +501,9 @@ export function useReuseVcsInstallation(projectId: string | null | undefined) {
 
   return useMutation({
     mutationFn: async (installationId: string) => {
-      const { client } = sdk.forProject(projectId!)
-      return (await client.call(
-        'post',
-        new URL(`${client.config.endpoint}/vcs/installations`),
-        { 'content-type': 'application/json' },
-        { installationId },
-      )) as Models.Installation
+      return await sdk
+        .forProject(projectId!)
+        .vcs.createInstallation({ installationId })
     },
     onSuccess: () => {
       queryClient.invalidateQueries({

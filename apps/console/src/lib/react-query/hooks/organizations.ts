@@ -22,11 +22,7 @@ import {
 import type { Organization } from '@/lib/utils/mock-data'
 import { listConsoleProjects } from '@/lib/appwrite/console-projects'
 import { sdk } from '@/lib/appwrite/sdk'
-import { updateReviewCredits } from '@/lib/appwrite/organization-review-credits'
-import {
-  type BudgetUpdate,
-  updateBudgetRecipients,
-} from '@/lib/appwrite/organization-budget'
+import type { BudgetUpdate } from '@/lib/appwrite/organization-budget'
 import { readMockLocaleCountryCookie } from '@/lib/locale/visitor-country'
 import {
   isStartPlanEligibleCountry,
@@ -1059,15 +1055,8 @@ export async function deleteOrganization(organizationId: string) {
  * @returns Updated organization
  */
 export async function updateOrganizationBudget(params: BudgetUpdate) {
-  const { notify, ...budget } = params
-  // Only a change of recipients sends `notify`: editions without them reject it.
-  if (notify !== undefined) {
-    return await updateBudgetRecipients(sdk.forConsole.client, {
-      ...budget,
-      notify,
-    })
-  }
-  return await sdk.forConsole.organizations.updateBudget(budget)
+  // `notify` is left out unless the recipients change: editions without them reject it.
+  return await sdk.forConsole.organizations.updateBudget(params)
 }
 
 /**
@@ -2510,7 +2499,7 @@ export function useUpdateOrganizationReviewCredits() {
 
   return useMutation({
     mutationFn: (params: { organizationId: string; overage: boolean }) =>
-      updateReviewCredits(sdk.forConsole.client, params),
+      sdk.forConsole.organizations.updateReviewCredits(params),
     onSuccess: async (_, variables) => {
       await queryClient.refetchQueries({
         queryKey: ['organization', variables.organizationId],

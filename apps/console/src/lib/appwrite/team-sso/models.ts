@@ -1,56 +1,19 @@
-/** An email domain an organization claimed for single sign-on. */
-export type SSODomain = {
-  $id: string
-  $createdAt: string
-  $updatedAt: string
-  teamId: string
-  domain: string
-  /** `unverified` until the TXT record is found, then `verified`. */
-  status: 'unverified' | 'verified'
-  /** TXT record that proves the organization owns the domain. */
-  recordName: string
-  recordValue: string
-}
+import type { Models } from '@appwrite.io/console'
 
-export type SSODomainList = {
-  total: number
-  domains: SSODomain[]
-}
+/** An email domain an organization claimed for single sign-on. */
+export type SSODomain = Models.SsoDomain
+
+export type SSODomainList = Models.SsoDomainList
 
 /** An organization's identity provider. The client secret never leaves the server. */
-export type SSOProvider = {
-  $id: string
-  $createdAt: string
-  $updatedAt: string
-  teamId: string
-  type: 'oidc'
-  name: string
-  /** Roles people get when they join through the provider. */
-  roles: string[]
-  enabled: boolean
-  oidcClientId: string
-  oidcClientSecretSet: boolean
-  oidcWellKnownURL: string
-  oidcAuthorizationURL: string
-  oidcTokenURL: string
-  oidcUserInfoURL: string
-}
+export type SSOProvider = Models.SsoProvider
 
-export type SSOProviderList = {
-  total: number
-  providers: SSOProvider[]
-}
+export type SSOProviderList = Models.SsoProviderList
 
 /** One way to sign in, as offered for an email on the sign-in page. */
-export type SSOSignInProvider = {
-  $id: string
-  name: string
-}
+export type SSOSignInProvider = Models.SsoSignInProvider
 
-export type SSOSignInProviderList = {
-  total: number
-  providers: SSOSignInProvider[]
-}
+export type SSOSignInProviderList = Models.SsoSignInProviderList
 
 export type OidcProviderParams = {
   name: string
