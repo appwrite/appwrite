@@ -5566,7 +5566,7 @@ dependencies = [
 
 [[package]]
 name = "utopia-queue"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "async-nats",
  "bytes",
