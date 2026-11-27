@@ -54,6 +54,11 @@ blowfish = { version = "0.9", features = ["bcrypt"] }
 # C brotli 1.2.1, built from source and linked statically: the library PHP's ext-brotli links.
 brotlic-sys = "0.2.5"
 bytes = "1"
+http-body-util = "0.1"
+# The Sentry transport (utopia-span): HTTP/1.1 client over rustls with the WebPKI roots.
+hyper = "1"
+hyper-rustls = { version = "0.27", default-features = false, features = ["http1", "ring", "tls12", "webpki-roots"] }
+hyper-util = "0.1"
 cc = "1"
 foldhash = "0.2"
 getrandom = "0.3"
@@ -108,6 +113,7 @@ lzma-rust2 = { version = "0.22", default-features = false, features = ["std", "e
 # library PHP loads with dlopen needs there.
 mimalloc = { version = "0.1.52", default-features = false, features = ["local_dynamic_tls"] }
 png = "0.18"
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
 thiserror = "2"
 tokio = { version = "1", features = ["time"] }
 # libzstd 1.5.7, built from source and linked statically, as PHP's ext-zstd links it. No
