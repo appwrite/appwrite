@@ -403,10 +403,10 @@ impl Sentry {
         let handled = get("span.handled").as_bool();
         let mut payload = vec![
             ("level", Php::from(SentryLevel::from_span(level).as_str())),
-            ("platform", Php::from("php")),
+            ("platform", Php::from("native")),
             (
                 "sdk",
-                object(vec![("name", Php::from("utopia-php/span")), ("version", Php::from(env!("CARGO_PKG_VERSION")))]),
+                object(vec![("name", Php::from("utopia-span")), ("version", Php::from(env!("CARGO_PKG_VERSION")))]),
             ),
             ("start_timestamp", Php::Float(started)),
             ("timestamp", Php::Float(finished)),

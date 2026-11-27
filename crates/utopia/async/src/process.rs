@@ -36,13 +36,17 @@ type Process = <Engine as Adapter>::Child;
 #[derive(Debug)]
 pub struct Command {
     inner: Spawn,
+    // Which standard streams were set, so [`Command::output`] fills in only the rest.
+    stdin: bool,
+    stdout: bool,
+    stderr: bool,
 }
 
 impl Command {
     /// A command running `program` (looked up in `PATH` when it has no
     /// slash).
     pub fn new(program: impl AsRef<OsStr>) -> Command {
-        Command { inner: adapter::Command::new(program.as_ref()) }
+        Command { inner: adapter::Command::new(program.as_ref()), stdin: false, stdout: false, stderr: false }
     }
 
     fn std(&mut self) -> &mut std::process::Command {
@@ -102,18 +106,21 @@ impl Command {
 
     /// What the process reads as standard input.
     pub fn stdin(&mut self, stdin: impl Into<Stdio>) -> &mut Command {
+        self.stdin = true;
         self.std().stdin(stdin);
         self
     }
 
     /// Where the process's standard output goes.
     pub fn stdout(&mut self, stdout: impl Into<Stdio>) -> &mut Command {
+        self.stdout = true;
         self.std().stdout(stdout);
         self
     }
 
     /// Where the process's standard error goes.
     pub fn stderr(&mut self, stderr: impl Into<Stdio>) -> &mut Command {
+        self.stderr = true;
         self.std().stderr(stderr);
         self
     }
@@ -140,12 +147,21 @@ impl Command {
         })
     }
 
-    /// Runs the process to its end, collecting its output (standard output
-    /// and error are piped unless configured otherwise).
+    /// Runs the process to its end, collecting its output. Standard output and
+    /// error are piped and standard input is closed, unless set otherwise, as
+    /// in [`std::process::Command::output`].
     ///
     /// PHP: `Swoole\Coroutine\System::exec()`.
     pub async fn output(&mut self) -> io::Result<Output> {
-        self.stdout(Stdio::piped()).stderr(Stdio::piped());
+        if !self.stdin {
+            self.std().stdin(Stdio::null());
+        }
+        if !self.stdout {
+            self.std().stdout(Stdio::piped());
+        }
+        if !self.stderr {
+            self.std().stderr(Stdio::piped());
+        }
         self.spawn()?.wait_with_output().await
     }
 

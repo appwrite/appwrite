@@ -375,6 +375,14 @@ async fn processes_pipe_and_exit() {
     let output = output.unwrap();
     assert_eq!((output.status.code(), output.stderr.as_slice()), (Some(3), &b"hi\n"[..]));
 
+    // output() closes standard input, so `cat` ends instead of waiting on ours.
+    let output = utopia_async::timeout(Duration::from_secs(5), Command::new("cat").output()).await;
+    assert_eq!(output.unwrap().unwrap().stdout, b"");
+
+    // A stream set before output() stays as set.
+    let output = Command::new("echo").arg("discarded").stdout(Stdio::null()).output().await.unwrap();
+    assert_eq!(output.stdout, b"");
+
     let mut sleeper = Command::new("sleep").arg("30").kill_on_drop(true).spawn().unwrap();
     assert!(sleeper.try_wait().unwrap().is_none());
     sleeper.kill().await.unwrap();
