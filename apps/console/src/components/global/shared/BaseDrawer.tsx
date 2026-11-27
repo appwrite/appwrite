@@ -26,6 +26,11 @@ export interface BaseDrawerProps {
   maxWidth?: string
   side?: 'right' | 'left' | 'top' | 'bottom'
   disableAutoFocus?: boolean
+  /**
+   * Pressing outside closes the drawer unless this prevents it, e.g. on a
+   * list row that opens its own details in the drawer.
+   */
+  onPointerDownOutside?: (event: Event & { target: EventTarget | null }) => void
 }
 
 export function BaseDrawer({
@@ -40,6 +45,7 @@ export function BaseDrawer({
   maxWidth = 'sm:max-w-lg',
   side = 'right',
   disableAutoFocus = false,
+  onPointerDownOutside,
 }: BaseDrawerProps) {
   const t = useT()
   const contentRef = React.useRef<HTMLDivElement>(null)
@@ -94,6 +100,7 @@ export function BaseDrawer({
         )}
         side={side}
         showCloseButton={false}
+        onPointerDownOutside={onPointerDownOutside}
         tabIndex={disableAutoFocus ? -1 : undefined}
         onOpenAutoFocus={
           disableAutoFocus
