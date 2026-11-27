@@ -2311,4 +2311,12 @@ export const heDatabasesDictionary: Record<string, string> = {
     'שחזור לנקודת זמן זמין במסדי נתונים ייעודיים',
   'Upgrade this database to a dedicated specification to restore it to any moment within a retention window.':
     'שדרגו את מסד הנתונים למפרט ייעודי כדי לשחזר אותו לכל רגע בתוך חלון השמירה.',
+  'Downgrade':
+    'שנמוך',
+  'Storage stays at {storage} GB, billed at {cost} per month above this tier.':
+    'האחסון נשאר {storage} GB, והחלק שמעבר לשכבה הזו מחויב ב-{cost} לחודש.',
+  'Dedicated database additional storage':
+    'אחסון נוסף למסד נתונים ייעודי',
+  'Storage provisioned beyond the tier allowance, such as storage kept after a downgrade.':
+    'אחסון שהוקצה מעבר למכסת השכבה, למשל אחסון שנשמר אחרי שנמוך.',
 }

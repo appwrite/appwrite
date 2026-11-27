@@ -2246,4 +2246,12 @@ export const jaDatabasesDictionary: Record<string, string> = {
     'ポイントインタイムリカバリは専用データベースで利用できます',
   'Upgrade this database to a dedicated specification to restore it to any moment within a retention window.':
     '保持期間内の任意の時点へ復元するには、このデータベースを専用スペックにアップグレードしてください。',
+  'Downgrade':
+    'ダウングレード',
+  'Storage stays at {storage} GB, billed at {cost} per month above this tier.':
+    'ストレージは {storage} GB のまま維持され、このティアを超える分は月額 {cost} で請求されます。',
+  'Dedicated database additional storage':
+    '専用データベースの追加ストレージ',
+  'Storage provisioned beyond the tier allowance, such as storage kept after a downgrade.':
+    'ティアの割り当てを超えてプロビジョニングされたストレージ (ダウングレード後に維持されたストレージなど)。',
 }

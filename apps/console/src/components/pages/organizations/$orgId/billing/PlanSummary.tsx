@@ -750,6 +750,7 @@ function BillingDedicatedDbMetricRow({
   currency: string
   item: DedicatedDbBillingSpecGroup['items'][number]
 }) {
+  const t = useT()
   const usageLabel = formatDedicatedDbBillingUsageLabel(
     item.usage,
     item.metricId,
@@ -763,7 +764,7 @@ function BillingDedicatedDbMetricRow({
   return (
     <div className="flex items-center justify-between gap-4 px-3 py-1.5">
       <span className="text-[11px] text-muted-foreground truncate">
-        {item.metricLabel}
+        {t(item.metricLabel)}
       </span>
       <div className="flex items-center gap-4 shrink-0">
         {usageDescription ? (
@@ -775,7 +776,7 @@ function BillingDedicatedDbMetricRow({
                 </span>
               </TooltipTrigger>
               <TooltipContent side="top" className="max-w-[240px]">
-                <p className="text-[12px]">{usageDescription}</p>
+                <p className="text-[12px]">{t(usageDescription)}</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>

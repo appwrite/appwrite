@@ -102,6 +102,7 @@ function getBillingResourceLabel(
 export const DEDICATED_DB_BILLING_METRIC_IDS = [
   'dedicatedDbSpecificationCost',
   'dedicatedDbStorage',
+  'dedicatedDbAutoscaledStorage',
   'dedicatedDbBandwidth',
   'dedicatedDbHaReplica',
   // Cloud aggregations currently emit `dedicatedDbReplica.*` (not HaReplica).
@@ -143,6 +144,14 @@ const DEDICATED_DB_PROJECT_RESOURCES: Record<
     name: 'Dedicated database storage',
     format: 'bytes',
     planKey: 'dedicatedDbStorage',
+    category: 'dedicated-databases',
+    showLimit: false,
+    showOnlyWhenUsed: true,
+  },
+  dedicatedDbAutoscaledStorage: {
+    name: 'Dedicated database additional storage',
+    format: 'bytes',
+    planKey: 'dedicatedDbAutoscaledStorage',
     category: 'dedicated-databases',
     showLimit: false,
     showOnlyWhenUsed: true,
@@ -320,6 +329,9 @@ function formatDedicatedDbEngineLabel(engine: string): string {
   if (normalized === 'mysql') return 'MySQL'
   if (normalized === 'mariadb') return 'MariaDB'
   if (normalized === 'mongodb') return 'MongoDB'
+  if (normalized === 'tablesdb') return 'TablesDB'
+  if (normalized === 'documentsdb') return 'DocumentsDB'
+  if (normalized === 'vectorsdb') return 'VectorsDB'
   if (!normalized) return 'Database'
   return normalized.charAt(0).toUpperCase() + normalized.slice(1)
 }
@@ -429,6 +441,7 @@ const DEDICATED_DB_BILLING_METRIC_SHORT_LABELS: Record<
 > = {
   dedicatedDbSpecificationCost: 'Compute',
   dedicatedDbStorage: 'Storage',
+  dedicatedDbAutoscaledStorage: 'Additional storage',
   dedicatedDbBandwidth: 'Bandwidth',
   dedicatedDbHaReplica: 'HA replicas',
   dedicatedDbReplica: 'Replicas',
@@ -507,6 +520,9 @@ export function getDedicatedDbBillingUsageDescription(
   if (formatType === 'bytes') {
     if (metricId === 'dedicatedDbStorage') {
       return 'Additional storage used beyond the tier allowance.'
+    }
+    if (metricId === 'dedicatedDbAutoscaledStorage') {
+      return 'Storage provisioned beyond the tier allowance, such as storage kept after a downgrade.'
     }
     if (metricId === 'dedicatedDbBandwidth') {
       return 'Network egress for this database tier.'
@@ -957,9 +973,8 @@ export function buildOrganizationUsageCategoriesFromAggregation(
       category: mapping.category,
     }
     if (resourceId === 'storage') {
-      const storageBreakdown = getBillingStorageBreakdownFromResources(
-        aggregationResources,
-      )
+      const storageBreakdown =
+        getBillingStorageBreakdownFromResources(aggregationResources)
       if (storageBreakdown.length > 0) {
         item.storageBreakdown = storageBreakdown
       }

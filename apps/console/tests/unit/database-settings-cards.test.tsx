@@ -78,6 +78,29 @@ mock.module('@/lib/appwrite/sdk', () => ({
   },
 }))
 
+function specification(
+  slug: string,
+  name: string,
+  price: number,
+  includedStorage: number,
+) {
+  return {
+    slug,
+    name,
+    price,
+    storageOverageRate: 0.25,
+    bandwidthOverageRate: 0,
+    replicaRate: 0.5,
+    pitrRate: 0.2,
+    cpu: 2000,
+    memory: 4096,
+    maxConnections: 200,
+    includedStorage,
+    includedBandwidth: 0,
+    enabled: true,
+  }
+}
+
 const consoleProfilePath = join(consoleRoot, 'src/hooks/use-console-profile.ts')
 const hooksPath = join(consoleRoot, 'src/lib/react-query/hooks/index.ts')
 const realConsoleProfile = { ...actualConsoleProfile }
@@ -90,26 +113,17 @@ mock.module(hooksPath, () => ({
   ...actualHooks,
   useProject: () => ({ project: { teamId: 'team1', region: 'fra' } }),
   useOrganizationPlan: () => ({
-    plan: { dedicatedDatabases: { maxPitrRetentionDays: 35 } },
+    plan: {
+      supportsDedicatedDatabases: true,
+      dedicatedDatabases: { maxPitrRetentionDays: 35 },
+    },
   }),
   useDatabaseSpecifications: () => ({
     data: {
       specifications: [
-        {
-          slug: 's-2vcpu-4gb',
-          name: 'Standard Plus',
-          price: 40,
-          storageOverageRate: 0.25,
-          bandwidthOverageRate: 0,
-          replicaRate: 0.5,
-          pitrRate: 0.2,
-          cpu: 2000,
-          memory: 4096,
-          maxConnections: 200,
-          includedStorage: 50,
-          includedBandwidth: 0,
-          enabled: true,
-        },
+        specification('s-1vcpu-1gb', 'Starter', 10, 10),
+        specification('s-2vcpu-4gb', 'Standard Plus', 40, 50),
+        specification('s-4vcpu-8gb', 'Pro', 80, 100),
       ],
       pricing: { replicaRate: 0.5, pitrRate: 0.2 },
     },
@@ -122,6 +136,9 @@ const { DatabaseNameCard } = await import(
 )
 const { DatabasePitrCard } = await import(
   join(settingsDir, 'DatabasePitrCard.tsx')
+)
+const { DatabaseSpecificationCard } = await import(
+  join(settingsDir, 'DatabaseSpecificationCard.tsx')
 )
 const { TooltipProvider } = await import(
   join(consoleRoot, 'src/components/ui/tooltip.tsx')
@@ -250,5 +267,69 @@ describe('DatabasePitrCard', () => {
       view.getByText('Retention must be between 1 and 35 days.'),
     ).toBeTruthy()
     expect(view.getByText('Update').closest('button')?.disabled).toBe(true)
+  })
+})
+
+describe('DatabaseSpecificationCard', () => {
+  function renderCard(dbKind: string, storage: number | null) {
+    return wrap(
+      createElement(DatabaseSpecificationCard, {
+        projectId: PROJECT_ID,
+        databaseId: DATABASE_ID,
+        dbKind,
+        database: {
+          ...database,
+          specification: 's-2vcpu-4gb',
+          storage,
+        },
+        canWrite: true,
+      }),
+    )
+  }
+
+  test('offers lower tiers as a downgrade that keeps the storage', async () => {
+    const view = renderCard('vectorsdb', 200)
+
+    expect(view.getAllByText('Downgrade')).toHaveLength(1)
+    expect(view.getAllByText('Upgrade')).toHaveLength(1)
+    expect(
+      view.getByText(
+        'Storage stays at 200 GB, billed at $47.50 per month above this tier.',
+      ),
+    ).toBeTruthy()
+    expect(
+      view.getByText(
+        'Storage stays at 200 GB, billed at $25.00 per month above this tier.',
+      ),
+    ).toBeTruthy()
+
+    fireEvent.click(view.getByText('Downgrade'))
+
+    await waitFor(() => expect(calls.length).toBeGreaterThan(0))
+    expect(calls[0]).toEqual({
+      service: 'vectorsDB',
+      method: 'update',
+      params: {
+        databaseId: DATABASE_ID,
+        name: 'Orders',
+        enabled: false,
+        specification: 's-1vcpu-1gb',
+      },
+    })
+  })
+
+  test('never offers to move a dedicated database back to serverless', () => {
+    const view = renderCard('tablesdb', 50)
+
+    expect(view.getByText('Serverless')).toBeTruthy()
+    expect(view.getAllByText('Downgrade')).toHaveLength(1)
+    expect(view.getAllByText(/Storage stays at/)).toHaveLength(1)
+  })
+
+  test('shows no storage charge when the database storage is unknown', () => {
+    const view = renderCard('vectorsdb', null)
+
+    expect(view.getAllByText('Downgrade')).toHaveLength(1)
+    expect(view.queryByText(/Storage stays at/)).toBeNull()
   })
 })
