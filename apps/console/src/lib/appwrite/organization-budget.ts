@@ -1,16 +1,13 @@
 /**
  * Budget alert recipients exist only in editions that add them: those
  * return `budgetNotify` on the organization and take `notify` on the budget
- * route. The generated `updateBudget` drops parameters it does not know, so
- * a change of recipients goes through `client.call` instead.
+ * route, so `notify` is only sent when the recipients change.
  */
-
-import type { Client, Models } from '@appwrite.io/console'
 
 export type BudgetUpdate = {
   organizationId: string
-  /** null removes the cap; 0 is a $0 cap. */
-  budget?: number | null
+  /** null removes the cap; 0 is a $0 cap. Always sent: the SDK requires it. */
+  budget: number | null
   alerts?: number[]
   /** Organization roles emailed when a budget alert fires. */
   notify?: string[]
@@ -38,24 +35,4 @@ export function changedBudgetRecipients(
     next.length === current.length &&
     next.every((role) => current.includes(role))
   return unchanged ? null : [...next]
-}
-
-export function updateBudgetRecipients(
-  client: Client,
-  params: BudgetUpdate & { notify: string[] },
-): Promise<Models.Organization<Models.Preferences>> {
-  const { organizationId, ...payload } = params
-  const uri = new URL(
-    `${client.config.endpoint}/organizations/${encodeURIComponent(organizationId)}/budget`,
-  )
-  return client.call(
-    'patch',
-    uri,
-    {
-      'X-Appwrite-Project': client.config.project,
-      'content-type': 'application/json',
-      accept: 'application/json',
-    },
-    payload,
-  ) as Promise<Models.Organization<Models.Preferences>>
 }

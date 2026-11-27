@@ -4,13 +4,13 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query'
+import type { Teams } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import type {
   OidcProviderParams,
   SSODomain,
   SSODomainList,
   SSOProviderList,
-  TeamSSO,
 } from '@/lib/appwrite/team-sso'
 import {
   ssoQueryKey,
@@ -23,14 +23,14 @@ import { organizationQueryOptions } from './organizations'
 import { useTeam } from './users'
 
 /**
- * The single sign-on client for `target`: the Console's for an organization,
- * the project's (admin mode, the project's ID in `X-Appwrite-Project`) for a
- * team of a project.
+ * The Teams service whose single sign-on routes `target` uses: the Console's
+ * for an organization, the project's (admin mode, the project's ID in
+ * `X-Appwrite-Project`) for a team of a project.
  */
-export function teamSSOFor(target: SSOTarget): TeamSSO {
+export function teamsFor(target: SSOTarget): Teams {
   return target.scope === 'organization'
-    ? sdk.forConsole.teamSSO
-    : sdk.forProject(target.projectId).teamSSO
+    ? sdk.forConsole.teams
+    : sdk.forProject(target.projectId).teams
 }
 
 /** The team the routes are called on; refuses a target with no ID. */
@@ -56,7 +56,7 @@ function organizationTarget(
 export async function fetchSSODomains(
   target: SSOTarget,
 ): Promise<SSODomainList> {
-  return teamSSOFor(target).listDomains(requireTeamId(target))
+  return teamsFor(target).listSSODomains({ teamId: requireTeamId(target) })
 }
 
 export function ssoDomainsQueryOptions(target: SSOTarget | null) {
@@ -108,10 +108,10 @@ export function useCreateSSODomain(target: SSOTarget) {
   const refresh = useRefreshSSODomains(target)
   return useMutation({
     mutationFn: ({ domain }: { domain: string }) =>
-      teamSSOFor(target).createDomain(
-        requireTeamId(target),
-        domain.trim().toLowerCase(),
-      ),
+      teamsFor(target).createSSODomain({
+        teamId: requireTeamId(target),
+        domain: domain.trim().toLowerCase(),
+      }),
     onSuccess: refresh,
   })
 }
@@ -121,7 +121,10 @@ export function useVerifySSODomain(target: SSOTarget) {
   const refresh = useRefreshSSODomains(target)
   return useMutation({
     mutationFn: (domainId: string): Promise<SSODomain> =>
-      teamSSOFor(target).updateDomainStatus(requireTeamId(target), domainId),
+      teamsFor(target).updateSSODomainStatus({
+        teamId: requireTeamId(target),
+        domainId,
+      }),
     onSettled: refresh,
   })
 }
@@ -130,7 +133,10 @@ export function useDeleteSSODomain(target: SSOTarget) {
   const refresh = useRefreshSSODomains(target)
   return useMutation({
     mutationFn: (domainId: string) =>
-      teamSSOFor(target).deleteDomain(requireTeamId(target), domainId),
+      teamsFor(target).deleteSSODomain({
+        teamId: requireTeamId(target),
+        domainId,
+      }),
     onSuccess: refresh,
   })
 }
@@ -140,7 +146,7 @@ export function ssoProvidersQueryOptions(target: SSOTarget | null) {
   return queryOptions({
     queryKey: ssoQueryKey('ssoProviders', target),
     queryFn: (): Promise<SSOProviderList> =>
-      teamSSOFor(target!).listProviders(requireTeamId(target!)),
+      teamsFor(target!).listSSOProviders({ teamId: requireTeamId(target!) }),
     enabled: !!target && !!ssoTargetTeamId(target),
     staleTime: LONG_STALE_TIME,
   })
@@ -194,12 +200,16 @@ export function useSaveSSOProvider(target: SSOTarget) {
       params: OidcProviderParams
     }) =>
       providerId
-        ? teamSSOFor(target).updateOidcProvider(
-            requireTeamId(target),
+        ? teamsFor(target).updateOidcSsoProvider({
+            teamId: requireTeamId(target),
             providerId,
-            params,
-          )
-        : teamSSOFor(target).createOidcProvider(requireTeamId(target), params),
+            ...params,
+          })
+        : teamsFor(target).createOidcSsoProvider({
+            teamId: requireTeamId(target),
+            ...params,
+            clientSecret: params.clientSecret ?? '',
+          }),
     onSuccess: refresh,
   })
 }
@@ -208,7 +218,10 @@ export function useDeleteSSOProvider(target: SSOTarget) {
   const refresh = useRefreshSSOProviders(target)
   return useMutation({
     mutationFn: (providerId: string) =>
-      teamSSOFor(target).deleteProvider(requireTeamId(target), providerId),
+      teamsFor(target).deleteSSOProvider({
+        teamId: requireTeamId(target),
+        providerId,
+      }),
     onSuccess: refresh,
   })
 }
@@ -243,7 +256,10 @@ export function useRequireSSO(target: SSOTarget) {
   const documentKey = ssoTeamQueryKey(target)
   return useMutation({
     mutationFn: (required: boolean) =>
-      teamSSOFor(target).updateRequired(requireTeamId(target), required),
+      teamsFor(target).updateSSORequired({
+        teamId: requireTeamId(target),
+        required,
+      }),
     onSuccess: (team) => {
       queryClient.setQueryData(
         documentKey,
