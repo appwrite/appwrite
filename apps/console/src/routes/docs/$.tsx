@@ -77,7 +77,11 @@ export const Route = createFileRoute('/docs/$')({
         return new Response(markdown, {
           headers: {
             'Content-Type': 'text/markdown; charset=utf-8',
-            'Cache-Control': 'public, max-age=3600',
+            // A shared cache would hand a preview reader's copy of Monitors
+            // docs to readers without the preview.
+            'Cache-Control': isMonitorsDocsSlug(slug)
+              ? 'private, no-store'
+              : 'public, max-age=3600',
           },
         })
       },

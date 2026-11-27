@@ -414,6 +414,10 @@ Each monitor ID must be unique in the project, and up to 36 characters long. Pas
 
 To read monitors back, call `list` with [queries](/docs/products/databases/tablesdb/queries) or `get` with a monitor ID. Both need the `monitors.read` scope. `updateUsageMonitor` changes only the parameters you pass, including `enabled` to pause or resume a monitor, and `delete` removes one. Both need `monitors.write`. Deleting a monitor resolves its open alert and keeps its alert history.
 
+# Budget alerts {% #budget-alerts %}
+
+Usage monitors watch a single project. To be warned about your organization's spending on Appwrite Cloud, open the organization's **Billing** page, turn on **Budget cap**, and add percentages of the cap under **Billing alerts**. When this billing cycle's additional usage passes one of them, and again when it reaches the cap, Appwrite notifies the roles you choose there, owners and billing members by default. Budget alerts belong to the organization, so they don't appear on a project's **Monitors** page. Learn more in [Budget cap](/docs/advanced/billing/payments#budget-cap).
+
 {% arrow_link href="/docs/products/monitors/alerts" %}
 Configure alert delivery
 {% /arrow_link %}

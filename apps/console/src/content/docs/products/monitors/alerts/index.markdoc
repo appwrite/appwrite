@@ -339,7 +339,7 @@ To tell the `update` cases apart, read the alert's fields:
 | `value`, `peak` | A usage monitor's latest reading, and the reading furthest past the threshold. |
 | `result` | Why an endpoint check failed, such as `timeout`, `status_mismatch`, `tls_expiring`, or `rule_matched`. |
 | `latency` | An endpoint check's latest response time, in milliseconds. |
-| `notifications` | How many times your team was notified about the alert. |
+| `notifications` | `1` once Appwrite announced the alert to your team. `0` if the monitor notifies no one, or while the monitor's cooldown holds the announcement back. An escalation counts once, when it starts, even if its first step waits. Later steps and the resolve notification don't count. |
 
 ## Act on alerts with a function {% #act-on-alerts-with-a-function %}
 
