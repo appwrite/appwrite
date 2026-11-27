@@ -451,6 +451,9 @@ class Get extends Base
                         $failureRedirect(Exception::GENERAL_BAD_REQUEST);
                     }
                     $user->setAttributes($userWithEmail->getArrayCopy());
+                    if (!$this->canAdoptByEmail($user)) {
+                        $failureRedirect(Exception::USER_MORE_FACTORS_REQUIRED);
+                    }
                     // The provider verified this address, or its canonical form on the same domain
                     if ((new Email($user->getAttribute('email')))->getDomain() === (new Email($providerEmail))->getDomain()) {
                         // Proving an unverified address claims the account, so whoever registered it keeps no other way in.
@@ -497,6 +500,9 @@ class Get extends Base
                         $failureRedirect(Exception::GENERAL_BAD_REQUEST);
                     }
                     $user->setAttributes($dbForProject->getDocument('users', $identityWithMatchingEmail->getAttribute('userId'))->getArrayCopy());
+                    if (!$this->canAdoptByEmail($user)) {
+                        $failureRedirect(Exception::USER_MORE_FACTORS_REQUIRED);
+                    }
                     $grounds = ['identities' => $identityWithMatchingEmail->getId()];
                 }
             }
