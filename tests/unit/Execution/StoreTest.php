@@ -452,7 +452,7 @@ final class StoreTest extends TestCase
             insertBuffer: 1500,
         );
 
-        $store->upsert('project', new Document(['$id' => 'first', 'resourceType' => 'functions', 'status' => 'waiting']));
+        $store->upsert('project', new Document(['$id' => 'first', 'resourceType' => 'functions', 'status' => 'completed']));
         $store->delete('project', new Document(['$id' => 'first', 'resourceType' => 'functions']));
 
         $this->assertCount(2, $client->requests);
@@ -464,6 +464,31 @@ final class StoreTest extends TestCase
             $this->assertSame('0', $parameters['async_insert_use_adaptive_busy_timeout'] ?? null);
             $this->assertSame('1500', $parameters['async_insert_busy_timeout_max_ms'] ?? null);
         }
+    }
+
+    public function testFirstSnapshotBypassesInsertBuffer(): void
+    {
+        $client = new CapturingClient();
+        $store = new Store(
+            dsn: 'http://appwrite:secret@clickhouse:8123/appwrite',
+            client: $client,
+            insertBuffer: 500,
+        );
+
+        $store->upsert('project', new Document(['$id' => 'queued', 'resourceType' => 'functions', 'status' => 'waiting']));
+        $store->upsert('project', new Document(['$id' => 'later', 'resourceType' => 'functions', 'status' => 'scheduled']));
+        $store->upsertMany('project', [
+            new Document(['$id' => 'queued', 'resourceType' => 'functions', 'status' => 'waiting']),
+            new Document(['$id' => 'done', 'resourceType' => 'functions', 'status' => 'completed']),
+        ]);
+
+        $this->assertCount(3, $client->requests);
+        $modes = \array_map(function ($request) {
+            \parse_str($request->getUri()->getQuery(), $parameters);
+            return $parameters['async_insert'] ?? null;
+        }, $client->requests);
+        // A batch with any later snapshot keeps the buffer.
+        $this->assertSame(['0', '0', '1'], $modes);
     }
 
     public function testWriteFailuresPropagate(): void
