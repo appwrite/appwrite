@@ -229,7 +229,7 @@ curl -X PATCH \
 
 You can upgrade a database to a newer PostgreSQL major version online. Appwrite supports PostgreSQL 17, 18, and 19. The target version must be higher than the current one, and an upgrade cannot be reversed.
 
-A second instance is provisioned on the target version, data streams over with logical replication, and traffic cuts over once replication has caught up. Reads continue throughout. At the cutover the old instance is fenced read-only and existing client connections are closed, so writes pause for that moment and the application has to reconnect. The database reports `upgrading` while the upgrade runs and returns to `ready` when the cutover finishes.
+A second instance is provisioned on the target version, data streams over with logical replication, and traffic cuts over once replication has caught up. The current instance keeps serving reads and writes while data streams over. At the cutover the old instance is fenced read-only, existing client connections are closed, and new connections are refused until traffic moves to the new instance, so queries pause for that moment and the application has to reconnect. The hostname and credentials stay the same. If replication can't catch up, the cutover is cancelled and the current instance keeps serving. The database reports `upgrading` while the upgrade runs and returns to `ready` when the cutover finishes.
 
 In the Console, open your database's **Settings** > **General**. The **Version** card lists the current version and every newer supported version. Click **Upgrade** next to the target version, review the notes, and click **Upgrade** again to confirm. The database must be `ready` to start an upgrade.
 

@@ -5,7 +5,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
   {
     "slug": "announcing-postgresql-19",
     "href": "/blog/post/announcing-postgresql-19",
-    "title": "Announcing managed PostgreSQL 19 on Appwrite Cloud",
+    "title": "Managed PostgreSQL 19 is now available on Appwrite Cloud",
     "description": "New Appwrite managed PostgreSQL databases now run PostgreSQL 19, and existing PostgreSQL 17 and 18 databases upgrade to it online from the Console or API.",
     "date": "2026-11-27",
     "lastUpdated": "2026-11-27",
@@ -13,6 +13,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "author": "jake-barnby",
     "category": "announcements",
     "featured": false,
+    "unlisted": false,
     "cover": "/images/blog/announcing-postgresql-19/cover.avif",
     "hasCover": true
   },

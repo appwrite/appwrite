@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "Announcing managed PostgreSQL 19 on Appwrite Cloud"
+title: "Managed PostgreSQL 19 is now available on Appwrite Cloud"
 description: New Appwrite managed PostgreSQL databases now run PostgreSQL 19, and existing PostgreSQL 17 and 18 databases upgrade to it online from the Console or API.
 date: 2026-11-27
 cover: /images/blog/announcing-postgresql-19/cover.avif
@@ -8,13 +8,14 @@ timeToRead: 6
 author: jake-barnby
 category: announcements
 featured: false
+unlisted: false
 faqs:
   - question: "Does Appwrite support PostgreSQL 19?"
     answer: "Yes. Appwrite Cloud supports PostgreSQL 19 for managed PostgreSQL databases, and new databases run it by default. PostgreSQL 18 and 17 are also supported. See [supported versions](/docs/products/databases/postgresql#versions)."
   - question: "How do I upgrade an Appwrite PostgreSQL database to PostgreSQL 19?"
     answer: "In the Console, open the database's **Settings** > **General**, click **Upgrade** next to PostgreSQL 19 in the **Version** card, and confirm. From a Server SDK, call `createUpgrade` with `targetVersion` set to `'19'`. See [engine version upgrades](/docs/products/databases/postgresql/maintenance#upgrades)."
   - question: "Is there downtime when upgrading to PostgreSQL 19?"
-    answer: "Reads continue throughout the upgrade. At the cutover, the old instance is fenced read-only and open connections are closed, so writes pause for a moment and your application has to reconnect."
+    answer: "Your database keeps serving reads and writes while your data copies to the new instance. At the cutover, the old instance is fenced read-only and open connections are closed, so queries pause for a moment and your application has to reconnect. The hostname and credentials stay the same."
   - question: "Can I downgrade from PostgreSQL 19 to PostgreSQL 18?"
     answer: "No. An upgrade can't be reversed, so take a [manual backup](/docs/products/databases/postgresql/backups#manual) and test your application against a PostgreSQL 19 database before you upgrade production."
   - question: "Can I still create a PostgreSQL 18 or 17 database on Appwrite?"
@@ -32,7 +33,7 @@ The PostgreSQL Global Development Group [released PostgreSQL 19](https://www.pos
 - **PostgreSQL 19 by default.** New [managed PostgreSQL databases](/docs/products/databases/postgresql) run PostgreSQL 19 unless you pass a different `version` when you create them.
 - **Upgrades from the Console.** A new **Version** card under **Settings** > **General** lists every newer supported version with an **Upgrade** button. Until now, upgrades were only available through the API.
 - **The same upgrade through the API.** `createUpgrade` with `targetVersion` set to `'19'` runs the same online upgrade from a Server SDK or a script.
-- **Reads during the upgrade.** Your data streams to a new instance with logical replication while the current one keeps serving reads. Writes pause only at the cutover.
+- **Reads and writes continue during the copy.** Your data streams to a new instance with logical replication while the current one keeps serving traffic. Queries pause only at the cutover, when connections close.
 - **PostgreSQL 17 and 18 stay supported.** Existing databases keep their version until you upgrade them, and you can still create a database on 18 or 17.
 
 # Create a PostgreSQL 19 database
@@ -44,7 +45,7 @@ New databases get PostgreSQL 19 with no extra step:
 
 ![PostgreSQL selected under Native databases in the Create database flow](/images/blog/announcing-postgresql-19/create-database.avif)
 
-3. Under **Specifications**, pick a tier, then review the summary and click **Create database**.
+3. Under **Name your database**, keep the generated name or enter your own, then pick a tier under **Specifications**. Review the summary and click **Create database**.
 
 Once the database reports `ready`, connect with `psql` or the SQL editor in the Console and confirm the version:
 
@@ -56,7 +57,7 @@ SHOW server_version;
 
 # Upgrade an existing database to PostgreSQL 19
 
-Databases created on PostgreSQL 17 or 18 upgrade in place. The database keeps running on its current version until you start the upgrade.
+Databases created on PostgreSQL 17 or 18 can upgrade to 19 online. The database keeps running on its current version until you start the upgrade.
 
 ## Upgrade from the Console
 
@@ -69,9 +70,9 @@ Databases created on PostgreSQL 17 or 18 upgrade in place. The database keeps ru
 
 ![The Upgrade to PostgreSQL 19 confirmation dialog](/images/blog/announcing-postgresql-19/upgrade-dialog.avif)
 
-The database moves to the `upgrading` state, the Console shows the upgrade in the database header, and the status returns to `ready` once the cutover is done.
+The database moves to the `upgrading` state, and the Console shows a **Database is upgrading** banner at the top of the database's pages. The status returns to `ready` once the cutover is done.
 
-![The database header showing that the database is upgrading](/images/blog/announcing-postgresql-19/upgrading.avif)
+![The Database is upgrading banner at the top of the database settings page](/images/blog/announcing-postgresql-19/upgrading.avif)
 
 ## Upgrade with a Server SDK
 
@@ -275,11 +276,11 @@ curl -X POST \
 
 ## How the online upgrade works
 
-An upgrade doesn't modify the instance that serves your traffic. Appwrite provisions a second instance on PostgreSQL 19, streams your data into it with logical replication, and waits for replication to catch up. Reads continue on the current instance the whole time.
+An upgrade doesn't modify the instance that serves your traffic. Appwrite provisions a second instance on PostgreSQL 19 with the same specification and storage, streams your data into it with logical replication, and waits for replication to catch up. Reads and writes continue on the current instance during the copy.
 
-At the cutover, the old instance is fenced read-only and existing client connections are closed. Writes pause for that moment, and your application reconnects to the database, now on PostgreSQL 19. A connection pool that retries dropped connections handles this without code changes. Because connections close, start the upgrade during a low-traffic period.
+At the cutover, the old instance is fenced read-only, its client connections are closed, and new connections are refused until traffic moves to the new instance. Queries pause for that moment, and your application has to reconnect. The hostname and credentials don't change, so a connection pool that retries dropped connections handles this without code changes. Because connections close, start the upgrade during a low-traffic period.
 
-The target version must be newer than the current one, and an upgrade can't be reversed.
+If the new instance can't catch up, Appwrite cancels the cutover and the current instance keeps serving. The database must be `ready` to start an upgrade, the target version must be newer than the current one, and an upgrade can't be reversed.
 
 # What's new in PostgreSQL 19
 
@@ -335,4 +336,4 @@ PostgreSQL 19 is available on Appwrite Cloud today. Create a new database to sta
 - [Managed PostgreSQL documentation](/docs/products/databases/postgresql)
 - [Engine version upgrades](/docs/products/databases/postgresql/maintenance#upgrades)
 - [PostgreSQL extensions](/docs/products/databases/postgresql/extensions)
-- [Sign up for Appwrite Cloud](/sign-in)
+- [Sign up for Appwrite Cloud](/sign-up)
