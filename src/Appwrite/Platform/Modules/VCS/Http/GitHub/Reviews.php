@@ -6,8 +6,10 @@ use Appwrite\Event\Message\Review as ReviewMessage;
 use Appwrite\Event\Message\ReviewChat as ReviewChatMessage;
 use Appwrite\Event\Publisher\Review as ReviewPublisher;
 use Appwrite\Extend\Exception;
+use Appwrite\Reviews\Provider;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\InstallationTokens;
+use Appwrite\Vcs\RepositoryPath;
 use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -58,6 +60,8 @@ trait Reviews
     protected function queueReviews(
         string $provider,
         array $parsedPayload,
+        VcsFactory $vcsFactory,
+        InstallationTokens $installationTokens,
         Database $dbForPlatform,
         Authorization $authorization,
         callable $getProjectDB,
@@ -81,7 +85,7 @@ trait Reviews
 
         $repositories = $this->findReviewRepositories($provider, $providerRepositoryId, \strval($parsedPayload['installationId'] ?? ''), $dbForPlatform, $authorization);
 
-        foreach ($repositories as ['repository' => $repository]) {
+        foreach ($repositories as ['repository' => $repository, 'installation' => $installation]) {
             try {
                 $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $repository->getAttribute('projectId', '')));
                 if ($project->isEmpty() || !$this->isProjectInCurrentRegion($project)) {
@@ -90,7 +94,7 @@ trait Reviews
 
                 $this->queueReview(
                     $provider,
-                    $parsedPayload,
+                    $this->withStoredRepository($provider, $parsedPayload, $repository, $installation, $vcsFactory, $installationTokens, $dbForPlatform, $authorization),
                     $project,
                     $repository,
                     $getProjectDB($project),
@@ -168,10 +172,12 @@ trait Reviews
 
         foreach ($repositories as ['repository' => $repository, 'installation' => $installation]) {
             try {
+                $delivery = $this->withStoredRepository($provider, $parsedPayload, $repository, $installation, $vcsFactory, $installationTokens, $dbForPlatform, $authorization);
+
                 // Every answer is a model run the project pays for: trusted humans and other apps
                 // may ask, never the reviewer itself. Checked once code review is known to be on, as
                 // a provider may have to be asked who the author is.
-                $association = $associations[$installation->getId()] ??= $this->getCommentAuthorAssociation($parsedPayload, $installation, $vcsFactory, $installationTokens, $dbForPlatform);
+                $association = $associations[$installation->getId()] ??= $this->getCommentAuthorAssociation($delivery, $installation, $vcsFactory, $installationTokens, $dbForPlatform);
                 if (!$this->canTriggerFromComment($author, $authorType, $association, $this->getReviewerLogin($installation))) {
                     // Other apps may ask, so the only bot refused here is the reviewer itself, whose
                     // own comments arrive on every review. Everyone else refused gets a line.
@@ -198,7 +204,7 @@ trait Reviews
                     // The service reviews whatever the head is when it runs, so no head is read here.
                     $this->queueReview(
                         $provider,
-                        $parsedPayload,
+                        $delivery,
                         $project,
                         $repository,
                         $dbForProject,
@@ -238,7 +244,7 @@ trait Reviews
                         'providerPullRequestId' => (string) $pullNumber,
                         'providerCommentId' => $commentId,
                         'kind' => $commentKind,
-                        'author' => $parsedPayload['commentAuthor'] ?? '',
+                        'author' => $delivery['commentAuthor'] ?? '',
                     ])));
                 } catch (DuplicateException) {
                     Console::info("Ignored {$subject} for repository '{$repository->getId()}': it is already queued");
@@ -248,9 +254,9 @@ trait Reviews
                 $comment = [
                     'id' => $this->toPayloadId($commentId),
                     'kind' => $commentKind,
-                    'author' => $parsedPayload['commentAuthor'] ?? '',
+                    'author' => $delivery['commentAuthor'] ?? '',
                     'authorAssociation' => $association,
-                    'url' => $parsedPayload['commentUrl'] ?? '',
+                    'url' => $delivery['commentUrl'] ?? '',
                 ];
                 // A review thread's replies attach to its first comment, which this one is when it replies to nothing,
                 // or, where the provider names threads, to the thread.
@@ -260,7 +266,7 @@ trait Reviews
 
                 try {
                     $queued = $publisherForReviews->enqueue(new ReviewChatMessage(
-                        repository: $this->getReviewRepository($provider, $parsedPayload, $project, $repository, $platform),
+                        repository: $this->getReviewRepository($provider, $delivery, $project, $repository, $platform),
                         pullNumber: $pullNumber,
                         comment: $comment,
                         unmentioned: $unmentioned,
@@ -547,6 +553,47 @@ trait Reviews
         $lines = \array_filter(\explode("\n", $text), fn (string $line) => !\str_starts_with(\ltrim($line), '>'));
 
         return \implode("\n", $lines);
+    }
+
+    /**
+     * The delivery with the repository it names replaced by the one the project connected.
+     *
+     * GitLab, Gitea and Bitbucket authenticate deliveries with one instance-wide secret that
+     * Appwrite registers on every connected repository, so the body speaks for no particular
+     * repository: whoever holds the secret could pair this repository's id with any owner and
+     * name. The job carries this installation's credential, so the owner and name are read from
+     * the provider for the stored repository id, as the repository was when it was connected, and
+     * the ids are the stored ones. App providers sign each delivery for its installation, and
+     * findReviewRepositories() only matched rows of that installation, so theirs is kept.
+     *
+     * @param array<string, mixed> $parsedPayload
+     * @return array<string, mixed>
+     */
+    private function withStoredRepository(string $provider, array $parsedPayload, Document $repository, Document $installation, VcsFactory $vcsFactory, InstallationTokens $installationTokens, Database $dbForPlatform, Authorization $authorization): array
+    {
+        if ($this->isAppProvider($provider)) {
+            return $parsedPayload;
+        }
+
+        $providerRepositoryId = \strval($repository->getAttribute('providerRepositoryId', ''));
+        $providerInstallationId = \strval($installation->getAttribute('providerInstallationId', ''));
+
+        $installation = $authorization->skip(fn () => $installationTokens->refreshForInstallation($installation, $dbForPlatform, $vcsFactory));
+        $vcs = $vcsFactory->fromInstallation($installation);
+
+        [$owner, $repositoryName] = RepositoryPath::read($vcs, Provider::from($provider), $providerInstallationId, $providerRepositoryId);
+
+        if (($parsedPayload['owner'] ?? '') !== $owner || ($parsedPayload['repositoryName'] ?? '') !== $repositoryName) {
+            Console::warning("Delivery named repository '{$providerRepositoryId}' as '" . ($parsedPayload['owner'] ?? '') . '/' . ($parsedPayload['repositoryName'] ?? '') . "', the provider names it '{$owner}/{$repositoryName}'");
+        }
+
+        return [
+            ...$parsedPayload,
+            'repositoryId' => $providerRepositoryId,
+            'installationId' => $providerInstallationId,
+            'owner' => $owner,
+            'repositoryName' => $repositoryName,
+        ];
     }
 
     /**

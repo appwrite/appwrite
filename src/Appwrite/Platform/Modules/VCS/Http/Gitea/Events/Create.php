@@ -7,10 +7,12 @@ use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\VCS\Http\GitHub\Deployment;
 use Appwrite\Platform\Modules\VCS\Http\GitHub\Reviews;
+use Appwrite\Reviews\Provider;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\InstallationTokens;
+use Appwrite\Vcs\RepositoryPath;
 use Utopia\Bus\Bus;
 use Utopia\Config\Config;
 use Utopia\Console\Console;
@@ -96,7 +98,7 @@ class Create extends Action
             // Without the secret no review service runs (optional on self-hosted), so nothing would consume the job.
             if (System::getEnv('_APP_REVIEWS_SECRET', '') !== '') {
                 match ($event) {
-                    'pull_request' => $this->queueReviews('gitea', $parsedPayload, $dbForPlatform, $authorization, $getProjectDB, $publisherForReviews, $platform),
+                    'pull_request' => $this->queueReviews('gitea', $parsedPayload, $vcsFactory, $installationTokens, $dbForPlatform, $authorization, $getProjectDB, $publisherForReviews, $platform),
                     'issue_comment' => $this->queueComment('gitea', $this->describeComment($parsedPayload, $vcsFactory, $installationTokens, $dbForPlatform, $authorization), $vcsFactory, $installationTokens, $dbForPlatform, $authorization, $getProjectDB, $publisherForReviews, $platform),
                     default => null,
                 };
@@ -380,7 +382,10 @@ class Create extends Action
                 return $parsedPayload;
             }
 
-            $rootId = $vcs->getReviewCommentThread(\strval($parsedPayload['owner'] ?? ''), \strval($parsedPayload['repositoryName'] ?? ''), $pullNumber, $commentId);
+            // The delivery's names are not trusted with this credential: the webhook secret is
+            // instance-wide, so the repository is the one connected under the id it matched.
+            [$owner, $repositoryName] = RepositoryPath::read($vcs, Provider::Gitea, \strval($installation->getAttribute('providerInstallationId', '')), \strval($repositories[0]['repository']->getAttribute('providerRepositoryId', '')));
+            $rootId = $vcs->getReviewCommentThread($owner, $repositoryName, $pullNumber, $commentId);
         } catch (\Throwable $error) {
             Console::warning("Failed to look up the thread of comment '{$commentId}': " . $error->getMessage());
 

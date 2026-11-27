@@ -45,6 +45,7 @@ import { Learnings } from './_components/Learnings'
 import {
   Performance,
   PerformanceRangeToggle,
+  PerformanceRepositorySelect,
   usePerformanceFilters,
 } from './_components/Performance'
 import {
@@ -379,10 +380,9 @@ export function View() {
             : activeTab === 'performance'
               ? {
                   beforeSearchButtons: (
-                    <RepositorySelect
+                    <PerformanceRepositorySelect
                       projectId={projectId}
-                      value={performanceFilters.repositoryId}
-                      onChange={performanceFilters.setRepositoryId}
+                      filters={performanceFilters}
                     />
                   ),
                   beforeCreateButtons: (

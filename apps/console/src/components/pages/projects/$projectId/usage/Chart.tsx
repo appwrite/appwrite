@@ -11,6 +11,7 @@ import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
 import {
   Area,
   AreaChart,
+  CartesianGrid,
   ResponsiveContainer,
   Tooltip,
 } from 'recharts'
@@ -61,6 +62,11 @@ export function UsageChart({ className }: UsageChartProps) {
               data={usageData}
               margin={USAGE_CHART_MARGIN}
             >
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="var(--border)"
+                vertical={false}
+              />
               <defs>
                 <linearGradient
                   id="requestsGradient"

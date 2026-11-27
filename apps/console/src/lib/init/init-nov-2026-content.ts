@@ -155,7 +155,7 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
           imageAlt:
             'A bandwidth monitor triggered as usage crosses its 80% threshold',
         },
-        films: [film('6b06b977275a9c08faf9', 'Appwrite Monitors')],
+        films: [film('6b08b6fdd3e2bf05152a', 'Appwrite Monitors')],
         resources: [
           {
             id: 'init5-day4-monitors-announce',
@@ -176,7 +176,7 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
           imageAlt:
             'Project updates arriving on a phone as pushes from Appwrite Beep: a triggered monitor, a failed SSL certificate and an Appwrite launch',
         },
-        films: [film('6b06b9bb1fe47403a7a5', 'Appwrite Beep')],
+        films: [film('6b0823090857b823a173', 'Appwrite Beep')],
         resources: [
           {
             id: 'init5-day4-beep-announce',
@@ -195,7 +195,7 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
     day: 5,
     dateLabel: 'DECEMBER 4',
     weekdayLabel: 'FRIDAY, DECEMBER 4',
-    films: [film('6b06ba0983ebf4f23ebb', 'Appwrite Reviews')],
+    films: [film('6b08baf395df68853cc6', 'Appwrite Reviews')],
     title: 'Introducing Appwrite Reviews',
     description: 'Code review for your Sites, Functions and repositories.',
     longDescription:

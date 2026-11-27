@@ -1,6 +1,12 @@
 import { useMemo } from 'react'
 import type { DateRange } from 'react-day-picker'
-import { Bar, BarChart, ResponsiveContainer, Tooltip } from 'recharts'
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+} from 'recharts'
 import { ZoomOut } from 'lucide-react'
 import {
   SeriesChartXAxis,
@@ -135,6 +141,11 @@ export function RuntimeLogsVolumeChart({
               className={surfaceClassName}
               {...chartProps}
             >
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="var(--border)"
+                vertical={false}
+              />
               <SeriesChartXAxis pointCount={data.length} labels={labels} />
               <UsageChartYAxis
                 tickFormatter={yTickFormatter}

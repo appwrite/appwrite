@@ -13,7 +13,6 @@ use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
-use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
@@ -21,7 +20,6 @@ use Utopia\Platform\Action;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
-use Utopia\System\System;
 use Utopia\Validator\WhiteList;
 
 class Get extends Base
@@ -47,8 +45,6 @@ class Get extends Base
                 namespace: 'videos',
                 group: 'playback',
                 name: 'getCaptionManifest',
-                // Hidden until videos is generally available; preview SDK builds show it.
-                hide: System::getEnv('_APP_SDK_PREVIEW', 'disabled') !== 'enabled',
                 description: '/docs/references/videos/get-caption-manifest.md',
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [
@@ -59,7 +55,7 @@ class Get extends Base
                 ],
                 contentType: ContentType::ANY,
                 type: MethodType::LOCATION,
-                locationAuth: ['Project', 'ImpersonateUserId'],
+                locationAuth: ['Project', 'Environment', 'ImpersonateUserId'],
             ))
             ->param('videoId', '', new UID(), 'Video unique ID.')
             ->param('output', '', new WhiteList(self::OUTPUTS, true), 'Streaming output format.', enum: new Enum(name: 'VideoOutput'))
@@ -67,7 +63,6 @@ class Get extends Base
             ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('project')
             ->inject('user')
             ->inject('authorization')
             ->inject('deviceForVideos')
@@ -81,7 +76,6 @@ class Get extends Base
         Request $request,
         Response $response,
         Database $dbForProject,
-        Document $project,
         User $user,
         Authorization $authorization,
         Device $deviceForVideos
@@ -134,7 +128,7 @@ class Get extends Base
         foreach ($segments as $segment) {
             $entries[] = [
                 'duration' => $segment->getAttribute('duration', 0),
-                'url' => $this->withProject($baseUri . $segment->getId(), $project, $video),
+                'url' => $this->withProject($baseUri . $segment->getId(), $request, $video),
             ];
         }
 

@@ -377,6 +377,11 @@ return [
         'description' => 'This authenticator is already verified on the current user.',
         'code' => 409,
     ],
+    Exception::USER_AUTHENTICATOR_LAST_FACTOR => [
+        'name' => Exception::USER_AUTHENTICATOR_LAST_FACTOR,
+        'description' => 'This authenticator is the last verified factor of a user with MFA enabled. Disable MFA before deleting it.',
+        'code' => 400,
+    ],
     Exception::USER_PHONE_NOT_FOUND => [
         'name' => Exception::USER_PHONE_NOT_FOUND,
         'description' => 'The current user does not have a phone number associated with their account.',
@@ -1737,6 +1742,11 @@ return [
         'description' => 'Video with the requested ID could not be found.',
         'code' => 404,
     ],
+    Exception::VIDEO_ALREADY_EXISTS => [
+        'name' => Exception::VIDEO_ALREADY_EXISTS,
+        'description' => 'A video with the same ID already exists in this project.',
+        'code' => 409,
+    ],
     Exception::VIDEO_NOT_VALID => [
         'name' => Exception::VIDEO_NOT_VALID,
         'description' => 'The requested file is not a valid video or audio file.',
@@ -1749,7 +1759,7 @@ return [
     ],
     Exception::VIDEO_PROFILE_ALREADY_EXISTS => [
         'name' => Exception::VIDEO_PROFILE_ALREADY_EXISTS,
-        'description' => 'A video profile with the same width, height, bitrates, and codec already exists.',
+        'description' => 'A video profile with the same ID, or the same width, height, bitrates, and codec, already exists.',
         'code' => 409,
     ],
     Exception::VIDEO_CODEC_DISABLED => [
@@ -1802,11 +1812,6 @@ return [
         'description' => 'Video caption segment with the requested ID could not be found.',
         'code' => 404,
     ],
-    Exception::VIDEO_LANGUAGE_CODE_NOT_VALID => [
-        'name' => Exception::VIDEO_LANGUAGE_CODE_NOT_VALID,
-        'description' => 'The caption language code is not a valid ISO 639-2 code.',
-        'code' => 400,
-    ],
     Exception::VIDEO_THUMBNAIL_NOT_FOUND => [
         'name' => Exception::VIDEO_THUMBNAIL_NOT_FOUND,
         'description' => 'Video thumbnail with the requested ID could not be found.',
@@ -1821,11 +1826,6 @@ return [
         'name' => Exception::VIDEO_TIMELINE_IN_PROGRESS,
         'description' => 'Cannot delete a video while its timeline is being generated. Wait for the job to finish, or wait until a stuck timeline is older than the retention window.',
         'code' => 409,
-    ],
-    Exception::VIDEO_SECOND_OUT_OF_RANGE => [
-        'name' => Exception::VIDEO_SECOND_OUT_OF_RANGE,
-        'description' => 'The requested second is outside the video duration range.',
-        'code' => 400,
     ],
 
     /** Reviews */

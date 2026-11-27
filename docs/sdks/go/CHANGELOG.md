@@ -1,5 +1,29 @@
 # Change Log
 
+## v7.25.1
+
+* Fixed: examples pass an empty `[]string{}` instead of the invalid `"example"` placeholder
+
+## v7.25.0
+
+* Added: `videos` service to create, list, get, update and delete videos from files in Storage
+* Added: `videos.createRendition`, `listRenditions`, `getRendition` and `deleteRendition` to transcode a video into HLS, DASH or CMAF
+* Added: `videos.createCaption`, `listCaptions`, `updateCaption` and `deleteCaption` for subtitle tracks
+* Added: `getHlsManifest`, `getDashManifest`, `getCmafHlsManifest`, `getCmafDashManifest`, `getCaptionManifest`, `getThumbnail` and `getTimeline` playback URLs, and `listCodecs`
+* Added: `project.listVideoProfiles`, `createVideoProfile`, `getVideoProfile`, `updateVideoProfile` and `deleteVideoProfile`
+* Added: `Video`, `VideoCodec`, `VideoProfile`, `VideoRendition` and `VideoCaption` models and their list models
+
+## v7.24.0
+
+* Added: `password`, `attempts` and `attemptsInterval` options on `waf.CreateChallengeRule` and `waf.UpdateChallengeRule`
+
+## v7.23.0
+
+* Added: `monitors` service to create, list, get, update and delete HTTP, DNS, TCP, SMTP and usage monitors
+* Added: `alerts` service to list and get alerts, and acknowledge them with `alerts.update`
+* Added: `organization.listEscalations`, `createEscalation`, `getEscalation`, `updateEscalation` and `deleteEscalation`
+* Added: `Monitor`, `Alert`, `Escalation` and `EscalationStep` models and their list models
+
 ## v7.22.0
 
 * Breaking: `Teams.GetPhoto`, `UpdatePhoto` and `DeletePhoto` moved to `Avatars.GetTeamPhoto`, `UpdateTeamPhoto` and `DeleteTeamPhoto`
