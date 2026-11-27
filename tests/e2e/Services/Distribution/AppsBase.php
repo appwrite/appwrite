@@ -173,6 +173,125 @@ trait AppsBase
         $this->assertSame('distribution_app_not_found', $missing['body']['type']);
     }
 
+    public function testCreateAppWithIncompleteRepository(): void
+    {
+        /**
+         * Test for FAILURE
+         */
+        $installationless = $this->createApp(['providerRepositoryId' => '1', 'providerBranch' => 'main']);
+        $this->assertSame(400, $installationless['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $installationless['body']['type']);
+
+        $branchless = $this->createApp(['providerRepositoryId' => '1']);
+        $this->assertSame(400, $branchless['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $branchless['body']['type']);
+
+        $unknown = $this->createApp([
+            'installationId' => ID::unique(),
+            'providerRepositoryId' => '1',
+            'providerBranch' => 'main',
+        ]);
+        $this->assertSame(404, $unknown['headers']['status-code']);
+        $this->assertSame('installation_not_found', $unknown['body']['type']);
+
+        $appId = ID::unique();
+        $installationOnly = $this->createApp(['appId' => $appId, 'installationId' => ID::unique()]);
+        $this->assertSame(404, $installationOnly['headers']['status-code']);
+        $this->assertSame('installation_not_found', $installationOnly['body']['type']);
+        $this->assertSame(404, $this->getApp($appId)['headers']['status-code'], 'A refused link must not create the app.');
+    }
+
+    public function testUpdateAppWithIncompleteRepository(): void
+    {
+        $created = $this->createApp();
+        $this->assertSame(201, $created['headers']['status-code']);
+        $appId = $created['body']['$id'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $disconnected = $this->updateApp($appId, ['providerRepositoryId' => '']);
+        $this->assertSame(200, $disconnected['headers']['status-code'], 'Disconnecting an app without a repository is a no-op.');
+        $this->assertSame('', $disconnected['body']['repositoryId']);
+        $this->assertSame('', $disconnected['body']['installationId']);
+
+        /**
+         * Test for FAILURE
+         */
+        $installationless = $this->updateApp($appId, ['providerRepositoryId' => '1', 'providerBranch' => 'main']);
+        $this->assertSame(400, $installationless['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $installationless['body']['type']);
+
+        $branchless = $this->updateApp($appId, ['installationId' => ID::unique(), 'providerRepositoryId' => '1']);
+        $this->assertSame(400, $branchless['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $branchless['body']['type']);
+
+        $unknown = $this->updateApp($appId, [
+            'installationId' => ID::unique(),
+            'providerRepositoryId' => '1',
+            'providerBranch' => 'main',
+        ]);
+        $this->assertSame(404, $unknown['headers']['status-code']);
+        $this->assertSame('installation_not_found', $unknown['body']['type']);
+
+        $installationOnly = $this->updateApp($appId, ['installationId' => ID::unique()]);
+        $this->assertSame(404, $installationOnly['headers']['status-code']);
+        $this->assertSame('installation_not_found', $installationOnly['body']['type']);
+
+        $app = $this->getApp($appId);
+        $this->assertSame('', $app['body']['installationId']);
+        $this->assertSame('', $app['body']['providerRepositoryId']);
+    }
+
+    public function testUpdateAppProviderFlagsWithoutRepository(): void
+    {
+        $created = $this->createApp([
+            'providerComments' => false,
+            'providerDeployments' => false,
+        ]);
+        $this->assertSame(201, $created['headers']['status-code']);
+        $this->assertFalse($created['body']['providerComments']);
+        $this->assertFalse($created['body']['providerDeployments']);
+        $this->assertTrue($created['body']['providerStatuses']);
+        $appId = $created['body']['$id'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $updated = $this->updateApp($appId, [
+            'providerComments' => true,
+            'providerStatuses' => false,
+            'providerSilentMode' => true,
+            'providerBranches' => ['release/*'],
+            'providerPaths' => ['lib/**'],
+            'providerTags' => ['v*'],
+            'providerRootDirectory' => 'mobile',
+        ]);
+        $this->assertSame(200, $updated['headers']['status-code'], \json_encode($updated['body']));
+        $this->assertTrue($updated['body']['providerComments']);
+        $this->assertFalse($updated['body']['providerDeployments']);
+        $this->assertFalse($updated['body']['providerStatuses']);
+        $this->assertTrue($updated['body']['providerSilentMode']);
+        $this->assertSame(['release/*'], $updated['body']['providerBranches']);
+        $this->assertSame(['lib/**'], $updated['body']['providerPaths']);
+        $this->assertSame(['v*'], $updated['body']['providerTags']);
+        $this->assertSame('mobile', $updated['body']['providerRootDirectory']);
+        $this->assertSame('', $updated['body']['repositoryId']);
+
+        $fetched = $this->getApp($appId);
+        $this->assertFalse($fetched['body']['providerStatuses']);
+        $this->assertSame(['release/*'], $fetched['body']['providerBranches']);
+
+        /**
+         * Test for FAILURE
+         */
+        $flag = $this->updateApp($appId, ['providerStatuses' => 'sometimes']);
+        $this->assertSame(400, $flag['headers']['status-code']);
+
+        $directory = $this->updateApp($appId, ['providerRootDirectory' => '../outside']);
+        $this->assertSame(400, $directory['headers']['status-code']);
+    }
+
     public function testDeleteApp(): void
     {
         $appId = ID::unique();

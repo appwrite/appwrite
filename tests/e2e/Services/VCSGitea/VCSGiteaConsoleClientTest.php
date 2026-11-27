@@ -462,6 +462,35 @@ final class VCSGiteaConsoleClientTest extends Scope
         ], $variables);
     }
 
+    public function testDetectionRejectsDistributionTypeWhileDisabled(): void
+    {
+        if ($this->getConsoleVariables()['_APP_DISTRIBUTION_ENABLED'] ?? false) {
+            $this->markTestSkipped('Distribution is enabled, so mobile detection is offered.');
+        }
+
+        $installationId = $this->createInstallationHelper()['$id'];
+        $headers = \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        /**
+         * Test for FAILURE
+         */
+        $detection = $this->client->call(Client::METHOD_POST, '/vcs/github/installations/' . $installationId . '/detections', $headers, [
+            'providerRepositoryId' => '1',
+            'type' => 'distribution',
+        ]);
+        $this->assertSame(400, $detection['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $detection['body']['type']);
+
+        $list = $this->client->call(Client::METHOD_GET, '/vcs/github/installations/' . $installationId . '/providerRepositories', $headers, [
+            'type' => 'distribution',
+        ]);
+        $this->assertSame(400, $list['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $list['body']['type']);
+    }
+
     public function testUpdateSiteKeepsRepositoryOnNull(): void
     {
         $headers = \array_merge([

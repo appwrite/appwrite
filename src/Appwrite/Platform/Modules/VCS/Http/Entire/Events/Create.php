@@ -322,10 +322,21 @@ class Create extends Action
      * deployment is accepted, and retrying it then would build the commit
      * twice. One that failed, such as a build that could not be queued, is
      * retried. A lookup that fails counts as no deployment, so the push is
-     * retried rather than dropped.
+     * retried rather than dropped. A repository connected to neither a
+     * function nor a site, such as a distribution app's, has nothing to
+     * deploy here and counts as deployed.
      */
     private function hasDeployed(Document $repository, string $commitHash, string $branch, string $since, Database $dbForPlatform, Authorization $authorization, callable $getProjectDB): bool
     {
+        $resourceType = match ($repository->getAttribute('resourceType')) {
+            'function' => 'functions',
+            'site' => 'sites',
+            default => null,
+        };
+        if ($resourceType === null) {
+            return true;
+        }
+
         try {
             $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $repository->getAttribute('projectId', '')));
             if ($project->isEmpty() || !$this->isProjectInCurrentRegion($project)) {
@@ -336,7 +347,7 @@ class Create extends Action
 
             return !$authorization->skip(fn () => $dbForProject->findOne('deployments', [
                 Query::equal('resourceId', [$repository->getAttribute('resourceId', '')]),
-                Query::equal('resourceType', [$repository->getAttribute('resourceType') === 'function' ? 'functions' : 'sites']),
+                Query::equal('resourceType', [$resourceType]),
                 Query::equal('providerCommitHash', [$commitHash]),
                 Query::equal('providerBranch', [$branch]),
                 Query::greaterThanEqual('$createdAt', $since),
@@ -421,12 +432,18 @@ class Create extends Action
             'installationInternalId' => $installation->getSequence(),
         ]);
 
-        // The site or function follows while it is still connected through this record
-        $collection = $repository->getAttribute('resourceType') === 'function' ? 'functions' : 'sites';
-        $dbForProject = $getProjectDB($project);
-        $resource = $authorization->skip(fn () => $dbForProject->getDocument($collection, $repository->getAttribute('resourceId', '')));
-        if ($resource->getAttribute('repositoryId') === $repository->getId() && $resource->getAttribute('installationId') !== $installation->getId()) {
-            $authorization->skip(fn () => $dbForProject->updateDocument($collection, $resource->getId(), $moved));
+        $collection = match ($repository->getAttribute('resourceType')) {
+            'function' => 'functions',
+            'site' => 'sites',
+            default => null,
+        };
+        if ($collection !== null) {
+            // The site or function follows while it is still connected through this record
+            $dbForProject = $getProjectDB($project);
+            $resource = $authorization->skip(fn () => $dbForProject->getDocument($collection, $repository->getAttribute('resourceId', '')));
+            if ($resource->getAttribute('repositoryId') === $repository->getId() && $resource->getAttribute('installationId') !== $installation->getId()) {
+                $authorization->skip(fn () => $dbForProject->updateDocument($collection, $resource->getId(), $moved));
+            }
         }
 
         $repository = $authorization->skip(fn () => $dbForPlatform->updateDocument('repositories', $repository->getId(), $moved));

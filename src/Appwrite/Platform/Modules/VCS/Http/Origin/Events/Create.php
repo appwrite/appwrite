@@ -709,9 +709,20 @@ class Create extends Action
      * retried. One that was canceled counts as deployed: someone stopped it
      * on purpose, and a retry must not build it again. A lookup that fails
      * counts as no deployment, so the push is retried rather than dropped.
+     * A repository connected to neither a function nor a site, such as a
+     * distribution app's, has nothing to deploy here and counts as deployed.
      */
     private function hasDeployed(Document $repository, string $commitHash, string $branch, string $since, Database $dbForPlatform, Authorization $authorization, callable $getProjectDB): bool
     {
+        $resourceType = match ($repository->getAttribute('resourceType')) {
+            'function' => 'functions',
+            'site' => 'sites',
+            default => null,
+        };
+        if ($resourceType === null) {
+            return true;
+        }
+
         try {
             $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $repository->getAttribute('projectId', '')));
             if ($project->isEmpty() || !$this->isProjectInCurrentRegion($project)) {
@@ -722,7 +733,7 @@ class Create extends Action
 
             return !$authorization->skip(fn () => $dbForProject->findOne('deployments', [
                 Query::equal('resourceId', [$repository->getAttribute('resourceId', '')]),
-                Query::equal('resourceType', [$repository->getAttribute('resourceType') === 'function' ? 'functions' : 'sites']),
+                Query::equal('resourceType', [$resourceType]),
                 Query::equal('providerCommitHash', [$commitHash]),
                 Query::equal('providerBranch', [$branch]),
                 Query::greaterThanEqual('$createdAt', $since),
