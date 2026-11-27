@@ -807,6 +807,10 @@ class Videos extends Action
 
             $rendition = $dbForProject->getDocument('videosRenditions', $rendition->getId());
             $claimed = true;
+            // The queued message carries the video as it was when the rendition
+            // was created; its read permissions may have been narrowed since.
+            $video = $dbForProject->getDocument('videos', $videoId);
+            $permissions = $this->readPermissions($video);
             Span::add('rendition.name', (string) $rendition->getAttribute('name', ''));
             Span::add('rendition.output', $output);
             Span::add('rendition.codec', $codec);
@@ -838,7 +842,7 @@ class Videos extends Action
                 $dbForProject,
                 $deviceForFiles,
                 $deviceForVideos,
-                $dbForProject->getDocument('videos', $videoId),
+                $video,
                 $workspace,
                 $queueForRealtime,
                 $project,
@@ -982,7 +986,7 @@ class Videos extends Action
                         $wrote = true;
                         $uploader->take($written);
                     })
-                    ->on(Packager::PROGRESS, function (mixed $progress) use ($dbForProject, $queueForRealtime, $project, $permissions, &$rendition, &$lastProgress, &$halted, &$last, &$advancedAt, &$advancedTime) {
+                    ->on(Packager::PROGRESS, function (mixed $progress) use ($dbForProject, $queueForRealtime, $project, $videoId, &$permissions, &$rendition, &$lastProgress, &$halted, &$last, &$advancedAt, &$advancedTime) {
                         if (!$progress instanceof Progress) {
                             return;
                         }
@@ -1028,6 +1032,7 @@ class Videos extends Action
                                 'progress' => (string) $percentage,
                             ])
                         );
+                        $permissions = $this->currentReadPermissions($dbForProject, $videoId);
                         $this->notify(
                             $queueForRealtime,
                             $project,
@@ -1129,6 +1134,7 @@ class Videos extends Action
                     'targetDuration' => $targetDuration,
                 ], fn ($value) => $value !== null))
             );
+            $permissions = $this->currentReadPermissions($dbForProject, $videoId);
             $this->notify(
                 $queueForRealtime,
                 $project,
@@ -1177,6 +1183,7 @@ class Videos extends Action
                     'size' => $storageBytes,
                 ])
             );
+            $permissions = $this->currentReadPermissions($dbForProject, $videoId);
             $this->notify(
                 $queueForRealtime,
                 $project,
@@ -1222,6 +1229,7 @@ class Videos extends Action
                             'error' => $reason,
                         ])
                     );
+                    $permissions = $this->currentReadPermissions($dbForProject, $videoId);
                     $this->notify(
                         $queueForRealtime,
                         $project,
@@ -2818,6 +2826,19 @@ class Videos extends Action
             'timelineStatus' => $status,
             'timelineError' => $error,
         ]));
+    }
+
+    /**
+     * Read permissions of the video as it is now. Rendition events carry no
+     * permissions of their own, so they are delivered with these, and the
+     * video's permissions can change while a job is queued or running. A video
+     * that is gone yields an empty set, so its events are dropped.
+     *
+     * @return array<string>
+     */
+    private function currentReadPermissions(Database $dbForProject, string $videoId): array
+    {
+        return $this->readPermissions($dbForProject->getDocument('videos', $videoId));
     }
 
     /**
