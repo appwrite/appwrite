@@ -760,10 +760,40 @@ export const InitTicketCard = forwardRef<
       applyMouseHoverTiltRef.current(event.clientX, event.clientY)
     }
 
-    window.addEventListener('mousemove', handleWindowMouseMove, {
-      passive: true,
-    })
-    return () => window.removeEventListener('mousemove', handleWindowMouseMove)
+    // The pointer can only be over the ticket while it is on screen, so skip the
+    // per-move hit test everywhere else on the page.
+    let listening = false
+    const setListening = (next: boolean) => {
+      if (next === listening) return
+      listening = next
+      if (next) {
+        window.addEventListener('mousemove', handleWindowMouseMove, { passive: true })
+        return
+      }
+      window.removeEventListener('mousemove', handleWindowMouseMove)
+      if (mouseHovering) {
+        mouseHovering = false
+        pointerStartRef.current = null
+        releaseMouseHoverTiltRef.current()
+      }
+    }
+
+    const scene = sceneRef.current
+    if (!scene || typeof IntersectionObserver === 'undefined') {
+      setListening(true)
+      return () => window.removeEventListener('mousemove', handleWindowMouseMove)
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setListening(entry?.isIntersecting ?? true),
+      // The tilted card overhangs its scene box a little.
+      { rootMargin: '64px' },
+    )
+    observer.observe(scene)
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('mousemove', handleWindowMouseMove)
+    }
   }, [interactive, reducedMotion])
 
   const handleSceneMouseMove = useCallback(

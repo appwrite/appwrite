@@ -389,11 +389,16 @@ export function EventHero({
       cancelAnimationFrame(frame)
       frame = requestAnimationFrame(() => {
         const rect = main.getBoundingClientRect()
-        setMainBounds({
-          left: rect.left,
-          width: rect.width,
-          top: rect.top,
-        })
+        // Scrolling `main` rarely moves `main` itself; keep the same object so the
+        // hero and sticky bar do not re-render on every scroll frame.
+        setMainBounds((previous) =>
+          previous &&
+          previous.left === rect.left &&
+          previous.width === rect.width &&
+          previous.top === rect.top
+            ? previous
+            : { left: rect.left, width: rect.width, top: rect.top },
+        )
       })
     }
 

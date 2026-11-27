@@ -7,6 +7,8 @@ import {
   PerspectiveCamera,
   Vector3,
   type Group,
+  type Material,
+  type Mesh,
 } from 'three'
 import ThreeGlobe from 'three-globe'
 import { useThree, Canvas, extend, useFrame } from '@react-three/fiber'
@@ -72,6 +74,25 @@ interface WorldProps {
   maxPixelRatio?: number
   /** Fires once after the first rendered frame. */
   onReady?: () => void
+}
+
+/**
+ * three-globe has no `dispose()`: `_destructor()` stops its own rAF loop and layer
+ * tickers, which otherwise keep running and hold the globe forever.
+ */
+function destroyGlobe(globe: ThreeGlobe) {
+  globe.parent?.remove(globe)
+  globe._destructor()
+  globe.traverse((object) => {
+    const mesh = object as Mesh
+    mesh.geometry?.dispose()
+    const materials: Material[] = Array.isArray(mesh.material)
+      ? mesh.material
+      : mesh.material
+        ? [mesh.material]
+        : []
+    for (const material of materials) material.dispose()
+  })
 }
 
 function FirstFrameNotifier({ onReady }: { onReady?: () => void }) {
@@ -168,7 +189,11 @@ export function Globe({
   data,
   markers = [],
   active = true,
-}: WorldProps) {
+  instances,
+}: WorldProps & {
+  /** Live globes, so `World` can destroy them when its canvas unmounts. */
+  instances?: Set<ThreeGlobe>
+}) {
   const globeRef = useRef<ThreeGlobe | null>(null)
   const groupRef = useRef<Group | null>(null)
   const [isInitialized, setIsInitialized] = useState(false)
@@ -183,6 +208,7 @@ export function Globe({
   useEffect(() => {
     if (!globeRef.current && groupRef.current) {
       globeRef.current = new ThreeGlobe({ animateIn: false })
+      instances?.add(globeRef.current)
       groupRef.current.add(globeRef.current)
       applyGlobeLand(globeRef.current, resolvedRef.current.polygonColor)
       setIsInitialized(true)
@@ -190,15 +216,25 @@ export function Globe({
 
     return () => {
       const globe = globeRef.current
-      const group = groupRef.current
-      if (globe && group) {
-        group.remove(globe)
-        globe.dispose?.()
+      if (globe) {
+        destroyGlobe(globe)
+        instances?.delete(globe)
       }
       globeRef.current = null
       setIsInitialized(false)
     }
-  }, [])
+  }, [instances])
+
+  // The canvas stops drawing off-screen; stop three-globe's arc and ring tickers too.
+  useEffect(() => {
+    const globe = globeRef.current
+    if (!globe || !isInitialized) return
+    if (active) {
+      globe.resumeAnimation()
+    } else {
+      globe.pauseAnimation()
+    }
+  }, [active, isInitialized])
 
   useEffect(() => {
     if (!globeRef.current || !isInitialized) return
@@ -446,6 +482,23 @@ export function World({
   const eventSourceRef = useRef<HTMLDivElement>(null)
   const webglAvailable = useWebGLAvailable()
   const skippedReadyRef = useRef(false)
+  const [globes] = useState(() => new Set<ThreeGlobe>())
+  const mountedRef = useRef(false)
+
+  useEffect(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+      // R3F does not run the canvas children's cleanups when the canvas unmounts
+      // (e.g. the theme `key` remount), so their globes would animate forever.
+      // Wait a tick: StrictMode remounts straight away and keeps the same globes.
+      window.setTimeout(() => {
+        if (mountedRef.current) return
+        for (const globe of globes) destroyGlobe(globe)
+        globes.clear()
+      })
+    }
+  }, [globes])
 
   useEffect(() => {
     if (webglAvailable !== false || skippedReadyRef.current) return
@@ -484,7 +537,13 @@ export function World({
           key={`${globeConfig.evenLighting ? 'even' : 'dir'}-${globeConfig.ambientLight}-${globeConfig.directionalLeftLight}-${globeConfig.pointLight}`}
           globeConfig={globeConfig}
         />
-        <Globe globeConfig={globeConfig} data={data} markers={markers} active={active} />
+        <Globe
+          globeConfig={globeConfig}
+          data={data}
+          markers={markers}
+          active={active}
+          instances={globes}
+        />
         <OrbitControls
           enablePan={false}
           enableZoom={false}

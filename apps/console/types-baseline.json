@@ -933,7 +933,6 @@
   },
   "src/components/ui/globe.tsx": {
     "TS2322: Type 'RefObject<HTMLDivElement | null>' is not assignable to type 'HTMLElement | RefObject<HTMLElement> | undefined'.": 1,
-    "TS2339: Property 'dispose' does not exist on type 'ThreeGlobe'.": 1,
     "TS7006: Parameter 'entry' implicitly has an 'any' type.": 2
   },
   "src/components/ui/map.tsx": {
