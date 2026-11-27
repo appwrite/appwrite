@@ -5,12 +5,15 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion'
 import { marketingSplitLayoutClassName } from '@/components/pages/marketing/MarketingSections'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useT } from '@/lib/i18n/translate'
 import { pricingFaqItems } from '@/lib/pricing/faq'
 import { PricingSectionHeading } from './_components/PricingSectionHeading'
 
 export function FaqSection() {
   const t = useT()
+  const { features } = useConsoleProfile()
+  const items = pricingFaqItems.filter((item) => !item.flag || features[item.flag])
   return (
     <section className="bg-background py-16 sm:py-20">
       <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
@@ -22,7 +25,7 @@ export function FaqSection() {
           />
 
           <Accordion type="single" collapsible defaultValue="item-0" className="w-full">
-            {pricingFaqItems.map((item, index) => (
+            {items.map((item, index) => (
               <AccordionItem key={item.question} value={`item-${index}`}>
                 <AccordionTrigger className="py-5 text-start hover:no-underline">
                   <span className="pe-4 text-[14px] font-medium text-foreground">

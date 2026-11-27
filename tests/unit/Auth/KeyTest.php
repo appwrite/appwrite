@@ -350,6 +350,12 @@ final class KeyTest extends TestCase
             new Document(),
             self::generateKey($projectId, false, ['documents.read'], extra: ['projectSequence' => '1']),
         ];
+        yield 'ephemeral key from the organization that owned the project before a transfer' => [
+            new Document(['$id' => $projectId, '$sequence' => '2', 'teamInternalId' => '20']),
+            new Document(),
+            new Document(),
+            self::generateKey($projectId, false, ['documents.read'], extra: ['projectSequence' => '2', 'teamInternalId' => '10']),
+        ];
         yield 'invalid standard key' => [
             $storedStandard,
             new Document(),
@@ -422,6 +428,28 @@ final class KeyTest extends TestCase
             key: self::generateKey('other', false, ['documents.read'], extra: ['projectSequence' => '1', 'projectCheckDisabled' => true]),
         );
         $this->assertTrue($decoded->isProjectCheckDisabled());
+    }
+
+    public function testDecodeEphemeralBoundToTheOwningOrganization(): void
+    {
+        $project = new Document(['$id' => 'test', '$sequence' => '42', 'teamInternalId' => '7']);
+
+        $decoded = Key::decode(
+            project: $project,
+            team: new Document(),
+            user: new Document(),
+            key: self::generateKey('test', false, ['documents.read'], extra: ['projectSequence' => '42', 'teamInternalId' => '7']),
+        );
+        $this->assertSame('test', $decoded->getProjectId());
+
+        // Internal keys, and keys issued before the claim existed, carry none
+        $decoded = Key::decode(
+            project: $project,
+            team: new Document(),
+            user: new Document(),
+            key: self::generateKey('test', false, ['documents.read'], extra: ['projectSequence' => '42']),
+        );
+        $this->assertSame('test', $decoded->getProjectId());
     }
 
     public static function rules(): \Iterator

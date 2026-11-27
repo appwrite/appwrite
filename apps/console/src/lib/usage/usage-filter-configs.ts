@@ -287,6 +287,13 @@ const WEBHOOKS_FILTER_COLUMNS: FilterColumn[] = [
   stringColumn('resourceType', 'Resource type', GAUGE_OPERATORS),
 ]
 
+/** Videos traffic and renditions (events) plus video count and storage (gauges). */
+const VIDEOS_FILTER_COLUMNS: FilterColumn[] = [
+  stringColumn('resourceId', 'Video ID', GAUGE_OPERATORS),
+  stringColumn('path', 'API path'),
+  stringColumn('country', 'Country'),
+]
+
 const CATEGORY_FILTER_COLUMNS: Record<string, FilterColumn[]> = {
   requests: NETWORK_EVENT_FILTER_COLUMNS,
   bandwidth: NETWORK_EVENT_FILTER_COLUMNS,
@@ -300,6 +307,7 @@ const CATEGORY_FILTER_COLUMNS: Record<string, FilterColumn[]> = {
   avatars: AVATARS_EVENT_FILTER_COLUMNS,
   messaging: MESSAGING_FILTER_COLUMNS,
   webhooks: WEBHOOKS_FILTER_COLUMNS,
+  videos: VIDEOS_FILTER_COLUMNS,
 }
 
 const CATEGORY_QUERY_SURFACE: Record<string, UsageFilterQuerySurface> = {
@@ -315,6 +323,7 @@ const CATEGORY_QUERY_SURFACE: Record<string, UsageFilterQuerySurface> = {
   avatars: 'events',
   messaging: 'mixed',
   webhooks: 'mixed',
+  videos: 'mixed',
 }
 
 export function getUsageQuerySurfaceForCategory(

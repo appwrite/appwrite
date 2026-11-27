@@ -274,6 +274,40 @@ class ClickHouse extends Adapter
         return (int) ($rows[0]['total'] ?? 0);
     }
 
+    /**
+     * @param array<Query> $queries
+     * @return list<array{time: string, total: int, stderr: int}>
+     */
+    public function histogram(string $projectId, array $queries, int $interval): array
+    {
+        if ($interval < 1) {
+            throw new \InvalidArgumentException('Log histogram interval must be at least one second');
+        }
+
+        $params = ['projectId' => $projectId, 'interval' => $interval];
+        [$filters] = $this->compileQueries($queries, $params);
+        $filters[] = 'projectId = {projectId:String}';
+
+        $where = \implode(' AND ', $filters);
+        $sql = 'SELECT toStartOfInterval(timestamp, INTERVAL {interval:UInt32} SECOND) AS bucket, count() AS total, countIf(stream = \'stderr\') AS stderr FROM '
+            . $this->quotedTable() . " WHERE {$where} GROUP BY bucket ORDER BY bucket FORMAT JSON";
+
+        $buckets = [];
+        foreach ($this->rows($this->query($sql, $params, self::READ_SETTINGS)) as $row) {
+            $time = DateTime::formatTz($this->date((string) ($row['bucket'] ?? '')));
+            if (!\is_string($time)) {
+                continue;
+            }
+            $buckets[] = [
+                'time' => $time,
+                'total' => (int) ($row['total'] ?? 0),
+                'stderr' => (int) ($row['stderr'] ?? 0),
+            ];
+        }
+
+        return $buckets;
+    }
+
     /** @return array<string, mixed> */
     private function snapshot(string $projectId, Document $log): array
     {

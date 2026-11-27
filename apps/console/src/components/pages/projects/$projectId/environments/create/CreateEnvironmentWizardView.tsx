@@ -3,10 +3,9 @@
  * addressed by in the X-Appwrite-Environment header, and whether to start
  * empty or as a copy. The ID follows the name until it is typed, and is
  * generated when left blank. A copy's progress card follows the environment,
- * so the wizard does not wait. Cloud only, behind the projectEnvironments
- * feature like the switcher that opens this. Environments are offered on Pro
- * and above: on Free and Start the page shows what an environment is and leads
- * to the upgrade instead of creating one.
+ * so the wizard does not wait. Cloud only, like the switcher that opens this.
+ * Environments are offered on Pro and above: on Free and Start the page shows
+ * what an environment is and leads to the upgrade instead of creating one.
  */
 
 import { useEffect, useRef, useState, type FormEvent } from 'react'
@@ -25,7 +24,10 @@ import {
 } from '@/lib/active-environment'
 import { isValidProjectId, PROJECT_ID_MAX_LENGTH } from '@/lib/project-id'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
-import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import {
+  getActiveProfileFeatures,
+  isCloudProfile,
+} from '@/lib/console-profiles'
 import {
   PROJECT_NAME_MAX_LENGTH,
   useCreateProjectEnvironment,
@@ -126,12 +128,10 @@ export function CreateEnvironmentWizardView({
   // Environments are created from production: opened inside an environment, this
   // page leaves it once, on entry. It does not react to the active environment
   // afterwards, so entering the environment just created here is not undone.
-  // Read the live profile (including the experiment override); useConsoleProfile's
-  // first paint is the canonical cloud default, which has this flag off and would
-  // bounce to overview.
+  // Self-hosted has no environments, so the page leads back to the overview.
   const leftEnvironmentOnEntry = useRef(false)
   useEffect(() => {
-    if (!getActiveProfileFeatures().projectEnvironments) {
+    if (!isCloudProfile()) {
       void navigate({ to: '/projects/$projectId', params: { projectId } })
       return
     }

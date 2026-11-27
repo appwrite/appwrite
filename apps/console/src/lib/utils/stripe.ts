@@ -4,7 +4,10 @@
  * Handles Stripe.js initialization and theme configuration
  */
 
-import { loadStripe, type Stripe } from '@stripe/stripe-js'
+// The pure entry loads Stripe.js when billing first asks for it; the default
+// entry injects it on import, which put it on every page.
+import type { Stripe } from '@stripe/stripe-js'
+import { loadStripe } from '@stripe/stripe-js/pure'
 import { getRuntimeConfig } from '@/lib/runtime-config'
 
 let stripePromise: Promise<Stripe | null> | null = null

@@ -43,9 +43,12 @@ import {
   isOptionalAuthPage,
 } from '@/components/global/auth/RequireAuth'
 import { applyScreenshotModeAccount } from '@/lib/screenshot-mode'
+import { useScreenshotMode } from '@/components/global/providers/ScreenshotMode'
 import { getConsoleAccountUnauthenticatedError } from '@/lib/console-account-cache'
 import { getConsoleAccountQueryRevision } from '@/lib/console-impersonation'
 import { organizationsQueryOptions } from '@/lib/react-query/hooks/organizations'
+import { consoleTeamQueryOptions } from '@/lib/react-query/hooks/teams'
+import { isSSORequiredError } from '@/lib/sso-required'
 import {
   getConsoleAccountFromCache,
   getConsoleAccountSync,
@@ -140,6 +143,8 @@ import {
   MarketingSolutionsNavPopover,
 } from '@/components/pages/marketing/MarketingSolutionsNavMenu'
 import { MarketingGitHubStarsLink } from '@/components/pages/marketing/MarketingGitHubStarsLink'
+import { InitWordmark } from '@/components/pages/init/_components/InitWordmark'
+import { isInitSurfaceEnabled } from '@/lib/init/init-surface'
 import { useI18n } from '@/lib/i18n'
 import { useT } from '@/lib/i18n/translate'
 import { useIsZeroAccount } from '@/hooks/use-zero-account'
@@ -389,6 +394,27 @@ function MarketingMobileNavLink({
   )
 }
 
+/** Init week wordmark linking to `/init`; sits before the GitHub stars link. */
+function MarketingInitLink({ mobile = false }: { mobile?: boolean }) {
+  const link = (
+    <Link
+      to="/init"
+      aria-label="Appwrite Init"
+      {...analyticsAttrs('marketing-nav-init')}
+      className={
+        mobile
+          ? 'link-unstyled flex h-10 w-full items-center justify-start rounded-md px-3 text-foreground transition-colors hover:bg-accent'
+          : cn(MARKETING_NAV_LINK_CLASS, 'text-foreground')
+      }
+      activeProps={{ className: MARKETING_NAV_LINK_ACTIVE_CLASS }}
+    >
+      <InitWordmark className="h-3.5" />
+    </Link>
+  )
+
+  return mobile ? <SheetClose asChild>{link}</SheetClose> : link
+}
+
 interface ConsoleHeaderProps {
   onMenuClick?: () => void
   className?: string
@@ -495,6 +521,14 @@ export function ConsoleHeader({
       ? orgId
       : undefined
     : orgId
+  // The last organization may require single sign-on that this session did
+  // not come from: go back to the Console home instead, which opens one the
+  // person can use.
+  const { error: backOrganizationError } = useQuery({
+    ...consoleTeamQueryOptions(orgId),
+    enabled: shouldValidateBackOrganizationLink,
+  })
+  const backOrganizationRefused = isSSORequiredError(backOrganizationError)
   const { features, isCloud } = useConsoleProfile()
   const { catalog } = useI18n()
   const headerCopy = catalog.app.header
@@ -674,7 +708,9 @@ export function ConsoleHeader({
     pathname: location.pathname,
     showMarketingNav,
   })
-  const showExperiments = hasQualityLabel(headerAccount?.labels)
+  const { isScreenshotModeActive } = useScreenshotMode()
+  const showExperiments =
+    !isScreenshotModeActive && hasQualityLabel(headerAccount?.labels)
   const showCenterSearch = centerSearch && !hideSearch && !preLaunch
   const showRightSearch = !hideSearch && !centerSearch && !preLaunch
   const { modKey: searchModKey, isMac } = usePlatform()
@@ -768,6 +804,7 @@ export function ConsoleHeader({
                       />
                     ),
                   )}
+                  {isInitSurfaceEnabled() ? <MarketingInitLink mobile /> : null}
                   <MarketingGitHubStarsLink mobile />
                 </nav>
               </SheetContent>
@@ -878,13 +915,20 @@ export function ConsoleHeader({
               size="sm"
               className="hidden h-9 shrink-0 gap-1.5 px-2.5 text-[13px] @[850px]:inline-flex"
             >
-              <Link
-                to="/organizations/$orgId"
-                params={{ orgId: backToOrganizationOrgId }}
-              >
-                <ArrowLeft className="h-4 w-4" />
-                {headerCopy.actions.backToOrganization}
-              </Link>
+              {backOrganizationRefused ? (
+                <Link to="/">
+                  <ArrowLeft className="h-4 w-4" />
+                  {headerCopy.actions.backToOrganization}
+                </Link>
+              ) : (
+                <Link
+                  to="/organizations/$orgId"
+                  params={{ orgId: backToOrganizationOrgId }}
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  {headerCopy.actions.backToOrganization}
+                </Link>
+              )}
             </Button>
           ) : null}
 
@@ -1386,6 +1430,7 @@ export function ConsoleHeader({
                   />
                 ),
               )}
+              {isInitSurfaceEnabled() ? <MarketingInitLink /> : null}
               <MarketingGitHubStarsLink />
             </nav>
           </div>
@@ -1851,7 +1896,7 @@ export function ConsoleHeader({
                       <p className="text-[11px] text-muted-foreground mb-1.5">
                         {headerCopy.accountMenu.accountStatus}
                       </p>
-                      <ul className="space-y-1.5">
+                      <ul className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
                         <li className="flex items-center gap-2">
                           <span className="flex h-3.5 w-3.5 items-center justify-center">
                             <span

@@ -1,0 +1,5 @@
+# osv-scanner reads the config in the scanned lockfile's own directory.
+
+[[IgnoredVulns]]
+id = "GHSA-fc5q-39xc-vjpf"
+reason = "picomatch has no fixed release (4.0.7 is the latest and the last affected). Here, in the docs site (TanStack Start on Vite), it is a build-time dependency of Vite and TanStack's router plugins, matching glob patterns from the app's own config, never user input, so the ReDoS on crafted extglobs cannot be reached. Remove this entry when a fixed picomatch ships."

@@ -22,7 +22,7 @@ export type ProductGroup = 'build' | 'deploy' | 'protect'
 
 export type ProductNavGroup = ProductGroup
 
-export type ProductNavItemId = ProductId | 'domains' | 'advisor' | 'agent'
+export type ProductNavItemId = ProductId | 'domains' | 'advisor' | 'agent' | 'zero'
 
 export type ProductNavItem = {
   id: ProductNavItemId

@@ -315,7 +315,45 @@ extern "C" fn numeric_type(_: &mut ExecuteData, retval: &mut Zval) {
 }
 extern "C" fn numeric_is_valid(ex: &mut ExecuteData, retval: &mut Zval) {
     let Some(value) = value_arg(ex, "Utopia\\Validator\\Numeric::isValid") else { return };
-    set_bool(retval, utopia_validators::numeric(input(value)));
+    set_bool(retval, is_numeric(value));
+}
+
+unsafe extern "C" {
+    /// Zend/zend_operators.h: what `is_numeric()` asks of a string.
+    fn _is_numeric_string_ex(
+        str: *const std::ffi::c_char,
+        length: usize,
+        lval: *mut ext_php_rs::ffi::zend_long,
+        dval: *mut f64,
+        allow_errors: bool,
+        oflow_info: *mut std::ffi::c_int,
+        trailing_data: *mut bool,
+    ) -> u8;
+}
+
+/// `is_numeric($value)`, as ext/standard answers it: ints and floats, and the strings the
+/// engine reads as a number (`is_numeric_string()`, whose first-byte check is inlined).
+fn is_numeric(value: &Zval) -> bool {
+    if value.is_long() || value.is_double() {
+        return true;
+    }
+    let Some(string) = value.zend_str() else { return false };
+    let bytes = string.as_bytes();
+    if bytes.first().is_some_and(|&first| first > b'9') {
+        return false;
+    }
+    // SAFETY: a live string; with no outputs and no errors allowed, the engine only reads it.
+    unsafe {
+        _is_numeric_string_ex(
+            bytes.as_ptr().cast(),
+            bytes.len(),
+            std::ptr::null_mut(),
+            std::ptr::null_mut(),
+            false,
+            std::ptr::null_mut(),
+            std::ptr::null_mut(),
+        ) != 0
+    }
 }
 
 const RANGE_METHODS: &[Method] = &[

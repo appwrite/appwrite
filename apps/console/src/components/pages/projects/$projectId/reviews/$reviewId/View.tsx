@@ -9,8 +9,10 @@ import {
 import {
   AlertCircle,
   ArrowLeft,
+  Copy,
   ExternalLink,
   FileCode,
+  MessageSquare,
   MoreHorizontal,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -26,13 +28,13 @@ import type {
 } from '@/lib/appwrite/reviews'
 import { isReviewRunning, useReview } from '@/lib/react-query/hooks'
 import { useT } from '@/lib/i18n/translate'
+import { copyToClipboard, openInNewTab } from '@/lib/utils/context-menu'
 import { cn } from '@/lib/utils'
+import type { ProviderReviewUrls } from '@/lib/vcs/providers'
 import { ServiceHeader } from '../../shared/ServiceHeader'
+import { RowContextMenu } from '../_components/RowMenus'
 import { Trace } from '../_components/Trace'
-import {
-  ReviewActionsMenu,
-  reviewGitHubUrls,
-} from '../_components/ReviewActions'
+import { ReviewActionsMenu, useReviewUrls } from '../_components/ReviewActions'
 import {
   FindingSeverityBadge,
   ReviewAuthorLink,
@@ -70,6 +72,7 @@ export function View({ initialReview }: ViewProps = {}) {
   const { review: reviewFromHook, isLoading } = useReview(projectId, reviewId)
   const review = reviewFromHook ?? initialReview ?? null
   const triggerLabel = useReviewTriggerLabel()
+  const links = useReviewUrls(projectId, review)
 
   // A running review's duration counts up.
   const running = review ? isReviewRunning(review) : false
@@ -138,11 +141,17 @@ export function View({ initialReview }: ViewProps = {}) {
     )
   }
 
-  const urls = reviewGitHubUrls(review)
   const duration = reviewDuration(review, now)
   const compareUrl =
-    review.providerBaseCommitHash && review.providerCommitHash
-      ? `${urls.repository}/compare/${review.providerBaseCommitHash}...${review.providerCommitHash}`
+    links && review.providerBaseCommitHash && review.providerCommitHash
+      ? (links.urls.compare(
+          review.providerBaseCommitHash,
+          review.providerCommitHash,
+        ) ?? undefined)
+      : undefined
+  const commitUrl =
+    links && review.providerCommitHash
+      ? links.urls.commit(review.providerCommitHash)
       : undefined
 
   return (
@@ -174,22 +183,29 @@ export function View({ initialReview }: ViewProps = {}) {
         }
         titleRightContent={
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 text-[13px]"
-              asChild
-            >
-              <a
-                href={urls.review}
-                target="_blank"
-                rel="noreferrer"
-                aria-label={t('Open on GitHub')}
+            {links && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-[13px]"
+                asChild
               >
-                <ExternalLink className="h-3.5 w-3.5 sm:me-1.5" />
-                <span className="hidden sm:inline">{t('Open on GitHub')}</span>
-              </a>
-            </Button>
+                <a
+                  href={links.urls.review}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label={t('Open on {provider}').replace(
+                    '{provider}',
+                    links.label,
+                  )}
+                >
+                  <ExternalLink className="h-3.5 w-3.5 sm:me-1.5" />
+                  <span className="hidden sm:inline">
+                    {t('Open on {provider}').replace('{provider}', links.label)}
+                  </span>
+                </a>
+              </Button>
+            )}
             <ReviewActionsMenu
               projectId={projectId}
               review={review}
@@ -248,19 +264,24 @@ export function View({ initialReview }: ViewProps = {}) {
                         <span className="text-muted-foreground">...</span>
                       </>
                     )}
-                    <a
-                      href={compareUrl ?? urls.commit}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-foreground hover:underline"
-                      title={
-                        compareUrl
-                          ? t('Compare on GitHub')
-                          : t('Open commit on GitHub')
-                      }
-                    >
-                      {review.providerCommitHash.slice(0, 7)}
-                    </a>
+                    {links ? (
+                      <a
+                        href={compareUrl ?? commitUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-foreground hover:underline"
+                        title={(compareUrl
+                          ? t('Compare on {provider}')
+                          : t('Open commit on {provider}')
+                        ).replace('{provider}', links.label)}
+                      >
+                        {review.providerCommitHash.slice(0, 7)}
+                      </a>
+                    ) : (
+                      <span className="text-foreground">
+                        {review.providerCommitHash.slice(0, 7)}
+                      </span>
+                    )}
                   </span>
                 ) : (
                   <Empty />
@@ -383,8 +404,8 @@ export function View({ initialReview }: ViewProps = {}) {
                     <Finding
                       key={finding.$id}
                       finding={finding}
-                      commitUrl={`${urls.repository}/blob/${review.providerCommitHash}`}
-                      pullRequestUrl={urls.pullRequest}
+                      commitHash={review.providerCommitHash}
+                      urls={links?.urls ?? null}
                     />
                   ))}
                 </ul>
@@ -460,61 +481,112 @@ function SeverityChip({
 
 function Finding({
   finding,
-  commitUrl,
-  pullRequestUrl,
+  commitHash,
+  urls,
 }: {
   finding: ReviewFinding
-  commitUrl: string
-  pullRequestUrl: string
+  commitHash: string
+  /** The review's links on its provider, or null where none can be built. */
+  urls: ProviderReviewUrls | null
 }) {
   const t = useT()
-  const lines =
-    finding.startLine === finding.endLine
-      ? `L${finding.startLine}`
-      : `L${finding.startLine}-L${finding.endLine}`
+  const fileUrl =
+    urls && commitHash
+      ? urls.file(commitHash, finding.path, finding.startLine, finding.endLine)
+      : undefined
+  const commentUrl =
+    urls && finding.providerCommentId
+      ? urls.comment(finding.providerCommentId)
+      : null
+  const location =
+    finding.endLine === finding.startLine
+      ? `${finding.path}:${finding.startLine}`
+      : `${finding.path}:${finding.startLine}-${finding.endLine}`
 
   return (
-    <li className="px-6 py-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <FindingSeverityBadge severity={finding.severity} />
-        {finding.category && (
-          <span className="rounded border border-border px-1.5 text-[11px] leading-5 text-muted-foreground">
-            {finding.category}
+    <RowContextMenu
+      actions={{
+        copy: [
+          {
+            icon: Copy,
+            label: t('Copy ID'),
+            onSelect: () => void copyToClipboard('ID', finding.$id),
+          },
+          {
+            icon: Copy,
+            label: t('Copy title'),
+            onSelect: () => void copyToClipboard('Title', finding.title),
+          },
+          {
+            icon: Copy,
+            label: t('Copy path'),
+            onSelect: () => void copyToClipboard('Path', location),
+          },
+        ],
+        links: [
+          ...(fileUrl
+            ? [
+                {
+                  icon: ExternalLink,
+                  label: t('Open file'),
+                  onSelect: () => openInNewTab(fileUrl),
+                },
+              ]
+            : []),
+          ...(commentUrl
+            ? [
+                {
+                  icon: MessageSquare,
+                  label: t('Open comment'),
+                  onSelect: () => openInNewTab(commentUrl),
+                },
+              ]
+            : []),
+        ],
+      }}
+    >
+      <li className="px-6 py-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <FindingSeverityBadge severity={finding.severity} />
+          {finding.category && (
+            <span className="rounded border border-border px-1.5 text-[11px] leading-5 text-muted-foreground">
+              {finding.category}
+            </span>
+          )}
+          <span className="text-[13px] font-medium text-foreground">
+            {finding.title}
           </span>
-        )}
-        <span className="text-[13px] font-medium text-foreground">
-          {finding.title}
-        </span>
-      </div>
-      <div className="mt-1.5 flex flex-wrap items-center gap-3">
-        <a
-          href={`${commitUrl}/${finding.path}#${lines}`}
-          target="_blank"
-          rel="noreferrer"
-          className="flex min-w-0 items-center gap-1.5 font-mono text-[12px] text-muted-foreground hover:text-foreground"
-        >
-          <FileCode className="h-3.5 w-3.5 shrink-0" />
-          <span className="truncate">
-            {finding.path}:{finding.startLine}
-            {finding.endLine !== finding.startLine && `-${finding.endLine}`}
-          </span>
-        </a>
-        {finding.providerCommentId && (
+        </div>
+        <div className="mt-1.5 flex flex-wrap items-center gap-3">
           <a
-            href={`${pullRequestUrl}#discussion_r${finding.providerCommentId}`}
+            href={fileUrl}
             target="_blank"
             rel="noreferrer"
-            className="text-[12px] text-muted-foreground hover:text-foreground hover:underline"
+            className="flex min-w-0 items-center gap-1.5 font-mono text-[12px] text-muted-foreground hover:text-foreground"
           >
-            {t('View comment')}
+            <FileCode className="h-3.5 w-3.5 shrink-0" />
+            <span className="truncate">
+              {finding.path}:{finding.startLine}
+              {finding.endLine !== finding.startLine && `-${finding.endLine}`}
+            </span>
           </a>
-        )}
-      </div>
-      {finding.body && (
-        <div className="mt-2 text-[13px] text-foreground">
-          <MarkdownContent content={finding.body} />
+          {commentUrl && (
+            <a
+              href={commentUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="text-[12px] text-muted-foreground hover:text-foreground hover:underline"
+            >
+              {t('View comment')}
+            </a>
+          )}
         </div>
-      )}
-    </li>
+        {finding.body && (
+          <div className="mt-2 text-[13px] text-foreground">
+            <MarkdownContent content={finding.body} />
+          </div>
+        )}
+      </li>
+    </RowContextMenu>
   )
 }

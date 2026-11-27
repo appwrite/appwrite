@@ -8,6 +8,7 @@ use Appwrite\Platform\Modules\Videos\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -17,7 +18,6 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\System\System;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -47,8 +47,6 @@ class Create extends Base
                 namespace: 'project',
                 group: 'profiles',
                 name: 'createVideoProfile',
-                // Hidden until videos is generally available; preview SDK builds show it.
-                hide: System::getEnv('_APP_SDK_PREVIEW', 'disabled') !== 'enabled',
                 description: '/docs/references/project/create-video-profile.md',
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
@@ -58,12 +56,13 @@ class Create extends Base
                     )
                 ]
             ))
+            ->param('profileId', '', new CustomId(), 'Video profile ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
             ->param('name', '', new Text(128), 'Video profile name.')
-            ->param('videoBitRate', null, new Range(self::MIN_VIDEO_BITRATE, self::MAX_VIDEO_BITRATE), 'Target video bitrate in kilobits per second.')
-            ->param('audioBitRate', null, new Range(self::MIN_AUDIO_BITRATE, self::MAX_AUDIO_BITRATE), 'Target audio bitrate in kilobits per second.')
-            ->param('width', null, new Range(self::MIN_DIMENSION, self::MAX_DIMENSION), 'Target video width in pixels.')
-            ->param('height', null, new Range(self::MIN_DIMENSION, self::MAX_DIMENSION), 'Target video height in pixels.')
-            ->param('codec', self::CODEC_H264, new WhiteList(self::enabledCodecs(), true), 'Video encode codec. Only codecs enabled on this instance are accepted. Defaults to `h264`.', true, enum: new Enum(name: 'VideoCodec'))
+            ->param('videoBitRate', null, new Range(self::MIN_VIDEO_BITRATE * 1000, self::MAX_VIDEO_BITRATE * 1000), 'Target video bitrate in bits per second. Must be a multiple of 1000.')
+            ->param('audioBitRate', null, new Range(self::MIN_AUDIO_BITRATE * 1000, self::MAX_AUDIO_BITRATE * 1000), 'Target audio bitrate in bits per second. Must be a multiple of 1000.')
+            ->param('width', null, new Range(self::MIN_DIMENSION, self::MAX_DIMENSION), 'Target video width in pixels. Must be an even number.')
+            ->param('height', null, new Range(self::MIN_DIMENSION, self::MAX_DIMENSION), 'Target video height in pixels. Must be an even number.')
+            ->param('codec', self::CODEC_H264, new WhiteList(self::codecIds(), true), 'Video encode codec. Codecs not enabled on this instance are rejected. Defaults to `h264`.', true, enum: new Enum(name: 'VideoCodecId'))
             ->inject('response')
             ->inject('dbForProject')
             ->inject('project')
@@ -73,6 +72,7 @@ class Create extends Base
     }
 
     public function action(
+        string $profileId,
         string $name,
         int $videoBitRate,
         int $audioBitRate,
@@ -85,16 +85,25 @@ class Create extends Base
         Authorization $authorization,
         Event $queueForEvents
     ): void {
+        // Renditions are encoded with 4:2:0 chroma, which needs even dimensions;
+        // an odd profile would fail every encode that uses it.
+        foreach (['width' => $width, 'height' => $height] as $param => $value) {
+            if ($value % 2 !== 0) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid `' . $param . '` param: Value must be an even number.');
+            }
+        }
+
         $codec = self::normalizeCodec($codec);
         $this->assertCodecEnabled($codec);
+        $profileId = $profileId === 'unique()' ? Id::unique() : $profileId;
 
         try {
             $profile = $authorization->skip(fn () => $dbForProject->createDocument('videosProfiles', new Document([
-                '$id' => Id::unique(),
+                '$id' => $profileId,
                 'name' => $name,
                 'codec' => $codec,
-                'videoBitRate' => $videoBitRate,
-                'audioBitRate' => $audioBitRate,
+                'videoBitRate' => self::toKilobits('videoBitRate', $videoBitRate),
+                'audioBitRate' => self::toKilobits('audioBitRate', $audioBitRate),
                 'width' => $width,
                 'height' => $height,
                 'search' => $name,

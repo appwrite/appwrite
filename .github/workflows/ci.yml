@@ -174,7 +174,7 @@ jobs:
 
           - name: Cache PHPStan result cache
             if: ${{ !cancelled() && steps.install.outcome == 'success' }}
-            uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+            uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
             with:
               path: .phpstan-cache
               key: phpstan-${{ github.workspace }}-${{ github.sha }}
@@ -437,7 +437,7 @@ jobs:
           sudo apt-get install -y --no-install-recommends clang libclang-dev libheif-dev pkg-config
 
       - name: Cache Cargo
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             ~/.cargo/registry
@@ -455,10 +455,10 @@ jobs:
             export PATH="$HOME/.cargo/bin:$PATH"
             echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
           fi
-          rustup toolchain install 1.97.1 --profile minimal
+          rustup toolchain install
 
       - name: Build the extension
-        run: cargo +1.97.1 build --release --locked -p utopia-extension
+        run: cargo build --release --locked -p utopia-extension
 
       - name: Upload the extension
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -563,15 +563,59 @@ jobs:
       - name: Build the toolchain image
         run: docker build --target extension-build --tag utopia-extension-build .
 
+      # kache (https://github.com/kunobi-ninja/kache) caches each crate's compiled output, so
+      # clippy and the tests rebuild only the crates a change touches instead of all 340. Its
+      # store is restored from main's and saved only by pushes to main, under a new key each week
+      # (a saved key cannot be updated), so pull requests read it and never write it. Line tables instead of full
+      # debug info keep the store small enough for the repository's Actions cache.
+      - name: Install kache
+        env:
+          KACHE_VERSION: v2.3.1
+          KACHE_SHA256: 6f1ff3f9faf5a9bb0e38501c5bfe9ab5b4a980834f1c835d09ad5b0fdf9b6ab9
+        run: |
+          curl -fsSL -o "$RUNNER_TEMP/kache.tar.gz" \
+            "https://github.com/kunobi-ninja/kache/releases/download/${KACHE_VERSION}/kache-x86_64-unknown-linux-musl.tar.gz"
+          echo "${KACHE_SHA256}  $RUNNER_TEMP/kache.tar.gz" | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/kache-bin" "$RUNNER_TEMP/kache"
+          tar -xzf "$RUNNER_TEMP/kache.tar.gz" -C "$RUNNER_TEMP/kache-bin" kache kache-engine
+          echo "week=$(date -u +%G-%V)" >> "$GITHUB_OUTPUT"
+        id: kache
+
+      - name: Restore the kache store
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/kache
+          key: kache-extension-${{ hashFiles('Cargo.lock', 'rust-toolchain.toml') }}-${{ steps.kache.outputs.week }}
+          restore-keys: |
+            kache-extension-${{ hashFiles('Cargo.lock', 'rust-toolchain.toml') }}-
+            kache-extension-
+
       - name: Check crates
         run: |
           docker run --rm --volume "$PWD:/usr/local/src" --env CARGO_TARGET_DIR=/tmp/target \
-            --env RUSTDOCFLAGS="-C target-feature=-crt-static" utopia-extension-build sh -c '
+            --env RUSTDOCFLAGS="-C target-feature=-crt-static" \
+            --volume "$RUNNER_TEMP/kache-bin:/opt/kache:ro" --volume "$RUNNER_TEMP/kache:/kache" \
+            --env RUSTC_WRAPPER=/opt/kache/kache --env KACHE_CACHE_DIR=/kache --env KACHE_LOCAL_ONLY=true \
+            --env KACHE_DEFERRED_DURABILITY=0 --env CARGO_PROFILE_DEV_DEBUG=line-tables-only \
+            --env CARGO_PROFILE_TEST_DEBUG=line-tables-only utopia-extension-build sh -c '
             . "$HOME/.cargo/env" &&
             rustup component add clippy rustfmt &&
             cargo fmt --all --check &&
             cargo clippy --workspace --all-targets --all-features --locked -- -D warnings &&
-            cargo test --locked --workspace --exclude utopia-extension --all-features'
+            cargo test --locked --workspace --exclude utopia-extension --all-features
+            status=$?
+            /opt/kache/kache stats || true
+            /opt/kache/kache daemon stop || true
+            exit $status'
+          sudo chown -R "$(id -u):$(id -g)" "$RUNNER_TEMP/kache"
+          du -sh "$RUNNER_TEMP/kache"
+
+      - name: Save the kache store
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/kache
+          key: kache-extension-${{ hashFiles('Cargo.lock', 'rust-toolchain.toml') }}-${{ steps.kache.outputs.week }}
 
       - name: Build the image
         run: docker build --target development --tag appwrite-utopia --build-arg TESTING=true .
@@ -1215,14 +1259,19 @@ jobs:
         run: |
           git fetch --depth=1 origin "${BENCHMARK_BEFORE_SHA}"
           git worktree add --detach /tmp/appwrite-benchmark-before "${BENCHMARK_BEFORE_SHA}"
-          docker build \
-            --cache-from "$IMAGE:after" \
-            --target development \
-            --build-arg DEBUG=false \
-            --build-arg TESTING=true \
-            --build-arg VERSION=dev \
-            --tag "$IMAGE:before" \
-            /tmp/appwrite-benchmark-before
+          BEFORE_IMAGE="${GCRUNNER_REGISTRY_PULL}/appwrite:${IMAGE}-${BENCHMARK_BEFORE_SHA}"
+          if docker pull "$BEFORE_IMAGE"; then
+            docker tag "$BEFORE_IMAGE" "$IMAGE:before"
+          else
+            docker build \
+              --cache-from "$IMAGE:after" \
+              --target development \
+              --build-arg DEBUG=false \
+              --build-arg TESTING=true \
+              --build-arg VERSION=dev \
+              --tag "$IMAGE:before" \
+              /tmp/appwrite-benchmark-before
+          fi
 
       - name: Start before Appwrite
         id: benchmark_before_start

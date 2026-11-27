@@ -114,6 +114,17 @@ class Factory
         return $adapter;
     }
 
+    /**
+     * The provider's base URL as this server reaches it, without a trailing slash: the configured
+     * host of a self-hosted GitLab or Gitea. Empty for a provider with none configured.
+     */
+    public function getEndpoint(string $key): string
+    {
+        $endpoint = $this->registry[$key]['endpoint'] ?? $this->getEnv($key, 'endpoint');
+
+        return \rtrim(\is_string($endpoint) ? $endpoint : '', '/');
+    }
+
     public function getWebhookSecret(string $key): string
     {
         return $this->getEnv($key, 'webhookSecret');

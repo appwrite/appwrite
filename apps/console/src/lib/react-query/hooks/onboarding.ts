@@ -4,14 +4,19 @@
 
 import { useQuery, useMutation, useQueryClient, queryOptions } from '@tanstack/react-query'
 import { useMemo } from 'react'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { useConsoleVariables } from '@/lib/react-query/hooks/console-variables'
+import { useProject } from '@/lib/react-query/hooks/projects'
 import {
   fetchProjectOnboardingSnapshot,
   skipOnboardingSteps,
   computeOnboardingProgress,
   buildOnboardingStepStateMap,
   getAtomicOnboardingStepCount,
+  getOnboardingProductCategories,
   ONBOARDING_CONNECT,
   ONBOARDING_PRODUCT_CATEGORIES,
+  type OnboardingProductCategoryDef,
   type OnboardingStepState,
   type ProjectOnboardingSnapshot,
 } from '@/lib/onboarding/project-onboarding'
@@ -34,19 +39,43 @@ export function useProjectOnboardingSnapshot(projectId: string | null | undefine
   return useQuery(onboardingSnapshotQueryOptions(projectId))
 }
 
+/**
+ * Product categories the checklist shows for this project: the same feature
+ * flags as the sidebar decide which products are listed and counted.
+ */
+export function useOnboardingProductCategories(
+  projectId: string | null | undefined,
+): OnboardingProductCategoryDef[] {
+  const { features } = useConsoleProfile()
+  const { project } = useProject(projectId ?? undefined)
+  // Self-hosted runs the review service only when it opts in
+  const { reviewsEnabled } = useConsoleVariables(project?.region)
+
+  return useMemo(
+    () =>
+      getOnboardingProductCategories((feature) =>
+        feature === 'reviews'
+          ? features.reviews && reviewsEnabled
+          : features[feature],
+      ),
+    [features, reviewsEnabled],
+  )
+}
+
 export function useOnboardingProgressFromSnapshot(
   snapshot: ProjectOnboardingSnapshot | undefined,
+  categories: readonly OnboardingProductCategoryDef[],
 ) {
   return useMemo(() => {
     if (!snapshot) {
       return {
         progress: 0,
         completedSteps: 0,
-        totalSteps: getAtomicOnboardingStepCount(),
+        totalSteps: getAtomicOnboardingStepCount(categories),
       }
     }
-    return computeOnboardingProgress(snapshot)
-  }, [snapshot])
+    return computeOnboardingProgress(snapshot, categories)
+  }, [snapshot, categories])
 }
 
 function emptyStepStateMap(): Map<string, OnboardingStepState> {

@@ -240,6 +240,9 @@ static DOMAIN: AtomicPtr<ClassEntry> = AtomicPtr::new(std::ptr::null_mut());
 static DOMAIN_RESTRICTIONS: Property = Property::new("restrictions");
 static DOMAIN_HOSTNAMES: Property = Property::new("hostnames");
 static DOMAIN_ALLOW_EMPTY: Property = Property::new("allowEmpty");
+static RESTRICTION_HOSTNAME: Literal = Literal::new("hostname");
+static RESTRICTION_LEVELS: Literal = Literal::new("levels");
+static RESTRICTION_PREFIX_DENY_LIST: Literal = Literal::new("prefixDenyList");
 
 const DOMAIN_METHODS: &[Method] = &[
     Method {
@@ -296,7 +299,7 @@ extern "C" fn domain_create_restriction(ex: &mut ExecuteData, retval: &mut Zval)
         too_few(ex, "Utopia\\Validator\\Domain::createRestriction", passed, 1, 3);
         return;
     };
-    let Some(hostname) = str_arg(ex, 1, hostname) else { return };
+    let Some(hostname) = engine::str_zval_arg(ex, 1, hostname) else { return };
     // `?int $levels = null`: `null` passes as it is.
     let levels = match engine::arg(ex, 1) {
         Some(arg) if !arg.is_null() => match engine::long_arg_named(ex, 2, arg, "?int") {
@@ -306,14 +309,18 @@ extern "C" fn domain_create_restriction(ex: &mut ExecuteData, retval: &mut Zval)
         _ => Zval::new(),
     };
     let Some(prefix_deny_list) = array_or_empty(ex, 2) else { return };
+    // `['hostname' => …, 'levels' => …, 'prefixDenyList' => …]`: the keys are interned, as a
+    // literal's are, and the hostname is the string passed, shared.
+    let (Some(hostname_key), Some(levels_key), Some(prefix_key)) =
+        (RESTRICTION_HOSTNAME.zend_str(), RESTRICTION_LEVELS.zend_str(), RESTRICTION_PREFIX_DENY_LIST.zend_str())
+    else {
+        return;
+    };
     let mut restriction = ZendHashTable::with_capacity(3);
-    let inserted = restriction
-        .insert("hostname", string(&hostname))
-        .and_then(|()| restriction.insert("levels", levels))
-        .and_then(|()| restriction.insert("prefixDenyList", prefix_deny_list));
-    if inserted.is_ok() {
-        retval.set_hashtable(restriction);
-    }
+    engine::update_name(&mut restriction, hostname_key, hostname);
+    engine::update_name(&mut restriction, levels_key, levels);
+    engine::update_name(&mut restriction, prefix_key, prefix_deny_list);
+    retval.set_hashtable(restriction);
 }
 
 extern "C" fn domain_description(_: &mut ExecuteData, retval: &mut Zval) {
@@ -811,7 +818,15 @@ extern "C" fn phone_is_valid(ex: &mut ExecuteData, retval: &mut Zval) {
 /// Registers the batch's classes, each extending `Utopia\Validator\Validator`. Called from
 /// the module's startup (MINIT), after the base.
 pub fn register() -> ext_php_rs::error::Result<()> {
-    engine::intern(&[&HOSTNAME_DESCRIPTION, &DOMAIN_DESCRIPTION, &IP_DESCRIPTION, &PHONE_DESCRIPTION]);
+    engine::intern(&[
+        &HOSTNAME_DESCRIPTION,
+        &DOMAIN_DESCRIPTION,
+        &IP_DESCRIPTION,
+        &PHONE_DESCRIPTION,
+        &RESTRICTION_HOSTNAME,
+        &RESTRICTION_LEVELS,
+        &RESTRICTION_PREFIX_DENY_LIST,
+    ]);
     let base = (super::base_class as fn() -> &'static ClassEntry, super::BASE);
     build("Utopia\\Validator\\Hostname", base, HOSTNAME_METHODS, hostname_register)?;
     build("Utopia\\Validator\\Domain", base, DOMAIN_METHODS, domain_register)?;

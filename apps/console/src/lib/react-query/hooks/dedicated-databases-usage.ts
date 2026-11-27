@@ -183,7 +183,7 @@ function dedicatedDatabaseMetricChartQueryOptions(
       ordinal,
     ),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageQueryOptionsBase.refetchOnMount,
     gcTime: projectId && databaseId ? 5 * 60 * 1000 : 0,
   })
@@ -367,7 +367,7 @@ function dedicatedDatabaseEventMetricChartQueryOptions(
       ordinal,
     ),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageQueryOptionsBase.refetchOnMount,
     gcTime: projectId && databaseId ? 5 * 60 * 1000 : 0,
   })
@@ -848,7 +848,7 @@ function databaseOperationsChartQueryOptions(
     ...usageQueryOptionsBase,
     placeholderData: keepPreviousDedicatedChartData(projectId, databaseId),
     refetchOnMount: refetchOnMountRolling
-      ? 'always'
+      ? true
       : usageQueryOptionsBase.refetchOnMount,
     gcTime: projectId && databaseId ? 5 * 60 * 1000 : 0,
   })
