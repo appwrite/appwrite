@@ -1,5 +1,9 @@
 # Change Log
 
+## 28.6.1
+
+* Fixed: file and video examples no longer render non-image responses with `Image.memory`
+
 ## 28.6.0
 
 * Added: `videos` service to create, list, get, update and delete videos from files in Storage

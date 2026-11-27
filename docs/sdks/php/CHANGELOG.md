@@ -1,5 +1,9 @@
 # Change Log
 
+## 32.7.1
+
+* Fixed: examples pass escaped parameter names such as `xdefault:` that the methods accept
+
 ## 32.7.0
 
 * Added: `videos` service to create, list, get, update and delete videos from files in Storage

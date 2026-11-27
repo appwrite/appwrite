@@ -400,28 +400,6 @@ export function useDeleteMonitor(projectId: string | null | undefined) {
   })
 }
 
-/** Budget monitors an organization's budget settings keep, highest threshold first. */
-export function organizationBudgetMonitorsQueryOptions(
-  organizationId: string | null | undefined,
-) {
-  return queryOptions({
-    queryKey: ['monitors', 'organization', organizationId, 'budget'],
-    queryFn: async () => {
-      const response = await sdk.forConsole.organizations.listMonitors({
-        organizationId: organizationId!,
-        queries: [Query.equal('type', ['budget']), Query.limit(25)],
-      })
-      return (response.monitors ?? [])
-        .map(parseMonitor)
-        .filter((monitor) => monitor.type === 'budget')
-        .sort((a, b) => b.threshold - a.threshold)
-    },
-    enabled: !!organizationId,
-    staleTime: DEFAULT_STALE_TIME,
-    retry: false,
-  })
-}
-
 /** How many synthetic checks the organization holds across its projects, which its plan counts. */
 export function organizationProbeCountQueryOptions(
   organizationId: string | null | undefined,
