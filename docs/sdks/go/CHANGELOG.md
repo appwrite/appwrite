@@ -1,5 +1,9 @@
 # Change Log
 
+## v7.25.1
+
+* Fixed: examples pass an empty `[]string{}` instead of the invalid `"example"` placeholder
+
 ## v7.25.0
 
 * Added: `videos` service to create, list, get, update and delete videos from files in Storage

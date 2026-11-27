@@ -128,8 +128,12 @@ export function OverviewSection({
           value={formatMs(metrics.startupMs)}
           tone={startupTone}
           hint={
-            player.manifestLoadedAt && player.requestedAt
-              ? `${t('Manifest')}: ${formatMs(player.manifestLoadedAt - player.requestedAt)}`
+            metrics.manifestMs != null
+              ? `${
+                  player.engine === 'native'
+                    ? t('Metadata (not counted)')
+                    : t('Manifest (not counted)')
+                }: ${formatMs(metrics.manifestMs)}`
               : undefined
           }
         />
@@ -253,7 +257,7 @@ function ScorePanel({
     {
       label: t('Startup'),
       value: scores?.startup ?? null,
-      hint: t('Time until the first frame'),
+      hint: t('Time from the manifest to the first frame'),
     },
     {
       label: t('Smoothness'),

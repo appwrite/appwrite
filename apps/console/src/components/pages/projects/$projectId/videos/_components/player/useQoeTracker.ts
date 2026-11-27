@@ -57,7 +57,10 @@ export type QoeScores = {
 }
 
 export type QoeMetrics = {
+  /** From the manifest's last byte to the first frame. */
   startupMs: number | null
+  /** How long the manifest took, which `startupMs` leaves out. */
+  manifestMs: number | null
   stallCount: number
   stallMs: number
   rebufferRatio: number
@@ -99,12 +102,16 @@ export function computeQoeMetrics(
   renderedHeight: number | null,
 ): QoeMetrics {
   const now = player.loadStartedAt ? Date.now() - player.loadStartedAt : 0
-  // From the stream request, not the mount: loading the player library is
-  // page cost, not video startup.
-  const requestedAt = player.requestedAt ?? player.loadStartedAt
+  // The stream's own startup: from the manifest to the first frame. The page,
+  // the player library and the manifest request itself are not counted.
+  const { requestedAt, manifestLoadedAt, firstFrameAt } = player
   const startupMs =
-    player.firstFrameAt && requestedAt
-      ? player.firstFrameAt - requestedAt
+    firstFrameAt != null && manifestLoadedAt != null
+      ? Math.max(0, firstFrameAt - manifestLoadedAt)
+      : null
+  const manifestMs =
+    manifestLoadedAt != null && requestedAt != null
+      ? Math.max(0, manifestLoadedAt - requestedAt)
       : null
   const stallMs = qoe.stalls.reduce((sum, s) => sum + stallDuration(s, now), 0)
   const rebufferRatio =
@@ -146,6 +153,7 @@ export function computeQoeMetrics(
 
   return {
     startupMs,
+    manifestMs,
     stallCount: qoe.stalls.length,
     stallMs,
     rebufferRatio,

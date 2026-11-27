@@ -5,10 +5,8 @@
  * All Appwrite operations are handled client-side.
  */
 
-import { Account, Activities, Affiliates, Analytics, Apps, Avatars, Backups, Client, Console, Functions, Growth, ImageFormat, Locale, Logs, Manager, Messaging, Migrations, Oauth2, Project, Project as ProjectApi, Projects, Proxy, Realtime, Storage, Teams, Users, Vcs, Sites, Tokens, TablesDB, DocumentsDB, VectorsDB, Postgresql, Mysql, Mongo, Domains, Organization, Organizations, Presences, Usage, Webhooks, Notifications, Waf, Videos } from '@appwrite.io/console'
+import { Account, Activities, Affiliates, Analytics, Apps, Avatars, Backups, Client, Console, Functions, Growth, ImageFormat, Locale, Logs, Manager, Messaging, Migrations, Oauth2, Project, Project as ProjectApi, Projects, Proxy, Realtime, Storage, Teams, Users, Vcs, Sites, Tokens, TablesDB, DocumentsDB, VectorsDB, Postgresql, Mysql, Mongo, Domains, Organization, Organizations, Presences, Usage, Webhooks, Notifications, Waf, Videos, Alerts, Monitors, Reviews } from '@appwrite.io/console'
 import { Agent } from '@/lib/appwrite/agent'
-import { Reviews } from '@/lib/appwrite/reviews'
-import { TeamSSO } from '@/lib/appwrite/team-sso'
 import { Zero } from '@/lib/appwrite/zero'
 import {
   getDebugEndpointBaseUrl,
@@ -32,7 +30,6 @@ import { resetFingerprintCache } from '@/lib/fingerprint'
 import { getActiveLanguage } from '@/lib/i18n/active-language'
 import { subscribeToDebugOverrides } from '@/lib/debug-overrides'
 import { getActiveEnvironmentId } from '@/lib/active-environment'
-import { Alerts, Monitors } from '@/lib/appwrite/monitors'
 
 /**
  * True when the endpoint host is a known multi-region Appwrite cloud host
@@ -197,8 +194,6 @@ function createConsoleSdkRaw(client: Client) {
     users: new Users(client),
     migrations: new Migrations(client),
     proxy: new Proxy(client),
-    // Hand-written until a Console SDK release carries the Teams single sign-on methods.
-    teamSSO: new TeamSSO(client),
     console: new Console(client),
     agent: new Agent(client),
     sites: new Sites(client),
@@ -561,13 +556,9 @@ const createProjectSdkRaw = (clientProject: Client) => ({
   storage: new Storage(clientProject),
   tokens: new Tokens(clientProject),
   teams: new Teams(clientProject),
-  // Hand-written until a Console SDK release carries the Teams single sign-on
-  // methods: single sign-on for the project's teams, on the project's client.
-  teamSSO: new TeamSSO(clientProject),
   users: new Users(clientProject),
   vcs: new Vcs(clientProject),
   proxy: new Proxy(clientProject),
-  // Hand-written until a Console SDK release carries the reviews service.
   reviews: new Reviews(clientProject),
   migrations: new Migrations(clientProject),
   sites: new Sites(clientProject),

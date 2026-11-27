@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.14.1
+
+* Fixed: examples import `System.Collections.Generic` for `List`
+
 ## 0.14.0
 
 * Added: `videos` service to create, list, get, update and delete videos from files in Storage

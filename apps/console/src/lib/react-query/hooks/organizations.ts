@@ -22,11 +22,7 @@ import {
 import type { Organization } from '@/lib/utils/mock-data'
 import { listConsoleProjects } from '@/lib/appwrite/console-projects'
 import { sdk } from '@/lib/appwrite/sdk'
-import { updateReviewCredits } from '@/lib/appwrite/organization-review-credits'
-import {
-  type BudgetUpdate,
-  updateBudgetRecipients,
-} from '@/lib/appwrite/organization-budget'
+import type { BudgetUpdate } from '@/lib/appwrite/organization-budget'
 import { readMockLocaleCountryCookie } from '@/lib/locale/visitor-country'
 import {
   isStartPlanEligibleCountry,
@@ -266,8 +262,20 @@ function createSelfHostedOrganizationPlan(): OrganizationPlan {
       baa: false,
       premiumGeoDB: false,
       premiumGeoDBOrg: false,
+      sso: false,
+      ssoOrg: false,
     },
     backupPolicies: 0,
+    // Alerting caps: 0 is uncapped, as these fields read when they were absent.
+    // Probes stay allowed, as alertingLimits() read the missing flag.
+    monitors: 0,
+    probes: 0,
+    monitorsAllowProbes: true,
+    alertInterval: 0,
+    probeInterval: 0,
+    escalations: 0,
+    escalationSteps: 0,
+    alertRetention: 0,
     deploymentSize: Number.MAX_SAFE_INTEGER,
     buildSize: Number.MAX_SAFE_INTEGER,
     functionsIntervalMinimum: 0,
@@ -1047,15 +1055,8 @@ export async function deleteOrganization(organizationId: string) {
  * @returns Updated organization
  */
 export async function updateOrganizationBudget(params: BudgetUpdate) {
-  const { notify, ...budget } = params
-  // Only a change of recipients sends `notify`: editions without them reject it.
-  if (notify !== undefined) {
-    return await updateBudgetRecipients(sdk.forConsole.client, {
-      ...budget,
-      notify,
-    })
-  }
-  return await sdk.forConsole.organizations.updateBudget(budget)
+  // `notify` is left out unless the recipients change: editions without them reject it.
+  return await sdk.forConsole.organizations.updateBudget(params)
 }
 
 /**
@@ -2498,7 +2499,7 @@ export function useUpdateOrganizationReviewCredits() {
 
   return useMutation({
     mutationFn: (params: { organizationId: string; overage: boolean }) =>
-      updateReviewCredits(sdk.forConsole.client, params),
+      sdk.forConsole.organizations.updateReviewCredits(params),
     onSuccess: async (_, variables) => {
       await queryClient.refetchQueries({
         queryKey: ['organization', variables.organizationId],

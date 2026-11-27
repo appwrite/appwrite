@@ -186,8 +186,6 @@ const CAPTIONS = [
     fileId: 'file000000000000000002',
     name: 'English',
     language: 'eng',
-    // Preview SDK types keep the removed field.
-    code: 'eng',
     default: true,
     embedded: false,
     targetDuration: 6,
@@ -204,8 +202,6 @@ const CAPTIONS = [
     fileId: 'file000000000000000003',
     name: 'Hebrew',
     language: 'heb',
-    // Preview SDK types keep the removed field.
-    code: 'heb',
     default: false,
     embedded: false,
     targetDuration: 6,
@@ -490,6 +486,14 @@ async function screenshot(page: Page, name: string) {
     path: test.info().outputPath(name),
     fullPage: true,
   })
+}
+
+/** A duration as the inspector writes it, `412 ms` or `1.52 s`, in ms. */
+function duration(text: string | null | undefined): number {
+  const value = text?.trim() ?? ''
+  if (value.endsWith(' ms')) return Number(value.slice(0, -3))
+  if (value.endsWith(' s')) return Number(value.slice(0, -2)) * 1000
+  throw new Error(`Not a duration: "${value}"`)
 }
 
 const profileRow = (page: Page, name: string) =>
@@ -777,6 +781,38 @@ test.describe('videos (mocked API)', () => {
 
     await scrollBy(-5000)
     await expect(player).toHaveCount(0)
+  })
+
+  test('times the first frame from the loaded manifest', async ({ page }) => {
+    await enableVideos(page)
+    await mockAppwriteApi(page, VIDEO, RENDITIONS, PROFILES, true)
+    // A slow manifest is not counted; a slow first segment is.
+    const delays: Record<string, number> = {
+      'master.m3u8': 1500,
+      'segment0.m4s': 400,
+    }
+    await page.route(`**/v1/videos/${VIDEO_ID}/outputs/**`, async (route) => {
+      const name = new URL(route.request().url()).pathname.split('/').pop()
+      await new Promise((resolve) => setTimeout(resolve, delays[name!] ?? 0))
+      await route.fallback()
+    })
+    await open(page, `/${VIDEO_ID}`, (page) =>
+      page.getByText('Time to first frame', { exact: true }),
+    )
+
+    const tile = page
+      .locator('dl > div')
+      .filter({ hasText: 'Time to first frame' })
+    await expect(tile.locator('dd')).toHaveText(/\d/, { timeout: 30_000 })
+    const startupMs = duration(await tile.locator('dd').textContent())
+    expect(startupMs).toBeGreaterThanOrEqual(400)
+    expect(startupMs).toBeLessThan(1500)
+    const hint = (await tile.locator('p').textContent()) ?? ''
+    expect(hint.startsWith('Manifest (not counted): ')).toBe(true)
+    expect(duration(hint.split(': ')[1])).toBeGreaterThanOrEqual(1500)
+    await tile.screenshot({
+      path: test.info().outputPath('videos-inspector-first-frame.png'),
+    })
   })
 
   for (const status of [404, 401] as const) {

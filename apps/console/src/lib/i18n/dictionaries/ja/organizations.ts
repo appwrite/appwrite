@@ -1854,11 +1854,16 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Search scopes': 'スコープを検索',
   'The app is created in your current organization. Switch organizations to create it in another one.': 'アプリは現在の組織に作成されます。別の組織に作成するには、組織を切り替えてください。',
   'Store this secret in your deployment environment before continuing.': '続行する前に、このシークレットをデプロイ環境に保存してください。',
-  'This app has no installation scopes to grant yet.': 'このアプリには、まだ付与できるインストールスコープがありません。',
   'App installed': 'アプリをインストールしました',
   'Failed to install app': 'アプリのインストールに失敗しました',
   'Values have a maximum length of {count} characters': '値の最大長は {count} 文字です',
   'This email is already added': 'このメールアドレスは既に追加されています',
   'This value is already added': 'この値は既に追加されています',
   Organization: '組織',
+  'Claim domain ownership': 'ドメインの所有権を申請',
+  'This domain is linked to another organization. Add this TXT record at your DNS provider, then verify to move it to this organization. You can remove the record after.':
+    'このドメインは別の組織にリンクされています。DNSプロバイダーでこのTXTレコードを追加してから検証すると、この組織に移動します。移動後はレコードを削除できます。',
+  'DNS changes can take time to propagate.':
+    'DNSの変更が反映されるまで時間がかかる場合があります。',
+  'Verify & claim': '検証して申請',
 }

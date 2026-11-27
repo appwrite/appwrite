@@ -502,10 +502,33 @@ class Create extends Action
     }
 
     /**
-     * GitHub sends the author's association with each comment.
+     * GitHub sends the author's association with each comment, but not always the one the author
+     * has: review comments from organization members arrive without MEMBER, while their
+     * conversation comments carry it. A human author the delivery does not trust is looked up
+     * instead, by their permission on the repository: admin counts as an owner, write as a
+     * collaborator. A failed read leaves the author untrusted.
      */
     protected function getCommentAuthorAssociation(array $parsedPayload, Document $installation, VcsFactory $vcsFactory, InstallationTokens $installationTokens, Database $dbForPlatform): string
     {
-        return \strval($parsedPayload['commentAuthorAssociation'] ?? '');
+        $association = \strval($parsedPayload['commentAuthorAssociation'] ?? '');
+        $author = \strval($parsedPayload['commentAuthor'] ?? '');
+        if (\in_array($association, ['OWNER', 'MEMBER', 'COLLABORATOR'], true) || ($parsedPayload['commentAuthorType'] ?? '') !== 'User' || $author === '') {
+            return $association;
+        }
+
+        try {
+            $vcs = $vcsFactory->fromInstallation($installation);
+            if (!$vcs instanceof GitHub) {
+                return $association;
+            }
+
+            $permission = $vcs->getCollaboratorPermission(\strval($parsedPayload['owner'] ?? ''), \strval($parsedPayload['repositoryName'] ?? ''), $author);
+        } catch (\Throwable $error) {
+            Console::warning("Failed to read the permission of comment author '{$author}': " . $error->getMessage());
+
+            return $association;
+        }
+
+        return $this->getAssociationFromPermission($permission) ?: $association;
     }
 }

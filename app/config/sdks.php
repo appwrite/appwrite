@@ -62,7 +62,7 @@ $platforms = [
             [
                 'key' => 'flutter',
                 'name' => 'Flutter',
-                'version' => '28.6.0',
+                'version' => '28.6.1',
                 'url' => 'https://github.com/appwrite/sdk-for-flutter',
                 'package' => 'https://pub.dev/packages/appwrite',
                 'enabled' => true,
@@ -124,7 +124,7 @@ $platforms = [
             [
                 'key' => 'react-native',
                 'name' => 'React Native',
-                'version' => '3.5.0',
+                'version' => '3.5.1',
                 'url' => 'https://github.com/appwrite/sdk-for-react-native',
                 'package' => 'https://npmjs.com/package/react-native-appwrite',
                 'enabled' => true,
@@ -143,7 +143,7 @@ $platforms = [
             [
                 'key' => 'unity',
                 'name' => 'Unity',
-                'version' => '0.14.0',
+                'version' => '0.14.1',
                 'url' => 'https://github.com/appwrite/sdk-for-unity',
                 'package' => 'https://github.com/appwrite/sdk-for-unity',
                 'enabled' => true,
@@ -267,7 +267,7 @@ $platforms = [
             [
                 'key' => 'agent-skills',
                 'name' => 'AgentSkills',
-                'version' => '0.7.0',
+                'version' => '0.8.0',
                 'url' => 'https://github.com/appwrite/skills',
                 'enabled' => true,
                 'beta' => false,
@@ -287,7 +287,7 @@ $platforms = [
             [
                 'key' => 'cursor-plugin',
                 'name' => 'CursorPlugin',
-                'version' => '0.2.0',
+                'version' => '0.4.0',
                 'url' => 'https://github.com/appwrite/cursor-plugin',
                 'enabled' => true,
                 'beta' => false,
@@ -307,7 +307,7 @@ $platforms = [
             [
                 'key' => 'claude-plugin',
                 'name' => 'ClaudePlugin',
-                'version' => '0.1.0',
+                'version' => '0.4.0',
                 'url' => 'https://github.com/appwrite/claude-plugin',
                 'enabled' => true,
                 'beta' => false,
@@ -327,7 +327,7 @@ $platforms = [
             [
                 'key' => 'codex-plugin',
                 'name' => 'CodexPlugin',
-                'version' => '0.1.1',
+                'version' => '0.4.0',
                 'url' => 'https://github.com/appwrite/codex-plugin',
                 'enabled' => true,
                 'beta' => false,
@@ -376,7 +376,7 @@ $platforms = [
             [
                 'key' => 'php',
                 'name' => 'PHP',
-                'version' => '32.7.0',
+                'version' => '32.7.1',
                 'url' => 'https://github.com/appwrite/sdk-for-php',
                 'package' => 'https://packagist.org/packages/appwrite/appwrite',
                 'enabled' => true,
@@ -433,7 +433,7 @@ $platforms = [
             [
                 'key' => 'go',
                 'name' => 'Go',
-                'version' => 'v7.25.0',
+                'version' => 'v7.25.1',
                 'url' => 'https://github.com/appwrite/sdk-for-go',
                 'package' => 'https://github.com/appwrite/sdk-for-go',
                 'enabled' => true,
