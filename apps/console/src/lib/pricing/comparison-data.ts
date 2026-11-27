@@ -285,6 +285,32 @@ export const comparisonTables: ComparisonTable[] = [
             ]
         },
         {
+            title: 'Videos',
+            rows: [
+                {
+                    title: 'Encoding',
+                    free: 'Counts toward GB-hours',
+                    pro: 'Counts toward GB-hours',
+                    enterprise: 'Counts toward GB-hours',
+                    info: 'Transcoding uploads into streaming renditions runs on compute and uses GB-hours.'
+                },
+                {
+                    title: 'Video storage',
+                    free: 'Counts toward storage',
+                    pro: 'Counts toward storage',
+                    enterprise: 'Counts toward storage',
+                    info: 'Source files, renditions, and captions.'
+                },
+                {
+                    title: 'Streaming',
+                    free: 'Counts toward bandwidth',
+                    pro: 'Counts toward bandwidth',
+                    enterprise: 'Counts toward bandwidth',
+                    info: 'HLS and DASH playback delivered through the Appwrite CDN.'
+                }
+            ]
+        },
+        {
             title: 'Compute',
             rows: [
                 {
@@ -476,13 +502,94 @@ export const comparisonTables: ComparisonTable[] = [
                 {
                     title: 'Properties',
                     free: '1 per project',
-                    pro: '5 per project',
+                    pro: 'Unlimited',
                     enterprise: 'Unlimited'
                 },
                 {
                     title: 'Data retention',
                     free: '30 days',
                     pro: '90 days',
+                    enterprise: 'Custom'
+                }
+            ]
+        },
+        {
+            title: 'Monitors',
+            rows: [
+                {
+                    title: 'Usage monitors',
+                    free: '3 per project',
+                    pro: '25 per project',
+                    enterprise: 'Custom',
+                    info: 'Alert when a project crosses a usage or budget threshold.'
+                },
+                {
+                    title: 'Usage monitor checks',
+                    free: 'Every 15 minutes',
+                    pro: 'Every minute',
+                    enterprise: 'Every minute'
+                },
+                {
+                    title: 'Synthetic checks',
+                    free: '-',
+                    pro: '10 per organization',
+                    enterprise: 'Custom',
+                    info: 'HTTP, DNS, TCP, and SMTP checks of your endpoints.'
+                },
+                {
+                    title: 'Additional synthetic checks',
+                    free: '-',
+                    pro: '$2 per check / month',
+                    enterprise: 'Custom'
+                },
+                {
+                    title: 'Synthetic check interval',
+                    free: '-',
+                    pro: 'Down to 60 seconds',
+                    enterprise: 'Down to 30 seconds'
+                },
+                {
+                    title: 'Escalations',
+                    free: '1, up to 2 steps',
+                    pro: '10, up to 10 steps each',
+                    enterprise: 'Unlimited',
+                    info: 'Who is notified about an alert, in which order, and how often it repeats.'
+                },
+                {
+                    title: 'On-call responders',
+                    free: '1',
+                    pro: '3 included',
+                    enterprise: 'Custom',
+                    info: 'Members named in any step of an escalation.'
+                },
+                {
+                    title: 'Additional on-call responders',
+                    free: '-',
+                    pro: '$25 per responder / month',
+                    enterprise: 'Custom'
+                },
+                {
+                    title: 'Alert history',
+                    free: '30 days',
+                    pro: '90 days',
+                    enterprise: '365 days'
+                }
+            ]
+        },
+        {
+            title: 'Reviews',
+            rows: [
+                {
+                    title: 'Code review credits',
+                    free: '100 / month',
+                    pro: '2,000 / month',
+                    enterprise: 'Custom',
+                    info: 'A basic review uses 10 credits, a normal review 50, and an expert review 500. Failed reviews and answers to review comments are free.'
+                },
+                {
+                    title: 'Additional credits',
+                    free: '-',
+                    pro: '$1 per 100 credits',
                     enterprise: 'Custom'
                 }
             ]
