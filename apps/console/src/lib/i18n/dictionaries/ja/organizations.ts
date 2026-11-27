@@ -1854,7 +1854,6 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Search scopes': 'スコープを検索',
   'The app is created in your current organization. Switch organizations to create it in another one.': 'アプリは現在の組織に作成されます。別の組織に作成するには、組織を切り替えてください。',
   'Store this secret in your deployment environment before continuing.': '続行する前に、このシークレットをデプロイ環境に保存してください。',
-  'This app has no installation scopes to grant yet.': 'このアプリには、まだ付与できるインストールスコープがありません。',
   'App installed': 'アプリをインストールしました',
   'Failed to install app': 'アプリのインストールに失敗しました',
   'Values have a maximum length of {count} characters': '値の最大長は {count} 文字です',

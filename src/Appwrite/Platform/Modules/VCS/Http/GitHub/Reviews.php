@@ -47,10 +47,23 @@ trait Reviews
 
     /**
      * The comment author's standing in the repository, as GitHub's author association names it:
-     * OWNER, MEMBER or COLLABORATOR may queue work, anything else may not. A provider that sends
-     * none asks for the author's permission through the installation.
+     * OWNER, MEMBER or COLLABORATOR lets the pull request's author queue work, anything else does
+     * not. A provider that sends none asks for the author's permission through the installation.
      */
     abstract protected function getCommentAuthorAssociation(array $parsedPayload, Document $installation, VcsFactory $vcsFactory, InstallationTokens $installationTokens, Database $dbForPlatform): string;
+
+    /**
+     * Whether the comment's author opened the pull request. Only they may queue work from a
+     * comment: the pull request and its findings are theirs to answer for. Logins are compared as
+     * the delivery names them; a provider whose comment deliveries do not name the pull request's
+     * author reads it instead.
+     */
+    protected function isPullRequestAuthor(array $parsedPayload, Document $installation, VcsFactory $vcsFactory): bool
+    {
+        $author = \strtolower(\strval($parsedPayload['pullRequestAuthor'] ?? ''));
+
+        return $author !== '' && $author === \strtolower(\strval($parsedPayload['commentAuthor'] ?? ''));
+    }
 
     /**
      * Queues a review of the pull request for each project that has code review on for the
@@ -169,14 +182,22 @@ trait Reviews
         $isReviewThread = $commentKind === 'review';
         // Asked once per installation: several projects may review the repository through one.
         $associations = [];
+        $authors = [];
 
         foreach ($repositories as ['repository' => $repository, 'installation' => $installation]) {
             try {
                 $delivery = $this->withStoredRepository($provider, $parsedPayload, $repository, $installation, $vcsFactory, $installationTokens, $dbForPlatform, $authorization);
 
-                // Every answer is a model run the project pays for: trusted humans and other apps
-                // may ask, never the reviewer itself. Checked once code review is known to be on, as
-                // a provider may have to be asked who the author is.
+                // Every answer is a model run the project pays for: only the pull request's author
+                // may ask, if trusted or another app, and never the reviewer itself. Checked once
+                // code review is known to be on, as a provider may have to be asked who the author is.
+                if (!($authors[$installation->getId()] ??= $this->isPullRequestAuthor($delivery, $installation, $vcsFactory))) {
+                    if ($authorType !== 'Bot' && $authorType !== 'App') {
+                        Console::info("Ignored {$subject} for repository '{$repository->getId()}': the author did not open the pull request");
+                    }
+                    continue;
+                }
+
                 $association = $associations[$installation->getId()] ??= $this->getCommentAuthorAssociation($delivery, $installation, $vcsFactory, $installationTokens, $dbForPlatform);
                 if (!$this->canTriggerFromComment($author, $authorType, $association, $this->getReviewerLogin($installation))) {
                     // Other apps may ask, so the only bot refused here is the reviewer itself, whose
@@ -465,9 +486,10 @@ trait Reviews
     }
 
     /**
-     * Whether a comment may queue work. Humans need an owner, member or collaborator association;
-     * other apps and bots may ask too (an agent answering a finding), but never the reviewer
-     * itself, so it does not answer itself in a loop. $self is the login the reviewer comments as.
+     * Whether the pull request's author may queue work with a comment. Humans need an owner,
+     * member or collaborator association; other apps and bots may ask too (an agent answering a
+     * finding on its pull request), but never the reviewer itself, so it does not answer itself in
+     * a loop. $self is the login the reviewer comments as.
      */
     private function canTriggerFromComment(string $login, string $type, string $association, string $self): bool
     {

@@ -1,12 +1,11 @@
 import type { ComparisonTable, PlanId, PricingPlan } from './types'
 
 /**
- * Analytics pricing is shown only while the `analytics` feature flag is on.
+ * Analytics plan bullets are shown only while the `analytics` feature flag is
+ * on (the comparison table is gated in ./flags).
  * Keep in step with `analyticsEvents` in the cloud repo's app/config/plans.php
  * and the per-100K overage in app/config/plans/usage.php.
  */
-export const ANALYTICS_COMPARISON_TABLE_TITLE = 'Analytics'
-
 const ANALYTICS_PLAN_FEATURES: Partial<Record<PlanId, string>> = {
   free: '50K analytics events',
   start: '50K analytics events',
@@ -29,15 +28,6 @@ export function withAnalyticsPlanFeatures(
     features.splice(anchor === -1 ? features.length : anchor + 1, 0, feature)
     return { ...plan, features }
   })
-}
-
-export function withAnalyticsComparison<T extends { title: string }>(
-  tables: readonly T[],
-  enabled: boolean,
-): T[] {
-  return enabled
-    ? [...tables]
-    : tables.filter((table) => table.title !== ANALYTICS_COMPARISON_TABLE_TITLE)
 }
 
 export type { ComparisonTable }
