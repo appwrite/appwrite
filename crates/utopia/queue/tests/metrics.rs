@@ -51,7 +51,8 @@ async fn a_committed_message_exports_what_php_workers_do() {
     js.publish("q.metrics-test.normal", body.clone().into()).await.unwrap().await.unwrap();
 
     let worker = Worker::join(js.clone(), "metrics-test").await.unwrap();
-    let mut deliveries = worker.receive(1, Duration::from_secs(5)).await.unwrap();
+    // Room for two, so the receive tops up for 250 ms after the first message arrives.
+    let mut deliveries = worker.receive(2, Duration::from_secs(5)).await.unwrap();
     assert_eq!(deliveries.len(), 1);
     worker.commit(deliveries.remove(0)).await.unwrap();
 
@@ -81,7 +82,10 @@ async fn a_committed_message_exports_what_php_workers_do() {
     assert_eq!(count, 1);
     assert!((2.0..6.0).contains(&waited), "waited {waited}s");
     assert_eq!(histogram("messaging.process.message.size"), (1, body.len() as f64));
-    assert_eq!(histogram("messaging.process.duration").0, 1);
+    // Committed as soon as it was handed over: the top-up is waiting, not processing.
+    let (count, processed) = histogram("messaging.process.duration");
+    assert_eq!(count, 1);
+    assert!(processed < 0.2, "processed in {processed}s");
 
     js.delete_stream("Q_METRICS-TEST").await.unwrap();
 }

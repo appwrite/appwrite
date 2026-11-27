@@ -163,6 +163,13 @@ impl Worker {
         if max > 1 && !deliveries.is_empty() {
             self.fetch(max - 1, TOP_UP, &mut deliveries).await?;
         }
+        // The work starts when the caller has the batch, as PHP's starts when its job callback
+        // runs: the top-up wait counts as waiting, not as processing.
+        let now = Instant::now();
+        for delivery in &mut deliveries {
+            delivery.received = now;
+            self.metrics.received(delivery.envelope.timestamp, delivery.message.payload.len());
+        }
         Ok(deliveries)
     }
 
@@ -179,8 +186,7 @@ impl Worker {
 
             match serde_json::from_slice::<Envelope>(&message.payload) {
                 Ok(envelope) => {
-                    self.metrics.received(envelope.timestamp, message.payload.len());
-                    deliveries.push(Delivery { envelope, attempts: delivered - 1, message, received: Instant::now() });
+                    deliveries.push(Delivery { envelope, attempts: delivered - 1, message, received: Instant::now() })
                 }
                 Err(_) => self.park(&message).await?,
             }
