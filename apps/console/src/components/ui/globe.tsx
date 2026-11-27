@@ -76,6 +76,9 @@ interface WorldProps {
   onReady?: () => void
 }
 
+/** The globes a `World` has built, and whether it has gone and destroyed them. */
+type GlobeInstances = { live: Set<ThreeGlobe>; closed: boolean }
+
 /**
  * three-globe has no `dispose()`: `_destructor()` stops its own rAF loop and layer
  * tickers, which otherwise keep running and hold the globe forever.
@@ -192,7 +195,7 @@ export function Globe({
   instances,
 }: WorldProps & {
   /** Live globes, so `World` can destroy them when its canvas unmounts. */
-  instances?: Set<ThreeGlobe>
+  instances?: GlobeInstances
 }) {
   const globeRef = useRef<ThreeGlobe | null>(null)
   const groupRef = useRef<Group | null>(null)
@@ -206,9 +209,10 @@ export function Globe({
   markersRef.current = markers
 
   useEffect(() => {
-    if (!globeRef.current && groupRef.current) {
+    // A canvas root can finish setting up after `World` has gone: build nothing then.
+    if (!globeRef.current && groupRef.current && !instances?.closed) {
       globeRef.current = new ThreeGlobe({ animateIn: false })
-      instances?.add(globeRef.current)
+      instances?.live.add(globeRef.current)
       groupRef.current.add(globeRef.current)
       applyGlobeLand(globeRef.current, resolvedRef.current.polygonColor)
       setIsInitialized(true)
@@ -218,7 +222,7 @@ export function Globe({
       const globe = globeRef.current
       if (globe) {
         destroyGlobe(globe)
-        instances?.delete(globe)
+        instances?.live.delete(globe)
       }
       globeRef.current = null
       setIsInitialized(false)
@@ -482,7 +486,10 @@ export function World({
   const eventSourceRef = useRef<HTMLDivElement>(null)
   const webglAvailable = useWebGLAvailable()
   const skippedReadyRef = useRef(false)
-  const [globes] = useState(() => new Set<ThreeGlobe>())
+  const [globes] = useState<GlobeInstances>(() => ({
+    live: new Set(),
+    closed: false,
+  }))
   const mountedRef = useRef(false)
 
   useEffect(() => {
@@ -494,8 +501,9 @@ export function World({
       // Wait a tick: StrictMode remounts straight away and keeps the same globes.
       window.setTimeout(() => {
         if (mountedRef.current) return
-        for (const globe of globes) destroyGlobe(globe)
-        globes.clear()
+        globes.closed = true
+        for (const globe of globes.live) destroyGlobe(globe)
+        globes.live.clear()
       })
     }
   }, [globes])
