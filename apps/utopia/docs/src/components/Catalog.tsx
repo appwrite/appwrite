@@ -12,12 +12,12 @@ import { epoch } from '@/lib/time'
  */
 
 /** How the list is ordered; anything but `category` shows one list instead of a section per category. */
-type Sort = 'category' | 'name' | 'updated' | 'size' | 'lines' | 'examples' | 'status'
+type Sort = 'category' | 'name' | 'released' | 'size' | 'lines' | 'examples' | 'status'
 
 const SORTS: { id: Sort; label: string }[] = [
   { id: 'category', label: 'Category' },
   { id: 'name', label: 'Name' },
-  { id: 'updated', label: 'Recently updated' },
+  { id: 'released', label: 'Recently released' },
   { id: 'size', label: 'Size (API items)' },
   { id: 'lines', label: 'Size (lines of Rust)' },
   { id: 'examples', label: 'Examples' },
@@ -56,7 +56,7 @@ function sorted(libs: LibrarySummary[], sort: Sort): LibrarySummary[] {
   const order = {
     category: by(() => 0),
     name: (a: LibrarySummary, b: LibrarySummary) => a.title.localeCompare(b.title),
-    updated: by((l) => epoch(l.updated)),
+    released: by((l) => epoch(l.released)),
     size: by((l) => (l.rust ? l.counts.items : -1)),
     lines: by((l) => l.size.rust?.total ?? -1),
     examples: by((l) => l.counts.examples),

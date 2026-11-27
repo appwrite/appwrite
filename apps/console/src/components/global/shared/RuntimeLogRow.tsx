@@ -194,9 +194,23 @@ const OPEN_SOURCE_LABELS: Record<string, string> = {
 }
 
 /**
+ * Whether the list can narrow to the line's resource: every function and
+ * site, and a database whose lines carry its own ID, as a native engine's do.
+ * A TablesDB, DocumentsDB or VectorsDB logs under its compute's ID instead.
+ */
+export function canFilterRuntimeLogSource(
+  resourceType: string,
+  source: RuntimeLogSource | undefined,
+): boolean {
+  if (resourceType === 'functions' || resourceType === 'sites') return true
+  return resourceType === 'databases' && !!source?.engine && !source.api
+}
+
+/**
  * Whether the Console has a page for the line's resource: every function and
- * site, and databases on a native engine. A TablesDB, DocumentsDB or VectorsDB
- * database logs under its compute, which has no page of its own.
+ * site, and databases on a native PostgreSQL or MySQL engine. A TablesDB,
+ * DocumentsDB or VectorsDB database logs under its compute, which has no page
+ * of its own.
  */
 export function canOpenRuntimeLogSource(
   resourceType: string,
@@ -238,6 +252,8 @@ export const RuntimeLogRow = memo(function RuntimeLogRow({
     onOpenSource && canOpenRuntimeLogSource(log.resourceType, source)
       ? OPEN_SOURCE_LABELS[log.resourceType]
       : null
+  const canFilter =
+    !!onShowSource && canFilterRuntimeLogSource(log.resourceType, source)
 
   const toggle = () => {
     // Selecting text to copy shouldn't open the details
@@ -358,9 +374,9 @@ export const RuntimeLogRow = memo(function RuntimeLogRow({
           <ContextMenuIcon icon={FileText} />
           {t('View details')}
         </ContextMenuItem>
-        {(onShowSource || openLabel) && <ContextMenuSeparator />}
-        {onShowSource && (
-          <ContextMenuItem onSelect={() => onShowSource(entry)}>
+        {(canFilter || openLabel) && <ContextMenuSeparator />}
+        {canFilter && (
+          <ContextMenuItem onSelect={() => onShowSource?.(entry)}>
             <ContextMenuIcon icon={Filter} />
             <span className="min-w-0 truncate">{t('Only this resource')}</span>
           </ContextMenuItem>

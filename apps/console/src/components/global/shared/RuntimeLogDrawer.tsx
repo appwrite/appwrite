@@ -13,6 +13,7 @@ import { CodeSnippetCopyButton } from '@/components/global/shared/CodeSnippetCop
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import {
+  canFilterRuntimeLogSource,
   canOpenRuntimeLogSource,
   RuntimeLogLevelBadge,
   RuntimeLogSourceIcon,
@@ -254,17 +255,18 @@ function RuntimeLogDetails({
                 <span className="font-mono">{log.resourceId}</span>
               </p>
             </div>
-            {onShowSource && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 shrink-0 gap-1.5 text-[12px]"
-                onClick={() => onShowSource(entry)}
-              >
-                <Filter className="h-3.5 w-3.5" />
-                {t('Only this resource')}
-              </Button>
-            )}
+            {onShowSource &&
+              canFilterRuntimeLogSource(log.resourceType, source) && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 shrink-0 gap-1.5 text-[12px]"
+                  onClick={() => onShowSource(entry)}
+                >
+                  <Filter className="h-3.5 w-3.5" />
+                  {t('Only this resource')}
+                </Button>
+              )}
             {onOpenSource &&
               canOpenRuntimeLogSource(log.resourceType, source) && (
                 <Button
