@@ -7,6 +7,7 @@
 
 import type { ReactElement } from 'react'
 import type { Models } from '@appwrite.io/console'
+import { getActiveEnvironmentId } from '@/lib/active-environment'
 
 export function GitHubIcon({ className }: { className?: string }) {
   return (
@@ -616,5 +617,9 @@ export function buildVcsAuthUrl(opts: {
     failure: failureUrl,
     mode: 'admin',
   })
+  // A browser redirect cannot send X-Appwrite-Environment, so the installation
+  // would land on the production project instead of the active environment
+  const environmentId = getActiveEnvironmentId(projectId)
+  if (environmentId) params.set('environment', environmentId)
   return `${endpoint}/vcs/${provider}/authorize?${params.toString()}`
 }
