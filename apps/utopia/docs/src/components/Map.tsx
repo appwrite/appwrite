@@ -5,9 +5,7 @@ import { chord, ribbon, type Chord, type ChordSubgroup } from 'd3-chord'
 import { arc } from 'd3-shape'
 import { APPWRITE, type Graph, type GraphNode, type Index } from '@/lib/docs'
 import { links as linksOf, neighbours, weight, type Link as Edge, type Runtime } from '@/lib/graph'
-import { useMigration } from '@/lib/prefs'
 import { StatusBadge, StatusDot } from './Status'
-import { MigrationOnly } from './Migration'
 
 const SIZE = 840
 
@@ -423,8 +421,8 @@ function Chord({
   )
 }
 
-function tagsOf(link: Edge, migration: boolean) {
-  return [migration && link.rust ? 'Rust' : '', migration && link.php ? 'PHP' : '', link.dev ? 'dev' : ''].filter(Boolean)
+function tagsOf(link: Edge) {
+  return [link.rust ? 'Rust' : '', link.php ? 'PHP' : '', link.dev ? 'dev' : ''].filter(Boolean)
 }
 
 function linkBetween(links: Edge[], a: string, b: string) {
@@ -449,22 +447,20 @@ function StatCell({ value, label }: { value: string; label: string }) {
   )
 }
 
-function NameRow({ node, color, onSelect, migration }: { node: GraphNode; color: string; onSelect: (id: string) => void; migration: boolean }) {
+function NameRow({ node, color, onSelect }: { node: GraphNode; color: string; onSelect: (id: string) => void }) {
   return (
     <span className="flex min-w-0 items-center gap-2">
       <span className="size-2.5 flex-none rounded-full" style={{ background: color }} />
       <button type="button" onClick={() => onSelect(node.id)} className="flex min-w-0 items-center gap-1.5 text-left hover:underline">
-        {node.status ? (
-          <MigrationOnly>
-            <StatusDot status={node.status} />
-          </MigrationOnly>
-        ) : null}
+        {node.status ? <StatusDot status={node.status} /> : null}
         <span className="truncate text-[15px] font-medium tracking-tight">{node.title}</span>
       </button>
-      {node.kind === 'app' ? null : (
+      {node.kind === 'app' ? null : node.rust ? (
         <Link to="/$lib" params={{ lib: node.id }} className="truncate font-mono text-[11px] text-muted-foreground hover:text-foreground">
-          {node.rust ?? (migration ? node.php : null)}
+          {node.rust}
         </Link>
+      ) : (
+        <span className="truncate font-mono text-[11px] text-muted-foreground">{node.php}</span>
       )}
     </span>
   )
@@ -478,7 +474,6 @@ function LibraryBoard({
   colors,
   titles,
   onSelect,
-  migration,
 }: {
   node: GraphNode
   out: Edge[]
@@ -487,7 +482,6 @@ function LibraryBoard({
   colors: Map<string, string>
   titles: Map<string, string>
   onSelect: (id: string) => void
-  migration: boolean
 }) {
   const seen = new Set<string>()
   const rivals: { other: GraphNode; link: Edge; strength: number }[] = []
@@ -511,31 +505,21 @@ function LibraryBoard({
         <span className="font-mono text-[10px] tracking-[0.2em] text-muted-foreground uppercase">{category}</span>
       </div>
       <div className="mt-3 flex items-start justify-between gap-2">
-        {node.kind === 'app' ? (
+        {node.kind === 'app' || !node.rust ? (
           <h2 className="text-[26px] leading-[1.05] font-medium tracking-tight">{node.title}</h2>
         ) : (
           <Link to="/$lib" params={{ lib: node.id }} className="text-[26px] leading-[1.05] font-medium tracking-tight hover:underline">
             {node.title}
           </Link>
         )}
-        {node.status ? (
-          <MigrationOnly>
-            <StatusBadge status={node.status} />
-          </MigrationOnly>
-        ) : null}
+        {node.status ? <StatusBadge status={node.status} /> : null}
       </div>
       {node.description ? <p className="mt-2 text-[13px] text-muted-foreground">{node.description}</p> : null}
       <div className="mt-5 grid grid-cols-2 gap-3 border-y border-border py-3">
         <StatCell value={String(out.length)} label="Depends on" />
         <StatCell value={String(into.length)} label="Used by" />
       </div>
-      {node.kind === 'app' ? (
-        <MigrationOnly>
-          <Link to="/migration/services" className="mt-3 inline-block text-[13px] hover:underline">
-            Appwrite migration
-          </Link>
-        </MigrationOnly>
-      ) : (
+      {node.kind === 'app' || !node.rust ? null : (
         <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-[13px]">
           <Link to="/$lib" params={{ lib: node.id }} className="hover:underline">
             Overview
@@ -552,7 +536,7 @@ function LibraryBoard({
       const depends = out.some((l) => l.target === rival.other.id)
       const used = into.some((l) => l.source === rival.other.id)
       const direction = depends && used ? 'Both ways' : depends ? 'Depends on' : 'Used by'
-            const tags = tagsOf(rival.link, migration)
+            const tags = tagsOf(rival.link)
             const rivalColor = colors.get(groupOf(rival.other)) ?? 'var(--muted-foreground)'
             return (
               <div key={rival.other.id}>
@@ -560,7 +544,7 @@ function LibraryBoard({
                   <span className="w-5 pt-1 font-mono text-[11px] text-muted-foreground tabular-nums">{String(i + 1).padStart(2, '0')}</span>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-3">
-                      <NameRow node={rival.other} color={rivalColor} onSelect={onSelect} migration={migration} />
+                      <NameRow node={rival.other} color={rivalColor} onSelect={onSelect} />
                       <span className="shrink-0 pt-1 font-mono text-[18px] leading-none tabular-nums">{rival.strength}</span>
                     </div>
                     <StrengthBar value={rival.strength} max={peak} color={rivalColor} />
@@ -588,7 +572,6 @@ function TieBoard({
   byId,
   colors,
   onSelect,
-  migration,
 }: {
   a: string
   b: string
@@ -596,7 +579,6 @@ function TieBoard({
   byId: Map<string, GraphNode>
   colors: Map<string, string>
   onSelect: (id: string) => void
-  migration: boolean
 }) {
   const left = byId.get(a)
   const right = byId.get(b)
@@ -606,7 +588,7 @@ function TieBoard({
   const aDepends = link?.source === a
   const bDepends = link?.source === b
   const story = aDepends && bDepends ? 'Each depends on the other' : aDepends ? `${left.title} depends on ${right.title}` : `${right.title} depends on ${left.title}`
-  const tags = link ? tagsOf(link, migration) : []
+  const tags = link ? tagsOf(link) : []
   return (
     <div>
       <div className="font-mono text-[10px] tracking-[0.2em] text-muted-foreground uppercase">Head to head</div>
@@ -709,7 +691,6 @@ function Board({
   colors,
   titles,
   onSelect,
-  migration,
   mode,
 }: {
   selection: Selection | null
@@ -719,12 +700,11 @@ function Board({
   colors: Map<string, string>
   titles: Map<string, string>
   onSelect: (id: string) => void
-  migration: boolean
   mode: Mode
 }) {
   let body: ReactNode
   if (selection?.type === 'tie' && byId.has(selection.a) && byId.has(selection.b)) {
-    body = <TieBoard a={selection.a} b={selection.b} link={linkBetween(shown, selection.a, selection.b)} byId={byId} colors={colors} onSelect={onSelect} migration={migration} />
+    body = <TieBoard a={selection.a} b={selection.b} link={linkBetween(shown, selection.a, selection.b)} byId={byId} colors={colors} onSelect={onSelect} />
   } else if (selection?.type === 'tie') {
     const pairs = pairsFor(shown, byId, (left, right) => {
       const groups = new Set([groupOf(left), groupOf(right)])
@@ -733,7 +713,7 @@ function Board({
     body = <CategoryBoard title={`${groupTitle(selection.a, titles)} · ${groupTitle(selection.b, titles)}`} color={colors.get(selection.a) ?? 'var(--muted-foreground)'} pairs={pairs} onSelect={onSelect} />
   } else if (selection?.type === 'node' && byId.has(selection.key)) {
     const node = byId.get(selection.key)!
-    body = <LibraryBoard node={node} out={near.out.get(node.id) ?? []} into={near.in.get(node.id) ?? []} byId={byId} colors={colors} titles={titles} onSelect={onSelect} migration={migration} />
+    body = <LibraryBoard node={node} out={near.out.get(node.id) ?? []} into={near.in.get(node.id) ?? []} byId={byId} colors={colors} titles={titles} onSelect={onSelect} />
   } else if ((selection?.type === 'node' || selection?.type === 'group') && titles.has(selection.key)) {
     const pairs = pairsFor(shown, byId, (left, right) => groupOf(left) === selection.key || groupOf(right) === selection.key)
     body = <CategoryBoard title={groupTitle(selection.key, titles)} color={colors.get(selection.key) ?? 'var(--muted-foreground)'} pairs={pairs} onSelect={onSelect} />
@@ -754,15 +734,8 @@ function Board({
  * another. Hover a library to see what it depends on and what depends on it; click one to keep it.
  */
 export function MapView({ graph: all, index }: { graph: Graph; index: Index }) {
-  const migration = useMigration()
-  const graph = useMemo(() => {
-    if (migration) return all
-    const nodes = all.nodes.filter((n) => n.kind === 'app' || n.rust)
-    const ids = new Set(nodes.map((n) => n.id))
-    return { ...all, nodes, edges: all.edges.filter((e) => e.runtime === 'rust' && ids.has(e.source) && ids.has(e.target)) }
-  }, [all, migration])
-  const [chosen, setRuntime] = useState<Runtime>('both')
-  const runtime: Runtime = migration ? chosen : 'rust'
+  const graph = all
+  const [runtime, setRuntime] = useState<Runtime>('both')
   const [dev, setDev] = useState(false)
   const [showApp, setShowApp] = useState(true)
   const [mode, setMode] = useState<Mode>('libraries')
@@ -876,7 +849,7 @@ export function MapView({ graph: all, index }: { graph: Graph; index: Index }) {
   const term = q.trim().toLowerCase()
   const matches = term
     ? nodes
-        .filter((n) => `${n.title} ${n.id} ${n.rust ?? ''} ${migration ? (n.php ?? '') : ''}`.toLowerCase().includes(term))
+        .filter((n) => `${n.title} ${n.id} ${n.rust ?? ''} ${n.php ?? ''}`.toLowerCase().includes(term))
         .sort((a, b) => Number(!a.title.toLowerCase().startsWith(term)) - Number(!b.title.toLowerCase().startsWith(term)))
         .slice(0, 8)
     : []
@@ -918,7 +891,7 @@ export function MapView({ graph: all, index }: { graph: Graph; index: Index }) {
                 <li key={n.id}>
                   <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => pick(n.id)} className="flex w-full items-center justify-between gap-2 rounded px-2 py-1 text-left text-[13px] hover:bg-accent">
                     <span className="truncate">{n.title}</span>
-                    <span className="truncate font-mono text-[11px] text-muted-foreground">{n.rust ?? (migration ? n.php : null)}</span>
+                    <span className="truncate font-mono text-[11px] text-muted-foreground">{n.rust ?? n.php}</span>
                   </button>
                 </li>
               ))}
@@ -939,7 +912,7 @@ export function MapView({ graph: all, index }: { graph: Graph; index: Index }) {
           ]}
           label="View"
         />
-        {migration ? <RuntimeSwitch value={runtime} onChange={setRuntime} /> : null}
+        <RuntimeSwitch value={runtime} onChange={setRuntime} />
         <Toggle on={dev} onChange={setDev}>
           Dev dependencies
         </Toggle>
@@ -973,7 +946,7 @@ export function MapView({ graph: all, index }: { graph: Graph; index: Index }) {
                 </ul>
               ) : null}
             </div>
-            <Board selection={selection} shown={shown} near={near} byId={byId} colors={colors} titles={titles} onSelect={selectLibrary} migration={migration} mode={mode} />
+            <Board selection={selection} shown={shown} near={near} byId={byId} colors={colors} titles={titles} onSelect={selectLibrary} mode={mode} />
           </>
         ) : (
           <p className="m-0 px-4 py-10 text-sm text-muted-foreground">No dependencies to draw for this view.</p>

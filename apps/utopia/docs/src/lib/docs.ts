@@ -1,51 +1,12 @@
-// The JSON `bin/compat crates` writes to apps/utopia/docs/data (see
-// crates/tools/compat/src/runner/crates.rs), loaded as Vite modules.
-
-/** `retired`: not converted, by design (crates/CONVERSION.md §8); older data has no such library. */
-export type Status = 'complete' | 'progress' | 'started' | 'planned' | 'retired'
-
-/** Whether a Rust crate follows its PHP library's latest changes. */
-export type SyncState = 'synced' | 'behind' | 'planned' | 'unknown' | 'untracked'
-
-export interface Commit {
-  hash: string
-  short: string
-  date: string
-  author: string
-  subject: string
-}
-
-export interface Release {
-  tag: string
-  version: string
-  date: string
-}
-
-export interface Sync {
-  state: SyncState
-  estimated?: boolean
-  synced?: Commit
-  latest?: Commit | null
-  behind?: { commits: number; files: number; insertions: number; deletions: number; list: Commit[] }
-  releases?: Release[]
-  release?: Release | null
-  /** `head`: the date of the ref's last commit; `fetched`: when the repository last fetched (older data leaves it out). */
-  upstream?: { ref: string; head: string | null; fetched?: string | null; commits: number; list: Commit[] } | null
-}
+// The JSON `bun run generate` (scripts/generate.ts) writes to apps/utopia/docs/data, loaded as Vite modules.
 
 /**
- * When a library's parts last changed (commit dates; older data leaves it out): its compat cases and spec, its crate,
- * its benchmark results and its PHP package. `bench_stale`: the crate changed after the commit the benchmarks ran on.
- * `at`: the latest of them, the benchmark run included.
+ * Where a library is in the move from PHP to Rust, read from the utopia PHP extension (crates/extension):
+ * `rust`: the extension always serves it and no PHP class of it is left; `partial`: the extension always
+ * serves some of its classes and the rest are still PHP; `switchable`: the extension takes its PHP classes
+ * over when switched on; `planned`: PHP only.
  */
-export interface Updated {
-  cases: string | null
-  crate: string | null
-  bench: string | null
-  bench_stale: boolean | null
-  php: string | null
-  at: string | null
-}
+export type Status = 'rust' | 'partial' | 'switchable' | 'planned'
 
 /** Lines of source: code, comments (doc comments included) and blank lines. */
 export interface Lines {
@@ -56,59 +17,10 @@ export interface Lines {
   files: number
 }
 
-/** A library's size: its crate's `src/` (and `build.rs`) and its PHP package's `src/`, each with its tests apart. */
+/** A library's size: its crate's `src/` and what is left of its PHP package's `src/`. */
 export interface Size {
-  rust: (Lines & { tests: Lines }) | null
-  php: (Lines & { tests: Lines }) | null
-}
-
-/** Lines summed over libraries (`tests`: their test lines), and how many libraries count. */
-export interface SizeTotal extends Lines {
-  tests: number
-  libraries: number
-}
-
-/** php-std's inventory totals (`entries`: functions, methods and behaviours together). */
-export interface PhpFunctionTotals {
-  entries: number
-  functions: number
-  methods: number
-  behaviours: number
-  groups: number
-  operations: number
-  cases: number
-  fuzz: { profiles: number; inputs: number }
-  quirks: number
-  deviations: number
-  used_by: number
-}
-
-/** One PHP function, method or engine behaviour php-std reimplements, and its proof. */
-export interface PhpFunction {
-  name: string
-  kind: 'function' | 'method' | 'behaviour'
-  group: string
-  /** The compat operations exercising it, and their docs. */
-  ops: string[]
-  doc: string[]
-  /** The Rust items implementing it (paths in the crate). */
-  rust: string[]
-  cases: number
-  fuzz: { profiles: number; inputs: number }
-  quirks: { symbol: string; description: string; case: string }[]
-  deviations: { symbol: string; php: string; reason: string }[]
-  /** Crates whose code reaches the Rust items (Utopia slugs; Appwrite crates as `appwrite-<name>`). */
-  used_by: string[]
-  /** For a crate reaching them only through other php-std items, those items (older data leaves it out). */
-  used_via?: Record<string, string[]>
-  /** `filter_var`: each filter, with its cases and fuzz inputs (a profile picking among filters shares its inputs). */
-  variants?: { name: string; value: number; cases: number; fuzz: { profiles: number; inputs: number } }[]
-}
-
-export interface PhpFunctions {
-  totals: PhpFunctionTotals
-  groups: { id: string; title: string; areas: string[]; functions: number; doc: string }[]
-  functions: PhpFunction[]
+  rust: Lines | null
+  php: Lines | null
 }
 
 export interface LibrarySummary {
@@ -116,68 +28,24 @@ export interface LibrarySummary {
   title: string
   category: string
   description: string
-  php_description?: string | null
   status: Status
-  php: { package: string; source: 'monorepo' | 'composer'; dir: string; version: string | null } | null
-  rust: { name: string; crate: string; dir: string; group: string; version: string } | null
-  compat: { complete: boolean; operations: number; cases: number; summary: string } | null
-  /** Why the library is not converted, by design (its spec's `not_converted`; older data leaves it out). */
-  not_converted?: { reason: string } | null
-  sync: { state: SyncState; estimated: boolean | null; behind: number | null; releases: number; upstream: number | null }
+  /** The PHP package: `dir` is null once the whole package is removed, `version` set for one Composer installs. */
+  php: { package: string; dir: string | null; version: string | null } | null
+  rust: { name: string; crate: string; dir: string; version: string; docs: string } | null
+  /** PHP classes the extension serves from Rust, and classes of the package still written in PHP (null when its source is not in this repository). */
+  classes: { rust: number; php: number | null }
   counts: {
     items: number
     documented: number
     examples: number
     guide: boolean
-    /** Whether the crate has a lifecycle guide (`lifecycle.md`; older data leaves it out). */
-    lifecycle?: boolean
-    php_symbols: number
-    linked: number
-    /** The PHP library's tasks and how many the crate ports or waives (older data leaves it out). */
-    tasks?: { total: number; ported: number; waived: number; pending: number }
-    /**
-     * How many dependencies of each kind (older data leaves it out). `php` counts the PHP package's `require`.
-     * `dependents` counts every library depending on it, through either runtime, plus Appwrite when it does
-     * (older data leaves `php_used_by`, `appwrite` and `dependents` out). `rust_dependents` counts them through
-     * Rust alone, Appwrite's crates included: what the docs show outside migration mode.
-     */
-    dependencies?: { rust: number; dev: number; build: number; used_by: number; php: number; php_used_by?: number; appwrite?: boolean; dependents?: number; rust_dependents?: number }
-    /** php-std only: the PHP functions it reimplements (older data leaves it out). */
-    php_functions?: PhpFunctionTotals | null
+    dependencies: { rust: number; dev: number; build: number; used_by: number }
+    /** Files of the Appwrite server importing the library. */
+    appwrite: number
   }
-  /**
-   * Geometric means over the benchmarks, compat ones left out: `speedup` (PHP time / Rust time) and `cpu` (PHP CPU
-   * time / Rust CPU time per call; null or absent when the results predate CPU measurement). `memory`: PHP's driver
-   * peak resident memory over Rust's, each the largest of the run (null or absent before memory was measured).
-   */
-  bench: { speedup: number; benchmarks: number; cpu?: number | null; memory?: number | null } | null
-  /** The crate's compile time (`compat build`), null without a run that timed it; older data leaves it out. */
-  build?: BuildTime | null
-  updated?: Updated
-  /** Older data leaves it out. */
-  size?: Size
-}
-
-/**
- * A crate's compile time in seconds (`bin/compat build --write`, tests/compat/build.json), from scratch with its
- * dependencies compiled: `lib` is its library's rustc run, `total` adds its build script and binaries. The latest
- * run's times, and the `average` over the `runs` kept on that run's machine.
- */
-export interface BuildTime {
-  lib: number | null
-  total: number
-  average: { lib: number | null; total: number | null }
-  runs: number
-  date: string
-  commit: string
-  profile: string
-}
-
-/** The latest `compat build` run: where it ran, and how long compiling every crate took (`wall`, seconds). */
-export interface BuildRun {
-  environment: { date: string; commit: string; machine: { os: string; arch: string; cpu: string }; rustc: string; profile: string; jobs: number | null }
-  wall: number
-  crates: number
+  size: Size
+  /** The date of the last commit to the crate, or to the PHP package without one. */
+  updated: string | null
 }
 
 export interface Category {
@@ -192,13 +60,12 @@ export interface Index {
   libraries: LibrarySummary[]
   commit: string | null
   branch: string | null
-  /** When `bin/compat crates` wrote the data (UTC), and the date of its commit (older data leaves them out). */
-  generated_at?: string
-  commit_date?: string | null
-  /** Lines across the ecosystem: every crate, every PHP package, and both sides of the libraries with both (older data leaves it out). */
-  size?: { rust: SizeTotal; php: SizeTotal; php_converted: SizeTotal; rust_converted?: SizeTotal }
-  /** The latest `compat build` run, null without one (older data leaves it out). */
-  build?: BuildRun | null
+  generated_at: string
+  commit_date: string | null
+  /** Lines across the ecosystem: every crate, and every PHP package's remaining source. */
+  size: { rust: Lines; php: Lines }
+  /** PHP classes served from Rust, and classes still written in PHP, across the libraries in this repository. */
+  classes: { rust: number; php: number }
 }
 
 export interface Code {
@@ -222,15 +89,12 @@ export interface Item {
   implements: string | null
   signature: string
   doc: string
-  /** PHP mentions moved out of `doc`, for the migration view. */
-  php_notes?: string
   inherits: string | null
   inherited_doc: string | null
   file: string
   line: number
   export: string | null
   examples: Example[]
-  php: string[]
   /** A function's parts, for outlines: receiver (`&self`, or null for an associated function), parameters and return type. */
   function: { receiver: string | null; params: { name: string; type: string }[]; output: string; async: boolean } | null
 }
@@ -238,145 +102,14 @@ export interface Item {
 export interface Module {
   path: string
   doc: string
-  php_notes?: string
   examples: Example[]
   file: string
   public: boolean
 }
 
-export interface PhpSymbol {
-  symbol: string
-  class: string | null
-  namespace: string
-  name: string
-  signature: string
-  static: boolean
-  params: { name: string; type: string; default: string | null; optional: boolean }[]
-  returns: string
-  doc: string
-  class_doc: string
-  file: string
-  line: number
-  rust: string[]
-}
-
 export type GuideBlock = { text: string } | { example: Example }
 
-/** A `- `name`: description` entry of a task's documentation. */
-export interface TaskEntry {
-  name: string
-  description: string
-}
-
-/** The PHP program a task is, as `compat coverage` discovers it. */
-export interface PhpTask {
-  /** The program's repository path, or `<package>/composer.json#<script>`. */
-  id: string
-  kind: 'bin' | 'script' | 'file'
-  /** The package directory it runs from. */
-  dir: string
-  /** How PHP runs it, from the package directory. */
-  command: string
-  /** Composer scripts that run it. */
-  scripts: { name: string; command: string }[]
-}
-
-/**
- * A program the library ships besides its API (a data import, a generator). A ported task is a
- * binary of the crate; a waived one has a reason; a pending one is PHP only.
- */
-export type Task =
-  | {
-      name: string
-      status: 'ported'
-      bin: string
-      package: string
-      /** `cargo run -p <package> --bin <bin>`. */
-      command: string
-      summary: string
-      /** Shell examples from the binary's docs. */
-      usage: string[]
-      /** The rest of its docs, as Markdown. */
-      doc: string
-      commands: TaskEntry[]
-      arguments: TaskEntry[]
-      environment: TaskEntry[]
-      exit_codes: TaskEntry[]
-      php_notes: string
-      /** Repository paths of the files it writes. */
-      writes: string[]
-      /** Case files that run it on both runtimes. */
-      cases: string[]
-      php: PhpTask
-    }
-  | { name: string; status: 'waived'; reason: string; php: PhpTask }
-  | { name: string; status: 'pending'; php: PhpTask }
-
-/** A task's anchor on its library's page. */
-export const taskHash = (name: string) => `task.${name}`
-
-/**
- * One runtime's timing of a benchmark (`compat bench`; tests/compat/README.md#benchmarks): wall nanoseconds per
- * call (median, fastest and slowest sample). Files written since the drivers measure CPU and memory add `cpu`
- * (process CPU ns per call), `peak` (most heap held above the start of the samples, bytes), `retained` (heap
- * growth per call, bytes) and `rss` (the driver's peak resident memory so far, bytes); older files leave them out.
- * Rust also counts heap `allocations` and `bytes` allocated per call (Rust's `peak` and `retained` need it too).
- */
-export interface Timing {
-  ns: number
-  min: number
-  max: number
-  samples: number
-  calls: number
-  cpu?: number
-  peak?: number
-  retained?: number
-  rss?: number
-  allocations?: number
-  bytes?: number
-}
-
-export interface Bench {
-  lib: string
-  environment: {
-    date: string
-    commit: string
-    machine: { os: string; arch: string; cpu: string }
-    // `image`, `os` and `kernel` (and Rust's `runs`) since benchmarks run both
-    // drivers in containers; older files leave them out (Rust ran on the host).
-    php: { version: string; opcache: boolean; jit: string; runs: string; image?: string | null; os?: string; kernel?: string }
-    rust: { version: string; profile: string; runs?: string; image?: string | null; os?: string; kernel?: string }
-  }
-  /**
-   * `bound`: why the benchmark is bound by work both runtimes wait on equally (it must reach parity, not win).
-   * `compat`: why it times a PHP-compatibility codec no Rust hot path uses (reported, never gated, left out of the mean).
-   */
-  results: { name: string; description: string | null; php: Timing; rust: Timing; speedup: number; bound?: string | null; compat?: string | null }[]
-}
-
-/** `1234.5` ns → `1.23 µs`, `2594060000` ns → `2.59 s`: three significant digits in the largest unit that fits. */
-export function duration(ns: number) {
-  const [v, u] = ns >= 1e9 ? [ns / 1e9, 's'] : ns >= 1e6 ? [ns / 1e6, 'ms'] : ns >= 1e3 ? [ns / 1e3, 'µs'] : [ns, 'ns']
-  return `${v.toFixed(v >= 100 ? 0 : v >= 10 ? 1 : u === 'ns' && v >= 1 ? 1 : 2)} ${u}`
-}
-
-/** `2.167` → `2.2×`. */
-export const times = (x: number) => `${x >= 10 ? Math.round(x) : x.toFixed(1)}×`
-
-/** `1536` → `1.50 KiB`: binary units, three significant digits. */
-export function bytes(b: number) {
-  const units = ['B', 'KiB', 'MiB', 'GiB']
-  let v = Math.abs(b)
-  let u = 0
-  while (v >= 1024 && u < units.length - 1) {
-    v /= 1024
-    u++
-  }
-  const n = u === 0 ? Math.round(v).toString() : v.toFixed(v >= 100 ? 0 : v >= 10 ? 1 : 2)
-  return `${b < 0 ? '-' : ''}${n} ${units[u]}`
-}
-
-/** A dependency of the Rust crate, from its `Cargo.toml` (workspace entries resolved). */
+/** A dependency of the Rust crate, from `cargo metadata`. */
 export interface RustDependency {
   /** The key in the manifest. */
   name: string
@@ -386,31 +119,14 @@ export interface RustDependency {
   /** A `[target.'cfg(…)'.dependencies]` table's target. */
   target: string | null
   requirement: string | null
-  /** Repository path of a workspace member. */
-  path: string | null
-  git: string | null
-  workspace: boolean
   optional: boolean
-  default_features: boolean
-  features: string[]
   /** The crate features that turn an optional dependency on. */
   enabled_by: string[]
+  default_features: boolean
+  features: string[]
   /** The version `Cargo.lock` resolved. */
   locked: string | null
   /** The library's slug, for another Utopia crate of this repository. */
-  utopia: string | null
-  /** The comment above the entry, in the crate's manifest or the workspace's. */
-  note: string | null
-}
-
-/** A requirement of the PHP package's `composer.json`. */
-export interface PhpDependency {
-  name: string
-  kind: 'normal' | 'dev'
-  requirement: string
-  /** `php`, `ext-*` and `lib-*`: the runtime, not a package. */
-  platform: boolean
-  locked: string | null
   utopia: string | null
 }
 
@@ -420,22 +136,8 @@ export interface Dependencies {
   build: RustDependency[]
   /** The Utopia crates that depend on this one, and how. */
   used_by: { slug: string; kinds: RustDependency['kind'][] }[]
-  /** The Utopia PHP packages requiring this library's package (older data leaves it out). */
-  php_used_by?: { slug: string; kinds: PhpDependency['kind'][] }[]
-  /** How Appwrite depends on it, when it does (older data leaves it out). */
-  appwrite?: AppwriteUse | null
-  php: PhpDependency[]
-}
-
-/** Appwrite's use of a library: its Rust crates (`crates/appwrite/*`) and its PHP server. */
-export interface AppwriteUse {
-  rust: { crate: string; dir: string; kinds: RustDependency['kind'][] }[]
-  /**
-   * `require`: the root `composer.json` requires the package. `import`: the server's code imports it
-   * without requiring it (a package of this monorepo, wired by the root autoload). `files` counts the
-   * PHP files in `app/` and `src/` importing it.
-   */
-  php: { via: 'require' | 'import'; kinds: PhpDependency['kind'][]; files: number } | null
+  /** The parts of Appwrite whose files import the library, with how many do. */
+  appwrite: { kind: AppwriteComponent['kind']; name: string; files: number }[]
 }
 
 /** A library, or Appwrite itself, in the ecosystem's dependency graph. */
@@ -450,8 +152,6 @@ export interface GraphNode {
   rust: string | null
   /** The PHP package name. */
   php: string | null
-  /** Appwrite's crates. */
-  crates?: string[]
   /** Appwrite's parts: its API modules, workers, schedulers, realtime and MQTT servers, each with the libraries its files import. */
   components?: AppwriteComponent[]
 }
@@ -463,16 +163,12 @@ export interface AppwriteComponent {
   libraries: Record<string, number>
 }
 
-/** `source` depends on `target` through one runtime; `kinds` holds `normal`, `dev` and `build`. */
+/** `source` depends on `target`: `rust` through Cargo, `php` through Composer or an import. */
 export interface GraphEdge {
   source: string
   target: string
   runtime: 'rust' | 'php'
   kinds: ('normal' | 'dev' | 'build')[]
-  /** Appwrite's crates behind a Rust edge. */
-  crates?: string[]
-  /** How Appwrite's PHP server depends on it. */
-  via?: 'require' | 'import'
 }
 
 export interface Graph {
@@ -483,42 +179,23 @@ export interface Graph {
 /** The graph's id for Appwrite. */
 export const APPWRITE = 'appwrite'
 
-/**
- * Who depends on a library, as the reader sees it: through either runtime in migration mode, through Rust
- * alone otherwise. `appwrite` says whether Appwrite is among them.
- */
-export function dependents(counts: NonNullable<LibrarySummary['counts']['dependencies']>, migration: boolean): { count: number; appwrite: boolean } {
-  if (migration) return { count: counts.dependents ?? counts.used_by, appwrite: !!counts.appwrite }
-  const rust = counts.rust_dependents ?? counts.used_by
-  return { count: rust, appwrite: rust > counts.used_by }
-}
-
 export interface Library {
   library: LibrarySummary
-  bench: Bench | null
-  install: { cargo: string | null; composer: string | null }
+  install: { cargo: string }
   overview: string
-  overview_notes: string
   guide: GuideBlock[]
-  /** A server's lifecycle guide (`lifecycle.md`); older data leaves it out. */
-  lifecycle?: GuideBlock[]
-  /** Older data leaves it out. */
-  tasks?: Task[]
-  /** Older data leaves it out. */
-  dependencies?: Dependencies
-  sync: Sync
+  dependencies: Dependencies
+  /** The PHP classes the extension serves from this crate, and the package's classes still written in PHP. */
+  classes: { rust: string[]; php: string[] }
   examples: Example[]
   modules: Module[]
   items: Item[]
   reexports: { name: string; source: string }[]
-  php_api: PhpSymbol[]
-  /** php-std only (older data leaves it out). */
-  php_functions?: PhpFunctions | null
 }
 
 const indexModule = import.meta.glob<Index>('../../data/index.json', { import: 'default' })
-// `appwrite.json` is the Appwrite migration (src/lib/appwrite.ts) and `graph.json` the ecosystem's dependencies, not libraries.
-const libraryModules = import.meta.glob<Library>(['../../data/*.json', '!../../data/index.json', '!../../data/appwrite.json', '!../../data/graph.json'], { import: 'default' })
+// `graph.json` is the ecosystem's dependencies, not a library.
+const libraryModules = import.meta.glob<Library>(['../../data/*.json', '!../../data/index.json', '!../../data/graph.json'], { import: 'default' })
 const graphModule = import.meta.glob<Graph>('../../data/graph.json', { import: 'default' })
 
 export async function loadIndex(): Promise<Index | null> {
@@ -526,7 +203,6 @@ export async function loadIndex(): Promise<Index | null> {
   return load ? load() : null
 }
 
-/** The ecosystem's graph; older data has none. */
 export async function loadGraph(): Promise<Graph | null> {
   const load = Object.values(graphModule)[0]
   return load ? load() : null
@@ -538,26 +214,28 @@ export async function loadLibrary(slug: string): Promise<Library | null> {
 }
 
 export const STATUS: Record<Status, { label: string; note: string }> = {
-  complete: { label: 'Converted', note: 'Every PHP behaviour is matched in Rust and proven by bin/compat.' },
-  progress: { label: 'In progress', note: 'The Rust crate is being checked against PHP; the gaps left are listed.' },
-  started: { label: 'Started', note: 'A Rust crate exists, but it is not compared with PHP yet.' },
-  planned: { label: 'Planned', note: 'Available in PHP; the Rust conversion has not started.' },
-  retired: { label: 'Not converted — by design', note: 'It fills a PHP gap that a Rust ecosystem standard already covers, so it has no Rust crate.' },
+  rust: { label: 'Rust', note: 'Appwrite runs the Rust crate: the PHP extension serves the library and none of its PHP is left.' },
+  partial: { label: 'Partly Rust', note: 'Appwrite runs some of its classes from the Rust crate; the rest are still PHP.' },
+  switchable: { label: 'Rust, switchable', note: 'The Rust crate serves the PHP classes when switched on; the PHP source is still there to fall back to.' },
+  planned: { label: 'PHP', note: 'Written in PHP; no Rust crate yet.' },
 }
 
-/** The statuses of libraries being converted, furthest first; `retired` ones are counted apart. */
-export const CONVERSION: Status[] = ['complete', 'progress', 'started', 'planned']
+/** Furthest along first. */
+export const STATUSES: Status[] = ['rust', 'partial', 'switchable', 'planned']
 
-/** How many libraries are converted, of how many are to be, and how many are not converted by design. */
-export function conversion(libraries: Pick<LibrarySummary, 'status'>[]) {
-  const retired = libraries.filter((l) => l.status === 'retired').length
-  return { converted: libraries.filter((l) => l.status === 'complete').length, total: libraries.length - retired, retired }
+/**
+ * How many of the PHP libraries have a Rust crate behind them (partly or switchable included), of how
+ * many PHP libraries there are. Crates with no PHP library (php-std) are not part of the move.
+ */
+export function progress(libraries: Pick<LibrarySummary, 'status' | 'php'>[]) {
+  const php = libraries.filter((l) => l.php)
+  return { rust: php.filter((l) => l.status !== 'planned').length, total: php.length }
 }
 
-/** `49 of 50 libraries converted, 1 not converted by design`. */
-export function conversionLine(libraries: Pick<LibrarySummary, 'status'>[]) {
-  const c = conversion(libraries)
-  return `${c.converted} of ${c.total} libraries converted${c.retired ? `, ${c.retired} not converted by design` : ''}`
+/** `13 of 52 libraries on Rust`. */
+export function progressLine(libraries: Pick<LibrarySummary, 'status' | 'php'>[]) {
+  const p = progress(libraries)
+  return `${p.rust} of ${p.total} libraries on Rust`
 }
 
 export const isTopLevel = (i: Pick<Item, 'kind'>) => i.kind !== 'method'
@@ -647,21 +325,9 @@ export function navigation(lib: Library) {
     modules: lib.modules.map((m) => ({ ...m, summary: summary(m.doc), doc: '', examples: [] as Example[] })),
     items: lib.items.map((i) => ({ ...i, doc: '', inherited_doc: null, signature: '', examples: [] as Example[] })),
     reexports: lib.reexports,
-    tasks: (lib.tasks ?? []).map((t) => ({ name: t.name, status: t.status, bin: t.status === 'ported' ? t.bin : null })),
-    phpClasses: [...new Set(lib.php_api.map((p) => p.class ?? p.namespace))].filter(Boolean) as string[],
   }
 }
 export type Navigation = ReturnType<typeof navigation>
-
-/** A PHP docblock's description: the text before its `@tags`, without indentation Markdown would read as code. */
-export function phpDescription(doc: string | null | undefined) {
-  const lines: string[] = []
-  for (const line of String(doc ?? '').split('\n')) {
-    if (/^\s*@\w/.test(line)) break
-    lines.push(line.trim())
-  }
-  return lines.join('\n').trim()
-}
 
 /** A heading's anchor: `Read a connection string` → `read-a-connection-string`. */
 export function slug(text: string) {
@@ -671,45 +337,9 @@ export function slug(text: string) {
     .replace(/^-|-$/g, '')
 }
 
-/**
- * A guide as it reads outside migration mode: the sections under a heading naming PHP (sharing data with a
- * PHP service), their examples included, and the paragraphs that are only a PHP comparison (`PHP: …`) are
- * left out. Mentions of PHP inside a paragraph about the Rust API stay: they are part of its description.
- */
-export function rustGuide(guide: GuideBlock[]): GuideBlock[] {
-  const out: GuideBlock[] = []
-  let skip = 0 // the level of the PHP heading being skipped, 0 when none
-  let fenced = false
-  for (const b of guide) {
-    if (!('text' in b)) {
-      if (!skip) out.push(b)
-      continue
-    }
-    const kept: string[] = []
-    for (const line of b.text.split('\n')) {
-      if (line.trimStart().startsWith('```')) fenced = !fenced
-      const level = !fenced && line.startsWith('#') ? line.length - line.replace(/^#+/, '').length : 0
-      if (level && line.charAt(level) === ' ') {
-        if (skip && level <= skip) skip = 0
-        if (!skip && line.includes('PHP')) skip = level
-      }
-      if (!skip) kept.push(line)
-    }
-    const text = kept
-      .join('\n')
-      .split('\n\n')
-      .filter((p) => !p.trimStart().startsWith('PHP:'))
-      .join('\n\n')
-      .trim()
-    if (text) out.push({ ...b, text })
-  }
-  return out
-}
-
 /** The `##` headings of a guide, for the page's table of contents. */
 export function guideHeadings(guide: GuideBlock[]) {
   return guide.flatMap((b) => ('text' in b ? b.text.split('\n').filter((l) => l.startsWith('## ')).map((l) => l.slice(3).trim()) : []))
 }
 
 export const commitUrl = (hash: string) => `https://github.com/appwrite/appwrite/commit/${hash}`
-export const releaseUrl = (slug: string, version: string) => `https://github.com/utopia-php/${slug}/releases/tag/${version}`

@@ -29,7 +29,7 @@ function Home() {
       <div className="max-w-2xl border border-border bg-card p-5">
         <h1 className="text-3xl">No documentation yet</h1>
         <p className="mt-2 text-muted-foreground">
-          Generate it from the repository root with <code className="font-mono">bin/compat crates</code> (or <code className="font-mono">bun run generate</code> here), then reload.
+          Run <code className="font-mono">bun run generate</code> in <code className="font-mono">apps/utopia/docs</code>, then reload.
         </p>
       </div>
     )

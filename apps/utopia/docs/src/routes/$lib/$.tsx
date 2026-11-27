@@ -4,8 +4,6 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { CodeBlock, Examples } from '@/components/Code'
 import { Markdown } from '@/components/Markdown'
 import { PageHeader, Section, WithToc } from '@/components/Page'
-import { PhpCounterpart } from '@/components/Php'
-import { PhpNotes } from '@/components/Migration'
 import { badge } from '@/components/Status'
 import {
   KIND_LABEL,
@@ -20,7 +18,6 @@ import {
   sourceUrl,
   summary,
   usePath,
-  type PhpSymbol,
 } from '@/lib/docs'
 
 const root = getRouteApi('__root__')
@@ -41,7 +38,6 @@ async function load(params: { lib: string; _splat?: string }) {
   const path = segments.length === 1 && segments[0] === ROOT ? '' : segments.join('::')
   const module = lib.modules.find((m) => m.path === path)
   if (!module) throw notFound()
-  const php = (symbols: string[]) => symbols.map((s) => lib.php_api.find((p) => p.symbol === s)).filter((p): p is PhpSymbol => !!p)
   const traitNames = new Set(lib.items.filter((i) => i.kind === 'trait').map((i) => i.name))
   const where = (name: string) => {
     const found = lib.items.find((i) => isTopLevel(i) && i.name === name)
@@ -62,11 +58,9 @@ async function load(params: { lib: string; _splat?: string }) {
       const unique = lib.items.filter((i) => isTopLevel(i) && i.name === item.name).length === 1
       const methods = lib.items
         .filter((i) => i.kind === 'method' && i.owner === item.name && (i.module === item.module || unique))
-        .map((m) => ({ ...m, phpSymbols: php(m.php) }))
       const traits = [...new Set(methods.map((m) => m.implements).filter((t): t is string => !!t))]
       return {
         item,
-        php: php(item.php),
         inherent: methods.filter((m) => !m.implements),
         // Traits of this library get their methods listed; standard ones (Debug, From, ...) are named.
         impls: traits.filter((t) => traitNames.has(t)).map((t) => ({ name: t, at: where(t), methods: methods.filter((m) => m.implements === t) })),
@@ -137,9 +131,7 @@ function Method({ owner, m }: { owner: string; m: MethodData }) {
       </div>
       <CodeBlock code={m.signature} lang="rust" />
       <Doc doc={m.doc} inherited={m.inherited_doc} from={m.inherits} />
-      <PhpNotes notes={m.php_notes} />
       <Examples examples={m.examples} />
-      <PhpCounterpart symbols={m.phpSymbols} />
     </div>
   )
 }
@@ -453,9 +445,7 @@ function ItemSection({ entry }: { entry: Entry }) {
       {compact ? null : <code className="font-mono text-[12px] text-muted-foreground">use {usePath(nav.library, item)};</code>}
       <CodeBlock code={item.signature} lang="rust" />
       <Doc doc={item.doc} />
-      <PhpNotes notes={item.php_notes} />
       <Examples examples={item.examples} />
-      <PhpCounterpart symbols={entry.php} />
       {entry.external.length ? (
         <div className="text-[12.5px] text-muted-foreground">
           Also implements{' '}
@@ -545,7 +535,6 @@ function ModulePage() {
           {module.path ? null : `What ${crate} defines at its root.`}
         </PageHeader>
         {module.path ? <Doc doc={module.doc} /> : null}
-        {module.path ? <PhpNotes notes={module.php_notes} /> : null}
         {module.path ? <Examples examples={module.examples} /> : null}
       </div>
 

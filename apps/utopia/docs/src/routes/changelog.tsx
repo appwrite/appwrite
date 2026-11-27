@@ -62,13 +62,7 @@ function Changelog() {
                       </a>
                     </h2>
                     {entry.tag ? (
-                      <span
-                        className={
-                          entry.tag === 'Migration'
-                            ? 'label border border-migration-border bg-migration px-1.5 py-0.5 text-migration-ink'
-                            : 'label border border-border px-1.5 py-0.5 text-muted-foreground'
-                        }
-                      >
+                      <span className="label border border-border px-1.5 py-0.5 text-muted-foreground">
                         {entry.tag}
                       </span>
                     ) : null}

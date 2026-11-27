@@ -1,19 +1,16 @@
 import { STATUS, type Status } from '@/lib/docs'
 
-// Not converted, by design: a hollow neutral dot, so it never reads as a stage of the conversion.
 const DOT: Record<Status, string> = {
-  complete: 'bg-ok',
-  progress: 'bg-progress',
-  started: 'bg-started',
+  rust: 'bg-ok',
+  partial: 'bg-progress',
+  switchable: 'bg-started',
   planned: 'bg-planned',
-  retired: 'bg-transparent ring-1 ring-inset ring-muted-foreground',
 }
 const BADGE: Record<Status, string> = {
-  complete: 'bg-ok-soft text-ok-ink',
-  progress: 'bg-progress-soft text-progress-ink',
-  started: 'bg-started-soft text-started-ink',
+  rust: 'bg-ok-soft text-ok-ink',
+  partial: 'bg-progress-soft text-progress-ink',
+  switchable: 'bg-started-soft text-started-ink',
   planned: 'bg-planned-soft text-planned-ink',
-  retired: 'border border-dashed border-border bg-transparent text-muted-foreground',
 }
 
 /** Every badge on the site: a square tag in mono capitals, its tint from the caller. */

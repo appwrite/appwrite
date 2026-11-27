@@ -1,3 +1,4 @@
+/// <reference types="bun" />
 import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 

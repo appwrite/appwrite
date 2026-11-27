@@ -1,13 +1,12 @@
 import { useSyncExternalStore } from 'react'
 import { trackDocsEvent } from '@/lib/analytics'
 
-// Per-reader preferences, kept in this browser: migration mode (PHP and the
-// conversion's status next to the Rust docs) and how library lists are laid
-// out (cards or rows). The server renders the defaults (the Rust docs alone);
-// the stored choice applies once the page hydrates.
+// Per-reader preferences, kept in this browser: how library lists are laid
+// out (cards or rows). The server renders the default; the stored choice
+// applies once the page hydrates.
 
-type Key = 'migration' | 'layout'
-const DEFAULTS: Record<Key, string> = { migration: 'off', layout: 'grid' }
+type Key = 'layout'
+const DEFAULTS: Record<Key, string> = { layout: 'grid' }
 const listeners = new Set<() => void>()
 
 function read(key: Key): string {
@@ -41,13 +40,6 @@ function usePref(key: Key) {
     () => memory[key] ?? read(key),
     () => DEFAULTS[key],
   )
-}
-
-/** Migration mode: PHP twins, PHP signatures, conversion status and sync, in yellow cards. */
-export const useMigration = () => usePref('migration') === 'on'
-export const setMigration = (on: boolean) => {
-  write('migration', on ? 'on' : 'off')
-  trackDocsEvent('migration_mode_changed', { enabled: on })
 }
 
 /** How lists of libraries are shown: a grid of cards, or one row per library. */

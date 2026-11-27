@@ -1,4 +1,4 @@
-import { Link, getRouteApi, useMatch, useRouterState } from '@tanstack/react-router'
+import { Link, getRouteApi, useRouterState } from '@tanstack/react-router'
 import { Fragment } from 'react'
 
 const root = getRouteApi('__root__')
@@ -13,18 +13,12 @@ export function Crumbs() {
   const path = useRouterState({ select: (s) => decodeURIComponent(s.location.pathname) })
   const parts = path.split('/').filter(Boolean)
   const crumbs: { label: string; to?: string; params?: Record<string, string> }[] = []
-  const service = useMatch({ from: '/migration/services/$service', shouldThrow: false })?.loaderData?.service
-  if (parts[0] === 'migration') {
-    // The dashboard's tabs say where its own pages sit; a service's page sits under Services.
-    if (parts[1] === 'services' && parts[2]) {
-      crumbs.push({ label: 'Migration', to: '/migration' }, { label: 'Services', to: '/migration/services' }, { label: service?.title ?? parts[2] })
-    }
-  } else if (index && parts.length > 1 && !['map', 'changelog', 'libraries', 'categories'].includes(parts[0])) {
+  if (index && parts.length > 1 && !['map', 'changelog', 'libraries', 'categories'].includes(parts[0])) {
     const lib = index.libraries.find((l) => l.slug === parts[0])
     const category = index.categories.find((c) => c.id === lib?.category)
     if (category) crumbs.push({ label: category.title, to: '/categories/$category', params: { category: category.id } })
     if (lib) crumbs.push({ label: lib.title, to: '/$lib', params: { lib: lib.slug } })
-    for (const p of parts.slice(1)) crumbs.push({ label: p === 'php-api' ? 'PHP API' : p === 'root' ? 'Crate root' : p === 'functions' && parts.length === 2 ? 'PHP functions' : p })
+    for (const p of parts.slice(1)) crumbs.push({ label: p === 'root' ? 'Crate root' : p })
   }
   if (crumbs.length < 2) return null
   return (

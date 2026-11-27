@@ -8,7 +8,6 @@ import { Check, Copy, Maximize2, Minimize2 } from 'lucide-react'
 import { useState } from 'react'
 import type { Example } from '@/lib/docs'
 import { trackDocsEvent } from '@/lib/analytics'
-import { useMigration } from '@/lib/prefs'
 
 export type Lang = 'rust' | 'php' | 'toml' | 'bash' | 'text'
 
@@ -52,27 +51,23 @@ export function CodeBlock({
   title,
   program,
   note,
-  migration,
 }: {
   code: string
   lang: Lang
   title?: string | null
   program?: string
   note?: string
-  /** A migration detail (a PHP twin): framed like the other migration cards. */
-  migration?: boolean
 }) {
   const [full, setFull] = useState(false)
   const runnable = program && program.trim() !== code.trim()
   const text = full && program ? program : code
   return (
-    <div className={`min-w-0 overflow-hidden border bg-code ${migration ? 'border-migration-border' : 'border-code-border'}`}>
-      <div className={`flex items-center gap-2 border-b py-1 pr-1 pl-3 ${migration ? 'border-migration-border bg-migration' : 'border-code-border bg-code-header'}`}>
-        <span className={`flex items-center gap-2 font-mono text-[10px] font-medium tracking-[0.12em] uppercase ${migration ? 'text-migration-ink' : 'text-code-header-fg'}`}>
-          {migration ? null : <span className="marker" aria-hidden />}
+    <div className="min-w-0 overflow-hidden border border-code-border bg-code">
+      <div className="flex items-center gap-2 border-b border-code-border bg-code-header py-1 pr-1 pl-3">
+        <span className="flex items-center gap-2 font-mono text-[10px] font-medium tracking-[0.12em] text-code-header-fg uppercase">
+          <span className="marker" aria-hidden />
           {LABEL[lang]}
         </span>
-        {migration ? <span className="text-[10px] font-semibold tracking-wider text-migration-ink uppercase">migration</span> : null}
         {title ? <span className="truncate border-l border-code-border pl-2 font-mono text-[11px] text-zinc-500">{title}</span> : null}
         <span className="flex-1" />
         {runnable ? (
@@ -96,17 +91,15 @@ export function CodeBlock({
   )
 }
 
-/** One example: Rust, and next to it PHP when the comparison is on. */
+/** One example: Rust, and next to it the same in PHP when the docs give it. */
 export function ExampleView({ example }: { example: Example }) {
-  const migration = useMigration()
-  const showPhp = migration && example.php
   const rustOnlyNote = example.rust?.attributes.includes('no_run') ? 'Compiles in CI; needs a running service to execute.' : undefined
   return (
     <div className="grid gap-2">
       {example.title ? <div className="text-[13.5px] font-medium">{example.title}</div> : null}
-      <div className={`grid min-w-0 gap-3 ${showPhp && example.rust ? 'md:grid-cols-2' : ''}`}>
+      <div className={`grid min-w-0 gap-3 ${example.php && example.rust ? 'md:grid-cols-2' : ''}`}>
         {example.rust ? <CodeBlock code={example.rust.shown} program={example.rust.program} lang="rust" note={rustOnlyNote} /> : null}
-        {showPhp && example.php ? <CodeBlock code={example.php.shown} program={example.php.program} lang="php" migration /> : null}
+        {example.php ? <CodeBlock code={example.php.shown} program={example.php.program} lang="php" /> : null}
       </div>
     </div>
   )

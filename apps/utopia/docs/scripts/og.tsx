@@ -31,7 +31,7 @@ interface Category {
 }
 
 if (!existsSync(root('data/index.json'))) {
-  console.log('og: no data/index.json yet (run bin/compat crates); no cards rendered')
+  console.log('og: no data/index.json yet (run bun run generate); no cards rendered')
   process.exit(0)
 }
 const index = JSON.parse(readFileSync(root('data/index.json'), 'utf8')) as { libraries: Library[]; categories: Category[] }

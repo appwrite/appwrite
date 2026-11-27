@@ -15,24 +15,10 @@ import { Route as ChangelogRouteImport } from './routes/changelog'
 import { Route as ContributingRouteImport } from './routes/contributing'
 import { Route as LibrariesRouteImport } from './routes/libraries'
 import { Route as MapRouteImport } from './routes/map'
-import { Route as MigrationRouteImport } from './routes/migration'
 import { Route as LibIndexRouteImport } from './routes/$lib/index'
 import { Route as LibSplatRouteImport } from './routes/$lib/$'
-import { Route as LibBenchmarksRouteImport } from './routes/$lib/benchmarks'
 import { Route as LibDependenciesRouteImport } from './routes/$lib/dependencies'
-import { Route as LibFunctionsRouteImport } from './routes/$lib/functions'
-import { Route as LibLifecycleRouteImport } from './routes/$lib/lifecycle'
-import { Route as AppwriteIndexRouteImport } from './routes/appwrite/index'
-import { Route as AppwriteSplatRouteImport } from './routes/appwrite/$'
 import { Route as CategoriesCategoryRouteImport } from './routes/categories/$category'
-import { Route as MigrationIndexRouteImport } from './routes/migration/index'
-import { Route as MigrationFactsRouteImport } from './routes/migration/facts'
-import { Route as MigrationHooksRouteImport } from './routes/migration/hooks'
-import { Route as MigrationTasksRouteImport } from './routes/migration/tasks'
-import { Route as MigrationUtopiaRouteImport } from './routes/migration/utopia'
-import { Route as LibPhpApiSplatRouteImport } from './routes/$lib/php-api/$'
-import { Route as MigrationServicesIndexRouteImport } from './routes/migration/services/index'
-import { Route as MigrationServicesServiceRouteImport } from './routes/migration/services/$service'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -64,11 +50,6 @@ const MapRoute = MapRouteImport.update({
   path: '/map',
   getParentRoute: () => rootRouteImport,
 } as any)
-const MigrationRoute = MigrationRouteImport.update({
-  id: '/migration',
-  path: '/migration',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const LibIndexRoute = LibIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -79,82 +60,16 @@ const LibSplatRoute = LibSplatRouteImport.update({
   path: '/$',
   getParentRoute: () => LibRoute,
 } as any)
-const LibBenchmarksRoute = LibBenchmarksRouteImport.update({
-  id: '/benchmarks',
-  path: '/benchmarks',
-  getParentRoute: () => LibRoute,
-} as any)
 const LibDependenciesRoute = LibDependenciesRouteImport.update({
   id: '/dependencies',
   path: '/dependencies',
   getParentRoute: () => LibRoute,
-} as any)
-const LibFunctionsRoute = LibFunctionsRouteImport.update({
-  id: '/functions',
-  path: '/functions',
-  getParentRoute: () => LibRoute,
-} as any)
-const LibLifecycleRoute = LibLifecycleRouteImport.update({
-  id: '/lifecycle',
-  path: '/lifecycle',
-  getParentRoute: () => LibRoute,
-} as any)
-const AppwriteIndexRoute = AppwriteIndexRouteImport.update({
-  id: '/appwrite/',
-  path: '/appwrite/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AppwriteSplatRoute = AppwriteSplatRouteImport.update({
-  id: '/appwrite/$',
-  path: '/appwrite/$',
-  getParentRoute: () => rootRouteImport,
 } as any)
 const CategoriesCategoryRoute = CategoriesCategoryRouteImport.update({
   id: '/categories/$category',
   path: '/categories/$category',
   getParentRoute: () => rootRouteImport,
 } as any)
-const MigrationIndexRoute = MigrationIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => MigrationRoute,
-} as any)
-const MigrationFactsRoute = MigrationFactsRouteImport.update({
-  id: '/facts',
-  path: '/facts',
-  getParentRoute: () => MigrationRoute,
-} as any)
-const MigrationHooksRoute = MigrationHooksRouteImport.update({
-  id: '/hooks',
-  path: '/hooks',
-  getParentRoute: () => MigrationRoute,
-} as any)
-const MigrationTasksRoute = MigrationTasksRouteImport.update({
-  id: '/tasks',
-  path: '/tasks',
-  getParentRoute: () => MigrationRoute,
-} as any)
-const MigrationUtopiaRoute = MigrationUtopiaRouteImport.update({
-  id: '/utopia',
-  path: '/utopia',
-  getParentRoute: () => MigrationRoute,
-} as any)
-const LibPhpApiSplatRoute = LibPhpApiSplatRouteImport.update({
-  id: '/php-api/$',
-  path: '/php-api/$',
-  getParentRoute: () => LibRoute,
-} as any)
-const MigrationServicesIndexRoute = MigrationServicesIndexRouteImport.update({
-  id: '/services/',
-  path: '/services/',
-  getParentRoute: () => MigrationRoute,
-} as any)
-const MigrationServicesServiceRoute =
-  MigrationServicesServiceRouteImport.update({
-    id: '/services/$service',
-    path: '/services/$service',
-    getParentRoute: () => MigrationRoute,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -163,24 +78,10 @@ export interface FileRoutesByFullPath {
   '/contributing': typeof ContributingRoute
   '/libraries': typeof LibrariesRoute
   '/map': typeof MapRoute
-  '/migration': typeof MigrationRouteWithChildren
   '/$lib/$': typeof LibSplatRoute
-  '/$lib/benchmarks': typeof LibBenchmarksRoute
   '/$lib/dependencies': typeof LibDependenciesRoute
-  '/$lib/functions': typeof LibFunctionsRoute
-  '/$lib/lifecycle': typeof LibLifecycleRoute
-  '/appwrite/$': typeof AppwriteSplatRoute
   '/categories/$category': typeof CategoriesCategoryRoute
-  '/migration/facts': typeof MigrationFactsRoute
-  '/migration/hooks': typeof MigrationHooksRoute
-  '/migration/tasks': typeof MigrationTasksRoute
-  '/migration/utopia': typeof MigrationUtopiaRoute
   '/$lib/': typeof LibIndexRoute
-  '/appwrite/': typeof AppwriteIndexRoute
-  '/migration/': typeof MigrationIndexRoute
-  '/$lib/php-api/$': typeof LibPhpApiSplatRoute
-  '/migration/services/$service': typeof MigrationServicesServiceRoute
-  '/migration/services/': typeof MigrationServicesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -189,22 +90,9 @@ export interface FileRoutesByTo {
   '/libraries': typeof LibrariesRoute
   '/map': typeof MapRoute
   '/$lib/$': typeof LibSplatRoute
-  '/$lib/benchmarks': typeof LibBenchmarksRoute
   '/$lib/dependencies': typeof LibDependenciesRoute
-  '/$lib/functions': typeof LibFunctionsRoute
-  '/$lib/lifecycle': typeof LibLifecycleRoute
-  '/appwrite/$': typeof AppwriteSplatRoute
   '/categories/$category': typeof CategoriesCategoryRoute
-  '/migration/facts': typeof MigrationFactsRoute
-  '/migration/hooks': typeof MigrationHooksRoute
-  '/migration/tasks': typeof MigrationTasksRoute
-  '/migration/utopia': typeof MigrationUtopiaRoute
   '/$lib': typeof LibIndexRoute
-  '/appwrite': typeof AppwriteIndexRoute
-  '/migration': typeof MigrationIndexRoute
-  '/$lib/php-api/$': typeof LibPhpApiSplatRoute
-  '/migration/services/$service': typeof MigrationServicesServiceRoute
-  '/migration/services': typeof MigrationServicesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -214,24 +102,10 @@ export interface FileRoutesById {
   '/contributing': typeof ContributingRoute
   '/libraries': typeof LibrariesRoute
   '/map': typeof MapRoute
-  '/migration': typeof MigrationRouteWithChildren
   '/$lib/$': typeof LibSplatRoute
-  '/$lib/benchmarks': typeof LibBenchmarksRoute
   '/$lib/dependencies': typeof LibDependenciesRoute
-  '/$lib/functions': typeof LibFunctionsRoute
-  '/$lib/lifecycle': typeof LibLifecycleRoute
-  '/appwrite/$': typeof AppwriteSplatRoute
   '/categories/$category': typeof CategoriesCategoryRoute
-  '/migration/facts': typeof MigrationFactsRoute
-  '/migration/hooks': typeof MigrationHooksRoute
-  '/migration/tasks': typeof MigrationTasksRoute
-  '/migration/utopia': typeof MigrationUtopiaRoute
   '/$lib/': typeof LibIndexRoute
-  '/appwrite/': typeof AppwriteIndexRoute
-  '/migration/': typeof MigrationIndexRoute
-  '/$lib/php-api/$': typeof LibPhpApiSplatRoute
-  '/migration/services/$service': typeof MigrationServicesServiceRoute
-  '/migration/services/': typeof MigrationServicesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -242,24 +116,10 @@ export interface FileRouteTypes {
     | '/contributing'
     | '/libraries'
     | '/map'
-    | '/migration'
     | '/$lib/$'
-    | '/$lib/benchmarks'
     | '/$lib/dependencies'
-    | '/$lib/functions'
-    | '/$lib/lifecycle'
-    | '/appwrite/$'
     | '/categories/$category'
-    | '/migration/facts'
-    | '/migration/hooks'
-    | '/migration/tasks'
-    | '/migration/utopia'
     | '/$lib/'
-    | '/appwrite/'
-    | '/migration/'
-    | '/$lib/php-api/$'
-    | '/migration/services/$service'
-    | '/migration/services/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -268,22 +128,9 @@ export interface FileRouteTypes {
     | '/libraries'
     | '/map'
     | '/$lib/$'
-    | '/$lib/benchmarks'
     | '/$lib/dependencies'
-    | '/$lib/functions'
-    | '/$lib/lifecycle'
-    | '/appwrite/$'
     | '/categories/$category'
-    | '/migration/facts'
-    | '/migration/hooks'
-    | '/migration/tasks'
-    | '/migration/utopia'
     | '/$lib'
-    | '/appwrite'
-    | '/migration'
-    | '/$lib/php-api/$'
-    | '/migration/services/$service'
-    | '/migration/services'
   id:
     | '__root__'
     | '/'
@@ -292,24 +139,10 @@ export interface FileRouteTypes {
     | '/contributing'
     | '/libraries'
     | '/map'
-    | '/migration'
     | '/$lib/$'
-    | '/$lib/benchmarks'
     | '/$lib/dependencies'
-    | '/$lib/functions'
-    | '/$lib/lifecycle'
-    | '/appwrite/$'
     | '/categories/$category'
-    | '/migration/facts'
-    | '/migration/hooks'
-    | '/migration/tasks'
-    | '/migration/utopia'
     | '/$lib/'
-    | '/appwrite/'
-    | '/migration/'
-    | '/$lib/php-api/$'
-    | '/migration/services/$service'
-    | '/migration/services/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -319,10 +152,7 @@ export interface RootRouteChildren {
   ContributingRoute: typeof ContributingRoute
   LibrariesRoute: typeof LibrariesRoute
   MapRoute: typeof MapRoute
-  MigrationRoute: typeof MigrationRouteWithChildren
-  AppwriteSplatRoute: typeof AppwriteSplatRoute
   CategoriesCategoryRoute: typeof CategoriesCategoryRoute
-  AppwriteIndexRoute: typeof AppwriteIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -369,13 +199,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MapRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/migration': {
-      id: '/migration'
-      path: '/migration'
-      fullPath: '/migration'
-      preLoaderRoute: typeof MigrationRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/$lib/': {
       id: '/$lib/'
       path: '/'
@@ -390,47 +213,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LibSplatRouteImport
       parentRoute: typeof LibRoute
     }
-    '/$lib/benchmarks': {
-      id: '/$lib/benchmarks'
-      path: '/benchmarks'
-      fullPath: '/$lib/benchmarks'
-      preLoaderRoute: typeof LibBenchmarksRouteImport
-      parentRoute: typeof LibRoute
-    }
     '/$lib/dependencies': {
       id: '/$lib/dependencies'
       path: '/dependencies'
       fullPath: '/$lib/dependencies'
       preLoaderRoute: typeof LibDependenciesRouteImport
       parentRoute: typeof LibRoute
-    }
-    '/$lib/functions': {
-      id: '/$lib/functions'
-      path: '/functions'
-      fullPath: '/$lib/functions'
-      preLoaderRoute: typeof LibFunctionsRouteImport
-      parentRoute: typeof LibRoute
-    }
-    '/$lib/lifecycle': {
-      id: '/$lib/lifecycle'
-      path: '/lifecycle'
-      fullPath: '/$lib/lifecycle'
-      preLoaderRoute: typeof LibLifecycleRouteImport
-      parentRoute: typeof LibRoute
-    }
-    '/appwrite/': {
-      id: '/appwrite/'
-      path: '/appwrite'
-      fullPath: '/appwrite/'
-      preLoaderRoute: typeof AppwriteIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/appwrite/$': {
-      id: '/appwrite/$'
-      path: '/appwrite/$'
-      fullPath: '/appwrite/$'
-      preLoaderRoute: typeof AppwriteSplatRouteImport
-      parentRoute: typeof rootRouteImport
     }
     '/categories/$category': {
       id: '/categories/$category'
@@ -439,110 +227,22 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CategoriesCategoryRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/migration/': {
-      id: '/migration/'
-      path: '/'
-      fullPath: '/migration/'
-      preLoaderRoute: typeof MigrationIndexRouteImport
-      parentRoute: typeof MigrationRoute
-    }
-    '/migration/facts': {
-      id: '/migration/facts'
-      path: '/facts'
-      fullPath: '/migration/facts'
-      preLoaderRoute: typeof MigrationFactsRouteImport
-      parentRoute: typeof MigrationRoute
-    }
-    '/migration/hooks': {
-      id: '/migration/hooks'
-      path: '/hooks'
-      fullPath: '/migration/hooks'
-      preLoaderRoute: typeof MigrationHooksRouteImport
-      parentRoute: typeof MigrationRoute
-    }
-    '/migration/tasks': {
-      id: '/migration/tasks'
-      path: '/tasks'
-      fullPath: '/migration/tasks'
-      preLoaderRoute: typeof MigrationTasksRouteImport
-      parentRoute: typeof MigrationRoute
-    }
-    '/migration/utopia': {
-      id: '/migration/utopia'
-      path: '/utopia'
-      fullPath: '/migration/utopia'
-      preLoaderRoute: typeof MigrationUtopiaRouteImport
-      parentRoute: typeof MigrationRoute
-    }
-    '/$lib/php-api/$': {
-      id: '/$lib/php-api/$'
-      path: '/php-api/$'
-      fullPath: '/$lib/php-api/$'
-      preLoaderRoute: typeof LibPhpApiSplatRouteImport
-      parentRoute: typeof LibRoute
-    }
-    '/migration/services/': {
-      id: '/migration/services/'
-      path: '/services'
-      fullPath: '/migration/services/'
-      preLoaderRoute: typeof MigrationServicesIndexRouteImport
-      parentRoute: typeof MigrationRoute
-    }
-    '/migration/services/$service': {
-      id: '/migration/services/$service'
-      path: '/services/$service'
-      fullPath: '/migration/services/$service'
-      preLoaderRoute: typeof MigrationServicesServiceRouteImport
-      parentRoute: typeof MigrationRoute
-    }
   }
 }
 
 interface LibRouteChildren {
   LibSplatRoute: typeof LibSplatRoute
-  LibBenchmarksRoute: typeof LibBenchmarksRoute
   LibDependenciesRoute: typeof LibDependenciesRoute
-  LibFunctionsRoute: typeof LibFunctionsRoute
-  LibLifecycleRoute: typeof LibLifecycleRoute
   LibIndexRoute: typeof LibIndexRoute
-  LibPhpApiSplatRoute: typeof LibPhpApiSplatRoute
 }
 
 const LibRouteChildren: LibRouteChildren = {
   LibSplatRoute: LibSplatRoute,
-  LibBenchmarksRoute: LibBenchmarksRoute,
   LibDependenciesRoute: LibDependenciesRoute,
-  LibFunctionsRoute: LibFunctionsRoute,
-  LibLifecycleRoute: LibLifecycleRoute,
   LibIndexRoute: LibIndexRoute,
-  LibPhpApiSplatRoute: LibPhpApiSplatRoute,
 }
 
 const LibRouteWithChildren = LibRoute._addFileChildren(LibRouteChildren)
-
-interface MigrationRouteChildren {
-  MigrationFactsRoute: typeof MigrationFactsRoute
-  MigrationHooksRoute: typeof MigrationHooksRoute
-  MigrationTasksRoute: typeof MigrationTasksRoute
-  MigrationUtopiaRoute: typeof MigrationUtopiaRoute
-  MigrationIndexRoute: typeof MigrationIndexRoute
-  MigrationServicesServiceRoute: typeof MigrationServicesServiceRoute
-  MigrationServicesIndexRoute: typeof MigrationServicesIndexRoute
-}
-
-const MigrationRouteChildren: MigrationRouteChildren = {
-  MigrationFactsRoute: MigrationFactsRoute,
-  MigrationHooksRoute: MigrationHooksRoute,
-  MigrationTasksRoute: MigrationTasksRoute,
-  MigrationUtopiaRoute: MigrationUtopiaRoute,
-  MigrationIndexRoute: MigrationIndexRoute,
-  MigrationServicesServiceRoute: MigrationServicesServiceRoute,
-  MigrationServicesIndexRoute: MigrationServicesIndexRoute,
-}
-
-const MigrationRouteWithChildren = MigrationRoute._addFileChildren(
-  MigrationRouteChildren,
-)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -551,10 +251,7 @@ const rootRouteChildren: RootRouteChildren = {
   ContributingRoute: ContributingRoute,
   LibrariesRoute: LibrariesRoute,
   MapRoute: MapRoute,
-  MigrationRoute: MigrationRouteWithChildren,
-  AppwriteSplatRoute: AppwriteSplatRoute,
   CategoriesCategoryRoute: CategoriesCategoryRoute,
-  AppwriteIndexRoute: AppwriteIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -1,6 +1,5 @@
 import { FileCode } from 'lucide-react'
 import { formatCount, type Lines, type LibrarySummary } from '@/lib/docs'
-import { useMigration } from '@/lib/prefs'
 
 const split = (l: Lines) => `${formatCount(l.code)} code, ${formatCount(l.comments)} comments, ${formatCount(l.blank)} blank, in ${formatCount(l.files)} ${l.files === 1 ? 'file' : 'files'}`
 
@@ -11,10 +10,10 @@ export function shortLines(n: number) {
 
 /** A library's lines of Rust, for cards and rows. */
 export function LinesBadge({ lib }: { lib: LibrarySummary }) {
-  const rust = lib.size?.rust
+  const rust = lib.size.rust
   if (!rust) return null
   return (
-    <span className="inline-flex items-center gap-1" title={`Rust: ${formatCount(rust.total)} lines (${split(rust)}); tests ${formatCount(rust.tests.total)} more`}>
+    <span className="inline-flex items-center gap-1" title={`Rust: ${formatCount(rust.total)} lines (${split(rust)})`}>
       <FileCode className="size-3" />
       {shortLines(rust.total)} lines
     </span>
@@ -23,13 +22,8 @@ export function LinesBadge({ lib }: { lib: LibrarySummary }) {
 
 /** The size table: one row per part, code, comments and blank lines. */
 export function SizeTable({ lib }: { lib: LibrarySummary }) {
-  const migration = useMigration()
   const s = lib.size
-  if (!s) return null
-  const rows: { label: string; lines: Lines }[] = [
-    ...(s.rust ? [{ label: 'Rust source', lines: s.rust }, { label: 'Rust tests', lines: s.rust.tests }] : []),
-    ...(s.php && (migration || !s.rust) ? [{ label: 'PHP source', lines: s.php }, { label: 'PHP tests', lines: s.php.tests }] : []),
-  ].filter((r) => r.lines.total > 0 || r.label.endsWith('source'))
+  const rows: { label: string; lines: Lines }[] = [...(s.rust ? [{ label: 'Rust source', lines: s.rust }] : []), ...(s.php ? [{ label: 'PHP source', lines: s.php }] : [])]
   if (!rows.length) return null
   const cell = 'px-3 py-1.5 text-right tabular-nums'
   return (
@@ -62,18 +56,13 @@ export function SizeTable({ lib }: { lib: LibrarySummary }) {
   )
 }
 
-/**
- * The compact size line under a library's title: lines of Rust (and of PHP in the migration view), the split on
- * hover, and the table on demand.
- */
+/** The compact size line under a library's title: lines of Rust and of the PHP left, the split on hover, and the table on demand. */
 export function SizeLine({ lib }: { lib: LibrarySummary }) {
-  const migration = useMigration()
   const s = lib.size
-  if (!s || (!s.rust && !(migration && s.php))) return null
+  if (!s.rust && !s.php) return null
   const parts = [
     s.rust ? { key: 'rust', text: `Rust ${formatCount(s.rust.total)} lines (${formatCount(s.rust.code)} code)`, title: `Rust: ${split(s.rust)}` } : null,
-    s.php && migration ? { key: 'php', text: `PHP ${formatCount(s.php.total)} lines (${formatCount(s.php.code)} code)`, title: `PHP: ${split(s.php)}` } : null,
-    migration && lib.compat ? { key: 'compat', text: `${formatCount(lib.compat.cases)} cases over ${formatCount(lib.compat.operations)} operations`, title: 'The compat suite' } : null,
+    s.php ? { key: 'php', text: `PHP ${formatCount(s.php.total)} lines (${formatCount(s.php.code)} code)`, title: `PHP: ${split(s.php)}` } : null,
   ].filter((p): p is { key: string; text: string; title: string } => !!p)
   return (
     <details className="group mt-1.5 text-[13px] text-muted-foreground">
@@ -90,13 +79,8 @@ export function SizeLine({ lib }: { lib: LibrarySummary }) {
       <div className="mt-2 max-w-[640px]">
         <SizeTable lib={lib} />
         <p className="m-0 mt-1.5 text-[11.5px]">
-          Comments include doc comments. Rust tests are <code className="font-mono">tests/</code> and <code className="font-mono">#[cfg(test)]</code> modules
-          {s.php && migration ? (
-            <>
-              ; PHP tests are the package's <code className="font-mono">tests/</code>
-            </>
-          ) : null}
-          .
+          Comments include doc comments. Each side counts its <code className="font-mono">src/</code>
+          {s.php ? '; the PHP side is what the package still has in PHP' : ''}.
         </p>
       </div>
     </details>

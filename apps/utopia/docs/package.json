@@ -3,9 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "generate": "cd ../../.. && bin/compat crates",
+    "generate": "bun scripts/generate.ts",
     "dev": "vite dev",
-    "build": "bun scripts/og.tsx && vite build && bun scripts/link-css.ts",
+    "build": "bun scripts/generate.ts && bun scripts/og.tsx && vite build && bun scripts/link-css.ts",
     "start": "vite preview",
     "check": "tsc --noEmit",
     "og": "bun scripts/og.tsx"
@@ -26,6 +26,7 @@
   "devDependencies": {
     "@resvg/resvg-js": "^2.6.2",
     "@tailwindcss/vite": "^4.0.6",
+    "@types/bun": "1.4.4",
     "@types/d3-chord": "^3.0.6",
     "@types/d3-shape": "^3.2.0",
     "@types/node": "^22.12.0",

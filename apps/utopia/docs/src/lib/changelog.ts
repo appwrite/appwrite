@@ -12,7 +12,7 @@ export interface Entry {
 }
 
 const EXTRA_PACKAGE_LABELS: Record<string, string> = {
-  appwrite: 'Appwrite migration',
+  appwrite: 'Appwrite',
   docs: 'Docs',
 }
 

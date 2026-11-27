@@ -1,10 +1,8 @@
 import { Link, getRouteApi, useMatch, useRouterState } from '@tanstack/react-router'
-import { ArrowLeftRight, ChevronDown, Menu as MenuIcon } from 'lucide-react'
+import { ChevronDown, Menu as MenuIcon } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
-import { setMigration, useMigration } from '@/lib/prefs'
 import { DiscordMark, GitHubMark, Logo } from './Logo'
-import { MigrationOnly } from './Migration'
-import { MIGRATION_TITLE, item, menuCategories } from './Sidebar'
+import { item, menuCategories } from './Sidebar'
 
 const root = getRouteApi('__root__')
 
@@ -16,7 +14,6 @@ const pressed = 'bg-sidebar-accent/60 text-sidebar-strong'
 /** The categories, from the header: a panel of the same rows as the drawer's, opened on click. */
 function CategoriesMenu() {
   const index = root.useLoaderData()
-  const migration = useMigration()
   const path = useRouterState({ select: (s) => s.location.pathname })
   const [open, setOpen] = useState(false)
   const box = useRef<HTMLDivElement>(null)
@@ -46,8 +43,8 @@ function CategoriesMenu() {
       </button>
       {open ? (
         <nav id="categories-menu" aria-label="Categories" className="absolute top-full left-0 -mt-px grid w-[260px] gap-px border border-border bg-background p-3">
-          {menuCategories(index, migration).map(({ category: c, count, rust }) => (
-            <Link key={c.id} to="/categories/$category" params={{ category: c.id }} className={item(!rust)} title={rust ? undefined : MIGRATION_TITLE}>
+          {menuCategories(index).map(({ category: c, count }) => (
+            <Link key={c.id} to="/categories/$category" params={{ category: c.id }} className={item}>
               <span className="truncate">{c.title}</span>
               <span className="ml-auto font-mono text-[10px] text-muted-foreground tabular-nums">{count}</span>
             </Link>
@@ -77,32 +74,7 @@ function Menu() {
       <Link to="/contributing" className={link} activeProps={{ className: active }}>
         Contributing
       </Link>
-      <MigrationOnly>
-        <Link to="/migration" className={`${link} nav-migration`} activeProps={{ className: active }} title={MIGRATION_TITLE}>
-          <ArrowLeftRight className="size-3.5 flex-none text-migration-ink" />
-          Migration
-        </Link>
-      </MigrationOnly>
     </nav>
-  )
-}
-
-function MigrationSwitch() {
-  const on = useMigration()
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={on}
-      onClick={() => setMigration(!on)}
-      className={`inline-flex h-8 items-center gap-2 border px-2.5 font-mono text-[10.5px] tracking-[0.08em] uppercase transition-colors ${on ? 'border-migration-border bg-migration text-migration-ink' : 'border-border text-muted-foreground hover:border-foreground hover:text-foreground'}`}
-      title="Show the PHP to Rust migration: PHP examples and signatures, conversion status and sync with PHP"
-    >
-      <span className={`relative inline-flex h-3.5 w-6 flex-none border transition-colors ${on ? 'border-amber-600 bg-amber-500' : 'border-ring bg-transparent'}`}>
-        <span className={`absolute top-[2px] size-2 transition-all ${on ? 'left-[12px] bg-background' : 'left-[2px] bg-muted-foreground'}`} />
-      </span>
-      <span className="sr-only sm:not-sr-only">Migration</span>
-    </button>
   )
 }
 
@@ -118,8 +90,6 @@ export function Header({ onMenu }: { onMenu: () => void }) {
       <span className="hidden h-5 w-px bg-border lg:block" aria-hidden />
       <Menu />
       <div className="ml-auto flex items-center gap-1.5 pr-3">
-        <MigrationSwitch />
-        <span className="mx-0.5 h-5 w-px bg-border sm:mx-1" aria-hidden />
         <a
           href="https://appwrite.io/discord"
           target="_blank"

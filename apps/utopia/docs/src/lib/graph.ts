@@ -12,9 +12,6 @@ export interface Link {
   php: boolean
   /** Only for tests, examples and benchmarks (or `require-dev`). */
   dev: boolean
-  /** Appwrite's crates behind it, and how its PHP server depends. */
-  crates?: string[]
-  via?: 'require' | 'import'
 }
 
 const runtime = (e: GraphEdge) => e.kinds.some((k) => k !== 'dev')
@@ -30,8 +27,6 @@ export function links(edges: GraphEdge[], show: Runtime, dev: boolean, appwrite:
     const link = out.get(key) ?? { source: e.source, target: e.target, rust: false, php: false, dev: true }
     link[e.runtime] = true
     link.dev = link.dev && !runtime(e)
-    if (e.crates) link.crates = e.crates
-    if (e.via) link.via = e.via
     out.set(key, link)
   }
   return [...out.values()]

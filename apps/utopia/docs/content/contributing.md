@@ -1,8 +1,8 @@
 ## Set up
 
-The crates live in [appwrite/appwrite](https://github.com/appwrite/appwrite): every Utopia crate in `crates/utopia/<name>`, and `php-std` in `crates/support/php-std`. Each repository under [utopia-rs](https://github.com/utopia-rs) is a read-only mirror of one of those directories, so open issues and pull requests against appwrite/appwrite. Run every command on this page from the root of a checkout.
+The crates live in [appwrite/appwrite](https://github.com/appwrite/appwrite), one per directory under `crates/utopia/<name>`, and are published to crates.io as `utopia-<name>`. Open issues and pull requests against appwrite/appwrite. Run every command on this page from the root of a checkout.
 
-You need Rust 1.97, the version CI builds and lints with. Comparing with PHP and running benchmarks also needs Docker.
+`rust-toolchain.toml` pins the Rust version CI builds and lints with; rustup picks it up on the first `cargo` command.
 
 ```bash
 git clone https://github.com/appwrite/appwrite.git
@@ -17,145 +17,66 @@ A crate's README and its page on this site both start from the `guide.md` next t
 Before you open a pull request, run the checks CI runs on the whole workspace:
 
 ```bash
-cargo fmt --all
-cargo clippy --workspace --all-targets -- -D warnings
-cargo test --workspace
+cargo fmt --all --check
+cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
+cargo test --locked --workspace --exclude utopia-extension --all-features
 ```
 
 While you work on one crate, run them for that crate only:
 
 ```bash
-cargo test -p utopia-dns
-cargo test -p utopia-dns -- zone
-cargo test -p utopia-dns --doc
-cargo clippy -p utopia-dns --all-targets -- -D warnings
+cargo test -p utopia-dsn
+cargo test -p utopia-dsn --doc
+cargo clippy -p utopia-dsn --all-targets -- -D warnings
 ```
 
-The second command runs only the tests whose name contains `zone`, and `--doc` runs the guide and the doc examples. Async tests use `#[utopia_async::test]`, and crates spawn, sleep and connect through `utopia-async`, never through `tokio` directly.
+`--doc` runs the guide and the doc examples.
 
-## Measure compile times
+## Serve a crate to PHP
 
-`bin/compat build` times how long each crate takes to compile from scratch, with its third-party dependencies already built. It uses its own target directory (`target/compat-build`), so your everyday build is not touched.
+Appwrite runs the crates through its PHP extension, `crates/extension`: each crate is registered as the PHP classes it replaces, and those classes' PHP source is removed from `packages/<name>`. The package's own PHP tests then run against Rust, so they are the parity test.
+
+A library goes through two gates in `crates/extension/src/lib.rs`:
+
+- `enabled("<name>")`: the crate serves the classes only when the library is switched on, through `utopia.libraries` in the ini or `_APP_EXTENSION_LIBRARIES`. The PHP source stays to fall back to.
+- `stable("<name>")`: the crate always serves the classes, and their PHP source is deleted.
+
+`crates/extension/tests/libraries.expected` lists every class the extension registers by default. The Appwrite image builds and loads the extension; run its tests there:
 
 ```bash
-bin/compat build dns http
-bin/compat build --write
+docker compose build appwrite
+docker compose exec appwrite php --ri utopia
+docker compose exec appwrite crates/extension/tests/run.sh
 ```
 
-With no names it times every crate. `--write` adds the run to `tests/compat/build.json`, which keeps the latest 10 runs for the Migration dashboard. Run it on a quiet machine, never alongside benchmarks or other builds.
-
-## Compare with PHP
-
-Every crate ports a Utopia PHP library and must behave exactly like it. `bin/compat` sends the same operations to a PHP driver and a Rust driver, then compares return values, errors and the state each leaves in shared services. The [compat README](https://github.com/appwrite/appwrite/blob/main/tests/compat/README.md) has every option.
-
-The fast loop needs no PHP. It replays the results PHP recorded for each case against Rust:
-
-```bash
-COMPAT_LIB=dns cargo test -p compat
-COMPAT_LIB=dns COMPAT_CASE=zone cargo test -p compat
-COMPAT_SERVICES=1 COMPAT_LIB=cache cargo test -p compat
-```
-
-`COMPAT_CASE` matches part of `<lib>/<file>#<case>`. Cases that need Redis, a database or another service run only with `COMPAT_SERVICES=1` and the dev stack up.
-
-To run both runtimes live, start the dev stack. A library that needs more services ships `tests/compat/<lib>/services.sh`, which starts them as throwaway containers:
-
-```bash
-docker compose up -d
-tests/compat/cache/services.sh up
-```
-
-| Command | What it does |
-|---|---|
-| `bin/compat run dns` | Runs every case on PHP and Rust and compares them. Add `--case <text>` to narrow it, `-v` for details. |
-| `bin/compat fuzz dns` | Sends both runtimes generated inputs. `--op`, `--iterations` and `--seed` control the run. |
-| `bin/compat call dns <op> '<args json>'` | Runs one operation and prints both results. |
-| `bin/compat coverage dns` | Lists the PHP API the cases cover, and the PHP tests and tasks ported. |
-| `bin/compat check dns` | The conversion gate: coverage, run and fuzz. |
-| `bin/compat record dns` | Stores PHP's results in the case files, for the replay above. |
-| `bin/compat examples` | Runs every doc example and the PHP version written after it. |
-| `bin/compat ci` | Runs and fuzzes every library, as CI does. |
-
-A difference is a Rust bug, a PHP quirk to keep and record, or a missing case. Never loosen a comparison to make it pass. [CONVERSION.md](https://github.com/appwrite/appwrite/blob/main/crates/CONVERSION.md) lists everything a converted library needs.
-
-## Benchmark against PHP
-
-A library's hot paths are benchmarked against its PHP library: parsing, validation, cache reads, route matching. Each benchmark is a name both drivers declare, and only the library call is timed.
-
-```bash
-bin/compat bench dns
-bin/compat bench dns --write
-```
-
-Both drivers run in Linux containers on the dev stack's network, Rust as a release build. Each benchmark warms up, then takes 15 samples and reports the median time per call, CPU time and memory. The command fails when Rust is slower, or when a benchmark exists on one side only. Two kinds of benchmark are listed in the library's `spec.json` with a reason:
-
-- `bench.bound`: bound by work both runtimes wait on equally, such as a Redis round trip. These must reach parity (0.95x) instead.
-- `bench.compat`: a PHP-compatibility codec no Rust hot path uses. These are reported but never fail the command.
-
-`--write` records the run in `tests/compat/<lib>/bench.json`, which the library's Benchmarks page shows. Timings from different machines are not comparable, so run it on a quiet machine, one library at a time. `--host` builds and runs Rust on your machine instead, for profiling. On macOS that adds Docker Desktop's port forwarding to every service round trip, so don't record those timings.
-
-## Test the Appwrite API on PHP and Rust
-
-The API is moving to Rust service by service. Traefik sends the migrated routes to the `appwrite-rust` container, and the PHP E2E suites run against it through the proxy. See [rfc/rust.md](https://github.com/appwrite/appwrite/blob/main/rfc/rust.md).
-
-```bash
-COMPOSE_PROFILES=postgresql,rust docker compose up -d --wait
-docker compose exec -e _APP_E2E_ENDPOINT=http://appwrite.test/v1 appwrite \
-  vendor/bin/paratest --functional tests/e2e/Services/Users
-```
-
-To record a run on a running dev stack:
-
-```bash
-bin/compat appwrite e2e Users --write
-bin/compat appwrite e2e Users --side php --write
-```
-
-The first writes the Rust run to `tests/e2e/results/users.rust.json`, and the second the PHP run next to it. `tests/rust/run.sh` runs a port of the Users assertions against Rust alone, with no PHP.
-
-## Benchmark the Appwrite API against PHP
-
-`tests/benchmarks/users-compare.sh` drives a read-heavy Users workload with k6 against PHP (`:9501`) and Rust (`:9530`) on the same stack. It runs at fixed rates to compare CPU per request and memory at equal load, then closed-loop for maximum throughput.
-
-```bash
-bash tests/benchmarks/users-compare.sh
-RATES="200 800" DURATION=120s bash tests/benchmarks/users-compare.sh
-RESULTS=tests/benchmarks/results/users.json bash tests/benchmarks/users-compare.sh
-```
-
-`RESULTS` writes the run as JSON, which the Migration dashboard shows. Before you run it:
-
-- Export `APPWRITE_ADMIN_EMAIL` with the email of an owner of the instance's organization.
-- Raise PostgreSQL's `max_connections`. PHP's workers hold one connection each, which alone uses up the default of 100 under load.
-
-Run it on dedicated hardware before and after every performance change, and attach the report to the pull request.
+`run.sh` runs each switchable library's PHP tests with Rust on, then its parity corpus (`tests/<name>.php`) on PHP and on Rust and diffs the two. The [extension's README](https://github.com/appwrite/appwrite/blob/main/crates/extension/README.md) covers loading it outside Appwrite.
 
 ## Work on this site
 
-This site lives in `apps/utopia/docs`, a TanStack Start app. Nothing on it is written by hand except this guide and the changelog: every page is generated from the crates themselves into `apps/utopia/docs/data`, which is not committed. Generate the data, then start the app:
+This site lives in `apps/utopia/docs`, a TanStack Start app. Everything on it except this guide, the categories and the changelog is generated from the repository and the crates' docs on docs.rs into `apps/utopia/docs/data`, which is not committed:
 
 ```bash
-bin/compat crates
 cd apps/utopia/docs
 bun install
+bun run generate
 bun run dev
 ```
 
-The app serves on <http://localhost:3200>. Generation reads PHP signatures in the `appwrite-dev` image; without Docker the pages are generated without them. Run `bin/compat crates` again after you change a crate, and after every merge, so the site shows what the branch holds.
+The app serves on <http://localhost:3200>. `bun run generate` (`scripts/generate.ts`) reads the workspace with `cargo metadata`, downloads each crate's rustdoc JSON from docs.rs, and scans the extension, the PHP packages and the Appwrite server. Run it again after a merge.
 
 To change what a page says, change its source, not the app:
 
 | On the site | Where it comes from |
 |---|---|
-| A library's overview | the crate's `//!` docs in `src/lib.rs` |
-| Getting started | `guide.md` next to the crate's `Cargo.toml`: one `## ` section per task, each with a Rust example |
-| Modules and items | the module and item doc comments |
-| Examples | Rust code blocks in doc comments, run as doctests |
-| Category | `[package.metadata.utopia]` in the crate's `Cargo.toml`, titles in `crates/categories.json` |
+| A library's overview | the crate's `//!` docs in `src/lib.rs`, as published to docs.rs |
+| Getting started | `guide.md` next to the crate's `Cargo.toml`: one `## ` section per task, each with a Rust example and its PHP twin |
+| Modules and items | the module and item doc comments, as published to docs.rs |
+| Status | the library's gate in `crates/extension/src/lib.rs`, and whether its package still has PHP classes |
+| Category | `[package.metadata.utopia]` in the crate's `Cargo.toml`, titles in `apps/utopia/docs/content/categories.json` |
 | Changelog | one Markdown file per entry in `apps/utopia/docs/content/changelog/`, with `title`, `date`, an optional `tag` and comma-separated `packages` in its frontmatter |
 | This page | `apps/utopia/docs/content/contributing.md`, one section per `## ` heading |
 
-The [site's README](https://github.com/appwrite/appwrite/blob/main/apps/utopia/docs/README.md) maps every page to its source. Before you open a pull request that touches the app, type-check and build it:
+Before you open a pull request that touches the app, type-check and build it:
 
 ```bash
 cd apps/utopia/docs
@@ -163,13 +84,4 @@ bun run check
 bun run build
 ```
 
-`bun run build` also renders each library's share card into `public/og/` (not committed); `bun run og` renders them alone.
-
-## Track the move from PHP
-
-The Migration dashboard is generated like the rest of the site, from the results committed in the repository: compat cases, `bench.json`, `build.json`, E2E runs and Appwrite benchmarks, each written by its `--write` command above. Two of its tabs are written by hand, in `apps/utopia/docs/content`:
-
-- `tasks.json` is the task board. Each task has an `id`, a `title`, an `area`, a `status` (`todo`, `progress`, `blocked` or `done`), an `updated` time and a `note` saying where it stands. Update it whenever a task changes status, along with the file's own `updated` time.
-- `facts.json` is the project in numbers, with its summary, sections of facts, timeline and lessons. Update it with each milestone, with figures you have measured or counted, never estimates.
-
-A finished milestone also gets a changelog entry tagged `Migration`, which can link to the [task board](/migration/tasks) and the [facts](/migration/facts). Run `bin/compat appwrite` to regenerate only the Appwrite migration (`data/appwrite.json`); it needs neither Docker nor a dev stack.
+`bun run build` generates the data and renders each library's share card into `public/og/` (not committed) first.

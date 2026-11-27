@@ -1,13 +1,10 @@
 import { Link } from '@tanstack/react-router'
-import { ArrowUpRight, BookOpen, Code2, FlaskConical, LayoutGrid, List, Package } from 'lucide-react'
+import { ArrowUpRight, Boxes, Code2, LayoutGrid, List, Package } from 'lucide-react'
 import type { ReactNode } from 'react'
 import type { LibrarySummary } from '@/lib/docs'
-import { setLayout, useLayout, useMigration, type Layout } from '@/lib/prefs'
+import { setLayout, useLayout, type Layout } from '@/lib/prefs'
 import { Crumbs } from './Crumbs'
-import { MigrationOnly } from './Migration'
 import { StatusBadge } from './Status'
-import { SyncBadge } from './Sync'
-import { SpeedupBadge } from './Bench'
 import { Time } from './Time'
 import { LinesBadge } from './Size'
 
@@ -50,29 +47,41 @@ export function Section({ id, title, children, description, number }: { id?: str
   )
 }
 
+/** A library's page, or a plain box for one still in PHP: it has no crate, so no page to open. */
+function LibraryLink({ lib, className, children }: { lib: LibrarySummary; className: string; children: ReactNode }) {
+  if (!lib.rust) return <div className={className}>{children}</div>
+  return (
+    <Link to="/$lib" params={{ lib: lib.slug }} className={`${className} transition-colors hover:bg-background`}>
+      {children}
+    </Link>
+  )
+}
+
+/** The PHP classes the extension serves from the crate. */
+function ClassesBadge({ lib, short }: { lib: LibrarySummary; short?: boolean }) {
+  if (!lib.classes.rust) return null
+  return (
+    <span className="inline-flex items-center gap-1" title={`${lib.classes.rust} PHP classes served from Rust`}>
+      <Boxes className="size-3" />
+      {lib.classes.rust}
+      {short ? '' : ' PHP classes'}
+    </span>
+  )
+}
+
 /** A library in a grid of cards. */
 export function LibraryCard({ lib }: { lib: LibrarySummary }) {
   return (
-    <Link
-      to="/$lib"
-      params={{ lib: lib.slug }}
-      className="pad group relative grid content-start gap-3 border-r border-b border-border bg-card p-5 transition-colors hover:bg-background"
-    >
+    <LibraryLink lib={lib} className="pad group relative grid content-start gap-3 border-r border-b border-border bg-card p-5">
       <div className="flex items-start justify-between gap-2">
         <div className="grid gap-1.5">
           <span className="flex items-center gap-1.5 font-display text-[16px] font-semibold tracking-tight">
             {lib.title}
-            <ArrowUpRight className="size-3.5 text-muted-foreground/0 transition-colors group-hover:text-highlight" />
+            {lib.rust ? <ArrowUpRight className="size-3.5 text-muted-foreground/0 transition-colors group-hover:text-highlight" /> : null}
           </span>
           <span className="font-mono text-[11px] text-muted-foreground">{lib.rust?.crate ?? lib.php?.package ?? lib.slug}</span>
         </div>
-        <MigrationOnly>
-          <div className="grid justify-items-end gap-1">
-            <StatusBadge status={lib.status} />
-            <SyncBadge sync={lib.sync} />
-            <SpeedupBadge bench={lib.bench} />
-          </div>
-        </MigrationOnly>
+        <StatusBadge status={lib.status} />
       </div>
       <p className="m-0 line-clamp-2 text-[13px] leading-relaxed text-muted-foreground">{lib.description}</p>
       <div className="mt-auto flex flex-wrap gap-x-3 gap-y-1 border-t border-border pt-3 font-mono text-[10.5px] text-muted-foreground">
@@ -82,31 +91,16 @@ export function LibraryCard({ lib }: { lib: LibrarySummary }) {
             {lib.counts.items} items
           </span>
         ) : null}
-        <MigrationOnly>
-        {lib.compat ? (
-          <span className="inline-flex items-center gap-1">
-            <FlaskConical className="size-3" />
-            {lib.compat.cases} cases vs PHP
-          </span>
-        ) : null}
-        </MigrationOnly>
         {lib.counts.examples ? (
           <span className="inline-flex items-center gap-1">
             <Code2 className="size-3" />
             {lib.counts.examples} examples
           </span>
         ) : null}
+        <ClassesBadge lib={lib} />
         <LinesBadge lib={lib} />
-        <MigrationOnly>
-        {!lib.rust && lib.php ? (
-          <span className="inline-flex items-center gap-1">
-            <BookOpen className="size-3" />
-            {lib.counts.php_symbols} PHP methods
-          </span>
-        ) : null}
-        </MigrationOnly>
       </div>
-    </Link>
+    </LibraryLink>
   )
 }
 
@@ -118,11 +112,7 @@ export function CardGrid({ children }: { children: ReactNode }) {
 /** A library as one row of a list: name and crate, what it does, its counts. */
 export function LibraryRow({ lib }: { lib: LibrarySummary }) {
   return (
-    <Link
-      to="/$lib"
-      params={{ lib: lib.slug }}
-      className="group grid items-center gap-x-4 gap-y-1 px-4 py-3 transition-colors hover:bg-background sm:grid-cols-[minmax(150px,220px)_minmax(0,1fr)_auto]"
-    >
+    <LibraryLink lib={lib} className="group grid items-center gap-x-4 gap-y-1 px-4 py-3 sm:grid-cols-[minmax(150px,220px)_minmax(0,1fr)_auto]">
       <span className="grid min-w-0 gap-0.5">
         <span className="truncate font-display text-[14.5px] font-semibold tracking-tight">{lib.title}</span>
         <span className="truncate font-mono text-[11px] text-muted-foreground">{lib.rust?.crate ?? lib.php?.package ?? lib.slug}</span>
@@ -141,25 +131,16 @@ export function LibraryRow({ lib }: { lib: LibrarySummary }) {
             {lib.counts.examples}
           </span>
         ) : null}
+        <ClassesBadge lib={lib} short />
         <LinesBadge lib={lib} />
-        <MigrationOnly>
-          {lib.compat ? (
-            <span className="inline-flex items-center gap-1">
-              <FlaskConical className="size-3" />
-              {lib.compat.cases}
-            </span>
-          ) : null}
-          <SpeedupBadge bench={lib.bench} />
-          <SyncBadge sync={lib.sync} />
-          <StatusBadge status={lib.status} />
-        </MigrationOnly>
-        {lib.updated?.at ? (
+        <StatusBadge status={lib.status} />
+        {lib.updated ? (
           <span className="min-w-[7.5rem] sm:text-right">
-            Updated <Time date={lib.updated.at} />
+            Updated <Time date={lib.updated} />
           </span>
         ) : null}
       </span>
-    </Link>
+    </LibraryLink>
   )
 }
 
@@ -244,16 +225,7 @@ export function ContentColumn({ children }: { children: ReactNode }) {
 }
 
 /** Grid beside the doc rail (TOC or symbols). */
-export function docAsideColumns(rail: boolean, php: boolean) {
-  if (php && !rail) return null
-  if (rail) return php ? '2xl:grid-cols-[minmax(0,1fr)_260px]' : 'xl:grid-cols-[minmax(0,1fr)_260px]'
-  return 'xl:grid-cols-[minmax(0,1fr)_200px]'
-}
-
-function docAsideRailClass(rail: boolean, php: boolean) {
-  if (rail && php) return 'hidden 2xl:block'
-  return 'hidden xl:block'
-}
+export const docAsideColumns = (rail: boolean) => (rail ? 'xl:grid-cols-[minmax(0,1fr)_260px]' : 'xl:grid-cols-[minmax(0,1fr)_200px]')
 
 /** The page body beside its rail, or beside an empty column that keeps the body's width when it has none. */
 export function DocAsideRow({
@@ -267,27 +239,21 @@ export function DocAsideRow({
   reserveAside?: boolean
   children: ReactNode
 }) {
-  const php = useMigration()
-  const columns = docAsideColumns(rail, php)
-  if (!columns) return <>{children}</>
   const col = aside ?? (reserveAside ? <div aria-hidden className="min-h-0" /> : null)
   if (!col) return <>{children}</>
   return (
-    <div className={`grid w-full gap-10 ${columns}`}>
+    <div className={`grid w-full gap-10 ${docAsideColumns(rail)}`}>
       <div className="min-w-0">{children}</div>
-      <div className={docAsideRailClass(rail, php)}>{col}</div>
+      <div className="hidden xl:block">{col}</div>
     </div>
   )
 }
 
 /** Page body with a rail: "On this page" from `toc`, or a page's own `rail`. */
 export function WithToc({ children, toc = [], rail }: { children: ReactNode; toc?: { id: string; label: string; depth?: number }[]; rail?: ReactNode }) {
-  const php = useMigration()
-  const body = <ContentColumn>{children}</ContentColumn>
-  if (php && !rail) return body
   return (
-    <DocAsideRow rail={!!rail} aside={rail ? rail : <Toc entries={toc} />} reserveAside={!rail && !php}>
-      {body}
+    <DocAsideRow rail={!!rail} aside={rail ? rail : <Toc entries={toc} />} reserveAside={!rail}>
+      <ContentColumn>{children}</ContentColumn>
     </DocAsideRow>
   )
 }

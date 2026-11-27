@@ -25,7 +25,7 @@ function MapPage() {
         <MapView graph={graph} index={index} />
       ) : (
         <div className="max-w-2xl rounded-lg border border-border bg-card p-5 text-[13.5px] text-muted-foreground">
-          This documentation was generated before the map existed. Regenerate it with <code className="font-mono">bin/compat crates</code>, then reload.
+          No data yet. Run <code className="font-mono">bun run generate</code>, then reload.
         </div>
       )}
     </div>
