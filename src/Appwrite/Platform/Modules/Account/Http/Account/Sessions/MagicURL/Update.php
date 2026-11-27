@@ -76,7 +76,7 @@ class Update extends Base
                 Limit::failures(['projectId', 'url', 'ip'], 100),
             ])
             ->param('userId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getMaxUidLength()), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
-            ->param('secret', '', new Text(256), 'Valid verification token.')
+            ->param('secret', '', new Text(512), 'Valid verification token.')
             ->inject('request')
             ->inject('response')
             ->inject('user')

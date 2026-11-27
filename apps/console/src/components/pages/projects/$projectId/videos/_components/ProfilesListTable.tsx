@@ -165,10 +165,10 @@ export function ProfilesListTable({
                   {formatResolution(profile.width, profile.height)}
                 </TableCell>
                 <TableCell className={MONO_CELL_CLASS}>
-                  {formatBitrate(profile.videoBitRate, 'kbps')}
+                  {formatBitrate(profile.videoBitRate)}
                 </TableCell>
                 <TableCell className={MONO_CELL_CLASS}>
-                  {formatBitrate(profile.audioBitRate, 'kbps')}
+                  {formatBitrate(profile.audioBitRate)}
                 </TableCell>
                 <TableCell className="px-4 py-3">
                   <DateTooltip

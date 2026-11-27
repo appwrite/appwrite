@@ -10,10 +10,13 @@ final class Timeline
     /**
      * Rewrites `previews/{id}`, `sprites/{id}`, and `thumbnails/{id}` cue URIs
      * to `thumbnails/{id}?project=...` before any `#xywh=` fragment.
+     *
+     * @param array<string, string> $binding query parameters every cue URL carries
      */
-    public static function withProjectOnThumbnailCues(string $vtt, string $projectId): string
+    public static function withProjectOnThumbnailCues(string $vtt, array $binding): string
     {
         $lines = \explode("\n", $vtt);
+        $query = \http_build_query($binding, '', '&');
 
         foreach ($lines as $index => $line) {
             $trimmed = \rtrim($line, "\r");
@@ -33,8 +36,7 @@ final class Timeline
                 $trimmed = \substr($trimmed, 0, $hash);
             }
 
-            $query = (\str_contains($trimmed, '?') ? '&' : '?') . 'project=' . \urlencode($projectId);
-            $lines[$index] = $trimmed . $query . $fragment;
+            $lines[$index] = $trimmed . (\str_contains($trimmed, '?') ? '&' : '?') . $query . $fragment;
         }
 
         return \implode("\n", $lines);

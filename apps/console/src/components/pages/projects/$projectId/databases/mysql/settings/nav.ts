@@ -48,6 +48,8 @@ export const MYSQL_DATABASE_SETTINGS_NAV: MysqlDatabaseSettingsNavItem[] =
         'created',
         'updated',
         'identifiers',
+        'version',
+        'upgrade',
         'delete',
         'remove',
         'trash',

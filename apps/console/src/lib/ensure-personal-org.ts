@@ -36,7 +36,12 @@ import {
   fetchConsoleAccount,
   updateAccountPrefs,
 } from '@/lib/react-query/hooks/auth'
+import {
+  consoleTeamQueryOptions,
+  fetchConsoleTeam,
+} from '@/lib/react-query/hooks/teams'
 import { USER_PREFS_KEY_ORGANIZATION } from '@/lib/user-prefs-keys'
+import { isSSORequiredError } from '@/lib/sso-required'
 import { isHttpNotFoundError } from '@/lib/utils/error-formatting'
 
 export const PERSONAL_ORG_NAME = 'Personal Projects'
@@ -59,19 +64,42 @@ function provisioningAccountKey(accountId: string): string {
   return JSON.stringify([getApiEndpoint(), accountId])
 }
 
-async function organizationIsAccessible(
+/**
+ * `open` when the person can use the organization, `missing` when it is gone
+ * (or they left it), `refused` when it requires single sign-on and this session
+ * did not come from it.
+ */
+type OrganizationAccess = 'open' | 'missing' | 'refused'
+
+async function organizationAccess(
   orgId: string,
   queryClient?: QueryClient,
-): Promise<boolean> {
+): Promise<OrganizationAccess> {
   try {
     const org = queryClient
       ? await queryClient.ensureQueryData(organizationQueryOptions(orgId))
       : await fetchOrganizationById(orgId)
-    return !!org
+    if (!org) return 'missing'
   } catch (error) {
-    if (isHttpNotFoundError(error)) return false
+    if (isHttpNotFoundError(error)) return 'missing'
+    if (isSSORequiredError(error)) return 'refused'
     throw error
   }
+  // On Cloud the organization comes from the organizations list, which never
+  // refuses; the team itself does. Asked fresh: a team cached before the
+  // organization started requiring single sign-on would still look open. The
+  // answer is cached for the overview, which needs the team anyway.
+  try {
+    await (queryClient
+      ? queryClient.fetchQuery({
+          ...consoleTeamQueryOptions(orgId),
+          staleTime: 0,
+        })
+      : fetchConsoleTeam(orgId))
+  } catch (error) {
+    if (isSSORequiredError(error)) return 'refused'
+  }
+  return 'open'
 }
 
 /**
@@ -83,6 +111,12 @@ async function organizationIsAccessible(
  *
  * Existence is checked with a single-org get (the same query the overview
  * already needs), not a full organizations list.
+ *
+ * An organization that requires single sign-on, opened on a session that did
+ * not come from it, is passed over for another one the person can open. The
+ * preference keeps naming it, so after signing in with SSO they return to it.
+ * When no organization can be opened, the refused one is returned: opening it
+ * sends the person to sign in with SSO.
  */
 export async function resolvePostAuthOrganizationId(
   account?: Awaited<ReturnType<typeof fetchConsoleAccount>>,
@@ -97,9 +131,13 @@ export async function resolvePostAuthOrganizationId(
       : undefined
 
   if (preferredId) {
-    if (await organizationIsAccessible(preferredId, queryClient)) {
+    const access = await organizationAccess(preferredId, queryClient)
+    if (access === 'open') {
       prohibitedAccounts.delete(provisioningAccountKey(resolved.$id))
       return preferredId
+    }
+    if (access === 'refused') {
+      return await ensurePersonalOrg(queryClient, [preferredId])
     }
 
     const restPrefs = { ...prefs }
@@ -138,16 +176,20 @@ let inflight: Promise<string> | null = null
  * call this within the same tick. Running them concurrently used to create a
  * second "Personal Projects".
  */
-export function ensurePersonalOrg(queryClient?: QueryClient): Promise<string> {
+export function ensurePersonalOrg(
+  queryClient?: QueryClient,
+  refused: string[] = [],
+): Promise<string> {
   if (inflight) return inflight
-  inflight = provisionPersonalOrg(queryClient).finally(() => {
+  inflight = provisionPersonalOrg(queryClient, refused).finally(() => {
     inflight = null
   })
   return inflight
 }
 
 async function provisionPersonalOrg(
-  queryClient?: QueryClient,
+  queryClient: QueryClient | undefined,
+  refused: string[],
 ): Promise<string> {
   const account = await fetchConsoleAccount()
   const prefs = (account.prefs || {}) as Record<string, unknown>
@@ -204,9 +246,24 @@ async function provisionPersonalOrg(
   }
 
   prohibitedAccounts.delete(accountKey)
-  const orgId = (prefs[USER_PREFS_KEY_ORGANIZATION] as string) || orgs[0].$id
+  const savedId = prefs[USER_PREFS_KEY_ORGANIZATION] as string | undefined
+  if (savedId && !refused.includes(savedId)) return savedId
 
-  if (!prefs[USER_PREFS_KEY_ORGANIZATION]) {
+  // The first organization the person can open. One that requires single
+  // sign-on is skipped, and never saved as the preference.
+  let orgId: string | undefined
+  for (const org of orgs) {
+    if (refused.includes(org.$id)) continue
+    const access = await organizationAccess(org.$id, queryClient)
+    if (access === 'open') {
+      orgId = org.$id
+      break
+    }
+    if (access === 'refused') refused.push(org.$id)
+  }
+  if (!orgId) return refused[0] ?? orgs[0].$id
+
+  if (!savedId) {
     rememberAccount(
       await updateAccountPrefs({
         ...prefs,

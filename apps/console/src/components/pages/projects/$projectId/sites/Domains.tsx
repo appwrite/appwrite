@@ -6,10 +6,10 @@ import {
   Loader2,
   Globe,
   FileText,
-  RefreshCw,
   Trash2,
   ExternalLink,
-  Pencil} from 'lucide-react'
+  Pencil,
+} from 'lucide-react'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import { Button } from '@/components/ui/button'
@@ -22,17 +22,20 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow} from '@/components/ui/table'
+  TableRow,
+} from '@/components/ui/table'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger} from '@/components/ui/dropdown-menu'
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import {
   siteDomainsQueryOptions,
   useProject,
   useProjectSite,
-  useOrganizationDomains} from '@/lib/react-query/hooks'
+  useOrganizationDomains,
+} from '@/lib/react-query/hooks'
 import { VerifyDomain } from './_components/VerifyDomain'
 import { DomainRecordsDialog } from '@/components/pages/projects/$projectId/settings/domains/DomainRecords'
 import { ViewLogsDialog } from '@/components/pages/projects/$projectId/settings/domains/ViewLogs'
@@ -42,7 +45,6 @@ import { ProxyRuleContextMenu } from '@/components/pages/projects/$projectId/set
 import { RuleStatusBadge } from '@/components/pages/projects/$projectId/settings/domains/RuleStatusBadge'
 import { CheckDomain } from '@/components/pages/projects/$projectId/settings/domains/CheckDomain'
 import {
-  getRuleStatusBadgeConfig,
   isWaitingForDns,
 } from '@/lib/utils/status-badge'
 import {
@@ -64,8 +66,7 @@ export function View() {
   const visitUrl = useVisitUrl()
   const { projectId, siteId } = useParams({ strict: false })
   const search = useSearch({ strict: false }) as
-    | { search?: string; query?: string }
-    | undefined
+    { search?: string; query?: string } | undefined
   const { project } = useProject(projectId)
   const [currentPage, setCurrentPage] = useState(0)
   const [pageSize, setPageSize] = useState(DOMAINS_DEFAULT_PAGE_SIZE)
@@ -101,7 +102,8 @@ export function View() {
     isLoading: domainsLoading,
     isFetching: domainsFetching,
     error: domainsError,
-    refetch: refetchDomains} = useQuery(
+    refetch: refetchDomains,
+  } = useQuery(
     siteDomainsQueryOptions(
       projectId,
       siteId,
@@ -147,6 +149,8 @@ export function View() {
   }
 
   const handleRecords = (rule: Models.ProxyRule) => {
+    // While DNS is pending, the records dialog is where the domain is verified
+    if (isWaitingForDns(rule)) return handleRetry(rule)
     openDialogAfterOverlayCloses(() => {
       setSelectedRule(rule)
       setRecordsOpen(true)
@@ -252,7 +256,6 @@ export function View() {
               </TableHeader>
               <TableBody>
                 {rules.map((rule) => {
-                  const statusConfig = getRuleStatusBadgeConfig(rule)
 
                   return (
                     <ProxyRuleContextMenu
@@ -260,8 +263,7 @@ export function View() {
                       projectId={projectId!}
                       rule={rule}
                       onViewLogs={handleViewLogs}
-                      onRetry={handleRetry}
-                        onUpdate={setUpdateRule}
+                      onUpdate={setUpdateRule}
                       onRecords={handleRecords}
                       onDelete={handleDelete}
                     >
@@ -269,7 +271,10 @@ export function View() {
                         className="cursor-pointer"
                         // The row opens its DNS records; its links and buttons keep their own action.
                         onClick={(event) => {
-                          if ((event.target as HTMLElement).closest('a, button')) return
+                          if (
+                            (event.target as HTMLElement).closest('a, button')
+                          )
+                            return
                           handleRecords(rule)
                         }}
                       >
@@ -301,22 +306,13 @@ export function View() {
                         <TableCell className="px-4 py-3">
                           <div className="flex items-center gap-2">
                             <RuleStatusBadge rule={rule} />
-                            {statusConfig.variant !== 'success' &&
-                              canViewRuleLogs(rule) && (
-                                <Button
-                                  variant="link"
-                                  size="sm"
-                                  className="h-auto p-0 text-[13px]"
-                                  onClick={() => handleViewLogs(rule)}
-                                >
-                                  {t('View logs')}
-                                </Button>
-                              )}
                             <CheckDomain
                               projectId={projectId ?? ''}
                               region={project?.region}
                               rule={rule}
-                              organizationDomainId={getOrganizationDomainId(rule)}
+                              organizationDomainId={getOrganizationDomainId(
+                                rule,
+                              )}
                             />
                             {canRetryRule(rule) && !isWaitingForDns(rule) && (
                               <Button
@@ -348,6 +344,13 @@ export function View() {
                                 <RowActionsMenuTrigger />
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  onClick={() => handleRecords(rule)}
+                                >
+                                  <MenuItemContent icon={Globe}>
+                                    {t('Records')}
+                                  </MenuItemContent>
+                                </DropdownMenuItem>
                                 {canViewRuleLogs(rule) && (
                                   <DropdownMenuItem
                                     onClick={() => handleViewLogs(rule)}
@@ -357,27 +360,11 @@ export function View() {
                                     </MenuItemContent>
                                   </DropdownMenuItem>
                                 )}
-                                {canRetryRule(rule) && (
-                                  <DropdownMenuItem
-                                    onClick={() => handleRetry(rule)}
-                                  >
-                                    <MenuItemContent icon={RefreshCw}>
-                                      {t('Retry')}
-                                    </MenuItemContent>
-                                  </DropdownMenuItem>
-                                )}
                                 <DropdownMenuItem
                                   onClick={() => handleUpdate(rule)}
                                 >
                                   <MenuItemContent icon={Pencil}>
                                     {t('Update')}
-                                  </MenuItemContent>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() => handleRecords(rule)}
-                                >
-                                  <MenuItemContent icon={Globe}>
-                                    {t('Records')}
                                   </MenuItemContent>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem

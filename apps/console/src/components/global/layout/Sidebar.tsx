@@ -34,6 +34,7 @@ import {
 import { useDebugMode } from '@/components/global/providers/DebugMode'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { isCloudProfile } from '@/lib/console-profiles'
 import {
   analyticsAttrs,
   getSidebarNavAnalyticsAction,
@@ -56,6 +57,7 @@ import {
   Globe,
   Plug,
   Activity,
+  Shield,
   ScanSearch,
   Package,
   FileText,
@@ -90,6 +92,26 @@ interface NavItem {
   icon: LucideIcon | 'imagine' | 'mcp'
   path: string
   comingSoon?: boolean
+  /** Launch day (YYYY-MM-DD); the item shows a "New" badge for three weeks from it. */
+  launchedOn?: string
+}
+
+const NEW_BADGE_DAYS = 21
+
+/** Init 5 (Nov 30 – Dec 4, 2026) launch days for products in the sidebar. */
+const INIT_5_LAUNCHES = {
+  analytics: '2026-11-30',
+  videos: '2026-12-01',
+  monitors: '2026-12-03',
+  reviews: '2026-12-04',
+} as const
+
+const isNewItem = (item: NavItem, now: Date) => {
+  if (!item.launchedOn) return false
+  const [year, month, day] = item.launchedOn.split('-').map(Number)
+  const start = new Date(year, month - 1, day)
+  const end = new Date(year, month - 1, day + NEW_BADGE_DAYS)
+  return now >= start && now < end
 }
 
 interface NavCategory {
@@ -126,6 +148,7 @@ interface SidebarCopy {
     monitors: string
     analytics: string
     errors: string
+    firewall: string
     advisor: string
     settings: string
   }
@@ -219,6 +242,7 @@ const getNavItems = (projectId: string, sidebarCopy: SidebarCopy) => {
           label: sidebarCopy.items.videos,
           icon: VIDEOS_PRODUCT_ICON,
           path: `/projects/${projectId}/videos`,
+          launchedOn: INIT_5_LAUNCHES.videos,
         },
       ],
     },
@@ -248,6 +272,7 @@ const getNavItems = (projectId: string, sidebarCopy: SidebarCopy) => {
           label: sidebarCopy.items.analytics,
           icon: ANALYTICS_PRODUCT_ICON,
           path: `/projects/${projectId}/analytics`,
+          launchedOn: INIT_5_LAUNCHES.analytics,
         },
         {
           id: 'activity',
@@ -273,6 +298,7 @@ const getNavItems = (projectId: string, sidebarCopy: SidebarCopy) => {
           label: sidebarCopy.items.monitors,
           icon: Gauge,
           path: `/projects/${projectId}/monitors`,
+          launchedOn: INIT_5_LAUNCHES.monitors,
         },
         {
           id: 'errors',
@@ -287,10 +313,17 @@ const getNavItems = (projectId: string, sidebarCopy: SidebarCopy) => {
       label: sidebarCopy.sections.protect,
       items: [
         {
+          id: 'firewall',
+          label: sidebarCopy.items.firewall,
+          icon: Shield,
+          path: `/projects/${projectId}/firewall`,
+        },
+        {
           id: 'reviews',
           label: sidebarCopy.items.reviews,
           icon: GitPullRequest,
           path: `/projects/${projectId}/reviews`,
+          launchedOn: INIT_5_LAUNCHES.reviews,
         },
         {
           id: 'advisor',
@@ -338,7 +371,7 @@ export function ConsoleSidebar({
   const { collapsed, setCollapsed } = useSidebarCollapsed(accountWithPrefs)
   const navRef = useRef<HTMLElement>(null)
   const { isDebugModeOpen } = useDebugMode()
-  const { features } = useConsoleProfile()
+  const { features, isCloud } = useConsoleProfile()
   const { project, projectData } = useProject(projectId)
   const { reviewsEnabled } = useConsoleVariables(project?.region)
   const { access, isLoading: scopesLoading } = useOrganizationScopes(
@@ -350,7 +383,18 @@ export function ConsoleSidebar({
 
   const visibleCategories = useMemo(() => {
     const { navCategories: categories } = getNavItems(projectId, sidebarCopy)
+    // Logs leaves "Soon" once runtime logs are on. Cloud only: self-hosted
+    // doesn't serve `/v1/logs`.
+    const logsReady = isCloudProfile() && features.runtimeLogs
     return categories
+      .map((cat) => ({
+        ...cat,
+        items: cat.items.map((item) =>
+          item.id === 'logs' && logsReady
+            ? { ...item, comingSoon: false }
+            : item,
+        ),
+      }))
       .map((cat) => ({
         ...cat,
         items: (isDebugModeOpen
@@ -361,6 +405,11 @@ export function ConsoleSidebar({
             return features.usageStats && canSeeUsageNav(access, features)
           if (item.id === 'activity')
             return features.activity && canSeeActivityNav(access, features)
+          if (item.id === 'firewall')
+            return (
+              isCloudProfile() &&
+              canSeeProjectNavItem(access, features, item.id)
+            )
           if (item.id === 'analytics')
             return (
               features.analytics &&
@@ -378,6 +427,7 @@ export function ConsoleSidebar({
             return (
               features.reviews &&
               reviewsEnabled &&
+              !projectData?.parentId &&
               canSeeProjectNavItem(access, features, item.id)
             )
           if (item.id === 'agents')
@@ -396,6 +446,7 @@ export function ConsoleSidebar({
     sidebarCopy,
     showProjectAgents,
     reviewsEnabled,
+    projectData?.parentId,
   ])
 
   const showOverview = canSeeProjects(access, features)
@@ -468,6 +519,7 @@ export function ConsoleSidebar({
     const isMcpIcon = item.icon === 'mcp'
     const navAnalytics = getSidebarNavAnalyticsAction(item.id)
     const showLabel = !collapsed || isMobile
+    const isNew = isNewItem(item, new Date())
 
     // Render the appropriate icon
     const renderIcon = () => {
@@ -562,7 +614,9 @@ export function ConsoleSidebar({
           ),
           collapsed && !isMobile
             ? SECONDARY_SIDEBAR_NAV_LINK_COLLAPSED_CLASS
-            : SECONDARY_SIDEBAR_NAV_LINK_GRID_CLASS,
+            : isNew
+              ? SECONDARY_SIDEBAR_NAV_LINK_GRID_TRAILING_CLASS
+              : SECONDARY_SIDEBAR_NAV_LINK_GRID_CLASS,
           isMobile && 'gap-x-3 px-3 py-2.5 text-[14px]',
         )}
       >
@@ -570,6 +624,11 @@ export function ConsoleSidebar({
         {showLabel && (
           <span className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}>
             {item.label}
+          </span>
+        )}
+        {showLabel && isNew && (
+          <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-foreground">
+            {sidebarCopy.badges.new}
           </span>
         )}
       </Link>
@@ -595,7 +654,14 @@ export function ConsoleSidebar({
                 </span>
               </p>
             ) : (
-              <p>{item.label}</p>
+              <p>
+                {item.label}
+                {isNew && (
+                  <span className="ms-1 text-muted-foreground">
+                    · {sidebarCopy.badges.new}
+                  </span>
+                )}
+              </p>
             )}
           </TooltipContent>
         </Tooltip>
@@ -666,7 +732,7 @@ export function ConsoleSidebar({
               <OnboardingCard projectId={projectId} collapsed={collapsed} />
             )}
 
-            {features.projectEnvironments && (
+            {isCloud && (
               <EnvironmentSwitcher
                 projectId={projectId}
                 collapsed={collapsed}
@@ -762,9 +828,7 @@ export function ConsoleSidebar({
             <OnboardingCard projectId={projectId} collapsed={false} />
           )}
 
-          {features.projectEnvironments && (
-            <EnvironmentSwitcher projectId={projectId} isMobile />
-          )}
+          {isCloud && <EnvironmentSwitcher projectId={projectId} isMobile />}
 
           {/* Overview */}
           {showOverview && (

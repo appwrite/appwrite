@@ -1,10 +1,15 @@
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import type {
   LaunchEventDay,
+  LaunchEventDayFilm,
+  LaunchEventDayAnnouncement,
   LaunchEventDayResource,
+  LaunchEventDayVisual,
   LaunchEventScheduleItem,
   InitDisplayEvent,
 } from '@/lib/init/types'
+import type { ProductIcon } from '@/lib/products/types'
+import { isFilmPlayerRevealed } from '@/lib/init/types'
 import { useInitPresenceActivity } from '@/lib/init/init-presence-context'
 import { buildInitDayPreviewActivity } from '@/lib/init/init-presence-day-activity'
 import { getInitDayCardId } from '@/lib/init/scroll-to-day-card'
@@ -12,15 +17,19 @@ import { InitDayMockVisual } from './InitDayMockVisual'
 import { Badge } from '@/components/ui/badge'
 import { InitDayCardHeaderNav } from './InitDayCardHeaderNav'
 import { InitScheduleRow } from './InitScheduleRow'
-import { ArrowUpRight, BookOpen, FileText, Play } from 'lucide-react'
+import { ArrowUpRight, BookOpen, FileText, Package, Play } from 'lucide-react'
+import { useQueryClient } from '@tanstack/react-query'
+import { InitFilmDialog, prefetchInitFilms } from './init5/InitFilmDialog'
 import { BlogPageAnchor } from '@/components/global/shared/BlogPageAnchor'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useInitHref } from '@/lib/init/use-init-href'
 import { parseBlogPagePath, parseDocsPagePath } from '@/lib/marketing/urls'
 import { cn } from '@/lib/utils'
 
-const CARD_SHELL =
-  'rounded-xl border border-border bg-card/50 overflow-hidden'
+const CARD_SHELL = 'rounded-xl border border-border bg-card/50 overflow-hidden'
+
+/** Every link in a day card opens in a new tab, so the Init page stays open. */
+const NEW_TAB = { target: '_blank', rel: 'noopener noreferrer' } as const
 
 function VideoThumbnail({
   label,
@@ -55,7 +64,7 @@ function VideoThumbnail({
     return (
       <a
         href={resolved.href}
-        {...(resolved.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+        {...NEW_TAB}
         className="group block transition-opacity hover:opacity-90"
       >
         {inner}
@@ -66,14 +75,18 @@ function VideoThumbnail({
   return <div>{inner}</div>
 }
 
-function DayVisual({ day }: { day: LaunchEventDay }) {
-  const Icon = day.icon
-
-  if (day.visual) {
+function DayVisual({
+  visual,
+  icon: Icon,
+}: {
+  visual?: LaunchEventDayVisual
+  icon: ProductIcon
+}) {
+  if (visual) {
     return (
       <InitDayMockVisual
-        mockVisualId={day.visual.mockVisualId}
-        label={day.visual.imageAlt}
+        mockVisualId={visual.mockVisualId}
+        label={visual.imageAlt}
       />
     )
   }
@@ -93,16 +106,34 @@ function DayVisual({ day }: { day: LaunchEventDay }) {
   )
 }
 
-const TITLE_CLASS =
-  'font-aeonik-pro text-[clamp(32px,4.5vw,42px)] font-normal leading-none tracking-tight'
+const TITLE_CLASS = 'font-aeonik-pro font-normal leading-none tracking-tight'
 
-function DayTitle({ title }: { title: string }) {
-  const lastSpace = title.lastIndexOf(' ')
-  const leading = lastSpace === -1 ? '' : title.slice(0, lastSpace + 1)
-  const lastWord = lastSpace === -1 ? title : title.slice(lastSpace + 1)
+function DayTitle({
+  title,
+  compact = false,
+}: {
+  title: string
+  /** Half-width columns, when a day shows its announcements side by side. */
+  compact?: boolean
+}) {
+  // "Introducing" gets its own line, with the product name below it.
+  const introducing = title.startsWith('Introducing ')
+  const name = introducing ? title.slice('Introducing '.length) : title
+  const lastSpace = name.lastIndexOf(' ')
+  const leading = lastSpace === -1 ? '' : name.slice(0, lastSpace + 1)
+  const lastWord = lastSpace === -1 ? name : name.slice(lastSpace + 1)
 
   return (
-    <h3 className={cn(TITLE_CLASS, 'text-foreground')}>
+    <h3
+      className={cn(
+        TITLE_CLASS,
+        compact
+          ? 'text-[clamp(28px,3.2vw,34px)]'
+          : 'text-[clamp(32px,4.5vw,42px)]',
+        'text-balance text-foreground',
+      )}
+    >
+      {introducing ? <span className="block">Introducing</span> : null}
       {leading ? <span>{leading}</span> : null}
       <span className="whitespace-nowrap">
         {lastWord}
@@ -132,7 +163,7 @@ function DayPrimaryLink({
 
   if (isBlogLink) {
     return (
-      <BlogPageAnchor href={href} className={className}>
+      <BlogPageAnchor href={href} className={className} {...NEW_TAB}>
         {children}
       </BlogPageAnchor>
     )
@@ -140,23 +171,216 @@ function DayPrimaryLink({
 
   if (isDocsLink) {
     return (
-      <DocsRouteLink href={href} className={className}>
+      <DocsRouteLink href={href} className={className} {...NEW_TAB}>
         {children}
       </DocsRouteLink>
     )
   }
 
   return (
-    <a
-      href={resolved.href}
-      {...(resolved.external
-        ? { target: '_blank', rel: 'noopener noreferrer' }
-        : {})}
-      className={className}
-    >
+    <a href={resolved.href} {...NEW_TAB} className={className}>
       {children}
     </a>
   )
+}
+
+/**
+ * The day's cover as a play button: the launch film opens in the Appwrite
+ * player. Pointing at the cover warms the player and the film's playlist.
+ */
+function DayFilmCover({
+  title,
+  films,
+  poweredBy,
+  children,
+}: {
+  title: string
+  films: LaunchEventDayFilm[]
+  poweredBy: boolean
+  children: ReactNode
+}) {
+  const [open, setOpen] = useState(false)
+  const queryClient = useQueryClient()
+  const prefetch = () => prefetchInitFilms(queryClient, films)
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        onPointerEnter={prefetch}
+        onFocus={prefetch}
+        className="group/film relative block w-full cursor-pointer rounded-lg text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+        aria-label={`Play the ${films.map((entry) => entry.label).join(' and ')} launch film`}
+      >
+        {children}
+        {/* A dimmed cover and a large play button say this cover is a film. */}
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-0 rounded-lg bg-black/25 transition-colors duration-300 group-hover/film:bg-black/40"
+        />
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-3"
+        >
+          <span className="relative flex size-16 items-center justify-center rounded-full bg-[var(--brand-cta)] text-white shadow-[0_0_0_8px_color-mix(in_srgb,var(--brand-cta)_22%,transparent),0_12px_40px_-8px_var(--brand-cta)] transition-transform duration-300 group-hover/film:scale-110 sm:size-[72px]">
+            <span className="absolute inset-0 animate-ping rounded-full bg-[var(--brand-cta)] opacity-25 [animation-duration:2.4s] motion-reduce:hidden" />
+            <Play className="relative ms-1 size-7 fill-current" />
+          </span>
+          <span className="rounded-full bg-black/70 px-3 py-1 text-[12px] font-medium text-white backdrop-blur-sm">
+            {films.length > 1 ? 'Watch the launch films' : 'Watch the launch'}
+          </span>
+        </span>
+      </button>
+      <InitFilmDialog
+        title={title}
+        films={films}
+        poweredBy={poweredBy}
+        open={open}
+        onOpenChange={setOpen}
+      />
+    </>
+  )
+}
+
+/**
+ * One launch in a day card: its copy (linking to its blog post) beside its
+ * cover, which plays its launch film or opens the post.
+ */
+function DayLaunchSection({
+  title,
+  longDescription,
+  visual,
+  icon,
+  films,
+  articleHref,
+  poweredBy,
+}: {
+  title: string
+  longDescription: string
+  visual?: LaunchEventDayVisual
+  icon: ProductIcon
+  films?: LaunchEventDayFilm[]
+  articleHref?: string
+  poweredBy: boolean
+}) {
+  const copyBlock = (
+    <div>
+      <DayTitle title={title} />
+      <p className="mt-4 text-[13px] leading-relaxed text-muted-foreground transition-colors group-hover:text-foreground/80">
+        {longDescription}
+      </p>
+    </div>
+  )
+  const visualBlock = <DayVisual visual={visual} icon={icon} />
+
+  return (
+    <div className="grid lg:grid-cols-2">
+      <div className="space-y-5 border-b border-border px-6 py-6 lg:border-b-0 lg:border-e">
+        {articleHref ? (
+          <DayPrimaryLink
+            href={articleHref}
+            className="group block transition-opacity hover:opacity-90"
+          >
+            {copyBlock}
+          </DayPrimaryLink>
+        ) : (
+          copyBlock
+        )}
+      </div>
+
+      <div className="flex items-center p-6">
+        {films?.length ? (
+          <DayFilmCover title={title} films={films} poweredBy={poweredBy}>
+            {visualBlock}
+          </DayFilmCover>
+        ) : articleHref ? (
+          <DayPrimaryLink
+            href={articleHref}
+            className="block w-full transition-opacity hover:opacity-90"
+          >
+            {visualBlock}
+          </DayPrimaryLink>
+        ) : (
+          visualBlock
+        )}
+      </div>
+    </div>
+  )
+}
+
+/**
+ * One of several launches on a day, as a column beside the others: its copy
+ * (linking to its blog post), its cover playing its launch film, and its
+ * links along the bottom, level with its neighbours'.
+ */
+function DayAnnouncementColumn({
+  announcement,
+  icon,
+  poweredBy,
+}: {
+  announcement: LaunchEventDayAnnouncement
+  icon: ProductIcon
+  poweredBy: boolean
+}) {
+  const articleHref = announcement.resources.find(isBlogResource)?.href
+  const copyBlock = (
+    <div>
+      <DayTitle title={announcement.title} compact />
+      <p className="mt-4 text-[13px] leading-relaxed text-muted-foreground transition-colors group-hover:text-foreground/80">
+        {announcement.longDescription}
+      </p>
+    </div>
+  )
+  const visualBlock = <DayVisual visual={announcement.visual} icon={icon} />
+
+  return (
+    <section aria-label={announcement.title} className="flex flex-col">
+      <div className="flex flex-1 flex-col gap-6 px-6 py-6">
+        {articleHref ? (
+          <DayPrimaryLink
+            href={articleHref}
+            className="group block transition-opacity hover:opacity-90"
+          >
+            {copyBlock}
+          </DayPrimaryLink>
+        ) : (
+          copyBlock
+        )}
+        <div className="mt-auto">
+          {announcement.films?.length ? (
+            <DayFilmCover
+              title={announcement.title}
+              films={announcement.films}
+              poweredBy={poweredBy}
+            >
+              {visualBlock}
+            </DayFilmCover>
+          ) : articleHref ? (
+            <DayPrimaryLink
+              href={articleHref}
+              className="block w-full transition-opacity hover:opacity-90"
+            >
+              {visualBlock}
+            </DayPrimaryLink>
+          ) : (
+            visualBlock
+          )}
+        </div>
+      </div>
+      {announcement.resources.length > 0 ? (
+        <ul className="divide-y divide-border border-t border-border">
+          {announcement.resources.map((resource) => (
+            <DayResourceRow key={resource.id} resource={resource} stacked />
+          ))}
+        </ul>
+      ) : null}
+    </section>
+  )
+}
+
+function isBlogResource(resource: LaunchEventDayResource) {
+  return resource.typeLabel.toLowerCase() === 'blog'
 }
 
 interface DayDetailCardProps {
@@ -167,17 +391,50 @@ interface DayDetailCardProps {
   isRecapMode?: boolean
 }
 
-function DayResourceRow({ resource }: { resource: LaunchEventDayResource }) {
+function DayResourceRow({
+  resource,
+  stacked = false,
+}: {
+  resource: LaunchEventDayResource
+  /**
+   * Half-width columns: one line with the label as its icon, the title, and
+   * an arrow for the link, so the title never wraps in a narrow slot.
+   */
+  stacked?: boolean
+}) {
   const type = resource.typeLabel.toLowerCase()
-  const ResourceIcon = type === 'docs' ? BookOpen : FileText
+  const ResourceIcon =
+    type === 'docs' ? BookOpen : type === 'product' ? Package : FileText
   const isBlogLink = Boolean(parseBlogPagePath(resource.href))
   const isDocsLink = Boolean(parseDocsPagePath(resource.href))
   const resolved = useInitHref(resource.href)
   // Phones give the title its own full-width line and drop the badge + action
   // below it; three inline columns left the title ~80px and shredded it.
-  const rowClassName =
-    'group flex flex-wrap items-center gap-x-4 gap-y-2 px-6 py-3.5 transition-colors hover:bg-accent/30 sm:flex-nowrap'
-  const rowContent = (
+  const rowClassName = stacked
+    ? 'group flex items-center gap-3 px-6 py-3.5 transition-colors hover:bg-accent/30'
+    : 'group flex flex-wrap items-center gap-x-4 gap-y-2 px-6 py-3.5 transition-colors hover:bg-accent/30 sm:flex-nowrap'
+  const rowContent = stacked ? (
+    // One line: the label as its icon, the title, and the link as an arrow.
+    <>
+      <span
+        className="flex size-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground"
+        title={resource.typeLabel}
+      >
+        <ResourceIcon className="size-3.5" aria-hidden />
+        <span className="sr-only">{resource.typeLabel}</span>
+      </span>
+      <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-foreground">
+        {resource.title}
+      </span>
+      <span
+        className="shrink-0 text-muted-foreground transition-colors group-hover:text-foreground"
+        title={resource.actionLabel}
+      >
+        <ArrowUpRight className="size-4" aria-hidden />
+        <span className="sr-only">{resource.actionLabel}</span>
+      </span>
+    </>
+  ) : (
     <>
       <span className="order-2 flex shrink-0 sm:order-none sm:w-[92px]">
         <Badge
@@ -209,21 +466,23 @@ function DayResourceRow({ resource }: { resource: LaunchEventDayResource }) {
   return (
     <li>
       {isBlogLink ? (
-        <BlogPageAnchor href={resource.href} className={rowClassName}>
+        <BlogPageAnchor
+          href={resource.href}
+          className={rowClassName}
+          {...NEW_TAB}
+        >
           {rowContent}
         </BlogPageAnchor>
       ) : isDocsLink ? (
-        <DocsRouteLink href={resource.href} className={rowClassName}>
+        <DocsRouteLink
+          href={resource.href}
+          className={rowClassName}
+          {...NEW_TAB}
+        >
           {rowContent}
         </DocsRouteLink>
       ) : (
-        <a
-          href={resolved.href}
-          {...(resolved.external
-            ? { target: '_blank', rel: 'noopener noreferrer' }
-            : {})}
-          className={rowClassName}
-        >
+        <a href={resolved.href} {...NEW_TAB} className={rowClassName}>
           {rowContent}
         </a>
       )}
@@ -239,34 +498,25 @@ export function DayDetailCard({
   isRecapMode = false,
 }: DayDetailCardProps) {
   const { setTransientActivity } = useInitPresenceActivity()
-  const blogResources = day.resources.filter(
-    (resource) => resource.typeLabel.toLowerCase() === 'blog',
-  )
+  const poweredBy = isFilmPlayerRevealed(event)
+  const announcements = day.announcements ?? []
+  const blogResources = day.resources.filter(isBlogResource)
   const otherResources = day.resources.filter(
-    (resource) => resource.typeLabel.toLowerCase() !== 'blog',
+    (resource) => !isBlogResource(resource),
   )
-  const primaryArticleHref = blogResources[0]?.href
   const hasListContent =
     blogResources.length > 0 ||
     scheduleItems.length > 0 ||
     otherResources.length > 0
   const footerVideos = day.footerVideos ?? []
 
-  const copyBlock = (
-    <div>
-      <DayTitle title={day.title} />
-      <p className="mt-4 text-[13px] leading-relaxed text-muted-foreground transition-colors group-hover:text-foreground/80">
-        {day.longDescription}
-      </p>
-    </div>
-  )
-  const visualBlock = <DayVisual day={day} />
-
   return (
     <article
       id={getInitDayCardId(day.day)}
       className={cn(CARD_SHELL, 'scroll-mt-28')}
-      onMouseEnter={() => setTransientActivity(buildInitDayPreviewActivity(day, currentDay))}
+      onMouseEnter={() =>
+        setTransientActivity(buildInitDayPreviewActivity(day, currentDay))
+      }
       onMouseLeave={() => setTransientActivity(null)}
     >
       <header className="grid grid-cols-[1fr_auto_1fr] items-center border-b border-border px-6 py-3">
@@ -284,33 +534,29 @@ export function DayDetailCard({
         </div>
       </header>
 
-      <div className="grid lg:grid-cols-2">
-        <div className="space-y-5 border-b border-border px-6 py-6 lg:border-b-0 lg:border-e">
-          {primaryArticleHref ? (
-            <DayPrimaryLink
-              href={primaryArticleHref}
-              className="group block transition-opacity hover:opacity-90"
-            >
-              {copyBlock}
-            </DayPrimaryLink>
-          ) : (
-            copyBlock
-          )}
+      {announcements.length > 0 ? (
+        // A day with several launches shows them side by side.
+        <div className="grid divide-y divide-border lg:grid-cols-2 lg:divide-x lg:divide-y-0">
+          {announcements.map((announcement) => (
+            <DayAnnouncementColumn
+              key={announcement.id}
+              announcement={announcement}
+              icon={day.icon}
+              poweredBy={poweredBy}
+            />
+          ))}
         </div>
-
-        <div className="flex items-center p-6">
-          {primaryArticleHref ? (
-            <DayPrimaryLink
-              href={primaryArticleHref}
-              className="block w-full transition-opacity hover:opacity-90"
-            >
-              {visualBlock}
-            </DayPrimaryLink>
-          ) : (
-            visualBlock
-          )}
-        </div>
-      </div>
+      ) : (
+        <DayLaunchSection
+          title={day.title}
+          longDescription={day.longDescription}
+          visual={day.visual}
+          icon={day.icon}
+          films={day.films}
+          articleHref={blogResources[0]?.href}
+          poweredBy={poweredBy}
+        />
+      )}
 
       {hasListContent ? (
         <ul className="divide-y divide-border border-t border-border">
@@ -324,6 +570,7 @@ export function DayDetailCard({
               item={item}
               isRecapMode={isRecapMode}
               inlineWhenWide
+              newTab
             />
           ))}
           {otherResources.map((resource) => (

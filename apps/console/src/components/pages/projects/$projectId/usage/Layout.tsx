@@ -37,6 +37,7 @@ import {
   Plus,
   type LucideIcon,
 } from '@/lib/icons'
+import { VIDEOS_PRODUCT_ICON } from '@/lib/videos/product-icon'
 import { Button } from '@/components/ui/button'
 import {
   Tooltip,
@@ -140,6 +141,7 @@ const iconMap: Record<string, LucideIcon> = {
   UserCircle,
   Webhook,
   Globe,
+  Video: VIDEOS_PRODUCT_ICON,
 }
 
 interface UsageLayoutProps {
@@ -661,7 +663,11 @@ function UsageLayoutContent({
   const { triggerRefresh, hasRefreshHandler, isRefreshing } = useRefresh()
 
   const categories = useMemo(() => getUsageCategories(plan), [plan])
-  const navGroups = useMemo(() => getUsageNavGroups(plan), [plan])
+  const showVideos = Boolean(features.videos)
+  const navGroups = useMemo(
+    () => getUsageNavGroups(plan, { videos: showVideos }),
+    [plan, showVideos],
+  )
   const activeCategoryData = findUsageCategory(categories, categoryId)
   const isRequestsCategory = categoryId === 'requests'
   const isBandwidthCategory = categoryId === 'bandwidth'

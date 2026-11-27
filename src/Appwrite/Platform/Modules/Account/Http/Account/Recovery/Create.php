@@ -127,7 +127,7 @@ class Create extends Action
             'secret' => $proofForToken->hash($secret), // One way hash encryption to protect DB leak
             'expire' => $expire,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
-            'ip' => $request->getIP(),
+            'ip' => $request->getClientIP(),
         ]);
 
         $recovery->setAttribute('$permissions', [

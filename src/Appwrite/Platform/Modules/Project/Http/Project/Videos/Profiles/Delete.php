@@ -16,7 +16,6 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\System\System;
 
 class Delete extends Base
 {
@@ -43,8 +42,6 @@ class Delete extends Base
                 namespace: 'project',
                 group: 'profiles',
                 name: 'deleteVideoProfile',
-                // Hidden until videos is generally available; preview SDK builds show it.
-                hide: System::getEnv('_APP_SDK_PREVIEW', 'disabled') !== 'enabled',
                 description: '/docs/references/project/delete-video-profile.md',
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [

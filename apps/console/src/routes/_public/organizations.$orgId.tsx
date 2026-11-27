@@ -2,11 +2,7 @@ import { OrgOverview } from '@/components/pages/organizations/$orgId/overview/Vi
 import { EducationPlanCurtain } from '@/components/global/layout/EducationPlanCurtain'
 import { createFileRoute, Outlet, useMatches } from '@tanstack/react-router'
 import { RequireAuth } from '@/components/global/auth/RequireAuth'
-import {
-  organizationOverviewProjectsParamsFromUrl,
-  prefetchOrganizationOverviewData,
-} from '@/lib/organization-overview-prefetch'
-import { urlFromRouterLocation } from '@/lib/table-filters'
+import { prefetchOrganizationShellData } from '@/lib/organization-overview-prefetch'
 import { z } from 'zod'
 
 const searchSchema = z
@@ -17,7 +13,7 @@ const searchSchema = z
 
 export const Route = createFileRoute('/_public/organizations/$orgId')({
   validateSearch: searchSchema,
-  loader: async ({ params, context, location }) => {
+  loader: async ({ params, context }) => {
     // Only run on client side (SDK requires browser environment)
     if (typeof window === 'undefined') {
       return
@@ -26,16 +22,11 @@ export const Route = createFileRoute('/_public/organizations/$orgId')({
     const { orgId } = params
     const { queryClient } = context
 
-    // Same pattern as projects grid (AGENTS.md): ensureQueryData with exact query keys the View uses.
+    // The header and tabs only: the projects grid is the index route's to
+    // load, so the other tabs open without waiting on it.
     if (orgId) {
       try {
-        await prefetchOrganizationOverviewData(
-          queryClient,
-          orgId,
-          organizationOverviewProjectsParamsFromUrl(
-            urlFromRouterLocation(location),
-          ),
-        )
+        await prefetchOrganizationShellData(queryClient, orgId)
       } catch (error) {
         console.warn('Failed to fetch organization data in loader:', error)
       }

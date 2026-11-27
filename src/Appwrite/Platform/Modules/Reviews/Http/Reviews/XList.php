@@ -20,11 +20,19 @@ use Utopia\System\System;
 use Utopia\Validator\Boolean;
 
 /**
- * Lists reviews without their findings; getting one review returns them.
+ * Lists reviews without their findings; getting one review returns them. Each review says how
+ * many findings it posted and how severe the worst one is, so a list shows which reviews found
+ * something.
  */
 class XList extends Action
 {
     use HTTP;
+
+    /** Reviews whose findings are counted in one query: at most 100 findings each. */
+    private const int FINDINGS_CHUNK = 50;
+
+    /** Finding severities, least severe first, so a severity ranks by its index. */
+    private const array SEVERITIES = ['info', 'minor', 'major', 'critical'];
 
     public static function getName()
     {
@@ -44,7 +52,7 @@ class XList extends Action
                 group: 'reviews',
                 name: 'list',
                 description: <<<EOT
-                List the code reviews of the project. Reviews are returned without their findings; get a review to read them. You can use the query params to filter your results.
+                List the code reviews of the project. Reviews are returned without their findings, but with how many they posted and the severity of the worst one; get a review to read them. You can use the query params to filter your results.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
@@ -103,9 +111,46 @@ class XList extends Action
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
 
+        $this->countFindings($reviews, $dbForProject);
+
         $response->dynamic(new Document([
             'reviews' => $reviews,
             'total' => $total,
         ]), Response::MODEL_REVIEW_LIST);
+    }
+
+    /**
+     * Sets on each review how many findings it posted and the severity of the worst. Dropped
+     * findings were never posted, so they do not count.
+     *
+     * @param array<Document> $reviews
+     */
+    private function countFindings(array $reviews, Database $dbForProject): void
+    {
+        $counts = [];
+
+        foreach (\array_chunk($reviews, self::FINDINGS_CHUNK) as $chunk) {
+            $findings = $dbForProject->find('reviewFindings', [
+                Query::equal('reviewInternalId', \array_map(fn (Document $review) => $review->getSequence(), $chunk)),
+                Query::notEqual('status', 'dropped'),
+                Query::select(['reviewInternalId', 'severity']),
+                Query::limit(self::FINDINGS_CHUNK * APP_LIMIT_ARRAY_PARAMS_SIZE),
+            ]);
+
+            foreach ($findings as $finding) {
+                $reviewId = (string) $finding->getAttribute('reviewInternalId');
+                $rank = \array_search($finding->getAttribute('severity'), self::SEVERITIES, true);
+                $counts[$reviewId] = [
+                    'total' => ($counts[$reviewId]['total'] ?? 0) + 1,
+                    'rank' => \max($counts[$reviewId]['rank'] ?? -1, $rank === false ? -1 : $rank),
+                ];
+            }
+        }
+
+        foreach ($reviews as $review) {
+            $count = $counts[(string) $review->getSequence()] ?? ['total' => 0, 'rank' => -1];
+            $review->setAttribute('findingsTotal', $count['total']);
+            $review->setAttribute('severity', $count['rank'] >= 0 ? self::SEVERITIES[$count['rank']] : '');
+        }
     }
 }

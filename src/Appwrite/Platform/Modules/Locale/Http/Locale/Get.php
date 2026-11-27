@@ -52,7 +52,7 @@ class Get extends Action
 
     public function action(Request $request, Response $response, Locale $locale, Geo $geo): void
     {
-        $geoRecord = $geo->get($request->getIP());
+        $geoRecord = $geo->get($request->getClientIP());
         $response->dynamic(new Document([
             'ip' => $geoRecord->getIp(),
             'countryCode' => $geoRecord->getCountryCode(),

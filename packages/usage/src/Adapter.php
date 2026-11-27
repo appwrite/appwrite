@@ -32,6 +32,17 @@ abstract class Adapter
     }
 
     /**
+     * Report where the storage differs from what migrate() leaves, without
+     * changing it. An adapter that cannot tell reports nothing.
+     *
+     * @return list<array{table: string, kind: string, name: string, detail: string}>
+     */
+    public function inspect(): array
+    {
+        return [];
+    }
+
+    /**
      * Add metrics in batch (raw append).
      *
      * Routes rows to the correct table based on the $type parameter.

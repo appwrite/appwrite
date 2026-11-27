@@ -10,8 +10,15 @@ import { pageTitle } from '@/lib/utils/page-title'
 
 const playerSearchSchema = z.object({
   project: z.string().optional(),
-  /** Playback start position in seconds (embed deep link). */
-  start: z.coerce.number().finite().nonnegative().optional(),
+  // Player options, read leniently by `parseEmbedPlayerOptions` (`start=1m30s`,
+  // `autoplay=true`, a bare `?loop`); a value it cannot read is ignored rather
+  // than refused.
+  start: z.unknown().optional(),
+  autoplay: z.unknown().optional(),
+  muted: z.unknown().optional(),
+  loop: z.unknown().optional(),
+  controls: z.unknown().optional(),
+  color: z.unknown().optional(),
 })
 
 export const Route = createFileRoute('/player/$videoId')({

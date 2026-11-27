@@ -13,12 +13,14 @@ use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
+use Utopia\Storage\Exception\NotFoundException;
 use Utopia\System\System;
 use Utopia\Validator\WhiteList;
 
@@ -45,7 +47,7 @@ class Get extends Base
                 namespace: 'videos',
                 group: 'playback',
                 name: 'getSegment',
-                // Hidden until videos is generally available; preview SDK builds show it.
+                // Players follow this URL from the manifest; apps never call it directly. Preview SDK builds show it.
                 hide: System::getEnv('_APP_SDK_PREVIEW', 'disabled') !== 'enabled',
                 description: '/docs/references/videos/get-segment.md',
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -57,7 +59,7 @@ class Get extends Base
                 ],
                 contentType: ContentType::ANY,
                 type: MethodType::LOCATION,
-                locationAuth: ['Project', 'ImpersonateUserId'],
+                locationAuth: ['Project', 'Environment', 'ImpersonateUserId'],
             ))
             ->param('videoId', '', new UID(), 'Video unique ID.')
             ->param('output', '', new WhiteList(self::OUTPUTS, true), 'Streaming output format.', enum: new Enum(name: 'VideoOutput'))
@@ -66,6 +68,7 @@ class Get extends Base
             ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('project')
             ->inject('user')
             ->inject('authorization')
             ->inject('deviceForVideos')
@@ -80,6 +83,7 @@ class Get extends Base
         Request $request,
         Response $response,
         Database $dbForProject,
+        Document $project,
         User $user,
         Authorization $authorization,
         Device $deviceForVideos
@@ -112,19 +116,23 @@ class Get extends Base
 
         $path = $segment->getAttribute('path', '') . $segment->getAttribute('fileName', '');
 
-        if (!$deviceForVideos->exists($path)) {
+        $contentType = $output === self::OUTPUT_HLS ? 'video/mp2t' : 'video/iso.segment';
+
+        // Rows written before the size was stored have none; those still ask storage.
+        // A missing file answers 404 from this call or from the read below.
+        $size = (int) $segment->getAttribute('size', 0);
+        try {
+            if ($size === 0) {
+                $size = $deviceForVideos->getFileSize($path);
+            }
+        } catch (NotFoundException) {
             throw new Exception(Exception::VIDEO_RENDITION_SEGMENT_NOT_FOUND);
         }
 
-        $contentType = $output === self::OUTPUT_HLS ? 'video/mp2t' : 'video/iso.segment';
-        $size = $deviceForVideos->getFileSize($path);
-
         $response
-            ->setContentType($contentType)
-            // Permission-gated. A shared cache would keep serving this URL after
-            // access is revoked or the video is deleted, and nothing can purge it.
-            // The bytes never change, so a private cache may hold them.
-            ->addHeader('Cache-Control', 'private, max-age=31536000, immutable')
+            ->setContentType($contentType);
+        $this->cachePlaybackSegment($response, $project, $video);
+        $response
             ->addHeader('Accept-Ranges', 'bytes')
             ->addHeader('X-Peak', \memory_get_peak_usage());
 
@@ -179,7 +187,7 @@ class Get extends Base
                 ->addHeader('Content-Range', 'bytes ' . $start . '-' . $end . '/' . $size)
                 ->addHeader('Content-Length', $end - $start + 1)
                 ->setStatusCode(Response::STATUS_CODE_PARTIALCONTENT)
-                ->send((string) $deviceForVideos->read($path, $start, ($end - $start + 1)));
+                ->send($this->readSegment($deviceForVideos, $path, $start, ($end - $start + 1)));
 
             return;
         }
@@ -187,7 +195,8 @@ class Get extends Base
         if ($size > APP_STORAGE_READ_BUFFER) {
             for ($i = 0; $i < \ceil($size / MAX_OUTPUT_CHUNK_SIZE); $i++) {
                 $response->chunk(
-                    (string) $deviceForVideos->read(
+                    $this->readSegment(
+                        $deviceForVideos,
                         $path,
                         ($i * MAX_OUTPUT_CHUNK_SIZE),
                         \min(MAX_OUTPUT_CHUNK_SIZE, $size - ($i * MAX_OUTPUT_CHUNK_SIZE))
@@ -199,6 +208,19 @@ class Get extends Base
             return;
         }
 
-        $response->send((string) $deviceForVideos->read($path));
+        $response->send($this->readSegment($deviceForVideos, $path));
+    }
+
+    /**
+     * A stored size skips the existence check, so a file removed after the
+     * encode is discovered here. That is the same 404 as a missing row.
+     */
+    private function readSegment(Device $device, string $path, int $offset = 0, ?int $length = null): string
+    {
+        try {
+            return (string) $device->read($path, $offset, $length);
+        } catch (NotFoundException) {
+            throw new Exception(Exception::VIDEO_RENDITION_SEGMENT_NOT_FOUND);
+        }
     }
 }

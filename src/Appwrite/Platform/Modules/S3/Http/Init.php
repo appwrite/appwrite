@@ -55,6 +55,8 @@ class Init extends Action
             'Content-Range',
             'ETag',
             'Last-Modified',
+            // The object's length on a GET answered as HeadObject, which has no Content-Length
+            'x-amz-meta-content-length',
         ])));
         foreach ($corsHeaders as $name => $value) {
             $response
