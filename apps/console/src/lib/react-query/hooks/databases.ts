@@ -523,6 +523,19 @@ function readProductDatabaseLifecycleStatus(
   return null
 }
 
+function readProductDatabaseBacking(db: Models.Database): {
+  pitr: boolean | null
+  pitrRetentionDays: number | null
+  storage: number | null
+} {
+  return {
+    pitr: typeof db.pitr === 'boolean' ? db.pitr : null,
+    pitrRetentionDays:
+      typeof db.pitrRetentionDays === 'number' ? db.pitrRetentionDays : null,
+    storage: typeof db.storage === 'number' ? db.storage : null,
+  }
+}
+
 function buildProjectDatabaseDetail(db: Models.Database) {
   const backupPolicies = db.policies ?? []
   const backupPolicyCount = backupPolicies.length
@@ -545,6 +558,7 @@ function buildProjectDatabaseDetail(db: Models.Database) {
     status: readProductDatabaseLifecycleStatus(db),
     replicas: typeof db.replicas === 'number' ? db.replicas : null,
     specification: readProductDatabaseSpecification(db),
+    ...readProductDatabaseBacking(db),
   }
 }
 
@@ -1097,13 +1111,14 @@ export async function fetchProjectDatabase(
 /**
  * Options for creating Appwrite product databases (TablesDB, DocumentsDB, VectorsDB).
  * Always a single product-API create (`tablesDB` / `documentsDB` / `vectorsDB`) with
- * optional `specification` and `replicas`. PITR and backup policies are follow-ups
- * after the database is ready, not separate create paths.
+ * optional `specification`, `replicas` and `pitr`. Backup policies are a follow-up
+ * after the database is ready, not a separate create path.
  */
 export type CreateProjectDatabaseOptions = {
   specification?: string
   region?: string | null
   haReplicaCount?: number
+  pitrEnabled?: boolean
 }
 
 function computeApiForDatabaseType(backend: DatabaseType): string {
@@ -1261,15 +1276,19 @@ function isDatabaseAlreadyExistsError(error: unknown): boolean {
   return message.toLowerCase().includes('already exists')
 }
 
+type CreateProductDatabaseParams = {
+  databaseId: string
+  name: string
+  specification?: string
+  replicas?: number
+  pitr?: boolean
+  pitrRetentionDays?: number
+}
+
 async function createProductDatabase(
   projectSdk: ReturnType<typeof sdk.forProject>,
   backend: DatabaseType,
-  params: {
-    databaseId: string
-    name: string
-    specification?: string
-    replicas?: number
-  },
+  params: CreateProductDatabaseParams,
 ) {
   const payload = {
     databaseId: params.databaseId,
@@ -1277,6 +1296,10 @@ async function createProductDatabase(
     ...(params.specification ? { specification: params.specification } : {}),
     ...(params.replicas != null && params.replicas > 0
       ? { replicas: params.replicas }
+      : {}),
+    ...(params.pitr !== undefined ? { pitr: params.pitr } : {}),
+    ...(params.pitrRetentionDays !== undefined
+      ? { pitrRetentionDays: params.pitrRetentionDays }
       : {}),
   }
 
@@ -1292,12 +1315,7 @@ async function createProductDatabase(
 async function createProductDatabaseWithExistsRecovery(
   projectSdk: ReturnType<typeof sdk.forProject>,
   backend: DatabaseType,
-  params: {
-    databaseId: string
-    name: string
-    specification?: string
-    replicas?: number
-  },
+  params: CreateProductDatabaseParams,
 ): Promise<Models.Database> {
   try {
     return await createProductDatabase(projectSdk, backend, params)
@@ -1375,6 +1393,9 @@ export async function createProjectDatabase(
         name,
         specification,
         ...(haReplicaCount > 0 ? { replicas: haReplicaCount } : {}),
+        ...(options?.pitrEnabled !== undefined
+          ? { pitr: options.pitrEnabled }
+          : {}),
       },
     )
 
@@ -1392,23 +1413,6 @@ export async function createProjectDatabase(
   )
   seedDatabaseModelCache(projectId, productDatabaseId, created, backend)
   return normalizeProductDatabase(created, backend)
-}
-
-/**
- * Enable PITR on a product-owned dedicated database after create.
- *
- * Product create/update APIs do not accept `pitr`. Do not fall back to engine
- * services (mysql / postgresql / mongo) for product IDs. Until the product
- * APIs expose PITR, this is a no-op and callers should skip product PITR waits.
- */
-export async function enableProductDatabasePitr(
-  _projectId: string,
-  _databaseId: string,
-  _backend: DatabaseType,
-  _region?: string | null,
-): Promise<void> {
-  // Intentionally empty: product SDKs have no PITR mutation. Never PATCH
-  // product database IDs via dedicatedEngineService.
 }
 
 /**
@@ -1503,9 +1507,8 @@ export async function waitForCreatedDatabaseHaReady(
 /**
  * Wait until PITR is reported enabled on the created database.
  *
- * Native DBs are checked via the engine get. Product DBs have no PITR field or
- * mutation on the product API, so this returns true immediately for product
- * kinds (never probe mysql / postgresql / mongo with product IDs).
+ * Native DBs are read through their engine, product DBs through their own
+ * product API (never probe mysql / postgresql / mongo with product IDs).
  */
 export async function waitForCreatedDatabasePitrReady(
   projectId: string,
@@ -1513,24 +1516,30 @@ export async function waitForCreatedDatabasePitrReady(
   kind: CreatedDatabaseWorkspaceKind,
 ): Promise<boolean> {
   if (!projectId || !databaseId) return false
-  if (kind.type !== 'native') return true
 
-  const matchesPitrReady = (payload: Record<string, unknown>): boolean =>
-    payload.pitr === true
+  const readPitr = async (): Promise<boolean> => {
+    if (kind.type === 'native') {
+      const database = await fetchDedicatedDatabaseById(projectId, databaseId, {
+        type: 'engine',
+        engine:
+          kind.engine === 'postgres'
+            ? 'postgresql'
+            : kind.engine === 'mongo'
+              ? 'mongodb'
+              : 'mysql',
+      })
+      return database?.pitr === true
+    }
+    const database = await getProductDatabase(
+      sdk.forProject(projectId),
+      kind.backend,
+      databaseId,
+    )
+    return database?.pitr === true
+  }
 
   try {
-    const database = await fetchDedicatedDatabaseById(projectId, databaseId, {
-      type: 'engine',
-      engine:
-        kind.engine === 'postgres'
-          ? 'postgresql'
-          : kind.engine === 'mongo'
-            ? 'mongodb'
-            : 'mysql',
-    })
-    if (database && matchesPitrReady(database as Record<string, unknown>)) {
-      return true
-    }
+    if (await readPitr()) return true
   } catch {
     /* wait for realtime */
   }
@@ -1543,18 +1552,7 @@ export async function waitForCreatedDatabasePitrReady(
       lifecycleOnly: true,
       timeoutMs: CREATED_DATABASE_READY_TIMEOUT_MS,
     })
-    const database = await fetchDedicatedDatabaseById(projectId, databaseId, {
-      type: 'engine',
-      engine:
-        kind.engine === 'postgres'
-          ? 'postgresql'
-          : kind.engine === 'mongo'
-            ? 'mongodb'
-            : 'mysql',
-    }).catch(() => null)
-    return Boolean(
-      database && matchesPitrReady(database as Record<string, unknown>),
-    )
+    return await readPitr().catch(() => false)
   } catch {
     return false
   }
@@ -1762,6 +1760,24 @@ export function useActiveTablesDatabaseMigration(
 }
 
 /**
+ * What a product `update` must carry back unchanged: CE writes `enabled` on
+ * every update (defaulting to true) and DocumentsDB/VectorsDB require `name`.
+ */
+export type ProductDatabaseIdentity = {
+  name: string
+  enabled: boolean
+}
+
+function productDatabaseService(
+  projectSdk: ReturnType<typeof sdk.forProject>,
+  dbKind: DatabaseRouteKind,
+) {
+  if (dbKind === 'documentsdb') return projectSdk.documentsDB
+  if (dbKind === 'vectorsdb') return projectSdk.vectorsDB
+  return projectSdk.tablesDB
+}
+
+/**
  * Change the dedicated compute specification via the product SDK `update`
  * method (`tablesDB` / `documentsDB` / `vectorsDB`). Never use engine
  * services or raw REST `client.call` from feature code.
@@ -1771,29 +1787,40 @@ async function updateProductDatabaseSpecificationViaUpdate(
   databaseId: string,
   dbKind: DatabaseRouteKind,
   specification: string,
-  name?: string,
+  identity: ProductDatabaseIdentity,
 ): Promise<Models.Database> {
-  const projectSdk = sdk.forProject(projectId)
-  const trimmedName = name?.trim()
-
-  if (dbKind === 'documentsdb') {
-    return projectSdk.documentsDB.update({
-      databaseId,
-      name: trimmedName || databaseId,
-      specification,
-    })
-  }
-  if (dbKind === 'vectorsdb') {
-    return projectSdk.vectorsDB.update({
-      databaseId,
-      name: trimmedName || databaseId,
-      specification,
-    })
-  }
-  return projectSdk.tablesDB.update({
+  return productDatabaseService(sdk.forProject(projectId), dbKind).update({
     databaseId,
+    name: identity.name.trim() || databaseId,
+    enabled: identity.enabled,
     specification,
-    ...(trimmedName ? { name: trimmedName } : {}),
+  })
+}
+
+/**
+ * Turn PITR on or off, or change its retention, on a dedicated product
+ * database. The change is a configuration reload: the database keeps serving.
+ */
+export async function updateProductDatabasePitr(
+  projectId: string,
+  databaseId: string,
+  dbKind: DatabaseRouteKind,
+  data: ProductDatabaseIdentity & {
+    pitr: boolean
+    pitrRetentionDays?: number
+  },
+): Promise<Models.Database> {
+  if (!projectId || !databaseId) {
+    throw new Error('Project ID and Database ID are required')
+  }
+  return productDatabaseService(sdk.forProject(projectId), dbKind).update({
+    databaseId,
+    name: data.name.trim() || databaseId,
+    enabled: data.enabled,
+    pitr: data.pitr,
+    ...(data.pitrRetentionDays !== undefined
+      ? { pitrRetentionDays: data.pitrRetentionDays }
+      : {}),
   })
 }
 
@@ -1811,7 +1838,7 @@ export async function updateProductDatabaseSpecification(
   databaseId: string,
   dbKind: DatabaseRouteKind,
   specification: string,
-  name?: string,
+  identity: ProductDatabaseIdentity,
 ) {
   if (!projectId || !databaseId) {
     throw new Error('Project ID and Database ID are required')
@@ -1848,7 +1875,7 @@ export async function updateProductDatabaseSpecification(
     databaseId,
     dbKind,
     trimmed,
-    name,
+    identity,
   )
 }
 
@@ -2245,6 +2272,7 @@ function dedicatedCardSourceFromProductDatabase(
     specification,
     status: readProductDatabaseLifecycleStatus(db) ?? 'ready',
     replicas: typeof db.replicas === 'number' ? db.replicas : 0,
+    pitr: db.pitr === true,
     cpu: 0,
     memory: 0,
   } as Models.DedicatedDatabase
@@ -4516,6 +4544,7 @@ function mapProjectDatabaseListItems(
       status: readProductDatabaseLifecycleStatus(db),
       replicas: typeof db.replicas === 'number' ? db.replicas : null,
       specification: readProductDatabaseSpecification(db),
+      ...readProductDatabaseBacking(db),
     } as Database & {
       enabled: boolean
       createdAt: string

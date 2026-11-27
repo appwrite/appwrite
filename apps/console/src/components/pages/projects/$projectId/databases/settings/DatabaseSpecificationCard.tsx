@@ -49,8 +49,9 @@ import { coerceTrimmedString } from '@/lib/databases/dedicated-database-status'
 import type { ProjectDatabaseDetail } from './types'
 
 const SERVERLESS_SPEC_OPTION =
-  TABLE_DB_SPEC_OPTIONS.find((spec) => spec.id === SERVERLESS_DATABASE_SPEC_ID) ??
-  TABLE_DB_SPEC_OPTIONS[0]
+  TABLE_DB_SPEC_OPTIONS.find(
+    (spec) => spec.id === SERVERLESS_DATABASE_SPEC_ID,
+  ) ?? TABLE_DB_SPEC_OPTIONS[0]
 
 type DatabaseSpecificationCardProps = {
   projectId: string
@@ -122,7 +123,7 @@ export function DatabaseSpecificationCard({
         databaseId,
         dbKind,
         specification,
-        database.name,
+        { name: database.name, enabled: database.enabled !== false },
       ),
     onSuccess: async (result) => {
       seedDatabaseProductRouteKind(projectId, databaseId, dbKind)
@@ -148,10 +149,7 @@ export function DatabaseSpecificationCard({
         refetchProjectDatabaseLists(queryClient, projectId),
         migrated
           ? queryClient.refetchQueries({
-              queryKey: tablesDatabaseMigrationsQueryKey(
-                projectId,
-                databaseId,
-              ),
+              queryKey: tablesDatabaseMigrationsQueryKey(projectId, databaseId),
             })
           : Promise.resolve(),
       ])
@@ -323,10 +321,7 @@ export function DatabaseSpecificationCard({
                         : spec.label}
                     </span>
                     {isCurrent ? (
-                      <Badge
-                        variant="success"
-                        className="text-[10px] shrink-0"
-                      >
+                      <Badge variant="success" className="text-[10px] shrink-0">
                         {t('Current')}
                       </Badge>
                     ) : null}

@@ -7,4 +7,8 @@ export type ProjectDatabaseDetail = {
   updatedAt: string
   /** Dedicated compute slug, or null/shared when TablesDB is serverless. */
   specification?: string | null
+  pitr?: boolean | null
+  pitrRetentionDays?: number | null
+  /** Provisioned storage in GB; null when there is no dedicated backing. */
+  storage?: number | null
 }
