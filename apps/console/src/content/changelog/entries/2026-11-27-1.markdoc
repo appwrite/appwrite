@@ -1,0 +1,19 @@
+---
+layout: changelog
+title: "Deploy Sites and Functions from Cursor Origin repositories"
+date: 2026-11-27
+cover: /images/blog/announcing-cursor-origin-support/cover.avif
+tags: sites, functions, integrations
+---
+
+Origin, Cursor's Git hosting platform, is now one of Appwrite's Git providers. Connect a Cursor workspace from **Project settings** > **Git configuration** > **Add installation**, approve the installation on Cursor, and [deploy from Git](/docs/products/sites/deploy-from-git) on every push.
+
+Pushes to your production branch build and activate. Pushes to other branches build without activating, and Sites get a private [preview link](/docs/products/sites/previews). Each build reports back to its commit as a check run, and pull requests get a build summary comment. Create repositories in Cursor first, since Origin doesn't let apps create them. Origin is available as a Git provider on Appwrite Cloud.
+
+{% arrow_link href="/blog/post/announcing-cursor-origin-support" %}
+Read the announcement
+{% /arrow_link %}
+
+{% arrow_link href="/integrations/deployments-origin" %}
+Connect Cursor Origin step by step
+{% /arrow_link %}

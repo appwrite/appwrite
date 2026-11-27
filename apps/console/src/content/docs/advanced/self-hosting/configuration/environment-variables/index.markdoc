@@ -201,6 +201,8 @@ If running in production, it might be easier to use a 3rd party SMTP server as i
 | `_APP_VCS_ENTIRE_PRIVATE_KEY` | **version >= 2.6.0** Entire plugin Ed25519 private key in PKCS#8 PEM format. Defaults to empty. |
 | `_APP_VCS_ENTIRE_ISSUER` | **version >= 2.6.0** Issuer registered on the Entire plugin, usually the server URL. Defaults to empty. |
 | `_APP_VCS_ENTIRE_ENDPOINT` | **version >= 2.6.0** Entire control-plane URL. When unset, the server uses `https://us.auth.entire.io`. |
+| `_APP_VCS_ORIGIN_CLIENT_ID` | **version >= 2.0.0** Client ID of your Origin app on Cursor, which is also its app ID. You can find it in your Origin app details. The Console that ships with self-hosted 2.7.4 and earlier doesn't offer new Origin connections. Defaults to empty. |
+| `_APP_VCS_ORIGIN_PRIVATE_KEY` | **version >= 2.0.0** Origin app Ed25519 private key in PKCS#8 PEM format. You can generate private keys from your Origin app settings on Cursor. Defaults to empty. |
 
 # Maintenance {% #maintenance %}
 | **Name**                                        | **Description**                                                                                                                                                                    |

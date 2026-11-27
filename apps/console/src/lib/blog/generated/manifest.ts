@@ -48,6 +48,20 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "announcing-cursor-origin-support",
+    "href": "/blog/post/announcing-cursor-origin-support",
+    "title": "Announcing Cursor Origin support for Sites and Functions",
+    "description": "Connect a Cursor workspace to Appwrite and deploy Sites and Functions from Cursor Origin repositories, with branch previews, check runs, and PR comments.",
+    "date": "2026-11-27",
+    "lastUpdated": "2026-11-27",
+    "timeToRead": 5,
+    "author": "aditya-oberai",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-cursor-origin-support/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-postgresql-19",
     "href": "/blog/post/announcing-postgresql-19",
     "title": "Managed PostgreSQL 19 is now available on Appwrite Cloud",
