@@ -59,8 +59,12 @@ pub fn child() {
 }
 
 /// The `compat-driver` binary: this process, or (in `cargo test`, whose
-/// harness cannot act as the child) the one Cargo built next to the tests.
+/// harness cannot act as the child) the one Cargo built for the tests:
+/// `COMPAT_DRIVER_BIN` when the test names it, else the one next to them.
 fn driver() -> Result<std::path::PathBuf, Fault> {
+    if let Some(path) = std::env::var_os("COMPAT_DRIVER_BIN").map(std::path::PathBuf::from).filter(|p| p.is_file()) {
+        return Ok(path);
+    }
     let exe = std::env::current_exe().map_err(|e| Fault::new(e.to_string()))?;
     if exe.file_stem().is_some_and(|n| n == "compat-driver") {
         return Ok(exe);

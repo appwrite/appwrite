@@ -16,6 +16,10 @@ use compat::runner::spec;
 /// tests do.
 #[test]
 fn recorded_php_results_hold_in_rust() {
+    // Cases that need the driver as a child process (console) run the one
+    // Cargo built for this test, wherever its build directory puts it.
+    // SAFETY: set before any thread is spawned.
+    unsafe { std::env::set_var("COMPAT_DRIVER_BIN", env!("CARGO_BIN_EXE_compat-driver")) };
     std::thread::Builder::new()
         .stack_size(64 * 1024 * 1024)
         .spawn(|| utopia_async::Builder::current_thread().build().expect("a runtime").block_on(replay_every_library()))
