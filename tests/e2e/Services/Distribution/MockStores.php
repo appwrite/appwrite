@@ -125,14 +125,27 @@ trait MockStores
         ], $params));
     }
 
-    protected function seedGoogleApplication(string $packageName, string $email): void
+    /**
+     * @param list<array{track: string, releases: list<array<string, mixed>>}> $tracks
+     */
+    protected function seedGoogleApplication(string $packageName, string $email, array $tracks = []): void
     {
         $seeded = $this->client->call(Client::METHOD_POST, '/mock/distribution/google/seeds/applications', $this->mockHeaders(), [
             'packageName' => $packageName,
             'emails' => [$email],
-            'tracks' => \array_map(fn (string $track): array => ['track' => $track, 'releases' => []], ['production', 'beta', 'alpha', 'internal']),
+            'tracks' => $tracks ?: \array_map(fn (string $track): array => ['track' => $track, 'releases' => []], ['production', 'beta', 'alpha', 'internal']),
         ]);
         $this->assertSame(201, $seeded['headers']['status-code'], 'Seeding a Google Play application requires _APP_ENV=development.');
+    }
+
+    protected function seedGoogleReview(string $packageName, string $track, string $state): void
+    {
+        $seeded = $this->client->call(Client::METHOD_POST, '/mock/distribution/google/seeds/reviews', $this->mockHeaders(), [
+            'packageName' => $packageName,
+            'track' => $track,
+            'state' => $state,
+        ]);
+        $this->assertSame(201, $seeded['headers']['status-code'], 'Seeding a Google Play review state requires _APP_ENV=development.');
     }
 
     protected function seedAppleApp(string $issuerId, string $bundleId): string
@@ -273,7 +286,7 @@ trait MockStores
     }
 
     /**
-     * @return array{appId: string, targetId: string, artifactId: string, releaseId: string, identifier: string, size: int, signedSize: int}
+     * @return array{appId: string, targetId: string, artifactId: string, releaseId: string, identifier: string, email: string, size: int, signedSize: int}
      */
     protected function prepareGoogleRelease(int $variant): array
     {
@@ -327,6 +340,7 @@ trait MockStores
             'artifactId' => $ready['$id'],
             'releaseId' => $release['body']['$id'],
             'identifier' => $identifier,
+            'email' => $serviceAccount['client_email'],
             'size' => (int) \filesize($path),
             'signedSize' => (int) $ready['size'],
         ];

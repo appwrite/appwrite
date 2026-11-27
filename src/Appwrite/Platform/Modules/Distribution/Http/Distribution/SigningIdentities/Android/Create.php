@@ -35,6 +35,12 @@ class Create extends Action
 
     private const int BASE64_BLOCK_CHARACTERS = 4;
 
+    private const string ALIAS = 'upload';
+
+    private const int SUBJECT_BYTES = 64;
+
+    private const string SUBJECT_INVALID = 'Certificate request subject';
+
     public static function getName(): string
     {
         return 'createAndroidSigningIdentity';
@@ -56,7 +62,7 @@ class Create extends Action
                 group: 'signingIdentities',
                 name: 'createAndroidSigningIdentity',
                 description: <<<EOT
-                Import an Android upload keystore. A PKCS#12 keystore is validated with its password, which must be the same for the store and the key. A JKS keystore is accepted as is and verified by the first sign job, so its fingerprint and expiry stay empty until then. The key alias is not checked against the keystore for either format, so a wrong alias fails the first sign job. JCEKS keystores are rejected. The keystore is stored encrypted and never returned except through the download endpoint.
+                Import an Android upload keystore. A PKCS#12 keystore is validated with its password, which must be the same for the store and the key. A JKS keystore is accepted as is and verified by the first sign job, so its fingerprint and expiry stay empty until then. The key alias is not checked against the keystore for either format, so a wrong alias fails the first sign job. JCEKS keystores are rejected. The keystore is stored encrypted and never returned except through the download endpoint. Pass no keystore to generate a managed upload key: an RSA-2048 key with a self-signed certificate valid for 30 years, in a PKCS#12 keystore with one generated password. The key that signs the first bundle uploaded to Google Play becomes the upload key.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
@@ -70,10 +76,10 @@ class Create extends Action
             ))
             ->param('signingIdentityId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getMaxUidLength()), "Signing identity ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars.", false, ['dbForProject'])
             ->param('name', '', new Text(128), 'Signing identity name. Max length: 128 chars.')
-            ->param('keystore', '', new Text(0), 'Base64-encoded keystore file, PKCS#12 or JKS.')
-            ->param('storePassword', '', new Text(0, 0), 'Keystore password.')
-            ->param('keyAlias', '', new Text(0, 1), 'Alias of the upload key inside the keystore.')
-            ->param('keyPassword', '', new Text(0, 0), 'Password of the upload key. Must equal the keystore password for a PKCS#12 keystore.')
+            ->param('keystore', '', new Text(0, 0), 'Base64-encoded keystore file, PKCS#12 or JKS. Leave empty to generate a managed upload key.', true)
+            ->param('storePassword', '', new Text(0, 0), 'Keystore password. Leave empty for a managed keystore.', true)
+            ->param('keyAlias', '', new Text(0, 0), 'Alias of the upload key inside the keystore. Defaults to upload for a managed keystore.', true)
+            ->param('keyPassword', '', new Text(0, 0), 'Password of the upload key. Must equal the keystore password for a PKCS#12 keystore. Leave empty for a managed keystore.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
@@ -95,11 +101,95 @@ class Create extends Action
         Event $queueForEvents,
     ): void {
         $signingIdentityId = $signingIdentityId === 'unique()' ? Id::unique() : $signingIdentityId;
+        $managed = $keystore === '';
+
+        if ($managed && ($storePassword !== '' || $keyPassword !== '')) {
+            throw new Exception(Exception::DISTRIBUTION_SIGNING_IDENTITY_INVALID, 'Leave the passwords empty for a managed keystore; one is generated.');
+        }
+
+        if (!$managed && $keyAlias === '') {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Param "keyAlias" is required for an imported keystore.');
+        }
 
         if (!$dbForProject->getDocument('distributionSigningIdentities', $signingIdentityId)->isEmpty()) {
             throw new Exception(Exception::DISTRIBUTION_SIGNING_IDENTITY_ALREADY_EXISTS);
         }
 
+        $key = $managed
+            ? $this->generate($name, $keyAlias ?: self::ALIAS)
+            : $this->import($keystore, $storePassword, $keyAlias, $keyPassword);
+
+        try {
+            $signingIdentity = $dbForProject->createDocument('distributionSigningIdentities', new Document([
+                '$id' => $signingIdentityId,
+                '$permissions' => [],
+                'platform' => Platform::Android->value,
+                'name' => $name,
+                'mode' => $key['mode'],
+                'secret' => $key['secret'],
+                'fingerprint' => $key['fingerprint'],
+                'teamId' => '',
+                'identifiers' => [],
+                'connectionId' => '',
+                'connectionInternalId' => '',
+                'externalId' => '',
+                'expiresAt' => $key['expiresAt'],
+                'status' => Status::Active->value,
+            ]));
+        } catch (Duplicate) {
+            throw new Exception(Exception::DISTRIBUTION_SIGNING_IDENTITY_ALREADY_EXISTS);
+        } catch (Structure $error) {
+            throw new Exception(Exception::DISTRIBUTION_SIGNING_IDENTITY_INVALID, $error->getMessage());
+        }
+
+        $queueForEvents->setParam('signingIdentityId', $signingIdentity->getId());
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($signingIdentity, Response::MODEL_DISTRIBUTION_SIGNING_IDENTITY);
+    }
+
+    /**
+     * @return array{mode: string, secret: array<string, string>, fingerprint: string, expiresAt: ?string}
+     */
+    private function generate(string $name, string $alias): array
+    {
+        try {
+            $generated = Keystore::generate($alias, ['CN' => \mb_strcut($name, 0, self::SUBJECT_BYTES)]);
+        } catch (Invalid $error) {
+            // Keystore::generate() also throws Invalid for OpenSSL failures; only a subject problem comes from the request.
+            if (\str_starts_with($error->getMessage(), self::SUBJECT_INVALID)) {
+                throw new Exception(Exception::DISTRIBUTION_SIGNING_IDENTITY_INVALID, $error->getMessage());
+            }
+
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'The managed keystore could not be generated. Try again.', previous: $error);
+        }
+
+        return [
+            'mode' => Mode::Managed->value,
+            'secret' => [
+                'keystore' => \base64_encode($generated->archive),
+                'storePassword' => $generated->password,
+                'keyAlias' => $alias,
+                'keyPassword' => $generated->password,
+            ],
+            'fingerprint' => $generated->certificate->fingerprint(),
+            'expiresAt' => DateTime::format(\DateTime::createFromImmutable($generated->certificate->expiresAt())),
+        ];
+    }
+
+    /**
+     * @return array{mode: string, secret: array<string, string>, fingerprint: string, expiresAt: ?string}
+     */
+    private function import(
+        #[\SensitiveParameter]
+        string $keystore,
+        #[\SensitiveParameter]
+        string $storePassword,
+        string $keyAlias,
+        #[\SensitiveParameter]
+        string $keyPassword,
+    ): array {
         if (\strlen($keystore) > $this->encodedLimit()) {
             throw new Exception(Exception::DISTRIBUTION_SIGNING_IDENTITY_INVALID, 'Signing files must not exceed ' . self::LIMIT . ' bytes in total once decoded.');
         }
@@ -139,39 +229,17 @@ class Create extends Action
             $expiresAt = DateTime::format(\DateTime::createFromImmutable($certificate->expiresAt()));
         }
 
-        try {
-            $signingIdentity = $dbForProject->createDocument('distributionSigningIdentities', new Document([
-                '$id' => $signingIdentityId,
-                '$permissions' => [],
-                'platform' => Platform::Android->value,
-                'name' => $name,
-                'mode' => Mode::Imported->value,
-                'secret' => [
-                    'keystore' => \base64_encode($archive),
-                    'storePassword' => $storePassword,
-                    'keyAlias' => $keyAlias,
-                    'keyPassword' => $keyPassword,
-                ],
-                'fingerprint' => $fingerprint,
-                'teamId' => '',
-                'identifiers' => [],
-                'connectionId' => '',
-                'connectionInternalId' => '',
-                'externalId' => '',
-                'expiresAt' => $expiresAt,
-                'status' => Status::Active->value,
-            ]));
-        } catch (Duplicate) {
-            throw new Exception(Exception::DISTRIBUTION_SIGNING_IDENTITY_ALREADY_EXISTS);
-        } catch (Structure $error) {
-            throw new Exception(Exception::DISTRIBUTION_SIGNING_IDENTITY_INVALID, $error->getMessage());
-        }
-
-        $queueForEvents->setParam('signingIdentityId', $signingIdentity->getId());
-
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($signingIdentity, Response::MODEL_DISTRIBUTION_SIGNING_IDENTITY);
+        return [
+            'mode' => Mode::Imported->value,
+            'secret' => [
+                'keystore' => \base64_encode($archive),
+                'storePassword' => $storePassword,
+                'keyAlias' => $keyAlias,
+                'keyPassword' => $keyPassword,
+            ],
+            'fingerprint' => $fingerprint,
+            'expiresAt' => $expiresAt,
+        ];
     }
 
     private function encodedLimit(): int

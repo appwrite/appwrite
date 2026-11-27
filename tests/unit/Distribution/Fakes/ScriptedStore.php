@@ -43,6 +43,20 @@ final class ScriptedStore extends Store
     ];
 
     /**
+     * @var array<string, mixed>
+     */
+    public array $promoted = [
+        'packageName' => 'io.example.app',
+        'editId' => 'edit-promoted',
+        'versionCode' => 88,
+    ];
+
+    /**
+     * @var list<array{identifier: string, build: string}>
+     */
+    public array $promotions = [];
+
+    /**
      * @var array<string, mixed>|null
      */
     public ?array $processed = [];
@@ -113,6 +127,15 @@ final class ScriptedStore extends Store
         $this->call('upload');
 
         return $this->uploaded;
+    }
+
+    #[\Override]
+    public function promote(string $identifier, string $build): array
+    {
+        $this->promotions[] = ['identifier' => $identifier, 'build' => $build];
+        $this->call('promote');
+
+        return $this->promoted;
     }
 
     #[\Override]

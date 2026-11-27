@@ -41,6 +41,16 @@ abstract class Store
     }
 
     /**
+     * Opens what a release needs for a build the store already has, without uploading it again.
+     *
+     * @return array<string, mixed> external ids
+     */
+    public function promote(string $identifier, string $build): array
+    {
+        throw $this->unsupported('promote');
+    }
+
+    /**
      * @param array<string, mixed> $external
      *
      * @return array<string, mixed>|null updated external once processed, null while processing

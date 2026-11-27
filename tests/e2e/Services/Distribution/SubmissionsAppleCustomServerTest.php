@@ -20,6 +20,8 @@ final class SubmissionsAppleCustomServerTest extends Scope
 
     private const string VERSION = '1.0.0';
 
+    private const float FRACTION = 0.5;
+
     private const array EXEMPT = ['usesNonExemptEncryption' => 'false'];
 
     private const array HIDDEN = ['checkpoint', 'claim', 'control', 'committed', 'track', 'bundleId', 'version', 'build', 'buildUploadFileId'];
@@ -217,10 +219,24 @@ final class SubmissionsAppleCustomServerTest extends Scope
         $this->assertSame(400, $track['headers']['status-code']);
         $this->assertSame('distribution_track_invalid', $track['body']['type']);
 
-        $created = $this->createSubmission($appId, $params);
+        $staged = $this->createSubmission($appId, [...$params, 'rollout' => self::FRACTION]);
+        $this->assertSame(400, $staged['headers']['status-code'], 'Apple phased release percentages are fixed, so a staged rollout is refused.');
+        $this->assertSame('general_argument_invalid', $staged['body']['type']);
+
+        $none = $this->listSubmissions($appId);
+        $this->assertSame(200, $none['headers']['status-code']);
+        $this->assertSame(0, $none['body']['total']);
+
+        $created = $this->createSubmission($appId, [...$params, 'rollout' => 1]);
         $this->assertSame(201, $created['headers']['status-code']);
         $this->assertTrue($created['body']['automatic']);
+        $this->assertEqualsWithDelta(1.0, (float) $created['body']['rollout'], PHP_FLOAT_EPSILON);
         $submissionId = $created['body']['$id'];
+
+        $restaged = $this->updateSubmission($appId, $submissionId, ['rollout' => self::FRACTION]);
+        $this->assertSame(400, $restaged['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $restaged['body']['type']);
+        $this->assertEqualsWithDelta(1.0, (float) $this->getSubmission($appId, $submissionId)['body']['rollout'], PHP_FLOAT_EPSILON);
 
         $approved = $this->awaitSubmission($appId, $submissionId, 'approved');
         $this->assertSame('released', $approved['step']);

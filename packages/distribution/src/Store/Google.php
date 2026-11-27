@@ -231,6 +231,29 @@ class Google extends Store
     }
 
     /**
+     * Google Play keeps every bundle a committed edit uploaded, so a release of one to another track
+     * needs only a new edit.
+     *
+     * @return array{packageName: string, editId: string, expiryTimeSeconds?: int, versionCode: int}
+     */
+    #[\Override]
+    public function promote(string $identifier, string $build): array
+    {
+        if (!ctype_digit($build)) {
+            throw new Invalid("Google Play version code \"{$build}\" must be a whole number");
+        }
+
+        $edit = $this->insert($identifier);
+        $promoted = ['packageName' => $identifier, 'editId' => $edit['id']];
+
+        if (isset($edit['expiryTimeSeconds'])) {
+            $promoted['expiryTimeSeconds'] = $edit['expiryTimeSeconds'];
+        }
+
+        return [...$promoted, 'versionCode' => (int) $build];
+    }
+
+    /**
      * @param array<string, mixed> $external
      *
      * @return array<string, mixed>

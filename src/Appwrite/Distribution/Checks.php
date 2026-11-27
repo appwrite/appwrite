@@ -146,7 +146,7 @@ readonly class Checks
             return [$this->unauthorized($unauthorized, $platform)];
         }
 
-        if ($latest < (int) $build) {
+        if ($latest < (int) $build || ($artifact !== null && Submissions::isPromotion($this->dbForProject, $connection, $artifact))) {
             return [];
         }
 

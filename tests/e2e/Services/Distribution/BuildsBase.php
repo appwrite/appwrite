@@ -3,7 +3,6 @@
 namespace Tests\E2E\Services\Distribution;
 
 use Appwrite\ID;
-use Appwrite\Tests\Async\Exceptions\Critical;
 use Tests\E2E\Client;
 use Utopia\Database\Query;
 
@@ -238,25 +237,6 @@ trait BuildsBase
             'A build is metered once',
             self::RECONCILE_TICK,
         );
-    }
-
-    /**
-     * Passes once every read for the whole window equals the expected value, and fails at the first that does not.
-     * A read that throws is retried.
-     */
-    protected function assertStays(callable $read, mixed $expected, string $message, int $windowMs): void
-    {
-        $until = \microtime(true) + $windowMs / 1000;
-
-        $this->assertEventually(function () use ($read, $expected, $message, $until): void {
-            $actual = $read();
-
-            if ($actual !== $expected) {
-                throw new Critical($message . ': expected ' . \json_encode($expected) . ', got ' . \json_encode($actual));
-            }
-
-            $this->assertGreaterThanOrEqual($until, \microtime(true), 'The window has not passed yet.');
-        }, $windowMs + 60_000, 5000);
     }
 
     /**

@@ -34,6 +34,8 @@ final class ChecksTest extends TestCase
 
     private const string TRACK = 'internal';
 
+    private const string RELEASED_ARTIFACT = '41';
+
     private SubmissionDatabase $database;
 
     private ScriptedStore $store;
@@ -514,6 +516,39 @@ final class ChecksTest extends TestCase
         $this->assertSame(['app'], $this->store->calls);
     }
 
+    public function testArtifactReleasedThroughAppwriteIsAPromotion(): void
+    {
+        $this->store->latest = 7;
+        $this->released(self::RELEASED_ARTIFACT, 7);
+
+        $check = $this->checks->run($this->app, $this->target(), 'production', $this->artifact(['$sequence' => self::RELEASED_ARTIFACT, 'versionCode' => 7]));
+
+        $this->assertTrue($check['ready']);
+        $this->assertSame([], $check['issues']);
+        $this->assertSame(['latestVersionCode'], $this->store->calls);
+    }
+
+    /**
+     * @return \Iterator<string, array{string, int}>
+     */
+    public static function unpromoted(): \Iterator
+    {
+        yield 'another version code reached the store elsewhere' => [self::RELEASED_ARTIFACT, 6];
+        yield 'another artifact with the same version code' => ['99', 7];
+    }
+
+    #[DataProvider('unpromoted')]
+    public function testVersionNotReleasedFromThisArtifactIsNotAPromotion(string $releasedArtifact, int $versionCode): void
+    {
+        $this->store->latest = 7;
+        $this->released($releasedArtifact, $versionCode);
+
+        $check = $this->checks->run($this->app, $this->target(), 'production', $this->artifact(['$sequence' => self::RELEASED_ARTIFACT, 'versionCode' => 7]));
+
+        $this->assertFalse($check['ready']);
+        $this->assertSame([Code::VersionNotIncreasing->value], \array_column($check['issues'], 'code'));
+    }
+
     public function testSignedArtifactNeedsNoSigningIdentity(): void
     {
         $check = $this->checks->run($this->app, $this->target(['signingIdentityId' => '']), self::TRACK, $this->artifact(['versionCode' => 1, 'signed' => true]));
@@ -572,6 +607,12 @@ final class ChecksTest extends TestCase
             'status' => $status,
             'external' => $external,
         ]);
+    }
+
+    private function released(string $artifactInternalId, int $versionCode): void
+    {
+        $this->sibling('connection', ['packageName' => self::PACKAGE, 'editId' => 'edit-1', 'versionCode' => $versionCode, 'committed' => true], 'published');
+        $this->database->updateDocument('distributionSubmissions', 'sibling', new Document(['step' => 'settled', 'artifactInternalId' => $artifactInternalId]));
     }
 
     /**

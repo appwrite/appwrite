@@ -266,7 +266,9 @@ class Submissions extends Action
             return;
         }
 
-        $run(fn (Document $current): Document => $submissions->control($current, $connection, $status->value));
+        $rollout = \is_numeric($payload->data['rollout'] ?? null) ? (float) $payload->data['rollout'] : null;
+
+        $run(fn (Document $current): Document => $submissions->control($current, $connection, $status->value, $rollout));
     }
 
     /**

@@ -106,6 +106,8 @@ readonly class Submissions
 
     private const array RELEASED = [Step::Released->value, Step::Settled->value];
 
+    private const array ROLLING = [State::STATUS_PUBLISHED, State::STATUS_HALTED];
+
     public function __construct(
         private Database $dbForProject,
         private Document $project,
@@ -151,25 +153,14 @@ readonly class Submissions
             return false;
         }
 
-        $identity = Stores::identity($connection);
-        $targets = \array_map(
-            static fn (Document $target): string => (string) $target->getSequence(),
-            \array_filter(
-                $dbForProject->find('distributionTargets', [
-                    Query::equal('identifier', [$identifier]),
-                    Query::equal('platform', [Platform::Android->value]),
-                    Query::limit(APP_LIMIT_SUBQUERY),
-                ]),
-                static fn (Document $target): bool => Stores::identity($dbForProject->getDocument('distributionConnections', (string) $target->getAttribute('connectionId', ''))) === $identity,
-            ),
-        );
+        $targets = self::targets($dbForProject, $connection, $identifier);
 
         if ($targets === []) {
             return false;
         }
 
         $others = $dbForProject->find('distributionSubmissions', [
-            Query::equal('targetInternalId', \array_values($targets)),
+            Query::equal('targetInternalId', $targets),
             Query::equal('status', self::ACTIVE),
             Query::notEqual('$id', $submissionId),
             Query::limit(APP_LIMIT_SUBQUERY),
@@ -180,6 +171,36 @@ readonly class Submissions
 
             return \is_array($external) && (self::isClaimed($external) || self::isEditing($external));
         });
+    }
+
+    /**
+     * Google keeps every bundle a committed edit uploaded, so an artifact Appwrite already released can go
+     * to another track without a new upload. An artifact belongs to one app, whose one Android target and
+     * its connection carry the release, so the same artifact is the same binary on the same package.
+     */
+    public static function isPromotion(Database $dbForProject, Document $connection, Document $artifact, string $submissionId = ''): bool
+    {
+        $versionCode = (string) $artifact->getAttribute('versionCode', '');
+
+        if (!Stores::isExclusive($connection) || $artifact->isEmpty() || !\ctype_digit($versionCode)) {
+            return false;
+        }
+
+        $prior = $dbForProject->findOne('distributionSubmissions', [
+            Query::equal('artifactInternalId', [(string) $artifact->getSequence()]),
+            Query::equal('step', self::RELEASED),
+            Query::notEqual('$id', $submissionId),
+        ]);
+
+        $external = $prior->getAttribute('external', []);
+
+        if ($prior->isEmpty() || !\is_array($external) || ($external['packageName'] ?? null) !== $artifact->getAttribute('identifier')) {
+            return false;
+        }
+
+        $released = $external['versionCode'] ?? null;
+
+        return (\is_int($released) || \is_string($released)) && (string) $released === $versionCode;
     }
 
     public static function interval(string $status, float $rollout): int
@@ -382,6 +403,58 @@ readonly class Submissions
         }
     }
 
+    /**
+     * Refuses a rollout outside (0, 1], and a staged one for Apple, whose phased release percentages are fixed.
+     */
+    public static function assertRollout(Provider $provider, float $rollout): void
+    {
+        if (\is_nan($rollout) || $rollout <= 0.0 || $rollout > 1.0) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Param "rollout" must be greater than 0 and at most 1.');
+        }
+
+        if ($provider === Provider::Apple && $rollout < 1.0) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Apple accepts only a rollout of 1, because its phased release percentages are fixed.');
+        }
+    }
+
+    /**
+     * Refuses a rollout change on a released submission unless it is a published Google Play staged rollout and the change does not lower it. Google Play never lowers a staged rollout: halting it is the rollback.
+     */
+    public static function assertRolloutChange(Document $submission, float $rollout): void
+    {
+        $id = $submission->getId();
+        $status = (string) $submission->getAttribute('status');
+        $current = (float) $submission->getAttribute('rollout', 1.0);
+
+        if ($status === Status::Halted->value) {
+            throw new Exception(Exception::DISTRIBUTION_SUBMISSION_TRANSITION_INVALID, "Submission '{$id}' is halted. Resume it with updateSubmissionStatus before changing its rollout.");
+        }
+
+        if (self::isHaltPending($submission)) {
+            throw new Exception(Exception::DISTRIBUTION_SUBMISSION_TRANSITION_INVALID, "A halt is pending for submission '{$id}'. Wait for it before changing its rollout.");
+        }
+
+        if ($submission->getAttribute('provider') !== Provider::Google->value || $status !== Status::Published->value || $current >= 1.0) {
+            throw new Exception(Exception::DISTRIBUTION_SUBMISSION_TRANSITION_INVALID, "Submission '{$id}' was already released to the store, so its rollout can change only while it is a published Google Play staged rollout.");
+        }
+
+        if ($rollout < $current) {
+            throw new Exception(Exception::DISTRIBUTION_SUBMISSION_TRANSITION_INVALID, "Google Play cannot lower the rollout of submission '{$id}'. Halt it with updateSubmissionStatus instead.");
+        }
+    }
+
+    public static function isRaise(Document $submission, float $rollout): bool
+    {
+        return $submission->getAttribute('status') === Status::Published->value && $rollout > (float) $submission->getAttribute('rollout', 1.0);
+    }
+
+    public static function isHaltPending(Document $submission): bool
+    {
+        $external = $submission->getAttribute('external', []);
+
+        return \is_array($external) && ($external['control']['status'] ?? null) === Status::Halted->value;
+    }
+
     public function existing(Document $app, string $key): Document
     {
         return $this->dbForProject->findOne('distributionSubmissions', [
@@ -390,7 +463,7 @@ readonly class Submissions
         ]);
     }
 
-    public function create(Document $app, Document $release, Document $target, Document $artifact, string $track, bool $automatic, string $key): ?Document
+    public function create(Document $app, Document $release, Document $target, Document $artifact, string $track, bool $automatic, string $key, float $rollout = 1.0): ?Document
     {
         $platform = Platform::from((string) $target->getAttribute('platform', ''));
 
@@ -410,7 +483,7 @@ readonly class Submissions
                 'platform' => $platform->value,
                 'provider' => Stores::provider($platform)->value,
                 'track' => $track,
-                'rollout' => 1.0,
+                'rollout' => $rollout,
                 'automatic' => $automatic,
                 'status' => Status::Waiting->value,
                 'external' => [],
@@ -506,10 +579,14 @@ readonly class Submissions
         $store = $this->stores->connection($connection);
         $upload = $this->stores->upload($artifact, $this->deviceForDistribution);
 
-        if (empty($external['editId']) && empty($external['checkpoint']) && \ctype_digit($upload->build)) {
-            $latest = $store->latestVersionCode($upload->identifier);
+        if (empty($external['editId']) && empty($external['checkpoint'])) {
+            if (self::isPromotion($this->dbForProject, $connection, $artifact, $submission->getId())) {
+                return $store->promote($upload->identifier, $upload->build);
+            }
 
-            if ($latest >= (int) $upload->build) {
+            $latest = \ctype_digit($upload->build) ? $store->latestVersionCode($upload->identifier) : null;
+
+            if ($latest !== null && $latest >= (int) $upload->build) {
                 throw new Exception(Exception::DISTRIBUTION_VERSION_INVALID, "Version code {$upload->build} is not higher than {$latest}, the highest version code the store already has.");
             }
         }
@@ -584,17 +661,21 @@ readonly class Submissions
         return $this->reconcile($submission, $this->releaseOf($submission), $connection);
     }
 
-    public function control(Document $submission, Document $connection, string $status): Document
+    public function control(Document $submission, Document $connection, string $status, ?float $rollout = null): Document
     {
         if (!\in_array($submission->getAttribute('step'), self::RELEASED, true)) {
             return Status::tryFrom($status) === Status::Canceled ? $this->cancel($submission) : $submission;
         }
 
-        if ($this->contended($submission, $connection)) {
-            return $this->defer($submission, $status, $this->attemptOf($submission, $status));
+        if (Status::tryFrom($status) === Status::Published && $rollout !== null && self::isHaltPending($submission)) {
+            return $submission;
         }
 
-        return $this->command($submission, $this->releaseOf($submission), $connection, $status);
+        if ($this->contended($submission, $connection)) {
+            return $this->defer($submission, $status, $rollout, $this->attemptOf($submission, $status, $rollout));
+        }
+
+        return $this->command($submission, $this->releaseOf($submission), $connection, $status, $rollout);
     }
 
     public function reconcile(Document $submission, Document $release, Document $connection): Document
@@ -609,10 +690,10 @@ readonly class Submissions
             return $submission;
         }
 
-        $pending = $this->external($submission)['control']['status'] ?? null;
+        $pending = $this->external($submission)['control'] ?? null;
 
-        if (\is_string($pending)) {
-            return $this->command($submission, $release, $connection, $pending);
+        if (\is_array($pending) && \is_string($pending['status'] ?? null)) {
+            return $this->command($submission, $release, $connection, $pending['status'], self::rolloutOf($pending));
         }
 
         return $this->observe($submission, $release, $connection);
@@ -642,7 +723,7 @@ readonly class Submissions
         };
     }
 
-    private function command(Document $submission, Document $release, Document $connection, string $status): Document
+    private function command(Document $submission, Document $release, Document $connection, string $status, ?float $rollout = null): Document
     {
         $requested = Status::tryFrom($status);
         $store = $this->stores->connection($connection);
@@ -658,20 +739,29 @@ readonly class Submissions
             ]);
         }
 
+        if ($requested === Status::Published && $rollout !== null && !self::isRaise($submission, $rollout)) {
+            return $this->update($submission, [
+                'external' => $this->withoutControl($submission),
+                'retryAt' => null,
+            ]);
+        }
+
         try {
             if ($requested === Status::Canceled) {
                 $store->withdraw($external);
             } elseif ($requested === Status::Halted) {
                 $store->halt($external, $track);
+            } elseif ($requested === Status::Published && $rollout !== null) {
+                $store->rollout($external, $track, $rollout);
             } elseif ($requested === Status::Published && $submission->getAttribute('status') === Status::Halted->value) {
                 $store->resume($external, $track);
             } elseif ($requested === Status::Published) {
-                $store->rollout($external, $track, 1.0);
+                $store->rollout($external, $track, (float) $submission->getAttribute('rollout', 1.0));
             } else {
                 return $this->update($submission, ['external' => $this->withoutControl($submission)]);
             }
         } catch (StoreException $error) {
-            return $this->uncontrolled($submission, $status, $this->attemptOf($submission, $status) + 1, $error);
+            return $this->uncontrolled($submission, $status, $rollout, $this->attemptOf($submission, $status, $rollout) + 1, $error);
         }
 
         return $this->observe($submission, $release, $connection, [
@@ -697,7 +787,7 @@ readonly class Submissions
         return $submission;
     }
 
-    private function uncontrolled(Document $submission, string $status, int $attempt, StoreException $error): Document
+    private function uncontrolled(Document $submission, string $status, ?float $rollout, int $attempt, StoreException $error): Document
     {
         $codes = \array_map(static fn (Issue $issue): string => $issue->code, $error->getIssues());
         $transient = $error instanceof RateLimited || $error instanceof Unavailable;
@@ -720,25 +810,37 @@ readonly class Submissions
             return $this->update($submission, [...$changes, 'external' => $this->withoutControl($submission), 'retryAt' => null]);
         }
 
-        return $this->defer($submission, $status, $attempt, [...$changes, 'retryAt' => DateTime::addSeconds(new \DateTime(), $delay)]);
+        return $this->defer($submission, $status, $rollout, $attempt, [...$changes, 'retryAt' => DateTime::addSeconds(new \DateTime(), $delay)]);
     }
 
     /**
      * @param array<string, mixed> $changes
      */
-    private function defer(Document $submission, string $status, int $attempt, array $changes = []): Document
+    private function defer(Document $submission, string $status, ?float $rollout, int $attempt, array $changes = []): Document
     {
         return $this->update($submission, [
             ...$changes,
-            'external' => [...$this->external($submission), 'control' => ['status' => $status, 'attempt' => $attempt]],
+            'external' => [...$this->external($submission), 'control' => ['status' => $status, 'rollout' => $rollout, 'attempt' => $attempt]],
         ]);
     }
 
-    private function attemptOf(Document $submission, string $status): int
+    private function attemptOf(Document $submission, string $status, ?float $rollout): int
     {
         $pending = $this->external($submission)['control'] ?? null;
 
-        return \is_array($pending) && ($pending['status'] ?? null) === $status ? (int) ($pending['attempt'] ?? 0) : 0;
+        if (!\is_array($pending) || ($pending['status'] ?? null) !== $status || self::rolloutOf($pending) !== $rollout) {
+            return 0;
+        }
+
+        return (int) ($pending['attempt'] ?? 0);
+    }
+
+    /**
+     * @param array<string, mixed> $control
+     */
+    private static function rolloutOf(array $control): ?float
+    {
+        return \is_numeric($control['rollout'] ?? null) ? (float) $control['rollout'] : null;
     }
 
     /**
@@ -781,11 +883,13 @@ readonly class Submissions
             $to = $from;
         }
 
+        $rollout = \in_array($state->status, self::ROLLING, true) ? $state->fraction : (float) $submission->getAttribute('rollout', 1.0);
+
         $changes = [
             ...$changes,
             'status' => $to->value,
             'storeStatus' => \mb_substr($state->raw, 0, 64),
-            'rollout' => $state->fraction,
+            'rollout' => $rollout,
             'attempt' => 0,
             'retryAt' => null,
         ];
@@ -805,7 +909,7 @@ readonly class Submissions
             $changes['publishedAt'] = DateTime::now();
         }
 
-        if (!self::isActive($to->value, $state->fraction)) {
+        if (!self::isActive($to->value, $rollout)) {
             $changes['step'] = Step::Settled->value;
         }
 
@@ -1100,6 +1204,41 @@ readonly class Submissions
         $external = $submission->getAttribute('external', []);
 
         return \is_array($external) ? $external : [];
+    }
+
+    /**
+     * @return list<string>
+     */
+    private static function targets(Database $dbForProject, Document $connection, string $identifier): array
+    {
+        $targets = $dbForProject->find('distributionTargets', [
+            Query::equal('identifier', [$identifier]),
+            Query::equal('platform', [Platform::Android->value]),
+            Query::limit(APP_LIMIT_SUBQUERY),
+        ]);
+
+        $connectionIds = \array_values(\array_unique(\array_filter(
+            \array_map(static fn (Document $target): string => (string) $target->getAttribute('connectionId', ''), $targets),
+            static fn (string $connectionId): bool => $connectionId !== '',
+        )));
+
+        if ($connectionIds === []) {
+            return [];
+        }
+
+        $identity = Stores::identity($connection);
+        $shared = [];
+
+        foreach ($dbForProject->find('distributionConnections', [Query::equal('$id', $connectionIds), Query::limit(\count($connectionIds))]) as $other) {
+            if (Stores::identity($other) === $identity) {
+                $shared[$other->getId()] = true;
+            }
+        }
+
+        return \array_values(\array_map(
+            static fn (Document $target): string => (string) $target->getSequence(),
+            \array_filter($targets, static fn (Document $target): bool => isset($shared[(string) $target->getAttribute('connectionId', '')])),
+        ));
     }
 
     /**

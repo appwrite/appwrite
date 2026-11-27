@@ -2063,7 +2063,8 @@
             "artifactId",
             "track",
             "automatic",
-            "key"
+            "key",
+            "rollout"
         ],
         "distribution.createTarget": [
             "appId",
@@ -2278,7 +2279,8 @@
         "distribution.updateSubmission": [
             "appId",
             "submissionId",
-            "automatic"
+            "automatic",
+            "rollout"
         ],
         "distribution.updateSubmissionStatus": [
             "appId",
@@ -7001,7 +7003,8 @@
             "artifactId",
             "track",
             "automatic",
-            "key"
+            "key",
+            "rollout"
         ],
         "distribution.createTarget": [
             "appId",
@@ -7216,7 +7219,8 @@
         "distribution.updateSubmission": [
             "appId",
             "submissionId",
-            "automatic"
+            "automatic",
+            "rollout"
         ],
         "distribution.updateSubmissionStatus": [
             "appId",
