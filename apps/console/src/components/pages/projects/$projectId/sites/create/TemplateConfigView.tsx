@@ -60,6 +60,10 @@ import { AnalyticsToggle } from './AnalyticsToggle'
 import { buildVcsAuthUrl, type VcsProviderId } from '@/lib/vcs/providers'
 import { getSiteTemplateScreenshotUrl } from '@/lib/sites/site-template-wizard'
 import { validateVariables } from '@/lib/variables'
+import {
+  CreateReviewSwitch,
+  useCreateReview,
+} from '../../reviews/_components/CreateReviewSwitch'
 
 // Fade-in image component
 function FadeImage({
@@ -138,6 +142,11 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
   const [siteId, setSiteId] = useState<string | undefined>(formData.siteId)
   const [framework, setFramework] = useState(formData.framework || '')
   const [gitConnection, setGitConnection] = useState<'now' | 'later'>('later')
+  const review = useCreateReview(
+    projectId,
+    formData.installationId,
+    formData.providerRepositoryId,
+  )
   const [variables, setVariables] = useState(formData.variables || [])
   const [domain, setDomain] = useState(formData.domain || '')
   // Domain follows the site name until the user edits it
@@ -324,6 +333,10 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
         analytics: features.analytics && analytics,
       })
       createdSiteId = site.$id
+
+      if (connectNow) {
+        await review.apply()
+      }
 
       // 2. Create domain rule
       if (domain) {
@@ -834,7 +847,9 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
           emptyStateDescription={t(
             'Create and deploy a Site with a connected git repository.',
           )}
-        />
+        >
+          <CreateReviewSwitch review={review} />
+        </ConnectRepositorySection>
       )}
 
       {/* Template variables section */}

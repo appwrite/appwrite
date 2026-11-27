@@ -1023,7 +1023,7 @@ return [
     ],
     [
         'category' => 'SMTP',
-        'description' => "Appwrite is using an SMTP server for emailing your projects users and server admins. The SMTP env vars are used to allow Appwrite server to connect to the SMTP container.\n\nIf running in production, it might be easier to use a 3rd party SMTP server as it might be a little more difficult to set up a production SMTP server that will not send all your emails into your user\'s SPAM folder.",
+        'description' => "Appwrite is using an SMTP server for emailing your projects users and server admins. The SMTP env vars are used to allow Appwrite server to connect to the SMTP container.\n\nIf running in production, it might be easier to use a 3rd party SMTP server as it might be a little more difficult to set up a production SMTP server that will not send all your emails into your user's SPAM folder.",
         'variables' => [
             [
                 'name' => '_APP_SMTP_HOST',
@@ -2231,6 +2231,15 @@ return [
                 'description' => 'Maximum number of pooled ClickHouse HTTP clients per process for execution CRUD.',
                 'introduction' => '',
                 'default' => '2',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_EXECUTIONS_INSERT_BUFFER',
+                'description' => 'Milliseconds ClickHouse may hold execution snapshots to write them together, using its async insert buffer. With 0, the default, every snapshot is written at once. Set it on installations that write so many executions that ClickHouse merges fall behind. Each write then takes up to this long and holds a pooled connection, so size _APP_POOL_SIZE_EXECUTIONS for the writes per second times this window.',
+                'introduction' => '',
+                'default' => '0',
                 'required' => false,
                 'question' => '',
                 'filter' => ''

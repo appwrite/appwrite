@@ -1,5 +1,4 @@
 import type { Models } from '@appwrite.io/console' // pragma: allowlist secret
-import { format } from 'sql-formatter'
 import { quoteMysqlIdentifier } from '@/lib/mysql-database-routes'
 
 const MYSQL_SYSTEM_SCHEMAS = `('mysql', 'information_schema', 'performance_schema', 'sys')`
@@ -807,12 +806,17 @@ export function buildMysqlCountSql(schema: string, table: string): string {
   )
 }
 
-/** Pretty-print SQL for the MySQL SQL editor. Returns the original string on parse errors. */
-export function formatMysqlSql(sql: string): string {
+/**
+ * Pretty-print SQL for the MySQL SQL editor. Returns the original string on parse errors.
+ * The formatter loads on first use: it is large, and only the editor's Format
+ * action needs it.
+ */
+export async function formatMysqlSql(sql: string): Promise<string> {
   const trimmed = sql.trim()
   if (!trimmed) return sql
 
   try {
+    const { format } = await import('sql-formatter')
     return format(trimmed, {
       language: 'mysql',
       tabWidth: 2,

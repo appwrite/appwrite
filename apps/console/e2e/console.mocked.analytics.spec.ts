@@ -202,6 +202,17 @@ function listParam(url: URL, name: string): string[] {
     .map(([, value]) => value)
 }
 
+/** The one-row list the plan limit reads its property count from. */
+function isPropertyCount(url: URL): boolean {
+  return (
+    url.pathname.endsWith('/analytics/properties') &&
+    listParam(url, 'queries').some((query) => {
+      const { method, values } = JSON.parse(query)
+      return method === 'limit' && values[0] === 1
+    })
+  )
+}
+
 /** One identified user's last active bucket, hour-aligned like the API's. */
 const USER_LAST_SEEN = new Date(
   Math.floor((Date.now() - 2 * 3_600_000) / 3_600_000) * 3_600_000,
@@ -402,12 +413,8 @@ async function mockAppwriteApi(
       return json(200, property(identifyUsers, options.type))
     }
     if (apiPath === '/analytics/properties') {
-      const isCount = listParam(url, 'queries').some((query) => {
-        const { method, values } = JSON.parse(query)
-        return method === 'limit' && values[0] === 1
-      })
-      // The route loader awaits the full list, so only the count waits.
-      if (isCount) await options.countGate
+      // Only the count waits: the full list answers at once.
+      if (isPropertyCount(url)) await options.countGate
       return json(200, {
         total: 1,
         properties: [property(identifyUsers, options.type)],
@@ -1095,6 +1102,62 @@ test.describe('analytics property (mocked API)', () => {
     await expect(dialog).toHaveCount(0)
   })
 
+  test('shows a note in the chart tooltip and offers to add one', async ({
+    page,
+  }) => {
+    const mock = await mockAppwriteApi(page)
+    mock.annotations.push({
+      $id: 'note1',
+      $createdAt: NOW,
+      $updatedAt: NOW,
+      propertyId: PROPERTY_ID,
+      userId: ACCOUNT.$id,
+      date: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+      content: 'Launched pricing page',
+    })
+    await openProperty(page)
+
+    const chart = page.getByLabel('Drag on the chart to select a date range')
+    await page
+      .getByRole('button', { name: 'Show notes' })
+      .hover({ timeout: 30_000 })
+    const tooltip = chart.locator('.recharts-tooltip-wrapper')
+    await expect(tooltip).toContainText('Launched pricing page')
+    await expect(page.getByText('Notes', { exact: true })).toBeVisible()
+
+    // A bucket without notes offers one where its badge will go.
+    const box = (await chart.boundingBox())!
+    await page.mouse.move(box.x + box.width * 0.4, box.y + box.height / 2)
+    await expect(chart.getByText('Add note')).toBeVisible()
+    const chip = chart.locator('[data-annotation-add]')
+    const chipBox = (await chip.boundingBox())!
+    await page.mouse.move(
+      chipBox.x + chipBox.width / 2,
+      chipBox.y + chipBox.height / 2,
+    )
+    // Whatever sits under the chip must show the pointer.
+    const cursorUnderChip = await page.evaluate(
+      ({ x, y }) => {
+        const el = document.elementFromPoint(x, y)
+        return el ? getComputedStyle(el).cursor : null
+      },
+      { x: chipBox.x + chipBox.width / 2, y: chipBox.y + chipBox.height / 2 },
+    )
+    expect(cursorUnderChip).toBe('pointer')
+    await chart.click({ position: { x: box.width * 0.4, y: box.height / 2 } })
+    await expect(page.getByRole('dialog')).toContainText('Add note')
+    await page.keyboard.press('Escape')
+    await expect(page.getByRole('dialog')).toBeHidden()
+
+    // A day with notes adds another from its popover.
+    await page.getByRole('button', { name: 'Show notes' }).click()
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: 'Add note' })
+      .click()
+    await expect(page.getByLabel('Note text')).toBeVisible()
+  })
+
   test('wraps a long unbroken note', async ({ page }) => {
     await mockAppwriteApi(page)
     await openProperty(page)
@@ -1211,14 +1274,20 @@ test.describe('analytics property (mocked API)', () => {
       releaseCount = resolve
     })
     await mockAppwriteApi(page, { planPropertyLimit: 5, countGate })
+    const counting = page.waitForRequest((request) =>
+      isPropertyCount(new URL(request.url())),
+    )
     await page.goto(`/projects/${PROJECT_ID}/analytics/add`, {
       waitUntil: 'domcontentloaded',
     })
 
+    // The Analytics loader waits for the count, so the form is not there to
+    // submit before the limit is known
+    await counting
     const create = page.getByRole('button', { name: 'Create property' })
-    await expect(create).toBeDisabled({ timeout: 30_000 })
+    await expect(create).toHaveCount(0)
     releaseCount()
-    await expect(create).toBeEnabled()
+    await expect(create).toBeEnabled({ timeout: 30_000 })
     await expect(page.getByTestId('analytics-property-plan-limit')).toHaveCount(
       0,
     )

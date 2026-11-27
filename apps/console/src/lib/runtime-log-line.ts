@@ -7,7 +7,7 @@
 
 export type RuntimeLogLevel = 'error' | 'warn' | 'info' | 'debug'
 
-/** Lowest first, so a minimum level keeps every entry at or after it. */
+/** Every level a runtime log line can carry, lowest first. */
 export const RUNTIME_LOG_LEVELS: RuntimeLogLevel[] = [
   'debug',
   'info',
@@ -154,16 +154,6 @@ export function parseRuntimeLogLine(raw: string): RuntimeLogLine {
   return parseJson(text) ?? parseLogfmt(text) ?? parseText(text)
 }
 
-/** True when `level` is at or above `minimum`. */
-export function isAtLeast(
-  level: RuntimeLogLevel,
-  minimum: RuntimeLogLevel,
-): boolean {
-  return (
-    RUNTIME_LOG_LEVELS.indexOf(level) >= RUNTIME_LOG_LEVELS.indexOf(minimum)
-  )
-}
-
 function parseJson(text: string): RuntimeLogLine | null {
   const trimmed = text.trim()
   if (!trimmed.startsWith('{') || !trimmed.endsWith('}')) return null
@@ -300,6 +290,32 @@ function tokenizeLogfmt(text: string): [string, string][] | null {
     pairs.push([key, value])
   }
   return pairs
+}
+
+/**
+ * The `key=value` pairs of a text line that is made of nothing else, for the
+ * expanded row. Lines without a level or message key stay text on the row, but
+ * their pairs still read better as fields than as one long run.
+ */
+export function logfmtFields(text: string): RuntimeLogField[] | null {
+  if (!text.includes('=') || text.includes('\n')) return null
+  const pairs = tokenizeLogfmt(text.trim())
+  if (!pairs || pairs.length < 2) return null
+  return pairs.map(([key, value]) => ({ key, value }))
+}
+
+/** The whole entry as logged: JSON indented, anything else as it came. */
+export function formatRawLog(text: string): string {
+  const trimmed = text.trim()
+  const json =
+    (trimmed.startsWith('{') && trimmed.endsWith('}')) ||
+    (trimmed.startsWith('[') && trimmed.endsWith(']'))
+  if (!json) return text
+  try {
+    return JSON.stringify(JSON.parse(trimmed), null, 2)
+  } catch {
+    return text
+  }
 }
 
 /** Plain text: the level is the first word, when it is a level name or an `...Error:`. */

@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Link } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
 import {
   BellOff,
-  BellRing,
   ChevronRight,
   Copy,
   FileJson,
@@ -58,7 +57,11 @@ import {
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
-import type { ParsedMonitor, ProbeType } from '@/lib/appwrite/monitors'
+import type {
+  MonitorSeverity,
+  ParsedMonitor,
+  ProbeType,
+} from '@/lib/appwrite/monitors'
 import {
   COMPARATORS,
   metricDefinition,
@@ -83,10 +86,11 @@ import {
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import { AlertDelivery } from './_components/AlertDelivery'
+import { BeepCallout } from '@/components/global/shared/BeepPromotion'
+import { MonitorContextMenu } from './_components/MonitorContextMenu'
 import { MonitorsEmptyState } from './MonitorsEmptyState'
-import { MonitorDrawer } from './MonitorDrawer'
 import { CreateMonitor } from './CreateMonitor'
-import type { RuleForm } from './RuleFields'
+import { SEVERITIES, type RuleForm } from './RuleFields'
 import { RuleSparkline } from './RuleChart'
 import { ruleState, type RuleState } from './StatusPill'
 
@@ -170,9 +174,6 @@ interface MonitorsProps {
   /** Opens the create form filled with these fields, e.g. from a usage page. */
   prefill?: Partial<RuleForm>
   onPrefillConsumed?: () => void
-  /** Opens this monitor's drawer once the monitors have loaded, e.g. from an alert email. */
-  openMonitorId?: string
-  onOpenMonitorConsumed?: () => void
 }
 
 export function Monitors({
@@ -181,10 +182,9 @@ export function Monitors({
   createDisabledTooltip,
   prefill,
   onPrefillConsumed,
-  openMonitorId,
-  onOpenMonitorConsumed,
 }: MonitorsProps) {
   const t = useT()
+  const navigate = useNavigate()
   const { monitors, isLoading } = useMonitors(projectId)
   const updateMutation = useUpdateMonitor(projectId)
   const deleteMutation = useDeleteMonitor(projectId)
@@ -195,8 +195,6 @@ export function Monitors({
   const [createOpen, setCreateOpen] = useState(false)
   const [initial, setInitial] = useState<Partial<RuleForm> | undefined>()
   const [initialType, setInitialType] = useState<'usage' | ProbeType>('usage')
-  const [drawerOpen, setDrawerOpen] = useState(false)
-  const [selected, setSelected] = useState<ParsedMonitor | null>(null)
   const [toDelete, setToDelete] = useState<ParsedMonitor | null>(null)
 
   const openCreate = (
@@ -216,24 +214,6 @@ export function Monitors({
     setCreateOpen(true)
     onPrefillConsumed?.()
   }, [prefill, createDisabled, onPrefillConsumed])
-
-  useEffect(() => {
-    if (!openMonitorId || isLoading) return
-    onOpenMonitorConsumed?.()
-    const open = (monitor: ParsedMonitor) => {
-      setSelected(monitor)
-      setDrawerOpen(true)
-    }
-    const listed = monitors.find((candidate) => candidate.$id === openMonitorId)
-    if (listed) {
-      open(listed)
-      return
-    }
-    // The list holds the first page only; a linked monitor can be beyond it.
-    fetchMonitor(projectId, openMonitorId).then(open, (err: Error) =>
-      toast.error(getErrorMessage(err, t('Monitor not found'))),
-    )
-  }, [openMonitorId, isLoading, monitors, onOpenMonitorConsumed, projectId, t])
 
   const counts = useMemo(() => {
     const result: Record<Filter, number> = {
@@ -269,16 +249,19 @@ export function Monitors({
       )
   }, [monitors, search, filter, t])
 
-  // The listed copy follows updates and refetches; `selected` is a snapshot.
-  const current =
-    monitors.find((monitor) => monitor.$id === selected?.$id) ?? selected
-
-  const handleOpen = (monitor: ParsedMonitor) => {
-    openDialogAfterOverlayCloses(() => {
-      setSelected(monitor)
-      setDrawerOpen(true)
+  const handleOpen = (monitor: ParsedMonitor) =>
+    void navigate({
+      to: '/projects/$projectId/monitors/$monitorId',
+      params: { projectId, monitorId: monitor.$id },
     })
-  }
+
+  const handleEdit = (monitor: ParsedMonitor) =>
+    void navigate({
+      to: createDisabled
+        ? '/projects/$projectId/monitors/$monitorId'
+        : '/projects/$projectId/monitors/$monitorId/settings',
+      params: { projectId, monitorId: monitor.$id },
+    })
 
   const handleToggle = (monitor: ParsedMonitor) => {
     updateMutation.mutate(
@@ -308,10 +291,7 @@ export function Monitors({
     const monitorId = toDelete.$id
     deleteMutation.mutate(monitorId, {
       onSuccess: () => {
-        closeDialogBeforeOverlayUnmount(() => {
-          setToDelete(null)
-          setSelected(null)
-        })
+        closeDialogBeforeOverlayUnmount(() => setToDelete(null))
         toast.success(t('Monitor has been deleted'))
       },
       onError: (error: Error) =>
@@ -344,12 +324,12 @@ export function Monitors({
 
   const createButton = (
     <Button
-      size="sm"
-      className="h-9 text-[13px]"
+      variant="brandCta"
+      className="h-9 shrink-0 gap-2 px-4 text-[13px] font-medium"
       onClick={() => openCreate()}
       disabled={createDisabled}
     >
-      <Plus className="me-1.5 h-4 w-4" />
+      <Plus className="h-4 w-4 shrink-0" />
       {t('Create monitor')}
     </Button>
   )
@@ -446,77 +426,68 @@ export function Monitors({
                 const state = ruleState(monitor)
                 const named = !sentence(monitor).startsWith(monitor.name)
                 return (
-                  <li
+                  <MonitorContextMenu
                     key={monitor.$id}
-                    className="group flex cursor-pointer items-center gap-3 px-4 py-3 transition-colors hover:bg-accent/30 sm:gap-4"
-                    onClick={() => handleOpen(monitor)}
+                    projectId={projectId}
+                    monitor={monitor}
+                    onUpdate={handleEdit}
+                    onToggle={handleToggle}
+                    onDelete={requestDelete}
+                    readOnly={createDisabled}
                   >
-                    <div
-                      className="flex shrink-0"
-                      onClick={(event) => event.stopPropagation()}
+                    <li
+                      className="group flex cursor-pointer items-center gap-3 px-4 py-3 transition-colors hover:bg-accent/30 sm:gap-4"
+                      onClick={() => handleOpen(monitor)}
                     >
-                      <Switch
-                        checked={monitor.enabled}
-                        onCheckedChange={() => handleToggle(monitor)}
-                        disabled={createDisabled}
-                        aria-label={
-                          monitor.enabled
-                            ? `${t('Pause')} ${monitor.name}`
-                            : `${t('Resume')} ${monitor.name}`
-                        }
-                      />
-                    </div>
-                    <div
-                      className={cn(
-                        'min-w-0 flex-1',
-                        state === 'paused' && 'opacity-60',
-                      )}
-                    >
-                      {/* A name that only repeats the condition is shown once, as the condition. */}
-                      <p className="truncate text-[13px] font-medium text-foreground">
-                        {named ? monitor.name : sentence(monitor)}
-                      </p>
-                      <p className="truncate text-[12px] text-muted-foreground">
-                        {named && (
-                          <>
-                            {sentence(monitor)}
-                            <span className="mx-1.5">·</span>
-                          </>
-                        )}
-                        {scope(monitor)}
-                      </p>
-                    </div>
-                    {isProbeType(monitor.type) ? (
-                      <div className="hidden h-8 w-28 shrink-0 md:block" />
-                    ) : (
-                      <RuleSparkline
-                        projectId={projectId}
-                        rule={monitor}
+                      <div
+                        className="flex shrink-0"
+                        onClick={(event) => event.stopPropagation()}
+                      >
+                        <Switch
+                          checked={monitor.enabled}
+                          onCheckedChange={() => handleToggle(monitor)}
+                          disabled={createDisabled}
+                          aria-label={
+                            monitor.enabled
+                              ? `${t('Pause')} ${monitor.name}`
+                              : `${t('Resume')} ${monitor.name}`
+                          }
+                        />
+                      </div>
+                      <div
                         className={cn(
-                          'hidden md:block',
-                          state === 'paused' && 'opacity-50',
+                          'min-w-0 flex-1',
+                          state === 'paused' && 'opacity-60',
                         )}
-                      />
-                    )}
-                    {monitor.severity === 'critical' && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <span
-                            tabIndex={0}
-                            aria-label={t('Critical')}
-                            onClick={(event) => event.stopPropagation()}
-                            className="hidden shrink-0 text-muted-foreground lg:inline-flex"
-                          >
-                            <BellRing className="h-3.5 w-3.5" />
-                          </span>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          {t('Critical. Rings on phones even on silent.')}
-                        </TooltipContent>
-                      </Tooltip>
-                    )}
-                    {monitor.notify.length === 0 &&
-                      !monitor.escalationId && (
+                      >
+                        {/* A name that only repeats the condition is shown once, as the condition. */}
+                        <p className="truncate text-[13px] font-medium text-foreground">
+                          {named ? monitor.name : sentence(monitor)}
+                        </p>
+                        <p className="truncate text-[12px] text-muted-foreground">
+                          {named && (
+                            <>
+                              {sentence(monitor)}
+                              <span className="mx-1.5">·</span>
+                            </>
+                          )}
+                          {scope(monitor)}
+                        </p>
+                      </div>
+                      {isProbeType(monitor.type) ? (
+                        <div className="hidden h-8 w-28 shrink-0 md:me-6 md:block" />
+                      ) : (
+                        <RuleSparkline
+                          projectId={projectId}
+                          rule={monitor}
+                          className={cn(
+                            'hidden md:me-6 md:block',
+                            state === 'paused' && 'opacity-50',
+                          )}
+                        />
+                      )}
+                      <SeverityBadge severity={monitor.severity} />
+                      {monitor.notify.length === 0 && !monitor.escalationId && (
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <span
@@ -535,81 +506,82 @@ export function Monitors({
                           </TooltipContent>
                         </Tooltip>
                       )}
-                    <MonitorState
-                      projectId={projectId}
-                      monitor={monitor}
-                      state={state}
-                    />
-                    <div
-                      className="flex shrink-0 justify-end"
-                      onClick={(event) => event.stopPropagation()}
-                    >
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <RowActionsMenuTrigger
-                            aria-label={`${t('Actions for')} ${monitor.name}`}
-                          />
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-56">
-                          <DropdownMenuItem
-                            disabled={createDisabled}
-                            onClick={() => handleOpen(monitor)}
-                          >
-                            <MenuItemContent icon={Pencil}>
-                              {t('Update')}
-                            </MenuItemContent>
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuSub>
-                            <DropdownMenuSubTrigger>
-                              <MenuItemIcon icon={Copy} />
-                              {t('Copy')}
-                            </DropdownMenuSubTrigger>
-                            <DropdownMenuSubContent>
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  copyToClipboard('ID', monitor.$id)
-                                }
-                              >
-                                <MenuItemContent icon={Copy}>
-                                  {t('Copy ID')}
-                                </MenuItemContent>
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  copyToClipboard('Name', monitor.name)
-                                }
-                              >
-                                <MenuItemContent icon={Copy}>
-                                  {t('Copy name')}
-                                </MenuItemContent>
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  void copyResourceAsJson(() =>
-                                    fetchMonitor(projectId, monitor.$id),
-                                  )
-                                }
-                              >
-                                <MenuItemContent icon={FileJson}>
-                                  {t('Copy as JSON')}
-                                </MenuItemContent>
-                              </DropdownMenuItem>
-                            </DropdownMenuSubContent>
-                          </DropdownMenuSub>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            disabled={createDisabled}
-                            onClick={() => requestDelete(monitor)}
-                          >
-                            <MenuItemContent icon={Trash2}>
-                              {t('Delete')}
-                            </MenuItemContent>
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </li>
+                      <MonitorState
+                        projectId={projectId}
+                        monitor={monitor}
+                        state={state}
+                      />
+                      <div
+                        className="flex shrink-0 justify-end"
+                        onClick={(event) => event.stopPropagation()}
+                      >
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <RowActionsMenuTrigger
+                              aria-label={`${t('Actions for')} ${monitor.name}`}
+                            />
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-56">
+                            <DropdownMenuItem
+                              disabled={createDisabled}
+                              onClick={() => handleEdit(monitor)}
+                            >
+                              <MenuItemContent icon={Pencil}>
+                                {t('Update')}
+                              </MenuItemContent>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuSub>
+                              <DropdownMenuSubTrigger>
+                                <MenuItemIcon icon={Copy} />
+                                {t('Copy')}
+                              </DropdownMenuSubTrigger>
+                              <DropdownMenuSubContent>
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    copyToClipboard('ID', monitor.$id)
+                                  }
+                                >
+                                  <MenuItemContent icon={Copy}>
+                                    {t('Copy ID')}
+                                  </MenuItemContent>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    copyToClipboard('Name', monitor.name)
+                                  }
+                                >
+                                  <MenuItemContent icon={Copy}>
+                                    {t('Copy name')}
+                                  </MenuItemContent>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    void copyResourceAsJson(() =>
+                                      fetchMonitor(projectId, monitor.$id),
+                                    )
+                                  }
+                                >
+                                  <MenuItemContent icon={FileJson}>
+                                    {t('Copy as JSON')}
+                                  </MenuItemContent>
+                                </DropdownMenuItem>
+                              </DropdownMenuSubContent>
+                            </DropdownMenuSub>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              disabled={createDisabled}
+                              onClick={() => requestDelete(monitor)}
+                            >
+                              <MenuItemContent icon={Trash2}>
+                                {t('Delete')}
+                              </MenuItemContent>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </li>
+                  </MonitorContextMenu>
                 )
               })}
             </ul>
@@ -618,6 +590,7 @@ export function Monitors({
       )}
 
       {monitors.length > 0 && <AlertDelivery projectId={projectId} />}
+      <BeepCallout source="monitors" className="mt-3" />
 
       <CreateMonitor
         open={createOpen}
@@ -627,14 +600,6 @@ export function Monitors({
         initialType={initialType}
       />
 
-      <MonitorDrawer
-        open={drawerOpen}
-        onOpenChange={setDrawerOpen}
-        projectId={projectId}
-        monitor={current}
-        onDelete={requestDelete}
-        readOnly={createDisabled}
-      />
       <Dialog
         open={!!toDelete}
         onOpenChange={(open) => {
@@ -761,5 +726,34 @@ function MonitorState({
         )}
       </p>
     </div>
+  )
+}
+
+/** How urgent the monitor's alerts are, in the same colors as the form's levels. */
+function SeverityBadge({ severity }: { severity: MonitorSeverity }) {
+  const t = useT()
+  const level =
+    SEVERITIES.find((entry) => entry.value === severity) ?? SEVERITIES[1]
+  const Icon = level.icon
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span
+          tabIndex={0}
+          onClick={(event) => event.stopPropagation()}
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-sm text-[13px] text-muted-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring sm:w-20"
+        >
+          <Icon
+            aria-hidden
+            className={cn('h-3.5 w-3.5 shrink-0', level.tone)}
+          />
+          <span className="sr-only sm:not-sr-only">{t(level.label)}</span>
+        </span>
+      </TooltipTrigger>
+      <TooltipContent className="max-w-64">
+        {t(level.hint)}
+        {level.delivery && ` ${t(level.delivery)}`}
+      </TooltipContent>
+    </Tooltip>
   )
 }

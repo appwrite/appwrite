@@ -1,12 +1,19 @@
 import { readFileSync } from 'node:fs'
 import { gunzipSync } from 'node:zlib'
 import type { Locator, Page, Request, Route } from '@playwright/test'
-import type { Models } from '@appwrite.io/console'
+import {
+  VideoCaptionStatus,
+  VideoCodecId,
+  VideoOutput,
+  VideoRenditionStatus,
+  VideoTimelineStatus,
+  type Models,
+} from '@appwrite.io/console'
 import { expect, test } from './fixtures'
 
 /**
  * The Videos pages against the Videos API as the server returns it: profiles
- * listed one codec at a time, codecs with the outputs they support, captions
+ * listed across codecs, codecs with the outputs they support, captions
  * with a processing status, and a thumbnail timeline whose cues point at
  * `thumbnails/{id}`. The Appwrite API is mocked at the network layer and the
  * real console pages are asserted.
@@ -90,19 +97,32 @@ const VIDEO = {
   videoFormat: 'AVC',
   videoFormatProfile: 'High',
   videoBitRate: 4500,
-  videoFrameRate: '30',
+  videoFrameRate: 30,
   videoFrameRateMode: 'CFR',
   audioCodec: 'aac',
   audioFormat: 'AAC',
   audioBitRate: 128,
-  audioSampleRate: '48000',
-  timelineStatus: 'ready',
+  audioSampleRate: 48000,
+  timelineStatus: VideoTimelineStatus.Ready,
   timelineError: '',
 } satisfies Models.Video
 
+/** Values of a `Query.equal('codec', [...])`; the SDK sends `queries[0]`, `queries[1]`, … */
+function codecFilter(url: URL): string[] | undefined {
+  return [...url.searchParams]
+    .filter(([key]) => key.startsWith('queries['))
+    .map(([, query]) => JSON.parse(query))
+    .find((query) => query.method === 'equal' && query.attribute === 'codec')
+    ?.values
+}
+
 const CODECS = [
-  { $id: 'h264', name: 'H.264', outputs: ['hls', 'dash', 'cmaf'] },
-  { $id: 'vp9', name: 'VP9', outputs: ['dash'] },
+  {
+    $id: 'h264',
+    name: 'H.264',
+    outputs: [VideoOutput.Hls, VideoOutput.Dash, VideoOutput.Cmaf],
+  },
+  { $id: 'vp9', name: 'VP9', outputs: [VideoOutput.Dash] },
 ] satisfies Models.VideoCodec[]
 
 const PROFILES = [
@@ -111,22 +131,22 @@ const PROFILES = [
     $createdAt: NOW,
     $updatedAt: NOW,
     name: '720p',
-    codec: 'h264',
+    codec: VideoCodecId.H264,
     width: 1280,
     height: 720,
-    videoBitRate: 2500,
-    audioBitRate: 128,
+    videoBitRate: 2500000,
+    audioBitRate: 128000,
   },
   {
     $id: 'profile00000000000000002',
     $createdAt: NOW,
     $updatedAt: NOW,
     name: 'Archive VP9',
-    codec: 'vp9',
+    codec: VideoCodecId.Vp9,
     width: 1920,
     height: 1080,
-    videoBitRate: 4000,
-    audioBitRate: 128,
+    videoBitRate: 4000000,
+    audioBitRate: 128000,
   },
 ] satisfies Models.VideoProfile[]
 
@@ -142,14 +162,15 @@ const RENDITIONS = [
     endedAt: NOW,
     width: 1280,
     height: 720,
-    videoBitRate: 2500,
-    audioBitRate: 128,
-    targetDuration: '6',
-    status: 'ready',
+    videoBitRate: 2500000,
+    audioBitRate: 128000,
+    targetDuration: 6,
+    status: VideoRenditionStatus.Ready,
     error: '',
-    progress: '100',
-    output: 'cmaf',
-    codec: 'h264',
+    progress: 100,
+    output: VideoOutput.Cmaf,
+    codec: VideoCodecId.H264,
+    size: 0,
   },
 ] satisfies Models.VideoRendition[]
 
@@ -164,12 +185,15 @@ const CAPTIONS = [
     bucketId: 'media',
     fileId: 'file000000000000000002',
     name: 'English',
+    language: 'eng',
+    // Preview SDK types keep the removed field.
     code: 'eng',
     default: true,
     embedded: false,
-    targetDuration: '6',
-    status: 'ready',
+    targetDuration: 6,
+    status: VideoCaptionStatus.Ready,
     error: '',
+    size: 0,
   },
   {
     $id: 'caption00000000000000002',
@@ -179,12 +203,15 @@ const CAPTIONS = [
     bucketId: 'media',
     fileId: 'file000000000000000003',
     name: 'Hebrew',
+    language: 'heb',
+    // Preview SDK types keep the removed field.
     code: 'heb',
     default: false,
     embedded: false,
-    targetDuration: '6',
-    status: 'error',
+    targetDuration: 6,
+    status: VideoCaptionStatus.Error,
     error: CAPTION_ERROR,
+    size: 0,
   },
 ] satisfies Models.VideoCaption[]
 
@@ -286,9 +313,11 @@ async function mockAppwriteApi(
     }
     if (apiPath === '/project/videos/profiles' && method === 'GET') {
       calls.profileLists.push(url)
-      // The API lists one codec per request and defaults to h264.
-      const codec = url.searchParams.get('codec') || 'h264'
-      const listed = profileStore.filter((profile) => profile.codec === codec)
+      // The API lists every codec; the Console filters with `Query.equal('codec', [...])`.
+      const codecs = codecFilter(url)
+      const listed = codecs
+        ? profileStore.filter((profile) => codecs.includes(profile.codec))
+        : profileStore
       return json(200, { total: listed.length, profiles: listed })
     }
     if (apiPath === '/project/videos/profiles' && method === 'POST') {
@@ -318,7 +347,8 @@ async function mockAppwriteApi(
       calls.videoUpdates.push(body)
       video = {
         ...video,
-        name: String(body.name),
+        // PATCH: only the passed fields change.
+        name: body.name === undefined ? video.name : String(body.name),
         $permissions: (body.permissions as string[]) ?? video.$permissions,
       }
       return json(200, video)
@@ -330,7 +360,7 @@ async function mockAppwriteApi(
     if (apiPath === `/videos/${VIDEO_ID}/captions`) {
       return json(200, { total: CAPTIONS.length, captions: CAPTIONS })
     }
-    if (apiPath === `/videos/${VIDEO_ID}/timelines`) {
+    if (apiPath === `/videos/${VIDEO_ID}/timeline`) {
       if (video.timelineStatus !== 'ready') {
         return json(404, {
           message: 'Video timelines not found.',
@@ -481,11 +511,15 @@ test.describe('videos (mocked API)', () => {
     await expect(
       profileRow(page, '720p').getByRole('cell', { name: 'h264', exact: true }),
     ).toBeVisible()
+    // Every enabled codec is filtered through queries, not the removed `codec` param.
     await expect
       .poll(() =>
-        calls.profileLists.map((url) => url.searchParams.get('codec')).sort(),
+        calls.profileLists.map((url) => ({
+          codec: url.searchParams.get('codec'),
+          codecs: codecFilter(url),
+        })),
       )
-      .toEqual(expect.arrayContaining(['h264', 'vp9']))
+      .toContainEqual({ codec: null, codecs: ['h264', 'vp9'] })
 
     await screenshot(page, 'videos-profiles.png')
   })
@@ -556,7 +590,12 @@ test.describe('videos (mocked API)', () => {
   test('locks the player until a rendition is ready', async ({ page }) => {
     await enableVideos(page)
     const calls = await mockAppwriteApi(page, VIDEO, [
-      { ...RENDITIONS[0], status: 'started', progress: '40', endedAt: '' },
+      {
+        ...RENDITIONS[0],
+        status: VideoRenditionStatus.Started,
+        progress: 40,
+        endedAt: '',
+      },
     ])
     await open(page, `/${VIDEO_ID}`, (page) =>
       page.locator('[data-player-state="locked"]'),
@@ -641,7 +680,12 @@ test.describe('videos (mocked API)', () => {
   test('shows encoding progress on every video tab', async ({ page }) => {
     await enableVideos(page)
     await mockAppwriteApi(page, VIDEO, [
-      { ...RENDITIONS[0], status: 'started', progress: '40', endedAt: '' },
+      {
+        ...RENDITIONS[0],
+        status: VideoRenditionStatus.Started,
+        progress: 40,
+        endedAt: '',
+      },
       {
         ...RENDITIONS[0],
         $id: 'rendition000000000000002',
@@ -713,7 +757,11 @@ test.describe('videos (mocked API)', () => {
     await expect
       .poll(async () => (await video.boundingBox())!.height)
       .toBeLessThan(fullHeight / 2)
-    // Stays pinned to the top of the scroll area.
+    // Stays pinned to the top of the scroll area. Measure once the docking
+    // slide-in has finished, or the 4px slide reads as the player moving.
+    await player.evaluate((node) =>
+      Promise.all(node.getAnimations().map((animation) => animation.finished)),
+    )
     const docked = (await player.boundingBox())!
     await scrollBy(300)
     await expect
@@ -774,6 +822,75 @@ test.describe('videos (mocked API)', () => {
     })
   }
 
+  test('plays the player page with the options in its query string', async ({
+    page,
+  }) => {
+    await enableVideos(page)
+    await mockAppwriteApi(page, VIDEO, RENDITIONS, PROFILES, true)
+    await page.goto(
+      `/player/${VIDEO_ID}?project=${PROJECT_ID}&muted=1&loop=1&controls=0`,
+      { waitUntil: 'domcontentloaded' },
+    )
+
+    const video = page.locator('video')
+    await expect
+      .poll(
+        () => video.evaluate((element: HTMLVideoElement) => element.readyState),
+        { timeout: 60_000 },
+      )
+      .toBeGreaterThanOrEqual(2)
+    expect(
+      await video.evaluate((element: HTMLVideoElement) => ({
+        muted: element.muted,
+        loop: element.loop,
+      })),
+    ).toEqual({ muted: true, loop: true })
+    // `controls=0` leaves no control bar.
+    await expect(page.getByRole('slider', { name: 'Seek' })).toHaveCount(0)
+    await expect(page.getByRole('button', { name: 'Settings' })).toHaveCount(0)
+  })
+
+  test('edits the player through its query string from Preview', async ({
+    page,
+  }) => {
+    await enableVideos(page)
+    await mockAppwriteApi(page)
+    // The page header's Preview, after the one under the sidebar thumbnail.
+    const preview = page
+      .getByRole('button', { name: 'Preview', exact: true })
+      .last()
+    await open(page, `/${VIDEO_ID}`, () => preview)
+
+    await preview.click()
+    const panel = page.getByRole('dialog').filter({ hasText: 'Player preview' })
+    await expect(panel).toBeVisible()
+    const frame = panel.locator('iframe')
+    const query = panel.getByLabel('Query string')
+    await expect(query).toHaveValue(`?project=${PROJECT_ID}`)
+
+    // An option writes its parameter...
+    await panel.getByRole('switch', { name: 'Loop' }).click()
+    await expect(query).toHaveValue(`?project=${PROJECT_ID}&loop=1`)
+    await expect
+      .poll(() => frame.getAttribute('src'))
+      .toContain(`/player/${VIDEO_ID}?project=${PROJECT_ID}&loop=1`)
+
+    // ...and a typed parameter sets the option.
+    await query.fill(`?project=${PROJECT_ID}&loop=1&start=5&controls=0`)
+    await query.press('Enter')
+    await expect(
+      panel.getByRole('switch', { name: 'Player controls' }),
+    ).not.toBeChecked()
+    await expect(panel.getByText('0:05', { exact: true })).toBeVisible()
+    await expect(query).toHaveValue(
+      `?project=${PROJECT_ID}&start=5&loop=1&controls=0`,
+    )
+    await expect
+      .poll(() => frame.getAttribute('src'))
+      .toContain('start=5&loop=1&controls=0')
+    await screenshot(page, 'videos-player-preview.png')
+  })
+
   test('warns that a video is private', async ({ page }) => {
     await enableVideos(page)
     await mockAppwriteApi(page)
@@ -817,9 +934,9 @@ test.describe('videos (mocked API)', () => {
 
     await expect(toggle).toBeChecked()
     await expect(warning).toHaveCount(0)
+    // A sparse PATCH: the name is not resent.
     expect(calls.videoUpdates).toEqual([
       {
-        name: VIDEO.name,
         permissions: ['read("users")', 'update("users")', 'read("any")'],
       },
     ])
@@ -1026,7 +1143,7 @@ test.describe('videos (mocked API)', () => {
     await enableVideos(page)
     await mockAppwriteApi(page, {
       ...VIDEO,
-      timelineStatus: 'error',
+      timelineStatus: VideoTimelineStatus.Error,
       timelineError: 'ffmpeg exited with code 1',
     })
     await open(page, `/${VIDEO_ID}/timeline`, (page) =>
@@ -1045,7 +1162,7 @@ test.describe('videos (mocked API)', () => {
       width: 0,
       height: 0,
       videoCodec: '',
-      timelineStatus: 'skipped',
+      timelineStatus: VideoTimelineStatus.Skipped,
     })
     await open(page, `/${VIDEO_ID}/timeline`, (page) =>
       page.getByText('No timeline for this video', { exact: true }),

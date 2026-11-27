@@ -648,17 +648,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "displaydoc"
-version = "0.2.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c6232dd377dcc64799954cbd3a9bb882e9cdc1308ccd87b1c098f1fb2eaf82a8"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 3.0.10",
-]
-
-[[package]]
 name = "document-features"
 version = "0.2.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1001,89 +990,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "icu_collections"
-version = "2.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fe090a42a0d3140fed8c63263ed1fecc02422cb2f4bfe55cd8de2de1b8e105dd"
-dependencies = [
- "displaydoc",
- "potential_utf",
- "utf8_iter",
- "yoke",
- "zerofrom",
- "zerovec",
-]
-
-[[package]]
-name = "icu_locale_core"
-version = "2.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "25d29b57c17c6528d0dc4c2141cfa2d08200465acb537a3909c8b9b8a4a984c0"
-dependencies = [
- "displaydoc",
- "litemap",
- "tinystr",
- "writeable",
- "zerovec",
-]
-
-[[package]]
-name = "icu_normalizer"
-version = "2.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "404a3b8c486f205c87fe7f23ab6894d84a4ad76d6e4671ae1981ba7def87c599"
-dependencies = [
- "icu_collections",
- "icu_normalizer_data",
- "icu_properties",
- "icu_provider",
- "smallvec",
- "zerovec",
-]
-
-[[package]]
-name = "icu_normalizer_data"
-version = "2.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "20f0088bfb7441f7a37fa0c9e20cb1e9cba1cac6b9ce8cd2a6dc44294f8e8cbc"
-
-[[package]]
-name = "icu_properties"
-version = "2.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2ea83d991c56158f7cf898bf86436c1dfe7c07ee82fe88951f2695c9f37a379f"
-dependencies = [
- "displaydoc",
- "icu_collections",
- "icu_locale_core",
- "icu_properties_data",
- "icu_provider",
- "zerotrie",
- "zerovec",
-]
-
-[[package]]
-name = "icu_properties_data"
-version = "2.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b98f29af82d02b163fe50161388350e743bb3107cc8e8c2f7314cb505faddfcf"
-
-[[package]]
-name = "icu_provider"
-version = "2.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "413099315636c588ee8f011190b329b971a09a8fae9d157e01dcae8379468514"
-dependencies = [
- "displaydoc",
- "icu_locale_core",
- "writeable",
- "yoke",
- "zerofrom",
- "zerotrie",
- "zerovec",
-]
-
-[[package]]
 name = "ident_case"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1338,12 +1244,6 @@ name = "linux-raw-sys"
 version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32a66949e030da00e8c7d4434b251670a91556f4144941d37452769c25d58a53"
-
-[[package]]
-name = "litemap"
-version = "0.8.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "47d9d19d1d6efa0109d2f65ff4c85cddd50bd572e5a00127ab10987290bcefae"
 
 [[package]]
 name = "litrs"
@@ -1742,37 +1642,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9b4f627cb1b25917193a259e49bdad08f671f8d9708acfd5fe0a8c1455d87220"
 
 [[package]]
-name = "php-std"
-version = "0.1.0"
-dependencies = [
- "argon2",
- "blake2",
- "blowfish",
- "bytes",
- "cc",
- "foldhash",
- "getrandom 0.3.4",
- "gost94",
- "hashbrown",
- "icu_normalizer",
- "icu_properties",
- "indexmap",
- "md-5",
- "md2",
- "ripemd",
- "rustix",
- "ryu",
- "serde_json",
- "sha1 0.10.7",
- "sha2 0.10.9",
- "sha3",
- "unsafe-libyaml",
- "whirlpool",
- "xxhash-rust",
- "zeroize",
-]
-
-[[package]]
 name = "pin-project-lite"
 version = "0.2.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1795,15 +1664,6 @@ dependencies = [
  "fdeflate",
  "flate2",
  "miniz_oxide 0.8.9",
-]
-
-[[package]]
-name = "potential_utf"
-version = "0.1.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d83eb9bc6d8e5cf568e7a1101d60ee05e81ed50ea106026f3d18deeb046d7661"
-dependencies = [
- "zerovec",
 ]
 
 [[package]]
@@ -2508,16 +2368,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9e1c906769ad99c88eaa54e728060edef082f8e358ff32030cb7c7d315e81109"
 
 [[package]]
-name = "tinystr"
-version = "0.8.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "abc840c238154d58f9e86b2792261edfde565a17696e1cda1a449de27979801a"
-dependencies = [
- "displaydoc",
- "zerovec",
-]
-
-[[package]]
 name = "toml"
 version = "1.2.1+spec-1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2629,29 +2479,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b8c0a043c9540bae7c578c88f91dda8bd82e59ae27c21baca69c8b191aaf5a6e"
 
 [[package]]
-name = "utf8_iter"
-version = "1.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "af3bd9d3e571c26fcce9d033b87ea5ab061b8d2ffe9b7a5675d810d68f03edf0"
-dependencies = [
- "utf_types",
-]
-
-[[package]]
-name = "utf_types"
-version = "1.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3a3b425286980a367278453f3b6d28cdcb134b574e5a35824a6ff5eebad50bb6"
-
-[[package]]
 name = "utopia-auth"
 version = "0.1.0"
 dependencies = [
  "aes 0.8.4",
  "getrandom 0.3.4",
  "md-5",
- "php-std",
  "sha2 0.10.9",
+ "utopia-php-std",
  "zeroize",
 ]
 
@@ -2659,8 +2494,8 @@ dependencies = [
 name = "utopia-balancer"
 version = "0.1.0"
 dependencies = [
- "php-std",
  "thiserror 2.0.21",
+ "utopia-php-std",
 ]
 
 [[package]]
@@ -2671,8 +2506,8 @@ dependencies = [
  "libz-sys",
  "lz4-sys",
  "lzma-rust2 0.22.0",
- "php-std",
  "thiserror 2.0.21",
+ "utopia-php-std",
  "zstd-safe",
 ]
 
@@ -2682,7 +2517,7 @@ version = "0.1.0"
 dependencies = [
  "getrandom 0.3.4",
  "hex",
- "php-std",
+ "utopia-php-std",
 ]
 
 [[package]]
@@ -2690,33 +2525,33 @@ name = "utopia-detector"
 version = "0.1.0"
 dependencies = [
  "memchr",
- "php-std",
  "thiserror 2.0.21",
+ "utopia-php-std",
 ]
 
 [[package]]
 name = "utopia-domains"
 version = "0.1.0"
 dependencies = [
- "php-std",
  "thiserror 2.0.21",
+ "utopia-php-std",
 ]
 
 [[package]]
 name = "utopia-dsn"
 version = "0.1.0"
 dependencies = [
- "php-std",
  "thiserror 2.0.21",
+ "utopia-php-std",
 ]
 
 [[package]]
 name = "utopia-emails"
 version = "0.1.0"
 dependencies = [
- "php-std",
  "serde_json",
  "thiserror 2.0.21",
+ "utopia-php-std",
 ]
 
 [[package]]
@@ -2725,8 +2560,9 @@ version = "0.1.0"
 dependencies = [
  "ext-php-rs",
  "foldhash",
+ "libc",
  "mimalloc",
- "php-std",
+ "psm",
  "stacker",
  "utopia-auth",
  "utopia-balancer",
@@ -2738,6 +2574,7 @@ dependencies = [
  "utopia-emails",
  "utopia-image",
  "utopia-locale",
+ "utopia-php-std",
  "utopia-query",
  "utopia-user-agent",
  "utopia-validators",
@@ -2754,10 +2591,10 @@ dependencies = [
  "jpeg-encoder",
  "kamadak-exif",
  "libheif-rs",
- "php-std",
  "png",
  "skrifa",
  "thiserror 2.0.21",
+ "utopia-php-std",
  "webp",
  "zeno",
 ]
@@ -2768,10 +2605,39 @@ version = "0.1.0"
 dependencies = [
  "foldhash",
  "indexmap",
- "php-std",
  "serde",
  "serde_json",
  "thiserror 2.0.21",
+ "utopia-php-std",
+]
+
+[[package]]
+name = "utopia-php-std"
+version = "0.1.0"
+dependencies = [
+ "argon2",
+ "blake2",
+ "blowfish",
+ "bytes",
+ "cc",
+ "foldhash",
+ "getrandom 0.3.4",
+ "gost94",
+ "hashbrown",
+ "indexmap",
+ "md-5",
+ "md2",
+ "ripemd",
+ "rustix",
+ "ryu",
+ "serde_json",
+ "sha1 0.10.7",
+ "sha2 0.10.9",
+ "sha3",
+ "unsafe-libyaml",
+ "whirlpool",
+ "xxhash-rust",
+ "zeroize",
 ]
 
 [[package]]
@@ -2779,8 +2645,8 @@ name = "utopia-query"
 version = "0.1.0"
 dependencies = [
  "md-5",
- "php-std",
  "thiserror 2.0.21",
+ "utopia-php-std",
 ]
 
 [[package]]
@@ -2789,14 +2655,14 @@ version = "0.1.0"
 dependencies = [
  "aho-corasick",
  "memchr",
- "php-std",
+ "utopia-php-std",
 ]
 
 [[package]]
 name = "utopia-validators"
 version = "0.1.0"
 dependencies = [
- "php-std",
+ "utopia-php-std",
 ]
 
 [[package]]
@@ -2967,12 +2833,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1ebf944e87a7c253233ad6766e082e3cd714b5d03812acc24c318f549614536e"
 
 [[package]]
-name = "writeable"
-version = "0.6.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3ad82d2a33cdc9674dc7465672f271e096168fcdbe0f799d9e6db8c5892679dc"
-
-[[package]]
 name = "xxhash-rust"
 version = "0.8.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3072,39 +2932,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.119",
-]
-
-[[package]]
-name = "zerotrie"
-version = "0.2.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4ea269c3bd32f0a32c321907a2ae912ba6f4649bb0fc764a15627e99a7095a3f"
-dependencies = [
- "displaydoc",
- "yoke",
- "zerofrom",
-]
-
-[[package]]
-name = "zerovec"
-version = "0.11.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f58a2799cfe9a1670c7ea8edbd52ef8edb93cb37a7f83bf31ba9e35d9dae6a40"
-dependencies = [
- "yoke",
- "zerofrom",
- "zerovec-derive",
-]
-
-[[package]]
-name = "zerovec-derive"
-version = "0.11.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c3743ddbf47738d929cd1ae2e199d40d0162979dfe31aef8ae646d2bf00bf97a"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 3.0.10",
 ]
 
 [[package]]

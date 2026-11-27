@@ -153,7 +153,7 @@ fn webp(data: &[u8]) -> Result<Vec<Frame>> {
             RgbaImage::from_raw(w, h, buf.to_vec()).unwrap_or_else(|| RgbaImage::new(w, h))
         } else {
             let mut out = Vec::with_capacity(w as usize * h as usize * 4);
-            for px in buf.chunks_exact(3) {
+            for px in buf.as_chunks::<3>().0 {
                 out.extend_from_slice(&[px[0], px[1], px[2], 255]);
             }
             RgbaImage::from_raw(w, h, out).unwrap_or_else(|| RgbaImage::new(w, h))

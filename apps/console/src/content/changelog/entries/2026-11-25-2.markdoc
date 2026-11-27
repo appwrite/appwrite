@@ -1,0 +1,21 @@
+---
+layout: changelog
+title: "Update custom domains on Sites and Functions"
+date: 2026-11-25
+cover: /images/blog/announcing-domain-updates/cover.avif
+tags: sites, functions, domains, console, api
+---
+
+You can now change what a custom domain on Appwrite Sites or Functions serves, without deleting it and adding it again. Open the **Domains** tab, click **Update** in the domain's menu, and pick what it should serve.
+
+A domain can switch between the active deployment and a branch, or move to a different branch. A redirect domain can point to a new URL or use a different status code. The domain keeps working while you change it, and its DNS records and certificate stay as they are.
+
+You can make the same changes from your server with the Appwrite SDKs.
+
+{% arrow_link href="/blog/post/announcing-domain-updates" %}
+Read the announcement
+{% /arrow_link %}
+
+{% arrow_link href="/docs/products/sites/domains#update-a-domain" %}
+Learn how to update a domain
+{% /arrow_link %}

@@ -1,5 +1,17 @@
 # Change log
 
+## 3.5.0
+
+* Added: `videos` service to create, list, get, update and delete videos from files in Storage
+* Added: `videos.listRenditions`, `getRendition` and `deleteRendition`; renditions are created from a server SDK or the Console
+* Added: `videos.createCaption`, `listCaptions`, `updateCaption` and `deleteCaption` for subtitle tracks
+* Added: `getHlsManifest`, `getDashManifest`, `getCmafHlsManifest`, `getCmafDashManifest`, `getCaptionManifest`, `getThumbnail` and `getTimeline` playback URLs, and `listCodecs`
+* Added: `Video`, `VideoCodec`, `VideoRendition` and `VideoCaption` models, their list models, and the `VideoCodecId`, `VideoOutput`, `VideoRenditionStatus`, `VideoCaptionStatus` and `VideoTimelineStatus` enums
+
+## 3.4.0
+
+* Added: Atlassian, Instagram, LINE, Linear, Netlify, Patreon, Railway, Reddit, Roblox, Strava, Vercel, VK and WorkOS to `OAuthProvider`
+
 ## 3.3.0
 
 * Added: `Tracking` and `trackNavigation` send app, screen and push analytics through `Analytics`; `start()` sends `first_open` once per install and `app_updated` after a version change

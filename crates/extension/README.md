@@ -83,10 +83,10 @@ utopia.libraries = "validators,dsn,domains"
 | `validators`  | `Utopia\Validator\Validator` and every validator of `packages/validators`        |
 
 - **Unset or empty** (the default, and what Appwrite and Cloud use): every library above but
-  `detector`, `compression` and `query` registers, and `_APP_EXTENSION_LIBRARIES` switches those
-  three on (see
+  the ones that still have a PHP implementation registers, and `_APP_EXTENSION_LIBRARIES`
+  switches those on (see
   [Switching a class on](#switching-a-class-on)).
-- **Set:** only the libraries it names register, the switchable three included, and
+- **Set:** only the libraries it names register, the switchable ones included, and
   `_APP_EXTENSION_LIBRARIES` is ignored. Names are the package names, the same ones
   `_APP_EXTENSION_LIBRARIES` takes, comma separated; spaces around them are ignored. The old
   `validators-scalar`, `validators-text`, `validators-network` and `validators-compose` each mean
@@ -106,14 +106,17 @@ utopia.libraries = "validators,dsn,domains"
 
 `Utopia\Image\Canvas`, `Utopia\Image\Font`, `Utopia\DSN\DSN`, `Utopia\Locale\Locale`,
 `Utopia\UserAgent\UserAgent`, `Utopia\Domains\Domain`, `Utopia\Emails\Email`, the validators
-of `packages/validators` and the password hashes of `packages/auth` are registered unless
+of `packages/validators`, the password hashes of `packages/auth`, every class of
+`packages/detector` and `packages/compression` and the 104 classes of
+`packages/query` listed under [Utopia\Query](#utopiaquery-the-classifiers-the-tokenizers-query-the-ast-and-the-schemas) are registered unless
 `utopia.libraries` leaves them out: they have no PHP implementation. Their signatures are in `stubs/`, `packages/image/stubs/`,
 `packages/user-agent/stubs/`, `packages/domains/stubs/`, `packages/emails/stubs/`,
-`packages/validators/stubs/` and `packages/auth/stubs/` for PHPStan, which runs without the
+`packages/validators/stubs/`, `packages/auth/stubs/`, `packages/query/stubs/`, `packages/detector/stubs/` and `packages/compression/stubs/` for PHPStan, which runs without the
 extension. A library that still has a PHP implementation is registered only when
-`_APP_EXTENSION_LIBRARIES` names its package; today those are `detector`, `compression`,
-`query`, `balancer` and `database` (four classes of `utopia-php/database`, from `vendor/`). Otherwise
-Composer loads the package's PHP class as before:
+`_APP_EXTENSION_LIBRARIES` names its package; today that is `balancer`.
+Otherwise Composer loads the package's PHP class as before. (`Id`, `Role`, `Permission` and
+`DateTime` of `utopia-php/database` are registered by default too, but their PHP stays in
+`vendor/`: see [Utopia\Database](#utopiadatabase-id-role-permission-and-datetime).)
 
 ```sh
 _APP_EXTENSION_LIBRARIES=<package>,<package>   # those packages' classes from the extension
@@ -148,10 +151,11 @@ package removed whole so it is never installed here.
 
 ## Utopia\Detector
 
-Over `crates/utopia/detector`, registered when `_APP_EXTENSION_LIBRARIES` names `detector`: every
-class of `packages/detector` (the `Detector` and `Detection` bases, the `Framework`, `Packager`,
-`Rendering` and `Runtime` detectors, `Strategy`, and the 15 frameworks, 3 packagers, 2 renderings
-and 11 runtimes), so none of the package's PHP classes loads. Off by default.
+Over `crates/utopia/detector`, always registered: every class of `packages/detector` (the
+`Detector` and `Detection` bases, the `Framework`, `Packager`, `Rendering` and `Runtime` detectors,
+`Strategy`, and the 15 frameworks, 3 packagers, 2 renderings and 11 runtimes). The PHP sources were
+removed once it ran in every Cloud region (2026-11-23); their signatures are in
+`packages/detector/stubs/`, one file per class, for PHPStan and editors.
 
 Built by hand like the validators (`src/classes/`), in `src/detector/`: the same names, inheritance
 chain, constants, signatures and typed properties (`$options`, `$inputs`, `$packager`, `$framework`,
@@ -174,13 +178,14 @@ persistent immutable arrays, and returned without an allocation, as PHP returns 
 OPcache holds. `detect()` reads the inputs where they lie and asks a native option nothing
 through PHP.
 
-`packages/detector/tests` run on the extension, and `tests/detector.php` (5,536 lines) is identical
-on both: reflection of every class, every leaf's answers and commands with every packager,
+`packages/detector/tests` run on the extension. While both existed, `tests/detector.php` (5,536
+lines) was identical on both; it went with the PHP classes, since there is nothing left to compare
+against. It covered reflection of every class, every leaf's answers and commands with every packager,
 adapters over 38 configurations, every pair of frameworks in both orders (675 cases), 3,000 seeded
 random projects, 40 real-world projects through all four detectors, 42 manifests (valid, invalid,
 deeply nested, YAML), rendering builds, runtime strategies, argument coercion and errors, PHP
-subclasses of the bases, leaves and detectors, and a 5,000-file repository. The differences below
-are asserted at its end. Nothing in Appwrite or Cloud subclasses a detector class.
+subclasses of the bases, leaves and detectors, and a 5,000-file repository, and asserted the
+differences below at its end. Nothing in Appwrite or Cloud subclasses a detector class.
 
 Known differences from the PHP classes:
 
@@ -196,9 +201,10 @@ Known differences from the PHP classes:
 
 ## Utopia\Compression
 
-Over `crates/utopia/compression`, registered when `_APP_EXTENSION_LIBRARIES` names `compression`:
-the abstract `Compression` and the seven algorithms of `packages/compression` (`Brotli`, `Deflate`,
-`GZIP`, `LZ4`, `Snappy`, `XZ`, `Zstd`), so none of the package's PHP classes loads. Off by default.
+Over `crates/utopia/compression`, always registered: the abstract `Compression` and the seven
+algorithms of `packages/compression` (`Brotli`, `Deflate`, `GZIP`, `LZ4`, `Snappy`, `XZ`, `Zstd`).
+The PHP sources were removed once it ran in every Cloud region (2026-11-25); their signatures are
+in `packages/compression/stubs/`, for PHPStan and editors.
 
 Built by hand like the detector, in `src/compression.rs`: the same names, inheritance, constants,
 signatures and typed properties (`Brotli`'s `$level` and `$mode`, `Deflate`'s private `$level`,
@@ -227,8 +233,9 @@ defines a reset stream as a new one); zstd's contexts and brotli's coders are cr
 per call, as PHP does, but zstd's and the brotli encoder's small blocks come from PHP's allocator
 rather than `malloc()`. A kept zstd context changed which error a corrupt frame reports, so none is kept.
 
-`packages/compression/tests` run on the extension, and `tests/compression.php` (5,702 lines) is
-identical on both: what every algorithm writes at every level (Brotli 0 to 11, LZ4 0 to 12, Zstd -5
+`packages/compression/tests` run on the extension, and so does `tests/compression.php` (5,702
+lines), diffed against `tests/compression.expected.jsonl`: what it printed on the PHP classes
+before they were removed (it was identical on both). It covers what every algorithm writes at every level (Brotli 0 to 11, LZ4 0 to 12, Zstd -5
 to 22) for 15 inputs up to 3 MB, read back by the class and by PHP's own function; what PHP's
 functions wrote (gzencode and gzdeflate at every level, zstd_compress at every level,
 brotli_compress at every level and mode, lz4_compress, snappy_compress, and their incremental forms)
@@ -237,7 +244,10 @@ skippable and legacy zstd frames (`tests/fixtures/compression`, written by zstd 
 every algorithm's output truncated and corrupted at a dozen places; 65 MB both ways; levels,
 constructors and argument coercion; `fromName()` and 1,342 `fromAcceptEncoding()` cases (61 headers
 against 22 `$supported` lists); reflection of every class; PHP subclasses; and, in processes of
-their own, frames claiming more than `memory_limit`. The differences below are asserted at its end.
+their own, frames claiming more than `memory_limit`. The differences below are asserted at its
+end. What PECL `zstd`, `lz4` and `snappy` wrote, and what their decoders said of the classes' bytes,
+is stored in `tests/fixtures/compression/pecl.json` (written by `pecl.php` there, on
+`appwrite/base` 2.5, which has them), so the corpus runs without them; PECL `brotli` is called.
 Nothing in Appwrite or Cloud subclasses a compression class.
 
 Known differences from the PHP classes:
@@ -253,8 +263,10 @@ Known differences from the PHP classes:
   under 2 MiB (each freed by the end of the call), so it counts against `memory_limit` while a call
   runs, where `malloc()` did not; near the limit, blocks come from `malloc()` again.
 
-Once every region runs it, PECL `brotli`, `zstd`, `lz4` and `snappy` can leave `appwrite/base`: the
-classes need none of them, and only the corpus's PHP side does.
+The classes need none of PECL `brotli`, `zstd`, `lz4` and `snappy`, and neither does the corpus but
+for `brotli`, so `zstd`, `lz4` and `snappy` can leave `appwrite/base`; `brotli` stays while
+`packages/http`'s `Response` streams with `brotli_compress_init()` (without it, a streamed
+response falls back to gzip).
 
 ## Utopia\Balancer
 
@@ -316,10 +328,12 @@ Known differences from the PHP classes:
 ## Utopia\Database: Id, Role, Permission and DateTime
 
 Over `crates/utopia/database` (the modules without I/O: `id`, `role`, `permission`, `datetime` and
-`error`), registered when `_APP_EXTENSION_LIBRARIES` names `database`: `Utopia\Database\Id`,
-`Role`, `Permission` and `DateTime` of `utopia-php/database` 10.2 (in `vendor/`), so Composer never
-loads those four files. The rest of the package, `PermissionType` and `Utopia\Database\Exception`
-included, stays PHP. Off by default.
+`error`), always registered: `Utopia\Database\Id`, `Role`, `Permission` and `DateTime` of
+`utopia-php/database` 10.2 (in `vendor/`), so Composer never loads those four files. The rest of
+the package, `PermissionType` and `Utopia\Database\Exception` included, stays PHP. The default
+since it ran in every Cloud region (2026-11-25). Unlike the packages in `packages/`, the PHP classes
+cannot be deleted here: they are utopia-php/database's, so `utopia.libraries` without `database`
+still brings them back, and the corpus below still runs against them.
 
 Built by hand like the balancer, in `src/database.rs`: the same names, signatures, static methods,
 private promoted properties (`Role`'s `$role`, `$identifier` and `$dimension`, `Permission`'s
@@ -344,7 +358,8 @@ make the same `\DateTime`, `\DateTimeZone` and `\DateInterval` calls the PHP cla
 `addSeconds()` always does, to change the caller's `\DateTime` exactly as PHP's `add()` does.
 
 The package's own `IdTest`, `RoleTest`, `PermissionTest` and `DateTimeTest` run on the extension,
-and `tests/database.php` (6,779 cases) is identical on both: reflection of every class; `Id::custom()`
+and `tests/database.php` (6,779 cases) is identical on both (`run.sh`, "database (against
+vendor/)"): reflection of every class; `Id::custom()`
 and `Id::unique()` (length, hex, time order, uniqueness and spread of the padding, for 14 paddings
 and 7 coercions); `Role::parse()` of 59 strings and every factory with 15 argument lists, `"0"`
 identifiers and dimensions, bytes that are not UTF-8; `Permission::parse()` of 54 strings and of
@@ -488,21 +503,28 @@ same exception for a URL, and fills the same properties. `==`, `var_dump()`, `(a
 
 ## Utopia\Query: the classifiers, the tokenizers, Query, the AST and the schemas
 
-Over `crates/utopia/query` (`_APP_EXTENSION_LIBRARIES=query`). `packages/query` is about 300 classes,
-so it moves to the extension one part at a time, and `query` switches on whatever part is here. So
-far that is the statement classifiers a database proxy routes with: the `Classifier` interface,
+Over `crates/utopia/query`, always registered. The PHP sources of the classes it serves were
+removed once it ran in every Cloud region (2026-11-24); their signatures are in
+`packages/query/stubs/`, one file per class, for PHPStan and editors. `packages/query` was about
+300 classes and 104 of them are the extension's: the statement classifiers a database proxy
+routes with: the `Classifier` interface,
 `Classifier\SQL` (abstract), `Classifier\MySQL`, `Classifier\PostgreSQL`, `Classifier\MongoDB` and
 the `Type` enum they return; the tokenizers; `Query`; the AST's parser and serializers; and the
-schemas, each below. Every other class of the package (`Method` and the other enums, the builders,
-the schema's blueprints, the AST's nodes and walker) is still its PHP source and works with these
-unchanged.
+schemas and the builders, each below. Every other class of the package (`Method` and the other
+enums, the schema's blueprints, the AST's nodes and walker, the hooks and exceptions) is still its
+PHP source and works with these unchanged.
+
+The sections below describe how each part was checked against the PHP class while both existed.
+The two corpora (`tests/query.php` and `tests/query-builders.php`) went with the PHP classes,
+since there is nothing left to compare against. The package's own tests and
+`tests/query-coroutines.php` run on the extension in `tests/run.sh`.
 
 The interface and the enum are registered too, not left in PHP: a class registered when the module
 starts cannot implement a userland interface, and returning the extension's own enum case costs no
 lookup. PHP code that implements `Classifier`, extends `Classifier\SQL` with its own `classify()`,
 or extends a concrete classifier and calls `parent::classify()` works as before.
 
-`crates/extension/tests/query.php` prints a corpus of results that must be identical on both
+`crates/extension/tests/query.php` printed a corpus of results that had to be identical on both
 implementations: every keyword the classifiers know, in three spellings and seven positions; SQL
 with comments, quoted and dollar-quoted text, `COPY` and CTEs, bytes that are not UTF-8 and inputs
 of 100 KB; seeded mutations of all of them; MySQL and PostgreSQL packets of every command and
@@ -543,9 +565,8 @@ whose tokens cover every byte, so they run on both implementations.
 ### Query
 
 `Utopia\Query\Query`, the value object every query is. The extension registers its methods and
-state as `Utopia\Query\NativeQuery`, and the package declares `Query` over it
-(`packages/query/src/extension.php` loads `packages/query/extension/Query.php` before the autoloader
-looks for `src/Query.php`). That one PHP class holds the two constants that are arrays,
+state as `Utopia\Query\NativeQuery`, and the package declares `Query` over it in `src/Query.php`.
+That one PHP class holds the two constants that are arrays,
 `LOGICAL_TYPES` and `GROUP_BY_TIME_BUCKET_INTERVALS`, which a class registered when the module
 starts cannot. `Utopia\Database\Query` reads the first.
 
@@ -560,6 +581,16 @@ query holds only nulls, booleans, integers, UTF-8 strings and queries like it, w
 PHP's time. Anything else (a float, an array, an object, a string that is not UTF-8, a subclass with
 its own `toArray()`) goes to PHP's `json_encode()` as before. `contains()` raises the deprecation
 `#[\Deprecated]` raised.
+
+A query holds its attribute and alias as PHP strings and its method's case object, as PHP's
+properties hold them: the constructor keeps the strings and the array it is given by refcount, the
+getters return them without copying, and `clone` shares the values of a query that holds no
+queries, as PHP's copy-on-write array does. `__construct()`, `getMethod()`, `getAttribute()`,
+`getValues()`, `getAlias()` and the classifiers' `classify()` have hand-written handlers
+(`src/classes/retarget.rs`), which skip ext-php-rs's per-call `setjmp` and argument parsing. Each
+takes the calls PHP code makes (the types the method declares, the right number of arguments) and
+hands any other to ext-php-rs's own handler, which converts and throws as before;
+`tests/query-handlers.php` pins what they return and throw.
 
 Subclasses are what most of the binding is about. `Utopia\Database\Query`, `Utopia\Audit\Query`
 and `Utopia\Usage\UsageQuery` extend `Query`:
@@ -633,8 +664,10 @@ if the package and the extension are out of step.
 PHP recurses on its own heap, so it parses and writes a tree as deep as its memory allows. Rust
 recurses on the native stack, which a Swoole coroutine keeps at 2 MB. Reading one level of a tree
 takes 3.1 KB of it in a release build. So the binding measures a tree first, and works on anything
-deeper than 32 levels on a stack allocated for that depth (`stacker`). Nothing that runs there
-calls PHP code. With this, the extension takes every tree PHP takes: the corpus goes to 20,000
+deeper than 32 levels on a larger stack: one kept per thread (`src/classes/stack.rs`, 4 MB mapped
+with a guard page, resident only as far as it is used), so a deep tree costs no fresh page faults
+on each call, and a stack mapped for the call (`stacker`) for a tree deeper than that holds. Nothing
+that runs there calls PHP code. With this, the extension takes every tree PHP takes: the corpus goes to 20,000
 levels, and under a 512 KB or 128 KB fiber stack both implementations stop at the same input,
 where PHP's own engine overflows freeing the objects.
 
@@ -809,9 +842,9 @@ Known differences:
 - `resolvedAttributeCache` has no order.
 - The classes declare a constructor and no `__clone()`. PHP's declare the reverse.
 
-Four things check them. `tests/query-builders.php` is a corpus like the others: 15,827 cases, the
-same on PHP and on the extension. The package's own 5,828 tests pass on the native builders, but for
-two that read the PHP class's source and private state and are skipped there. utopia-php/database
+Four things checked them. `tests/query-builders.php` was a corpus like the others: 15,827 cases,
+the same on PHP and on the extension. The package's own tests pass on the native builders; two
+that read the PHP class's source and private state were removed with it, leaving 5,826. utopia-php/database
 10.2.3 subclasses four of the builders, overrides 23 of their methods and serializes queries for its
 cache keys. Its 13,217 unit tests give the same result on the native builders as on PHP.
 `tests/query-coroutines.php` builds 720 statements in Swoole coroutines whose overrides and
@@ -997,6 +1030,9 @@ The abstract `Utopia\Auth\Hash` and its eight hashes, `Argon2`, `Bcrypt`, `MD5`,
 `Plaintext`, `Scrypt`, `ScryptModified` and `Sha`, always registered, over
 `php-std` (`password_hash()`, `password_verify()`, `crypt()`, `hash()`, `base64_*()`,
 `mb_convert_encoding()`) and `crates/utopia/auth` (PECL `scrypt()`, Firebase's modified scrypt, phpass).
+`crypt()`, bcrypt's `password_verify()` and `md5()` run the C that ext/standard exports
+(`php_crypt()`, `PHP_MD5*`, in `src/auth/native.rs`), as PHP's own functions do: the Rust ports
+give the same bytes, but php-std's blowfish is 18% slower than PHP's.
 Once the extension had served them in every Cloud region (appwrite-labs/cloud#7503), the PHP
 classes (`src/Hash.php` and `src/Hashes/*`) were removed from `packages/auth`, which now requires
 `ext-utopia` like `packages/image` and keeps their signatures in `stubs/Hash.php`; 0.12.x on
@@ -1105,5 +1141,5 @@ How it behaves inside a Swoole worker:
   encoded an AVIF and then forked left the child waiting forever on its next encode.
 
 
-`crates/support/php-std` here holds only the functions `utopia-image` calls, copied
+`crates/utopia/php-std` here holds only the functions `utopia-image` calls, copied
 unchanged from the full crate on `feat/rust-utopia-conversion`.

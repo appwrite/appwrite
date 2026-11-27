@@ -20,7 +20,12 @@ composer require utopia-php/compression
 
 ## System requirements
 
-Utopia Framework requires PHP 8.1 or later. We recommend using the latest PHP version whenever possible.
+Utopia Compression requires PHP 8.4 or later and the `utopia` extension (`ext-utopia`, built from
+[`crates/extension`](https://github.com/appwrite/appwrite/tree/main/crates/extension) in
+appwrite/appwrite). Every class of `Utopia\Compression` comes from the extension, which links the
+codecs itself, so no PECL extension is needed except `xz` for the XZ algorithm. This package holds
+their signatures for static analysis and editors (`stubs/`) and the tests. 0.1.x is the last
+release with the classes in PHP.
 
 ## Copyright and license
 

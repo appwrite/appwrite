@@ -178,13 +178,17 @@ export function applyInitEventVisibility(
     }
   })
 
+  // Sessions after the last launch day (the AMA, the community recap) reveal
+  // no launch, so they keep their real titles all week.
+  const maxDay = getInitMaxDay(event)
   const schedule = event.schedule.map((item) => {
     const isLive = isInitScheduleItemLiveNow(item, currentDay, nowMs)
     return {
       ...item,
-      title: isInitDailyPrizeRevealed(currentDay, item.day)
-        ? item.title
-        : getInitMaskedSessionTitle(item.platform, item.day),
+      title:
+        item.day > maxDay || isInitDailyPrizeRevealed(currentDay, item.day)
+          ? item.title
+          : getInitMaskedSessionTitle(item.platform, item.day),
       isLive,
       isStartingSoon:
         !isLive && isInitScheduleItemStartingSoon(item, currentDay, nowMs),

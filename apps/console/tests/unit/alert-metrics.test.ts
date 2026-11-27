@@ -13,6 +13,12 @@ import {
   toBytes,
 } from '@/lib/alerts/metrics'
 import {
+  alertingLimits,
+  countResponders,
+  defaultProbeInterval,
+  monitorCaps,
+} from '@/lib/alerts/plan-limits'
+import {
   fillBuckets,
   firings,
   growth,
@@ -641,5 +647,115 @@ describe('budget alert recipients', () => {
     expect(changedBudgetRecipients(current, ['owner'])).toEqual(['owner'])
     expect(changedBudgetRecipients(current, ['billing', 'owner'])).toBeNull()
     expect(changedBudgetRecipients(current, [])).toBeNull()
+  })
+})
+
+describe('alerting plan limits', () => {
+  test('reads a missing or zero cap as uncapped, as the API does', () => {
+    expect(alertingLimits(undefined)).toEqual({
+      probesAllowed: true,
+      probes: null,
+      probeInterval: 0,
+      escalations: null,
+      escalationSteps: null,
+      escalationRepeat: null,
+    })
+    const free = {
+      probes: 1,
+      probeInterval: 300,
+      escalations: 1,
+      escalationSteps: 2,
+      escalationRepeat: 0,
+    } as unknown as Parameters<typeof alertingLimits>[0]
+    expect(alertingLimits(free)).toEqual({
+      probesAllowed: true,
+      probes: 1,
+      probeInterval: 300,
+      escalations: 1,
+      escalationSteps: 2,
+      escalationRepeat: 0,
+    })
+    const scale = {
+      probes: 0,
+      escalations: 0,
+      escalationSteps: 0,
+    } as unknown as Parameters<typeof alertingLimits>[0]
+    expect(alertingLimits(scale).probes).toBeNull()
+    expect(alertingLimits(scale).escalationSteps).toBeNull()
+  })
+
+  test('caps usage monitors and synthetic checks separately', () => {
+    const free = {
+      monitors: 3,
+      probes: 1,
+    } as unknown as Parameters<typeof monitorCaps>[0]
+    // Three usage monitors fill a Free project, yet a synthetic check can
+    // still be added, so creating a monitor stays open.
+    expect(monitorCaps(free, 3, 0)).toEqual({
+      usageLimit: 3,
+      usageAtLimit: true,
+      probeLimit: 1,
+      probesAtLimit: false,
+      probesAllowed: true,
+      allAtLimit: false,
+    })
+    expect(monitorCaps(free, 3, 1).allAtLimit).toBe(true)
+    expect(monitorCaps(free, 2, 1).usageAtLimit).toBe(false)
+    // A count not loaded yet never closes creating.
+    expect(monitorCaps(free, undefined, undefined).allAtLimit).toBe(false)
+    expect(monitorCaps(undefined, 500, 500).allAtLimit).toBe(false)
+  })
+
+  test('closes synthetic checks on a plan without them, keeping usage monitors', () => {
+    const free = {
+      monitors: 3,
+      monitorsAllowProbes: false,
+    } as unknown as Parameters<typeof monitorCaps>[0]
+    expect(monitorCaps(free, 2, 0)).toEqual({
+      usageLimit: 3,
+      usageAtLimit: false,
+      probeLimit: null,
+      probesAtLimit: false,
+      probesAllowed: false,
+      allAtLimit: false,
+    })
+    // With the usage monitors full, nothing is left to create.
+    expect(monitorCaps(free, 3, 0).allAtLimit).toBe(true)
+  })
+
+  test('starts new checks on a minute, or the plan minimum when longer', () => {
+    expect(defaultProbeInterval(0)).toBe(60)
+    expect(defaultProbeInterval(30)).toBe(60)
+    expect(defaultProbeInterval(300)).toBe(300)
+  })
+
+  test('counts each member an escalation notifies once, by role or by name', () => {
+    const members = [
+      { userId: 'ola', roles: ['owner'] },
+      { userId: 'bob', roles: ['developer'] },
+      { userId: 'cy', roles: ['developer'] },
+      { userId: 'dee', roles: ['analyst'] },
+    ]
+    expect(countResponders([], members)).toBe(0)
+    expect(
+      countResponders(
+        [
+          {
+            steps: [
+              { delay: 0, roles: ['owner'], userIds: ['ola'] },
+              { delay: 600, roles: [], userIds: ['bob'] },
+            ],
+          },
+          { steps: [{ delay: 0, roles: ['owner'], userIds: [] }] },
+        ],
+        members,
+      ),
+    ).toBe(2)
+    expect(
+      countResponders(
+        [{ steps: [{ delay: 0, roles: ['developer'], userIds: ['dee'] }] }],
+        members,
+      ),
+    ).toBe(3)
   })
 })

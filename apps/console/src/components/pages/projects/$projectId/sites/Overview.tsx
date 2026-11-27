@@ -147,6 +147,8 @@ export function View() {
             siteName={site.name}
             siteDomains={siteDomainNames}
             domainsLoading={domainsLoading}
+            linkedPropertyId={site.analyticsPropertyId || undefined}
+            tracked={site.analyticsEnabled ?? false}
           />
         ) : null}
 

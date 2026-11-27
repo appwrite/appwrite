@@ -4,7 +4,11 @@ import { AnalyticsPropertyType } from '@appwrite.io/console'
 import { View } from '@/components/pages/projects/$projectId/analytics/add/View'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { pageTitle } from '@/lib/utils/page-title'
-import { fetchProject } from '@/lib/react-query/hooks'
+import {
+  analyticsPropertiesQueryOptions,
+  fetchProject,
+  organizationPlanQueryOptions,
+} from '@/lib/react-query/hooks'
 import { ANALYTICS_PLATFORMS } from '@/lib/analytics-wizard/snippets'
 
 const addPropertySearchSchema = z.object({
@@ -38,11 +42,23 @@ export const Route = createFileRoute(
     const { projectId } = params
     const { queryClient } = context
     if (!projectId) return undefined
-    await queryClient.ensureQueryData({
+    const project = await queryClient.ensureQueryData({
       queryKey: ['project', projectId],
       queryFn: () => fetchProject(projectId),
       staleTime: 5 * 60 * 1000,
     })
+    // The create form waits for the plan limit (useAnalyticsPropertiesPlanLimit):
+    // the plan and the one-row property count, so it cannot be submitted first.
+    await Promise.all([
+      queryClient
+        .ensureQueryData(analyticsPropertiesQueryOptions(projectId, 0, 1))
+        .catch(() => undefined),
+      project?.teamId
+        ? queryClient
+            .ensureQueryData(organizationPlanQueryOptions(project.teamId))
+            .catch(() => undefined)
+        : undefined,
+    ])
     return undefined
   },
   component: AddPropertyPage,

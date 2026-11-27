@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 import {
-  isAtLeast,
+  formatRawLog,
+  logfmtFields,
   normalizeLevel,
   parseRuntimeLogLine,
   stripAnsi,
@@ -158,15 +159,39 @@ describe('runtime log line', () => {
     expect(normalizeLevel(true)).toBeNull()
   })
 
-  test('compares levels', () => {
-    expect(isAtLeast('error', 'warn')).toBe(true)
-    expect(isAtLeast('info', 'warn')).toBe(false)
-    expect(isAtLeast('debug', 'debug')).toBe(true)
-  })
-
   test('strips color codes', () => {
     const esc = String.fromCharCode(27)
     expect(stripAnsi(`${esc}[1;31mred${esc}[0m plain`)).toBe('red plain')
     expect(stripAnsi('no codes')).toBe('no codes')
+  })
+})
+
+describe('logfmtFields', () => {
+  test('splits a line made only of pairs, with no level or message key', () => {
+    expect(logfmtFields('mode=delta orgs=a,b chunks=1')).toEqual([
+      { key: 'mode', value: 'delta' },
+      { key: 'orgs', value: 'a,b' },
+      { key: 'chunks', value: '1' },
+    ])
+  })
+
+  test('leaves prose and single pairs alone', () => {
+    expect(logfmtFields('delta since x=1 (last success)')).toBeNull()
+    expect(logfmtFields('retries=3')).toBeNull()
+    expect(logfmtFields('a=1\nb=2')).toBeNull()
+  })
+})
+
+describe('formatRawLog', () => {
+  test('indents JSON objects and arrays', () => {
+    expect(formatRawLog('{"a":1,"b":{"c":true}}')).toBe(
+      '{\n  "a": 1,\n  "b": {\n    "c": true\n  }\n}',
+    )
+    expect(formatRawLog('[1,2]')).toBe('[\n  1,\n  2\n]')
+  })
+
+  test('returns anything else unchanged', () => {
+    expect(formatRawLog('plain text')).toBe('plain text')
+    expect(formatRawLog('{not json}')).toBe('{not json}')
   })
 })

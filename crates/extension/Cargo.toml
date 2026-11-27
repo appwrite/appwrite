@@ -6,7 +6,8 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
-publish.workspace = true
+# A PHP extension, shipped as utopia.so in the appwrite/utopia-extension image.
+publish = false
 
 [lib]
 name = "utopia"
@@ -20,6 +21,8 @@ mimalloc.workspace = true
 # would bring its thread pool (rayon) into a process that forks.
 php-std.workspace = true
 stacker.workspace = true
+psm.workspace = true
+libc.workspace = true
 utopia-auth.workspace = true
 utopia-balancer.workspace = true
 utopia-compression.workspace = true

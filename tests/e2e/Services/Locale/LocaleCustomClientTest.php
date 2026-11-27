@@ -57,6 +57,7 @@ final class LocaleCustomClientTest extends Scope
             'true-client-ip',
             'fastly-client-ip',
             'forwarded',
+            'x-forwarded-ip',
         ];
         foreach ($untrusted as $header) {
             if (\in_array($header, $trusted, true)) {

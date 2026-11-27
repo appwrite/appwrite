@@ -28,7 +28,7 @@ class Get extends Base
             ->setHttpPath('/v1/organization/escalations/:escalationId')
             ->desc('Get escalation')
             ->groups(['api', 'organization', 'escalations'])
-            ->label('scope', 'monitors.read')
+            ->label('scope', ['escalations.read', 'monitors.read'])
             ->label('sdk', new Method(
                 namespace: 'organization',
                 group: 'escalations',
@@ -36,7 +36,7 @@ class Get extends Base
                 description: <<<EOT
                 Get one of your organization's escalations by its ID.
                 EOT,
-                auth: [AuthType::ADMIN, AuthType::ORGANIZATION],
+                auth: [AuthType::ADMIN, AuthType::KEY, AuthType::ORGANIZATION],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,

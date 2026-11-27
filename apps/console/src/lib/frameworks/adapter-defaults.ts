@@ -61,7 +61,9 @@ export function frameworkHasStaticAdapter(
 }
 
 /**
- * Defaults when creating a site (prefer static adapter when available).
+ * Defaults when creating a site (build fields from the static adapter when
+ * available). A framework that can render either way gets an empty adapter,
+ * so the build's output picks it instead of pinning the site to static.
  */
 export function getFrameworkCreateDefaults(
   framework: Models.Framework | undefined,
@@ -87,7 +89,7 @@ export function getFrameworkCreateDefaults(
     installCommand: fields.installCommand || 'npm install',
     buildCommand: fields.buildCommand || 'npm run build',
     outputDirectory: fields.outputDirectory || '.output',
-    adapter: adapter.key,
+    adapter: framework.adapters.length > 1 ? '' : adapter.key,
     buildRuntime: framework.buildRuntime || 'node-22',
   }
 }

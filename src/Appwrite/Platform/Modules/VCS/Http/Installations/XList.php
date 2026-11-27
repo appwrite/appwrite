@@ -111,7 +111,6 @@ class XList extends Action
             } while (\count($projects) === APP_LIMIT_SUBQUERY);
 
             $queries[] = Query::equal('provider', ['github']);
-            $queries[] = Query::equal('personal', [false]);
             $queries[] = Query::equal('projectInternalId', $projectInternalIds ?: ['']);
         } else {
             $queries[] = Query::equal('projectInternalId', [$project->getSequence()]);

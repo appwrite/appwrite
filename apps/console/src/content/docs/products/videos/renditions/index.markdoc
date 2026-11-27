@@ -330,7 +330,7 @@ A rendition reports its `status` and a `progress` percentage while it encodes.
 
 Each rendition also records `startedAt` and `endedAt`, its `width`, `height`, bitrates, and `codec`, and `targetDuration`, the length of its longest segment in seconds. When a rendition fails or is aborted, `error` says why.
 
-`progress` is a percentage sent as a string, such as `"42"`. Parse it with `parseFloat` before you compare or display it.
+`progress` is an integer percentage from 0 to 100, such as `42`.
 
 # Wait until ready {% #wait-until-ready %}
 
@@ -584,7 +584,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 ```
 {% /multicode %}
 
-You can also filter and sort renditions on `profileId`, `name`, `codec`, `width`, `height`, `videoBitRate`, `audioBitRate`, `progress`, `targetDuration`, `startedAt`, and `endedAt`.
+You can also filter and sort renditions on `profileId`, `name`, `codec`, `width`, `height`, `videoBitRate`, `audioBitRate`, `startedAt`, and `endedAt`.
 
 A common pattern is to mark the video as published in your own database once `total` is greater than 0, and to show a "processing" state until then. Poll every few seconds rather than in a tight loop, since encoding takes seconds to minutes.
 

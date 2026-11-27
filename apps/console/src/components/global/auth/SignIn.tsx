@@ -6,7 +6,7 @@ import * as z from 'zod'
 import { useEffect, useState, type ReactNode } from 'react'
 import { useLocation } from '@tanstack/react-router'
 import { AppwriteException, ID } from '@appwrite.io/console'
-import { Bug, Eye, EyeOff, Fingerprint } from 'lucide-react'
+import { Bug, Eye, EyeOff, Fingerprint, KeyRound } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
@@ -124,7 +124,7 @@ export type SignInSubmitOptions = {
   skipAccountCreate?: boolean
 }
 
-/** Accordion row. Google sits on its own full-width row below it. */
+/** Accordion row. Google sits on its own full-width row above it. */
 const VCS_OAUTH_PROVIDERS: {
   id: OAuthLoginMethod
   Icon: (props: { className?: string }) => ReactNode
@@ -280,6 +280,8 @@ interface SignInProps {
   onPasskeyAutofill?: () => void
   /** Shows a "Sign in with a passkey" button that opens the browser's passkey prompt. */
   onPasskeySignIn?: () => void
+  /** Shows a "Sign in with SSO" button that opens /sso. */
+  showSSO?: boolean
   redirect?: string // Optional redirect URL to preserve when switching between sign-in/sign-up
   /** Debug preview routes: cross-links stay on /debug/*-preview; demo user is fill-only. */
   preview?: boolean
@@ -295,6 +297,7 @@ export function SignIn({
   onPasskeySignIn,
   redirect,
   preview = false,
+  showSSO = false,
 }: SignInProps) {
   const t = useT()
   const { isDebugModeOpen } = useDebugMode()
@@ -441,6 +444,51 @@ export function SignIn({
     }
   }
 
+  const showSSOButton = mode === 'sign-in' && showSSO && !preview
+  // Side by side when both are offered, so the list of methods stays short.
+  const otherMethods =
+    showSSOButton || showPasskeyButton ? (
+      <div className="flex gap-2">
+        {showSSOButton && (
+          <div className="min-w-0 flex-1">
+            <Button
+              asChild
+              variant="outline"
+              className="h-9 w-full"
+              disabled={!!oauthLoading || formBusy}
+            >
+              <Link
+                to="/sso"
+                search={{ redirect }}
+                aria-label={t('Sign in with SSO')}
+              >
+                <KeyRound className="size-4" />
+                {showPasskeyButton ? t('SSO') : t('Sign in with SSO')}
+              </Link>
+            </Button>
+          </div>
+        )}
+        {showPasskeyButton && (
+          <div className="relative min-w-0 flex-1">
+            {lastLoginMethod === 'passkey' && (
+              <LastUsedBadge>{t('Last used')}</LastUsedBadge>
+            )}
+            <Button
+              variant="outline"
+              type="button"
+              className="h-9 w-full"
+              aria-label={t('Sign in with a passkey')}
+              onClick={onPasskeySignIn}
+              disabled={!!oauthLoading || formBusy}
+            >
+              <Fingerprint className="size-4" />
+              {showSSOButton ? t('Passkey') : t('Sign in with a passkey')}
+            </Button>
+          </div>
+        )}
+      </div>
+    ) : null
+
   return (
     <AuthFlowIllustrationCard illustration={<AuthFlowIllustrationColumn />}>
       <Form {...form}>
@@ -460,6 +508,22 @@ export function SignIn({
             <>
               <style>{OAUTH_ACCORDION_STYLES}</style>
               <div className="space-y-4">
+                <div className="relative">
+                  {mode === 'sign-in' && lastLoginMethod === 'google' && (
+                    <LastUsedBadge>{t('Last used')}</LastUsedBadge>
+                  )}
+                  <Button
+                    variant="outline"
+                    type="button"
+                    data-provider="google"
+                    className="h-9 w-full"
+                    onClick={() => onOAuthLogin('google')}
+                    disabled={!!oauthLoading || formBusy}
+                  >
+                    <GoogleIcon className="size-4" />
+                    {oauthProviderLabel('google', mode, t)}
+                  </Button>
+                </div>
                 <div className="oauth-login-row">
                   {VCS_OAUTH_PROVIDERS.map(({ id, Icon }) => {
                     const label = oauthProviderLabel(id, mode, t)
@@ -515,47 +579,17 @@ export function SignIn({
                     )
                   })}
                 </div>
-                <div className="relative">
-                  {mode === 'sign-in' && lastLoginMethod === 'google' && (
-                    <LastUsedBadge>{t('Last used')}</LastUsedBadge>
-                  )}
-                  <Button
-                    variant="outline"
-                    type="button"
-                    data-provider="google"
-                    className="h-9 w-full"
-                    onClick={() => onOAuthLogin('google')}
-                    disabled={!!oauthLoading || formBusy}
-                  >
-                    <GoogleIcon className="size-4" />
-                    {oauthProviderLabel('google', mode, t)}
-                  </Button>
-                </div>
               </div>
 
               <Divider>
-                {showPasskeyButton ? t('Or') : t('Or continue with')}
+                {otherMethods ? t('Or') : t('Or continue with')}
               </Divider>
             </>
           )}
 
-          {showPasskeyButton && (
+          {otherMethods && (
             <>
-              <div className="relative">
-                {lastLoginMethod === 'passkey' && (
-                  <LastUsedBadge>{t('Last used')}</LastUsedBadge>
-                )}
-                <Button
-                  variant="outline"
-                  type="button"
-                  className="h-9 w-full"
-                  onClick={onPasskeySignIn}
-                  disabled={!!oauthLoading || formBusy}
-                >
-                  <Fingerprint className="size-4" />
-                  {t('Sign in with a passkey')}
-                </Button>
-              </div>
+              {otherMethods}
 
               <Divider>{t('Or continue with')}</Divider>
             </>

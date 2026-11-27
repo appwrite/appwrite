@@ -15,6 +15,9 @@ use Appwrite\Platform\Modules\Videos\Base;
 use Appwrite\Storage\Encryption;
 use Appwrite\Usage\Context;
 use Appwrite\Usage\Video as VideoUsage;
+use Appwrite\Utopia\Response\Model\Video as VideoModel;
+use Appwrite\Utopia\Response\Model\VideoCaption as VideoCaptionModel;
+use Appwrite\Utopia\Response\Model\VideoRendition as VideoRenditionModel;
 use Appwrite\Video\Dash as DashManifest;
 use Appwrite\Video\Uploader;
 use Captioning\Format\SubripFile;
@@ -430,7 +433,7 @@ class Videos extends Action
                     'image/jpeg'
                 );
 
-                // Relative to /v1/videos/{videoId}/timelines so the player resolves
+                // Relative to /v1/videos/{videoId}/timeline so the player resolves
                 // to /v1/videos/{videoId}/thumbnails/{thumbnailId}.
                 $urls[$fileName] = 'thumbnails/' . $thumbnail->getId();
             }
@@ -893,6 +896,15 @@ class Videos extends Action
             // emits NaN samples that the AAC encoder rejects. The aeval stage
             // maps those back to silence.
             $params = ['-dn', '-sn'];
+
+            // The adapter's thread count is written before the input, where
+            // ffmpeg applies it to the decoder alone. Left to itself the
+            // encoder starts a thread per CPU of the node, not of this
+            // container, and each one holds frames in memory.
+            if ($threads > 0) {
+                $params[] = '-threads';
+                $params[] = (string) $threads;
+            }
             if (\trim((string) $video->getAttribute('audioCodec', '')) !== '') {
                 $params[] = '-af';
                 $params[] = 'loudnorm=I=-14:TP=-1.5:LRA=11,aeval=if(isnan(val(ch))+isinf(val(ch))\,0\,val(ch)):c=same';
@@ -907,11 +919,14 @@ class Videos extends Action
                     ->crf(32)
                     ->keyframe(2.0)
                     ->params($params),
+                // A 10-bit source would otherwise come out as 10-bit H.264,
+                // which browsers do not play and which nearly doubles the
+                // memory the encode needs.
                 default => (new X264())
                     ->crf(22)
                     ->bframes(3)
                     ->keyframe(2.0)
-                    ->params($params),
+                    ->params([...$params, '-pix_fmt', 'yuv420p']),
             };
 
             // FFmpeg writes each segment's duration only into a SegmentTimeline,
@@ -1335,7 +1350,16 @@ class Videos extends Action
             if (\str_starts_with($detail, $srtPath)) {
                 $detail = \ltrim(\substr($detail, \strlen($srtPath)));
             }
-            throw new AppwriteException(AppwriteException::VIDEO_CAPTION_NOT_VALID, 'Caption ' . $detail, previous: $th);
+            // Files without a .srt or .vtt extension land here too, so name both
+            // accepted formats rather than the library's "not a proper .srt file".
+            if (\str_starts_with($detail, 'is not a proper .srt file')) {
+                $detail = \ltrim(\substr($detail, \strlen('is not a proper .srt file')), ' .');
+            }
+            $message = 'Caption is not a valid SubRip (.srt) or WebVTT (.vtt) file';
+            if ($detail !== '') {
+                $message .= ': ' . \trim($detail, '() ');
+            }
+            throw new AppwriteException(AppwriteException::VIDEO_CAPTION_NOT_VALID, $message, previous: $th);
         }
         $webvtt->build();
         $webvtt->save($vttPath);
@@ -1630,7 +1654,7 @@ class Videos extends Action
                         $queueForRealtime,
                         $project,
                         $caption,
-                        'videos.[videoId].captions.[captionId].update',
+                        'videos.[videoId].captions.[captionId].create',
                         [
                             'videoId' => $video->getId(),
                             'captionId' => $caption->getId(),
@@ -2835,6 +2859,17 @@ class Videos extends Action
         array $params,
         array $permissions
     ): void {
+        // Realtime sends the stored document, so apply the response model's unit and type conversions.
+        $model = match ($document->getCollection()) {
+            'videos' => new VideoModel(),
+            'videosRenditions' => new VideoRenditionModel(),
+            'videosCaptions' => new VideoCaptionModel(),
+            default => null,
+        };
+        if ($model !== null) {
+            $document = $model->filter(clone $document);
+        }
+
         $payload = $document->getArrayCopy();
         if (empty($payload['$permissions'])) {
             $payload['$permissions'] = $permissions;

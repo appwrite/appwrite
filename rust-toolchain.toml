@@ -2,5 +2,5 @@
 # Dockerfile, CI and appwrite-labs/cloud (which builds crates/ from its vendored
 # copy of this repository) need no version of their own.
 [toolchain]
-channel = "1.97.1"
+channel = "1.100.0"
 profile = "minimal"

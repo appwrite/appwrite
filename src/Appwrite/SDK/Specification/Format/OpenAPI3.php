@@ -676,7 +676,10 @@ class OpenAPI3 extends Format
 
                 $openEnum = false;
                 if ($class === \Utopia\Validator\AnyOf::class) {
-                    $validators = $param['validator']->getValidators();
+                    /** @var \Utopia\Validator\AnyOf $anyOf */
+                    $anyOf = $validator;
+                    /** @var array<mixed> $validators */
+                    $validators = $anyOf->getValidators();
                     $validator = $validators[0];
                     $class = \get_class($validator);
 

@@ -10,6 +10,7 @@ use Appwrite\Alert\Escalation;
 use Appwrite\Alert\Escalations;
 use Appwrite\Alert\Events;
 use Appwrite\Alert\Meter;
+use Appwrite\Alert\Monitors;
 use Appwrite\Alert\Quantity;
 use Appwrite\Alert\Schedules;
 use Appwrite\Alert\Severity;
@@ -41,8 +42,8 @@ use Utopia\Usage\Tenant;
 /**
  * Measures one monitor, compares it with its threshold and records the result
  * on the monitor and on the alert it opens while firing. Every change of state
- * fires a project event (`monitors.[monitorId].alerts.[alertId].firing` or
- * `.resolved`) for webhooks, functions and realtime. The organization's members
+ * fires a project event (`monitors.[monitorId].alerts.[alertId].create` or
+ * `.update`) for webhooks, functions and realtime. The organization's members
  * holding a role its `notify` names are notified by email, by push and in the console:
  * on entering `firing` (at most once per cooldown) and on returning to `ok`. A monitor
  * with an escalation notifies the escalation's steps instead, one after another
@@ -116,6 +117,7 @@ class Alerts extends Action
 
             return;
         }
+        Span::add('monitor.id', $monitor->getAttribute('monitorId') ?: $monitor->getId());
         if (!$monitor->getAttribute('enabled', false) || $monitor->getAttribute('projectInternalId') !== (string) $project->getSequence()) {
             return;
         }
@@ -305,7 +307,7 @@ class Alerts extends Action
                 '$id' => $alertId,
                 '$permissions' => [],
                 'name' => (string) $monitor->getAttribute('name'),
-                'monitorId' => $monitor->getId(),
+                'monitorId' => $monitor->getAttribute('monitorId') ?: $monitor->getId(),
                 'monitorInternalId' => (string) $monitor->getSequence(),
                 'teamId' => (string) $project->getAttribute('teamId', ''),
                 'teamInternalId' => (string) $project->getAttribute('teamInternalId', ''),
@@ -325,7 +327,7 @@ class Alerts extends Action
                 'value' => $value,
                 'peak' => $value,
                 'notifications' => 0,
-                'search' => \implode(' ', \array_filter([$alertId, $monitor->getId(), (string) $monitor->getAttribute('name'), (string) $monitor->getAttribute('metric')])),
+                'search' => \implode(' ', \array_filter([$alertId, $monitor->getAttribute('monitorId') ?: $monitor->getId(), (string) $monitor->getAttribute('name'), (string) $monitor->getAttribute('metric')])),
             ]));
         } catch (Duplicate) {
             return $dbForPlatform->getDocument('monitorAlerts', $alertId);
@@ -361,8 +363,8 @@ class Alerts extends Action
     }
 
     /**
-     * Fires the alert's project event, `monitors.[monitorId].alerts.[alertId].firing`
-     * or `.resolved`, with the alert as its payload: to the project's webhooks,
+     * Fires the alert's project event, `monitors.[monitorId].alerts.[alertId].create`
+     * when it opens or `.update` when it resolves, with the alert as its payload: to the project's webhooks,
      * the functions that listen to it, and realtime. A monitor outside a project,
      * which has no webhooks or functions, fires none.
      */
@@ -509,7 +511,7 @@ class Alerts extends Action
             'since' => $alert->isEmpty() ? null : new \DateTimeImmutable($alert->getCreatedAt()),
             'cooldown' => (int) $monitor->getAttribute('cooldown', 0),
             // The monitor's drawer, which pauses it from its header.
-            'pauseUrl' => $consoleUrl . $this->path($project) . '/monitors?monitor=' . $monitor->getId(),
+            'pauseUrl' => $consoleUrl . $this->path($project) . '/monitors?monitor=' . ($monitor->getAttribute('monitorId') ?: $monitor->getId()),
         ];
 
         foreach ($members as [$user]) {
@@ -534,7 +536,7 @@ class Alerts extends Action
                 $recipients[] = ['address' => (string) $user->getAttribute('email'), 'channel' => NOTIFICATION_TYPE_EMAIL, ...$resource];
             }
 
-            $token = $unsubscribe->token($user->getId(), $monitor->getId(), $type);
+            $token = $unsubscribe->token($user->getId(), $monitor->getAttribute('monitorId') ?: $monitor->getId(), $type, Monitors::scope($monitor));
             $email = new Email(...$notice, timeZone: $this->timeZone($user));
 
             $this->publish($publisherForNotifications, new NotificationMessage(
@@ -576,7 +578,7 @@ class Alerts extends Action
                         'severity' => $alert->getAttribute('severity') ?: Severity::Warning->value,
                         'status' => $status === Status::Firing ? State::Firing->value : State::Resolved->value,
                         'alertId' => $alert->getId(),
-                        'monitorId' => $monitor->getId(),
+                        'monitorId' => $monitor->getAttribute('monitorId') ?: $monitor->getId(),
                         'organizationId' => (string) $project->getAttribute('teamId', ''),
                         'projectId' => $project->getId(),
                         'url' => $notice['url'],
@@ -613,7 +615,9 @@ class Alerts extends Action
             return;
         }
 
-        $monitor = $dbForPlatform->getDocument('monitors', (string) $alert->getAttribute('monitorId'));
+        $monitor = $dbForPlatform->findOne('monitors', [
+            Query::equal('$sequence', [(string) $alert->getAttribute('monitorInternalId')]),
+        ]);
         if ($alert->getAttribute('status') !== State::Firing->value || $alert->getAttribute('acknowledgedAt') !== null || $monitor->isEmpty()) {
             $escalations->stop($alert);
 

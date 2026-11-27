@@ -1822,4 +1822,98 @@ export const jaAuthStorageDictionary: Record<string, string> = {
   "Couldn't load sign-ups": 'サインアップを読み込めませんでした',
   'sign-ups': 'サインアップ',
   second: '秒',
+  // Single sign-on for a team of a project
+  "Prove the domains this team owns. The team's identity providers sign in only users with an email on a verified domain.":
+    'このチームが所有するドメインを証明します。チームの ID プロバイダーは、検証済みドメインのメールアドレスを持つユーザーのみをサインインさせます。',
+  "Add the domain of your users' emails, then connect an identity provider so they sign in to your app with single sign-on.":
+    'ユーザーのメールアドレスのドメインを追加してから ID プロバイダーを接続すると、ユーザーがシングルサインオンでアプリにサインインできます。',
+  "Users with an email on it can no longer sign in through the team's identity providers. Users who already joined stay members.":
+    'このドメインのメールアドレスを持つユーザーは、チームの ID プロバイダー経由でサインインできなくなります。参加済みのユーザーはメンバーのままです。',
+  "Require SSO is on and this is the team's only verified domain: deleting it pauses Require SSO, and members keep the team's roles however they sign in.":
+    'SSO の必須化が有効で、これがチームの唯一の検証済みドメインです。削除すると SSO の必須化が一時停止され、メンバーはどの方法でサインインしてもチームのロールを保持します。',
+  "Prove this team owns this domain with a DNS record. The team's identity providers then sign in users with an email on it.":
+    'DNS レコードで、このドメインがチームのものであることを証明します。その後、チームの ID プロバイダーはこのドメインのメールアドレスを持つユーザーをサインインさせます。',
+  "Users on the team's verified domains sign in to your app through an identity provider, like Okta, Microsoft Entra ID, Google Workspace or Keycloak, and join the team with its roles.":
+    'チームの検証済みドメインのユーザーは、Okta、Microsoft Entra ID、Google Workspace、Keycloak などの ID プロバイダー経由でアプリにサインインし、そのロールでチームに参加します。',
+  "Connect an identity provider so users on the team's domains sign in to your app with single sign-on.":
+    'ID プロバイダーを接続すると、チームのドメインのユーザーがシングルサインオンでアプリにサインインできます。',
+  'Users can no longer sign in through it. Users who already joined stay members.':
+    'このプロバイダーではサインインできなくなります。参加済みのユーザーはメンバーのままです。',
+  "Require SSO is on and this is the team's only enabled identity provider: deleting it pauses Require SSO, and members keep the team's roles however they sign in.":
+    'SSO の必須化が有効で、これがチームの唯一の有効な ID プロバイダーです。削除すると SSO の必須化が一時停止され、メンバーはどの方法でサインインしてもチームのロールを保持します。',
+  'Your app can show this name when users choose how to sign in.':
+    'ユーザーがサインイン方法を選ぶときに、アプリでこの名前を表示できます。',
+  'Add at least one role.': 'ロールを1つ以上追加してください。',
+  'Roles users get in this team when they sign in through this identity provider.':
+    'この ID プロバイダー経由でサインインしたユーザーに、このチームで付与されるロールです。',
+  'A role can be at most 36 characters.': 'ロールは最大 36 文字です。',
+  'Use letters, numbers, periods, hyphens and underscores, starting with a letter or number.':
+    '英字、数字、ピリオド、ハイフン、アンダースコアを使い、先頭は英字か数字にしてください。',
+  "Members with an email on the team's verified domains keep their account, but get the team's roles only after signing in through one of its identity providers. Team owners keep their roles however they sign in, so a broken identity provider never locks the team out. Members on other domains are not affected.":
+    'チームの検証済みドメインのメールアドレスを持つメンバーは、アカウントはそのままですが、チームの ID プロバイダーのいずれかでサインインした後にのみチームのロールを得られます。チームのオーナーはどの方法でサインインしてもロールを保持するため、ID プロバイダーに問題が起きてもチームから締め出されることはありません。他のドメインのメンバーには影響しません。',
+  "Enabled - members on the team's verified domains get its roles only through single sign-on.":
+    '有効 - チームの検証済みドメインのメンバーは、シングルサインオンでのみチームのロールを得られます。',
+  "Disabled - members get the team's roles however they sign in.":
+    '無効 - メンバーはどの方法でサインインしてもチームのロールを得られます。',
+  "Members on the team's verified domains who signed in another way keep their account but lose the team's roles until they sign in through one of its identity providers. Their other teams are not affected. Team owners keep their roles, so a broken identity provider never locks the team out.":
+    '別の方法でサインインしたチームの検証済みドメインのメンバーは、アカウントはそのままですが、チームの ID プロバイダーのいずれかでサインインするまでチームのロールを失います。他のチームには影響しません。チームのオーナーはロールを保持するため、ID プロバイダーに問題が起きてもチームから締め出されることはありません。',
+  'Add sign-in to your app': 'アプリにサインインを追加',
+  'Declare the API key':
+    'API キーを宣言する',
+  'SvelteKit reads it from the environment when the app starts. Put it in .env locally.':
+    'SvelteKit はアプリの起動時に環境変数から読み込みます。ローカルでは .env に記述してください。',
+  'Turn on desugaring':
+    'desugaring を有効にする',
+  'Android only: the Appwrite SDK needs core library desugaring, or the build fails.':
+    'Android のみ: Appwrite SDK には core library desugaring が必要です。有効にしないとビルドが失敗します。',
+  'Build settings':
+    'ビルド設定',
+  'People type their work email, sign in at their identity provider and come back signed in, as members of this team. Hand the setup to your AI tool, or follow the steps.':
+    'ユーザーは仕事用のメールアドレスを入力し、ID プロバイダーでサインインして、このチームのメンバーとしてサインインした状態で戻ってきます。セットアップを AI ツールに任せるか、手順に沿って進めてください。',
+  'Find the identity providers for an email':
+    'メールアドレスの ID プロバイダーを調べる',
+  'People type their work email. None found: offer your other sign-in methods. Several: let them choose by name.':
+    'ユーザーが仕事用のメールアドレスを入力します。見つからない場合は他のサインイン方法を案内し、複数ある場合は名前で選んでもらいます。',
+  'Send the browser to the chosen one':
+    '選んだプロバイダーへブラウザーを送る',
+  'With a fresh random state, so your app only accepts sign-ins it started.':
+    '毎回新しいランダムな state を付けて、アプリが自分で開始したサインインだけを受け付けるようにします。',
+  'Create the session when it comes back':
+    '戻ってきたらセッションを作成する',
+  'The success URL gets userId, secret and state. Check the state, then trade the rest for the session.':
+    'success URL には userId、secret、state が付きます。state を確認してから、残りをセッションに交換します。',
+  'Handle the callback scheme':
+    'コールバックスキームを処理する',
+  'Android only: let flutter_web_auth_2 receive the callback. iOS needs nothing.':
+    'Android のみ: flutter_web_auth_2 がコールバックを受け取れるようにします。iOS では不要です。',
+  'Register the scheme so the system hands the callback back to the app.':
+    'システムがコールバックをアプリに返せるように、スキームを登録します。',
+  'The Custom Tab hands the callback to this activity.':
+    'Custom Tab はコールバックをこのアクティビティに渡します。',
+  'Find providers':
+    'プロバイダーを調べる',
+  'Create session':
+    'セッションを作成',
+  'Callback scheme':
+    'コールバックスキーム',
+  "Add your site as a Web platform of this project first: Appwrite only sends people back to its platforms' hostnames, and localhost.":
+    'まずサイトをこのプロジェクトの Web プラットフォームとして追加してください。Appwrite が戻り先にするのは、プラットフォームのホスト名と localhost だけです。',
+  'The server trades the token for the session with an API key that has the sessions.write scope, then keeps the session in its own cookie.':
+    'サーバーは sessions.write スコープを持つ API キーでトークンをセッションに交換し、そのセッションを自身の Cookie に保存します。',
+  'The sign-in opens in a system browser sheet and comes back to the appwrite-callback scheme, which every app of this project may use.':
+    'サインインはシステムのブラウザーシートで開き、このプロジェクトのすべてのアプリが使える appwrite-callback スキームに戻ります。',
+  'ASWebAuthenticationSession catches the appwrite-callback scheme itself, so there is nothing to register in Info.plist.':
+    'ASWebAuthenticationSession が appwrite-callback スキームを自分で受け取るため、Info.plist に登録するものはありません。',
+  'The sign-in opens in a Custom Tab and comes back to an activity that handles the appwrite-callback scheme.':
+    'サインインは Custom Tab で開き、appwrite-callback スキームを処理するアクティビティに戻ります。',
+  'Any language works: two requests and one browser redirect. With an API key, the session response includes its secret for your own cookie.':
+    'どの言語でも使えます。リクエスト 2 つとブラウザーのリダイレクト 1 つだけです。API キーを使うと、セッションのレスポンスに自分の Cookie 用の secret が含まれます。',
+  'Installation':
+    'インストール',
+  'Add to your app':
+    'アプリに追加',
+  'Select step':
+    'ステップを選択',
+  'Users can sign in through this identity provider.':
+    'ユーザーはこの ID プロバイダーでサインインできます。',
 }
