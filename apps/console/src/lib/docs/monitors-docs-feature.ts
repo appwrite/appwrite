@@ -29,9 +29,9 @@ export function isMonitorsDocsEnabled(): boolean {
  * Whether monitors docs should be treated as unavailable for route guards.
  *
  * The `alerts` flag defaults to off and is turned on through a debug profile
- * override, which lives in localStorage and isn't visible to SSR. On the
- * server, do not block so a reload doesn't bounce to /docs before the client
- * can apply the override. The docs sidebar still enforces the real flag.
+ * override, which lives in localStorage. This helper can't see it on the
+ * server, so it doesn't block there; the docs route reads the override's
+ * cookie mirror instead. The docs sidebar still enforces the real flag.
  */
 export function shouldBlockMonitorsDocs(): boolean {
   if (isMonitorsDocsEnabled()) return false

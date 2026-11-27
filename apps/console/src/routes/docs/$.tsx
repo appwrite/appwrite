@@ -1,9 +1,12 @@
 import { createFileRoute, notFound, redirect } from '@tanstack/react-router'
 import { NotFoundView } from '@/components/error/NotFound'
 import { View } from '@/components/pages/docs/View'
+import { getProfileFeaturesForCookieHeader } from '@/lib/console-profiles'
 import { getDocsMarkdownExport, getDocsPage } from '@/lib/docs/content'
 import { isFeatureGatedDocsSlugHidden } from '@/lib/docs/feature-gated-docs'
+import { isMonitorsDocsSlug } from '@/lib/docs/monitors-docs-feature'
 import { getDocsRedirectTarget } from '@/lib/docs/redirects'
+import { getProductPageFeatures } from '@/lib/products/availability-ssr'
 import { respondWithPrebuiltOrRuntime } from '@/lib/seo/export-response'
 import { generateDocsLlmsTxt } from '@/lib/seo/llms-content'
 import { trackServerPageview } from '@/lib/server-analytics'
@@ -39,7 +42,7 @@ export const Route = createFileRoute('/docs/$')({
         }
 
         const slug = splat.slice(0, -3)
-        // Match the HTML route: partners, analytics, videos, and monitors docs stay available on
+        // Match the HTML route: partners, analytics, and videos docs stay available on
         // the server until the client can apply a local override. A hard 404
         // here made `/docs/partners/...md` fail while the page itself rendered.
         // Zero docs follow the server flag: a Markdown export has no client to
@@ -51,6 +54,15 @@ export const Route = createFileRoute('/docs/$')({
             deferVideosOnServer: true,
             deferMonitorsOnServer: true,
           })
+        ) {
+          return new Response('Not found', { status: 404 })
+        }
+        // Monitors docs follow the `alerts` preview, which reaches the server
+        // through the debug profile cookie.
+        if (
+          isMonitorsDocsSlug(slug) &&
+          !getProfileFeaturesForCookieHeader(request.headers.get('cookie'))
+            .alerts
         ) {
           return new Response('Not found', { status: 404 })
         }
@@ -84,6 +96,11 @@ export const Route = createFileRoute('/docs/$')({
         deferZeroOnServer: true,
       })
     ) {
+      throw redirect({ to: '/docs', replace: true })
+    }
+    // The server reads the `alerts` preview from the debug profile cookie, so
+    // it doesn't render Monitors docs for anyone without the preview.
+    if (isMonitorsDocsSlug(splat) && !getProductPageFeatures().alerts) {
       throw redirect({ to: '/docs', replace: true })
     }
   },
