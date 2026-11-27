@@ -13,6 +13,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
+use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
@@ -93,15 +94,24 @@ class Delete extends Action
             && $membership->getAttribute('confirm', false)
             && \in_array('owner', $membership->getAttribute('roles', []), true);
 
-        $dbForProject->withTransaction(function () use ($dbForProject, $membership, $team, $isConfirmedOwner) {
+        $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $membership, $team, $isConfirmedOwner) {
             if ($isConfirmedOwner) {
                 $dbForProject->getDocument('teams', $team->getId(), forUpdate: true);
             }
 
             try {
-                $dbForProject->deleteDocument('memberships', $membership->getId());
+                $deleted = $dbForProject->deleteDocument('memberships', $membership->getId());
             } catch (AuthorizationException $exception) {
                 throw new Exception(Exception::USER_UNAUTHORIZED);
+            }
+
+            // Only the request that removed the row uncounts it, so concurrent deletes count once
+            if ($deleted && $membership->getAttribute('confirm')) {
+                try {
+                    $authorization->skip(fn () => $dbForProject->decreaseDocumentAttribute('teams', $team->getId(), 'total', 1, 0));
+                } catch (LimitException) {
+                    // Already 0 after drift; the removal must still go through
+                }
             }
 
             if (!$isConfirmedOwner) {
@@ -141,10 +151,6 @@ class Delete extends Action
                     'userInternalId' => $successor->getAttribute('userInternalId'),
                 ]));
             }
-        }
-
-        if ($membership->getAttribute('confirm')) { // Count only confirmed members
-            $authorization->skip(fn () => $dbForProject->decreaseDocumentAttribute('teams', $team->getId(), 'total', 1, 0));
         }
 
         $queueForEvents
