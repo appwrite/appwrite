@@ -1,0 +1,14 @@
+{
+    "errors": [
+        {
+            "id": "0c5a5f53-6b3e-4b0e-9a63-6f2a2f1d0402",
+            "status": "409",
+            "code": "ENTITY_ERROR.RELATIONSHIP.INVALID",
+            "title": "The provided entity includes a relationship with an invalid value",
+            "detail": "The build is missing export compliance information.",
+            "source": {
+                "pointer": "/data/relationships/build"
+            }
+        }
+    ]
+}

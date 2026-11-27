@@ -1,0 +1,27 @@
+{
+    "data": [
+        {
+            "type": "builds",
+            "id": "a1b2c3d4-0000-4000-8000-000000000042",
+            "attributes": {
+                "version": "42",
+                "processingState": "VALID",
+                "usesNonExemptEncryption": null,
+                "buildAudienceType": "APP_STORE_ELIGIBLE",
+                "expired": false
+            },
+            "links": {
+                "self": "https://api.appstoreconnect.apple.com/v1/builds/a1b2c3d4-0000-4000-8000-000000000042"
+            }
+        }
+    ],
+    "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/builds"
+    },
+    "meta": {
+        "paging": {
+            "total": 1,
+            "limit": 1
+        }
+    }
+}

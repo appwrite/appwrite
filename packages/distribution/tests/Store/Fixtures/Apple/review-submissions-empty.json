@@ -1,0 +1,12 @@
+{
+    "data": [],
+    "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/reviewSubmissions"
+    },
+    "meta": {
+        "paging": {
+            "total": 0,
+            "limit": 5
+        }
+    }
+}

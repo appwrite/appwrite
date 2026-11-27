@@ -1,0 +1,50 @@
+{
+    "data": {
+        "type": "appStoreVersions",
+        "id": "b7c1d2e3-1111-4111-8111-000000000002",
+        "attributes": {
+            "platform": "IOS",
+            "versionString": "1.4.0",
+            "appStoreState": "DEVELOPER_REJECTED",
+            "appVersionState": "DEVELOPER_REJECTED",
+            "copyright": null,
+            "reviewType": "APP_STORE",
+            "releaseType": "AFTER_APPROVAL",
+            "earliestReleaseDate": null,
+            "downloadable": true,
+            "createdDate": "2026-11-20T09:15:00-08:00"
+        },
+        "relationships": {
+            "app": {
+                "links": {
+                    "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersions/b7c1d2e3-1111-4111-8111-000000000002/relationships/app",
+                    "related": "https://api.appstoreconnect.apple.com/v1/appStoreVersions/b7c1d2e3-1111-4111-8111-000000000002/app"
+                }
+            },
+            "build": {
+                "links": {
+                    "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersions/b7c1d2e3-1111-4111-8111-000000000002/relationships/build",
+                    "related": "https://api.appstoreconnect.apple.com/v1/appStoreVersions/b7c1d2e3-1111-4111-8111-000000000002/build"
+                }
+            },
+            "appStoreVersionPhasedRelease": {
+                "links": {
+                    "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersions/b7c1d2e3-1111-4111-8111-000000000002/relationships/appStoreVersionPhasedRelease",
+                    "related": "https://api.appstoreconnect.apple.com/v1/appStoreVersions/b7c1d2e3-1111-4111-8111-000000000002/appStoreVersionPhasedRelease"
+                }
+            },
+            "appStoreVersionLocalizations": {
+                "links": {
+                    "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersions/b7c1d2e3-1111-4111-8111-000000000002/relationships/appStoreVersionLocalizations",
+                    "related": "https://api.appstoreconnect.apple.com/v1/appStoreVersions/b7c1d2e3-1111-4111-8111-000000000002/appStoreVersionLocalizations"
+                }
+            }
+        },
+        "links": {
+            "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersions/b7c1d2e3-1111-4111-8111-000000000002"
+        }
+    },
+    "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersions/b7c1d2e3-1111-4111-8111-000000000002"
+    }
+}

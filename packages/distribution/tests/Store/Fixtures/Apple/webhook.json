@@ -1,0 +1,29 @@
+{
+    "data": {
+        "type": "webhooks",
+        "id": "9c3e4f6a-2b1d-4e8f-a5c7-1d2e3f4a5b6c",
+        "attributes": {
+            "enabled": true,
+            "eventTypes": [
+                "APP_STORE_VERSION_APP_VERSION_STATE_UPDATED",
+                "BUILD_UPLOAD_STATE_UPDATED",
+                "BUILD_BETA_DETAIL_EXTERNAL_BUILD_STATE_UPDATED"
+            ],
+            "name": "Appwrite",
+            "url": "https://cloud.example.io/v1/distribution/hooks/apple/6450000001"
+        },
+        "relationships": {
+            "app": {
+                "links": {
+                    "self": "https://api.appstoreconnect.apple.com/v1/webhooks/9c3e4f6a-2b1d-4e8f-a5c7-1d2e3f4a5b6c/relationships/app"
+                }
+            }
+        },
+        "links": {
+            "self": "https://api.appstoreconnect.apple.com/v1/webhooks/9c3e4f6a-2b1d-4e8f-a5c7-1d2e3f4a5b6c"
+        }
+    },
+    "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/webhooks"
+    }
+}

@@ -1,0 +1,46 @@
+{
+    "data": [
+        {
+            "type": "webhooks",
+            "id": "9c3e4f6a-2b1d-4e8f-a5c7-1d2e3f4a5b6c",
+            "attributes": {
+                "enabled": true,
+                "eventTypes": [
+                    "APP_STORE_VERSION_APP_VERSION_STATE_UPDATED",
+                    "BUILD_UPLOAD_STATE_UPDATED",
+                    "BUILD_BETA_DETAIL_EXTERNAL_BUILD_STATE_UPDATED"
+                ],
+                "name": "Appwrite",
+                "url": "https://cloud.example.io/v1/distribution/hooks/apple/6450000001"
+            },
+            "links": {
+                "self": "https://api.appstoreconnect.apple.com/v1/webhooks/9c3e4f6a-2b1d-4e8f-a5c7-1d2e3f4a5b6c"
+            }
+        },
+        {
+            "type": "webhooks",
+            "id": "1f2e3d4c-5b6a-4978-8a1b-2c3d4e5f6a7b",
+            "attributes": {
+                "enabled": false,
+                "eventTypes": [
+                    "BUILD_UPLOAD_STATE_UPDATED",
+                    42
+                ],
+                "name": "Legacy",
+                "url": "https://hooks.example.io/apple"
+            },
+            "links": {
+                "self": "https://api.appstoreconnect.apple.com/v1/webhooks/1f2e3d4c-5b6a-4978-8a1b-2c3d4e5f6a7b"
+            }
+        }
+    ],
+    "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/apps/6450000001/webhooks?limit=200"
+    },
+    "meta": {
+        "paging": {
+            "total": 2,
+            "limit": 200
+        }
+    }
+}

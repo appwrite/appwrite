@@ -1,0 +1,15 @@
+{
+    "data": {
+        "type": "reviewSubmissionItems",
+        "id": "e0f4a5b6-4444-4444-8444-000000000001",
+        "attributes": {
+            "state": "READY_FOR_REVIEW"
+        },
+        "links": {
+            "self": "https://api.appstoreconnect.apple.com/v1/reviewSubmissionItems/e0f4a5b6-4444-4444-8444-000000000001"
+        }
+    },
+    "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/reviewSubmissionItems"
+    }
+}

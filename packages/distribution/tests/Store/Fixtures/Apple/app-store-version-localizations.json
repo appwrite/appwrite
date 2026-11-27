@@ -1,0 +1,45 @@
+{
+    "data": [
+        {
+            "type": "appStoreVersionLocalizations",
+            "id": "f1a5b6c7-5555-4555-8555-000000000001",
+            "attributes": {
+                "description": "An example app.",
+                "locale": "en-US",
+                "keywords": "example",
+                "marketingUrl": null,
+                "promotionalText": null,
+                "supportUrl": "https://example.io/support",
+                "whatsNew": "Bug fixes."
+            },
+            "links": {
+                "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersionLocalizations/f1a5b6c7-5555-4555-8555-000000000001"
+            }
+        },
+        {
+            "type": "appStoreVersionLocalizations",
+            "id": "f1a5b6c7-5555-4555-8555-000000000002",
+            "attributes": {
+                "description": "An example app.",
+                "locale": "fr-FR",
+                "keywords": "example",
+                "marketingUrl": null,
+                "promotionalText": null,
+                "supportUrl": "https://example.io/support",
+                "whatsNew": "Corrections de bugs et améliorations."
+            },
+            "links": {
+                "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersionLocalizations/f1a5b6c7-5555-4555-8555-000000000002"
+            }
+        }
+    ],
+    "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersions/b7c1d2e3-1111-4111-8111-000000000001/appStoreVersionLocalizations"
+    },
+    "meta": {
+        "paging": {
+            "total": 2,
+            "limit": 5
+        }
+    }
+}

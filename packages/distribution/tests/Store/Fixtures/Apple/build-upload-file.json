@@ -1,0 +1,71 @@
+{
+    "data": {
+        "type": "buildUploadFiles",
+        "id": "f2a9c4e6-1b3d-4f7a-8c5e-9d0b2a4c6e18",
+        "attributes": {
+            "assetDeliveryState": {
+                "state": "AWAITING_UPLOAD",
+                "errors": [],
+                "warnings": []
+            },
+            "assetToken": "Upload42/v4/00/aa/bb/ipa",
+            "assetType": "ASSET",
+            "fileName": "App.ipa",
+            "fileSize": 10,
+            "sourceFileChecksums": null,
+            "uti": "com.apple.ipa",
+            "uploadOperations": [
+                {
+                    "method": "PUT",
+                    "url": "https://storage.test/apple/upload/f2a9c4e6-1b3d-4f7a-8c5e-9d0b2a4c6e18/2?X-Amz-Expires=604800&X-Amz-Signature=5e2f",
+                    "offset": 6,
+                    "length": 4,
+                    "partNumber": 2,
+                    "expiration": "2099-01-01T00:00:00.000Z",
+                    "requestHeaders": [
+                        {
+                            "name": "Content-Type",
+                            "value": "application/octet-stream"
+                        },
+                        {
+                            "name": "x-apple-upload-part",
+                            "value": "part-2"
+                        }
+                    ]
+                },
+                {
+                    "method": "PUT",
+                    "url": "https://storage.test/apple/upload/f2a9c4e6-1b3d-4f7a-8c5e-9d0b2a4c6e18/1?X-Amz-Expires=604800&X-Amz-Signature=5e1f",
+                    "offset": 0,
+                    "length": 6,
+                    "partNumber": 1,
+                    "expiration": "2099-01-01T00:00:00.000Z",
+                    "requestHeaders": [
+                        {
+                            "name": "Content-Type",
+                            "value": "application/octet-stream"
+                        },
+                        {
+                            "name": "x-apple-upload-part",
+                            "value": "part-1"
+                        }
+                    ]
+                }
+            ]
+        },
+        "relationships": {
+            "buildUpload": {
+                "data": {
+                    "type": "buildUploads",
+                    "id": "b7d0e2a1-5c3f-4e8a-9b1d-2f6c8a0e4d17"
+                }
+            }
+        },
+        "links": {
+            "self": "https://api.appstoreconnect.apple.com/v1/buildUploadFiles/f2a9c4e6-1b3d-4f7a-8c5e-9d0b2a4c6e18"
+        }
+    },
+    "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/buildUploadFiles/f2a9c4e6-1b3d-4f7a-8c5e-9d0b2a4c6e18"
+    }
+}

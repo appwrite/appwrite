@@ -1,0 +1,59 @@
+{
+    "data": [
+        {
+            "type": "reviewSubmissions",
+            "id": "d9e3f4a5-3333-4333-8333-000000000002",
+            "attributes": {
+                "platform": "IOS",
+                "submittedDate": null,
+                "state": "READY_FOR_REVIEW"
+            },
+            "relationships": {
+                "app": {
+                    "links": {
+                        "self": "https://api.appstoreconnect.apple.com/v1/reviewSubmissions/d9e3f4a5-3333-4333-8333-000000000002/relationships/app",
+                        "related": "https://api.appstoreconnect.apple.com/v1/reviewSubmissions/d9e3f4a5-3333-4333-8333-000000000002/app"
+                    }
+                },
+                "items": {
+                    "links": {
+                        "self": "https://api.appstoreconnect.apple.com/v1/reviewSubmissions/d9e3f4a5-3333-4333-8333-000000000002/relationships/items",
+                        "related": "https://api.appstoreconnect.apple.com/v1/reviewSubmissions/d9e3f4a5-3333-4333-8333-000000000002/items"
+                    },
+                    "data": []
+                },
+                "appStoreVersionForReview": {
+                    "links": {
+                        "self": "https://api.appstoreconnect.apple.com/v1/reviewSubmissions/d9e3f4a5-3333-4333-8333-000000000002/relationships/appStoreVersionForReview",
+                        "related": "https://api.appstoreconnect.apple.com/v1/reviewSubmissions/d9e3f4a5-3333-4333-8333-000000000002/appStoreVersionForReview"
+                    },
+                    "data": null
+                },
+                "submittedByActor": {
+                    "links": {
+                        "self": "https://api.appstoreconnect.apple.com/v1/reviewSubmissions/d9e3f4a5-3333-4333-8333-000000000002/relationships/submittedByActor",
+                        "related": "https://api.appstoreconnect.apple.com/v1/reviewSubmissions/d9e3f4a5-3333-4333-8333-000000000002/submittedByActor"
+                    }
+                },
+                "lastUpdatedByActor": {
+                    "links": {
+                        "self": "https://api.appstoreconnect.apple.com/v1/reviewSubmissions/d9e3f4a5-3333-4333-8333-000000000002/relationships/lastUpdatedByActor",
+                        "related": "https://api.appstoreconnect.apple.com/v1/reviewSubmissions/d9e3f4a5-3333-4333-8333-000000000002/lastUpdatedByActor"
+                    }
+                }
+            },
+            "links": {
+                "self": "https://api.appstoreconnect.apple.com/v1/reviewSubmissions/d9e3f4a5-3333-4333-8333-000000000002"
+            }
+        }
+    ],
+    "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/reviewSubmissions"
+    },
+    "meta": {
+        "paging": {
+            "total": 1,
+            "limit": 5
+        }
+    }
+}

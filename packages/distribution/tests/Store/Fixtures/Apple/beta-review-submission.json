@@ -1,0 +1,24 @@
+{
+    "data": {
+        "type": "betaAppReviewSubmissions",
+        "id": "e8f7a6b5-0000-4000-8000-000000000301",
+        "attributes": {
+            "betaReviewState": "WAITING_FOR_REVIEW",
+            "submittedDate": "2026-11-21T09:30:00-08:00"
+        },
+        "relationships": {
+            "build": {
+                "links": {
+                    "self": "https://api.appstoreconnect.apple.com/v1/betaAppReviewSubmissions/e8f7a6b5-0000-4000-8000-000000000301/relationships/build",
+                    "related": "https://api.appstoreconnect.apple.com/v1/betaAppReviewSubmissions/e8f7a6b5-0000-4000-8000-000000000301/build"
+                }
+            }
+        },
+        "links": {
+            "self": "https://api.appstoreconnect.apple.com/v1/betaAppReviewSubmissions/e8f7a6b5-0000-4000-8000-000000000301"
+        }
+    },
+    "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/builds/b7e1c2d3-0000-4000-8000-000000000101/betaAppReviewSubmission"
+    }
+}

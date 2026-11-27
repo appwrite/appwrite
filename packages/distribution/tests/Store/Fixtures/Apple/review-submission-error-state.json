@@ -1,0 +1,23 @@
+{
+    "errors": [
+        {
+            "id": "7a1b2c3d-6666-4666-8666-000000000002",
+            "status": "409",
+            "code": "STATE_ERROR",
+            "title": "The request cannot be fulfilled because of the state of another resource.",
+            "detail": "Submit for review errors found.",
+            "meta": {
+                "associatedErrors": {
+                    "/v1/appScreenshots/": [
+                        {
+                            "id": "7a1b2c3d-6666-4666-8666-000000000003",
+                            "status": "409",
+                            "code": "STATE_ERROR.SCREENSHOT_REQUIRED.APP_IPHONE_67",
+                            "title": "App screenshot missing (APP_IPHONE_67)."
+                        }
+                    ]
+                }
+            }
+        }
+    ]
+}
