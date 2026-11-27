@@ -31,6 +31,10 @@ use Utopia\Detector\Detection\Framework\Svelte;
 use Utopia\Detector\Detection\Framework\SvelteKit;
 use Utopia\Detector\Detection\Framework\TanStackStart;
 use Utopia\Detector\Detection\Framework\Vue;
+use Utopia\Detector\Detection\Mobile\Android as MobileAndroid;
+use Utopia\Detector\Detection\Mobile\Flutter as MobileFlutter;
+use Utopia\Detector\Detection\Mobile\Ios as MobileIos;
+use Utopia\Detector\Detection\Mobile\ReactNative as MobileReactNative;
 use Utopia\Detector\Detection\Packager\NPM;
 use Utopia\Detector\Detection\Packager\PNPM;
 use Utopia\Detector\Detection\Packager\Yarn;
@@ -46,19 +50,36 @@ use Utopia\Detector\Detection\Runtime\Python;
 use Utopia\Detector\Detection\Runtime\Ruby;
 use Utopia\Detector\Detection\Runtime\Swift;
 use Utopia\Detector\Detector\Framework;
+use Utopia\Detector\Detector\Mobile as MobileDetector;
 use Utopia\Detector\Detector\Packager;
 use Utopia\Detector\Detector\Runtime;
 use Utopia\Detector\Detector\Strategy;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\System\System;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
+use Utopia\VCS\Adapter\Git;
 use Utopia\VCS\Exception\FileNotFound;
 use Utopia\VCS\Exception\RepositoryNotFound;
 
 class Create extends Action
 {
     use HTTP;
+
+    private const array MANIFESTS = [
+        'package.json' => ['package.json' => MobileDetector::INPUT_PACKAGES],
+        'pubspec.yaml' => ['pubspec.yaml' => MobileDetector::INPUT_PACKAGES],
+        'build.gradle' => ['build.gradle' => MobileDetector::INPUT_GRADLE],
+        'build.gradle.kts' => ['build.gradle.kts' => MobileDetector::INPUT_GRADLE],
+        'settings.gradle' => ['settings.gradle' => MobileDetector::INPUT_GRADLE],
+        'settings.gradle.kts' => ['settings.gradle.kts' => MobileDetector::INPUT_GRADLE],
+        'app' => [
+            'app/build.gradle' => MobileDetector::INPUT_GRADLE,
+            'app/build.gradle.kts' => MobileDetector::INPUT_GRADLE,
+        ],
+        'gradle' => ['gradle/libs.versions.toml' => MobileDetector::INPUT_GRADLE],
+    ];
 
     public static function getName()
     {
@@ -67,6 +88,10 @@ class Create extends Action
 
     public function __construct()
     {
+        // Mobile detection is offered only while the operator enables Distribution
+        $distribution = System::getEnv('_APP_DISTRIBUTION', 'disabled') === 'enabled';
+        $types = ['runtime', 'framework', ...($distribution ? ['distribution'] : [])];
+
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
             ->setHttpPath('/v1/vcs/github/installations/:installationId/detections')
@@ -87,13 +112,14 @@ class Create extends Action
                         model: [
                             Response::MODEL_DETECTION_RUNTIME,
                             Response::MODEL_DETECTION_FRAMEWORK,
+                            ...($distribution ? [Response::MODEL_DETECTION_DISTRIBUTION] : []),
                         ],
                     ),
                 ]
             ))
             ->param('installationId', '', new Text(256), 'Installation Id')
             ->param('providerRepositoryId', '', new Text(256), 'Repository Id')
-            ->param('type', '', new WhiteList(['runtime', 'framework']), 'Detector type. Must be one of the following: runtime, framework', enum: new Enum(name: 'VCSDetectionType'))
+            ->param('type', '', new WhiteList($types), 'Detector type. Must be one of the following: ' . \implode(', ', $types), enum: new Enum(name: 'VCSDetectionType'))
             ->param('providerRootDirectory', '', new Directory(256), 'Path to Root Directory', true)
             ->inject('vcsFactory')
             ->inject('installationTokens')
@@ -140,7 +166,6 @@ class Create extends Action
 
         $files = $vcs->listRepositoryContents($owner, $repositoryName, $providerRootDirectory);
         $files = \array_column($files, 'name');
-        $languages = $vcs->listRepositoryLanguages($owner, $repositoryName);
 
         $detector = new Packager();
         foreach ($files as $file) {
@@ -211,7 +236,12 @@ class Create extends Action
                 $framework = 'other';
             }
             $output->setAttribute('framework', $framework);
+        } elseif ($type === 'distribution') {
+            $output = new Document([
+                'framework' => $this->detectMobile($vcs, $owner, $repositoryName, $providerRootDirectory, $files),
+            ]);
         } else {
+            $languages = $vcs->listRepositoryLanguages($owner, $repositoryName);
             $output = new Document([
                 'runtime' => '',
                 'commands' => '',
@@ -320,6 +350,44 @@ class Create extends Action
         $output->setAttribute('type', $type);
         $output->setAttribute('variables', $variables);
 
-        $response->dynamic($output, $type === 'framework' ? Response::MODEL_DETECTION_FRAMEWORK : Response::MODEL_DETECTION_RUNTIME);
+        $response->dynamic($output, match ($type) {
+            'framework' => Response::MODEL_DETECTION_FRAMEWORK,
+            'distribution' => Response::MODEL_DETECTION_DISTRIBUTION,
+            default => Response::MODEL_DETECTION_RUNTIME,
+        });
+    }
+
+    /**
+     * @param array<string> $files
+     */
+    private function detectMobile(Git $vcs, string $owner, string $repositoryName, string $providerRootDirectory, array $files): string
+    {
+        $detector = new MobileDetector();
+        foreach ($files as $file) {
+            $detector->addInput($file, MobileDetector::INPUT_FILE);
+        }
+
+        foreach (self::MANIFESTS as $entry => $manifests) {
+            if (!\in_array($entry, $files, true)) {
+                continue;
+            }
+
+            foreach ($manifests as $path => $input) {
+                try {
+                    $contentResponse = $vcs->getRepositoryContent($owner, $repositoryName, \rtrim($providerRootDirectory, '/') . '/' . $path);
+                    $detector->addInput($contentResponse['content'] ?? '', $input);
+                } catch (FileNotFound) {
+                    continue;
+                }
+            }
+        }
+
+        $detector
+            ->addOption(new MobileFlutter())
+            ->addOption(new MobileReactNative())
+            ->addOption(new MobileAndroid())
+            ->addOption(new MobileIos());
+
+        return $detector->detect()?->getName() ?? '';
     }
 }

@@ -1982,7 +1982,18 @@
             "appId",
             "name",
             "framework",
-            "enabled"
+            "enabled",
+            "installationId",
+            "providerRepositoryId",
+            "providerBranch",
+            "providerSilentMode",
+            "providerRootDirectory",
+            "providerBranches",
+            "providerPaths",
+            "providerTags",
+            "providerComments",
+            "providerDeployments",
+            "providerStatuses"
         ],
         "distribution.createAppleConnection": [
             "connectionId",
@@ -2154,7 +2165,18 @@
             "appId",
             "name",
             "framework",
-            "enabled"
+            "enabled",
+            "installationId",
+            "providerRepositoryId",
+            "providerBranch",
+            "providerSilentMode",
+            "providerRootDirectory",
+            "providerBranches",
+            "providerPaths",
+            "providerTags",
+            "providerComments",
+            "providerDeployments",
+            "providerStatuses"
         ],
         "distribution.updateAppleConnection": [
             "connectionId",
@@ -6779,7 +6801,18 @@
             "appId",
             "name",
             "framework",
-            "enabled"
+            "enabled",
+            "installationId",
+            "providerRepositoryId",
+            "providerBranch",
+            "providerSilentMode",
+            "providerRootDirectory",
+            "providerBranches",
+            "providerPaths",
+            "providerTags",
+            "providerComments",
+            "providerDeployments",
+            "providerStatuses"
         ],
         "distribution.createAppleConnection": [
             "connectionId",
@@ -6951,7 +6984,18 @@
             "appId",
             "name",
             "framework",
-            "enabled"
+            "enabled",
+            "installationId",
+            "providerRepositoryId",
+            "providerBranch",
+            "providerSilentMode",
+            "providerRootDirectory",
+            "providerBranches",
+            "providerPaths",
+            "providerTags",
+            "providerComments",
+            "providerDeployments",
+            "providerStatuses"
         ],
         "distribution.updateAppleConnection": [
             "connectionId",

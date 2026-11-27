@@ -165,7 +165,28 @@ class Create extends Action
                 if (!$project->isEmpty()) {
                     $dbForProject = $getProjectDB($project);
 
-                    foreach (['functions', 'sites'] as $collection) {
+                    foreach (['functions', 'sites', 'distributionApps'] as $collection) {
+                        if ($collection === 'distributionApps' && $authorization->skip(fn () => $dbForProject->findCollection($collection)) === null) {
+                            continue;
+                        }
+
+                        $changes = [
+                            'installationId' => '',
+                            'installationInternalId' => '',
+                            'providerRepositoryId' => '',
+                            'providerBranch' => '',
+                            'providerSilentMode' => false,
+                            'providerRootDirectory' => '',
+                            'repositoryId' => '',
+                            'repositoryInternalId' => '',
+                        ];
+
+                        if ($collection === 'distributionApps') {
+                            $changes['providerBranches'] = [];
+                            $changes['providerPaths'] = [];
+                            $changes['providerTags'] = [];
+                        }
+
                         $cursor = null;
                         do {
                             $queries = [
@@ -178,16 +199,7 @@ class Create extends Action
                             $resources = $authorization->skip(fn () => $dbForProject->find($collection, $queries));
 
                             foreach ($resources as $resource) {
-                                $authorization->skip(fn () => $dbForProject->updateDocument($collection, $resource->getId(), new Document([
-                                    'installationId' => '',
-                                    'installationInternalId' => '',
-                                    'providerRepositoryId' => '',
-                                    'providerBranch' => '',
-                                    'providerSilentMode' => false,
-                                    'providerRootDirectory' => '',
-                                    'repositoryId' => '',
-                                    'repositoryInternalId' => '',
-                                ])));
+                                $authorization->skip(fn () => $dbForProject->updateDocument($collection, $resource->getId(), new Document($changes)));
                             }
 
                             $cursor = count($resources) === 1000 ? $resources[array_key_last($resources)] : null;

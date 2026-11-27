@@ -32,6 +32,10 @@ use Utopia\Detector\Detection\Framework\Svelte;
 use Utopia\Detector\Detection\Framework\SvelteKit;
 use Utopia\Detector\Detection\Framework\TanStackStart;
 use Utopia\Detector\Detection\Framework\Vue;
+use Utopia\Detector\Detection\Mobile\Android as MobileAndroid;
+use Utopia\Detector\Detection\Mobile\Flutter as MobileFlutter;
+use Utopia\Detector\Detection\Mobile\Ios as MobileIos;
+use Utopia\Detector\Detection\Mobile\ReactNative as MobileReactNative;
 use Utopia\Detector\Detection\Packager\NPM;
 use Utopia\Detector\Detection\Packager\PNPM;
 use Utopia\Detector\Detection\Packager\Yarn;
@@ -47,15 +51,18 @@ use Utopia\Detector\Detection\Runtime\Python;
 use Utopia\Detector\Detection\Runtime\Ruby;
 use Utopia\Detector\Detection\Runtime\Swift;
 use Utopia\Detector\Detector\Framework;
+use Utopia\Detector\Detector\Mobile as MobileDetector;
 use Utopia\Detector\Detector\Packager;
 use Utopia\Detector\Detector\Runtime;
 use Utopia\Detector\Detector\Strategy;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Query\Method as QueryMethod;
+use Utopia\System\System;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
+use Utopia\VCS\Adapter\Git;
 use Utopia\VCS\Exception\FileNotFound;
 
 use function Swoole\Coroutine\batch;
@@ -64,6 +71,20 @@ class XList extends Action
 {
     use HTTP;
 
+    private const array MANIFESTS = [
+        'package.json' => ['package.json' => MobileDetector::INPUT_PACKAGES],
+        'pubspec.yaml' => ['pubspec.yaml' => MobileDetector::INPUT_PACKAGES],
+        'build.gradle' => ['build.gradle' => MobileDetector::INPUT_GRADLE],
+        'build.gradle.kts' => ['build.gradle.kts' => MobileDetector::INPUT_GRADLE],
+        'settings.gradle' => ['settings.gradle' => MobileDetector::INPUT_GRADLE],
+        'settings.gradle.kts' => ['settings.gradle.kts' => MobileDetector::INPUT_GRADLE],
+        'app' => [
+            'app/build.gradle' => MobileDetector::INPUT_GRADLE,
+            'app/build.gradle.kts' => MobileDetector::INPUT_GRADLE,
+        ],
+        'gradle' => ['gradle/libs.versions.toml' => MobileDetector::INPUT_GRADLE],
+    ];
+
     public static function getName()
     {
         return 'listRepositories';
@@ -71,6 +92,10 @@ class XList extends Action
 
     public function __construct()
     {
+        // Mobile detection is offered only while the operator enables Distribution
+        $distribution = System::getEnv('_APP_DISTRIBUTION', 'disabled') === 'enabled';
+        $types = ['runtime', 'framework', ...($distribution ? ['distribution'] : [])];
+
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/vcs/github/installations/:installationId/providerRepositories')
@@ -90,12 +115,13 @@ class XList extends Action
                         model: [
                             Response::MODEL_PROVIDER_REPOSITORY_RUNTIME_LIST,
                             Response::MODEL_PROVIDER_REPOSITORY_FRAMEWORK_LIST,
+                            ...($distribution ? [Response::MODEL_PROVIDER_REPOSITORY_DISTRIBUTION_LIST] : []),
                         ],
                     ),
                 ]
             ))
             ->param('installationId', '', new Text(256), 'Installation Id')
-            ->param('type', '', new WhiteList(['runtime', 'framework']), 'Detector type. Must be one of the following: runtime, framework', enum: new Enum(name: 'VCSDetectionType'))
+            ->param('type', '', new WhiteList($types), 'Detector type. Must be one of the following: ' . \implode(', ', $types), enum: new Enum(name: 'VCSDetectionType'))
             ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
             ->param('queries', [], new VcsRepositories(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit, offset, and equal on namespace.', true)
             ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
@@ -229,6 +255,8 @@ class XList extends Action
                         $framework = 'other';
                     }
                     $repo['framework'] = $framework;
+                } elseif ($type === 'distribution') {
+                    $repo['framework'] = $this->detectMobile($vcs, $repo['organization'], $repo['name'], $files);
                 } else {
                     $languages = $vcs->listRepositoryLanguages($repo['organization'], $repo['name']);
 
@@ -331,8 +359,50 @@ class XList extends Action
 
         $response->dynamic(new Document([
             'type' => $type,
-            $type === 'framework' ? 'frameworkProviderRepositories' : 'runtimeProviderRepositories' => $repos,
+            match ($type) {
+                'framework' => 'frameworkProviderRepositories',
+                'distribution' => 'distributionProviderRepositories',
+                default => 'runtimeProviderRepositories',
+            } => $repos,
             'total' => $includeTotal ? $total : 0,
-        ]), ($type === 'framework') ? Response::MODEL_PROVIDER_REPOSITORY_FRAMEWORK_LIST : Response::MODEL_PROVIDER_REPOSITORY_RUNTIME_LIST);
+        ]), match ($type) {
+            'framework' => Response::MODEL_PROVIDER_REPOSITORY_FRAMEWORK_LIST,
+            'distribution' => Response::MODEL_PROVIDER_REPOSITORY_DISTRIBUTION_LIST,
+            default => Response::MODEL_PROVIDER_REPOSITORY_RUNTIME_LIST,
+        });
+    }
+
+    /**
+     * @param array<string> $files
+     */
+    private function detectMobile(Git $vcs, string $owner, string $repositoryName, array $files): string
+    {
+        $detector = new MobileDetector();
+        foreach ($files as $file) {
+            $detector->addInput($file, MobileDetector::INPUT_FILE);
+        }
+
+        foreach (self::MANIFESTS as $entry => $manifests) {
+            if (!\in_array($entry, $files, true)) {
+                continue;
+            }
+
+            foreach ($manifests as $path => $input) {
+                try {
+                    $contentResponse = $vcs->getRepositoryContent($owner, $repositoryName, $path);
+                    $detector->addInput($contentResponse['content'] ?? '', $input);
+                } catch (FileNotFound) {
+                    continue;
+                }
+            }
+        }
+
+        $detector
+            ->addOption(new MobileFlutter())
+            ->addOption(new MobileReactNative())
+            ->addOption(new MobileAndroid())
+            ->addOption(new MobileIos());
+
+        return $detector->detect()?->getName() ?? '';
     }
 }

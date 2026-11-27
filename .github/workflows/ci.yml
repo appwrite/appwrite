@@ -878,7 +878,7 @@ jobs:
           fi
 
           # Gitea runs alongside Appwrite only where VCS tests need it.
-          if [ "$SERVICE" = "VCSGitea" ]; then
+          if [ "$SERVICE" = "VCSGitea" ] || [ "$SERVICE" = "Distribution" ]; then
             COMPOSE_PROFILES="${COMPOSE_PROFILES},gitea"
           fi
 
@@ -904,7 +904,7 @@ jobs:
           token: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Provision Gitea
-        if: matrix.service.name == 'VCSGitea'
+        if: matrix.service.name == 'VCSGitea' || matrix.service.name == 'Distribution'
         timeout-minutes: 5
         run: |
           docker compose up -d --wait gitea
