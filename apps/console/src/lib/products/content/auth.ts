@@ -80,7 +80,7 @@ export const authProductContent: ProductPageContent = {
     {
       question: 'Does Appwrite support single sign-on (SSO) for business customers?',
       answer:
-        'Yes, on Appwrite Cloud with the Single sign-on add-on. Each customer is a team in your project. The team verifies its email domains with a DNS record and connects its own OpenID Connect identity provider, such as Okta, Microsoft Entra ID, or Google Workspace. Users who enter a work email on those domains sign in through their company\'s identity provider and join the team with the roles you chose. A team can also require SSO for its members.',
+        'Yes, on Appwrite Cloud with the Single sign-on add-on. Each company you sell to is a team in your project, with its own verified email domains and its own OpenID Connect identity providers, such as Okta, Microsoft Entra ID, or Google Workspace. Your app\'s SSO sign-in page sends employees to their company\'s identity provider, and Appwrite creates or links their account and adds them to the team with the roles you chose. A team can also require SSO for its members.',
       links: [{ label: 'Single sign-on', href: '/docs/products/auth/sso' }],
     },
     {
