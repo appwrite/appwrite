@@ -37,6 +37,13 @@ final class MemoryDatabase extends Database
      */
     public ?\Closure $onUpdates = null;
 
+    /**
+     * Runs right before each document is created, with its collection, to observe the writes around it.
+     *
+     * @var (\Closure(string): void)|null
+     */
+    public ?\Closure $onCreate = null;
+
     private int $sequence = 0;
 
     private Authorization $skipping;
@@ -61,6 +68,8 @@ final class MemoryDatabase extends Database
     #[\Override]
     public function createDocument(string $collection, Document $document): Document
     {
+        $this->onCreate?->__invoke($collection);
+
         $this->sequence++;
         $id = $document->getId() !== '' ? $document->getId() : 'document' . $this->sequence;
 

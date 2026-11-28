@@ -55,6 +55,14 @@ use Appwrite\Platform\Modules\Distribution\Http\Distribution\Connections\Google\
 use Appwrite\Platform\Modules\Distribution\Http\Distribution\Connections\Google\Update as UpdateGoogleConnection;
 use Appwrite\Platform\Modules\Distribution\Http\Distribution\Connections\XList as ListConnections;
 use Appwrite\Platform\Modules\Distribution\Http\Distribution\Events\Create as CreateEvent;
+use Appwrite\Platform\Modules\Distribution\Http\Distribution\Runners\Create as CreateRunner;
+use Appwrite\Platform\Modules\Distribution\Http\Distribution\Runners\Leases\Artifacts\Create as CreateRunnerLeaseArtifact;
+use Appwrite\Platform\Modules\Distribution\Http\Distribution\Runners\Leases\Create as CreateRunnerLease;
+use Appwrite\Platform\Modules\Distribution\Http\Distribution\Runners\Leases\Events\Create as CreateRunnerLeaseEvent;
+use Appwrite\Platform\Modules\Distribution\Http\Distribution\Runners\Leases\Source\Get as GetRunnerLeaseSource;
+use Appwrite\Platform\Modules\Distribution\Http\Distribution\Runners\Leases\Status\Update as UpdateRunnerLeaseStatus;
+use Appwrite\Platform\Modules\Distribution\Http\Distribution\Runners\Leases\Update as UpdateRunnerLease;
+use Appwrite\Platform\Modules\Distribution\Http\Distribution\Runners\Update as UpdateRunner;
 use Appwrite\Platform\Modules\Distribution\Http\Distribution\SigningIdentities\Android\Create as CreateAndroidSigningIdentity;
 use Appwrite\Platform\Modules\Distribution\Http\Distribution\SigningIdentities\Delete as DeleteSigningIdentity;
 use Appwrite\Platform\Modules\Distribution\Http\Distribution\SigningIdentities\Download\Get as GetSigningIdentityDownload;
@@ -145,5 +153,14 @@ class Http extends Service
         $this->addAction(DeleteListing::getName(), DeleteListing::class);
         $this->addAction(CreateListingScreenshot::getName(), CreateListingScreenshot::class);
         $this->addAction(DeleteListingScreenshot::getName(), DeleteListingScreenshot::class);
+
+        $this->addAction(CreateRunner::getName(), CreateRunner::class);
+        $this->addAction(UpdateRunner::getName(), UpdateRunner::class);
+        $this->addAction(CreateRunnerLease::getName(), CreateRunnerLease::class);
+        $this->addAction(UpdateRunnerLease::getName(), UpdateRunnerLease::class);
+        $this->addAction(UpdateRunnerLeaseStatus::getName(), UpdateRunnerLeaseStatus::class);
+        $this->addAction(CreateRunnerLeaseEvent::getName(), CreateRunnerLeaseEvent::class);
+        $this->addAction(CreateRunnerLeaseArtifact::getName(), CreateRunnerLeaseArtifact::class);
+        $this->addAction(GetRunnerLeaseSource::getName(), GetRunnerLeaseSource::class);
     }
 }

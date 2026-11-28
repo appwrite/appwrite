@@ -7,6 +7,7 @@ namespace Tests\Unit\Distribution;
 use Appwrite\Auth\JobsSecret;
 use Appwrite\Distribution\Build\Status as BuildStatus;
 use Appwrite\Distribution\Builds;
+use Appwrite\Distribution\Leases;
 use Appwrite\Distribution\Provider;
 use Appwrite\Distribution\Schedules;
 use Appwrite\Distribution\Signing;
@@ -59,6 +60,8 @@ final class BuildsTest extends TestCase
     ];
 
     private const string CREDENTIAL = 'store-credential-never-in-a-job';
+
+    private const string LEASE = '0123456789abcdef0123456789abcdef0123';
 
     /**
      * Unset for every test, so objectUrl() resolves the bucket from the device alone.
@@ -755,6 +758,7 @@ final class BuildsTest extends TestCase
             Builds::ERROR_BUILD_SOURCE_FAILED,
             Builds::ERROR_RUNNER_UNAVAILABLE,
             Builds::ERROR_VARIABLE_INVALID,
+            Builds::ERROR_RUNNER_LOST,
         ] as $code) {
             $this->assertNotSame('', Builds::message($code), "{$code} needs a message.");
         }
@@ -1744,6 +1748,294 @@ final class BuildsTest extends TestCase
         $this->assertSame([], $this->buildPlane->requests);
     }
 
+    public function testClaimReturnsTheLeasePayload(): void
+    {
+        $lease = $this->claimable();
+        $app = $this->dbForProject->getDocument('distributionApps', 'app1');
+        $this->variable('project', '', 'API_URL', 'https://api.example.test');
+        $this->variable(RESOURCE_TYPE_DISTRIBUTION_APPS, (string) $app->getSequence(), 'DISTRIBUTION_IDENTIFIER', 'io.appwrite.spoofed');
+
+        $assignment = $this->builds(LocalBuilds::class)->claim($lease, 'lease-token');
+
+        $this->assertIsArray($assignment);
+        $this->assertSame(self::LEASE, $assignment['leaseId']);
+        $this->assertSame('lease-token', $assignment['token']);
+        $this->assertNotFalse(\DateTimeImmutable::createFromFormat(\DATE_RFC3339_EXTENDED, $assignment['expiresAt']), 'The expiry is RFC 3339.');
+        $this->assertSame((new \DateTimeImmutable('2030-01-01 00:00:00.000'))->getTimestamp(), (new \DateTimeImmutable($assignment['expiresAt']))->getTimestamp());
+        $this->assertSame('https://appwrite.test/v1', $assignment['endpoint']);
+        $this->assertSame(['project' => 'project1'], $assignment['query']);
+        $this->assertSame('build1', $assignment['buildId']);
+        $this->assertSame(1, $assignment['attempt']);
+        $this->assertSame(900, $assignment['timeout'], 'A build without a timeout takes its target\'s.');
+        $this->assertSame('ios', $assignment['platform']);
+        $this->assertSame('flutter', $assignment['framework']);
+        $this->assertSame(['rootDirectory' => 'mobile', 'commit' => 'abc1234def5678'], $assignment['source']);
+
+        $environment = $assignment['environment'];
+        $this->assertSame('io.appwrite.example', $environment['DISTRIBUTION_IDENTIFIER'], 'A variable cannot replace the target identifier.');
+        $this->assertSame('https://api.example.test', $environment['API_URL']);
+        $this->assertSame('{"scheme":"Runner","xcode":"16.2"}', $environment['DISTRIBUTION_CONFIGURATION']);
+        $this->assertSame('Runner', $environment['DISTRIBUTION_SCHEME']);
+        $this->assertSame('abc1234def5678', $environment['APPWRITE_VCS_COMMIT_HASH']);
+        $this->assertSame('mobile-app', $environment['APPWRITE_VCS_REPOSITORY_NAME']);
+        $this->assertSame('true', $environment['CI']);
+        $this->assertArrayNotHasKey('DISTRIBUTION_VERSION_NAME', $environment, 'The agent sets the version from the lease.');
+
+        $this->assertSame([
+            'install' => Config::getParam('distribution')['frameworks']['flutter']['ios']['install'],
+            'build' => 'flutter build ipa --release --flavor production',
+        ], $assignment['commands']);
+        $this->assertSame([
+            'certificate' => 'cDEyLWJ5dGVz',
+            'password' => 'p12-password',
+            'profiles' => ['io.appwrite.example' => 'cHJvZmlsZQ==', 'io.appwrite.example.widget' => 'd2lkZ2V0'],
+            'teamId' => 'ABCDE12345',
+        ], $assignment['signing'], 'Only profiles keyed by a bundle ID reach the runner.');
+        $this->assertSame(['name' => '', 'code' => 42], $assignment['version'], 'An empty version name is sent as stored.');
+
+        $this->assertSame('processing', $this->dbForProject->getDocument('distributionBuilds', 'build1')->getAttribute('status'));
+    }
+
+    public function testClaimFallsBackToTheConfiguredTimeoutAndOmitsAMissingScheme(): void
+    {
+        $lease = $this->claimable();
+        $builds = $this->builds(LocalBuilds::class);
+        $app = $this->dbForProject->getDocument('distributionApps', 'app1');
+        $target = $this->dbForProject->updateDocument('distributionTargets', 'target1', new Document([
+            'timeout' => 0,
+            'buildCommand' => '',
+            'configuration' => null,
+        ]));
+        $build = $this->dbForProject->getDocument('distributionBuilds', 'build1');
+        $signingIdentity = $this->dbForProject->getDocument('distributionSigningIdentities', 'identity1');
+
+        $assignment = $builds->claim($lease, 'lease-token');
+        $named = $builds->assignmentPayload($app, $target, new Document([...$build->getArrayCopy(), 'versionName' => '2.4.0']), $lease, $signingIdentity);
+
+        $this->assertIsArray($assignment);
+        $this->assertSame(3600, $assignment['timeout'], 'Without a build or target timeout the configured default applies.');
+        $this->assertSame('{}', $assignment['environment']['DISTRIBUTION_CONFIGURATION']);
+        $this->assertArrayNotHasKey('DISTRIBUTION_SCHEME', $assignment['environment']);
+        $this->assertSame(Config::getParam('distribution')['frameworks']['flutter']['ios']['build'], $assignment['commands']['build']);
+        $this->assertSame(['name' => '2.4.0', 'code' => 42], $named['version']);
+    }
+
+    public static function stale(): \Iterator
+    {
+        yield 'a later attempt' => [['attempt' => 2], []];
+        yield 'another job' => [['jobId' => 'dist-build-job'], []];
+        yield 'a canceled build' => [['status' => 'canceled'], []];
+        yield 'a build not yet in its build stage' => [['stage' => ''], []];
+        yield 'an Android identity' => [[], ['platform' => 'android']];
+    }
+
+    /**
+     * @param array<string, mixed> $build
+     * @param array<string, mixed> $identity
+     */
+    #[DataProvider('stale')]
+    public function testClaimRefusesAStaleLease(array $build, array $identity): void
+    {
+        $lease = $this->claimable($build, $identity);
+        $status = $this->dbForProject->getDocument('distributionBuilds', 'build1')->getAttribute('status');
+
+        $this->assertNull($this->builds(LocalBuilds::class)->claim($lease, 'lease-token'));
+        $this->assertSame($status, $this->dbForProject->getDocument('distributionBuilds', 'build1')->getAttribute('status'));
+    }
+
+    public function testJobIdsCarryTheOrchestratorPrefix(): void
+    {
+        $build = $this->build();
+
+        foreach ([Builds::STAGE_INSPECT, Builds::STAGE_SIGN, Builds::STAGE_BUILD] as $stage) {
+            $this->assertStringStartsWith(Builds::JOB, Builds::id($this->project, $build, $stage));
+        }
+
+        $lease = Leases::id($this->project, $build, 1);
+        $this->assertStringStartsNotWith(Builds::JOB, $lease, 'A lease id never passes for a build-plane job.');
+        $this->assertStringStartsNotWith(Builds::JOB, Leases::artifact($lease));
+    }
+
+    /**
+     * @return \Iterator<string, array{string, string}>
+     */
+    public static function schemes(): \Iterator
+    {
+        yield 'https' => ['enabled', 'https://cloud.example.test/v1'];
+        yield 'http' => ['disabled', 'http://cloud.example.test/v1'];
+    }
+
+    #[DataProvider('schemes')]
+    public function testDispatchQueuesAnIosLeaseWhenARunnerIsOnline(string $forceHttps, string $endpoint): void
+    {
+        $this->setEnvironment('_APP_DOMAIN', 'cloud.example.test');
+        $this->setEnvironment('_APP_OPTIONS_FORCE_HTTPS', $forceHttps);
+        $this->runner(['labels' => ['xcode-16.2', 'fake']]);
+        $build = $this->iosBuild();
+
+        $dispatched = $this->builds(LocalBuilds::class)->dispatch($build, new RecordingGit());
+
+        $leaseId = Leases::id($this->project, $build, 1);
+        $lease = $this->dbForPlatform->getDocument('distributionLeases', $leaseId);
+        $this->assertSame([], $this->buildPlane->requests);
+        $this->assertSame('waiting', $dispatched->getAttribute('status'));
+        $this->assertSame('build', $dispatched->getAttribute('stage'));
+        $this->assertSame('pool', $dispatched->getAttribute('runner'));
+        $this->assertSame($leaseId, $dispatched->getAttribute('jobId'));
+        $this->assertNotEmpty($dispatched->getAttribute('dispatchedAt'));
+        $this->assertSame('queued', $lease->getAttribute('status'));
+        $this->assertSame('7', $lease->getAttribute('projectInternalId'));
+        $this->assertSame('build1', $lease->getAttribute('buildId'));
+        $this->assertSame(1, $lease->getAttribute('attempt'));
+        $this->assertSame(['xcode-16.2'], $lease->getAttribute('labels'));
+        $this->assertSame($endpoint, $lease->getAttribute('endpoint'));
+        $this->assertTrue($this->schedule('build1')->getAttribute('active'));
+    }
+
+    public function testDispatchKeepsAnExistingIosLease(): void
+    {
+        $this->runner();
+        $builds = $this->builds(LocalBuilds::class);
+        $first = $builds->dispatch($this->iosBuild(), new RecordingGit());
+        $dispatchedAt = '2020-01-01T00:00:00.000+00:00';
+        $this->dbForProject->updateDocument('distributionBuilds', 'build1', new Document(['dispatchedAt' => $dispatchedAt]));
+
+        $second = $builds->dispatch($first, new RecordingGit());
+
+        $this->assertSame($first->getAttribute('jobId'), $second->getAttribute('jobId'));
+        $this->assertSame($dispatchedAt, $second->getAttribute('dispatchedAt'), 'the same attempt keeps its lease and deadline');
+        $this->assertSame('waiting', $second->getAttribute('status'));
+        $this->assertCount(1, $this->dbForPlatform->documents['distributionLeases']);
+    }
+
+    public function testDispatchNamesTheIosLeaseBeforeQueuingIt(): void
+    {
+        $this->runner();
+        $build = $this->iosBuild();
+        $leaseId = Leases::id($this->project, $build, 1);
+        $named = null;
+        $this->dbForPlatform->onCreate = function (string $collection) use (&$named): void {
+            if ($collection === 'distributionLeases') {
+                $named = $this->dbForProject->getDocument('distributionBuilds', 'build1')->getAttribute('jobId');
+            }
+        };
+
+        $this->builds(LocalBuilds::class)->dispatch($build, new RecordingGit());
+
+        $this->assertSame($leaseId, $named, 'a runner claiming the new lease finds the build already naming it');
+    }
+
+    public function testDispatchQueuesTheLeaseTheBuildAlreadyNames(): void
+    {
+        $this->runner();
+        $build = $this->iosBuild();
+        $leaseId = Leases::id($this->project, $build, 1);
+        $dispatchedAt = '2020-01-01T00:00:00.000+00:00';
+        $build = $this->dbForProject->updateDocument('distributionBuilds', 'build1', new Document([
+            'stage' => 'build',
+            'jobId' => $leaseId,
+            'dispatchedAt' => $dispatchedAt,
+        ]));
+
+        $dispatched = $this->builds(LocalBuilds::class)->dispatch($build, new RecordingGit());
+
+        $this->assertSame($dispatchedAt, $dispatched->getAttribute('dispatchedAt'), 'recovering the lost lease row keeps the attempt');
+        $this->assertSame('queued', $this->dbForPlatform->getDocument('distributionLeases', $leaseId)->getAttribute('status'));
+    }
+
+    /**
+     * @return \Iterator<string, array{array<string, mixed>, array<string, mixed>, string}>
+     */
+    public static function unsignable(): \Iterator
+    {
+        yield 'no identity' => [['signingIdentityId' => ''], [], 'The target has no signing identity.'];
+        yield 'android identity' => [[], ['platform' => 'android'], "Signing identity 'identity1' is not an iOS signing identity"];
+        yield 'no profile for the bundle ID' => [[], ['secret' => ['profiles' => ['io.appwrite.other' => 'cHJvZmlsZQ==']]], "Signing identity 'identity1' is not an iOS signing identity with an App Store profile for io.appwrite.example."];
+    }
+
+    /**
+     * @param array<string, mixed> $target
+     * @param array<string, mixed> $identity
+     */
+    #[DataProvider('unsignable')]
+    public function testDispatchFailsAnIosBuildWithoutASigningIdentity(array $target, array $identity, string $message): void
+    {
+        $this->runner();
+
+        $failed = $this->builds(LocalBuilds::class)->dispatch($this->iosBuild($target, identity: $identity), new RecordingGit());
+
+        $this->assertSame('failed', $failed->getAttribute('status'));
+        $this->assertSame(Builds::ERROR_BUILD_INVALID, $failed->getAttribute('errorCode'));
+        $this->assertStringContainsString($message, (string) $failed->getAttribute('errorMessage'));
+        $this->assertSame([], $this->dbForPlatform->documents['distributionLeases'] ?? []);
+        $this->assertTrue($this->schedule('build1')->getAttribute('active'));
+    }
+
+    public function testDispatchFailsAnIosBuildWithoutAVersionName(): void
+    {
+        $this->runner();
+
+        $failed = $this->builds(LocalBuilds::class)->dispatch($this->iosBuild(build: ['versionName' => '']), new RecordingGit());
+
+        $this->assertSame('failed', $failed->getAttribute('status'));
+        $this->assertSame(Builds::ERROR_BUILD_INVALID, $failed->getAttribute('errorCode'));
+        $this->assertSame("iOS builds need a version name until the runner agent supports keeping the project's version; set versionName on the build.", $failed->getAttribute('errorMessage'));
+        $this->assertSame('', $failed->getAttribute('jobId'));
+        $this->assertSame([], $this->dbForPlatform->documents['distributionLeases'] ?? []);
+    }
+
+    public function testDispatchFailsAnIosBuildWhenNoRunnerHasTheLabels(): void
+    {
+        $this->runner(['labels' => ['xcode-15.4']]);
+        $this->runner(['status' => 'offline', 'labels' => ['xcode-16.2']]);
+
+        $failed = $this->builds(LocalBuilds::class)->dispatch($this->iosBuild(), new RecordingGit());
+
+        $this->assertSame('failed', $failed->getAttribute('status'));
+        $this->assertSame(Builds::ERROR_RUNNER_UNAVAILABLE, $failed->getAttribute('errorCode'));
+        $this->assertSame([], $this->dbForPlatform->documents['distributionLeases'] ?? []);
+    }
+
+    public function testDispatchQueuesAnIosLeaseForADrainingRunner(): void
+    {
+        $this->runner(['status' => 'draining']);
+
+        $dispatched = $this->builds(LocalBuilds::class)->dispatch($this->iosBuild(), new RecordingGit());
+
+        $this->assertSame('waiting', $dispatched->getAttribute('status'));
+        $this->assertCount(1, $this->dbForPlatform->documents['distributionLeases']);
+    }
+
+    /**
+     * @return \Iterator<string, array{string, string}>
+     */
+    public static function abandoned(): \Iterator
+    {
+        yield 'uploading' => ['uploading', 'invalid'];
+        yield 'processing' => ['processing', 'invalid'];
+        yield 'ready' => ['ready', 'ready'];
+    }
+
+    #[DataProvider('abandoned')]
+    public function testCancelInvalidatesTheAbandonedLeaseArtifact(string $status, string $expected): void
+    {
+        $artifactId = Leases::artifact('lease1');
+        $otherId = Leases::artifact('lease2');
+        $this->dbForProject->createDocument('distributionArtifacts', new Document(['$id' => $artifactId, 'status' => $status, 'errorCode' => '']));
+        $this->dbForProject->createDocument('distributionArtifacts', new Document(['$id' => $otherId, 'status' => 'uploading', 'errorCode' => '']));
+        $build = new Document(['$id' => 'build1', '$collection' => 'distributionBuilds', 'runner' => 'pool', 'stage' => 'build', 'jobId' => 'lease1']);
+
+        $this->builds(LocalBuilds::class)->cancel($build);
+
+        $artifact = $this->dbForProject->getDocument('distributionArtifacts', $artifactId);
+        $this->assertSame($expected, $artifact->getAttribute('status'));
+        $this->assertSame($expected === 'invalid' ? Builds::ERROR_BUILD_FAILED : '', $artifact->getAttribute('errorCode'));
+        if ($expected === 'invalid') {
+            $this->assertSame(Builds::message(Builds::ERROR_BUILD_FAILED), $artifact->getAttribute('errorMessage'));
+        }
+        $this->assertSame('uploading', $this->dbForProject->getDocument('distributionArtifacts', $otherId)->getAttribute('status'), 'another lease keeps its upload');
+    }
+
     /**
      * @template T of ExposedBuilds
      * @param class-string<T> $class
@@ -1790,6 +2082,65 @@ final class BuildsTest extends TestCase
     private function inspecting(): Document
     {
         return $this->builds(LocalBuilds::class)->inspect($this->stored($this->artifact('aab')));
+    }
+
+    /**
+     * A waiting iOS build whose current attempt is the returned lease, as a runner just claimed it.
+     *
+     * @param array<string, mixed> $build
+     * @param array<string, mixed> $identity
+     */
+    private function claimable(array $build = [], array $identity = []): Document
+    {
+        $this->storedApp();
+        $this->storedTarget([
+            'platform' => 'ios',
+            'signingIdentityId' => 'identity1',
+            'timeout' => 900,
+            'buildCommand' => 'flutter build ipa --release --flavor production',
+            'configuration' => ['scheme' => 'Runner', 'xcode' => '16.2'],
+        ]);
+        $this->dbForProject->createDocument('distributionSigningIdentities', new Document([
+            '$id' => 'identity1',
+            'platform' => 'ios',
+            'mode' => 'imported',
+            'teamId' => 'ABCDE12345',
+            'secret' => [
+                'certificate' => 'cDEyLWJ5dGVz',
+                'password' => 'p12-password',
+                'profiles' => [
+                    'io.appwrite.example' => 'cHJvZmlsZQ==',
+                    'io.appwrite.example.widget' => 'd2lkZ2V0',
+                    '.hidden' => 'aGlkZGVu',
+                    'io.appwrite/escape' => 'ZXNjYXBl',
+                    'io appwrite' => 'c3BhY2U=',
+                    '' => 'ZW1wdHk=',
+                ],
+            ],
+            ...$identity,
+        ]));
+        $this->storedBuild([
+            'platform' => 'ios',
+            'runner' => 'pool',
+            'stage' => 'build',
+            'jobId' => self::LEASE,
+            'timeout' => 0,
+            'versionName' => '',
+            'versionCode' => null,
+            'buildNumber' => '42',
+            ...$build,
+        ]);
+
+        return new Document([
+            '$id' => self::LEASE,
+            'projectId' => 'project1',
+            'projectInternalId' => '7',
+            'buildId' => 'build1',
+            'attempt' => 1,
+            'status' => 'leased',
+            'endpoint' => 'https://appwrite.test/v1',
+            'expiresAt' => '2030-01-01 00:00:00.000',
+        ]);
     }
 
     private function schedule(string $resourceId): Document
@@ -2037,5 +2388,70 @@ final class BuildsTest extends TestCase
         }
 
         return $artifacts;
+    }
+
+    /**
+     * Restored by tearDown().
+     */
+    private function setEnvironment(string $name, string $value): void
+    {
+        if (!\array_key_exists($name, $this->environment)) {
+            $this->environment[$name] = \getenv($name);
+        }
+
+        \putenv("{$name}={$value}");
+    }
+
+    /**
+     * @param array<string, mixed> $attributes
+     */
+    private function runner(array $attributes = []): Document
+    {
+        return $this->dbForPlatform->createDocument('distributionRunners', new Document([
+            'name' => 'mac-mini',
+            'platform' => 'macos',
+            'status' => 'online',
+            'labels' => ['xcode-16.2'],
+            'capacity' => 1,
+            'seenAt' => DateTime::now(),
+            ...$attributes,
+        ]));
+    }
+
+    /**
+     * A waiting iOS build of a target signed by an iOS identity with a profile for its bundle ID.
+     *
+     * @param array<string, mixed> $target
+     * @param array<string, mixed> $build
+     * @param array<string, mixed> $identity
+     */
+    private function iosBuild(array $target = [], array $build = [], array $identity = []): Document
+    {
+        $this->storedApp();
+        $this->dbForProject->createDocument('distributionSigningIdentities', new Document([
+            '$id' => 'identity1',
+            'platform' => 'ios',
+            'teamId' => 'ABCDE12345',
+            'secret' => [
+                'certificate' => 'cDEy',
+                'password' => 'p12-password',
+                'profiles' => ['io.appwrite.example' => 'cHJvZmlsZQ=='],
+            ],
+            ...$identity,
+        ]));
+        $this->storedTarget([
+            'platform' => 'ios',
+            'signingIdentityId' => 'identity1',
+            'configuration' => ['xcode' => '16.2', 'scheme' => 'Runner'],
+            ...$target,
+        ]);
+
+        return $this->storedBuild([
+            'platform' => 'ios',
+            'runner' => 'pool',
+            'versionCode' => null,
+            'buildNumber' => '7',
+            ...$build,
+        ]);
     }
 }
