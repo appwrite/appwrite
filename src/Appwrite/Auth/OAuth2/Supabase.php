@@ -13,6 +13,11 @@ class Supabase extends OAuth2
     use PKCE;
 
     /**
+     * Prefix of the temporary login roles created for migrations
+     */
+    public const string ROLE_PREFIX = 'appwrite_migration_';
+
+    /**
      * @var array
      */
     protected array $user = [];
@@ -146,6 +151,94 @@ class Supabase extends OAuth2
         $user = $this->getUser($accessToken);
 
         return $user['username'] ?? '';
+    }
+
+    /**
+     * Revoke the refresh token and every access token issued with it
+     */
+    public function revokeTokens(string $refreshToken): void
+    {
+        $this->request(
+            'POST',
+            'https://api.supabase.com/v1/oauth/revoke',
+            ['Content-Type: application/json'],
+            (string) \json_encode([
+                'client_id' => $this->appID,
+                'client_secret' => $this->appSecret,
+                'refresh_token' => $refreshToken,
+            ])
+        );
+    }
+
+    /**
+     * @return array<array<string, mixed>>
+     */
+    public function getProjects(string $accessToken): array
+    {
+        return \json_decode($this->request('GET', 'https://api.supabase.com/v1/projects', ['Authorization: Bearer ' . $accessToken]), true) ?? [];
+    }
+
+    /**
+     * The key that bypasses row level security: the legacy service role key, or a secret key
+     */
+    public function getSecretKey(string $accessToken, string $projectRef): string
+    {
+        $keys = \json_decode($this->request(
+            'GET',
+            'https://api.supabase.com/v1/projects/' . \rawurlencode($projectRef) . '/api-keys?reveal=true',
+            ['Authorization: Bearer ' . $accessToken]
+        ), true) ?? [];
+
+        foreach ($keys as $key) {
+            if (($key['type'] ?? '') === 'legacy' && ($key['name'] ?? '') === 'service_role') {
+                return $key['api_key'] ?? '';
+            }
+        }
+
+        foreach ($keys as $key) {
+            if (($key['type'] ?? '') === 'secret') {
+                return $key['api_key'] ?? '';
+            }
+        }
+
+        return '';
+    }
+
+    /**
+     * The primary database's connection pooler, which unlike the direct host is reachable over IPv4
+     *
+     * @return array<string, mixed>
+     */
+    public function getPooler(string $accessToken, string $projectRef): array
+    {
+        $poolers = \json_decode($this->request(
+            'GET',
+            'https://api.supabase.com/v1/projects/' . \rawurlencode($projectRef) . '/config/database/pooler',
+            ['Authorization: Bearer ' . $accessToken]
+        ), true) ?? [];
+
+        foreach ($poolers as $pooler) {
+            if (($pooler['database_type'] ?? '') === 'PRIMARY') {
+                return $pooler;
+            }
+        }
+
+        return [];
+    }
+
+    /**
+     * Run SQL on the project's database as its owner
+     *
+     * @return array<array<string, mixed>>
+     */
+    public function query(string $accessToken, string $projectRef, string $sql): array
+    {
+        return \json_decode($this->request(
+            'POST',
+            'https://api.supabase.com/v1/projects/' . \rawurlencode($projectRef) . '/database/query',
+            ['Authorization: Bearer ' . $accessToken, 'Content-Type: application/json'],
+            (string) \json_encode(['query' => $sql])
+        ), true) ?? [];
     }
 
     /**

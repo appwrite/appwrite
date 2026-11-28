@@ -2372,6 +2372,24 @@ return [
                 'required' => false,
                 'question' => '',
                 'filter' => ''
+            ],
+            [
+                'name' => '_APP_MIGRATIONS_SUPABASE_CLIENT_ID',
+                'description' => 'Supabase OAuth app client ID, used to migrate from Supabase without pasting credentials. Create the app in your Supabase organization settings with the projects:read, secrets:read and database:write scopes.',
+                'introduction' => '2.8.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_MIGRATIONS_SUPABASE_CLIENT_SECRET',
+                'description' => 'Supabase OAuth app client secret.',
+                'introduction' => '2.8.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
             ]
         ]
     ]
