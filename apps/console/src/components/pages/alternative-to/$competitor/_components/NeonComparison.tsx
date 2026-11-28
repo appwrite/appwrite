@@ -152,7 +152,7 @@ function StackVisual() {
  * -----------------------------------------------------------------------------------------------*/
 
 const SPEC_SHEET: { label: string; value: string }[] = [
-  { label: 'Engine', value: 'PostgreSQL 18 (17 available)' },
+  { label: 'Engine', value: 'PostgreSQL 19 (17 and 18 available)' },
   { label: 'Regions', value: 'Frankfurt, New York, San Francisco, Singapore, Sydney, Toronto' },
   { label: 'High availability', value: 'Up to 5 replicas, async, sync, or quorum' },
   { label: 'Point-in-time recovery', value: 'Any moment in a 1 to 35 day window' },

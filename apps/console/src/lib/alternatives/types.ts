@@ -17,6 +17,10 @@ export type AlternativeId =
   | 'posthog'
   | 'plausible'
   | 'mux'
+  | 'coderabbit'
+  | 'copilot'
+  | 'bugbot'
+  | 'greptile'
 
 /**
  * `true` renders a check, `false` a dash, `'partial'` a half mark, `'soon'` a "Coming soon" pill,
@@ -88,4 +92,12 @@ export type AlternativeMeta = {
   secondaryTone: ProductTone
   /** Appwrite product the comparison centers on, when the competitor is product specific. */
   focusProduct?: ProductId
+  /**
+   * Product whose launch this comparison waits for. Until that product is
+   * released the page returns 404, stays unlisted, and is left out of
+   * prerendering, the sitemap, and the Markdown exports.
+   */
+  launchesWith?: ProductId
+  /** Month this competitor's facts were last checked, when newer than `ALTERNATIVES_VERIFIED_ON`. */
+  verifiedOn?: string
 }

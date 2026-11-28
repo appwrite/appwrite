@@ -11,6 +11,7 @@ export const DOCS_GLOBAL_NAV: DocsNavTree = [
         isParent: true,
       },
       { label: 'Quick start', href: '/docs/quick-starts', icon: 'play' },
+      { label: 'Appwrite Zero', href: '/docs/zero', icon: 'zero' },
       { label: 'Tutorials', href: '/docs/tutorials', icon: 'book-open' },
       { label: 'SDKs', href: '/docs/sdks', icon: 'cog' },
       {

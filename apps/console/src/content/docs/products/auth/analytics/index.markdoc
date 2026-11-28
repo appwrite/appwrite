@@ -1,0 +1,84 @@
+---
+layout: article
+title: Analytics
+description: See what each signed-in user does in your sites, apps, and AI agents with Appwrite Analytics, from the Analytics tab of a user in Auth.
+---
+
+[Appwrite Analytics](/docs/products/analytics) can link the events your sites, apps, and AI agents send to the users in **Auth**. Each user then gets an **Analytics** tab with their activity across every property in the project: how often they come back, which pages or screens they open, and which events they send.
+
+Events record the user ID only, never an email address or a name. Anonymous visitors aren't affected.
+
+# Identify signed-in users {% #identify %}
+
+{% only_dark %}
+![User identification card in a property's Settings tab with Identify signed-in users turned on](/images/docs/analytics/dark/user-identification.avif)
+{% /only_dark %}
+{% only_light %}
+![User identification card in a property's Settings tab with Identify signed-in users turned on](/images/docs/analytics/user-identification.avif)
+{% /only_light %}
+
+1. In your project, open **Analytics** and select a property. To create one, see [Properties](/docs/products/analytics/properties#create).
+2. Open the **Settings** tab.
+3. Under **User identification**, turn on **Identify signed-in users**. The change saves right away.
+
+From then on, each event the property receives from a signed-in Appwrite session carries that user's ID. Events received before the change stay anonymous. Turn the setting on only if your privacy policy covers linking analytics to user accounts.
+
+Your server can also attach a user ID to the events it sends with an API key. See [Track events from your server](/docs/products/analytics/server-side#visitor).
+
+# Read a user's activity {% #activity %}
+
+{% only_dark %}
+![Analytics tab of a user in Auth with events, visits, views, active days, last seen, events per day by property, and the Properties table](/images/docs/auth/analytics/dark/user-analytics.avif)
+{% /only_dark %}
+{% only_light %}
+![Analytics tab of a user in Auth with events, visits, views, active days, last seen, events per day by property, and the Properties table](/images/docs/auth/analytics/user-analytics.avif)
+{% /only_light %}
+
+Open **Auth**, select a user, and open the **Analytics** tab. It covers the last 30 days.
+
+- **Events**, **Visits**, and **Pageviews**, each with the change from the previous 30 days. **Pageviews** reads **Screen views** when every listed property is a **Mobile** property, and **Views** when Mobile properties are mixed with others. When every listed property is an **Agent** property, there's no views count.
+- **Active days**: the days with at least one event from the user.
+- **Last seen**: when the user was last active, and in which property.
+- **Activity**: the user's events per day, split by property.
+- **Properties**: each property the user was active in, with their events, visits, views, and when they were last active.
+
+A property is listed when it identifies signed-in users, or when your server sent events with this user's ID.
+
+## Property details {% #details %}
+
+{% only_dark %}
+![Storefront row expanded in the Properties table with the user's pages, events, sources, locations, browsers, and operating systems](/images/docs/auth/analytics/dark/user-property-details.avif)
+{% /only_dark %}
+{% only_light %}
+![Storefront row expanded in the Properties table with the user's pages, events, sources, locations, browsers, and operating systems](/images/docs/auth/analytics/user-property-details.avif)
+{% /only_light %}
+
+Click a property in the **Properties** table to see the user's activity there. The lists depend on the property's type:
+
+- **Web**: **Pages**, **Events**, **Sources**, **Locations**, **Browsers**, and **Operating systems**.
+- **Mobile**: **Screens**, **Events**, **Locations**, **Devices**, **Operating systems**, and **OS versions**.
+- **Agent**: **Events**, **Models**, and **Tools**.
+
+**Events** lists the custom events the user sent, such as `add_to_cart`. See [Track custom events](/docs/products/analytics/custom-events).
+
+# Open a user in a property {% #property %}
+
+{% only_dark %}
+![A user's page in the Storefront property with visits, pageviews, events, last seen, their top pages, and their custom events](/images/docs/auth/analytics/dark/user-property.avif)
+{% /only_dark %}
+{% only_light %}
+![A user's page in the Storefront property with visits, pageviews, events, last seen, their top pages, and their custom events](/images/docs/auth/analytics/user-property.avif)
+{% /only_light %}
+
+Click the arrow at the end of a property's row to open the user's page in that property. It has its own date range, and shows the user's visits, events, when they were last seen, and their custom events. On **Web** and **Mobile** properties, it also shows their views and their top pages or screens.
+
+## From the dashboard {% #dashboard %}
+
+{% only_dark %}
+![Users card on a property's dashboard ranking signed-in users by visits, next to the Event properties card](/images/docs/analytics/dark/users-card.avif)
+{% /only_dark %}
+{% only_light %}
+![Users card on a property's dashboard ranking signed-in users by visits, next to the Event properties card](/images/docs/analytics/users-card.avif)
+{% /only_light %}
+
+The **Users** card on a property's dashboard ranks signed-in users by visits. Click a user to open their page in that property. The **Users** metric at the top of the dashboard counts distinct signed-in users. See [Metrics](/docs/products/analytics/metrics#dashboard-metrics).

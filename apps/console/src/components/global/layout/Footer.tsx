@@ -176,9 +176,12 @@ function getExpandedFooterGroups(
     analytics: boolean
     videos: boolean
     zero: boolean
+    monitors: boolean
+    beep: boolean
+    reviews: boolean
   },
 ): readonly ExpandedFooterGroup[] {
-  const { agent, isCloud, analytics, videos, zero } = options
+  const { agent, isCloud, analytics, videos, zero, monitors, beep, reviews } = options
   return [
   {
     title: footerCopy.groups.quickStarts,
@@ -270,12 +273,36 @@ function getExpandedFooterGroups(
                   ),
                 ]
               : []),
+            // Monitors, Beep, and Reviews stay out until launch, as in the header's Products menu.
+            ...(monitors
+              ? [
+                  productFooterLink(
+                    footerCopy.expanded.products.monitors,
+                    '/products/monitors',
+                    marketing,
+                    'monitors',
+                  ),
+                ]
+              : []),
+            ...(beep
+              ? [productFooterLink(footerCopy.expanded.products.beep, '/products/beep', marketing, 'beep')]
+              : []),
             productFooterLink(
               footerCopy.expanded.products.firewall,
               '/products/firewall',
               marketing,
               'firewall',
             ),
+            ...(reviews
+              ? [
+                  productFooterLink(
+                    footerCopy.expanded.products.reviews,
+                    '/products/reviews',
+                    marketing,
+                    'reviews',
+                  ),
+                ]
+              : []),
           ]
         : []),
       {
@@ -406,6 +433,15 @@ function getExpandedFooterGroups(
       ...(videos
         ? [comparisonFooterLink(footerCopy.expanded.compare.vsMux, 'mux', marketing)]
         : []),
+      // The code review comparisons launch with Appwrite Reviews.
+      ...(reviews
+        ? [
+            comparisonFooterLink(footerCopy.expanded.compare.vsCodeRabbit, 'coderabbit', marketing),
+            comparisonFooterLink(footerCopy.expanded.compare.vsCopilot, 'copilot', marketing),
+            comparisonFooterLink(footerCopy.expanded.compare.vsBugbot, 'bugbot', marketing),
+            comparisonFooterLink(footerCopy.expanded.compare.vsGreptile, 'greptile', marketing),
+          ]
+        : []),
       blogFooterLink(footerCopy.expanded.compare.nextjsHosting, 'free-nextjs-hosting', marketing),
       blogFooterLink(footerCopy.expanded.compare.reactHosting, 'free-react-hosting', marketing),
       blogFooterLink(footerCopy.expanded.compare.vueHosting, 'free-vuejs-hosting', marketing),
@@ -487,6 +523,9 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
       analytics: features.analytics,
       videos: features.videos,
       zero: features.zero,
+      monitors: features.alerts,
+      beep: features.beep,
+      reviews: features.reviews,
     },
   )
 

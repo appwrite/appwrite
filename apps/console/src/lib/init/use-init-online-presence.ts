@@ -76,6 +76,20 @@ const ACTIVITY_PUBLISH_DEBOUNCE_MS = 300
 /** Safety-net list sync when realtime events are missed (reconnect, tab background). */
 const INIT_PRESENCE_LIST_REFRESH_MS = 5 * 60_000
 const PRESENCE_PREFS_SAVE_DEBOUNCE_MS = 600
+/** Coalesce realtime presence events; well under what reads as a delay. */
+const PRESENCE_REALTIME_BATCH_MS = 150
+
+function samePresenceMaps(a: PresenceMaps, b: PresenceMaps) {
+  if (a === b) return true
+  const sameMap = (x: PresenceMaps['online'], y: PresenceMaps['online']) => {
+    if (x.size !== y.size) return false
+    for (const [key, value] of x) {
+      if (y.get(key) !== value) return false
+    }
+    return true
+  }
+  return sameMap(a.online, b.online) && sameMap(a.away, b.away)
+}
 
 export type InitParticipantStatus = 'online' | 'offline'
 
@@ -926,36 +940,64 @@ export function useInitOnlinePresence(
     }
   }, [])
 
-  const handlePresenceRealtimeRef = useRef(
-    (_event: RealtimeResponseEvent<unknown>) => undefined,
-  )
+  const handlePresenceRealtimeRef = useRef<
+    (events: RealtimeResponseEvent<unknown>[]) => void
+  >(() => undefined)
 
   useEffect(() => {
-    handlePresenceRealtimeRef.current = (event: RealtimeResponseEvent<unknown>) => {
+    handlePresenceRealtimeRef.current = (events: RealtimeResponseEvent<unknown>[]) => {
       const scopeEventId = eventIdRef.current
       if (!scopeEventId) return
 
-      const payload = event.payload as Models.Presence | undefined
-      const isDelete = isPresenceDeleteEvent(event.events)
-      const isMutation = isPresenceMutationEvent(event.events)
+      const records = events.flatMap((event) => {
+        const payload = event.payload as Models.Presence | undefined
+        const isDelete = isPresenceDeleteEvent(event.events)
+        const isMutation = isPresenceMutationEvent(event.events)
 
-      if (!isDelete && !isMutation) return
-      if (!isDelete && !payload) return
+        if (!isDelete && !isMutation) return []
+        if (!isDelete && !payload) return []
+        return [{ payload, deleted: isDelete }]
+      })
+      if (!records.length) return
 
-      setPresenceMaps((previous) =>
-        applyInitPresenceRealtimeRecord(previous, payload, scopeEventId, {
-          deleted: isDelete,
-        }),
-      )
+      setPresenceMaps((previous) => {
+        let next = previous
+        for (const record of records) {
+          next = applyInitPresenceRealtimeRecord(next, record.payload, scopeEventId, {
+            deleted: record.deleted,
+          })
+        }
+        return samePresenceMaps(previous, next) ? previous : next
+      })
     }
   })
 
   useEffect(() => {
     if (!enabled || !eventId || !accountUserId) return
 
-    return retainInitPresencesRealtimeListener((event) => {
-      handlePresenceRealtimeRef.current(event)
+    // Every participant heartbeats, so a busy event sends many events per second.
+    // Apply them in one update per window instead of re-rendering the page for each.
+    let queue: RealtimeResponseEvent<unknown>[] = []
+    let flushTimer: number | null = null
+    const flush = () => {
+      flushTimer = null
+      const events = queue
+      queue = []
+      handlePresenceRealtimeRef.current(events)
+    }
+
+    const release = retainInitPresencesRealtimeListener((event) => {
+      queue.push(event)
+      if (flushTimer === null) {
+        flushTimer = window.setTimeout(flush, PRESENCE_REALTIME_BATCH_MS)
+      }
     })
+
+    return () => {
+      release()
+      if (flushTimer !== null) window.clearTimeout(flushTimer)
+      queue = []
+    }
   }, [accountUserId, enabled, eventId])
 
   return useMemo(() => {

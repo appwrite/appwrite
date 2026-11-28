@@ -4577,4 +4577,82 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'signed in': 'מחוברים',
   'Signed in now': 'מחוברים עכשיו',
   'and {count} more': 'ועוד {count}',
+  // Runtime logs
+  '1 line': 'שורה אחת',
+  '1 line loaded': 'נטענה שורה אחת',
+  'All levels': 'כל הרמות',
+  'All resources': 'כל המשאבים',
+  'All sites': 'כל האתרים',
+  'All streams': 'כל הסטרימים',
+  'Copy line': 'העתקת השורה',
+  'Could not copy to the clipboard': 'ההעתקה ללוח נכשלה',
+  'Could not load logs': 'טעינת הלוגים נכשלה',
+  Debug: 'דיבאג',
+  'Details for log line': 'פרטי שורת הלוג',
+  'Drag across the bars to zoom in': 'גררו על העמודות כדי להתמקד בטווח',
+  'Every line in this time range is loaded': 'כל השורות בטווח הזמן הזה נטענו',
+  Fields: 'שדות',
+  'ID copied': 'המזהה הועתק',
+  'JSON copied': 'ה-JSON הועתק',
+  'Last 15 minutes': '15 הדקות האחרונות',
+  'Line copied': 'השורה הועתקה',
+  'Live tail paused on an error and will retry:':
+    'המעקב החי נעצר בגלל שגיאה וינסה שוב:',
+  'Load older': 'טעינת שורות ישנות יותר',
+  'Log ID': 'מזהה לוג',
+  'Log line': 'שורת לוג',
+  'Log volume': 'נפח לוגים',
+  'Message copied': 'ההודעה הועתקה',
+  'Newer line': 'שורה חדשה יותר',
+  'No deployment selected': 'לא נבחרה פריסה',
+  'No lines in this time range': 'אין שורות בטווח הזמן הזה',
+  'No matching lines': 'אין שורות תואמות',
+  'No resources found': 'לא נמצאו משאבים',
+  'Older line': 'שורה ישנה יותר',
+  'Only the lines loaded so far are searched and filtered. Load older lines or widen the time range to search further back.':
+    'החיפוש והסינון חלים רק על השורות שנטענו עד עכשיו. טענו שורות ישנות יותר או הרחיבו את טווח הזמן כדי לחפש אחורה יותר.',
+  'Only this resource': 'רק המשאב הזה',
+  'Open function': 'פתיחת הפונקציה',
+  'Open site': 'פתיחת האתר',
+  'Pick a deployment to see its logs.': 'בחרו פריסה כדי לראות את הלוגים שלה.',
+  'Reset zoom': 'איפוס זום',
+  'Search logs': 'חיפוש בלוגים',
+  'Search resources': 'חיפוש משאבים',
+  'The line names no level, so stderr counts as an error.':
+    'בשורה לא מצוינת רמה, ולכן stderr נחשב לשגיאה.',
+  'The line names no level, so stdout counts as info.':
+    'בשורה לא מצוינת רמה, ולכן stdout נחשב למידע.',
+  'Wrap lines': 'גלישת שורות',
+  'is any of': 'אחד מ-',
+  '{count} lines': '{count} שורות',
+  '{count} lines loaded': 'נטענו {count} שורות',
+  '{count} on stderr': '{count} ב-stderr',
+  '{shown} of {loaded} loaded lines': '{shown} מתוך {loaded} השורות שנטענו',
+  'Older than your plan keeps logs': 'ישן יותר ממה שהתוכנית שלכם שומרת',
+  'Your plan keeps logs for a limited time. Pick a more recent range, or upgrade your plan for longer retention.':
+    'התוכנית שלכם שומרת לוגים לזמן מוגבל. בחרו טווח עדכני יותר, או שדרגו את התוכנית לשמירה ארוכה יותר.',
+  'Show the last 24 hours': 'הצגת 24 השעות האחרונות',
+  "Your project's runtime logs": 'לוגי זמן הריצה של הפרויקט',
+  'Lines your functions, sites and dedicated databases write show up here within seconds, ready to search, filter and inspect. Nothing has been written in this time range yet.':
+    'השורות שהפונקציות, האתרים ומסדי הנתונים הייעודיים שלכם כותבים יופיעו כאן תוך שניות, מוכנות לחיפוש, לסינון ולבדיקה. עדיין לא נכתב דבר בטווח הזמן הזה.',
+  "Logs may not be collected in this project's region yet.":
+    'ייתכן שעדיין לא נאספים לוגים באזור של הפרויקט הזה.',
+  'Every line, as it is written': 'כל שורה, ברגע שנכתבת',
+  'What your functions, sites and dedicated databases write to stdout and stderr lands here, newest first. Turn on Live to follow along.':
+    'מה שהפונקציות, האתרים ומסדי הנתונים הייעודיים שלכם כותבים ל-stdout ול-stderr מגיע לכאן, מהחדש לישן. הפעילו Live כדי לעקוב בזמן אמת.',
+  'Narrow it down': 'צמצום התוצאות',
+  'Filter by resource, level, stream and time, or search the lines you have loaded.':
+    'סננו לפי משאב, רמה, סטרים וזמן, או חפשו בשורות שנטענו.',
+  'Inspect any line': 'בדיקת כל שורה',
+  'Open a line to read its fields, where it ran, and the line exactly as it was written.':
+    'פתחו שורה כדי לקרוא את השדות שלה, היכן היא רצה, ואת השורה בדיוק כפי שנכתבה.',
+  'No logs in this time range': 'אין לוגים בטווח הזמן הזה',
+  'Lines your functions, sites and databases write to stdout and stderr show up here.':
+    'השורות שהפונקציות, האתרים ומסדי הנתונים שלכם כותבים ל-stdout ול-stderr יופיעו כאן.',
+  'Lines your function writes to stdout and stderr show up here.':
+    'השורות שהפונקציה שלכם כותבת ל-stdout ול-stderr יופיעו כאן.',
+  'Lines your site writes to stdout and stderr show up here.':
+    'השורות שהאתר שלכם כותב ל-stdout ול-stderr יופיעו כאן.',
+  'Lines your database writes show up here.':
+    'השורות שמסד הנתונים שלכם כותב יופיעו כאן.',
 }

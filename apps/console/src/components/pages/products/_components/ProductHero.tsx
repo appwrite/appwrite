@@ -134,7 +134,7 @@ function ProductHeroStats({ items }: { items: MarketingStatItem[] }) {
             {t(item.label)}
           </dt>
           <dd className="font-aeonik-pro text-[22px] font-normal tracking-tight text-foreground tabular-nums sm:text-[26px]">
-            <bdi>{item.value}</bdi>
+            <bdi>{t(item.value)}</bdi>
           </dd>
         </div>
       ))}

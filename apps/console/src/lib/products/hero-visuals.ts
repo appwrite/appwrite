@@ -1,13 +1,16 @@
 import type { ComponentType } from 'react'
 import { AnalyticsHeroArt } from '@/components/pages/products/hero-art/AnalyticsHeroArt'
 import { AuthHeroArt } from '@/components/pages/products/hero-art/AuthHeroArt'
+import { BeepHeroArt } from '@/components/pages/products/hero-art/BeepHeroArt'
 import { DatabasesHeroArt } from '@/components/pages/products/hero-art/DatabasesHeroArt'
 import { FirewallHeroArt } from '@/components/pages/products/hero-art/FirewallHeroArt'
 import { FunctionsHeroArt } from '@/components/pages/products/hero-art/FunctionsHeroArt'
 import { FunctionsHeroRuntimes } from '@/components/pages/products/hero-art/FunctionsHeroRuntimes'
 import { MessagingHeroArt } from '@/components/pages/products/hero-art/MessagingHeroArt'
+import { MonitorsHeroArt } from '@/components/pages/products/hero-art/MonitorsHeroArt'
 import { PostgresHeroArt } from '@/components/pages/products/hero-art/PostgresHeroArt'
 import { RealtimeHeroArt } from '@/components/pages/products/hero-art/RealtimeHeroArt'
+import { ReviewsHeroArt } from '@/components/pages/products/hero-art/ReviewsHeroArt'
 import { SitesHeroArt } from '@/components/pages/products/hero-art/SitesHeroArt'
 import { StorageHeroArt } from '@/components/pages/products/hero-art/StorageHeroArt'
 import { VideosHeroArt } from '@/components/pages/products/hero-art/VideosHeroArt'
@@ -25,7 +28,10 @@ export const PRODUCT_HERO_ART: Record<ProductId, ComponentType> = {
   realtime: RealtimeHeroArt,
   sites: SitesHeroArt,
   analytics: AnalyticsHeroArt,
+  monitors: MonitorsHeroArt,
+  beep: BeepHeroArt,
   firewall: FirewallHeroArt,
+  reviews: ReviewsHeroArt,
 }
 
 /** Decorative layer scattered around the hero copy and art on large screens. */

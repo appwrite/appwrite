@@ -284,6 +284,10 @@ export const DOCS_LOCAL_SECTION_NAVS: DocsSectionNavConfig[] = [
             href: '/docs/products/auth/presences',
           },
           {
+            label: 'Analytics',
+            href: '/docs/products/auth/analytics',
+          },
+          {
             label: 'OAuth2 server',
             href: '/docs/products/auth/oauth-server',
           },
@@ -698,8 +702,8 @@ export const DOCS_LOCAL_SECTION_NAVS: DocsSectionNavConfig[] = [
             href: '/docs/products/analytics/web',
           },
           {
-            label: 'Track a Flutter app',
-            href: '/docs/products/analytics/flutter',
+            label: 'Track a mobile app',
+            href: '/docs/products/analytics/mobile',
           },
           {
             label: 'Send events over REST',

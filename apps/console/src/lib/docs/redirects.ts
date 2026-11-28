@@ -16,6 +16,7 @@ const DOCS_REDIRECTS: Record<string, string> = {
   'tooling/ai': 'tooling',
   'tooling/ai/assistant': 'products/agent',
   'tooling/skills': 'tooling/ai/skills',
+  'products/analytics/flutter': 'products/analytics/mobile',
   'products/databases/spatial':
     'products/databases/tablesdb/geo-queries#spatial-columns',
   'tutorials/android': 'tutorials/android/step-1',

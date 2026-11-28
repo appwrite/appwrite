@@ -26,6 +26,7 @@ import {
   isVideosDocsSlug,
 } from '@/lib/docs/videos-docs-feature'
 import { isBeepDocsEnabled, isBeepDocsSlug } from '@/lib/docs/beep-docs-feature'
+import { isZeroDocsEnabled, isZeroDocsSlug } from '@/lib/docs/zero-docs-feature'
 import {
   isDomainsDocsEnabled,
   isDomainsDocsSlug,
@@ -87,6 +88,7 @@ export function DocsPreviewProvider({ children }: { children: ReactNode }) {
       if (isAnalyticsDocsSlug(nextSlug) && !isAnalyticsDocsEnabled()) return
       if (isVideosDocsSlug(nextSlug) && !isVideosDocsEnabled()) return
       if (isBeepDocsSlug(nextSlug) && !isBeepDocsEnabled()) return
+      if (isZeroDocsSlug(nextSlug) && !isZeroDocsEnabled()) return
       showDocs()
       setSlug(nextSlug)
       setView(resolveDocsPreviewView(nextSlug, options?.view))

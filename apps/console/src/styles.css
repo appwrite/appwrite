@@ -3555,6 +3555,19 @@ pre.prism-code .token-line > span {
  * `.init5-light-halo` child for a soft glow that follows the comet around the
  * rounded edge. Reduced motion keeps the arc still.
  */
+/*
+ * Looping Init 5 light scrolled off screen (see `useInitOffscreenLoops`): stop
+ * repainting it. It resumes where it stopped.
+ */
+[data-init-offscreen],
+[data-init-offscreen]::before,
+[data-init-offscreen]::after,
+[data-init-offscreen] *,
+[data-init-offscreen] *::before,
+[data-init-offscreen] *::after {
+  animation-play-state: paused !important;
+}
+
 @property --init5-trail-angle {
   syntax: '<angle>';
   inherits: false;

@@ -50,9 +50,9 @@ function Ecosystem({ l }: { l: LibrarySummary }) {
           <ArrowUpRight className="size-3" />
         </a>
       ) : null}
-      {l.updated ? (
+      {l.released ? (
         <span>
-          Updated <Time date={l.updated} />
+          Released <Time date={l.released} />
         </span>
       ) : null}
     </div>

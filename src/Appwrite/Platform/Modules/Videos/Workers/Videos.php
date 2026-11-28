@@ -327,7 +327,6 @@ class Videos extends Action
                 $workspace,
                 $queueForRealtime,
                 $project,
-                $permissions,
                 $telemetry,
                 VideoAction::Timeline->value,
                 $stage
@@ -640,8 +639,7 @@ class Videos extends Action
                 $caption,
                 $captionPath,
                 $queueForRealtime,
-                $project,
-                $permissions
+                $project
             );
             $this->phase($telemetry, VideoAction::Caption->value, 'persist', $phaseStart);
             Span::add('caption.size', (int) $caption->getAttribute('size', 0));
@@ -807,6 +805,10 @@ class Videos extends Action
 
             $rendition = $dbForProject->getDocument('videosRenditions', $rendition->getId());
             $claimed = true;
+            // The queued message carries the video as it was when the rendition
+            // was created; its read permissions may have been narrowed since.
+            $video = $dbForProject->getDocument('videos', $videoId);
+            $permissions = $this->readPermissions($video);
             Span::add('rendition.name', (string) $rendition->getAttribute('name', ''));
             Span::add('rendition.output', $output);
             Span::add('rendition.codec', $codec);
@@ -838,11 +840,10 @@ class Videos extends Action
                 $dbForProject,
                 $deviceForFiles,
                 $deviceForVideos,
-                $dbForProject->getDocument('videos', $videoId),
+                $video,
                 $workspace,
                 $queueForRealtime,
                 $project,
-                $permissions,
                 $telemetry,
                 VideoAction::Encode->value,
                 $stage
@@ -982,7 +983,7 @@ class Videos extends Action
                         $wrote = true;
                         $uploader->take($written);
                     })
-                    ->on(Packager::PROGRESS, function (mixed $progress) use ($dbForProject, $queueForRealtime, $project, $permissions, &$rendition, &$lastProgress, &$halted, &$last, &$advancedAt, &$advancedTime) {
+                    ->on(Packager::PROGRESS, function (mixed $progress) use ($dbForProject, $queueForRealtime, $project, $videoId, &$permissions, &$rendition, &$lastProgress, &$halted, &$last, &$advancedAt, &$advancedTime) {
                         if (!$progress instanceof Progress) {
                             return;
                         }
@@ -1028,6 +1029,7 @@ class Videos extends Action
                                 'progress' => (string) $percentage,
                             ])
                         );
+                        $permissions = $this->currentReadPermissions($dbForProject, $videoId);
                         $this->notify(
                             $queueForRealtime,
                             $project,
@@ -1129,6 +1131,7 @@ class Videos extends Action
                     'targetDuration' => $targetDuration,
                 ], fn ($value) => $value !== null))
             );
+            $permissions = $this->currentReadPermissions($dbForProject, $videoId);
             $this->notify(
                 $queueForRealtime,
                 $project,
@@ -1177,6 +1180,7 @@ class Videos extends Action
                     'size' => $storageBytes,
                 ])
             );
+            $permissions = $this->currentReadPermissions($dbForProject, $videoId);
             $this->notify(
                 $queueForRealtime,
                 $project,
@@ -1222,6 +1226,7 @@ class Videos extends Action
                             'error' => $reason,
                         ])
                     );
+                    $permissions = $this->currentReadPermissions($dbForProject, $videoId);
                     $this->notify(
                         $queueForRealtime,
                         $project,
@@ -1435,8 +1440,6 @@ class Videos extends Action
 
     /**
      * Write a staged WebVTT file as the caption's single segment and mark ready.
-     *
-     * @param array<string> $permissions
      */
     private function persistCaptionVtt(
         Database $dbForProject,
@@ -1445,8 +1448,7 @@ class Videos extends Action
         Document $caption,
         string $vttPath,
         Realtime $queueForRealtime,
-        Document $project,
-        array $permissions
+        Document $project
     ): Document {
         $dbForProject->deleteDocuments('videosCaptionsSegments', [
             Query::equal('captionInternalId', [$caption->getSequence()]),
@@ -1498,7 +1500,7 @@ class Videos extends Action
                 'videoId' => $caption->getAttribute('videoId', $video->getId()),
                 'captionId' => $caption->getId(),
             ],
-            $permissions
+            $this->currentReadPermissions($dbForProject, $video->getId())
         );
 
         return $caption;
@@ -1513,7 +1515,6 @@ class Videos extends Action
      * returns false so the caller can release `captionsExtracted` and a later
      * job can retry. Tracks already stored are reused instead of inserted again.
      *
-     * @param array<string> $permissions
      * @return bool True when every text track was stored or permanently skipped
      */
     private function extractEmbeddedCaptions(
@@ -1525,7 +1526,6 @@ class Videos extends Action
         Encoder $encoder,
         Realtime $queueForRealtime,
         Document $project,
-        array $permissions,
         Telemetry $telemetry
     ): bool {
         try {
@@ -1659,7 +1659,7 @@ class Videos extends Action
                             'videoId' => $video->getId(),
                             'captionId' => $caption->getId(),
                         ],
-                        $permissions
+                        $this->currentReadPermissions($dbForProject, $video->getId())
                     );
                 }
 
@@ -1670,8 +1670,7 @@ class Videos extends Action
                     $caption,
                     $vttPath,
                     $queueForRealtime,
-                    $project,
-                    $permissions
+                    $project
                 );
                 $registered++;
                 $this->record($extracted, 1, ['result' => 'registered', 'codec' => $codec]);
@@ -1704,7 +1703,7 @@ class Videos extends Action
                                     'videoId' => $video->getId(),
                                     'captionId' => $caption->getId(),
                                 ],
-                                $permissions
+                                $this->currentReadPermissions($dbForProject, $video->getId())
                             );
                         } catch (\Throwable $park) {
                             // The failed extract or registration owns warning.message.
@@ -1743,7 +1742,7 @@ class Videos extends Action
                         'videoId' => $video->getId(),
                         'captionId' => $caption->getId(),
                     ],
-                    $permissions
+                    $this->currentReadPermissions($dbForProject, $video->getId())
                 );
                 Span::add('captions.default.id', $caption->getId());
                 break;
@@ -1890,7 +1889,6 @@ class Videos extends Action
      * A failed extract clears captionsExtracted so a later job can retry.
      *
      * @param array{basePath: string, inDir: string, outDir: string} $workspace
-     * @param array<string> $permissions
      * @return array{0: Document, 1: string, 2: array<string, string>} the video, the path or URL of its source, and the headers a URL is requested with
      */
     private function prepareSource(
@@ -1901,7 +1899,6 @@ class Videos extends Action
         array $workspace,
         Realtime $queueForRealtime,
         Document $project,
-        array $permissions,
         Telemetry $telemetry,
         string $action,
         string &$stage
@@ -1945,7 +1942,7 @@ class Videos extends Action
                 $video,
                 'videos.[videoId].update',
                 ['videoId' => $video->getId()],
-                $permissions
+                $this->currentReadPermissions($dbForProject, $video->getId())
             );
         }
 
@@ -1983,7 +1980,6 @@ class Videos extends Action
                         $this->encoder(headers: $headers),
                         $queueForRealtime,
                         $project,
-                        $permissions,
                         $telemetry
                     );
                 } catch (\Throwable $th) {
@@ -2818,6 +2814,19 @@ class Videos extends Action
             'timelineStatus' => $status,
             'timelineError' => $error,
         ]));
+    }
+
+    /**
+     * Read permissions of the video as it is now. Rendition events carry no
+     * permissions of their own, so they are delivered with these, and the
+     * video's permissions can change while a job is queued or running. A video
+     * that is gone yields an empty set, so its events are dropped.
+     *
+     * @return array<string>
+     */
+    private function currentReadPermissions(Database $dbForProject, string $videoId): array
+    {
+        return $this->readPermissions($dbForProject->getDocument('videos', $videoId));
     }
 
     /**

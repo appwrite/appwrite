@@ -1882,7 +1882,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/analytics",
     "title": "Analytics",
     "description": "See who visits your websites and apps with Appwrite Analytics. Track pageviews and custom events without cookies, and see where visitors come from, what they view, and how much of your traffic comes from bots and AI.",
-    "excerpt": "Appwrite **Analytics** shows how people find and use your websites and apps. Add tracking with the Web or Flutter SDK, or send events over REST. Each property's dashboard then shows your visitors, where they came from, the pages they viewed, where they are, and the devices they use, next to the events you define, such as signups and purchases. Analytics works without cookies or identifiers stored on the visitor's device, and labels traffic from search crawlers, AI crawlers, AI assistants,…",
+    "excerpt": "Appwrite **Analytics** shows how people find and use your websites, mobile apps, and AI agents: who visits, where they came from, the pages or screens they viewed, where they are, and the devices they use, next to your own events, such as signups and purchases. A site on Appwrite Sites needs no code, a website needs one script tag, and apps use the Android, Apple, Flutter, React Native, or Web SDK. Anything else can send events over REST. Analytics works…",
     "breadcrumbs": [
       "products",
       "Analytics"
@@ -1891,8 +1891,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "products/analytics/bots",
     "title": "Bots and AI traffic",
-    "description": "How Appwrite Analytics recognizes bots, AI crawlers, and AI assistants from their user agent, where they appear on the dashboard, and how they count toward your plan.",
-    "excerpt": "Not every visit comes from a person. Search engines index your pages, AI companies crawl them for training and answers, social sites fetch link previews, and monitors check that your site is up. Appwrite recognizes these clients from their user agent and labels their events, so you can see how much of your traffic is automated and who sends it. How bots are recognized Appwrite checks the user agent of every event: the browser's header, or the your server or…",
+    "description": "How Appwrite Analytics recognizes bots, AI crawlers, and AI assistants from their user agent and network, where they appear on the dashboard, and how they count toward your plan.",
+    "excerpt": "Not every visit comes from a person. Search engines index your pages, AI companies crawl them for training and answers, social sites fetch link previews, and monitors check that your site is up. Appwrite recognizes these clients from their user agent and the network they connect from, and labels their events, so the dashboard shows how much of your traffic is automated and who sends it. How bots are recognized Appwrite checks three things for every event, in this order:…",
     "breadcrumbs": [
       "products",
       "Analytics",
@@ -1902,8 +1902,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "products/analytics/custom-events",
     "title": "Track custom events",
-    "description": "Record the actions that matter to your product in Appwrite Analytics, such as signups and purchases, with event names and props from the browser, Flutter, or your server.",
-    "excerpt": "Pageviews show where people go. Custom events show what they do there: a signup, a purchase, an invite sent, a plan upgraded. Each custom event has a name and optional props, and appears in the **Custom events** card on the property's dashboard. Send an event Send a custom event with the tracking helper on the client, or with from your server. These examples continue from the setup in Track a website, Track a Flutter app, and Track events from your…",
+    "description": "Record the actions that matter to your product in Appwrite Analytics, such as signups and purchases, with event names and props from the browser, mobile apps, or your server.",
+    "excerpt": "Pageviews show where people go. Custom events show what they do there: a signup, a purchase, an invite sent, a plan upgraded. Each custom event has a name and optional props, and appears in the **Custom events** card on the property's dashboard. Send an event Send a custom event with the class in your website or app, or from your server with an API key. These examples continue from the setup in Track a website, Track a mobile app, and…",
     "breadcrumbs": [
       "products",
       "Analytics",
@@ -1914,7 +1914,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/analytics/dashboard",
     "title": "Dashboard",
     "description": "A tour of the Appwrite Analytics dashboard, from the metrics, chart, and notes to date ranges, live visitors, and the cards that break traffic down by source, page, location, technology, bots, and custom events.",
-    "excerpt": "Each property has a dashboard on its **Analytics** tab. It shows the property's traffic for the date range you pick: the headline metrics, a chart over time, and cards that break visits down by where they came from, what they viewed, and who sent them. Metrics and chart The top of the dashboard has a tab for each metric: **Unique visitors**, **Visits**, **Pageviews**, **Views per visit**, **Bounce rate**, **Visit duration**, and **Engagement time**. Each tab shows the total for the…",
+    "excerpt": "Each property has a dashboard on its **Analytics** tab. It shows the property's traffic for the selected date range: the headline metrics, a chart over time, and cards that break visits down by where they came from, what they viewed, and who sent them. Metrics and chart The top of the dashboard has a tab for each metric: **Unique visitors**, **Visits**, **Pageviews**, **Events**, **Users**, **Views per visit**, **Bounce rate**, **Visit duration**, and **Engagement time**. **Users** appears when the property identifies…",
     "breadcrumbs": [
       "products",
       "Analytics",
@@ -1924,8 +1924,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "products/analytics/events",
     "title": "Events",
-    "description": "Events are the records every Appwrite Analytics metric is built from. Learn which events the tracking helpers send, how custom events differ, and what Appwrite adds to each event.",
-    "excerpt": "An event is one thing that happened in your app: a page was viewed, a link was clicked, a purchase completed. Every figure on an analytics dashboard, from visitors to bounce rate, is calculated from the events a property receives. Each event has a name and the URL it happened on. It can also carry a referrer, the viewport width, scroll depth, engagement time, and custom props. Automatic events The tracking helpers in the Web and Flutter SDKs send these…",
+    "description": "Events are the records every Appwrite Analytics metric is built from. Learn which events the `Tracking` class sends, how custom events differ, and what Appwrite adds to each event.",
+    "excerpt": "An event is one thing that happened in your app: a page was viewed, a link was clicked, a purchase completed. Every figure on an analytics dashboard, from visitors to bounce rate, is calculated from the events a property receives. Each event has a name and the URL it happened on. It can also carry a referrer, the viewport width, scroll depth, engagement time, and custom props. Events the class sends The class in each Appwrite SDK uses these event…",
     "breadcrumbs": [
       "products",
       "Analytics",
@@ -1947,7 +1947,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/analytics/filters",
     "title": "Filter and compare traffic",
     "description": "Narrow the Appwrite Analytics dashboard to the traffic you care about with filters, save filters for later, and compare a date range with an earlier period.",
-    "excerpt": "Filters narrow the whole dashboard to traffic that matches, such as visitors from search engines or visits to one page. Comparisons show how a date range differs from an earlier one. You can use both together, for example to see whether search traffic grew compared with last month. Filter from a card The quickest way to filter is from a card. Click a row, such as on the **Channels** tab of **Traffic sources**, and every metric, the chart, and the…",
+    "excerpt": "Filters narrow the whole dashboard to traffic that matches, such as visitors from search engines or visits to one page. Comparisons show how a date range differs from an earlier one. Use both together, for example to see whether traffic grew compared with last month. Filter from a card Click a row in any card, such as on the **Channels** tab of **Traffic sources**, and every metric, the chart, and the other cards update to that traffic. The filter appears…",
     "breadcrumbs": [
       "products",
       "Analytics",
@@ -1958,7 +1958,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/analytics/firewall",
     "title": "Block traffic with Firewall",
     "description": "Turn what Appwrite Analytics shows into Firewall rules for a site. Block a country, serve only one country, or deny a bot or a page, starting from the dashboard.",
-    "excerpt": "Analytics shows who visits your site, and Firewall decides who reaches it. When a property tracks a site hosted on Appwrite Sites, you can start a Firewall rule for that site from a country, region, city, hostname, page, or bot on the dashboard. Before you start - The property must be linked to the site: its domain has to be one of the site's domains. See Properties. - You need permission to create Firewall rules in the project. Start a…",
+    "excerpt": "Analytics shows who visits your site, and Firewall decides who reaches it. When a property tracks a site hosted on Appwrite Sites, its dashboard can start a Firewall rule for that site from a country, region, city, hostname, page, or bot on the dashboard. Before you start - The property must be linked to the site: its domain has to be one of the site's domains. See Properties. - Your role must allow creating Firewall rules in the project. Start…",
     "breadcrumbs": [
       "products",
       "Analytics",
@@ -1966,21 +1966,10 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
-    "slug": "products/analytics/flutter",
-    "title": "Track a Flutter app",
-    "description": "Add Appwrite Analytics to a Flutter app. Track screen views with a navigator observer, app lifecycle and engagement time, and your own events on iOS, Android, web, and desktop.",
-    "excerpt": "The Appwrite Flutter SDK includes a helper and a . Together they record screen views as your users move through the app, when the app goes to the background and comes back, and how long it stays in the foreground. The same code runs on iOS, Android, web, and desktop. Before you start You need an analytics property and its property ID, which the Console shows next to the property name. Your app also needs to be registered in the…",
-    "breadcrumbs": [
-      "products",
-      "Analytics",
-      "Track a Flutter app"
-    ]
-  },
-  {
     "slug": "products/analytics/limits",
     "title": "Limits and retention",
     "description": "Appwrite Analytics plan limits for events, properties, and data retention, and the size limits for events, properties, and metric queries.",
-    "excerpt": "This page lists how many events Appwrite Analytics accepts on each plan and how far back you can see them, and the size limits that apply to every event and request. Plan limits | | Free | Pro | Enterprise | | --- | --- | --- | --- | | Events | 50K per month | 100K per month | Custom | | Additional events | Not available | $3 per 100K events | Custom | | Properties |…",
+    "excerpt": "This page lists how many events Appwrite Analytics accepts on each plan, how long the data stays readable, and the size limits that apply to every event and request. Plan limits | | Free | Start | Pro | Enterprise | | --- | --- | --- | --- | --- | | Events | 50K per month per organization | 50K per month per project | 100K per month per project | Custom | | Additional events | Not…",
     "breadcrumbs": [
       "products",
       "Analytics",
@@ -1991,7 +1980,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/analytics/metrics",
     "title": "Metrics",
     "description": "How Appwrite Analytics calculates visitors, visits, pageviews, bounce rate, visit duration, and engagement time, which breakdowns it offers, and how to read metrics from your own code.",
-    "excerpt": "Every figure on an analytics dashboard comes from the events your property receives. This page defines each metric and breakdown, and shows how to read the same numbers from your own code. Dashboard metrics The row of metrics at the top of the dashboard covers the selected date range. - **Unique visitors**: distinct visitors in the range. Someone who returns several times counts once. - **Visits**: visits that started in the range. A visit that started earlier doesn't count, even…",
+    "excerpt": "Every figure on an analytics dashboard comes from the events a property receives. This page defines each metric and breakdown, and shows how to read the same numbers from code. Dashboard metrics The row of metrics at the top of the dashboard covers the selected date range. - **Unique visitors**: distinct visitors in the range. Visitor IDs change every day, so someone who returns on three days counts three times. See Visitors and sessions. - **Visits**: visits that started in…",
     "breadcrumbs": [
       "products",
       "Analytics",
@@ -1999,10 +1988,21 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "products/analytics/mobile",
+    "title": "Track a mobile app",
+    "description": "Add Appwrite Analytics to an Android, Apple, Flutter, or React Native app. Track installs, updates, screen views, push notifications, time in the app, and your own events.",
+    "excerpt": "The Android, Apple, Flutter, and React Native SDKs each include a class. One call to records installs, updates, and when the app goes to the background and comes back. Connect to your navigation to record screen views, and call it from your push handler to see which notifications people open. Before you start Create a **Mobile** property and copy its property ID, which the Console shows next to the property name. Register the app in the same project. The SDK…",
+    "breadcrumbs": [
+      "products",
+      "Analytics",
+      "Track a mobile app"
+    ]
+  },
+  {
     "slug": "products/analytics/own-domain",
     "title": "Serve tracking from your domain",
     "description": "Send Appwrite Analytics events through a domain you own, with a custom API domain or a small proxy on your site, so tracking requests stay first-party.",
-    "excerpt": "The tracking helpers send events to your project's Appwrite endpoint, such as . Ad blockers and privacy extensions decide what to block from filter lists, which name tracking hosts and URL patterns. When your events go to a domain you own, list entries written for third-party hosts don't apply to them. The **Ad blockers** card in a property's **Settings** tab offers two ways to do this. | | Custom domain | Proxy | | --- | --- | --- |…",
+    "excerpt": "The class sends events to your project's Appwrite endpoint, such as . Ad blockers and privacy extensions block requests that match their filter lists, which name known tracking hosts and URL patterns. Sending events to a domain you own keeps them clear of entries written for third-party hosts. A site on Appwrite Sites with analytics turned on needs no setup here: Appwrite already sends its events through the site's own domain. See Properties. Choose a method For any other site,…",
     "breadcrumbs": [
       "products",
       "Analytics",
@@ -2013,7 +2013,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/analytics/privacy",
     "title": "Privacy",
     "description": "What Appwrite Analytics collects and stores for each event, how visitor IDs work without cookies, and the controls you have over tracking and data.",
-    "excerpt": "Appwrite Analytics works without cookies and doesn't store IP addresses. This page lists what it collects, what it keeps, and the controls you have, so you can describe your analytics accurately to your users. No cookies or device storage Appwrite doesn't set cookies for analytics, and the tracking helpers in the Web and Flutter SDKs don't keep identifiers on the device. In the browser, the Web helper doesn't write to , , or any other storage. Each event is a…",
+    "excerpt": "Appwrite Analytics works without cookies and doesn't store IP addresses. This page lists what it collects, what it keeps, and the controls available, to help describe your analytics accurately to your users. No cookies or stored visitor identifiers Appwrite doesn't set cookies for analytics, and the class in the Appwrite SDKs doesn't keep visitor identifiers on the device. In the browser, it doesn't write to , , or any other storage. In an app, it keeps only a marker with…",
     "breadcrumbs": [
       "products",
       "Analytics",
@@ -2024,7 +2024,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/analytics/properties",
     "title": "Properties",
     "description": "A property collects Appwrite Analytics events for one website or app. Create properties, control which origins can send events, link a property to a site, and turn off or delete a property.",
-    "excerpt": "A property is one website or app you track. Every event belongs to a property, and each property has its own dashboard, settings, and property ID. A project can hold several properties, for example one for your marketing site and one for your mobile app. Your tracking code and the Analytics API identify a property by its property ID. The Console shows it next to the property name, with a button to copy it. Properties in a project Open **Analytics**…",
+    "excerpt": "A property is one website, mobile app, or AI agent you track. Every event belongs to a property, and each property has its own dashboard, settings, and property ID. A project can hold several properties, for example one for your marketing site and one for your mobile app. Your tracking code and the Analytics API identify a property by its property ID. The Console shows it next to the property name, with a button to copy it. Properties in a…",
     "breadcrumbs": [
       "products",
       "Analytics",
@@ -2034,8 +2034,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "products/analytics/quick-start",
     "title": "Start with Analytics",
-    "description": "Track your first website visit with Appwrite Analytics. Create a property, add the Web SDK's tracking helper to your site, and see the visit on the dashboard.",
-    "excerpt": "In this quick start you create an analytics property, add tracking to a website with the Appwrite Web SDK, and see your first visit on the dashboard. Add your site to the project Appwrite accepts events from a browser only when the site's hostname belongs to one of the project's apps. If your site isn't one yet, add it. 1. Sign in to Appwrite Cloud and open a project. 2. Open **Apps** in the sidebar and click **Add app**. 3.…",
+    "description": "Track your first website visit with Appwrite Analytics. Create a property, add one script tag to your site, and see the visit on the dashboard.",
+    "excerpt": "Create an analytics property, add tracking to a website with one script tag, and see your first visit on the dashboard. A site hosted on Appwrite Sites needs no code: turn on **Web analytics** in the site's **Settings** and click **Update** instead. See Properties. Add your site to the project Appwrite accepts events from a browser only when the site's hostname belongs to one of the project's apps. If the hostname isn't registered, add it as a Web app. 1.…",
     "breadcrumbs": [
       "products",
       "Analytics",
@@ -2045,8 +2045,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "products/analytics/rest",
     "title": "Send events over REST",
-    "description": "Send Appwrite Analytics events with a plain HTTP request from any platform, including native iOS and Android apps, games, and command-line tools.",
-    "excerpt": "Any client that can make an HTTP request can send analytics events. Use REST when your platform has no tracking helper, such as a native iOS or Android app, a game engine, a smart TV app, or a command-line tool. Each event is one request to your property. Client-side events need no API key. Send an event Send the event name and the URL it happened on. Appwrite responds with . An event named or counts as a pageview. Any…",
+    "description": "Send Appwrite Analytics events with a plain HTTP request from any platform, such as games, desktop apps, and command-line tools.",
+    "excerpt": "Any client that can make an HTTP request can send analytics events. Use REST on platforms without an Appwrite class, such as a game engine, a smart TV app, a desktop app, or a command-line tool. Android, Apple, Flutter, and React Native apps have a class instead. See Track a mobile app. Each event is one request to your property. Client-side events need no API key. Send an event Send the event name and the URL it happened on. Appwrite…",
     "breadcrumbs": [
       "products",
       "Analytics",
@@ -2057,7 +2057,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/analytics/server-side",
     "title": "Track events from your server",
     "description": "Send Appwrite Analytics events from your backend with an API key, and attach server-side actions such as purchases to the visitor who made them.",
-    "excerpt": "Some of the events you care about happen on your server: an order that completes, a subscription that renews, a job that finishes. Send these from your backend with an API key. When you pass the visitor's IP address and user agent, the event joins that visitor's visit, next to the pageviews their browser sent. Create an API key Server-side events use an API key with the scope. 1. In your project, open **API Keys** and click **Create API key**.…",
+    "excerpt": "Some events happen on your server: an order that completes, a subscription that renews, a job that finishes. Send them from your backend with a server SDK and an API key. To join the visitor's browser visit, pass their IP address and user agent with a URL on the same hostname. To count the event toward a signed-in user, pass their user ID. That event starts a visit of its own. Create an API key Server-side events use an API…",
     "breadcrumbs": [
       "products",
       "Analytics",
@@ -2068,7 +2068,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/analytics/sources",
     "title": "Traffic sources",
     "description": "How Appwrite Analytics works out where visitors come from, with channels, referring sources, and UTM campaign parameters.",
-    "excerpt": "The **Traffic sources** card on the dashboard shows where visitors came from in three ways: the type of source as a **channel**, the referring site as a **source**, and the UTM tags on the link they followed as a **campaign**. Appwrite works these out from two fields of each event: the referrer, which is the page a visitor came from, and the event URL. The Web helper sends the browser's referrer with every pageview. In a single-page app, the browser…",
+    "excerpt": "On a **Web** property, the **Traffic sources** card on the dashboard shows where visitors came from in three ways: the type of source as a **channel**, the referring site as a **source**, and the UTM tags on the link they followed as a **campaign**. Appwrite works these out from two fields of each event: the referrer, which is the page a visitor came from, and the event URL. In a single-page app, the browser keeps the original referrer while the…",
     "breadcrumbs": [
       "products",
       "Analytics",
@@ -2079,7 +2079,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/analytics/visitors",
     "title": "Visitors and sessions",
     "description": "How Appwrite Analytics identifies visitors without cookies, groups their events into visits, and works out bounces, entry and exit pages, visit duration, and live visitors.",
-    "excerpt": "Appwrite Analytics counts people and their visits without cookies or anything else stored on their device. It works out who sent each event from the request itself, then groups each visitor's events into visits. Visitors Appwrite gives every event a visitor ID: a one-way hash of three values from the request. - The IP address the event came from. - The header of the browser or app. - The hostname of the event's URL. Events with the same three values…",
+    "excerpt": "Appwrite Analytics counts people and their visits without cookies or anything else stored on their device. It works out who sent each event from the request itself, then groups each visitor's events into visits. Visitors Appwrite gives every event a visitor ID: a one-way hash of these values. - A salt: a random value that changes every day at midnight UTC. - Who sent it: the user ID when Appwrite knows who sent the event, or else the IP address…",
     "breadcrumbs": [
       "products",
       "Analytics",
@@ -2089,8 +2089,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "products/analytics/web",
     "title": "Track a website",
-    "description": "Add Appwrite Analytics to a website or web app with the Web SDK. Track pageviews, outbound links, scroll depth, engagement time, and file downloads from the browser.",
-    "excerpt": "The Appwrite Web SDK includes a helper that records visits from the browser. A call to tracks pageviews, outbound link clicks, scroll depth, and engagement time. File downloads and your own events each take one more line. Before you start You need an analytics property and its property ID, which the Console shows next to the property name. Your site also needs a Web app in the same project. Browsers send an header with every event, and Appwrite accepts events…",
+    "description": "Add Appwrite Analytics to a website or web app with one script tag or the Web SDK. Track pageviews, outbound links, scroll depth, engagement time, and file downloads from the browser.",
+    "excerpt": "The Appwrite Web SDK includes a class that records visits from the browser. A call to tracks pageviews, outbound link clicks, scroll depth, and engagement time. File downloads and your own events each take one more line. On a site without a build step, such as a static site or a CMS theme, the tracker script sets up from one script tag. In an app with a build step, install the SDK from npm instead. A site hosted on Appwrite…",
     "breadcrumbs": [
       "products",
       "Analytics",
@@ -2128,6 +2128,16 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       "Auth",
       "Concepts",
       "Accounts"
+    ]
+  },
+  {
+    "slug": "products/auth/analytics",
+    "title": "Analytics",
+    "description": "See what each signed-in user does in your sites, apps, and AI agents with Appwrite Analytics, from the Analytics tab of a user in Auth.",
+    "excerpt": "Appwrite Analytics can link the events your sites, apps, and AI agents send to the users in **Auth**. Each user then gets an **Analytics** tab with their activity across every property in the project: how often they come back, which pages or screens they open, and which events they send. Events record the user ID only, never an email address or a name. Anonymous visitors aren't affected. Identify signed-in users 1. In your project, open **Analytics** and select a property.…",
+    "breadcrumbs": [
+      "Auth",
+      "Analytics"
     ]
   },
   {
@@ -3705,7 +3715,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/databases/postgresql/integrations/grafana",
     "title": "Grafana",
     "description": "Connect Grafana to an Appwrite native PostgreSQL database as a data source and build dashboards. Create a read-only reporting role, configure the PostgreSQL data source with TLS, and provision it from YAML.",
-    "excerpt": "An Appwrite native PostgreSQL database exposes a standard managed PostgreSQL 18 or 17 engine, so Grafana connects to it through the built-in **PostgreSQL data source** with no Appwrite-specific configuration. Point the data source at your database hostname, authenticate with a read-only reporting role, and query your tables to build dashboards and alerts. You'll need a native PostgreSQL database in a state and its credentials. In the Console, open the database and click **Credentials**. Use the **Details** tab for individual values,…",
+    "excerpt": "An Appwrite native PostgreSQL database exposes a standard managed PostgreSQL 19, 18, or 17 engine, so Grafana connects to it through the built-in **PostgreSQL data source** with no Appwrite-specific configuration. Point the data source at your database hostname, authenticate with a read-only reporting role, and query your tables to build dashboards and alerts. You'll need a native PostgreSQL database in a state and its credentials. In the Console, open the database and click **Credentials**. Use the **Details** tab for individual…",
     "breadcrumbs": [
       "PostgreSQL",
       "Integrations",
@@ -6989,6 +6999,16 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "tooling/command-line/zero",
+    "title": "Zero",
+    "description": "Use the Appwrite CLI to start and manage Appwrite Zero projects without an account.",
+    "excerpt": "Running creates an Appwrite Zero project without an account and links it to the current directory. Additional subcommands report remaining time, open the Console, extend the build window, list Zero projects created on this machine, and delete a project. requires Appwrite CLI 28.15.0 or later. Update the CLI to the latest release first. Start a Zero project Run inside an existing app directory, or pass a directory name to create a new one: The CLI writes , signs in to…",
+    "breadcrumbs": [
+      "Tooling",
+      "Zero"
+    ]
+  },
+  {
     "slug": "tooling/terraform",
     "title": "Terraform provider",
     "description": "Manage Appwrite infrastructure as code with the official Terraform provider. Works with Appwrite Cloud and Community Edition.",
@@ -8339,6 +8359,15 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       "Vue",
       "Steps",
       "Next steps"
+    ]
+  },
+  {
+    "slug": "zero",
+    "title": "Appwrite Zero",
+    "description": "Start an Appwrite Cloud project without an account, build with a coding agent, and claim the project to keep it.",
+    "excerpt": "With Appwrite **Zero**, a single CLI command creates an Appwrite Cloud project and an API key for a coding agent without requiring an Appwrite account. Every Zero project runs for a 60-minute build window before pausing. The claim deadline falls 24 hours after that initial 60-minute window ends, after which unclaimed projects and their data are deleted. Claiming moves the project into an Appwrite organization while keeping its ID, data, and API key intact. Project lifecycle 1. **Build.** The project…",
+    "breadcrumbs": [
+      "Appwrite Zero"
     ]
   }
 ] as DocsSearchEntry[]

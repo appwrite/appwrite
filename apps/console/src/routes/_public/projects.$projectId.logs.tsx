@@ -2,9 +2,12 @@ import { createFileRoute, redirect } from '@tanstack/react-router'
 import { View } from '@/components/pages/projects/$projectId/logs/View'
 import { projectQueryOptions } from '@/lib/react-query/hooks'
 import { isCloudProfile, isFeatureEnabled } from '@/lib/console-profiles'
+import { runtimeLogsSearchSchema } from '@/lib/runtime-log-filters'
 import { pageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute('/_public/projects/$projectId/logs')({
+  // Filters live in the URL, so a filtered view can be shared and reloaded
+  validateSearch: runtimeLogsSearchSchema,
   head: () => ({ meta: [{ title: pageTitle('Logs') }] }),
   beforeLoad: ({ params }) => {
     // Cloud only: self-hosted doesn't serve `/v1/logs`, even with the flag on.

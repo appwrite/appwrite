@@ -113,11 +113,18 @@ export type ConsoleProfileFeatures = {
   /** Runtime logs: the project Logs page, the Runtime logs tabs on functions and sites, and the deployment page Build / Runtime switch. Cloud only: served by `/v1/logs`. */
   runtimeLogs: boolean
   /**
-   * Appwrite Zero marketing page (`/zero`, `/zero.md`) and its Products menu and
-   * footer links. Off until launch: the page returns 404 while this is off.
+   * Appwrite Zero marketing page (`/zero`, `/zero.md`), its Products menu and
+   * footer links, and the Zero docs (`/docs/zero` and the CLI `zero` page).
+   * Off until launch: the page returns 404 while this is off.
    * Enable from Debug → Feature flags; at launch, default it on.
    */
   zero: boolean
+  /**
+   * Appwrite Beep marketing page (`/products/beep`), the Beep mobile app's
+   * Products menu and footer links. Off until launch: the page returns 404
+   * while this is off. Enable from Debug → Feature flags; at launch, default it on.
+   */
+  beep: boolean
 }
 
 /** Short labels for debug UI (profile comparison, etc.). */
@@ -164,6 +171,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   appwritePush: 'Appwrite push',
   runtimeLogs: 'Runtime logs',
   zero: 'Zero',
+  beep: 'Beep',
 }
 
 export type ConsoleProfile = {
@@ -224,6 +232,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       // Off until launch; enable from Debug → Feature flags.
       runtimeLogs: false,
       zero: false,
+      beep: false,
     },
   },
   'self-hosted': {
@@ -270,6 +279,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       appwritePush: true,
       runtimeLogs: false,
       zero: false,
+      beep: false,
     },
   },
 }
@@ -551,6 +561,7 @@ function applyCloudOnlyFeatureGates(
       multiTenancy: false,
       sso: false,
       zero: false,
+      beep: false,
     }
   }
   return features

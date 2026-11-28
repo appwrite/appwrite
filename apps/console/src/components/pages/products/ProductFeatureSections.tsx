@@ -15,7 +15,10 @@ import { SitesNetworkSection } from '@/components/pages/products/features/sites/
 import { VideosOutputsCatalog } from '@/components/pages/products/features/videos/VideosOutputsCatalog'
 import { VideosPerformanceCatalog } from '@/components/pages/products/features/videos/VideosPerformanceCatalog'
 import { getProductFeatures } from '@/lib/products/features'
-import { getProductFeatureVisual } from '@/lib/products/features/visuals'
+import {
+  getProductFeatureCompanion,
+  getProductFeatureVisual,
+} from '@/lib/products/features/visuals'
 import { getProductTheme } from '@/lib/products/theme'
 import type { ProductId } from '@/lib/products/types'
 
@@ -33,8 +36,11 @@ export function ProductFeatureSections({ productId }: ProductFeatureSectionsProp
     <>
       {features.map((feature) => {
         const Visual = getProductFeatureVisual(productId, feature.id)
+        const Companion = getProductFeatureCompanion(productId, feature.id)
         const companion =
-          productId === 'analytics' && feature.id === 'privacy' ? (
+          Companion ? (
+            <Companion />
+          ) : productId === 'analytics' && feature.id === 'privacy' ? (
             <AnalyticsPrivacyCatalog />
           ) : productId === 'databases' && feature.id === 'engines' ? (
             <DatabasesEnginesCatalog />

@@ -51,6 +51,12 @@ MCP clients complete that OAuth flow with a localhost callback URL. If you run y
 
 Before connecting to the MCP server, you must [set up an Appwrite project](https://cloud.appwrite.io) on Appwrite Cloud. No additional software needs to be installed on your system.
 
+{% feature_gate anyOf="zero" %}
+{% info title="No account yet?" %}
+Without an account, an agent can [start an Appwrite Zero project](/docs/zero#ai) through the CLI and build on it there. Because the hosted MCP server requires an Appwrite account, it cannot create Zero projects. Once the project is claimed, connect the MCP server with your Appwrite account to continue working on it.
+{% /info %}
+{% /feature_gate %}
+
 # Installation {% #installation %}
 
 {% partial file="mcp-add-ides-tools.md" /%}
