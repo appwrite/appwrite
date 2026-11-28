@@ -5,6 +5,7 @@ import {
   ArrowUpRight,
   ArrowLeftRight,
   BarChart2,
+  BellRing,
   BookOpen,
   BotMessageSquare,
   Boxes,
@@ -73,6 +74,7 @@ import { isAgentDocsPathname } from '@/lib/docs/agent-docs-feature'
 import { isAnalyticsDocsPathname } from '@/lib/docs/analytics-docs-feature'
 import { isPartnersDocsPathname } from '@/lib/docs/partners-docs-feature'
 import { isVideosDocsPathname } from '@/lib/docs/videos-docs-feature'
+import { isBeepDocsPathname } from '@/lib/docs/beep-docs-feature'
 import { isZeroDocsPathname } from '@/lib/docs/zero-docs-feature'
 import { isDocsProductNavNew } from '@/lib/products/new-badge'
 import { ZERO_PRODUCT_ICON } from '@/lib/zero/product-icon'
@@ -161,6 +163,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   refresh: RefreshCw,
   environments: GitBranch,
   radio: Radio,
+  bell: BellRing,
 }
 
 type DocsCustomNavIconProps = {
@@ -580,11 +583,16 @@ export function DocsGlobalSidebar({
       navigate({ to: '/docs', replace: true })
       return
     }
+    if (!features.alerts && isBeepDocsPathname(pathname)) {
+      navigate({ to: '/docs', replace: true })
+      return
+    }
     if (!features.zero && isZeroDocsPathname(pathname)) {
       navigate({ to: '/docs', replace: true })
     }
   }, [
     features.agent,
+    features.alerts,
     features.analytics,
     features.partnersDocs,
     features.videos,
