@@ -786,6 +786,10 @@ export const DOCS_LOCAL_SECTION_NAVS: DocsSectionNavConfig[] = [
         label: 'Guides',
         items: [
           {
+            label: 'Embed the player',
+            href: '/docs/products/videos/player',
+          },
+          {
             label: 'Play a video in your app',
             href: '/docs/products/videos/play',
           },

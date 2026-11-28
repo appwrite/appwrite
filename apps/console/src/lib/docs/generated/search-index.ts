@@ -5781,7 +5781,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/videos/inspector",
     "title": "Inspect playback",
     "description": "Use the Appwrite Videos inspector to watch a playback session's experience score, buffer, bitrate, network requests, and manifests.",
-    "excerpt": "The **inspector** shows what the player in the Console is doing while it plays a video. Use it to check how fast a stream starts, whether it rebuffers, which renditions it picks, and what the player actually requested. Open the inspector 1. Open **Videos** in your project and select a video with at least one ready rendition. 2. Play the video on its **Overview**. The inspector shows under the player and fills in as the session runs. 3. To give…",
+    "excerpt": "The **inspector** shows what the player in the Console is doing while it plays a video. Use it to check how fast a stream starts, whether it rebuffers, which renditions it picks, and what the player actually requested. Open the inspector 1. Open **Videos** in your project and select a video with at least one ready rendition. 2. Play the video on its **Overview**. The inspector shows under the player and fills in as the session runs. To give it…",
     "breadcrumbs": [
       "products",
       "Videos",
@@ -5814,11 +5814,22 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/videos/play",
     "title": "Play a video in your app",
     "description": "Play Appwrite Videos streams on the web, Apple platforms, Android, Flutter, and React Native by loading the master manifest in a standard player.",
-    "excerpt": "Appwrite Videos streams work with standard HLS and DASH players. You give the player the master manifest URL, and it handles adaptive bitrate and captions on its own. There is no Appwrite SDK to add for playback. Open a video and select **Install**. Pick a platform, player, framework, and format to get install steps and code with your stream URL already filled in. **Copy prompt** copies the same setup as instructions for an AI coding agent. Before you start 1.…",
+    "excerpt": "Appwrite Videos streams work with standard HLS and DASH players. You give the player the master manifest URL, and it handles adaptive bitrate and captions on its own. There is no Appwrite SDK to add for playback. To put a video on a website without building a player, embed the video player with an iframe instead. Open a video and select **Install**. Pick a platform, player, framework, and format to get install steps and code with your stream URL already…",
     "breadcrumbs": [
       "products",
       "Videos",
       "Play a video in your app"
+    ]
+  },
+  {
+    "slug": "products/videos/player",
+    "title": "Embed the video player",
+    "description": "Embed the Appwrite video player on any website with an iframe. It streams adaptively, shows captions, and takes options for start time, autoplay, looping, controls, and accent color.",
+    "excerpt": "Every video comes with a hosted player, the same one you use in the Console. Embed it on any website with an , or share its link, and viewers get adaptive streaming, captions, keyboard shortcuts, and picture in picture without you building a player. To build playback into your own app with hls.js, Shaka Player, AVPlayer, ExoPlayer, or another player, see Play a video in your app. What viewers get - **Adaptive streaming**: The player switches between your renditions as…",
+    "breadcrumbs": [
+      "products",
+      "Videos",
+      "Embed the video player"
     ]
   },
   {

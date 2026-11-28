@@ -98,6 +98,9 @@ Who can watch a stream, and who can manage videos in your organization.
 Step-by-step guides for playing and checking your streams.
 
 {% cards %}
+{% cards_item href="/docs/products/videos/player" title="Embed the video player" %}
+Embed the hosted player with an iframe, and set start time, autoplay, looping, controls, and accent color.
+{% /cards_item %}
 {% cards_item href="/docs/products/videos/play" title="Play a video in your app" %}
 Load the master manifest with hls.js, Shaka Player, Video.js, AVPlayer, ExoPlayer, Flutter, or React Native.
 {% /cards_item %}

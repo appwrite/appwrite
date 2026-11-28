@@ -1,0 +1,163 @@
+---
+layout: article
+title: Embed the video player
+description: Embed the Appwrite video player on any website with an iframe. It streams adaptively, shows captions, and takes options for start time, autoplay, looping, controls, and accent color.
+---
+
+Every video comes with a hosted player, the same one you use in the Console. Embed it on any website with an `<iframe>`, or share its link, and viewers get adaptive streaming, captions, keyboard shortcuts, and picture in picture without you building a player.
+
+To build playback into your own app with hls.js, Shaka Player, AVPlayer, ExoPlayer, or another player, see [Play a video in your app](/docs/products/videos/play).
+
+# What viewers get {% #what-viewers-get %}
+
+- **Adaptive streaming**: The player switches between your [renditions](/docs/products/videos/renditions) as the viewer's bandwidth changes. With HLS, it also caps quality at the player's size, so a small embed does not download 4K.
+- **Captions and audio tracks**: Viewers pick a [caption](/docs/products/videos/captions) track and its size, and an audio track when the video has more than one.
+- **Playback controls**: Playback speed from 0.5× to 2×, picture in picture, full screen, and a clock that switches between elapsed and remaining time when you click it.
+- **Keyboard and touch**: [Keyboard shortcuts](#keyboard-shortcuts) on desktop, and [double tap to seek](#touch) on phones.
+- **Media keys**: Media keys, the lock screen, and the system's now playing controls play, pause, and seek the video.
+- **A responsive layout**: The controls size to the player, so a small embed or a phone keeps full screen and the settings menu.
+
+# Before you start {% #before-you-start %}
+
+1. Make sure the video has a `ready` [rendition](/docs/products/videos/renditions) for the **HLS** output. Until a rendition is ready, the player shows **Not ready to play**. Signed-in members can also play DASH and CMAF, but visitors play HLS only.
+2. To let anyone watch, turn on **Public playback** in the video's **Settings**. See [Who can watch](#who-can-watch).
+
+# Embed a video {% #embed-a-video %}
+
+1. Open **Videos** in your project and select a video.
+2. Click **Embed**. Optionally, turn on **Custom start time** and set where playback begins.
+3. Click **Copy embed code**, and paste it into your page:
+
+```html
+<iframe
+  src="https://appwrite.io/player/<VIDEO_ID>?project=<PROJECT_ID>"
+  title="Product demo"
+  allow="autoplay; fullscreen; picture-in-picture"
+  allowfullscreen
+  style="width:100%;aspect-ratio:16/9;border:0;"
+></iframe>
+```
+
+The player is served from the Console's domain, at `/player/<VIDEO_ID>`: `appwrite.io` on Appwrite Cloud, or your own Console domain when you self-host. Keep the `allow` attribute: without it, browsers block autoplay, full screen, and picture in picture inside the frame.
+
+The player fills the frame and fits the video inside it, with black bars when the shapes differ. Set `aspect-ratio` to match your video, such as `9/16` for a vertical clip.
+
+To share the player as a link instead, open the URL from `src` on its own. It plays the same way.
+
+# Preview and customize {% #preview-and-customize %}
+
+Click **Preview** on a video to open the player live in a large panel, next to the [player options](#player-options). Changing an option updates the preview and the panel's **Query string**, and editing the query string updates the options.
+
+{% only_dark %}
+![Player preview panel with the video paused at 0:39, a pink progress bar, Loop turned on, and the query string with start, loop, and color](/images/docs/videos/dark/player-preview.avif)
+{% /only_dark %}
+{% only_light %}
+![Player preview panel with the video paused at 0:39, a pink progress bar, Loop turned on, and the query string with start, loop, and color](/images/docs/videos/player-preview.avif)
+{% /only_light %}
+
+When it looks right, click **Copy embed code** or **Copy URL**, or **Open in new tab** to try the player on its own. **Reset** sets every option back to its default.
+
+# Player options {% #player-options %}
+
+Add options to the player URL as query parameters. The player ignores a value it cannot read, so a typo never breaks the embed.
+
+| Parameter | Default | What it does |
+|-----------|---------|--------------|
+| `project` | Required | Your project ID |
+| `start` | `0` | Where playback begins. Takes seconds (`90`), units (`90s`, `1m30s`, `1h2m3s`), or a clock (`1:30`, `1:02:03`) |
+| `autoplay` | Off | Plays as soon as the player loads. See [Autoplay](#autoplay) |
+| `muted` | Off | Starts with the sound off |
+| `loop` | Off | Plays again from the start when the video ends |
+| `controls` | On | `controls=0` hides the control bar. Viewers click the picture to play or pause |
+| `color` | White | Colors the progress bar and the volume. A hex color with 3 or 6 digits and no `#`, such as `fd366e` |
+
+Turn a flag on with `1`, `true`, `yes`, `on`, or the bare parameter, such as `?loop`. Turn it off with `0`, `false`, `no`, or `off`.
+
+For example, a silent product clip that loops from 12 seconds in, with a pink accent:
+
+```text
+https://appwrite.io/player/<VIDEO_ID>?project=<PROJECT_ID>&start=12&autoplay=1&muted=1&loop=1&color=fd366e
+```
+
+## Autoplay {% #autoplay %}
+
+Browsers often block autoplay with sound. When a browser refuses, the player starts the video muted instead and shows an **Unmute** button. To autoplay silently on purpose, such as a background clip, add `muted=1` as well.
+
+Leave autoplay off for videos people choose to watch, and let them press play.
+
+# Settings menu {% #settings-menu %}
+
+The gear button in the control bar opens the player's settings:
+
+![Player settings menu with Quality on Auto at 1080p, Playback speed, Keyboard shortcuts, Stream format on HLS, Inspector, and Reload stream](/images/docs/videos/player-settings.avif)
+
+| Setting | What it does |
+|---------|--------------|
+| **Quality** | **Auto** picks a rendition from bandwidth and player size, and shows the one playing. Pick a rendition to stay on it. Renditions of 720p and up show an **HD** badge, and 2160p and up a **4K** badge |
+| **Playback speed** | 0.5× to 2× |
+| **Subtitles** | Turns captions off, or picks a track. Shows when the video has captions |
+| **Subtitle size** | Compact, standard, or large subtitles |
+| **Audio** | Picks an audio track. Shows when the video has more than one |
+| **Keyboard shortcuts** | Lists the [keyboard shortcuts](#keyboard-shortcuts). Shows on devices with a mouse or trackpad |
+| **Stream format** | Switches between HLS, DASH, CMAF, and **Source**, the original file in Storage. A format with no ready rendition is turned off |
+| **Inspector** | Opens the [inspector](/docs/products/videos/inspector) in a separate window, to check how the stream plays |
+| **Reload stream** | Loads the stream again. A dot marks it when renditions finished after the player loaded |
+
+The player starts on the first format with a ready rendition, in this order: HLS, CMAF, DASH. **Source** needs read access to the file in Storage.
+
+Where the browser plays HLS on its own, as on some iPhones, the browser picks the quality and **Quality** does not show.
+
+# Keyboard shortcuts {% #keyboard-shortcuts %}
+
+Shortcuts work while the player has focus, so click an embedded player first. Press `?` to see the list in the player.
+
+![Keyboard shortcuts list open in the player's settings menu, from Play or pause to Jump to 0% to 90%](/images/docs/videos/player-shortcuts.avif)
+
+| Keys | Action |
+|------|--------|
+| `Space` or `K` | Play or pause |
+| `←` `→` | Seek 5 seconds back or forward |
+| `J` `L` | Seek 10 seconds back or forward |
+| `,` `.` | Step one frame back or forward, while paused |
+| `↑` `↓` | Change volume |
+| `M` | Mute or unmute |
+| `<` `>` | Change playback speed |
+| `C` | Turn subtitles on or off |
+| `F` | Full screen |
+| `I` | Picture in picture |
+| `0` to `9` | Jump to 0% to 90% of the video |
+| `Home` `End` | Go to the start or end |
+| `?` | Show keyboard shortcuts |
+
+With a mouse, double-click the picture to enter or leave full screen.
+
+# Touch {% #touch %}
+
+On phones and tablets:
+
+- Tap the picture to show the controls, and tap again to play or pause.
+- Double tap the left or right side of the picture to seek 10 seconds back or forward. Each further tap seeks another 10 seconds.
+- In full screen, a landscape video turns the phone to landscape.
+
+# Who can watch {% #who-can-watch %}
+
+The player follows the video's [permissions](/docs/products/videos/permissions):
+
+- **Public videos** play for anyone. Turn on **Public playback** in the video's **Settings**, or grant **Read** to `Role.any()`. Visitors who are not signed in play the HLS output, so the video needs a ready HLS rendition. They get the stream without scrubbing thumbnails, because they cannot read the video's [timeline](/docs/products/videos/timeline).
+- **Private videos** play only for viewers signed in to the Console with an account that can read the video, such as members of your project. Everyone else sees **This video is private** and a **Sign in** button.
+
+The player signs viewers in with an Appwrite Console account, not as users of your app. To show a private video to your app's users, build playback into your app as described in [Private playback](/docs/products/videos/permissions#private-playback).
+
+# Troubleshooting {% #troubleshooting %}
+
+| Message | Check |
+|---------|-------|
+| **Missing project** | The URL needs a `project` parameter, such as `?project=<PROJECT_ID>` |
+| **Not ready to play** | No rendition is ready yet. Wait for encoding to finish, or [create a rendition](/docs/products/videos/renditions) |
+| **This video is private** | Turn on **Public playback**, or sign in with an account that can read the video. For a public video, check that it has a ready HLS rendition: visitors cannot play DASH or CMAF |
+| **Access denied** | The signed-in account cannot read the video. Check the video's [permissions](/docs/products/videos/permissions) |
+| **Video not found** | The video ID in the URL, and whether the video was deleted |
+| Autoplay starts muted | The browser blocked sound. Viewers click **Unmute**. See [Autoplay](#autoplay) |
+| Full screen or picture in picture does nothing | The iframe's `allow` attribute, and `allowfullscreen` |
+| Shortcuts do nothing | Click the player first so it has focus |
+| Stalls or low quality | Open **Inspector** from the settings menu to see buffer, bitrate, and network timing |
