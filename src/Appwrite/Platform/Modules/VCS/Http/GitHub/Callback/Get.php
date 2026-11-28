@@ -7,6 +7,7 @@ use Appwrite\Auth\OAuth2\Github as OAuth2Github;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Permission as AppwritePermission;
 use Appwrite\Utopia\Database\Documents\User;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\State;
@@ -19,6 +20,7 @@ use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Domains\Domain;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Psr7\Header;
@@ -52,6 +54,7 @@ class Get extends Action
             ->param('code', '', new Text(2048, 0), 'OAuth2 code. This is a temporary code that the will be later exchanged for an access token.', true)
             ->inject('vcsFactory')
             ->inject('project')
+            ->inject('request')
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('platform')
@@ -68,6 +71,7 @@ class Get extends Action
         string $code,
         VcsFactory $vcsFactory,
         Document $project,
+        Request $request,
         Response $response,
         Database $dbForPlatform,
         array $platform,
@@ -75,8 +79,98 @@ class Get extends Action
         Authorization $authorization,
         Client $clientForOAuth2
     ) {
+        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+        $host = \parse_url('//' . ($platform['consoleHostname'] ?? ''), PHP_URL_HOST) ?: '';
+        $domain = match (true) {
+            \in_array($host, ['', 'localhost'], true), \filter_var($host, FILTER_VALIDATE_IP) !== false => null,
+            System::getEnv('_APP_CONSOLE_ROOT_SESSION', 'disabled') === 'enabled' => '.' . ((new Domain($host))->getRegisterable() ?: $host),
+            default => '.' . $host,
+        };
+
+        $pending = \array_filter(
+            $request->getCookieParams(),
+            fn (string $name) => \str_starts_with($name, COOKIE_NAME_GITHUB_STATE . '_'),
+            ARRAY_FILTER_USE_KEY
+        );
+
+        // GitHub drops state when the flow ends on an existing installation's
+        // settings page (setup_action=update), so fall back to the copy
+        // Authorize left in a cookie. The signature below still applies.
+        $fromCookie = empty($state) && $setupAction === 'update' && !empty($pending);
+        $readable = false;
+        $linkedTeams = [];
+
+        if ($fromCookie) {
+            // The cookie is sent on any top-level navigation to this URL, so it
+            // cannot vouch for the installation_id and code beside it. It may
+            // only relink an installation already linked to a project this user
+            // can read, or to one in the cookie project's organization. Members
+            // scoped to one project cannot read its siblings, hence the skips.
+            $linkedIds = \array_map(
+                fn (Document $installation) => $installation->getAttribute('projectId'),
+                $authorization->skip(fn () => $dbForPlatform->find('installations', [
+                    Query::equal('providerInstallationId', [$providerInstallationId]),
+                    Query::equal('provider', ['github']),
+                    Query::select(['projectId']),
+                    Query::limit(APP_DATABASE_QUERY_MAX_VALUES),
+                ]))
+            );
+
+            if (!empty($linkedIds)) {
+                $readable = !$dbForPlatform->findOne('projects', [
+                    Query::equal('$id', $linkedIds),
+                ])->isEmpty();
+                $linkedTeams = \array_map(
+                    fn (Document $linked) => $linked->getAttribute('teamInternalId'),
+                    $authorization->skip(fn () => $dbForPlatform->find('projects', [
+                        Query::equal('$id', $linkedIds),
+                        Query::select(['teamInternalId']),
+                        Query::limit(APP_DATABASE_QUERY_MAX_VALUES),
+                    ]))
+                );
+            }
+
+            // GitHub returns nothing to tell pending connections apart by, so
+            // with several, keep those this installation could be relinked into
+            if (\count($pending) > 1) {
+                $pending = \array_filter($pending, fn (string $cookie) => $readable || \in_array(
+                    $dbForPlatform->getDocument('projects', (string) (\json_decode($cookie, true)['projectId'] ?? ''))->getAttribute('teamInternalId'),
+                    $linkedTeams,
+                    true
+                ));
+            }
+
+            $fromCookie = \count($pending) === 1;
+        }
+
+        if ($fromCookie) {
+            $state = \reset($pending);
+        }
+
         if (empty($state)) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This installation was completed on GitHub, so it could not be connected to a project. Open your project\'s settings in the Appwrite Console and connect GitHub from there.');
+            $ambiguous = $setupAction === 'update' && \count($pending) > 1;
+
+            // Clear them so the next attempt finds a single pending connection
+            if ($ambiguous) {
+                foreach (\array_keys($pending) as $name) {
+                    $response->addCookie(
+                        $name,
+                        '',
+                        \time() - 3600,
+                        COOKIE_PATH_GITHUB_STATE,
+                        $domain,
+                        $protocol === 'https',
+                        true,
+                        Response::COOKIE_SAMESITE_LAX
+                    );
+                }
+            }
+
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, match (true) {
+                $setupAction === 'request' => 'Your request was sent to the organization owners. An owner must complete the installation from the Appwrite Console; approving the request on GitHub is not enough.',
+                $ambiguous => 'GitHub connections were started for more than one project in this browser, so this one could not be matched to a project. Connect GitHub again from the project you want.',
+                default => 'GitHub did not say which project this installation is for, so it could not be connected. Open your project\'s settings in the Appwrite Console and connect GitHub again.',
+            });
         }
 
         // This endpoint is public -- without verifying the signature the
@@ -120,10 +214,32 @@ class Get extends Action
             return;
         }
 
+        // One shot: once this project's flow ends, its cookie must not carry a
+        // later one. Other projects' pending cookies are left alone.
+        $name = COOKIE_NAME_GITHUB_STATE . '_' . $project->getSequence();
+
+        if (isset($pending[$name])) {
+            $response->addCookie(
+                $name,
+                '',
+                \time() - 3600,
+                COOKIE_PATH_GITHUB_STATE,
+                $domain,
+                $protocol === 'https',
+                true,
+                Response::COOKIE_SAMESITE_LAX
+            );
+        }
+
         // Create / Update installation
         if (!empty($providerInstallationId)) {
             if (empty($code)) {
                 $this->failure($response, $redirectFailure, 'GitHub did not return an authorization code, so the installation could not be verified. Please restart the installation from the Appwrite Console.');
+                return;
+            }
+
+            if ($fromCookie && !$readable && !\in_array($project->getAttribute('teamInternalId'), $linkedTeams, true)) {
+                $this->failure($response, $redirectFailure, 'This GitHub installation is not connected to any project you can access, so it could not be linked. Ask someone who already uses it in one of their projects to connect GitHub for this project.');
                 return;
             }
 
