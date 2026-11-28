@@ -235,8 +235,9 @@ const DATABASE_LINE = 'checkpoint complete'
 
 /**
  * The project's databases as the Databases page lists them: a PostgreSQL
- * database on dedicated compute, which logs, and a shared TablesDB, which
- * doesn't.
+ * database on dedicated compute, which logs, and two serverless TablesDB
+ * databases, which don't: one without a backing, one whose backing reports
+ * its engine on the serverless specification.
  */
 const DATABASE = {
   $id: 'compute1',
@@ -256,6 +257,14 @@ const SHARED_DATABASE = {
   type: 'tablesdb',
   engine: null,
   specification: null,
+}
+const SERVERLESS_DATABASE = {
+  ...DATABASE,
+  $id: 'serverless1',
+  name: 'Serverless',
+  type: 'tablesdb',
+  engine: 'mysql',
+  specification: 'serverless',
 }
 
 function projectLogs() {
@@ -481,7 +490,10 @@ async function mockAppwriteApi(page: Page) {
     if (apiPath === '/projects' || apiPath === '/organization/projects')
       return json(200, { total: 1, projects: [PROJECT] })
     if (apiPath === '/console/databases')
-      return json(200, { total: 2, databases: [DATABASE, SHARED_DATABASE] })
+      return json(200, {
+        total: 3,
+        databases: [DATABASE, SHARED_DATABASE, SERVERLESS_DATABASE],
+      })
     if (
       apiPath === '/project' ||
       apiPath === `/projects/${PROJECT.$id}` ||
@@ -792,13 +804,16 @@ test.describe('runtime logs', () => {
     await expect(logs).not.toContainText(SITE_LINE)
 
     // Databases on dedicated compute are listed from the Databases page's
-    // own list; shared ones don't log. A picked database is read by path.
+    // own list; serverless ones don't log. A picked database is read by path.
     await resource.click()
     await expect(
       page.getByRole('option', { name: DATABASE.name }),
     ).toBeVisible()
     await expect(
       page.getByRole('option', { name: SHARED_DATABASE.name }),
+    ).toHaveCount(0)
+    await expect(
+      page.getByRole('option', { name: SERVERLESS_DATABASE.name }),
     ).toHaveCount(0)
     const byPath = page.waitForRequest((request) => {
       const url = new URL(request.url())

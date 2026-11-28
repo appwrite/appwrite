@@ -112,7 +112,7 @@ export function RuntimeLogResourcePicker({
     enabled,
     placeholderData: keepPreviousData,
   })
-  // Shared databases don't log, so read past them to the dedicated ones
+  // Serverless databases don't log, so read past them to the dedicated ones
   const databases = useQuery({
     ...consoleDatabasesQueryOptions(
       projectId,
