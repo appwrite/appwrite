@@ -4,6 +4,10 @@ import {
   isAnalyticsDocsEnabled,
   isAnalyticsDocsHref,
 } from '../analytics-docs-feature'
+import {
+  isReviewsDocsEnabled,
+  isReviewsDocsHref,
+} from '../reviews-docs-feature'
 import { isVideosDocsEnabled, isVideosDocsHref } from '../videos-docs-feature'
 import { isZeroDocsEnabled, isZeroDocsHref } from '../zero-docs-feature'
 import { DOCS_GLOBAL_NAV } from './global'
@@ -63,6 +67,9 @@ export function getDocsGlobalNav(audience: DocsAudience): DocsNavTree {
   }
   if (!isVideosDocsEnabled()) {
     navigation = withoutHref(navigation, isVideosDocsHref)
+  }
+  if (!isReviewsDocsEnabled()) {
+    navigation = withoutHref(navigation, isReviewsDocsHref)
   }
   if (!isZeroDocsEnabled()) {
     navigation = withoutHref(navigation, isZeroDocsHref)

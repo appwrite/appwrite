@@ -1,0 +1,41 @@
+---
+layout: article
+title: Learnings
+description: Teach Appwrite Reviews how your team works. Learnings are preferences the reviewer remembers from pull request conversations and follows in later reviews.
+---
+
+A learning is a preference someone asked the reviewer to remember in a pull request conversation. Later reviews and answers in the same repository follow it.
+
+# Add a learning {% #add-a-learning %}
+
+Ask the reviewer to remember the preference in a comment on a pull request:
+
+```text
+@appwrite remember that we use early returns instead of nested conditions
+```
+
+On GitLab and Gitea, mention the account that connected the provider instead of `@appwrite`. See [Mention the reviewer](/docs/products/reviews/mentions#providers).
+
+The reviewer only acts on comments from people with access to the repository, so people outside your team can't add learnings.
+
+# Manage learnings {% #manage-learnings %}
+
+The **Learnings** tab of the **Review** page lists each learning with its repository, who asked for it, and when. Click **Open conversation** in a learning's menu to see the comment it came from, or select its repository to show only that repository's learnings.
+
+{% only_dark %}
+![Learnings tab listing four learnings with their repository and the person who asked for each](/images/docs/reviews/dark/learnings.avif)
+{% /only_dark %}
+{% only_light %}
+![Learnings tab listing four learnings with their repository and the person who asked for each](/images/docs/reviews/learnings.avif)
+{% /only_light %}
+
+Delete a learning to stop the reviewer from following it.
+
+# Learnings or instructions {% #learnings-or-instructions %}
+
+A repository's [configuration file](/docs/products/reviews/configuration#instructions) can also give the reviewer instructions. The two differ in how they change:
+
+- **Learnings** come from a comment and apply at once. They suit a correction that comes up in a review, such as a finding your team doesn't want to see again.
+- **Instructions** live in the repository, so a change to them goes through a pull request like any other code. They suit rules your team has agreed on, or rules for some paths only.
+
+The **Performance** tab marks a finding category **Noisy** when most of its findings are dismissed. A learning is a quick way to tell the reviewer to flag fewer of them. See [Track performance](/docs/products/reviews/performance#categories).

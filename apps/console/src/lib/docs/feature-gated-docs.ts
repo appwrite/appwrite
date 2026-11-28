@@ -10,6 +10,11 @@ import {
   shouldBlockPartnersDocs,
 } from './partners-docs-feature'
 import {
+  isReviewsDocsEnabled,
+  isReviewsDocsSlug,
+  shouldBlockReviewsDocs,
+} from './reviews-docs-feature'
+import {
   isVideosDocsEnabled,
   isVideosDocsSlug,
   shouldBlockVideosDocs,
@@ -29,6 +34,7 @@ export function isFeatureGatedDocsSlugHidden(
     deferPartnersOnServer?: boolean
     deferAnalyticsOnServer?: boolean
     deferVideosOnServer?: boolean
+    deferReviewsOnServer?: boolean
     deferZeroOnServer?: boolean
   },
 ): boolean {
@@ -44,6 +50,10 @@ export function isFeatureGatedDocsSlugHidden(
   if (isVideosDocsSlug(slug)) {
     if (options?.deferVideosOnServer) return shouldBlockVideosDocs()
     return !isVideosDocsEnabled()
+  }
+  if (isReviewsDocsSlug(slug)) {
+    if (options?.deferReviewsOnServer) return shouldBlockReviewsDocs()
+    return !isReviewsDocsEnabled()
   }
   if (isZeroDocsSlug(slug)) {
     if (options?.deferZeroOnServer) return shouldBlockZeroDocs()

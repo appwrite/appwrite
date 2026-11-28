@@ -26,15 +26,17 @@ describe('hasQualityLabel', () => {
 })
 
 describe('experiments catalog', () => {
-  test('lists Appwrite Analytics, alerts and Videos', () => {
+  test('lists Appwrite Analytics, alerts, Videos and Reviews', () => {
     expect(EXPERIMENTS.map((experiment) => experiment.flag)).toEqual([
       'analytics',
       'alerts',
       'videos',
+      'reviews',
     ])
     expect(EXPERIMENTS[0]?.name).toBe('Appwrite Analytics')
     expect(EXPERIMENTS[1]?.name).toBe('Monitors and alerts')
     expect(EXPERIMENTS[2]?.name).toBe('Appwrite Videos')
+    expect(EXPERIMENTS[3]?.name).toBe('Appwrite Reviews')
     for (const experiment of EXPERIMENTS) {
       expect(experiment.description.length).toBeGreaterThan(0)
     }
@@ -83,6 +85,12 @@ describe('experiments catalog', () => {
   test('Videos is off in every profile until the experiment turns it on', () => {
     for (const profile of Object.values(CONSOLE_PROFILES)) {
       expect(profile.features.videos).toBe(false)
+    }
+  })
+
+  test('Reviews is off in every profile until the experiment turns it on', () => {
+    for (const profile of Object.values(CONSOLE_PROFILES)) {
+      expect(profile.features.reviews).toBe(false)
     }
   })
 

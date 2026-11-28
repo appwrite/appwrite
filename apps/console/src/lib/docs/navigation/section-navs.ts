@@ -1,5 +1,6 @@
 import { isAgentDocsEnabled, isAgentDocsHref } from '../agent-docs-feature'
 import { isAnalyticsDocsEnabled } from '../analytics-docs-feature'
+import { isReviewsDocsEnabled } from '../reviews-docs-feature'
 import { isVideosDocsEnabled } from '../videos-docs-feature'
 import { isZeroDocsEnabled, isZeroDocsHref } from '../zero-docs-feature'
 import type { DocsNavGroup, DocsNavTree } from '../types'
@@ -57,6 +58,9 @@ export function getAllDocsSectionNavs(): DocsSectionNavConfig[] {
     configs = configs.filter((config) => config.prefix !== 'products/videos')
   }
 
+  if (!isReviewsDocsEnabled()) {
+    configs = configs.filter((config) => config.prefix !== 'products/reviews')
+  }
   if (!isZeroDocsEnabled()) {
     configs = configs.map((config) =>
       config.prefix === 'tooling/command-line'

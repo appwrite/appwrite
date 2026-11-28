@@ -1,0 +1,62 @@
+---
+layout: article
+title: Review results
+description: Understand what an Appwrite review posts on a pull request, a summary, findings by severity, a verdict, and a merge confidence grade from S to F, and where to find it in the Console.
+---
+
+A completed review posts a summary, findings, and a verdict on the pull request, and grades how ready the pull request is to merge. The Console keeps every review with its findings and the steps the reviewer took.
+
+# Summary {% #summary %}
+
+The summary says what the pull request changes. After new commits, the reviewer updates its summary instead of posting a new one.
+
+# Findings {% #findings %}
+
+A finding is a problem the reviewer found, posted as an inline comment on the line it concerns. Each finding has a severity: **Critical**, **Major**, **Minor**, or **Info**.
+
+By default, Info findings aren't posted, and one review posts at most 15 inline comments. Change both with `reviews.minSeverity` and `reviews.maxComments` in the [configuration file](/docs/products/reviews/configuration#review-settings).
+
+To discuss a finding, reply in its thread. You don't need to [mention the reviewer](/docs/products/reviews/mentions) there.
+
+# Verdict {% #verdict %}
+
+The verdict is **Approved**, **Changes requested**, or **Commented**. Your repository settings decide the verdict from the findings, not the model:
+
+- A Major or Critical finding requests changes. Change the threshold with `reviews.requestChanges`, or set it to `never` to only comment.
+- A pull request with no blocking findings and no open bugs is approved. Set `reviews.approve` to `false` to comment instead.
+- Pull requests from people without write access to the repository, such as pull requests from forks, aren't approved. Their changes could try to talk the model into an approval. Turn on `reviews.approveOutsideContributors` to approve them anyway.
+
+See [Configure a repository](/docs/products/reviews/configuration#verdict-settings) for every verdict setting.
+
+# Merge confidence {% #merge-confidence %}
+
+Each review grades the pull request from **S** to **F**. Open findings cap the grade.
+
+| Grade | Meaning |
+|-------|---------|
+| S | Ready to merge |
+| A | Mergeable after minor fixes |
+| B | Needs changes before merging |
+| C | Significant problems |
+| D | Serious problems |
+| F | Do not merge |
+
+# Reviews in the Console {% #console %}
+
+The **Reviews** tab of the **Review** page lists every review in the project, newest first, with its pull request, status, verdict, grade, findings, author, and duration. The status tabs above the list count the reviews in progress, completed, failed, and skipped, and filter the list to one of them.
+
+{% only_dark %}
+![Reviews tab listing reviews with their status, verdict, merge confidence grade, findings, and author](/images/docs/reviews/dark/reviews.avif)
+{% /only_dark %}
+{% only_light %}
+![Reviews tab listing reviews with their status, verdict, merge confidence grade, findings, and author](/images/docs/reviews/reviews.avif)
+{% /only_light %}
+
+Open a review to see:
+
+- Its status, verdict, grade, author, trigger, [strength](/docs/products/reviews/strength), commit range, and duration.
+- The summary.
+- The findings, most severe first. Filter them by severity, or open a finding's file or comment on your Git provider.
+- The trace, every step the reviewer took in order, including the work of its subagents. The trace updates while the review runs.
+
+If a review was skipped or failed, its page says why. Click **Open on GitHub**, or your provider's name, to see the review on the pull request.

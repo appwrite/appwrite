@@ -39,7 +39,7 @@ export const Route = createFileRoute('/docs/$')({
         }
 
         const slug = splat.slice(0, -3)
-        // Match the HTML route: partners, analytics, and videos docs stay available on
+        // Match the HTML route: partners, analytics, videos, and reviews docs stay available on
         // the server until the client can apply a local override. A hard 404
         // here made `/docs/partners/...md` fail while the page itself rendered.
         // Zero docs follow the server flag: a Markdown export has no client to
@@ -49,6 +49,7 @@ export const Route = createFileRoute('/docs/$')({
             deferPartnersOnServer: true,
             deferAnalyticsOnServer: true,
             deferVideosOnServer: true,
+            deferReviewsOnServer: true,
           })
         ) {
           return new Response('Not found', { status: 404 })
@@ -79,6 +80,7 @@ export const Route = createFileRoute('/docs/$')({
         deferPartnersOnServer: true,
         deferAnalyticsOnServer: true,
         deferVideosOnServer: true,
+        deferReviewsOnServer: true,
         deferZeroOnServer: true,
       })
     ) {
@@ -101,6 +103,7 @@ export const Route = createFileRoute('/docs/$')({
           deferPartnersOnServer: true,
           deferAnalyticsOnServer: true,
           deferVideosOnServer: true,
+          deferReviewsOnServer: true,
           deferZeroOnServer: true,
         })
       ) {

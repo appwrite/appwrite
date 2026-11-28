@@ -1,0 +1,34 @@
+---
+layout: article
+title: Credits and billing
+description: Learn how Appwrite Reviews is billed in credits, how many credits each plan includes every month, and what extra credits cost.
+---
+
+Reviews are billed in credits, and there are no per-seat fees. A review costs credits by its [strength](/docs/products/reviews/strength): 10 for Basic, 50 for Normal, and 500 for Expert. Answers to [mentions](/docs/products/reviews/mentions) are free. A review you request in a comment costs credits like any other review.
+
+# Credits by plan {% #plans %}
+
+Each plan includes credits every month:
+
+| Plan | Credits per month | Allowance | Past the allowance |
+|------|-------------------|-----------|--------------------|
+| Free | 100 | Shared by the organization's projects | Reviews stop until the next billing cycle |
+| Start | 500 | Shared by the organization's projects | Extra credits |
+| Pro | 2,000 | Per project | Extra credits |
+| Scale | 20,000 | Per project | Extra credits |
+
+# Extra credits {% #extra-credits %}
+
+On Start, Pro, and Scale, reviews keep running past the allowance by default. Extra credits cost $1 per 100, so a Normal review past the allowance costs $0.50. They're billed with the rest of your usage, up to your organization's [budget cap](/docs/advanced/billing/payments#budget-cap).
+
+If extra review credits are off for your organization, reviews stop when the included credits are used, and you aren't billed for extra credits. The credits card on the **Review** page says which applies to you.
+
+On Free, reviews stop when the included credits are used, until the next billing cycle or an [upgrade](/pricing).
+
+# See your usage {% #usage %}
+
+The **Review** page shows the credits used this billing cycle against your plan's allowance. On Pro and Scale, it shows the credits of the current project. Past the allowance, it shows how many extra credits you've used and about how much they add to your next invoice.
+
+- Click **View usage** to see the credits in your organization's billing settings.
+- On plans with a budget cap, click **Manage budget** to change the cap.
+- On other plans, click **Upgrade for more credits** to change your plan.

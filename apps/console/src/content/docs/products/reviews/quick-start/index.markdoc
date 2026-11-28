@@ -1,0 +1,57 @@
+---
+layout: article
+title: Start with Reviews
+description: Turn on Appwrite Reviews for a Git repository and get your first AI review on a pull request.
+difficulty: beginner
+readtime: 3
+---
+
+In this quick start you connect a Git repository, turn on reviews for it, and open a pull request to get your first review.
+
+# Choose repositories {% #choose-repositories %}
+
+1. Sign in to [Appwrite Cloud](https://cloud.appwrite.io) and open a project.
+2. Open **Review** in the sidebar.
+3. Click **Choose repositories**.
+
+{% only_dark %}
+![Review page before any repository is reviewed, with the Choose repositories button](/images/docs/reviews/dark/empty-state.avif)
+{% /only_dark %}
+{% only_light %}
+![Review page before any repository is reviewed, with the Choose repositories button](/images/docs/reviews/empty-state.avif)
+{% /only_light %}
+
+If your project isn't connected to a Git provider yet, click **Add installation** and connect GitHub, GitLab, Gitea, Bitbucket, or Origin. On GitHub, this installs the [Appwrite GitHub App](https://github.com/apps/appwrite) on the account or organization you pick.
+
+# Turn on reviews {% #turn-on-reviews %}
+
+On the **Repositories** tab, select **All repositories** to list every repository of the installation. Turn on **Review** for each repository you want reviewed, or click **Review all** to turn it on for all of them.
+
+{% only_dark %}
+![All repositories view with code review turned on for four repositories, each at its own strength, and Review new repositories turned on](/images/docs/reviews/dark/repositories.avif)
+{% /only_dark %}
+{% only_light %}
+![All repositories view with code review turned on for four repositories, each at its own strength, and Review new repositories turned on](/images/docs/reviews/repositories.avif)
+{% /only_light %}
+
+To also review repositories you add to the installation later, turn on **Review new repositories**.
+
+Repositories are reviewed at **Normal** [strength](/docs/products/reviews/strength) unless you change it. Pick another strength in the **Strength** column.
+
+# Open a pull request {% #open-a-pull-request %}
+
+Open a pull request in one of those repositories, or mark a draft pull request ready for review. Appwrite queues a review, and the reviewer posts it on the pull request: inline comments on the lines it found problems in, a summary, and a verdict. On GitHub, the review also adds a check run to the commit.
+
+To review a pull request that was already open before you turned on reviews, [request a review](/docs/products/reviews/mentions) in a comment.
+
+# Follow the review {% #follow-the-review %}
+
+Go back to **Review** in the Console. The **Reviews** tab lists the new review, and its status moves from **Queued** to **Reviewing** to **Completed**. Open it to see the summary, the findings, the verdict, the merge confidence grade, and a trace of the steps the reviewer took.
+
+The **Reviews** tab also shows how many of your plan's [credits](/docs/products/reviews/billing) you've used this billing cycle.
+
+# Next steps {% #next-steps %}
+
+- [Review results](/docs/products/reviews/results) explains severities, verdicts, and grades.
+- [Configure a repository](/docs/products/reviews/configuration) limits reviews to some branches or files, and adds instructions for the reviewer.
+- [Mention the reviewer](/docs/products/reviews/mentions) covers questions, new reviews, and learnings from pull request comments.

@@ -1,0 +1,80 @@
+---
+layout: article
+title: Reviews
+description: Review pull requests with AI using Appwrite Reviews. Turn it on for GitHub, GitLab, Gitea, Bitbucket, and Origin repositories and get findings, a verdict, and a merge confidence grade on every pull request.
+---
+
+Appwrite **Reviews** reviews the pull requests in your Git repositories with AI. Turn it on for a repository, and each pull request gets a review where it was opened: a summary, findings on the lines they concern, a verdict, and a merge confidence grade. Mention the reviewer in a comment to ask about a change, request another review, or teach it how your team works.
+
+You turn on reviews and follow them under **Review** in your project.
+
+{% info title="Appwrite Cloud" %}
+Reviews is available on Appwrite Cloud.
+{% /info %}
+
+{% only_dark %}
+![Review page in the Console with an approved review graded A, its summary, and its findings](/images/docs/reviews/dark/review.avif)
+{% /only_dark %}
+{% only_light %}
+![Review page in the Console with an approved review graded A, its summary, and its findings](/images/docs/reviews/review.avif)
+{% /only_light %}
+
+# How it works {% #how-it-works %}
+
+When a pull request is opened or gets new commits, Appwrite queues a review. The reviewer checks out the pull request and reads the repository, not only the diff. At Normal and Expert [strength](/docs/products/reviews/strength), it can also run your tests and type checkers in a sandbox. A second pass checks every finding against the code before the review is posted.
+
+Each review has four parts:
+
+- **Summary**: What the pull request changes.
+- **Findings**: Problems on the lines they concern, each with a severity of **Critical**, **Major**, **Minor**, or **Info**.
+- **Verdict**: **Approved**, **Changes requested**, or **Commented**.
+- **Merge confidence**: A grade from **S**, ready to merge, down to **F**, do not merge.
+
+# Get started {% #getting-started %}
+
+Connect a repository, turn on reviews, and get your first review on a pull request.
+
+{% arrow_link href="/docs/products/reviews/quick-start" %}
+Quick start
+{% /arrow_link %}
+
+# Concepts {% #concepts %}
+
+What a review does, what it posts, and what it costs.
+
+{% cards %}
+{% cards_item href="/docs/products/reviews/how-it-works" title="How reviews work" %}
+What starts a review, what the reviewer reads, and when it reviews a pull request again.
+{% /cards_item %}
+{% cards_item href="/docs/products/reviews/results" title="Review results" %}
+Summaries, findings and their severities, verdicts, and merge confidence grades.
+{% /cards_item %}
+{% cards_item href="/docs/products/reviews/strength" title="Review strength" %}
+Basic, Normal, and Expert reviews, the models and tools each one uses, and their cost.
+{% /cards_item %}
+{% cards_item href="/docs/products/reviews/billing" title="Credits and billing" %}
+The credits each plan includes every month, extra credits, and where to see usage.
+{% /cards_item %}
+{% cards_item href="/docs/products/reviews/learnings" title="Learnings" %}
+Preferences the reviewer remembers from pull request conversations.
+{% /cards_item %}
+{% /cards %}
+
+# Guides {% #guides %}
+
+Work with the reviewer on your pull requests, in the Console, and in your repository.
+
+{% cards %}
+{% cards_item href="/docs/products/reviews/mentions" title="Mention the reviewer" %}
+Request a review, ask a question, or teach a preference from a pull request comment.
+{% /cards_item %}
+{% cards_item href="/docs/products/reviews/functions-and-sites" title="Review functions and sites" %}
+Review the pull requests of a function or site, and see the reviews that change its code.
+{% /cards_item %}
+{% cards_item href="/docs/products/reviews/performance" title="Track performance" %}
+Approvals, findings per pull request, useful findings, and review time by repository and author.
+{% /cards_item %}
+{% cards_item href="/docs/products/reviews/configuration" title="Configure a repository" %}
+Choose which branches and files get reviewed, add instructions, set up the sandbox, and see every setting.
+{% /cards_item %}
+{% /cards %}
