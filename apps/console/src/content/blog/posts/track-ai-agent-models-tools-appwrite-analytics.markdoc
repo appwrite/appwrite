@@ -88,18 +88,13 @@ import { Client, Analytics } from 'node-appwrite';
 const client = new Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
     .setProject('<PROJECT_ID>')
-    .setKey(process.env.APPWRITE_API_KEY!);
+    .setKey(process.env.APPWRITE_API_KEY);
 
 const analytics = new Analytics(client);
 const PROPERTY_ID = '<PROPERTY_ID>';
 const AGENT_URL = 'https://agent.example.com/support';
 
-export async function trackAgentEvent(
-    name: string,
-    runId: string,
-    props: Record<string, string>,
-    userId?: string,
-) {
+export async function trackAgentEvent(name, runId, props, userId) {
     try {
         await analytics.createEvent({
             propertyId: PROPERTY_ID,
