@@ -3,14 +3,14 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { History } from 'lucide-react'
-import { sdk } from '@/lib/appwrite/sdk'
-import { dedicatedEngineService } from '@/lib/databases/dedicated-engine'
+import type { DedicatedDatabaseSource } from '@/lib/databases/dedicated-database-source'
 import {
   isEligiblePitrRestoreTarget,
   isTimeInPitrWindow,
   pitrWindowFromResponse,
 } from '@/lib/databases/dedicated-pitr'
 import {
+  createDedicatedDatabasePitrRestoration,
   useDedicatedDatabasePitrWindows,
   useDedicatedDatabaseRestorations,
   useProjectDedicatedDatabases,
@@ -90,11 +90,7 @@ function restorationTypeLabel(type: string): string {
   return type.toLowerCase() === 'pitr' ? 'PITR' : 'Backup'
 }
 
-function PitrRecoveryWindowTimestampSkeleton({
-  label,
-}: {
-  label: string
-}) {
+function PitrRecoveryWindowTimestampSkeleton({ label }: { label: string }) {
   return (
     <div className="flex flex-col gap-0.5">
       <span className="text-muted-foreground">{label}</span>
@@ -125,7 +121,7 @@ type RestorePitrSharedProps = {
   projectId: string
   databaseId: string
   database: Models.DedicatedDatabase
-  engine?: string | null
+  source: DedicatedDatabaseSource
   canWrite: boolean
 }
 
@@ -135,7 +131,7 @@ export function RestorePitrDialog({
   projectId,
   databaseId,
   database,
-  engine,
+  source,
   canWrite,
   initialTimeZone,
 }: RestorePitrSharedProps & {
@@ -149,11 +145,12 @@ export function RestorePitrDialog({
   const { data: windowsData } = useDedicatedDatabasePitrWindows(
     projectId,
     databaseId,
-    engine ?? database.engine,
+    source,
     open && pitrEnabled,
   )
+  const inPlaceOnly = source.type === 'product'
   const { databases: dedicatedDatabases } = useProjectDedicatedDatabases(
-    open ? projectId : undefined,
+    open && !inPlaceOnly ? projectId : undefined,
   )
   const recoveryWindow = useMemo(
     () => pitrWindowFromResponse(windowsData),
@@ -180,9 +177,7 @@ export function RestorePitrDialog({
     setTargetDatabaseId('')
     setConfirmRestore(false)
     setTimeZone(initialTimeZone || getUserTimeZone())
-    setTargetTime(
-      latestMs != null ? new Date(latestMs).toISOString() : null,
-    )
+    setTargetTime(latestMs != null ? new Date(latestMs).toISOString() : null)
   }, [open, latestMs, initialTimeZone])
 
   const selectedDate = useMemo(() => {
@@ -201,18 +196,17 @@ export function RestorePitrDialog({
       if (!selectedDate) {
         throw new Error(t('Choose a restore time inside the recovery window.'))
       }
-      const projectSdk = sdk.forProject(projectId)
-      return dedicatedEngineService(
-        projectSdk,
-        engine ?? database.engine,
-      ).createRestoration({
+      return createDedicatedDatabasePitrRestoration(
+        projectId,
         databaseId,
-        type: 'pitr',
-        targetTime: selectedDate.toISOString(),
-        ...(restoreTarget === 'other' && targetDatabaseId
-          ? { targetDatabaseId }
-          : {}),
-      })
+        source,
+        {
+          targetTime: selectedDate.toISOString(),
+          ...(restoreTarget === 'other' && targetDatabaseId
+            ? { targetDatabaseId }
+            : {}),
+        },
+      )
     },
     onSuccess: async () => {
       toast.success(t('Database restore initiated'))
@@ -224,7 +218,15 @@ export function RestorePitrDialog({
           queryKey: ['mysql-database', 'project', projectId, databaseId],
         }),
         queryClient.refetchQueries({
-          queryKey: ['dedicated-restorations', 'project', projectId, databaseId],
+          queryKey: ['database', 'project', projectId, databaseId],
+        }),
+        queryClient.refetchQueries({
+          queryKey: [
+            'dedicated-restorations',
+            'project',
+            projectId,
+            databaseId,
+          ],
         }),
         queryClient.refetchQueries({
           queryKey: ['dedicated-databases', 'project', projectId],
@@ -233,7 +235,9 @@ export function RestorePitrDialog({
       onOpenChange(false)
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error, t('Failed to restore to this point in time')))
+      toast.error(
+        getErrorMessage(error, t('Failed to restore to this point in time')),
+      )
     },
   })
 
@@ -242,10 +246,7 @@ export function RestorePitrDialog({
     restoreTarget === 'other' &&
     (!targetDatabaseId || targetDatabaseId === databaseId)
   const canSubmit =
-    !writeDisabled &&
-    confirmRestore &&
-    timeInWindow &&
-    !otherTargetInvalid
+    !writeDisabled && confirmRestore && timeInWindow && !otherTargetInvalid
 
   const handleOpenChange = (nextOpen: boolean) => {
     if (restoreMutation.isPending) return
@@ -285,74 +286,76 @@ export function RestorePitrDialog({
                 disabled={writeDisabled}
               />
 
-              <div>
-                <h3 className="text-[15px] font-semibold text-foreground mb-4">
-                  {t('Restore target')}
-                </h3>
-                <RadioGroup
-                  value={restoreTarget}
-                  onValueChange={(value) =>
-                    setRestoreTarget(value as RestoreTarget)
-                  }
-                  className="grid grid-cols-2 gap-3"
-                  disabled={writeDisabled}
-                >
-                  <Label
-                    htmlFor="pitr-restore-same"
-                    className={cn(
-                      'flex cursor-pointer items-start gap-3 rounded-lg border p-4 transition-colors',
-                      restoreTarget === 'same'
-                        ? 'border-primary/50 bg-muted/50'
-                        : 'border-border bg-card/50 hover:bg-muted/30',
-                    )}
+              {inPlaceOnly ? null : (
+                <div>
+                  <h3 className="text-[15px] font-semibold text-foreground mb-4">
+                    {t('Restore target')}
+                  </h3>
+                  <RadioGroup
+                    value={restoreTarget}
+                    onValueChange={(value) =>
+                      setRestoreTarget(value as RestoreTarget)
+                    }
+                    className="grid grid-cols-2 gap-3"
+                    disabled={writeDisabled}
                   >
-                    <RadioGroupItem
-                      value="same"
-                      id="pitr-restore-same"
-                      className="mt-0.5 shrink-0"
-                    />
-                    <div className="min-w-0 flex-1 space-y-2">
-                      <span className="text-[13px] font-semibold text-foreground">
-                        {t('Current database')}
-                      </span>
-                      <p className="text-[12px] text-muted-foreground leading-snug">
-                        {t(
-                          'Overwrite this database in place. This cannot be undone.',
-                        )}
-                      </p>
-                    </div>
-                  </Label>
-                  <Label
-                    htmlFor="pitr-restore-other"
-                    className={cn(
-                      'flex items-start gap-3 rounded-lg border p-4 transition-colors',
-                      targets.length === 0
-                        ? 'cursor-not-allowed opacity-60'
-                        : 'cursor-pointer',
-                      restoreTarget === 'other'
-                        ? 'border-primary/50 bg-muted/50'
-                        : 'border-border bg-card/50 hover:bg-muted/30',
-                    )}
-                  >
-                    <RadioGroupItem
-                      value="other"
-                      id="pitr-restore-other"
-                      className="mt-0.5 shrink-0"
-                      disabled={targets.length === 0}
-                    />
-                    <div className="min-w-0 flex-1 space-y-2">
-                      <span className="text-[13px] font-semibold text-foreground">
-                        {t('Another database')}
-                      </span>
-                      <p className="text-[12px] text-muted-foreground leading-snug">
-                        {t(
-                          'Restore into a ready database with the same engine and version.',
-                        )}
-                      </p>
-                    </div>
-                  </Label>
-                </RadioGroup>
-              </div>
+                    <Label
+                      htmlFor="pitr-restore-same"
+                      className={cn(
+                        'flex cursor-pointer items-start gap-3 rounded-lg border p-4 transition-colors',
+                        restoreTarget === 'same'
+                          ? 'border-primary/50 bg-muted/50'
+                          : 'border-border bg-card/50 hover:bg-muted/30',
+                      )}
+                    >
+                      <RadioGroupItem
+                        value="same"
+                        id="pitr-restore-same"
+                        className="mt-0.5 shrink-0"
+                      />
+                      <div className="min-w-0 flex-1 space-y-2">
+                        <span className="text-[13px] font-semibold text-foreground">
+                          {t('Current database')}
+                        </span>
+                        <p className="text-[12px] text-muted-foreground leading-snug">
+                          {t(
+                            'Overwrite this database in place. This cannot be undone.',
+                          )}
+                        </p>
+                      </div>
+                    </Label>
+                    <Label
+                      htmlFor="pitr-restore-other"
+                      className={cn(
+                        'flex items-start gap-3 rounded-lg border p-4 transition-colors',
+                        targets.length === 0
+                          ? 'cursor-not-allowed opacity-60'
+                          : 'cursor-pointer',
+                        restoreTarget === 'other'
+                          ? 'border-primary/50 bg-muted/50'
+                          : 'border-border bg-card/50 hover:bg-muted/30',
+                      )}
+                    >
+                      <RadioGroupItem
+                        value="other"
+                        id="pitr-restore-other"
+                        className="mt-0.5 shrink-0"
+                        disabled={targets.length === 0}
+                      />
+                      <div className="min-w-0 flex-1 space-y-2">
+                        <span className="text-[13px] font-semibold text-foreground">
+                          {t('Another database')}
+                        </span>
+                        <p className="text-[12px] text-muted-foreground leading-snug">
+                          {t(
+                            'Restore into a ready database with the same engine and version.',
+                          )}
+                        </p>
+                      </div>
+                    </Label>
+                  </RadioGroup>
+                </div>
+              )}
 
               {restoreTarget === 'other' ? (
                 <div className="space-y-2">
@@ -442,7 +445,7 @@ export function RestorePitrButton({
   projectId,
   databaseId,
   database,
-  engine,
+  source,
   canWrite,
 }: RestorePitrSharedProps) {
   const t = useT()
@@ -453,7 +456,7 @@ export function RestorePitrButton({
   const { data: windowsData } = useDedicatedDatabasePitrWindows(
     projectId,
     databaseId,
-    engine ?? database.engine,
+    source,
     showPitrRestore && pitrEnabled,
   )
   const recoveryWindow = pitrWindowFromResponse(windowsData)
@@ -504,7 +507,7 @@ export function RestorePitrButton({
         projectId={projectId}
         databaseId={databaseId}
         database={database}
-        engine={engine}
+        source={source}
         canWrite={canWrite}
       />
     </>
@@ -515,7 +518,7 @@ export function DedicatedDatabasePitrRestoreCard({
   projectId,
   databaseId,
   database,
-  engine,
+  source,
   canWrite,
 }: RestorePitrSharedProps) {
   const t = useT()
@@ -532,13 +535,13 @@ export function DedicatedDatabasePitrRestoreCard({
   } = useDedicatedDatabasePitrWindows(
     projectId,
     databaseId,
-    engine ?? database.engine,
+    source,
     showPitrRestore && pitrEnabled,
   )
   const { data: restorationsData } = useDedicatedDatabaseRestorations(
     projectId,
     databaseId,
-    engine ?? database.engine,
+    source,
     showPitrRestore && pitrEnabled,
   )
   const recoveryWindow = pitrWindowFromResponse(windowsData)
@@ -693,11 +696,7 @@ export function DedicatedDatabasePitrRestoreCard({
           <Tooltip>
             <TooltipTrigger asChild>
               <span>
-                <Button
-                  size="sm"
-                  className="h-9 text-[13px]"
-                  disabled
-                >
+                <Button size="sm" className="h-9 text-[13px]" disabled>
                   {t('Start restore')}
                 </Button>
               </span>
@@ -722,7 +721,7 @@ export function DedicatedDatabasePitrRestoreCard({
         projectId={projectId}
         databaseId={databaseId}
         database={database}
-        engine={engine}
+        source={source}
         canWrite={canWrite}
         initialTimeZone={timeZone}
       />

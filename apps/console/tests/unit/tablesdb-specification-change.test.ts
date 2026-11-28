@@ -6,6 +6,7 @@ import { updateProductDatabaseSpecification } from '@/lib/react-query/hooks/data
 const PROJECT_ID = 'proj0000000000000000001'
 const DATABASE_ID = 'db000000000000000000001'
 const TARGET_SPECIFICATION = 's-2vcpu-4gb'
+const IDENTITY = { name: 'Orders', enabled: true }
 
 type Call = { service: string; method: string; params: unknown }
 
@@ -68,6 +69,12 @@ describe('updateProductDatabaseSpecification', () => {
                 (() => ({ $id: 'migration1', phase: 'pending' })),
             ),
           },
+          documentsDB: {
+            update: record('documentsDB', 'update', () => ({
+              $id: DATABASE_ID,
+              specification: TARGET_SPECIFICATION,
+            })),
+          },
           mysql: {
             get: record('mysql', 'get', engineNotFound),
             list: record('mysql', 'list', () => ({ databases: [], total: 0 })),
@@ -94,14 +101,65 @@ describe('updateProductDatabaseSpecification', () => {
       DATABASE_ID,
       'tablesdb',
       TARGET_SPECIFICATION,
+      IDENTITY,
     )
 
     expect(methodsOn(calls, 'tablesDB')).toEqual(['get', 'update'])
     expect(calls.at(-1)?.params).toEqual({
       databaseId: DATABASE_ID,
+      name: 'Orders',
+      enabled: true,
       specification: TARGET_SPECIFICATION,
     })
     expect(methodsOn(calls, 'mysql')).toEqual([])
+  })
+
+  test('keeps a disabled database disabled when it changes tier', async () => {
+    const calls = mockSdk({ specification: 's-1vcpu-1gb' })
+
+    await updateProductDatabaseSpecification(
+      PROJECT_ID,
+      DATABASE_ID,
+      'tablesdb',
+      TARGET_SPECIFICATION,
+      { name: 'Orders', enabled: false },
+    )
+
+    expect(calls.at(-1)).toEqual({
+      service: 'tablesDB',
+      method: 'update',
+      params: {
+        databaseId: DATABASE_ID,
+        name: 'Orders',
+        enabled: false,
+        specification: TARGET_SPECIFICATION,
+      },
+    })
+  })
+
+  test('sends the name DocumentsDB requires when it changes tier', async () => {
+    const calls = mockSdk({})
+
+    await updateProductDatabaseSpecification(
+      PROJECT_ID,
+      DATABASE_ID,
+      'documentsdb',
+      TARGET_SPECIFICATION,
+      { name: 'Catalog', enabled: false },
+    )
+
+    expect(calls).toEqual([
+      {
+        service: 'documentsDB',
+        method: 'update',
+        params: {
+          databaseId: DATABASE_ID,
+          name: 'Catalog',
+          enabled: false,
+          specification: TARGET_SPECIFICATION,
+        },
+      },
+    ])
   })
 
   test.each([['shared'], ['serverless'], [undefined]])(
@@ -114,6 +172,7 @@ describe('updateProductDatabaseSpecification', () => {
         DATABASE_ID,
         'tablesdb',
         TARGET_SPECIFICATION,
+        IDENTITY,
       )
 
       expect(methodsOn(calls, 'tablesDB')).toEqual([
@@ -146,12 +205,18 @@ describe('updateProductDatabaseSpecification', () => {
       DATABASE_ID,
       'tablesdb',
       TARGET_SPECIFICATION,
+      IDENTITY,
     )
 
     expect(calls.at(-1)).toEqual({
       service: 'tablesDB',
       method: 'update',
-      params: { databaseId: DATABASE_ID, specification: TARGET_SPECIFICATION },
+      params: {
+        databaseId: DATABASE_ID,
+        name: 'Orders',
+        enabled: true,
+        specification: TARGET_SPECIFICATION,
+      },
     })
   })
 
@@ -172,6 +237,7 @@ describe('updateProductDatabaseSpecification', () => {
       DATABASE_ID,
       'tablesdb',
       TARGET_SPECIFICATION,
+      IDENTITY,
     )
 
     await expect(attempt).rejects.toMatchObject({

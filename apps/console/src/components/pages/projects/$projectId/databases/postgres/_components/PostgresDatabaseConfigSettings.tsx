@@ -39,11 +39,11 @@ import {
   useDedicatedDatabaseReplicas,
   useProject,
   useUpdateDedicatedDatabaseHa,
+  type DedicatedDatabaseHaSource,
   useUpdatePostgresDatabase,
 } from '@/lib/react-query/hooks'
 import { isDedicatedDatabaseReady } from '@/lib/databases/dedicated-database-status'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import type { DedicatedReplicationSource } from '@/lib/databases/dedicated-replication'
 import { DEFAULT_USAGE_CHART_INTERVAL } from '@/lib/usage/chart-interval'
 import { getDedicatedDatabaseGaugeHeadline } from '@/lib/usage/dedicated-databases-usage'
 import { formatCompactBytes } from '@/lib/usage/format-metric'
@@ -93,7 +93,7 @@ function useWriteAccess(canWrite: boolean, isPending: boolean) {
 
 function useReplicationSource(
   props: PostgresDatabaseSettingsCardProps,
-): DedicatedReplicationSource {
+): DedicatedDatabaseHaSource {
   return (
     props.replicationSource ?? {
       type: 'engine',
@@ -151,22 +151,24 @@ export function PostgresDatabaseReplicasCard({
   )
   const isPostgresEngine =
     engine === 'postgresql' || engine === 'postgres' || !engine
-  const { connections, isLoading: connectionsLoading, refetch: refetchConnections } =
-    usePostgresActiveConnections(
-      projectId,
-      isPostgresEngine ? databaseId : null,
-    )
+  const {
+    connections,
+    isLoading: connectionsLoading,
+    refetch: refetchConnections,
+  } = usePostgresActiveConnections(
+    projectId,
+    isPostgresEngine ? databaseId : null,
+  )
   const [replicaCount, setReplicaCount] = useState(database.replicas ?? 0)
   const committedReplicaCount = database.replicas ?? 0
   const fetchReplicas =
     committedReplicaCount > 0 || replicaCount > 0 || updateMutation.isPending
-  const { members, refetch: refetchReplicas } =
-    useDedicatedDatabaseReplicas(
-      projectId,
-      databaseId,
-      source,
-      fetchReplicas,
-    )
+  const { members, refetch: refetchReplicas } = useDedicatedDatabaseReplicas(
+    projectId,
+    databaseId,
+    source,
+    fetchReplicas,
+  )
   const { writeDisabled, writeTooltip } = useWriteAccess(
     canWrite,
     updateMutation.isPending,
@@ -214,15 +216,13 @@ export function PostgresDatabaseReplicasCard({
 
   const [topologyRefreshing, setTopologyRefreshing] = useState(false)
 
-  const {
-    nodeMetrics,
-    refetch: refetchMetrics,
-  } = useDedicatedDatabaseCardMetrics(
-    projectId,
-    databaseId,
-    presentReplicaCount,
-    features.usageStats,
-  )
+  const { nodeMetrics, refetch: refetchMetrics } =
+    useDedicatedDatabaseCardMetrics(
+      projectId,
+      databaseId,
+      presentReplicaCount,
+      features.usageStats,
+    )
 
   const handleTopologyRefresh = useCallback(() => {
     setTopologyRefreshing(true)
@@ -283,7 +283,7 @@ export function PostgresDatabaseReplicasCard({
 
   const handleReplicasUpdate = () => {
     updateMutation.mutate(
-      { replicas: replicaCount, name: database.name },
+      { replicas: replicaCount },
       {
         onSuccess: () => toast.success(t('High availability settings updated')),
         onError: (error) =>
@@ -452,7 +452,7 @@ export function PostgresDatabaseSyncModeCard({
 
   const handleSyncModeUpdate = () => {
     updateMutation.mutate(
-      { syncMode, name: database.name },
+      { syncMode },
       {
         onSuccess: () => toast.success(t('High availability settings updated')),
         onError: (error) =>
@@ -665,7 +665,10 @@ export function PostgresDatabasePitrCard({
   const { features } = useConsoleProfile()
   const { project } = useProject(projectId)
   const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
-  const { data: specificationsData } = useDatabaseSpecifications(projectId, POSTGRES_DATABASE_SPECS_SOURCE)
+  const { data: specificationsData } = useDatabaseSpecifications(
+    projectId,
+    POSTGRES_DATABASE_SPECS_SOURCE,
+  )
   const updateMutation = useUpdatePostgresDatabase(projectId, databaseId)
   const [pitrEnabled, setPitrEnabled] = useState(database.pitr === true)
   const [pitrRetentionDays, setPitrRetentionDays] = useState(
@@ -790,7 +793,12 @@ export function PostgresDatabasePitrCard({
                 <span className="font-medium text-foreground">
                   {formatCurrency(pitrCost, 'USD')} {t('per month')}
                 </span>{' '}
-                ({pitrRatePercent}% {t('of your database price')}).
+                (
+                {t('{percent}% of your database price').replace(
+                  '{percent}',
+                  String(pitrRatePercent),
+                )}
+                ).
               </p>
             </AlertDescription>
           </Alert>
@@ -872,7 +880,11 @@ export function PostgresDatabaseStorageCard({
       return rawSpec.includedStorage
     }
     return null
-  }, [database.specification, database.storage, specificationsData?.specifications])
+  }, [
+    database.specification,
+    database.storage,
+    specificationsData?.specifications,
+  ])
 
   const storageLimitBytes = useMemo(() => {
     if (storageLimitGb == null || storageLimitGb <= 0) return null

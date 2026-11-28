@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useParams } from '@tanstack/react-router'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ID, BackupServices } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { setActiveEnvironment } from '@/lib/active-environment'
@@ -15,7 +15,11 @@ import {
   useDatabaseRestoreMigrations,
   enrichRestorationTargetOptions,
   databaseRestoreMigrationsQueryOptions,
+  dedicatedDatabaseByIdQueryOptions,
 } from '@/lib/react-query/hooks'
+import { dedicatedDatabaseSourceFromRouteKind } from '@/lib/databases/dedicated-database-source'
+import { RestorePitrButton } from './_components/RestorePitr'
+import { useDatabaseAdminOperationsAccess } from './_components/DatabaseOperationsLockContext'
 import { RestoreProgressBanner } from './_components/RestoreProgressBanner'
 import {
   BACKUPS_VIEW_CONTAINER,
@@ -140,6 +144,14 @@ export function BackupsView({ databaseId, dbKind }: BackupsViewProps) {
   const params = useParams({ strict: false })
   const projectId = params.projectId as string
   const queryClient = useQueryClient()
+  const { canWrite } = useDatabaseAdminOperationsAccess()
+  const { data: dedicated } = useQuery(
+    dedicatedDatabaseByIdQueryOptions(
+      projectId,
+      databaseId,
+      dbKind ? { type: 'product', dbKind } : null,
+    ),
+  )
   const [backupsPage, setBackupsPage] = useState(1)
   const [backupsPageSize, setBackupsPageSize] = useState(12)
   const [createPolicyDialogOpen, setCreatePolicyDialogOpen] = useState(false)
@@ -886,15 +898,26 @@ export function BackupsView({ databaseId, dbKind }: BackupsViewProps) {
                 {t('Backups')}
               </h3>
             </div>
-            <Button
-              variant="brandCta"
-              onClick={() => setCreateManualBackupDialogOpen(true)}
-              size="sm"
-              className="h-8 gap-1.5 text-[12px] font-medium"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              {t('Manual backup')}
-            </Button>
+            <div className="flex items-center gap-2">
+              {dedicated && dbKind ? (
+                <RestorePitrButton
+                  projectId={projectId}
+                  databaseId={databaseId}
+                  database={dedicated}
+                  source={dedicatedDatabaseSourceFromRouteKind(dbKind)}
+                  canWrite={canWrite}
+                />
+              ) : null}
+              <Button
+                variant="brandCta"
+                onClick={() => setCreateManualBackupDialogOpen(true)}
+                size="sm"
+                className="h-8 gap-1.5 text-[12px] font-medium"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                {t('Manual backup')}
+              </Button>
+            </div>
           </div>
           <div className="flex-1">
             {isArchivesActuallyLoading ? (

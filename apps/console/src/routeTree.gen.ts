@@ -482,6 +482,7 @@ import { Route as PublicProjectsProjectIdVideosVideoIdCaptionsCreateRouteImport 
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.collections.$collectionId'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdOverviewIndexRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.overview.index'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsIndexRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.settings.index'
+import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsPitrRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.settings.pitr'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsReplicationRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.settings.replication'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSecurityRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.settings.security'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSpecificationRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.settings.specification'
@@ -3295,6 +3296,15 @@ const PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsIndexRoute =
         PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsRoute,
     } as any,
   )
+const PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsPitrRoute =
+  PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsPitrRouteImport.update(
+    {
+      id: '/pitr',
+      path: '/pitr',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsRoute,
+    } as any,
+  )
 const PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsReplicationRoute =
   PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsReplicationRouteImport.update(
     {
@@ -4303,6 +4313,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/sites/$siteId/settings/': typeof PublicProjectsProjectIdSitesSiteIdSettingsIndexRoute
   '/projects/$projectId/videos/$videoId/captions/': typeof PublicProjectsProjectIdVideosVideoIdCaptionsIndexRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRouteWithChildren
+  '/projects/$projectId/databases/$dbKind/$databaseId/settings/pitr': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsPitrRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/settings/replication': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsReplicationRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/settings/security': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSecurityRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/settings/specification': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSpecificationRoute
@@ -4777,6 +4788,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/sites/$siteId/domains': typeof PublicProjectsProjectIdSitesSiteIdDomainsIndexRoute
   '/projects/$projectId/sites/$siteId/settings': typeof PublicProjectsProjectIdSitesSiteIdSettingsIndexRoute
   '/projects/$projectId/videos/$videoId/captions': typeof PublicProjectsProjectIdVideosVideoIdCaptionsIndexRoute
+  '/projects/$projectId/databases/$dbKind/$databaseId/settings/pitr': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsPitrRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/settings/replication': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsReplicationRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/settings/security': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSecurityRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/settings/specification': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSpecificationRoute
@@ -5312,6 +5324,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/sites/$siteId/settings/': typeof PublicProjectsProjectIdSitesSiteIdSettingsIndexRoute
   '/_public/projects/$projectId/videos/$videoId/captions/': typeof PublicProjectsProjectIdVideosVideoIdCaptionsIndexRoute
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRouteWithChildren
+  '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings/pitr': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsPitrRoute
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings/replication': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsReplicationRoute
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings/security': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSecurityRoute
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings/specification': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSpecificationRoute
@@ -5845,6 +5858,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/sites/$siteId/settings/'
     | '/projects/$projectId/videos/$videoId/captions/'
     | '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId'
+    | '/projects/$projectId/databases/$dbKind/$databaseId/settings/pitr'
     | '/projects/$projectId/databases/$dbKind/$databaseId/settings/replication'
     | '/projects/$projectId/databases/$dbKind/$databaseId/settings/security'
     | '/projects/$projectId/databases/$dbKind/$databaseId/settings/specification'
@@ -6319,6 +6333,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/sites/$siteId/domains'
     | '/projects/$projectId/sites/$siteId/settings'
     | '/projects/$projectId/videos/$videoId/captions'
+    | '/projects/$projectId/databases/$dbKind/$databaseId/settings/pitr'
     | '/projects/$projectId/databases/$dbKind/$databaseId/settings/replication'
     | '/projects/$projectId/databases/$dbKind/$databaseId/settings/security'
     | '/projects/$projectId/databases/$dbKind/$databaseId/settings/specification'
@@ -6853,6 +6868,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/sites/$siteId/settings/'
     | '/_public/projects/$projectId/videos/$videoId/captions/'
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId'
+    | '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings/pitr'
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings/replication'
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings/security'
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings/specification'
@@ -10292,6 +10308,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsIndexRouteImport
       parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsRoute
     }
+    '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings/pitr': {
+      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings/pitr'
+      path: '/pitr'
+      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/settings/pitr'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsPitrRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsRoute
+    }
     '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings/replication': {
       id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings/replication'
       path: '/replication'
@@ -11482,6 +11505,7 @@ const PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsRouteWithChildr
   )
 
 interface PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsRouteChildren {
+  PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsPitrRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsPitrRoute
   PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsReplicationRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsReplicationRoute
   PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSecurityRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSecurityRoute
   PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSpecificationRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSpecificationRoute
@@ -11490,6 +11514,8 @@ interface PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsRouteChildren 
 
 const PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsRouteChildren: PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsRouteChildren =
   {
+    PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsPitrRoute:
+      PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsPitrRoute,
     PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsReplicationRoute:
       PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsReplicationRoute,
     PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSecurityRoute:

@@ -4,6 +4,7 @@ import {
 } from '@/components/global/shared/settings-search/SettingsCardsList'
 import { MysqlDatabasePitrCard } from '../_components/MysqlDatabaseConfigSettings'
 import { DedicatedDatabasePitrRestoreCard } from '../../_components/RestorePitr'
+import { dedicatedDatabaseSourceFromEngine } from '@/lib/databases/dedicated-database-source'
 import { useMysqlDatabaseSettingsPage } from './useMysqlDatabaseSettingsPage'
 import { MysqlSettingsLoading } from './MysqlSettingsLoading'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
@@ -42,7 +43,10 @@ export function View() {
               ],
             },
             node: (
-              <DedicatedDatabasePitrRestoreCard {...cardProps} engine="mysql" />
+              <DedicatedDatabasePitrRestoreCard
+                {...cardProps}
+                source={dedicatedDatabaseSourceFromEngine('mysql')}
+              />
             ),
           } satisfies SettingsCardItem,
         ]

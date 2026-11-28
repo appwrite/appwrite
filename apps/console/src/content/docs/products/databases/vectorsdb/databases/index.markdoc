@@ -236,6 +236,8 @@ Three parameters on `create` and `update` decide what a database runs on.
 `replicas` and `syncMode` only apply to a dedicated database. Passing either one alongside a serverless specification fails with `database_ha_requires_dedicated`.
 {% /info %}
 
+Dedicated databases also take the [point-in-time recovery](#pitr) parameters `pitr` and `pitrRetentionDays`.
+
 Use the `listSpecifications` method to read the tiers your organization can select, along with their CPU, memory, connection limit, and price.
 
 {% multicode %}
@@ -969,6 +971,195 @@ appwrite vectorsdb update \
     --name <NAME>
 ```
 {% /multicode %}
+
+# Point-in-time recovery {% #pitr %}
+A dedicated VectorsDB database records its changes continuously, so you can restore it to any moment inside a retention window, for example the second before a bad migration ran. Point-in-time recovery (PITR) needs a dedicated specification; a serverless database ignores these parameters.
+
+| Parameter | Description |
+| --- | --- |
+| `pitr` | Turns point-in-time recovery on or off. Defaults to `true` on `create` with a dedicated specification. |
+| `pitrRetentionDays` | How many days of changes to keep, from 1 to 35 and up to your plan's maximum. Defaults to 7. Recovery points older than this are deleted. |
+
+Pass both on `create` to choose them up front, or on `update` to change them later. A database created through the API with a dedicated specification and no `pitr` starts with PITR on and 7 days of retention; the Console's create wizard leaves PITR off unless you turn it on.
+
+`update` writes `name` and `enabled` on every call, and `enabled` defaults to `true`, so pass the database's current values alongside the PITR parameters. Leaving `enabled` out turns a disabled database back on.
+
+A PITR change reloads the database's configuration, so the database keeps serving and is never restarted. In the Console, open the database's **Settings** and select **Point-in-time recovery**.
+
+PITR is billed as a share of the specification price. `listSpecifications` returns that share as `pitrRate`.
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+const vectorsDB = new sdk.VectorsDB(client);
+
+const result = await vectorsDB.update({
+    databaseId: '<DATABASE_ID>',
+    name: '<NAME>',
+    enabled: true,
+    pitr: true,
+    pitrRetentionDays: 14
+});
+```
+```python
+from appwrite.client import Client
+from appwrite.services.vectors_db import VectorsDB
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+client.set_project('<YOUR_PROJECT_ID>') # Your project ID
+client.set_key('<YOUR_API_KEY>') # Your secret API key
+
+vectors_db = VectorsDB(client)
+
+result = vectors_db.update(
+    database_id = '<DATABASE_ID>',
+    name = '<NAME>',
+    enabled = True,
+    pitr = True,
+    pitr_retention_days = 14
+)
+```
+```php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\VectorsDB;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    ->setProject('<YOUR_PROJECT_ID>') // Your project ID
+    ->setKey('<YOUR_API_KEY>'); // Your secret API key
+
+$vectorsDB = new VectorsDB($client);
+
+$result = $vectorsDB->update(
+    databaseId: '<DATABASE_ID>',
+    name: '<NAME>',
+    enabled: true,
+    pitr: true,
+    pitrRetentionDays: 14
+);
+```
+{% /multicode %}
+
+## Check the recovery window {% #pitr-windows %}
+Use the `getPitr` method to read the earliest and latest moments you can restore to. Right after you turn PITR on, no window is available yet; it opens once continuous archiving captures its first segment.
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+const vectorsDB = new sdk.VectorsDB(client);
+
+const windows = await vectorsDB.getPitr({
+    databaseId: '<DATABASE_ID>'
+});
+```
+```python
+from appwrite.client import Client
+from appwrite.services.vectors_db import VectorsDB
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+client.set_project('<YOUR_PROJECT_ID>') # Your project ID
+client.set_key('<YOUR_API_KEY>') # Your secret API key
+
+vectors_db = VectorsDB(client)
+
+windows = vectors_db.get_pitr(
+    database_id = '<DATABASE_ID>'
+)
+```
+```php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\VectorsDB;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    ->setProject('<YOUR_PROJECT_ID>') // Your project ID
+    ->setKey('<YOUR_API_KEY>'); // Your secret API key
+
+$vectorsDB = new VectorsDB($client);
+
+$windows = $vectorsDB->getPitr(
+    databaseId: '<DATABASE_ID>'
+);
+```
+{% /multicode %}
+
+## Restore to a point in time {% #pitr-restore %}
+Use the `createRestoration` method with `type` set to `pitr` and an ISO 8601 `targetTime` inside the recovery window. The database is restored in place: it is unavailable while it restores, and every change after `targetTime` is discarded.
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+const vectorsDB = new sdk.VectorsDB(client);
+
+const restoration = await vectorsDB.createRestoration({
+    databaseId: '<DATABASE_ID>',
+    type: 'pitr',
+    targetTime: '2026-01-01T00:00:00.000+00:00'
+});
+```
+```python
+from appwrite.client import Client
+from appwrite.services.vectors_db import VectorsDB
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+client.set_project('<YOUR_PROJECT_ID>') # Your project ID
+client.set_key('<YOUR_API_KEY>') # Your secret API key
+
+vectors_db = VectorsDB(client)
+
+restoration = vectors_db.create_restoration(
+    database_id = '<DATABASE_ID>',
+    type = 'pitr',
+    target_time = '2026-01-01T00:00:00.000+00:00'
+)
+```
+```php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\VectorsDB;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    ->setProject('<YOUR_PROJECT_ID>') // Your project ID
+    ->setKey('<YOUR_API_KEY>'); // Your secret API key
+
+$vectorsDB = new VectorsDB($client);
+
+$restoration = $vectorsDB->createRestoration(
+    databaseId: '<DATABASE_ID>',
+    type: 'pitr',
+    targetTime: '2026-01-01T00:00:00.000+00:00'
+);
+```
+{% /multicode %}
+
+Use `listRestorations` and `getRestoration` to follow a restoration until its status is `completed`. In the Console, start a restore from **Settings** > **Point-in-time recovery** or from the **Backups** tab with **Restore PITR**.
 
 # Delete a database {% #delete-database %}
 Use the `delete` method to permanently remove a database and all of its collections and documents.

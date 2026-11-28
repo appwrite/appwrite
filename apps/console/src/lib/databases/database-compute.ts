@@ -52,11 +52,15 @@ export function readDatabaseLifecycleStatus(status: unknown): string | null {
 }
 
 /** Spec slug from a product or dedicated payload. */
-export function readDatabaseSpecification(
-  value: unknown,
-): string | null {
+export function readDatabaseSpecification(value: unknown): string | null {
   const trimmed = coerceTrimmedString(value)
   return trimmed ? trimmed : null
+}
+
+/** True when a product payload reports a dedicated (non-serverless) tier. */
+export function hasDedicatedSpecification(value: unknown): boolean {
+  const specification = readDatabaseSpecification(value)
+  return specification != null && !isServerlessDatabaseSpecId(specification)
 }
 
 /**
@@ -99,9 +103,7 @@ export function hasDedicatedDatabaseCompute(
   if (isNativeDatabaseTypeValue(db.databaseType)) return true
 
   const type = coerceDatabaseType(db.databaseType)
-  return (
-    type === DatabaseType.Documentsdb || type === DatabaseType.Vectorsdb
-  )
+  return type === DatabaseType.Documentsdb || type === DatabaseType.Vectorsdb
 }
 
 /**

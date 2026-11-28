@@ -2,6 +2,7 @@ import { createFileRoute, redirect } from '@tanstack/react-router'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { View } from '@/components/pages/projects/$projectId/databases/postgres/settings/Pitr'
 import {
+  dedicatedDatabaseSourceFromEngine,
   postgresDatabaseQueryOptions,
   prefetchDedicatedDatabasePitrSettingsData,
 } from '@/lib/react-query/hooks'
@@ -34,7 +35,7 @@ export const Route = createFileRoute(
       queryClient,
       projectId,
       databaseId,
-      'postgresql',
+      dedicatedDatabaseSourceFromEngine('postgresql'),
       database ?? null,
     )
   },

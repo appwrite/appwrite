@@ -1620,7 +1620,7 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Each replica is billed at': 'כל replica מחויב ב-',
   'of your compute tier per month.': 'מרמת המחשוב שלכם בחודש.',
   'of your compute tier per month when enabled.': 'מרמת המחשוב שלכם בחודש כשהאפשרות מופעלת.',
-  'of your database price': 'ממחיר מסד הנתונים שלכם',
+  '{percent}% of your database price': '{percent}% ממחיר מסד הנתונים שלכם',
   'Coming soon in your project region. Available in': 'בקרוב באזור הפרויקט שלכם. זמין ב-',
   'No compute fee': 'ללא דמי מחשוב',
   'No monthly compute charge. Storage and database operations use your plan quota.':
@@ -2303,4 +2303,17 @@ export const heDatabasesDictionary: Record<string, string> = {
     'ודאו שההרחבות המותקנות תומכות בגרסת היעד.',
   'You cannot downgrade afterwards.':
     'לא ניתן לחזור לגרסה קודמת אחר כך.',
+  'Retention must be between 1 and {max} days.':
+    'השמירה חייבת להיות בין 1 ל-{max} ימים.',
+  'Retention must be at least 1 day.':
+    'השמירה חייבת להיות לפחות יום אחד.',
+  'Point-in-time recovery is available on dedicated databases':
+    'שחזור לנקודת זמן זמין במסדי נתונים ייעודיים',
+  'Upgrade this database to a dedicated specification to restore it to any moment within a retention window.':
+    'שדרגו את מסד הנתונים למפרט ייעודי כדי לשחזר אותו לכל רגע בתוך חלון השמירה.',
+  'Dedicated database autoscaled storage':
+    'אחסון ב-autoscaling למסד נתונים ייעודי',
+  'Autoscaled storage': 'אחסון ב-autoscaling',
+  'Storage autoscaled beyond the tier allowance.':
+    'אחסון שגדל ב-autoscaling מעבר למכסת השכבה.',
 }

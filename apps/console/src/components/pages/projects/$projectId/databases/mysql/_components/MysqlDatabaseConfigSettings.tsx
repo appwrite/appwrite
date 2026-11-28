@@ -39,11 +39,11 @@ import {
   useDedicatedDatabaseReplicas,
   useProject,
   useUpdateDedicatedDatabaseHa,
+  type DedicatedDatabaseHaSource,
   useUpdateMysqlDatabase,
 } from '@/lib/react-query/hooks'
 import { isDedicatedDatabaseReady } from '@/lib/databases/dedicated-database-status'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import type { DedicatedReplicationSource } from '@/lib/databases/dedicated-replication'
 import { DEFAULT_USAGE_CHART_INTERVAL } from '@/lib/usage/chart-interval'
 import { getDedicatedDatabaseGaugeHeadline } from '@/lib/usage/dedicated-databases-usage'
 import { formatCompactBytes } from '@/lib/usage/format-metric'
@@ -93,7 +93,7 @@ function useWriteAccess(canWrite: boolean, isPending: boolean) {
 
 function useReplicationSource(
   props: MysqlDatabaseSettingsCardProps,
-): DedicatedReplicationSource {
+): DedicatedDatabaseHaSource {
   return (
     props.replicationSource ?? {
       type: 'engine',
@@ -149,24 +149,22 @@ export function MysqlDatabaseReplicasCard({
     projectId,
     source,
   )
-  const isMysqlEngine =
-    engine === 'mysql' || engine === 'mysql' || !engine
-  const { connections, isLoading: connectionsLoading, refetch: refetchConnections } =
-    useMysqlActiveConnections(
-      projectId,
-      isMysqlEngine ? databaseId : null,
-    )
+  const isMysqlEngine = engine === 'mysql' || engine === 'mysql' || !engine
+  const {
+    connections,
+    isLoading: connectionsLoading,
+    refetch: refetchConnections,
+  } = useMysqlActiveConnections(projectId, isMysqlEngine ? databaseId : null)
   const [replicaCount, setReplicaCount] = useState(database.replicas ?? 0)
   const committedReplicaCount = database.replicas ?? 0
   const fetchReplicas =
     committedReplicaCount > 0 || replicaCount > 0 || updateMutation.isPending
-  const { members, refetch: refetchReplicas } =
-    useDedicatedDatabaseReplicas(
-      projectId,
-      databaseId,
-      source,
-      fetchReplicas,
-    )
+  const { members, refetch: refetchReplicas } = useDedicatedDatabaseReplicas(
+    projectId,
+    databaseId,
+    source,
+    fetchReplicas,
+  )
   const { writeDisabled, writeTooltip } = useWriteAccess(
     canWrite,
     updateMutation.isPending,
@@ -214,15 +212,13 @@ export function MysqlDatabaseReplicasCard({
 
   const [topologyRefreshing, setTopologyRefreshing] = useState(false)
 
-  const {
-    nodeMetrics,
-    refetch: refetchMetrics,
-  } = useDedicatedDatabaseCardMetrics(
-    projectId,
-    databaseId,
-    presentReplicaCount,
-    features.usageStats,
-  )
+  const { nodeMetrics, refetch: refetchMetrics } =
+    useDedicatedDatabaseCardMetrics(
+      projectId,
+      databaseId,
+      presentReplicaCount,
+      features.usageStats,
+    )
 
   const handleTopologyRefresh = useCallback(() => {
     setTopologyRefreshing(true)
@@ -283,7 +279,7 @@ export function MysqlDatabaseReplicasCard({
 
   const handleReplicasUpdate = () => {
     updateMutation.mutate(
-      { replicas: replicaCount, name: database.name },
+      { replicas: replicaCount },
       {
         onSuccess: () => toast.success(t('High availability settings updated')),
         onError: (error) =>
@@ -452,7 +448,7 @@ export function MysqlDatabaseSyncModeCard({
 
   const handleSyncModeUpdate = () => {
     updateMutation.mutate(
-      { syncMode, name: database.name },
+      { syncMode },
       {
         onSuccess: () => toast.success(t('High availability settings updated')),
         onError: (error) =>
@@ -665,7 +661,10 @@ export function MysqlDatabasePitrCard({
   const { features } = useConsoleProfile()
   const { project } = useProject(projectId)
   const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
-  const { data: specificationsData } = useDatabaseSpecifications(projectId, MYSQL_DATABASE_SPECS_SOURCE)
+  const { data: specificationsData } = useDatabaseSpecifications(
+    projectId,
+    MYSQL_DATABASE_SPECS_SOURCE,
+  )
   const updateMutation = useUpdateMysqlDatabase(projectId, databaseId)
   const [pitrEnabled, setPitrEnabled] = useState(database.pitr === true)
   const [pitrRetentionDays, setPitrRetentionDays] = useState(
@@ -790,7 +789,12 @@ export function MysqlDatabasePitrCard({
                 <span className="font-medium text-foreground">
                   {formatCurrency(pitrCost, 'USD')} {t('per month')}
                 </span>{' '}
-                ({pitrRatePercent}% {t('of your database price')}).
+                (
+                {t('{percent}% of your database price').replace(
+                  '{percent}',
+                  String(pitrRatePercent),
+                )}
+                ).
               </p>
             </AlertDescription>
           </Alert>
@@ -872,7 +876,11 @@ export function MysqlDatabaseStorageCard({
       return rawSpec.includedStorage
     }
     return null
-  }, [database.specification, database.storage, specificationsData?.specifications])
+  }, [
+    database.specification,
+    database.storage,
+    specificationsData?.specifications,
+  ])
 
   const storageLimitBytes = useMemo(() => {
     if (storageLimitGb == null || storageLimitGb <= 0) return null

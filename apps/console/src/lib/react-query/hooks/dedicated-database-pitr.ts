@@ -2,15 +2,16 @@
  * React Query hooks for dedicated-database PITR windows and restorations.
  */
 
-import {
-  queryOptions,
-  useQuery,
-  type QueryClient,
-} from '@tanstack/react-query'
+import { queryOptions, useQuery, type QueryClient } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
-import { dedicatedEngineService } from '@/lib/databases/dedicated-engine'
+import {
+  dedicatedDatabaseService,
+  dedicatedDatabaseSourceFromEngine,
+  dedicatedDatabaseSourceKey,
+  type DedicatedDatabaseSource,
+} from '@/lib/databases/dedicated-database-source'
 import { DEFAULT_STALE_TIME } from './constants'
 
 function normalizeDedicatedEngine(engine: string | null | undefined): string {
@@ -20,55 +21,91 @@ function normalizeDedicatedEngine(engine: string | null | undefined): string {
   return 'postgresql'
 }
 
+/** Product sources pass through; engine aliases collapse so caches share a key. */
+function normalizePitrSource(
+  source: DedicatedDatabaseSource,
+): DedicatedDatabaseSource {
+  if (source.type === 'product') return source
+  return { type: 'engine', engine: normalizeDedicatedEngine(source.engine) }
+}
+
 export const DEDICATED_PITR_RESTORATIONS_LIMIT = 10
 
 export async function fetchDedicatedDatabasePitrWindows(
   projectId: string,
   databaseId: string,
-  engine?: string | null,
+  source: DedicatedDatabaseSource,
 ): Promise<Models.DedicatedDatabasePITRWindows | null> {
   if (!projectId || !databaseId) return null
-  const projectSdk = sdk.forProject(projectId)
-  return dedicatedEngineService(projectSdk, engine).getPitr({ databaseId })
+  return dedicatedDatabaseService(
+    sdk.forProject(projectId),
+    normalizePitrSource(source),
+  ).getPitr({ databaseId })
 }
 
 export async function fetchDedicatedDatabaseRestorations(
   projectId: string,
   databaseId: string,
-  engine?: string | null,
+  source: DedicatedDatabaseSource,
   limit: number = DEDICATED_PITR_RESTORATIONS_LIMIT,
 ): Promise<Models.DedicatedDatabaseRestorationList> {
   if (!projectId || !databaseId) {
     return { restorations: [], total: 0 }
   }
-  const projectSdk = sdk.forProject(projectId)
-  return dedicatedEngineService(projectSdk, engine).listRestorations({
+  return dedicatedDatabaseService(
+    sdk.forProject(projectId),
+    normalizePitrSource(source),
+  ).listRestorations({
     databaseId,
     limit,
     offset: 0,
   })
 }
 
+/**
+ * Start a point-in-time restoration. Without a target it replays over the
+ * database in place; with one it restores into that database. Product sources
+ * restore in place only.
+ */
+export async function createDedicatedDatabasePitrRestoration(
+  projectId: string,
+  databaseId: string,
+  source: DedicatedDatabaseSource,
+  params: { targetTime: string; targetDatabaseId?: string },
+): Promise<Models.DedicatedDatabaseRestoration> {
+  return dedicatedDatabaseService(
+    sdk.forProject(projectId),
+    normalizePitrSource(source),
+  ).createRestoration({
+    databaseId,
+    type: 'pitr',
+    targetTime: params.targetTime,
+    ...(params.targetDatabaseId
+      ? { targetDatabaseId: params.targetDatabaseId }
+      : {}),
+  })
+}
+
 export function dedicatedDatabasePitrWindowsQueryOptions(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
-  engine?: string | null,
+  source: DedicatedDatabaseSource,
   enabled: boolean = true,
 ) {
-  const normalizedEngine = normalizeDedicatedEngine(engine)
+  const normalizedSource = normalizePitrSource(source)
   return queryOptions({
     queryKey: [
       'dedicated-pitr-windows',
       'project',
       projectId,
       databaseId,
-      normalizedEngine,
+      dedicatedDatabaseSourceKey(normalizedSource),
     ],
     queryFn: () =>
       fetchDedicatedDatabasePitrWindows(
         projectId!,
         databaseId!,
-        normalizedEngine,
+        normalizedSource,
       ),
     enabled: enabled && !!projectId && !!databaseId,
     staleTime: DEFAULT_STALE_TIME,
@@ -86,23 +123,23 @@ export function dedicatedDatabasePitrWindowsQueryOptions(
 export function dedicatedDatabaseRestorationsQueryOptions(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
-  engine?: string | null,
+  source: DedicatedDatabaseSource,
   enabled: boolean = true,
 ) {
-  const normalizedEngine = normalizeDedicatedEngine(engine)
+  const normalizedSource = normalizePitrSource(source)
   return queryOptions({
     queryKey: [
       'dedicated-restorations',
       'project',
       projectId,
       databaseId,
-      normalizedEngine,
+      dedicatedDatabaseSourceKey(normalizedSource),
     ],
     queryFn: () =>
       fetchDedicatedDatabaseRestorations(
         projectId!,
         databaseId!,
-        normalizedEngine,
+        normalizedSource,
       ),
     enabled: enabled && !!projectId && !!databaseId,
     staleTime: DEFAULT_STALE_TIME,
@@ -120,14 +157,14 @@ export function dedicatedDatabaseRestorationsQueryOptions(
 export function useDedicatedDatabasePitrWindows(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
-  engine?: string | null,
+  source: DedicatedDatabaseSource,
   enabled: boolean = true,
 ) {
   return useQuery(
     dedicatedDatabasePitrWindowsQueryOptions(
       projectId,
       databaseId,
-      engine,
+      source,
       enabled,
     ),
   )
@@ -136,14 +173,14 @@ export function useDedicatedDatabasePitrWindows(
 export function useDedicatedDatabaseRestorations(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
-  engine?: string | null,
+  source: DedicatedDatabaseSource,
   enabled: boolean = true,
 ) {
   return useQuery(
     dedicatedDatabaseRestorationsQueryOptions(
       projectId,
       databaseId,
-      engine,
+      source,
       enabled,
     ),
   )
@@ -154,7 +191,7 @@ export function prefetchDedicatedDatabasePitrSettingsData(
   queryClient: QueryClient,
   projectId: string,
   databaseId: string,
-  engine: string | null | undefined,
+  source: DedicatedDatabaseSource,
   database: Models.DedicatedDatabase | null | undefined,
 ): void {
   if (!getActiveProfileFeatures().databasePitrRestore) return
@@ -165,7 +202,7 @@ export function prefetchDedicatedDatabasePitrSettingsData(
       dedicatedDatabasePitrWindowsQueryOptions(
         projectId,
         databaseId,
-        engine,
+        source,
         true,
       ),
     )
@@ -178,7 +215,7 @@ export function prefetchDedicatedDatabasePitrSettingsData(
       dedicatedDatabaseRestorationsQueryOptions(
         projectId,
         databaseId,
-        engine,
+        source,
         true,
       ),
     )
@@ -209,7 +246,7 @@ export function syncDedicatedDatabasePitrCachesAfterUpdate(
     queryClient,
     projectId,
     databaseId,
-    database.engine,
+    dedicatedDatabaseSourceFromEngine(database.engine ?? ''),
     database,
   )
 }

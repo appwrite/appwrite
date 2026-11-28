@@ -803,6 +803,7 @@ export function CreateDatabaseWizardView({
         specification: specId ?? undefined,
         region: project?.region,
         haReplicaCount,
+        pitrEnabled,
       })
     },
   })
@@ -903,8 +904,7 @@ export function CreateDatabaseWizardView({
     const trimmedName = name.trim()
     const showProvisioningStep = usesDedicatedCompute
     const showHaStep = haReplicaCount > 0
-    // Product APIs have no PITR mutation; never enable/wait via engine for product IDs.
-    const showPitrStep = pitrEnabled && isNativeDatabaseType(dbType)
+    const showPitrStep = pitrEnabled && usesDedicatedCompute
     const shouldCreateBackupPolicies =
       features.databaseBackups &&
       planBackupsEnabled === true &&

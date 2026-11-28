@@ -39,15 +39,12 @@ export function getDedicatedDatabaseCreatePricing(
     DEFAULT_HA_REPLICA_RATE
 
   const pitrRate =
-    usage?.dedicatedDbPitr?.price ??
-    apiPricing?.pitrRate ??
-    DEFAULT_PITR_RATE
+    usage?.dedicatedDbPitr?.price ?? apiPricing?.pitrRate ?? DEFAULT_PITR_RATE
 
   return {
     haReplicaRate,
     pitrRate,
-    haReplicaLabel:
-      usage?.dedicatedDbHaReplica?.name?.trim() || 'HA replicas',
+    haReplicaLabel: usage?.dedicatedDbHaReplica?.name?.trim() || 'HA replicas',
     pitrLabel: usage?.dedicatedDbPitr?.name?.trim() || 'Point-in-time recovery',
   }
 }
@@ -61,9 +58,7 @@ export function calculateDedicatedDatabaseMonthlyCost(params: {
   const baseUsd = Math.max(0, params.basePriceUsd)
   const haReplicasUsd =
     baseUsd * params.pricing.haReplicaRate * Math.max(0, params.replicaCount)
-  const pitrUsd = params.pitrEnabled
-    ? baseUsd * params.pricing.pitrRate
-    : 0
+  const pitrUsd = params.pitrEnabled ? baseUsd * params.pricing.pitrRate : 0
 
   return {
     baseUsd,
@@ -82,18 +77,21 @@ export function formatDatabaseComputeCreditsNote(amountUsd: number): string {
 }
 
 /** Marketing fallback when no organization plan is available. */
-export const DATABASE_COMPUTE_CREDITS_NOTE = formatDatabaseComputeCreditsNote(10)
+export const DATABASE_COMPUTE_CREDITS_NOTE =
+  formatDatabaseComputeCreditsNote(10)
 
 export function formatDedicatedMonthlyPrice(amountUsd: number): string {
-  const rounded =
-    Number.isInteger(amountUsd) ? amountUsd.toFixed(0) : amountUsd.toFixed(2)
+  const rounded = Number.isInteger(amountUsd)
+    ? amountUsd.toFixed(0)
+    : amountUsd.toFixed(2)
   return `$${rounded}/mo`
 }
 
 export function formatDedicatedAddonPrice(amountUsd: number): string {
   if (amountUsd <= 0) return formatDedicatedMonthlyPrice(0)
-  const rounded =
-    Number.isInteger(amountUsd) ? amountUsd.toFixed(0) : amountUsd.toFixed(2)
+  const rounded = Number.isInteger(amountUsd)
+    ? amountUsd.toFixed(0)
+    : amountUsd.toFixed(2)
   return `+$${rounded}/mo`
 }
 

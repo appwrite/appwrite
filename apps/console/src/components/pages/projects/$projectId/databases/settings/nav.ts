@@ -1,4 +1,4 @@
-import { Cpu, Settings, Shield, ShieldCheck } from 'lucide-react'
+import { Cpu, History, Settings, Shield, ShieldCheck } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import type { SettingsCardIndexEntry } from '@/lib/settings-search'
 
@@ -6,6 +6,7 @@ export type DatabaseSettingsPathSuffix =
   | ''
   | 'specification'
   | 'replication'
+  | 'pitr'
   | 'security'
 
 export type DatabaseSettingsNavItem = {
@@ -23,6 +24,8 @@ export type DatabaseSettingsVisibility = {
   showSpecification: boolean
   /** Replication needs a dedicated database that supports replicas. */
   showReplication: boolean
+  /** Point-in-time recovery needs a dedicated specification. */
+  showPitr: boolean
 }
 
 export function isDatabaseSettingsSectionVisible(
@@ -31,6 +34,7 @@ export function isDatabaseSettingsSectionVisible(
 ): boolean {
   if (sectionId === 'specification') return visibility.showSpecification
   if (sectionId === 'replication') return visibility.showReplication
+  if (sectionId === 'pitr') return visibility.showPitr
   return true
 }
 
@@ -111,6 +115,21 @@ export const DATABASE_SETTINGS_NAV: DatabaseSettingsNavItem[] = [
       'sync',
       'async',
       'ha',
+    ],
+  },
+  {
+    id: 'pitr',
+    label: 'Point-in-time recovery',
+    pathSuffix: 'pitr',
+    icon: History,
+    keywords: [
+      'pitr',
+      'point in time',
+      'recovery',
+      'restore',
+      'retention',
+      'backup',
+      'timestamp',
     ],
   },
   {

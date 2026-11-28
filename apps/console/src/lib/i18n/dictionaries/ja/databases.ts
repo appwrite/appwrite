@@ -1495,7 +1495,7 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Each replica is billed at': '各レプリカの課金額',
   'of your compute tier per month.': 'コンピュートティア/月の',
   'of your compute tier per month when enabled.': '有効時のコンピュートティア/月の',
-  'of your database price': 'のデータベース料金',
+  '{percent}% of your database price': 'データベース料金の{percent}%',
   'Coming soon in your project region. Available in': 'プロジェクトリージョンでは近日公開予定。利用可能:',
   'No compute fee': 'コンピュート料金なし',
   'No monthly compute charge. Storage and database operations use your plan quota.':
@@ -2238,4 +2238,17 @@ export const jaDatabasesDictionary: Record<string, string> = {
     'インストール済みの拡張機能が対象バージョンに対応しているか確認してください。',
   'You cannot downgrade afterwards.':
     'アップグレード後にダウングレードすることはできません。',
+  'Retention must be between 1 and {max} days.':
+    '保持期間は 1 から {max} 日の範囲で指定してください。',
+  'Retention must be at least 1 day.':
+    '保持期間は 1 日以上で指定してください。',
+  'Point-in-time recovery is available on dedicated databases':
+    'ポイントインタイムリカバリは専用データベースで利用できます',
+  'Upgrade this database to a dedicated specification to restore it to any moment within a retention window.':
+    '保持期間内の任意の時点へ復元するには、このデータベースを専用スペックにアップグレードしてください。',
+  'Dedicated database autoscaled storage':
+    '専用データベースのオートスケールされたストレージ',
+  'Autoscaled storage': 'オートスケールされたストレージ',
+  'Storage autoscaled beyond the tier allowance.':
+    'ティアの割り当てを超えてオートスケールされたストレージ。',
 }
