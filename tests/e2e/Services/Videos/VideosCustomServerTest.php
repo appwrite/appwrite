@@ -813,6 +813,49 @@ final class VideosCustomServerTest extends Scope
         $this->assertNotEmpty($thumbnail['body']);
     }
 
+    /**
+     * Video IDs are caller-chosen, so a deleted video's ID can be reused. The
+     * cached thumbnails of the deleted video must not be served for the new one.
+     */
+    public function testCachedThumbnailNotServedForRecreatedVideo(): void
+    {
+        $videoId = 'video-' . \uniqid();
+        $create = fn () => $this->client->call(Client::METHOD_POST, '/videos', $this->headers(), [
+            'videoId' => $videoId,
+            'bucketId' => $this->getVideoBucket()['$id'],
+            'fileId' => $this->getVideoFile()['$id'],
+        ]);
+
+        $this->assertEquals(201, $create()['headers']['status-code']);
+
+        $timeline = $this->waitForTimeline($videoId);
+        $thumbnailId = $this->playlistToken(
+            (string) $timeline['body'],
+            'thumbnails/',
+            '?project=',
+            'Timeline did not reference a thumbnail'
+        );
+        $path = '/videos/' . $videoId . '/thumbnails/' . $thumbnailId . '?project=' . $this->getProject()['$id'];
+
+        $first = $this->client->call(Client::METHOD_GET, $path, $this->headers());
+        $this->assertEquals(200, $first['headers']['status-code']);
+
+        $this->assertEventually(function () use ($path) {
+            $cached = $this->client->call(Client::METHOD_GET, $path, $this->headers());
+            $this->assertEquals(200, $cached['headers']['status-code']);
+            $this->assertSame('hit', $cached['headers']['x-appwrite-cache'] ?? null);
+        });
+
+        $delete = $this->client->call(Client::METHOD_DELETE, '/videos/' . $videoId, $this->headers());
+        $this->assertEquals(204, $delete['headers']['status-code']);
+
+        $this->assertEquals(201, $create()['headers']['status-code']);
+
+        $stale = $this->client->call(Client::METHOD_GET, $path, $this->headers());
+        $this->assertNotSame('hit', $stale['headers']['x-appwrite-cache'] ?? null);
+        $this->assertEquals(404, $stale['headers']['status-code']);
+    }
+
     // --------------------------------------------------------------- captions
 
     public function testCreateCaption(): void

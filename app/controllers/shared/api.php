@@ -880,7 +880,19 @@ Http::init()
                     // Thumbnail previews inherit access from the video document's
                     // `$permissions` — re-check that before serving cached bytes.
                     $videoId = $parts[1] ?? null;
-                    VideosBase::getAuthorizedVideo($dbForProject, $authorization, $user, $videoId);
+                    $video = VideosBase::getAuthorizedVideo($dbForProject, $authorization, $user, $videoId);
+
+                    // Cached before this video existed: a deleted video with the same
+                    // ID. Its thumbnails must not be served for the new one.
+                    if ($cacheLog->getCreatedAt() < $video->getCreatedAt()) {
+                        $authorization->skip(fn () => $dbForProject->deleteDocument('cache', $cacheLog->getId()));
+                        $cache->purge($key);
+                        $fallback?->purge($key);
+                        Span::add('video.cache.superseded', true);
+                        $miss();
+
+                        return;
+                    }
 
                     Span::add('video.id', $videoId);
                 }
