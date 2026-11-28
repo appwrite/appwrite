@@ -198,6 +198,7 @@ export const startComparisonOverrides: Record<string, ComparisonCell> = {
   Webhooks: '50 per project',
   Users: '100K MAU',
   Teams: '1,000 per project',
+  SSO: '-',
   Databases: '10 per project',
   Reads: '1000K / month',
   Writes: '500K / month',

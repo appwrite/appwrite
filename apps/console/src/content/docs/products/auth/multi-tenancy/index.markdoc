@@ -103,6 +103,8 @@ val tenantTeam = teams.create(
 
 Invite users to join a tenant using team memberships. Each member can be assigned different roles for access control.
 
+If your tenants are companies with their own identity provider, use [single sign-on](/docs/products/auth/sso) instead of invitations. Users who sign in through the tenant's identity provider join the tenant's team automatically.
+
 {% multicode %}
 ```client-web
 import { Client, Teams } from "appwrite";

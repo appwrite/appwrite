@@ -1,0 +1,827 @@
+---
+layout: article
+title: Single sign-on (SSO)
+description: Let your customers' employees sign in to your app through their company's identity provider, such as Okta or Microsoft Entra ID, with OpenID Connect.
+---
+
+Single sign-on (SSO) lets the employees of your business customers sign in to your app with the accounts their company manages in an identity provider, such as Okta, Microsoft Entra ID, Google Workspace, or Keycloak. Each company you sell to is a [team](/docs/products/auth/teams) in your project, with its own verified email domains and its own identity providers.
+
+Your app gets an SSO sign-in page where people enter their work email. From the email's domain, Appwrite finds the identity providers of their company's team. The user signs in on their company's sign-in page and comes back to your app signed in. On their first sign-in, Appwrite creates their account, or links it to an existing account with the same email, and adds them to the team with the roles you chose. Your users never see Appwrite. They go from your app to their company's sign-in page and back.
+
+SSO fits two kinds of apps:
+
+- **Apps you sell to enterprise customers.** The customer's IT team decides who can use your app at their identity provider, for example only the engineering department. You don't keep a list of their employees.
+- **Internal tools at large companies.** Everyone already has an account at the company's identity provider.
+
+A team can also [require SSO](#require-sso). This matters most when someone leaves the company. Their IT team disables them at the identity provider, and a password they set up earlier no longer gives them the team's access.
+
+SSO is available on Appwrite Cloud with the [Single sign-on add-on](#add-on) for your project.
+
+{% info title="Single sign-on for the Appwrite Console" %}
+This page covers SSO for your app's users. To let the members of your Appwrite organization sign in to the Console through your company's identity provider, see [Single sign-on for the Console](/docs/advanced/security/sso). It uses a separate organization add-on.
+{% /info %}
+
+# How it works {% #how-it-works %}
+
+1. Your sign-in page asks for the user's work email and calls `listSSOProviders()`. It returns the enabled identity providers of the team that verified the email's domain.
+2. If there are several identity providers, the user chooses one by name.
+3. Your app calls `createSSOSession()` with the chosen identity provider. The user signs in on their company's sign-in page and comes back to your app, signed in and a member of the team.
+
+Server-rendered apps and React Native apps use `createSSOToken()` in step 3 instead. The user comes back with a `userId` and a `secret`, and your app passes them to `createSession()` to sign the user in. See [Use the token flow](#token-flow).
+
+An identity provider only signs in emails on its own team's verified domains. One customer's identity provider can't sign anyone in with an email on another customer's domain.
+
+## SSO and OAuth2 login {% #sso-and-oauth2 %}
+
+[OAuth2 login](/docs/products/auth/oauth2), including its generic OpenID Connect provider, is built for buttons such as "Sign in with Google" that anyone can use. SSO is built for business customers who each bring their own identity provider.
+
+{% table %}
+* Feature {% width=200 %}
+* OAuth2 login
+* SSO
+---
+* Configuration
+* One per provider, for the whole project
+* Per team, with any number of identity providers
+---
+* Who can sign in
+* Anyone with an account at the provider
+* Only emails on the team's verified domains, and only the people the company allows at its identity provider
+---
+* Choosing the provider
+* The user selects a button
+* Your app finds the team's identity providers from the user's email
+---
+* Teams
+* No automatic membership
+* The user joins the team with the identity provider's roles
+---
+* Enforcement
+* None
+* [Require SSO](#require-sso) for members on the team's domains
+{% /table %}
+
+# Enable the add-on {% #add-on %}
+
+{% only_dark %}
+![The Single sign-on add-on card in project settings, with its price and the Enable add-on button](/images/docs/auth/sso/dark/add-on.avif)
+{% /only_dark %}
+{% only_light %}
+![The Single sign-on add-on card in project settings, with its price and the Enable add-on button](/images/docs/auth/sso/add-on.avif)
+{% /only_light %}
+
+1. In the Appwrite Console, open your project and go to **Settings**.
+2. On the **Overview** tab, find the **Single sign-on** card.
+3. Click **Enable add-on**.
+4. Review the monthly price and the prorated amount due today, then click **Enable**.
+
+If your bank asks for payment authentication, the card shows **Payment pending** until you complete it. Click **Refresh** afterwards to confirm the payment. On a plan that doesn't sell the add-on, the card shows **Upgrade plan** instead.
+
+Once the add-on is active, you can [add SSO sign-in to your app](#sign-in) and [set up SSO for your customers](#setup) with the Appwrite SDKs.
+
+{% info title="Pricing" %}
+The Single sign-on add-on is available on the Pro plan and is billed monthly per project. One add-on covers every team in the project, and [project environments](/docs/advanced/environments) use the add-on of the project they belong to. When you enable it, Appwrite charges a prorated amount for the rest of the current billing cycle. See the [pricing page](/pricing) for the current price.
+{% /info %}
+
+## Disable the add-on {% #disable %}
+
+Click **Disable** on the **Single sign-on** card and confirm with **Disable add-on**. The add-on stays active until the end of the current billing cycle and doesn't renew. Until then, click **Keep add-on** to keep it.
+
+When the add-on ends, nobody can sign in through SSO, and Require SSO stops applying, so members can sign in any way they like. Appwrite keeps each team's domains and identity providers for when you enable the add-on again. Without the add-on, you can still list and delete them and turn off Require SSO, but you can't add, verify, or update anything.
+
+# Add SSO sign-in to your app {% #sign-in %}
+
+Before you start, add your app as a platform under **Overview** > **Platforms** > **Add platform**. Appwrite only sends users back to success and failure URLs on the hostname of one of your Web platforms, or `localhost`. Native apps return to the `appwrite-callback-<PROJECT_ID>` scheme, which every app in the project can use.
+
+## Find the identity providers {% #find-providers %}
+
+Ask for the user's work email on your sign-in page and pass it to `listSSOProviders()`. No session is needed.
+
+{% multicode %}
+```client-web
+import { Client, Account } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<PROJECT_ID>');                          // Your project ID
+
+const account = new Account(client);
+
+const { providers } = await account.listSSOProviders({
+    email: 'ada@example.com'
+});
+```
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+final client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<PROJECT_ID>');                          // Your project ID
+
+final account = Account(client);
+
+final result = await account.listSSOProviders(
+    email: 'ada@example.com',
+);
+final providers = result.providers;
+```
+```client-apple
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<PROJECT_ID>")                           // Your project ID
+
+let account = Account(client)
+
+let result = try await account.listSSOProviders(
+    email: "ada@example.com"
+)
+let providers = result.providers
+```
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Account
+
+val client = Client(context)                              // Activity or application context
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<PROJECT_ID>")                           // Your project ID
+
+val account = Account(client)
+
+val result = account.listSSOProviders(
+    email = "ada@example.com"
+)
+val providers = result.providers
+```
+```client-react-native
+import { Client, Account } from "react-native-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<PROJECT_ID>');                          // Your project ID
+
+const account = new Account(client);
+
+const { providers } = await account.listSSOProviders({
+    email: 'ada@example.com'
+});
+```
+{% /multicode %}
+
+Each identity provider in the list has an ID and a name, oldest first:
+
+- **No identity providers.** The email can't use SSO. Offer your app's other sign-in methods.
+- **One identity provider.** Send the user straight to it.
+- **Several identity providers.** Show their names and let the user choose. Large companies connect several when departments use different identity providers, or to give different groups of people different roles in the team.
+
+## Sign the user in {% #create-session %}
+
+Pass the chosen identity provider's ID to `createSSOSession()`. The user signs in on their company's sign-in page and comes back to your app with a session.
+
+{% tabs %}
+{% tabsitem #web title="Web" %}
+```client-web
+account.createSSOSession({
+    providerId: '<PROVIDER_ID>',               // From listSSOProviders()
+    success: 'https://example.com/dashboard',  // Redirect here on success
+    failure: 'https://example.com/sign-in'     // Redirect here on failure
+});
+```
+
+The session cookie belongs to the domain your app calls Appwrite on. If your app runs on another site than `<REGION>.cloud.appwrite.io`, browsers that block third-party cookies, such as Safari, don't send it. Add a [custom domain](/docs/products/network/custom-domains) for Appwrite on your app's domain, such as `api.example.com`, or use the [token flow](#token-flow).
+{% /tabsitem %}
+
+{% tabsitem #flutter title="Flutter" %}
+For Android, add this activity inside the `<application>` tag in your `AndroidManifest.xml`. Replace `<PROJECT_ID>` with your project ID. No other configuration is required for iOS.
+
+```xml
+<activity android:exported="true" android:name="com.linusu.flutter_web_auth_2.CallbackActivity" >
+  <intent-filter android:label="flutter_web_auth_2">
+    <action android:name="android.intent.action.VIEW" />
+    <category android:name="android.intent.category.DEFAULT" />
+    <category android:name="android.intent.category.BROWSABLE" />
+    <data android:scheme="appwrite-callback-<PROJECT_ID>" />
+  </intent-filter>
+</activity>
+```
+
+```client-flutter
+await account.createSSOSession(
+    providerId: '<PROVIDER_ID>', // From listSSOProviders()
+);
+```
+{% /tabsitem %}
+
+{% tabsitem #apple title="Apple" %}
+Add this URL scheme to your `Info.plist`.
+
+```xml
+<key>CFBundleURLTypes</key>
+<array>
+<dict>
+    <key>CFBundleTypeRole</key>
+    <string>Editor</string>
+    <key>CFBundleURLName</key>
+    <string>io.appwrite</string>
+    <key>CFBundleURLSchemes</key>
+    <array>
+        <string>appwrite-callback-<PROJECT_ID></string>
+    </array>
+</dict>
+</array>
+```
+
+If you're using UIKit, also add this hook to your `SceneDelegate.swift` file so the session cookie is stored.
+
+```client-apple
+func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
+    guard let url = URLContexts.first?.url,
+        url.absoluteString.contains("appwrite-callback") else {
+        return
+    }
+    WebAuthComponent.handleIncomingCookie(from: url)
+}
+```
+
+```client-apple
+try await account.createSSOSession(
+    providerId: "<PROVIDER_ID>" // From listSSOProviders()
+)
+```
+{% /tabsitem %}
+
+{% tabsitem #android title="Android" %}
+Add this activity inside the `<application>` tag in your `AndroidManifest.xml`. Replace `<PROJECT_ID>` with your project ID.
+
+```xml
+<activity android:name="io.appwrite.views.CallbackActivity" android:exported="true">
+  <intent-filter android:label="android_web_auth">
+    <action android:name="android.intent.action.VIEW" />
+    <category android:name="android.intent.category.DEFAULT" />
+    <category android:name="android.intent.category.BROWSABLE" />
+    <data android:scheme="appwrite-callback-<PROJECT_ID>" />
+  </intent-filter>
+</activity>
+```
+
+```client-android-kotlin
+account.createSSOSession(
+    activity = activity,
+    providerId = "<PROVIDER_ID>" // From listSSOProviders()
+)
+```
+{% /tabsitem %}
+
+{% tabsitem #react-native title="React Native" %}
+React Native apps use the token flow. If you use Expo, set the URL scheme to `appwrite-callback-<PROJECT_ID>` in your `app.json` file.
+
+```json
+{
+  "expo": {
+    "scheme": "appwrite-callback-<PROJECT_ID>"
+  }
+}
+```
+
+Then pass a deep link to `createSSOToken()`, open the URL it returns in a browser, and create the session from the `userId` and `secret` on the redirect.
+
+```client-react-native
+import { makeRedirectUri } from 'expo-auth-session';
+import * as WebBrowser from 'expo-web-browser';
+
+// Use localhost as the hostname, so the deep link passes the redirect URL check
+const deepLink = new URL(makeRedirectUri({ preferLocalhost: true }));
+const scheme = `${deepLink.protocol}//`; // e.g. 'exp://' or 'appwrite-callback-<PROJECT_ID>://'
+
+const loginUrl = await account.createSSOToken({
+    providerId: '<PROVIDER_ID>', // From listSSOProviders()
+    success: `${deepLink}`,
+    failure: `${deepLink}`,
+});
+
+// Open the company's sign-in page and wait for the redirect back
+const result = await WebBrowser.openAuthSessionAsync(`${loginUrl}`, scheme);
+if (result.type !== 'success') return;
+
+const url = new URL(result.url);
+await account.createSession({
+    userId: url.searchParams.get('userId'),
+    secret: url.searchParams.get('secret'),
+});
+```
+{% /tabsitem %}
+{% /tabs %}
+
+On mobile, leave out `success` and `failure`, and the SDK brings the user back to your app. Both methods take these parameters:
+
+{% table %}
+* Parameter {% width=140 %}
+* Description
+---
+* `providerId`
+* The ID of the identity provider the user chose, from `listSSOProviders()`. Required.
+---
+* `success`
+* The URL the user lands on after they sign in. With `createSSOToken()`, it gets `userId`, `secret`, and `state` added.
+---
+* `failure`
+* The URL the user lands on when the sign-in fails, with `error` and `state` added.
+---
+* `state`
+* A random value your app generates for each sign-in and keeps until the user comes back, for example in a cookie. Appwrite returns it unchanged on both URLs. Printable ASCII, up to 256 characters.
+{% /table %}
+
+When the sign-in fails, the `error` parameter on your failure URL holds JSON with `message`, `type`, and `code`. Show the message to the user with a way to try again. [Errors](#errors) lists the messages and their causes.
+
+## Use the token flow {% #token-flow %}
+
+`createSSOToken()` ends the sign-in with a token instead of a session cookie. Use it when:
+
+- Your app renders on a server and keeps the session in its own cookie, as in [SSR login](/docs/products/auth/server-side-rendering).
+- Your app is a React Native app.
+- Your web app runs on another site than Appwrite, and you can't add a custom domain.
+
+The user comes back to your success URL with `userId`, `secret`, and `state`. Check that `state` matches the value you kept, then delete the kept value and pass `userId` and `secret` to `createSession()`. The user is already a member of the team at this point, but nobody is signed in until you create the session.
+
+Always send `state` with the token flow and check it when the user comes back. The token flow doesn't rely on cookies from Appwrite, so `state` is the only thing that ties the result to the browser that started the sign-in.
+
+{% tabs %}
+{% tabsitem #token-web title="Web" %}
+Start the sign-in:
+
+```client-web
+const state = crypto.randomUUID();
+sessionStorage.setItem('sso-state', state);
+
+account.createSSOToken({
+    providerId: '<PROVIDER_ID>',                      // From listSSOProviders()
+    success: 'https://example.com/auth/sso/callback', // Gets userId, secret and state
+    failure: 'https://example.com/sign-in',           // Gets error and state
+    state: state
+});
+```
+
+Then, on the page at your success URL, create the session:
+
+```client-web
+const params = new URLSearchParams(window.location.search);
+
+// Only accept a sign-in this browser started
+const expected = sessionStorage.getItem('sso-state');
+sessionStorage.removeItem('sso-state');
+if (!expected || params.get('state') !== expected) {
+    throw new Error('This sign-in was not started here.');
+}
+
+await account.createSession({
+    userId: params.get('userId'),
+    secret: params.get('secret')
+});
+```
+{% /tabsitem %}
+
+{% tabsitem #token-ssr title="Server-side rendering" %}
+On your server, use an API key with the `sessions.write` scope. One endpoint starts the sign-in and one receives the user back. Both follow the [OAuth2 flow for SSR](/docs/products/auth/server-side-rendering#oauth2).
+
+```server-nodejs
+import crypto from 'node:crypto';
+import { Client, Account } from 'node-appwrite';
+
+const adminClient = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<PROJECT_ID>')                           // Your project ID
+    .setKey('<API_KEY>');                                 // Your secret API key
+
+app.post('/sso', async (req, res) => {
+    const account = new Account(adminClient);
+
+    const { providers } = await account.listSSOProviders({
+        email: req.body.email
+    });
+    if (providers.length === 0) {
+        return res.redirect('/sign-in?sso=unavailable');
+    }
+    // With several identity providers, let the user choose. This example takes the first.
+
+    // A random value only this browser will hold
+    const state = crypto.randomBytes(32).toString('hex');
+    res.cookie('sso_state', state, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'lax', // Sent on the redirect back from the identity provider
+        maxAge: 10 * 60 * 1000,
+        path: '/',
+    });
+
+    const redirectUrl = await account.createSSOToken({
+        providerId: providers[0].$id,
+        success: 'https://example.com/sso/callback',
+        failure: 'https://example.com/sign-in',
+        state: state
+    });
+
+    res.redirect(redirectUrl);
+});
+
+app.get('/sso/callback', async (req, res) => {
+    const { userId, secret, state } = req.query;
+
+    // Only accept a sign-in this browser started
+    const expected = req.cookies.sso_state; // Parsed by the cookie-parser middleware
+    res.clearCookie('sso_state', { path: '/' });
+    if (!expected || state !== expected) {
+        return res.status(400).send('This sign-in was not started here.');
+    }
+
+    const account = new Account(adminClient);
+    const session = await account.createSession({
+        userId,
+        secret
+    });
+
+    res.cookie('a_session_<PROJECT_ID>', session.secret, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'strict',
+        expires: new Date(session.expire),
+        path: '/',
+    });
+
+    res.redirect('/dashboard');
+});
+```
+{% /tabsitem %}
+{% /tabs %}
+
+# Set up SSO for your customers {% #setup %}
+
+Each customer's IT admin controls their own DNS and identity provider. Build a settings page in your app where they enter their email domain and their identity provider's details, and save them from your server with the `Teams` service. Use an API key with the `teams.read` and `teams.write` scopes.
+
+The examples below set up the team `<TEAM_ID>` for the domain `example.com`.
+
+## Verify a domain {% #verify-domain %}
+
+Add the customer's email domain with `createSSODomain()`. The response holds the TXT record that proves the team owns the domain. Show it to the customer's IT admin so they can add it at their DNS provider.
+
+{% multicode %}
+```server-nodejs
+import { Client, Teams } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<PROJECT_ID>')                           // Your project ID
+    .setKey('<API_KEY>');                                 // Your secret API key
+
+const teams = new Teams(client);
+
+const domain = await teams.createSSODomain({
+    teamId: '<TEAM_ID>',
+    domain: 'example.com'
+});
+
+console.log(domain.recordName);  // _<PROJECT_ID>.example.com
+console.log(domain.recordValue); // team:<TEAM_ID>
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.teams import Teams
+
+client = (Client()
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+    .set_project('<PROJECT_ID>')                           # Your project ID
+    .set_key('<API_KEY>'))                                 # Your secret API key
+
+teams = Teams(client)
+
+domain = teams.create_sso_domain(
+    team_id='<TEAM_ID>',
+    domain='example.com'
+)
+
+print(domain.record_name)  # _<PROJECT_ID>.example.com
+print(domain.record_value) # team:<TEAM_ID>
+```
+{% /multicode %}
+
+Once the record is published, call `updateSSODomainStatus()` to check it. When Appwrite finds the record, the domain's `status` changes to `verified`. Until then, nobody can sign in with SSO on the domain.
+
+{% multicode %}
+```server-nodejs
+const verified = await teams.updateSSODomainStatus({
+    teamId: '<TEAM_ID>',
+    domainId: domain.$id
+});
+
+console.log(verified.status); // verified
+```
+```server-python
+verified = teams.update_sso_domain_status(
+    team_id='<TEAM_ID>',
+    domain_id=domain.id
+)
+
+print(verified.status) # verified
+```
+{% /multicode %}
+
+DNS changes can take a few minutes to propagate. If the record is missing or holds another value, the call fails with `rule_verification_failed`, and the message says what Appwrite found. Most DNS providers add the zone to record names, so the IT admin may need to enter only `_<PROJECT_ID>`.
+
+- Each domain needs its own entry. Verifying `example.com` doesn't cover `eu.example.com`.
+- A domain belongs to one team in a project at a time. Teams in other projects can claim the same domain, because the record name includes the project ID.
+- If another team in the project holds the domain, `createSSODomain()` fails with `rule_claim_required`, and the message names the TXT record your team needs. Once that record is published, add the domain again. It moves to your team, already verified.
+- You can't claim Appwrite's own Functions and Sites domains, or a domain ending on its own, such as `com` or `co.uk`.
+- In a [project environment](/docs/advanced/environments), the record name uses the ID of the project the environment belongs to.
+
+## Connect an identity provider {% #connect-provider %}
+
+Appwrite connects to identity providers over OpenID Connect. The customer's IT admin creates an application at their identity provider:
+
+1. Create an OpenID Connect web application that uses the authorization code flow and has a client secret.
+2. Register this redirect URL. If your app calls Appwrite through a [custom domain](/docs/products/network/custom-domains), use that domain instead, such as `https://api.example.com/v1/account/sessions/sso/callback/<PROJECT_ID>`.
+
+    ```text
+    https://<REGION>.cloud.appwrite.io/v1/account/sessions/sso/callback/<PROJECT_ID>
+    ```
+
+3. Let the application share the user's email address. Appwrite requests the `openid`, `profile`, and `email` scopes, and refuses the sign-in when the identity provider returns no email.
+4. Assign the people or groups who may use your app. The identity provider only lets them sign in.
+5. Send you the client ID, the client secret, and the discovery URL.
+
+Then add the identity provider to the team with `createOidcSsoProvider()`.
+
+{% multicode %}
+```server-nodejs
+const provider = await teams.createOidcSsoProvider({
+    teamId: '<TEAM_ID>',
+    name: 'Okta',             // Shown when the user chooses an identity provider
+    roles: ['member'],        // Team roles for users who join through it
+    clientId: '<CLIENT_ID>',
+    clientSecret: '<CLIENT_SECRET>',
+    wellKnownURL: 'https://<OKTA_DOMAIN>/.well-known/openid-configuration'
+});
+```
+```server-python
+provider = teams.create_oidc_sso_provider(
+    team_id='<TEAM_ID>',
+    name='Okta',             # Shown when the user chooses an identity provider
+    roles=['member'],        # Team roles for users who join through it
+    client_id='<CLIENT_ID>',
+    client_secret='<CLIENT_SECRET>',
+    well_known_url='https://<OKTA_DOMAIN>/.well-known/openid-configuration'
+)
+```
+{% /multicode %}
+
+{% table %}
+* Parameter {% width=200 %}
+* Description
+---
+* `name`
+* Shown in your app when a team has more than one identity provider, such as `Okta`. Up to 128 characters.
+---
+* `roles`
+* The team roles users get when they join the team through this identity provider, such as `member`. Add at least one. Roles use letters, digits, periods, hyphens, and underscores, are up to 36 characters long, and can't start with a period, hyphen, or underscore.
+---
+* `clientId`, `clientSecret`
+* The client ID and client secret of the application at the identity provider. Appwrite never returns the secret. Responses only say whether one is set, in `oidcClientSecretSet`.
+---
+* `wellKnownURL`
+* The identity provider's OpenID Connect discovery document, which ends in `/.well-known/openid-configuration`.
+---
+* `authorizationURL`, `tokenURL`, `userInfoURL`
+* Override what the discovery document publishes. Without a discovery URL, set all three.
+---
+* `enabled`
+* Whether users can sign in through this identity provider. Defaults to `true`.
+{% /table %}
+
+Every URL must start with `https://`, because Appwrite sends the client secret and the user's tokens to them. These are the discovery URLs of common identity providers:
+
+{% table %}
+* Identity provider {% width=200 %}
+* Discovery URL
+---
+* Okta
+* `https://<OKTA_DOMAIN>/.well-known/openid-configuration`
+---
+* Microsoft Entra ID
+* `https://login.microsoftonline.com/<TENANT_ID>/v2.0/.well-known/openid-configuration`
+---
+* Google Workspace
+* `https://accounts.google.com/.well-known/openid-configuration`
+---
+* Keycloak
+* `https://<KEYCLOAK_HOST>/realms/<REALM>/.well-known/openid-configuration`
+---
+* Auth0
+* `https://<AUTH0_DOMAIN>/.well-known/openid-configuration`
+{% /table %}
+
+Google's discovery URL is the same for every Google account. That is safe here, because the identity provider only signs in emails on the team's verified domains.
+
+To change an identity provider, call `updateOidcSsoProvider()` with every setting again. Leave out `clientSecret` to keep the stored one. To turn an identity provider off without deleting it, set `enabled` to `false`.
+
+## Require SSO {% #require-sso %}
+
+When a team requires SSO, its members only get the team's access after they sign in through one of the team's identity providers. When someone leaves the company and their IT team disables them at the identity provider, a password or another sign-in method they set up earlier no longer gives them the team's access.
+
+{% multicode %}
+```server-nodejs
+await teams.updateSSORequired({
+    teamId: '<TEAM_ID>',
+    required: true
+});
+```
+```server-python
+teams.update_sso_required(
+    team_id='<TEAM_ID>',
+    required=True
+)
+```
+{% /multicode %}
+
+`updateSSORequired()` is also in the client SDKs, so your app can let a team's owners turn it on or off themselves.
+
+Members with an email on the team's verified domains keep their account. On any session that isn't from one of the team's identity providers, such as one from a password, a magic URL, an OAuth2 provider, or a session created before you turned it on:
+
+- Requests run without the roles the team gives, `team:<TEAM_ID>`, `team:<TEAM_ID>/<ROLE>`, and `member:<MEMBERSHIP_ID>`. The member can't reach resources that only the team's [permissions](/docs/advanced/security/permissions) grant.
+- Requests to the team itself, such as getting the team or listing its memberships, fail with `sso_required`.
+
+Nothing else changes for the member. They keep their other teams and the resources their account has access to. Two kinds of members are exempt:
+
+- Team owners keep their roles however they sign in, so a broken identity provider never locks the team out.
+- Members with an email on another domain, such as contractors, keep their roles too, because none of the team's identity providers can sign them in.
+
+The team needs a verified domain and an enabled identity provider first, or the call fails with `sso_required_unavailable`. If the team later loses either one, or the add-on ends, Require SSO pauses and applies to nobody until the team has both again.
+
+A session counts as SSO when one of the team's own identity providers issued it. Sessions from an identity provider you disable later still count. Sessions from an identity provider you delete don't.
+
+While Require SSO applies to a member, they can't change their account's email, and `updateEmail()` fails with `sso_email_managed`. Otherwise, they could move their account to another domain and get the team's access back on a password.
+
+# Accounts and team membership {% #accounts %}
+
+The first time someone signs in through an identity provider, Appwrite creates or links their account the same way as an [OAuth2](/docs/products/auth/oauth2) sign-in:
+
+1. An account already linked to the user's identity at this identity provider signs in.
+2. Otherwise, an account with the same email address is linked. The team proved it owns the domain, so Appwrite trusts the identity provider for the address and marks it verified, even if the identity provider doesn't send `email_verified`.
+3. Otherwise, Appwrite creates an account with the user's name and email address.
+
+If the account with the matching email address never verified it, Appwrite treats the SSO user as the address's owner. It signs that account out everywhere and removes its password, phone number, MFA, and other identities before linking it.
+
+Each linked account gets an [identity](/docs/products/auth/identities) with the provider `sso`. Its provider UID is the identity provider's ID and the user's ID at the identity provider, in the form `<PROVIDER_ID>:<SUBJECT>`. New accounts follow your [email policies](/docs/products/auth/email-policies) and your project's user limit, and blocked users can't sign in.
+
+When the user signs in, Appwrite adds them to the identity provider's team:
+
+- A user who isn't a member joins the team with the identity provider's roles.
+- A member keeps the roles they have. Changing an identity provider's roles only affects users who join after the change.
+- A user with a pending invitation to the team accepts it, and gets the roles from the invitation.
+
+Every user who joins through an identity provider gets the same roles. Appwrite doesn't read roles or groups from the identity provider. To give different roles to different groups of people, connect an identity provider for each group, or change the roles on the [membership](/docs/products/auth/teams) after the user joins.
+
+Removing a user at the identity provider stops their next SSO sign-in, but doesn't end their sessions or remove them from the team. To remove their access right away, delete their membership, or delete their sessions or block the user. Deleting an identity provider stops sign-ins through it, and the members who joined through it stay in the team.
+
+# SDK methods {% #methods %}
+
+{% table %}
+* Method {% width=300 %}
+* SDKs
+* Description
+---
+* `account.listSSOProviders()`
+* Client, server
+* List the enabled identity providers for an email.
+---
+* `account.createSSOSession()`
+* Client
+* Sign the user in through an identity provider and create a session.
+---
+* `account.createSSOToken()`
+* Client, server
+* Sign the user in through an identity provider and return a token for `createSession()`.
+---
+* `teams.createSSODomain()`, `teams.listSSODomains()`, `teams.getSSODomain()`, `teams.deleteSSODomain()`
+* Server
+* Add, list, get, and delete a team's domains.
+---
+* `teams.updateSSODomainStatus()`
+* Server
+* Check a domain's TXT record and verify the domain.
+---
+* `teams.createOidcSsoProvider()`, `teams.updateOidcSsoProvider()`
+* Server
+* Add an OpenID Connect identity provider, or replace its settings.
+---
+* `teams.listSSOProviders()`, `teams.getSSOProvider()`, `teams.deleteSSOProvider()`
+* Server
+* List, get, and delete a team's identity providers.
+---
+* `teams.updateSSORequired()`
+* Client, server
+* Turn Require SSO on or off.
+{% /table %}
+
+The `Teams` methods need an API key with the `teams.read` scope to read and `teams.write` to make changes. A team's owners can also manage its SSO settings. Every change to a team's SSO settings triggers the `teams.<TEAM_ID>.update` [event](/docs/apis/events).
+
+# View SSO in the Console {% #console %}
+
+To see a team's SSO settings, open your project in the Appwrite Console, go to **Auth** > **Teams**, select the team, and open the **Single sign-on** tab. It lists the team's domains with their TXT records and status, its identity providers with their roles, and whether the team requires SSO. You can also add, verify, edit, and delete them there, for example while you help a customer with their setup.
+
+{% only_dark %}
+![The Domains card of a team, with one verified and one unverified domain](/images/docs/auth/sso/dark/domains.avif)
+{% /only_dark %}
+{% only_light %}
+![The Domains card of a team, with one verified and one unverified domain](/images/docs/auth/sso/domains.avif)
+{% /only_light %}
+
+{% only_dark %}
+![The Identity providers card of a team, with an enabled and a disabled identity provider and their roles](/images/docs/auth/sso/dark/identity-providers.avif)
+{% /only_dark %}
+{% only_light %}
+![The Identity providers card of a team, with an enabled and a disabled identity provider and their roles](/images/docs/auth/sso/identity-providers.avif)
+{% /only_light %}
+
+A user's SSO identities are on their **Identities** tab under **Auth** > **Users**.
+
+# Rate limits {% #rate-limits %}
+
+{% table %}
+* Method {% width=300 %}
+* Limit
+---
+* `account.listSSOProviders()`
+* 60 requests per minute for each IP address.
+---
+* `account.createSSOSession()`, `account.createSSOToken()`
+* 50 requests per hour for each IP address.
+---
+* `teams.createSSODomain()`
+* 10 requests per minute for each user or API key.
+{% /table %}
+
+# Errors {% #errors %}
+
+When a sign-in fails, the `error` parameter on your failure URL has one of these types and messages:
+
+{% table %}
+* Error {% width=300 %}
+* Cause
+---
+* `user_oauth2_provider_error`: "This identity provider is not available."
+* The identity provider is disabled or deleted, the team has no verified domain, or the project's add-on isn't active.
+---
+* `user_oauth2_provider_error`: "Single sign-on for your organization is not working right now. Contact your administrator."
+* Appwrite couldn't reach the identity provider or read its discovery document, one of its endpoints doesn't use `https://`, or it sent an answer Appwrite couldn't read. Check the identity provider's settings.
+---
+* `user_oauth2_provider_error`: "Single sign-on could not finish. Start again from the sign-in page."
+* Someone disabled or deleted the identity provider, or deleted its team's verified domains, while the user was signing in.
+---
+* `user_oauth2_provider_failure` with `email_missing`
+* The identity provider didn't share the user's email address. Let the application release the `email` claim, and check that the user has an email address at the identity provider.
+---
+* `user_oauth2_provider_failure` with `email_domain_not_verified`
+* The user's email at the identity provider isn't on one of the team's verified domains.
+---
+* `user_blocked`
+* The account is blocked.
+---
+* `user_count_exceeded`
+* The sign-in would create an account, and the project already has as many users as its user limit allows.
+---
+* `user_email_disposable`, `user_email_free`, `user_email_not_corporate`, `user_email_not_canonical`
+* The user's email address breaks one of your [email policies](/docs/products/auth/email-policies).
+{% /table %}
+
+The other SSO methods can return these errors:
+
+{% table %}
+* Error {% width=300 %}
+* Cause
+---
+* `sso_addon_required`
+* The project's Single sign-on add-on isn't active, so you can't add or verify a domain, add or update an identity provider, or turn on Require SSO.
+---
+* `sso_required`
+* The team requires SSO, and the request came from a member on one of its domains with a session from another sign-in method.
+---
+* `sso_required_unavailable`
+* You tried to turn on Require SSO for a team without a verified domain and an enabled identity provider.
+---
+* `sso_email_managed`
+* A member tried to change their email while their team requires SSO for their domain.
+---
+* `rule_claim_required`
+* Another team in the project holds the domain. The message names the TXT record that moves it to your team.
+---
+* `rule_already_exists`
+* The team has already claimed the domain.
+---
+* `rule_verification_failed`
+* The TXT record is missing or holds another value. The message says what Appwrite found.
+---
+* `user_unauthorized`
+* The user isn't an owner of the team, so they can't manage its SSO settings.
+---
+* `general_argument_invalid`
+* A setting is invalid, such as a domain Appwrite owns, a domain ending on its own, or a URL that doesn't use `https://`.
+{% /table %}

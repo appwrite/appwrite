@@ -78,6 +78,12 @@ export const authProductContent: ProductPageContent = {
       links: [{ label: 'LDAP login', href: '/docs/products/auth/ldap' }],
     },
     {
+      question: 'Does Appwrite support single sign-on (SSO) for business customers?',
+      answer:
+        'Yes, on Appwrite Cloud with the Single sign-on add-on. Each company you sell to is a team in your project, with its own verified email domains and its own OpenID Connect identity providers, such as Okta, Microsoft Entra ID, or Google Workspace. Your app\'s SSO sign-in page sends employees to their company\'s identity provider, and Appwrite creates or links their account and adds them to the team with the roles you chose. A team can also require SSO for its members.',
+      links: [{ label: 'Single sign-on', href: '/docs/products/auth/sso' }],
+    },
+    {
       question: 'Can I migrate users from another auth provider?',
       answer:
         'Yes. Import users through the Console or the Users API with the Server SDK. For email and password accounts, create users with plain-text passwords or import existing password hashes when your provider uses a supported algorithm: Argon2, bcrypt, scrypt, scrypt-modified (Firebase), SHA, MD5, or PHPass. New passwords are stored with Argon2. Hashes imported from other algorithms are upgraded to Argon2 after the user\'s first successful sign-in.',
