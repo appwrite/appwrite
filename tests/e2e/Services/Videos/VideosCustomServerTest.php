@@ -2682,6 +2682,14 @@ final class VideosCustomServerTest extends Scope
         $hls720Body = $this->waitForRenditionTerminalState($videoId, $hls720['body']['$id']);
         $this->assertEquals('ready', $hls720Body['status']);
 
+        // A profile's bitrate is its rung's budget, and the fixture's detailed
+        // leaves spend it: at 720p they stream at about the profile's rate and
+        // not above it. An encoder that treats the rate only as a ceiling (CRF 22
+        // under -maxrate) stopped near 55% of it.
+        $rate = $this->videoBitRate($videoId, $hls720['body']['$id']);
+        $this->assertGreaterThan(0.8 * $profile720['videoBitRate'], $rate, 'The 720p rendition left most of its profile bitrate unused');
+        $this->assertLessThan(1.15 * $profile720['videoBitRate'], $rate, 'The 720p rendition streamed above its profile bitrate');
+
         $master = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/outputs/hls/master.m3u8', $this->headers());
         $this->assertEquals(200, $master['headers']['status-code']);
         $this->assertStringContainsString('#EXTM3U', (string) $master['body']);
@@ -4910,6 +4918,58 @@ final class VideosCustomServerTest extends Scope
         $codecs = \strtolower($this->attributeValue($variant, 'CODECS'));
         $this->assertStringContainsString('avc1.64', $codecs, 'Expected High profile, got: ' . $codecs);
         $this->assertStringNotContainsString('avc1.6e', $codecs);
+    }
+
+    /**
+     * Bits per second a rendition's HLS video variant streams at: the bytes of
+     * every segment its playlist names over their summed EXTINF seconds,
+     * MPEG-TS overhead included.
+     */
+    private function videoBitRate(string $videoId, string $renditionId): float
+    {
+        $master = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/outputs/hls/master.m3u8', $this->headers());
+        $this->assertEquals(200, $master['headers']['status-code']);
+
+        $uri = '';
+        $variant = false;
+        foreach (\explode("\n", (string) $master['body']) as $raw) {
+            $line = \trim($raw);
+            if (\str_starts_with($line, '#EXT-X-STREAM-INF:')) {
+                $variant = true;
+                continue;
+            }
+            if (!$variant || $line === '' || \str_starts_with($line, '#')) {
+                continue;
+            }
+            if (\str_contains($line, '/renditions/' . $renditionId . '/')) {
+                $uri = $line;
+                break;
+            }
+            $variant = false;
+        }
+        $this->assertNotSame('', $uri, 'The master names no video variant of this rendition');
+
+        $playlist = $this->client->call(Client::METHOD_GET, $this->manifestRequestPath($uri), $this->headers());
+        $this->assertEquals(200, $playlist['headers']['status-code'], 'Playlist unreachable: ' . $uri);
+
+        $seconds = 0.0;
+        $bytes = 0;
+        foreach (\explode("\n", (string) $playlist['body']) as $raw) {
+            $line = \trim($raw);
+            if (\str_starts_with($line, '#EXTINF:')) {
+                $seconds += (float) \explode(',', \substr($line, \strlen('#EXTINF:')))[0];
+                continue;
+            }
+            if ($line === '' || \str_starts_with($line, '#')) {
+                continue;
+            }
+            $segment = $this->client->call(Client::METHOD_GET, $this->manifestRequestPath($line), $this->headers());
+            $this->assertEquals(200, $segment['headers']['status-code'], 'Segment unreachable: ' . $line);
+            $bytes += \strlen((string) $segment['body']);
+        }
+        $this->assertGreaterThan(0, $seconds, 'The variant playlist lists no media time: ' . $uri);
+
+        return $bytes * 8 / $seconds;
     }
 
     /**

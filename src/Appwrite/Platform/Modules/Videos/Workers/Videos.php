@@ -101,6 +101,19 @@ class Videos extends Action
     /** Packaged media segment length in seconds (HLS / DASH / CMAF). */
     private const SEGMENT_DURATION = 4;
 
+    /**
+     * H.264 quality under the profile's bitrate. utopia-php/video writes the
+     * profile's rate as -maxrate with a two-second -bufsize, so a rendition never
+     * streams above it, and the CRF decides how much of it a scene spends.
+     *
+     * At 22, smooth, dark or grainy pictures stopped at a quarter to a half of
+     * their profile and broke into blocks and banding (a 2160p rendition at
+     * 4 Mb/s of 16). 18 is about where x264 output stops looking lossy, so a
+     * detailed picture fills its profile and an easy one, like a screen
+     * recording, still stops well short of it instead of padding out to the cap.
+     */
+    private const H264_CRF = 18;
+
     /** Seconds one embedded caption track may take to extract before it counts as failed. */
     private const SUBTITLE_TIMEOUT = 60;
 
@@ -924,7 +937,7 @@ class Videos extends Action
                 // which browsers do not play and which nearly doubles the
                 // memory the encode needs.
                 default => (new X264())
-                    ->crf(22)
+                    ->crf(self::H264_CRF)
                     ->bframes(3)
                     ->keyframe(2.0)
                     ->params([...$params, '-pix_fmt', 'yuv420p']),
