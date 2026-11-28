@@ -15,12 +15,14 @@ describe('ensureApexDomainInOrganization', () => {
   function mockCloud(
     variables?: () => Promise<object>,
     regional?: Record<string, () => Promise<object>>,
+    failure?: { type: string; message: string },
   ) {
     queryClient.removeQueries({ queryKey: ['console-variables'] })
     const created: string[] = []
     const domains = {
       list: async () => ({ domains: [] }),
       create: async ({ domain }: { domain: string }) => {
+        if (failure) throw failure
         created.push(domain)
       },
     }
@@ -97,5 +99,36 @@ describe('ensureApexDomainInOrganization', () => {
     await ensureApexDomainInOrganization('team1', 'fn.fra.appwrite.run')
     await ensureApexDomainInOrganization('team1', 'fn.appwrite.global')
     expect(created).toEqual([])
+  })
+
+  test('leaves an apex another organization holds to the rule create', async () => {
+    mockCloud(undefined, undefined, {
+      type: 'domain_claim_required',
+      message:
+        'This domain belongs to another organization. Add a TXT record _appwrite.example.com with the value domain:team1, then create the domain again to claim it.',
+    })
+    await expect(
+      ensureApexDomainInOrganization('team1', 'api.example.com'),
+    ).resolves.toBeUndefined()
+  })
+
+  test('leaves a domain under another organization to the rule create', async () => {
+    mockCloud(undefined, undefined, {
+      type: 'domain_owned_by_different_organization',
+      message: 'Domain is owned by a different organization.',
+    })
+    await expect(
+      ensureApexDomainInOrganization('team1', 'api.example.com'),
+    ).resolves.toBeUndefined()
+  })
+
+  test('stops on any other failure', async () => {
+    mockCloud(undefined, undefined, {
+      type: 'general_server_error',
+      message: 'Server error',
+    })
+    await expect(
+      ensureApexDomainInOrganization('team1', 'api.example.com'),
+    ).rejects.toMatchObject({ type: 'general_server_error' })
   })
 })

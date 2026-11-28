@@ -435,9 +435,14 @@ export async function ensureApexDomainInOrganization(
     ) {
       return // Non-fatal
     }
-    // Part of this domain belongs to another organization. The rule create
-    // decides, and asks for the claim record when that organization manages it.
-    if (e?.type === 'domain_owned_by_different_organization') return
+    // Part of this domain belongs to another organization, or another
+    // organization holds the apex itself. The rule create decides, and asks for
+    // the claim record when that organization manages it.
+    if (
+      e?.type === 'domain_owned_by_different_organization' ||
+      e?.type === 'domain_claim_required'
+    )
+      return
     throw err
   }
 
