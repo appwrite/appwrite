@@ -2390,6 +2390,94 @@ trait WebhooksBase
         $this->assertEquals('webhook_not_found', $delete['body']['type']);
     }
 
+    public function testDeleteWebhookConditionalPreconditions(): void
+    {
+        $webhook = $this->createWebhook(
+            Id::unique(),
+            'Conditional Delete Webhook',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            null,
+            null,
+            null
+        );
+
+        $this->assertEquals(201, $webhook['headers']['status-code']);
+        $webhookId = $webhook['body']['$id'];
+        $updatedAt = $webhook['body']['$updatedAt'];
+
+        $defaultHeaders = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        // 1. Stale precondition query parameter rejects with 412
+        $staleParamDelete = $this->client->call(
+            Client::METHOD_DELETE,
+            '/webhooks/' . $webhookId . '?ifUpdatedAt=' . urlencode('2020-01-01T00:00:00.000+00:00'),
+            $defaultHeaders
+        );
+        $this->assertEquals(412, $staleParamDelete['headers']['status-code']);
+        $this->assertEquals('webhook_precondition_failed', $staleParamDelete['body']['type']);
+
+        // Verify webhook still exists
+        $get = $this->getWebhook($webhookId);
+        $this->assertEquals(200, $get['headers']['status-code']);
+
+        // 2. Stale precondition header rejects with 412
+        $staleHeaderDelete = $this->client->call(
+            Client::METHOD_DELETE,
+            '/webhooks/' . $webhookId,
+            array_merge($defaultHeaders, ['x-appwrite-if-updated-at' => '2020-01-01T00:00:00.000+00:00'])
+        );
+        $this->assertEquals(412, $staleHeaderDelete['headers']['status-code']);
+        $this->assertEquals('webhook_precondition_failed', $staleHeaderDelete['body']['type']);
+
+        // Verify webhook still exists
+        $get = $this->getWebhook($webhookId);
+        $this->assertEquals(200, $get['headers']['status-code']);
+
+        // 3. Matching precondition header deletes webhook
+        $matchingHeaderDelete = $this->client->call(
+            Client::METHOD_DELETE,
+            '/webhooks/' . $webhookId,
+            array_merge($defaultHeaders, ['x-appwrite-if-updated-at' => $updatedAt])
+        );
+        $this->assertEquals(204, $matchingHeaderDelete['headers']['status-code']);
+
+        // Verify it no longer exists
+        $get = $this->getWebhook($webhookId);
+        $this->assertEquals(404, $get['headers']['status-code']);
+        $this->assertEquals('webhook_not_found', $get['body']['type']);
+
+        // 4. Verify matching query parameter deletes webhook as well
+        $webhook2 = $this->createWebhook(
+            Id::unique(),
+            'Conditional Delete Webhook 2',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            null,
+            null,
+            null
+        );
+        $this->assertEquals(201, $webhook2['headers']['status-code']);
+        $webhookId2 = $webhook2['body']['$id'];
+        $updatedAt2 = $webhook2['body']['$updatedAt'];
+
+        $matchingParamDelete = $this->client->call(
+            Client::METHOD_DELETE,
+            '/webhooks/' . $webhookId2 . '?ifUpdatedAt=' . urlencode($updatedAt2),
+            $defaultHeaders
+        );
+        $this->assertEquals(204, $matchingParamDelete['headers']['status-code']);
+
+        $get2 = $this->getWebhook($webhookId2);
+        $this->assertEquals(404, $get2['headers']['status-code']);
+        $this->assertEquals('webhook_not_found', $get2['body']['type']);
+    }
+
     // =========================================================================
     // Backward compatibility tests (1.9.0 response format)
     // =========================================================================
