@@ -1245,7 +1245,8 @@ impl Connection {
         };
         let mut fields: Vec<(String, String)> = Vec::new();
         let mut length: Option<u64> = None;
-        let mut location = false;
+        // The first Location value, as cURL copies it.
+        let mut location: Option<String> = None;
         // cURL processes a header line once the next one shows it is not
         // folded: the last line before the connection closes is never checked.
         let mut pending: Option<Vec<u8>> = None;
@@ -1288,11 +1289,16 @@ impl Connection {
                     (Some(a), _) => length = Some(a),
                 }
             }
-            if name.eq_ignore_ascii_case("Location") && !trimmed.is_empty() {
-                if location {
-                    return Err(fail(self, "Multiple Location headers"));
+            // cURL ignores an empty value and an exact repeat of the first,
+            // and fails on any other second value (`http_header_l()`).
+            if name.eq_ignore_ascii_case("Location") {
+                let copied = value.trim_matches(|c: char| c.is_ascii_whitespace() || c == '\x0b');
+                match &location {
+                    _ if copied.is_empty() => {}
+                    None => location = Some(copied.to_owned()),
+                    Some(first) if first == copied => {}
+                    Some(_) => return Err(fail(self, "Multiple Location headers")),
                 }
-                location = true;
             }
             fields.push((name.to_owned(), value.to_owned()));
             if next.is_empty() {
@@ -1847,6 +1853,19 @@ mod tests {
         let uri = serve(gzipped(&b"utopia ".repeat(64))).await;
         let response = http.send(Request::new("GET", &uri).unwrap()).await.unwrap();
         assert_eq!(response.bytes().len(), 64 * 7);
+    }
+
+    #[utopia_async::test]
+    async fn a_repeated_location_is_refused_only_when_it_differs() {
+        // cURL ignores an empty value and an exact repeat of the first.
+        let uri =
+            serve(b"HTTP/1.1 200 OK\r\nLocation: /a\r\nLocation:\r\nLocation:  /a \r\nContent-Length: 2\r\n\r\nok")
+                .await;
+        assert_eq!(Http::new().send(Request::new("GET", &uri).unwrap()).await.unwrap().bytes(), &b"ok"[..]);
+
+        let uri = serve(b"HTTP/1.1 200 OK\r\nLocation: /a\r\nLocation: /b\r\nContent-Length: 2\r\n\r\nok").await;
+        let error = Http::new().send(Request::new("GET", &uri).unwrap()).await.unwrap_err();
+        assert_eq!(error.message(), "Multiple Location headers");
     }
 
     #[utopia_async::test]
