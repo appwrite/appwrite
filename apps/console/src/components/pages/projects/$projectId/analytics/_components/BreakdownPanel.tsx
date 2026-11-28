@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import { Maximize2 } from 'lucide-react'
-import type { AnalyticsDimension, Models } from '@appwrite.io/console'
+import { AnalyticsDimension, type Models } from '@appwrite.io/console'
 import { Button } from '@/components/ui/button'
 import { useT } from '@/lib/i18n/translate'
 import { BreakdownTabBar } from './BreakdownTabBar'
@@ -8,13 +8,18 @@ import { CountryMap } from './CountryMap'
 import { AnalyticsValueMenu } from './AnalyticsValueMenu'
 import { useAnalyticsCardTab } from '@/hooks/use-analytics-card-tab'
 import {
+  ANALYTICS_BREAKDOWN_LIMIT,
   useAnalyticsBreakdown,
+  useAnalyticsConversions,
   type AnalyticsRange,
 } from '@/lib/react-query/hooks'
 import { BreakdownRow, RowRank } from './BreakdownRow'
 import { BREAKDOWN_DIALOG_MAX_ROWS, BreakdownDialog } from './BreakdownDialog'
 import { MetricInfo, type AnalyticsMetricInfoKey } from './MetricInfo'
-import { useAnalyticsFilters } from './analytics-filters-context'
+import {
+  useAnalyticsFilters,
+  useAnalyticsGoal,
+} from './analytics-filters-context'
 import { isKnownBreakdownValue } from '@/lib/analytics/breakdown-values'
 import {
   ANALYTICS_FILTER_UNSUPPORTED_MESSAGE,
@@ -232,6 +237,12 @@ type BreakdownPanelProps = {
   onRowClick?: (value: string) => void
 }
 
+/** Read from the sessions table, which has no event name to match a goal on. */
+const SESSION_DIMENSIONS: ReadonlySet<AnalyticsDimension> = new Set([
+  AnalyticsDimension.EntryPage,
+  AnalyticsDimension.ExitPage,
+])
+
 /**
  * Ranked breakdown card with dimension tabs.
  *
@@ -274,6 +285,33 @@ export function BreakdownPanel({
 
   const { filters, addEqualFilter, isFilterActive } = useAnalyticsFilters()
   const filterAttribute = analyticsFilterAttributeForTab(active)
+  const { goalId } = useAnalyticsGoal()
+  // The sessions-table breakdowns cannot tell which visits converted yet.
+  const showConversions =
+    goalId !== null &&
+    active.display !== 'map' &&
+    !SESSION_DIMENSIONS.has(active.dimension)
+  const { metrics: conversions } = useAnalyticsConversions(
+    projectId,
+    propertyId,
+    range,
+    {
+      goalId: goalId ?? undefined,
+      dimension: active.dimension,
+      limit:
+        valueKey === 'visitors'
+          ? ANALYTICS_BREAKDOWN_LIMIT
+          : BREAKDOWN_DIALOG_MAX_ROWS,
+      propKey: active.propKey,
+    },
+    filters,
+    showConversions,
+  )
+  const conversionRates = useMemo(
+    () =>
+      new Map(conversions.map((row) => [row.value, row.conversionRate ?? 0])),
+    [conversions],
+  )
 
   const { breakdown, isLoading, error, unsupported } = useAnalyticsBreakdown(
     projectId,
@@ -408,8 +446,15 @@ export function BreakdownPanel({
                   }
                   color={rowColor?.(entry, index)}
                   mono={mono && !!entry.value}
-                  href={entry.value ? rowHref?.(entry.value, active.id) : undefined}
+                  href={
+                    entry.value ? rowHref?.(entry.value, active.id) : undefined
+                  }
                   hrefTitle={rowHrefTitle && t(rowHrefTitle)}
+                  conversionRate={
+                    showConversions && entry.value
+                      ? (conversionRates.get(entry.value) ?? null)
+                      : undefined
+                  }
                   {...filterRowProps(entry.value)}
                 />
               )

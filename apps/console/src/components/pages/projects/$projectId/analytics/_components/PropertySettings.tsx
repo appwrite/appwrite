@@ -30,6 +30,7 @@ import {
   propertyType,
 } from '@/lib/analytics-wizard/property-types'
 import { DeleteProperty } from './DeleteProperty'
+import { GoalSettings } from './GoalSettings'
 import { InstallTrackingDialog } from './InstallTrackingDialog'
 
 interface PropertySettingsProps {
@@ -524,6 +525,12 @@ export function PropertySettings({
             </Button>
           </div>
         </div>
+
+        <GoalSettings
+          projectId={projectId}
+          propertyId={property.$id}
+          canWrite={canWrite}
+        />
 
         {/* Delete */}
         {canWrite && (

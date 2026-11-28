@@ -13,7 +13,10 @@ export type AnalyticsFiltersContextValue = {
   /** Add (or replace) an `equal` filter; used by breakdown row clicks. */
   addEqualFilter: (attribute: AnalyticsFilterAttribute, value: string) => void
   /** True when an `equal` filter for this attribute/value is already active. */
-  isFilterActive: (attribute: AnalyticsFilterAttribute, value: string) => boolean
+  isFilterActive: (
+    attribute: AnalyticsFilterAttribute,
+    value: string,
+  ) => boolean
   /** Active humans/bots filter, if any. */
   trafficKind: AnalyticsTrafficKind | null
   /** Show only humans or only bots; clicking the active one clears it. */
@@ -69,10 +72,12 @@ export type AnalyticsValueMenuContextValue = {
   firewallSiteId: string | null
 }
 
-const AnalyticsValueMenuContext = createContext<AnalyticsValueMenuContextValue>({
-  projectId: null,
-  firewallSiteId: null,
-})
+const AnalyticsValueMenuContext = createContext<AnalyticsValueMenuContextValue>(
+  {
+    projectId: null,
+    firewallSiteId: null,
+  },
+)
 
 export function AnalyticsValueMenuProvider({
   value,
@@ -95,4 +100,39 @@ export function useAnalyticsValueMenuContext(): AnalyticsValueMenuContextValue {
 /** Falls back to "no filters" outside a provider, so cards stay reusable. */
 export function useAnalyticsFilters(): AnalyticsFiltersContextValue {
   return useContext(AnalyticsFiltersContext)
+}
+
+// ─── Selected goal ──────────────────────────────────────────────────────────
+
+export type AnalyticsGoalContextValue = {
+  /** Goal from `?goal=`; breakdowns add its conversion rate per row. */
+  goalId: string | null
+  /** Select a goal, or clear the selection with null. */
+  selectGoal: (goalId: string | null) => void
+  /** Open the goal dialog prefilled with an event name. Null when the viewer cannot write. */
+  addGoalForEvent: ((eventName: string) => void) | null
+}
+
+const AnalyticsGoalContext = createContext<AnalyticsGoalContextValue>({
+  goalId: null,
+  selectGoal: () => {},
+  addGoalForEvent: null,
+})
+
+export function AnalyticsGoalProvider({
+  value,
+  children,
+}: {
+  value: AnalyticsGoalContextValue
+  children: ReactNode
+}) {
+  return (
+    <AnalyticsGoalContext.Provider value={value}>
+      {children}
+    </AnalyticsGoalContext.Provider>
+  )
+}
+
+export function useAnalyticsGoal(): AnalyticsGoalContextValue {
+  return useContext(AnalyticsGoalContext)
 }

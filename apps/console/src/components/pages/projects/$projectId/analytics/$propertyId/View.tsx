@@ -47,6 +47,7 @@ import {
   canWriteRules,
 } from '@/lib/console-access-checks'
 import { isCloudProfile } from '@/lib/console-profiles'
+import { useNavigate } from '@tanstack/react-router'
 import { AnalyticsOverview } from '../_components/AnalyticsOverview'
 import {
   PropertyHeaderLive,
@@ -70,10 +71,13 @@ import {
   useShowUsersPanel,
 } from '../_components/DimensionPanels'
 import { EventsPanel } from '../_components/EventsPanel'
+import { GoalSummary, GoalsPanel } from '../_components/GoalsPanel'
+import { SaveGoal } from '../_components/SaveGoal'
 import { TrafficSplit } from '../_components/TrafficSplit'
 import { CompareControl, compareModeLabel } from '../_components/CompareControl'
 import {
   AnalyticsFiltersProvider,
+  AnalyticsGoalProvider,
   AnalyticsValueMenuProvider,
   type AnalyticsFiltersContextValue,
 } from '../_components/analytics-filters-context'
@@ -108,6 +112,9 @@ interface ViewProps {
   /** Encoded `FilterMap` from the URL `?query=` param. */
   filterQuery?: string
   onFilterQueryChange?: (query: string | undefined) => void
+  /** Selected goal from `?goal=`. */
+  goalId?: string | null
+  onGoalChange?: (goalId: string | null) => void
 }
 
 /** Ranges this short read better hourly; longer ones default to daily. */
@@ -179,8 +186,12 @@ export function View({
   initialData,
   filterQuery,
   onFilterQueryChange,
+  goalId = null,
+  onGoalChange,
 }: ViewProps) {
   const t = useT()
+  const navigate = useNavigate()
+  const [goalEventName, setGoalEventName] = useState<string | null>(null)
   const [installOpen, setInstallOpen] = useState(false)
   // Settings is its own route (settings/View.tsx); this page is the Analytics tab.
   const tabs = usePropertyTabs(projectId, propertyId)
@@ -525,10 +536,21 @@ export function View({
     return []
   }, [eventsFromHook, isDefaultRange, initialData])
 
+  const canWrite = canCreateAnalyticsProperty(access, features)
+  const goalContext = useMemo(
+    () => ({
+      goalId,
+      selectGoal: (next: string | null) => onGoalChange?.(next),
+      addGoalForEvent: canWrite ? setGoalEventName : null,
+    }),
+    [goalId, onGoalChange, canWrite],
+  )
+
   // Custom events close a web page, where the empty state carries the how-to
   // CTA; an app's own events lead, ahead of its screen and lifecycle numbers.
   const eventsPanel = (
-    <div className="lg:col-span-2">
+    // Full width when it leads a mobile property; beside Goals on the web.
+    <div className={isMobile ? 'lg:col-span-2' : undefined}>
       <EventsPanel
         projectId={projectId}
         propertyId={propertyId}
@@ -576,271 +598,300 @@ export function View({
     // The provider wraps the header too: the toolbar's export reads filters.
     <AnalyticsFiltersProvider value={filtersContext}>
       <AnalyticsValueMenuProvider value={valueMenuContext}>
-        <div className="flex flex-col">
-          <ServiceHeader
-            title={
-              <PropertyHeaderTitle
-                projectId={projectId}
-                propertyId={propertyId}
-                property={property}
-                onBack={onBack}
-              />
-            }
-            titleRightContent={
-              <PropertyHeaderLive
-                projectId={projectId}
-                propertyId={propertyId}
-                property={property}
-              />
-            }
-            tabs={tabs}
-            activeTab="analytics"
-            // Analytics tab toolbar, laid out like the other detail views:
-            // Filters on the start side; time controls before Refresh.
-            showFilters
-            filterTrigger={
-              <FiltersPopover
-                open={filtersOpen}
-                onOpenChange={setFiltersOpen}
-                columns={filterColumns}
-                filterMap={filterMap}
-                onRemoveFilter={filtersContext.onRemoveFilter}
-                onClearAll={filtersContext.onClearAllFilters}
-                onApplyFilter={filtersContext.onApplyFilter}
-                resourceLabel="analytics"
-                filterScope="analytics.property"
-                onApplyQuery={filtersContext.onApplySavedFilterQuery}
-                teamId={project?.teamId}
-              />
-            }
-            beforeRefreshButtons={
-              <>
-                <UsageChartIntervalToggle
-                  value={resolvedInterval}
-                  onValueChange={(next) => {
-                    if (next === '1h' || next === '1d') setChartInterval(next)
-                  }}
-                  dateRange={dateRange}
-                  allowedIntervals={ANALYTICS_CHART_INTERVALS}
-                  className="h-9"
+        <AnalyticsGoalProvider value={goalContext}>
+          <div className="flex flex-col">
+            <ServiceHeader
+              title={
+                <PropertyHeaderTitle
+                  projectId={projectId}
+                  propertyId={propertyId}
+                  property={property}
+                  onBack={onBack}
                 />
-                <DateRangePicker
-                  dateRange={dateRange}
-                  onDateRangeChange={handleDateRangeChange}
-                  presetId={presetId}
-                  presetGroups={ANALYTICS_DATE_RANGE_PRESET_GROUPS}
-                  presetContext={presetContext}
-                  className="h-9 shrink-0"
+              }
+              titleRightContent={
+                <PropertyHeaderLive
+                  projectId={projectId}
+                  propertyId={propertyId}
+                  property={property}
                 />
-                <CompareControl
-                  mode={compareMode}
-                  onModeChange={handleCompareModeChange}
-                  customDateRange={customCompareDateRange}
-                  onCustomDateRangeChange={handleCustomCompareDateRangeChange}
-                  comparisonRange={comparisonRange}
+              }
+              tabs={tabs}
+              activeTab="analytics"
+              // Analytics tab toolbar, laid out like the other detail views:
+              // Filters on the start side; time controls before Refresh.
+              showFilters
+              filterTrigger={
+                <FiltersPopover
+                  open={filtersOpen}
+                  onOpenChange={setFiltersOpen}
+                  columns={filterColumns}
+                  filterMap={filterMap}
+                  onRemoveFilter={filtersContext.onRemoveFilter}
+                  onClearAll={filtersContext.onClearAllFilters}
+                  onApplyFilter={filtersContext.onApplyFilter}
+                  resourceLabel="analytics"
+                  filterScope="analytics.property"
+                  onApplyQuery={filtersContext.onApplySavedFilterQuery}
+                  teamId={project?.teamId}
                 />
-              </>
-            }
-            showRefresh
-            onRefresh={handleRefresh}
-            isRefreshing={isRefreshing}
-            afterRefreshButtons={
-              <ExportMenu
-                projectId={projectId}
-                property={property}
-                range={range}
-                interval={resolvedInterval}
-                comparisonRange={comparisonRange}
-                compareLabel={
-                  comparisonRange ? t(compareModeLabel(compareMode)) : null
-                }
-              />
-            }
-            showToolbarBottomBorder
-            fullWidthBorder
-            fullWidth
-          />
-
-          <div className="flex-1">
-            {/* No events in the last 24 hours: tracking is probably not (or no
-              longer) installed. The install CTA lives here, not in the header. */}
-            {showNoRecentEventsBanner ? (
-              <div className="flex flex-wrap items-center gap-3 border-b border-amber-500/30 bg-amber-500/10 px-4 py-3 sm:px-6">
-                <AlertTriangle
-                  className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400"
-                  aria-hidden
-                />
-                <div className="min-w-0 flex-1">
-                  <p className="text-[13px] font-medium text-amber-900 dark:text-amber-200">
-                    {t('No events in the last 24 hours')}
-                  </p>
-                  <p className="text-[12px] text-amber-900/80 dark:text-amber-200/80">
-                    {t(
-                      'Tracking may not be installed yet, or it stopped sending. Add the snippet to your app and load a page.',
-                    )}
-                  </p>
-                </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="h-8 shrink-0 gap-1.5 border-amber-500/40 bg-background/60 text-[12px] hover:bg-background"
-                  onClick={() => setInstallOpen(true)}
-                >
-                  <Download className="h-3.5 w-3.5" />
-                  {t('Install tracking')}
-                </Button>
-              </div>
-            ) : null}
-            {/* Full-width traffic overview, same layout as Firewall. */}
-            <AnalyticsOverview
-              projectId={projectId}
-              propertyId={propertyId}
-              dateRange={dateRange}
-              onDateRangeChange={handleDateRangeChange}
-              range={range}
-              interval={resolvedInterval}
-              activeSeries={activeSeries}
-              onActiveSeriesChange={setActiveSeries}
-              fallbackStats={isDefaultRange ? initialData?.stats : undefined}
-              fallbackSeries={isDefaultRange ? initialData?.series : undefined}
-              compareMode={compareMode}
-              comparisonRange={comparisonRange}
+              }
+              beforeRefreshButtons={
+                <>
+                  <UsageChartIntervalToggle
+                    value={resolvedInterval}
+                    onValueChange={(next) => {
+                      if (next === '1h' || next === '1d') setChartInterval(next)
+                    }}
+                    dateRange={dateRange}
+                    allowedIntervals={ANALYTICS_CHART_INTERVALS}
+                    className="h-9"
+                  />
+                  <DateRangePicker
+                    dateRange={dateRange}
+                    onDateRangeChange={handleDateRangeChange}
+                    presetId={presetId}
+                    presetGroups={ANALYTICS_DATE_RANGE_PRESET_GROUPS}
+                    presetContext={presetContext}
+                    className="h-9 shrink-0"
+                  />
+                  <CompareControl
+                    mode={compareMode}
+                    onModeChange={handleCompareModeChange}
+                    customDateRange={customCompareDateRange}
+                    onCustomDateRangeChange={handleCustomCompareDateRangeChange}
+                    comparisonRange={comparisonRange}
+                  />
+                </>
+              }
+              showRefresh
               onRefresh={handleRefresh}
-              showUsers={showUsersPanel}
-              type={resolvedType}
-              canAnnotate={canCreateAnalyticsProperty(access, features)}
+              isRefreshing={isRefreshing}
+              afterRefreshButtons={
+                <ExportMenu
+                  projectId={projectId}
+                  property={property}
+                  range={range}
+                  interval={resolvedInterval}
+                  comparisonRange={comparisonRange}
+                  compareLabel={
+                    comparisonRange ? t(compareModeLabel(compareMode)) : null
+                  }
+                />
+              }
+              showToolbarBottomBorder
+              fullWidthBorder
+              fullWidth
             />
 
-            <div className="mx-auto w-full max-w-7xl space-y-4 px-4 py-6 sm:px-6">
-              {/* Dimension breakdowns. Each panel requests only the dimension
+            <div className="flex-1">
+              {/* No events in the last 24 hours: tracking is probably not (or no
+              longer) installed. The install CTA lives here, not in the header. */}
+              {showNoRecentEventsBanner ? (
+                <div className="flex flex-wrap items-center gap-3 border-b border-amber-500/30 bg-amber-500/10 px-4 py-3 sm:px-6">
+                  <AlertTriangle
+                    className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400"
+                    aria-hidden
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[13px] font-medium text-amber-900 dark:text-amber-200">
+                      {t('No events in the last 24 hours')}
+                    </p>
+                    <p className="text-[12px] text-amber-900/80 dark:text-amber-200/80">
+                      {t(
+                        'Tracking may not be installed yet, or it stopped sending. Add the snippet to your app and load a page.',
+                      )}
+                    </p>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 shrink-0 gap-1.5 border-amber-500/40 bg-background/60 text-[12px] hover:bg-background"
+                    onClick={() => setInstallOpen(true)}
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                    {t('Install tracking')}
+                  </Button>
+                </div>
+              ) : null}
+              {/* Full-width traffic overview, same layout as Firewall. */}
+              <AnalyticsOverview
+                projectId={projectId}
+                propertyId={propertyId}
+                dateRange={dateRange}
+                onDateRangeChange={handleDateRangeChange}
+                range={range}
+                interval={resolvedInterval}
+                activeSeries={activeSeries}
+                onActiveSeriesChange={setActiveSeries}
+                fallbackStats={isDefaultRange ? initialData?.stats : undefined}
+                fallbackSeries={
+                  isDefaultRange ? initialData?.series : undefined
+                }
+                compareMode={compareMode}
+                comparisonRange={comparisonRange}
+                onRefresh={handleRefresh}
+                showUsers={showUsersPanel}
+                type={resolvedType}
+                canAnnotate={canWrite}
+              />
+
+              <div className="mx-auto w-full max-w-7xl space-y-4 px-4 py-6 sm:px-6">
+                <GoalSummary
+                  projectId={projectId}
+                  propertyId={propertyId}
+                  range={range}
+                />
+                {/* Dimension breakdowns. Each panel requests only the dimension
                 of its visible tab, and every card has a fixed body height
                 so switching tabs never shifts the grid. */}
-              <div className="grid gap-4 lg:grid-cols-2">
-                {isMobile ? eventsPanel : null}
-                {/* App lifecycle and push engagement, side by side: two
+                <div className="grid gap-4 lg:grid-cols-2">
+                  {isMobile ? eventsPanel : null}
+                  {/* App lifecycle and push engagement, side by side: two
                   different stories from the mobile SDK's automatic events. */}
-                {panels.has('installs') ? (
-                  <InstallsPanel
-                    projectId={projectId}
-                    propertyId={propertyId}
-                    range={range}
-                    interval={resolvedInterval}
-                    comparisonRange={comparisonRange ?? null}
-                    onOpenSetup={() => setInstallOpen(true)}
-                  />
-                ) : null}
-                {panels.has('push') ? (
-                  <PushPanel
-                    projectId={projectId}
-                    propertyId={propertyId}
-                    range={range}
-                    interval={resolvedInterval}
-                    comparisonRange={comparisonRange ?? null}
-                  />
-                ) : null}
-                {/* Channels, referrers and UTM campaigns in one card. */}
-                {panels.has('sources') ? (
-                  <TrafficSourcesPanel
-                    projectId={projectId}
-                    propertyId={propertyId}
-                    range={range}
-                  />
-                ) : null}
-                {/* Humans vs bots, stretched to the sources card's height. */}
-                {panels.has('split') ? (
-                  <TrafficSplit
-                    projectId={projectId}
-                    propertyId={propertyId}
-                    range={range}
-                    comparisonRange={comparisonRange}
-                    compareLabel={t(compareModeLabel(compareMode))}
-                  />
-                ) : null}
-                {panels.has('pages') ? (
-                  <PagesPanel
-                    projectId={projectId}
-                    propertyId={propertyId}
-                    range={range}
-                    screens={resolvedType === AnalyticsPropertyType.Mobile}
-                  />
-                ) : null}
-                {panels.has('locations') ? (
-                  <LocationsPanel
-                    projectId={projectId}
-                    propertyId={propertyId}
-                    range={range}
-                    type={resolvedType}
-                  />
-                ) : null}
-                {panels.has('technology') ? (
-                  // With an odd panel count (mobile) it would sit alone on its row.
-                  <div
-                    className={
-                      breakdownCount % 2 === 1 ? 'lg:col-span-2' : 'contents'
-                    }
-                  >
-                    <TechnologyPanel
+                  {panels.has('installs') ? (
+                    <InstallsPanel
+                      projectId={projectId}
+                      propertyId={propertyId}
+                      range={range}
+                      interval={resolvedInterval}
+                      comparisonRange={comparisonRange ?? null}
+                      onOpenSetup={() => setInstallOpen(true)}
+                    />
+                  ) : null}
+                  {panels.has('push') ? (
+                    <PushPanel
+                      projectId={projectId}
+                      propertyId={propertyId}
+                      range={range}
+                      interval={resolvedInterval}
+                      comparisonRange={comparisonRange ?? null}
+                    />
+                  ) : null}
+                  {/* Channels, referrers and UTM campaigns in one card. */}
+                  {panels.has('sources') ? (
+                    <TrafficSourcesPanel
+                      projectId={projectId}
+                      propertyId={propertyId}
+                      range={range}
+                    />
+                  ) : null}
+                  {/* Humans vs bots, stretched to the sources card's height. */}
+                  {panels.has('split') ? (
+                    <TrafficSplit
+                      projectId={projectId}
+                      propertyId={propertyId}
+                      range={range}
+                      comparisonRange={comparisonRange}
+                      compareLabel={t(compareModeLabel(compareMode))}
+                    />
+                  ) : null}
+                  {panels.has('pages') ? (
+                    <PagesPanel
+                      projectId={projectId}
+                      propertyId={propertyId}
+                      range={range}
+                      screens={resolvedType === AnalyticsPropertyType.Mobile}
+                    />
+                  ) : null}
+                  {panels.has('locations') ? (
+                    <LocationsPanel
                       projectId={projectId}
                       propertyId={propertyId}
                       range={range}
                       type={resolvedType}
                     />
-                  </div>
-                ) : null}
-                {panels.has('bots') ? (
-                  <BotsPanel
-                    projectId={projectId}
-                    propertyId={propertyId}
-                    range={range}
-                  />
-                ) : null}
-                {panels.has('models') && modelTabs.length > 0 ? (
-                  <div className="lg:col-span-2">
-                    <ModelsPanel
-                      projectId={projectId}
-                      propertyId={propertyId}
-                      range={range}
-                      tabs={modelTabs}
-                    />
-                  </div>
-                ) : null}
-                {panels.has('users') && showUsersPanel ? (
-                  <UsersPanel
-                    projectId={projectId}
-                    propertyId={propertyId}
-                    range={range}
-                  />
-                ) : null}
-                {panels.has('eventProps') ? (
-                  // Full width when it has no Users card beside it.
-                  <div
-                    className={
-                      panels.has('users') && showUsersPanel
-                        ? undefined
-                        : 'lg:col-span-2'
-                    }
-                  >
-                    <EventPropertiesPanel
+                  ) : null}
+                  {panels.has('technology') ? (
+                    // With an odd panel count (mobile) it would sit alone on its row.
+                    <div
+                      className={
+                        breakdownCount % 2 === 1 ? 'lg:col-span-2' : 'contents'
+                      }
+                    >
+                      <TechnologyPanel
+                        projectId={projectId}
+                        propertyId={propertyId}
+                        range={range}
+                        type={resolvedType}
+                      />
+                    </div>
+                  ) : null}
+                  {panels.has('bots') ? (
+                    <BotsPanel
                       projectId={projectId}
                       propertyId={propertyId}
                       range={range}
                     />
+                  ) : null}
+                  {panels.has('models') && modelTabs.length > 0 ? (
+                    <div className="lg:col-span-2">
+                      <ModelsPanel
+                        projectId={projectId}
+                        propertyId={propertyId}
+                        range={range}
+                        tabs={modelTabs}
+                      />
+                    </div>
+                  ) : null}
+                  {panels.has('users') && showUsersPanel ? (
+                    <UsersPanel
+                      projectId={projectId}
+                      propertyId={propertyId}
+                      range={range}
+                    />
+                  ) : null}
+                  {panels.has('eventProps') ? (
+                    // Full width when it has no Users card beside it.
+                    <div
+                      className={
+                        panels.has('users') && showUsersPanel
+                          ? undefined
+                          : 'lg:col-span-2'
+                      }
+                    >
+                      <EventPropertiesPanel
+                        projectId={projectId}
+                        propertyId={propertyId}
+                        range={range}
+                      />
+                    </div>
+                  ) : null}
+                  {isMobile ? null : eventsPanel}
+                  <div className={isMobile ? 'lg:col-span-2' : undefined}>
+                    <GoalsPanel
+                      projectId={projectId}
+                      propertyId={propertyId}
+                      range={range}
+                      onManage={() =>
+                        navigate({
+                          to: '/projects/$projectId/analytics/$propertyId/settings',
+                          params: { projectId, propertyId },
+                        })
+                      }
+                    />
                   </div>
-                ) : null}
-                {isMobile ? null : eventsPanel}
+                </div>
               </div>
             </div>
-          </div>
 
-          {property ? (
-            <InstallTrackingDialog
-              open={installOpen}
-              onOpenChange={setInstallOpen}
-              projectId={projectId}
-              property={property}
-            />
-          ) : null}
-        </div>
+            {property ? (
+              <InstallTrackingDialog
+                open={installOpen}
+                onOpenChange={setInstallOpen}
+                projectId={projectId}
+                property={property}
+              />
+            ) : null}
+          </div>
+          <SaveGoal
+            open={goalEventName !== null}
+            onOpenChange={(open) => !open && setGoalEventName(null)}
+            projectId={projectId}
+            propertyId={propertyId}
+            eventName={goalEventName ?? undefined}
+          />
+        </AnalyticsGoalProvider>
       </AnalyticsValueMenuProvider>
     </AnalyticsFiltersProvider>
   )
