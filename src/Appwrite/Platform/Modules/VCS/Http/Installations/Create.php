@@ -75,8 +75,9 @@ class Create extends Action
     ) {
         $source = $dbForPlatform->getDocument('installations', $installationId);
 
-        // GitLab, Gitea and Bitbucket need the source's OAuth pair on every call, and a copy of a rotating refresh token revokes the original
-        if ($source->isEmpty() || $source->getAttribute('provider') !== 'github') {
+        // GitLab, Gitea and Bitbucket need the source's OAuth pair on every call, and a copy of a rotating refresh token revokes the original.
+        // A personal installation belongs to one GitHub account, so another project's members can't act through it.
+        if ($source->isEmpty() || $source->getAttribute('provider') !== 'github' || $source->getAttribute('personal', false)) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 
@@ -112,7 +113,6 @@ class Create extends Action
                     'projectInternalId' => $project->getSequence(),
                     'provider' => 'github',
                     'organization' => $source->getAttribute('organization'),
-                    'personal' => $source->getAttribute('personal', false),
                 ]));
             } catch (Duplicate) {
                 $installation = $dbForPlatform->getDocument('installations', $id);
