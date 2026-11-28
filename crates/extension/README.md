@@ -72,6 +72,7 @@ utopia.libraries = "validators,dsn,domains"
 | `auth`        | `Utopia\Auth\Hash`, `Utopia\Auth\Hashes\*`                                       |
 | `compression` | `Utopia\Compression\*`                                                           |
 | `database`    | `Utopia\Database\Id`, `Role`, `Permission`, `DateTime`                           |
+| `database-validators` | `Utopia\Database\Validator\Key`, `Label`, `UID`, and `validators` with them |
 | `detector`    | `Utopia\Detector\*`                                                              |
 | `domains`     | `Utopia\Domains\Domain`                                                          |
 | `dsn`         | `Utopia\DSN\DSN`                                                                 |
@@ -92,7 +93,8 @@ utopia.libraries = "validators,dsn,domains"
   `validators-scalar`, `validators-text`, `validators-network` and `validators-compose` each mean
   `validators`: the validators register together, as every one extends `Utopia\Validator\Validator`.
 - **Dependencies:** `emails` brings `domains`, because `Utopia\Emails\Email` builds a
-  `Utopia\Domains\Domain`. No other library uses another's classes.
+  `Utopia\Domains\Domain`, and `database-validators` brings `validators`, whose
+  `Utopia\Validator\Validator` its classes extend. No other library uses another's classes.
 - **Unknown names** are skipped with a startup warning that names them
   (`PHP Startup: utopia.libraries: unknown library "…" ignored; …`); the rest of the
   list still applies.
@@ -113,7 +115,8 @@ of `packages/validators`, the password hashes of `packages/auth`, every class of
 `packages/user-agent/stubs/`, `packages/domains/stubs/`, `packages/emails/stubs/`,
 `packages/validators/stubs/`, `packages/auth/stubs/`, `packages/query/stubs/`, `packages/detector/stubs/` and `packages/compression/stubs/` for PHPStan, which runs without the
 extension. A library that still has a PHP implementation is registered only when
-`_APP_EXTENSION_LIBRARIES` names its package; today that is `balancer`.
+`_APP_EXTENSION_LIBRARIES` names its package; today that is `balancer` and
+`database-validators` (utopia-php/database's `Key`, `Label` and `UID`, apart from `database`).
 Otherwise Composer loads the package's PHP class as before. (`Id`, `Role`, `Permission` and
 `DateTime` of `utopia-php/database` are registered by default too, but their PHP stays in
 `vendor/`: see [Utopia\Database](#utopiadatabase-id-role-permission-and-datetime).)
@@ -382,6 +385,38 @@ Known differences from the PHP classes:
   characters (the padding still differs).
 - A closure cannot be bound to the scope of an internal class: `Closure::bind()` into one warns
   and returns `null`, where PHP's classes allowed it.
+
+## Utopia\Database\Validator: Key, Label and UID
+
+Over `crates/utopia/database`'s `validator` module, registered only when `database-validators` is
+switched on (`_APP_EXTENSION_LIBRARIES=database-validators`, or named in `utopia.libraries`): the
+`Key`, `Label` and `UID` validators of utopia-php/database 10.2. They are kept apart from `database`
+(whose classes are the default) so they can be canaried and rolled back alone; Composer loads
+the PHP classes from `vendor/` whenever the switch is off. `database-validators` brings `validators`,
+since the classes extend `Utopia\Validator\Validator`. Structure, the query validators and
+`IndexDefinition` stay PHP: they read PHP `Document`, `Attribute`, `Profile` and `Query` objects and
+call PHP validators, closures and subclasses throughout (appwrite-labs/cloud#7823).
+
+Built by hand like the validators of `packages/validators`, in `src/database_validators.rs`: the same
+names, signatures and parameter defaults (`Database::MAX_UID_DEFAULT_LENGTH`), and `Key`'s
+`protected string $message` and its promoted `protected readonly bool $allowInternal` and
+`int $maxLength`, read and written when PHP reads and writes them. Appwrite's `CustomId` (a `Key`) and
+`KeywordId` (a `UID`), a subclass that sets the message or the readonly properties itself, objects
+made without a constructor, a second `__construct()`, `var_dump()`, `serialize()`, `clone` and
+reflection all behave as on the PHP classes.
+
+The package's own `KeyTest`, `LabelTest`, `UIDTest`, `RolesTest` and `PermissionsTest` run on the
+extension. `tests/database-validators.php` is identical on both (`run.sh`, the switchable
+libraries). It covers reflection of the three classes; 17 validators over 120 strings, 13 values that
+are not strings and 3,000 seeded random strings; constructor coercion and errors in weak and strict
+mode, named arguments and extra arguments; uninitialized, unset and reflection-written properties;
+seven PHP subclasses; and the package's `Permissions`, `Roles` and `Query\Cursor`, which build the
+classes.
+
+Known differences from the PHP classes:
+
+- The methods have no `#[\Override]` attribute, and the class has no file.
+- A closure cannot be bound to the scope of these classes (it can be bound to a subclass's).
 
 ## Utopia\DSN\DSN
 

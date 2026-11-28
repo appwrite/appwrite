@@ -4417,6 +4417,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 3
   },
   {
+    "slug": "tooling/beep",
+    "title": "Appwrite Beep",
+    "description": "Get pushes on your phone when a monitor fires, triage alerts, check project usage, and read the Appwrite changelog with the Appwrite Beep app for iOS and Android.",
+    "layout": "article",
+    "readingTimeMinutes": 5
+  },
+  {
     "slug": "tooling/command-center",
     "title": "Command Center",
     "description": "Appwrite Command Center enhances developer experience with AI, keyboard shortcuts, and context-aware search for efficient navigation and task execution.",
