@@ -636,6 +636,9 @@ jobs:
             cargo fmt --all --check &&
             cargo clippy --workspace --all-targets --all-features --locked -- -D warnings &&
             cargo test --locked --workspace --exclude utopia-extension --all-features &&
+            cargo fmt --all --check --manifest-path apps/worker-executions/Cargo.toml &&
+            cargo clippy --manifest-path apps/worker-executions/Cargo.toml --all-targets --locked -- -D warnings &&
+            cargo test --locked --manifest-path apps/worker-executions/Cargo.toml &&
             ZSTD_SYS_USE_PKG_CONFIG=1 CARGO_PROFILE_RELEASE_LTO=off CARGO_PROFILE_RELEASE_CODEGEN_UNITS=16 \
               cargo build --release --locked -p utopia-extension &&
             cp /tmp/target/release/libutopia.so /extension/utopia.so

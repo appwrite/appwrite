@@ -6,6 +6,7 @@ Deployable applications that live in this repository but are not part of the PHP
 | ------------------ | ---------------------------------------------------------- | -------------- |
 | [console](console) | The Appwrite Console and appwrite.io, Bun + TanStack Start | `appwrite/new` |
 | [utopia/docs](utopia/docs) | API documentation of the Rust Utopia crates, Bun + TanStack Start | local tool |
+| [worker-executions](worker-executions) | The `v1-executions` queue worker for NATS installations, Rust | none yet: a binary, `cargo build -p worker-executions` |
 
 ## Apps, packages, and app
 

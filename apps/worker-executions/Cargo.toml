@@ -1,0 +1,38 @@
+[package]
+name = "worker-executions"
+description = "The executions queue's worker: writes function and site execution snapshots to ClickHouse."
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.100"
+license = "BSD-3-Clause"
+repository = "https://github.com/appwrite/appwrite"
+# An app, not a library: nothing publishes it to crates.io.
+publish = false
+
+# A workspace of its own, with its own Cargo.lock: the server's image builds the root workspace
+# from crates/ alone (apps/ is outside its build context), so this cannot be a member of it.
+[workspace]
+
+[dependencies]
+bytes = "1"
+http-body-util = "0.1"
+hyper = { version = "1", features = ["client", "http1"] }
+hyper-rustls = { version = "0.27", default-features = false, features = ["http1", "ring", "tls12", "webpki-roots"] }
+hyper-util = { version = "0.1", features = ["client-legacy", "http1", "tokio"] }
+php-std = { package = "utopia-php-std", path = "../../crates/utopia/php-std" }
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
+serde_json = { version = "1", features = ["raw_value", "preserve_order", "float_roundtrip"] }
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "signal", "time"] }
+utopia-database = { path = "../../crates/utopia/database" }
+utopia-dsn = { path = "../../crates/utopia/dsn" }
+utopia-queue = { path = "../../crates/utopia/queue" }
+# Without its Sentry transport: the worker writes its spans to stdout.
+utopia-span = { path = "../../crates/utopia/span", default-features = false }
+
+[dev-dependencies]
+async-nats = "0.53"
+tokio = { version = "1", features = ["io-util", "net"] }
+
+[profile.release]
+lto = "thin"
+strip = "symbols"

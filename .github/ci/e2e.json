@@ -22,6 +22,7 @@
     ],
     "extension": [
       "crates/",
+      "apps/worker-executions/",
       "Cargo.toml",
       "Cargo.lock",
       ".cargo/",
@@ -39,6 +40,7 @@
     ],
     "checks": [
       "crates/",
+      "apps/worker-executions/",
       "Cargo.toml",
       "Cargo.lock",
       ".cargo/",
