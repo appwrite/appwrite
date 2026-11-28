@@ -22,7 +22,7 @@ Enable or disable authentication methods on your project.
 {% cards_item href="/docs/partners/project/oauth" title="OAuth providers" %}
 Configure OAuth2 sign-in providers like Google, GitHub, and Apple.
 {% /cards_item %}
-{% cards_item href="/docs/partners/project/api-keys" title="API keys" %}
+{% cards_item href="/docs/advanced/security/api-keys" title="API keys" %}
 Create and manage API keys used by Server SDKs.
 {% /cards_item %}
 {% cards_item href="/docs/partners/project/platforms" title="Platforms" %}

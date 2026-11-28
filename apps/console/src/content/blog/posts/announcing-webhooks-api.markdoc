@@ -41,7 +41,7 @@ This is especially valuable for:
 
 # How it works
 
-The Webhooks API introduces two new [API key scopes](/docs/advanced/platform/api-keys#scopes):
+The Webhooks API introduces two new [API key scopes](/docs/advanced/security/api-keys#scopes):
 
 - **`webhooks.read`** for listing and retrieving webhooks
 - **`webhooks.write`** for creating, updating, and deleting webhooks
@@ -653,5 +653,5 @@ The Webhooks API is available on **Appwrite Cloud** today. Full documentation, i
 # Resources
 
 - [Webhooks documentation](/docs/advanced/platform/webhooks)
-- [API keys and scopes](/docs/advanced/platform/api-keys)
+- [API keys and scopes](/docs/advanced/security/api-keys)
 - [Webhook events reference](/docs/advanced/platform/events)

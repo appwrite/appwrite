@@ -46,7 +46,7 @@ Admin clients should only be used if you need to perform admin actions that bypa
 or [unauthenticated requests that bypass rate limits](#rate-limits).
 {% /info %}
 
-To initialize the admin client, we'll need to first [generate an API key](/docs/partners/project/api-keys#create-api-key).
+To initialize the admin client, we'll need to first [generate an API key](/docs/advanced/security/api-keys#create-api-key).
 The API key should have the following scope in order to perform authentication:
 
 | Category  {% width=120 %} | Required scopes    | Purpose |

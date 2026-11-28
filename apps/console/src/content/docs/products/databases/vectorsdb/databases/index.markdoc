@@ -18,7 +18,7 @@ A database runs on shared or dedicated infrastructure; see [shared and dedicated
 Navigate to the **Databases** page and click **Create database**, then choose **VectorsDB** as the database type. Name the database, select your preferred tier, and pick a replica count and backup policy. Click **Create database** to finish.
 
 # Create using Server SDKs {% #create-using-server-sdks %}
-You can programmatically create a shared database using a [Server SDK](/docs/sdks#server). Appwrite [Server SDKs](/docs/sdks#server) require an [API key](/docs/advanced/platform/api-keys).
+You can programmatically create a shared database using a [Server SDK](/docs/sdks#server). Appwrite [Server SDKs](/docs/sdks#server) require an [API key](/docs/advanced/security/api-keys).
 
 {% multicode %}
 ```server-nodejs

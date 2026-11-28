@@ -11,7 +11,7 @@ In Appwrite, permissions are **granted**, meaning a user has no access by defaul
 A user with access granted at either collection level or document level will be able to access a document.
 Users **don't need access at both levels** to access documents.
 
-Permissions are evaluated when documents are accessed through a [Client SDK](/docs/sdks#client). [Server SDKs](/docs/sdks#server) authenticated with an [API key](/docs/advanced/platform/api-keys) bypass permissions, so the examples below use a Server SDK to set and read back the permissions that a client would then be evaluated against.
+Permissions are evaluated when documents are accessed through a [Client SDK](/docs/sdks#client). [Server SDKs](/docs/sdks#server) authenticated with an [API key](/docs/advanced/security/api-keys) bypass permissions, so the examples below use a Server SDK to set and read back the permissions that a client would then be evaluated against.
 
 # Collection level {% #collection-level %}
 Collection level permissions apply to every document in the collection.

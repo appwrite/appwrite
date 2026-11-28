@@ -23,7 +23,7 @@ Head to the **Databases** page, open a [database](/docs/products/databases/docum
 {% /tabsitem %}
 
 {% tabsitem #server-sdk title="Server SDK" %}
-You can also create collections programmatically using a [Server SDK](/docs/sdks#server). Appwrite [Server SDKs](/docs/sdks#server) require an [API key](/docs/advanced/platform/api-keys).
+You can also create collections programmatically using a [Server SDK](/docs/sdks#server). Appwrite [Server SDKs](/docs/sdks#server) require an [API key](/docs/advanced/security/api-keys).
 
 {% multicode %}
 ```server-nodejs

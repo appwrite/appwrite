@@ -293,6 +293,6 @@ proxy
 
 # Related {% #related %}
 
-{% arrow_link href="/docs/partners/project/api-keys" %}
+{% arrow_link href="/docs/advanced/security/api-keys" %}
 Project API keys
 {% /arrow_link %}

@@ -35,7 +35,7 @@ You can also configure global variables that apply to all your sites from your p
 
 # Manage with a Server SDK {% #server-sdks %}
 
-You can also manage site variables programmatically using a [Server SDK](/docs/sdks#server). Each call requires an [API key](/docs/partners/project/api-keys) with the `sites.write` scope to create, update, or delete variables, or the `sites.read` scope to list and read them.
+You can also manage site variables programmatically using a [Server SDK](/docs/sdks#server). Each call requires an [API key](/docs/advanced/security/api-keys) with the `sites.write` scope to create, update, or delete variables, or the `sites.read` scope to list and read them.
 
 ## Create a variable {% #create-variable %}
 

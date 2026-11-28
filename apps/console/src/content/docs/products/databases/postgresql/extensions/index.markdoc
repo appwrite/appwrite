@@ -6,7 +6,7 @@ description: Install and manage PostgreSQL extensions like PostGIS, pgvector, an
 
 PostgreSQL exposes a rich extension ecosystem: PostGIS for geospatial data, pgvector for embeddings, pg_trgm for fuzzy search, and more. Native PostgreSQL databases on Appwrite support extensions at no extra cost.
 
-Extensions change the database itself, so only trusted callers can manage them. You cannot manage extensions from client SDKs: the API needs a [Server SDK](/docs/sdks#server) and an [API key](/docs/partners/project/api-keys). Installing and removing an extension needs the `databases.write` scope, and listing extensions needs `databases.read`.
+Extensions change the database itself, so only trusted callers can manage them. You cannot manage extensions from client SDKs: the API needs a [Server SDK](/docs/sdks#server) and an [API key](/docs/advanced/security/api-keys). Installing and removing an extension needs the `databases.write` scope, and listing extensions needs `databases.read`.
 
 # Install an extension {% #install %}
 

@@ -147,7 +147,7 @@ If you create the collection through an SDK instead, set `dimension` to the numb
 
 # Generate embeddings with a specific model
 
-To choose a model for a call, pass `model` to `createTextEmbeddings`. By default, Appwrite uses `nomic-embed-text`. Server SDKs need an [API key](/docs/partners/project/api-keys) with the `embeddings.write` scope.
+To choose a model for a call, pass `model` to `createTextEmbeddings`. By default, Appwrite uses `nomic-embed-text`. Server SDKs need an [API key](/docs/advanced/security/api-keys) with the `embeddings.write` scope.
 
 {% multicode %}
 ```server-nodejs

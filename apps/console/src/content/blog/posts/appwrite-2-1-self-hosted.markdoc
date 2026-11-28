@@ -30,7 +30,7 @@ Upgrading from [Appwrite 2.0](/blog/post/appwrite-2-self-hosted) takes the same 
 
 Earlier this month we [announced the S3 API](/blog/post/announcing-s3-api) for Appwrite Storage on Cloud. It is an S3-compatible API in front of your existing buckets, so the AWS CLI, the AWS SDKs, rclone, and any other S3 client can read and write Appwrite files. Appwrite 2.1 brings it to self-hosted instances.
 
-The API lives at `/v1/s3` on your instance. Clients authenticate with AWS Signature Version 4, using your project ID as the access key ID and an [API key](/docs/partners/project/api-keys) secret as the secret access key.
+The API lives at `/v1/s3` on your instance. Clients authenticate with AWS Signature Version 4, using your project ID as the access key ID and an [API key](/docs/advanced/security/api-keys) secret as the secret access key.
 
 | Setting | Value |
 | --- | --- |

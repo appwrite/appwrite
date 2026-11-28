@@ -19,7 +19,7 @@ faqs:
   - question: "Can I set an expiration date on a key?"
     answer: "Yes. Pass an ISO 8601 timestamp in the `expire` field when calling `project.createKey`. Once that time passes, the key stops working automatically. Setting expirations on every key is a good default for short-lived credentials in CI and customer-facing tenants."
   - question: "Where can I find the list of available scopes?"
-    answer: "The full scope list is in the [API key scopes documentation](/docs/advanced/platform/api-keys#scopes). The server SDKs also ship a `Scopes` enum so you can reference them by constant (e.g., `Scopes.DatabasesRead`) instead of typing strings."
+    answer: "The full scope list is in the [API key scopes documentation](/docs/advanced/security/api-keys#scopes). The server SDKs also ship a `Scopes` enum so you can reference them by constant (e.g., `Scopes.DatabasesRead`) instead of typing strings."
   - question: "How is the Keys API different from session-based auth?"
     answer: "Sessions identify end users of your app via [Appwrite Auth](/docs/products/auth), while API keys identify trusted backend services that act on behalf of the project. The Keys API itself uses an existing API key with `keys.write` scope to create new keys, so it is strictly a server-to-server flow."
 ---
@@ -41,7 +41,7 @@ API keys are the foundation of server-side authentication in Appwrite. Every ser
 
 # How it works
 
-The Keys API introduces two new [API key scopes](/docs/advanced/platform/api-keys#scopes):
+The Keys API introduces two new [API key scopes](/docs/advanced/security/api-keys#scopes):
 
 - **`keys.read`** for listing and retrieving API keys
 - **`keys.write`** for creating, updating, and deleting API keys
@@ -506,7 +506,7 @@ To use the Keys API, you need an existing API key with the `keys.read` and `keys
 
 # Full SDK support
 
-The Keys API is available across all Appwrite Server SDKs. Complete code examples for every supported language are available in the [API keys documentation](/docs/advanced/platform/api-keys#manage-api-keys-with-a-server-sdk).
+The Keys API is available across all Appwrite Server SDKs. Complete code examples for every supported language are available in the [API keys documentation](/docs/advanced/security/api-keys#manage-api-keys-with-a-server-sdk).
 
 # Get started
 
@@ -516,10 +516,10 @@ The Keys API is available on **Appwrite Cloud** today.
 2. Initialize a Server SDK with your API key.
 3. Use the `Project` service to manage keys from code.
 
-Full documentation is available on the [API keys documentation page](/docs/advanced/platform/api-keys).
+Full documentation is available on the [API keys documentation page](/docs/advanced/security/api-keys).
 
 # Resources
 
-- [API keys documentation](/docs/advanced/platform/api-keys)
-- [API key scopes reference](/docs/advanced/platform/api-keys#scopes)
+- [API keys documentation](/docs/advanced/security/api-keys)
+- [API key scopes reference](/docs/advanced/security/api-keys#scopes)
 - [How to leverage dynamic API keys for better security](/blog/post/how-to-leverage-dynamic-api-keys-for-better-security)

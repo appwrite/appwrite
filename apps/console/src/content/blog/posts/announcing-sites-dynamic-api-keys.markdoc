@@ -83,4 +83,4 @@ Ephemeral API keys are available today on Appwrite Cloud and in self-hosted Appw
 - [Ephemeral API keys for Appwrite Sites](/docs/products/sites/develop#ephemeral-api-key)
 - [Server-side rendering on Appwrite Sites](/docs/products/sites/rendering/ssr)
 - [Server-side rendering with Appwrite Auth](/docs/products/auth/server-side-rendering)
-- [API key scopes](/docs/partners/project/api-keys#scopes)
+- [API key scopes](/docs/advanced/security/api-keys#scopes)

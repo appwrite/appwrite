@@ -57,7 +57,7 @@ A server API key in client-side code is not a configuration issue, it's a critic
 - If an operation needs elevated privileges, it belongs in an Appwrite Function, not the browser.
 - Use client-side SDKs on the frontend. Use server-side SDKs only in secure environments.
 
-If something only works with a server key, that's the system telling you it shouldn't be running on the client. Learn more about [API keys and scopes](https://appwrite.io/docs/advanced/platform/api-keys).
+If something only works with a server key, that's the system telling you it shouldn't be running on the client. Learn more about [API keys and scopes](https://appwrite.io/docs/advanced/security/api-keys).
 
 # 3. Skipping indexes until queries slow down
 

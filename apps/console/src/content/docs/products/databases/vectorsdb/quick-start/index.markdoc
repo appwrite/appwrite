@@ -9,7 +9,7 @@ An embedding is a list of numbers that represents the meaning of a piece of text
 
 In this guide you store three sentences about Appwrite as embeddings, then ask a question in plain English and get back the sentence that answers it. The question and the answer share no words.
 
-These steps use a [Server SDK](/docs/sdks#server), which requires an [API key](/docs/advanced/platform/api-keys).
+These steps use a [Server SDK](/docs/sdks#server), which requires an [API key](/docs/advanced/security/api-keys).
 
 {% section #create-database step=1 title="Create database" %}
 {% only_dark %}

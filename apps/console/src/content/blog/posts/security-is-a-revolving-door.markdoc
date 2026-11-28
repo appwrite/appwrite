@@ -119,7 +119,7 @@ Permissions default to empty, meaning resources are not accessible until you exp
 
 ## API keys with scope restrictions
 
-[API keys](/docs/advanced/platform/api-keys) used in server-side code support granular scope restrictions. You can create API keys that are limited to exactly the actions your server functions need to perform, rather than granting broad administrative access. Scopes that are not needed for a function should not be granted. This limits the blast radius if an API key is ever exposed.
+[API keys](/docs/advanced/security/api-keys) used in server-side code support granular scope restrictions. You can create API keys that are limited to exactly the actions your server functions need to perform, rather than granting broad administrative access. Scopes that are not needed for a function should not be granted. This limits the blast radius if an API key is ever exposed.
 
 API keys are treated as secrets: they're for server-side use only and should never be embedded in client-side code or committed to version control.
 

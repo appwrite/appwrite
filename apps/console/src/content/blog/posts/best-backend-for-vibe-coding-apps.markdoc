@@ -101,7 +101,7 @@ To set it up:
 
 1. Sign up at [Appwrite Cloud](https://cloud.appwrite.io) and create a project.
 2. Install the editor plugin: [Claude Code plugin](/docs/tooling/ai/agents/claude-code) or [Cursor plugin](/docs/tooling/ai/ai-dev-tools/cursor). This bundles the API MCP, Docs MCP, and Skills in one command.
-3. Configure an [API key](/docs/advanced/platform/api-keys) scoped to the resources your agent should manage. Avoid using a master key during development.
+3. Configure an [API key](/docs/advanced/security/api-keys) scoped to the resources your agent should manage. Avoid using a master key during development.
 4. Pick an [SDK](/docs/sdks) for your frontend or backend language.
 5. Start the agent on your first feature. Ask it to design the schema, create the tables, set permissions, write the function, and deploy the frontend to [Appwrite Sites](/docs/products/sites).
 

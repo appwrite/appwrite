@@ -173,7 +173,7 @@ var client = new Client()
 
 JWT auth is useful when you need your backend app's Server SDK to be restricted by the same set of permissions.
 
-If your backend app's Server SDK is using an [API key](/docs/partners/project/api-keys), it will fetch **all resources** regardless of permissions. This means the Server SDK might fetch files and rows your user should not be able to see, which is not helpful when you need to act on behalf of a user.
+If your backend app's Server SDK is using an [API key](/docs/advanced/security/api-keys), it will fetch **all resources** regardless of permissions. This means the Server SDK might fetch files and rows your user should not be able to see, which is not helpful when you need to act on behalf of a user.
 
 If your backend app's Server SDK is using a **JWT**, it will only fetch resources your user has permissions to access.
 

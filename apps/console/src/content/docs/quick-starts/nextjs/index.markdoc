@@ -40,7 +40,7 @@ You can skip optional steps.
 
 {% section #step-2 step=2 title="Create an API key" %}
 
-In your project, go to **Overview** > **Integrations** > **API keys** and create a new key with the scopes `users.read`, `users.write`, and `sessions.write`. Copy the key secret. The SSR handler uses this to create sessions on behalf of users; never expose it to the browser.
+In your project, open **API Keys** in the sidebar and create a new [API key](/docs/advanced/security/api-keys) with the scopes `users.read`, `users.write`, and `sessions.write`. Copy the key secret. The SSR handler uses this to create sessions on behalf of users; never expose it to the browser.
 
 {% /section %}
 

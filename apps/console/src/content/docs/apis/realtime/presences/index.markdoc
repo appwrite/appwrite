@@ -115,7 +115,7 @@ The SDK remembers the latest payload and re-sends it after a reconnect, so a bri
 
 # Upsert a presence {% #upsert-a-presence %}
 
-`upsert` creates a presence or updates the existing record with the same `presenceId`. Call it on every page navigation, focus change, or heartbeat without worrying about duplicates. From a client session, `userId` is inferred from the signed-in user; from a server SDK with an API key, pass `userId` explicitly. Server SDKs need an [API key](/docs/partners/project/api-keys) with the `presences.write` scope.
+`upsert` creates a presence or updates the existing record with the same `presenceId`. Call it on every page navigation, focus change, or heartbeat without worrying about duplicates. From a client session, `userId` is inferred from the signed-in user; from a server SDK with an API key, pass `userId` explicitly. Server SDKs need an [API key](/docs/advanced/security/api-keys) with the `presences.write` scope.
 
 {% multicode %}
 ```client-web

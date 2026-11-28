@@ -11,12 +11,12 @@ Client APIs and SDKs are for integrating with Appwrite to build client-based app
 Client APIs only give access to resources if users have been [granted permissions](/docs/advanced/security/permissions).
 
 Server API and SDKs are for integrating with Appwrite to build backend or server applications.
-Server APIs are constrained by an [API key's](/docs/partners/project/api-keys) scope, ignoring user permissions.
+Server APIs are constrained by an [API key's](/docs/advanced/security/api-keys) scope, ignoring user permissions.
 
 ## APIs {% #api %}
 Before using the Appwrite APIs, in the **Settings** of your Appwrite project, obtain your **API endpoint** and **Project ID**.
 Client APIs require an active session, created from [signing up and logging in](/docs/products/auth/accounts#signup-login).
-Server APIs require [API keys](/docs/partners/project/api-keys).
+Server APIs require [API keys](/docs/advanced/security/api-keys).
 
 
 {% only_dark %}

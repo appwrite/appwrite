@@ -366,6 +366,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "advanced/security/api-keys",
+    "title": "API keys",
+    "description": "Secure your application with Appwrite API Keys. Discover how to create and manage API keys to control access and enhance your application's security.",
+    "excerpt": "API keys are secrets used by Appwrite Server SDKs and the Appwrite CLI to prove their identity. What can be accessed each API key is restricted by scopes instead of permissions. It is a best practice to grant only the scopes you need to meet your project's goals to an API key. API keys should be treated as a secret. Never share the API key and keep API keys out of client applications. Create API key To create a new…",
+    "breadcrumbs": [
+      "Security",
+      "Access control",
+      "API keys"
+    ]
+  },
+  {
     "slug": "advanced/security/audit-logs",
     "title": "Audit logs",
     "description": "Appwrite provides audit logs to help detect anomalies and investigate security incidents.",
@@ -1274,17 +1285,6 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       "Project",
       "Getting started",
       "Overview"
-    ]
-  },
-  {
-    "slug": "partners/project/api-keys",
-    "title": "API keys",
-    "description": "Secure your application with Appwrite API Keys. Discover how to create and manage API keys to control access and enhance your application's security.",
-    "excerpt": "API keys are secrets used by Appwrite Server SDKs and the Appwrite CLI to prove their identity. What can be accessed each API key is restricted by scopes instead of permissions. It is a best practice to grant only the scopes you need to meet your project's goals to an API key. API keys should be treated as a secret. Never share the API key and keep API keys out of client applications. Create API key To create a new…",
-    "breadcrumbs": [
-      "Project",
-      "Concepts",
-      "API keys"
     ]
   },
   {
@@ -6000,7 +6000,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "quick-starts/nextjs",
     "title": "Start with Next.js",
     "description": "Build Next.js apps with the Appwrite React library. Add server-rendered authentication, sign-in, sign-up, and user state without writing the SSR plumbing yourself.",
-    "excerpt": "Learn how to set up your first Next.js project with the Appwrite React library. The library ships SSR auth handlers, server helpers, and the same React hooks you use on the client. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**, add a **Web app**. The **Hostname** should be . You can skip optional steps. In your project, go to **Overview** > **Integrations**…",
+    "excerpt": "Learn how to set up your first Next.js project with the Appwrite React library. The library ships SSR auth handlers, server helpers, and the same React hooks you use on the client. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**, add a **Web app**. The **Hostname** should be . You can skip optional steps. In your project, open **API Keys** in the…",
     "breadcrumbs": [
       "Quick start",
       "Web app",
@@ -6153,7 +6153,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "quick-starts/tanstack-start",
     "title": "Start with TanStack Start",
     "description": "Build TanStack Start apps with the Appwrite React library. Add server-rendered authentication via file-route handlers and server functions.",
-    "excerpt": "Learn how to set up your first TanStack Start project with the Appwrite React library. The library exposes a TanStack file-route handler, server helpers, and the same React hooks you use on the client. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**, add a **Web app**. The **Hostname** should be . You can skip optional steps. In your project, go to **Overview**…",
+    "excerpt": "Learn how to set up your first TanStack Start project with the Appwrite React library. The library exposes a TanStack file-route handler, server helpers, and the same React hooks you use on the client. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**, add a **Web app**. The **Hostname** should be . You can skip optional steps. In your project, open **API Keys**…",
     "breadcrumbs": [
       "Quick start",
       "Web app",

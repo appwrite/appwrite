@@ -269,7 +269,7 @@ The `region` fixes where the project's data lives and which regional endpoint it
 Once the project exists, switch to a project API key to configure it. Create that key in the Console, then work through the configuration pages:
 
 {% cards %}
-{% cards_item href="/docs/partners/project/api-keys" title="API keys" %}
+{% cards_item href="/docs/advanced/security/api-keys" title="API keys" %}
 Create and manage the keys your backend uses inside the project.
 {% /cards_item %}
 {% cards_item href="/docs/partners/project/provisioning" title="Provisioning" %}

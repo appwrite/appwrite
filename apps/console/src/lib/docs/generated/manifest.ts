@@ -234,6 +234,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 2
   },
   {
+    "slug": "advanced/security/api-keys",
+    "title": "API keys",
+    "description": "Secure your application with Appwrite API Keys. Discover how to create and manage API keys to control access and enhance your application's security.",
+    "layout": "article",
+    "readingTimeMinutes": 7
+  },
+  {
     "slug": "advanced/security/audit-logs",
     "title": "Audit logs",
     "description": "Appwrite provides audit logs to help detect anomalies and investigate security incidents.",
@@ -813,13 +820,6 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Configure your Appwrite project, including auth methods, platforms, protocols, services, and policies.",
     "layout": "article",
     "readingTimeMinutes": 3
-  },
-  {
-    "slug": "partners/project/api-keys",
-    "title": "API keys",
-    "description": "Secure your application with Appwrite API Keys. Discover how to create and manage API keys to control access and enhance your application's security.",
-    "layout": "article",
-    "readingTimeMinutes": 7
   },
   {
     "slug": "partners/project/auth-methods",

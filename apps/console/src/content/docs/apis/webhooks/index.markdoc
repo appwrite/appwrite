@@ -27,7 +27,7 @@ To add a webhook from the Appwrite Console:
 
 # Manage webhooks with a Server SDK {% #manage-webhooks-with-a-server-sdk %}
 
-You can also manage webhooks programmatically using a Server SDK. This requires an API key with the `webhooks.read` and `webhooks.write` [scopes](/docs/partners/project/api-keys#scopes).
+You can also manage webhooks programmatically using a Server SDK. This requires an API key with the `webhooks.read` and `webhooks.write` [scopes](/docs/advanced/security/api-keys#scopes).
 
 ## Create a webhook {% #create-a-webhook %}
 

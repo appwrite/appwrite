@@ -31,7 +31,7 @@ An app that only signs users in requests `openid profile email` and stops there.
 
 # Project scopes {% #project-scopes %}
 
-Project scopes carry the `project:` prefix and map to the permissions [API keys](/docs/partners/project/api-keys) use, one `.read` and one `.write` scope per resource. The catalog covers every Appwrite product:
+Project scopes carry the `project:` prefix and map to the permissions [API keys](/docs/advanced/security/api-keys) use, one `.read` and one `.write` scope per resource. The catalog covers every Appwrite product:
 
 | Product | Scopes |
 | --- | --- |
