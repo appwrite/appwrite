@@ -257,6 +257,16 @@ final class OriginTest extends TestCase
         $this->assertTrue($validator->isValid('http://[::1]:3000'));
         $this->assertTrue($validator->isValid('exp://index'));
 
+        // Subdomains of localhost are loopback too, once allowed
+        $validator->setAllowedHostnames(['appwrite.io', 'localhost', 'my_app.localhost', 'localhost.appwrite.io']);
+        $this->assertTrue($validator->isValid('http://my_app.localhost:3000'));
+        $this->assertFalse($validator->isValid('http://other.localhost:3000'));
+        $this->assertStringNotContainsString('only accepts https', $validator->getDescription());
+        $this->assertFalse($validator->isValid('http://localhost.appwrite.io'));
+        $this->assertStringContainsString('only accepts https', $validator->getDescription());
+        $this->assertFalse($validator->isValid('http://my_app.localhost.'));
+        $validator->setAllowedHostnames(['appwrite.io', 'localhost']);
+
         $this->assertFalse($validator->isValid('http://appwrite.io'));
         $this->assertFalse($validator->isValid('http://appwrite.io/callback?next=1'));
         $this->assertStringContainsString('https://appwrite.io', $validator->getDescription());
@@ -281,5 +291,8 @@ final class OriginTest extends TestCase
         $this->assertTrue($redirect->isValid('https://appwrite.io/success'));
         $this->assertFalse($redirect->isValid('http://appwrite.io/success'));
         $this->assertStringContainsString('only redirects to https', $redirect->getDescription());
+
+        $redirect->setAllowedHostnames(['appwrite.io', 'my_app.localhost']);
+        $this->assertTrue($redirect->isValid('http://my_app.localhost:3000/success'));
     }
 }

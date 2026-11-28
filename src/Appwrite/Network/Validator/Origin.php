@@ -174,9 +174,13 @@ class Origin extends Validator
         }
     }
 
+    /**
+     * Browsers resolve `*.localhost` to loopback (RFC 6761 6.3) and treat it as a secure context.
+     */
     protected function isLoopback(?string $host): bool
     {
         return $host === Platform::LOOPBACK_HOSTNAME
+            || \str_ends_with($host ?? '', '.' . Platform::LOOPBACK_HOSTNAME)
             || \in_array($host, Platform::LOOPBACK_ALIASES, true);
     }
 
