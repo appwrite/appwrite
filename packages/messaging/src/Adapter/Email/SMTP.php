@@ -2,12 +2,14 @@
 
 namespace Utopia\Messaging\Adapter\Email;
 
+use Closure;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
 use Utopia\Messaging\Adapter\Email\SMTP\NoHostAnswered;
 use Utopia\Messaging\Messages\Email as EmailMessage;
 use Utopia\Messaging\Response;
 use Utopia\SMTP\Auth\Login;
 use Utopia\SMTP\Auth\Plain;
+use Utopia\SMTP\Auth\XOAuth2;
 use Utopia\SMTP\Client;
 use Utopia\SMTP\Encryption;
 use Utopia\SMTP\Exception\AuthenticationException;
@@ -27,6 +29,8 @@ class SMTP extends EmailAdapter
     protected const NAME = 'SMTP';
 
     private ?Client $client = null;
+    private ?string $accessToken = null;
+    private int $tokenExpiresAt = 0;
 
     /**
      * @param string $host SMTP hosts. Either a single hostname or multiple semicolon-delimited hostnames. A port may follow a hostname after a colon (e.g. "smtp1.example.com:25;smtp2.example.com"), and an address literal is bracketed to keep its own colons apart from it (e.g. "[::1]:587"). An encryption prefix may lead each entry (e.g. "tls://smtp1.example.com:587;ssl://smtp2.example.com:465"). Hosts are tried in order.
@@ -42,6 +46,10 @@ class SMTP extends EmailAdapter
      * @param int $pingThreshold Seconds a kept session may sit idle before it is probed ahead of the next message. 0 probes before every reuse. A session the server already closed still fails that command; the message is sent again once, on a new connection.
      * @param int $restartThreshold Messages a kept session carries before it is replaced. 0 disables.
      * @param array<string, string> $addresses Host => address to dial it on, as each host appears in $host (e.g. "smtp1.example.com" => "203.0.113.10", "[2001:db8::1]" for IPv6), so the connection lands on an address the caller checked. The certificate is still verified against the host. When any address is given, a host not listed is refused; with none, every host is dialled by name.
+     * @param string $clientId Microsoft Entra ID (Azure AD) application client ID for XOAUTH2 authentication.
+     * @param string $clientSecret Microsoft Entra ID (Azure AD) client secret for XOAUTH2 authentication.
+     * @param string $tenantId Microsoft Entra ID (Azure AD) directory tenant ID for XOAUTH2 authentication.
+     * @param ?Closure $clientFactory Factory for the PSR-18 HTTP client used to fetch OAuth2 tokens.
      */
     public function __construct(
         private readonly string $host,
@@ -57,8 +65,12 @@ class SMTP extends EmailAdapter
         private readonly int $pingThreshold = 30,
         private readonly int $restartThreshold = 100,
         private readonly array $addresses = [],
+        private readonly string $clientId = '',
+        private readonly string $clientSecret = '',
+        private readonly string $tenantId = '',
+        ?Closure $clientFactory = null,
     ) {
-        parent::__construct();
+        parent::__construct(clientFactory: $clientFactory);
         if (!\in_array($this->smtpSecure, ['', 'ssl', 'tls'])) {
             throw new \InvalidArgumentException('Invalid SMTP secure prefix. Must be "", "ssl" or "tls"');
         }
@@ -358,17 +370,95 @@ class SMTP extends EmailAdapter
     }
 
     /**
-     * @return list<Plain|Login>
+     * @return list<Plain|Login|XOAuth2>
+     *
+     * @throws \Exception
      */
     private function authenticators(): array
     {
         // The adapter this replaces treated a literal "0" as no credential,
         // an artefact of empty() that some configuration still relies on.
-        if (\in_array($this->username, ['', '0'], true) || \in_array($this->password, ['', '0'], true)) {
+        if (\in_array($this->username, ['', '0'], true)) {
+            return [];
+        }
+
+        if (
+            !\in_array($this->clientId, ['', '0'], true)
+            && !\in_array($this->clientSecret, ['', '0'], true)
+            && !\in_array($this->tenantId, ['', '0'], true)
+        ) {
+            return [new XOAuth2($this->username, $this->fetchAccessToken())];
+        }
+
+        if (\in_array($this->password, ['', '0'], true)) {
             return [];
         }
 
         return [new Plain($this->username, $this->password), new Login($this->username, $this->password)];
+    }
+
+    /**
+     * Fetch and cache an OAuth 2.0 access token from Microsoft Entra ID.
+     *
+     * @throws \Exception
+     */
+    private function fetchAccessToken(): string
+    {
+        if ($this->accessToken !== null && time() < ($this->tokenExpiresAt - 60)) {
+            return $this->accessToken;
+        }
+
+        $result = $this->request(
+            method: 'POST',
+            url: "https://login.microsoftonline.com/{$this->tenantId}/oauth2/v2.0/token",
+            headers: [
+                'Content-Type: application/x-www-form-urlencoded',
+            ],
+            body: [
+                'client_id' => $this->clientId,
+                'client_secret' => $this->clientSecret,
+                'scope' => 'https://outlook.office365.com/.default',
+                'grant_type' => 'client_credentials',
+            ],
+        );
+
+        $statusCode = (int) $result['statusCode'];
+        $response = $result['response'];
+
+        if (
+            $statusCode !== 200
+            || !\is_array($response)
+            || !isset($response['access_token'])
+            || !\is_string($response['access_token'])
+            || $response['access_token'] === ''
+        ) {
+            $parts = ["HTTP {$statusCode}"];
+
+            if (\is_array($response)) {
+                $error = $response['error'] ?? null;
+                if (\is_string($error) && $error !== '') {
+                    $parts[] = $error;
+                }
+
+                $description = $response['error_description'] ?? null;
+                if (\is_string($description) && $description !== '') {
+                    $parts[] = $description;
+                }
+            } elseif (\is_string($response) && $response !== '') {
+                $parts[] = $response;
+            }
+
+            if ($result['error'] !== '') {
+                $parts[] = $result['error'];
+            }
+
+            throw new \Exception('Failed to obtain OAuth2 access token: ' . implode(' - ', $parts), $statusCode);
+        }
+
+        $this->accessToken = $response['access_token'];
+        $this->tokenExpiresAt = time() + (int) ($response['expires_in'] ?? 3600);
+
+        return $this->accessToken;
     }
 
     /**

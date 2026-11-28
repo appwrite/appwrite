@@ -89,7 +89,7 @@ class Provider extends Model
 
         // Secrets are write-only; identifiers such as bundleId, teamId or region stay readable.
         if (\is_array($credentials)) {
-            foreach (['apiKey', 'apiSecret', 'authKey', 'authToken', 'password', 'secretKey', 'serviceAccountJSON'] as $secret) {
+            foreach (['apiKey', 'apiSecret', 'authKey', 'authToken', 'clientSecret', 'password', 'secretKey', 'serviceAccountJSON'] as $secret) {
                 unset($credentials[$secret]);
             }
             $document->setAttribute('credentials', $credentials);

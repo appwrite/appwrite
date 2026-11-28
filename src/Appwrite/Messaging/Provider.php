@@ -123,6 +123,9 @@ class Provider
                 $options['autoTLS'] ?? false,
                 $options['mailer'] ?? '',
                 addresses: new Host($this->hostname)->addresses($credentials['host'] ?? ''),
+                clientId: $credentials['clientId'] ?? '',
+                clientSecret: $credentials['clientSecret'] ?? '',
+                tenantId: $credentials['tenantId'] ?? '',
             ),
             'mailgun' => new Mailgun(
                 $apiKey,
