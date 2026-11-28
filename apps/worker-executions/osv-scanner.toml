@@ -1,0 +1,3 @@
+[[IgnoredVulns]]
+id = "RUSTSEC-2024-0449"
+reason = "unsafe-libyaml is unmaintained, not vulnerable: the advisory has no fixed version and reports no flaw. It comes in through php-std's yaml module (PHP's yaml_parse()), which this worker never calls."
