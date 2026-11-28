@@ -23,6 +23,7 @@ use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\System\System;
 
 final class FunctionsCustomServerTest extends Scope
 {
@@ -3677,6 +3678,396 @@ final class FunctionsCustomServerTest extends Scope
             $this->assertGreaterThan(0, $execution['body']['duration']);
             $this->assertLessThanOrEqual(\microtime(true) - $queuedAt, $execution['body']['duration']);
         }, 60000, 500);
+
+        $this->cleanupFunction($functionId);
+    }
+
+    public function testListFunctionFrameworks(): void
+    {
+        // Test for SUCCESS: Express, with only the runtimes this server enables
+        $frameworks = $this->client->call(Client::METHOD_GET, '/functions/frameworks', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertSame(200, $frameworks['headers']['status-code']);
+        $this->assertGreaterThanOrEqual(1, $frameworks['body']['total']);
+
+        $express = \array_values(\array_filter($frameworks['body']['frameworks'], fn (array $framework): bool => $framework['key'] === 'express'))[0] ?? null;
+        $this->assertNotNull($express);
+        $this->assertSame('Express', $express['name']);
+        $this->assertSame('server.js', $express['entrypoint']);
+        $this->assertSame('npm install', $express['installCommand']);
+        $enabled = \array_filter(\explode(',', (string) System::getEnv('_APP_FUNCTIONS_RUNTIMES', '')));
+        foreach ($express['runtimes'] as $runtime) {
+            $this->assertStringStartsWith('node-', $runtime);
+            if ($enabled !== []) {
+                $this->assertContains($runtime, $enabled);
+            }
+        }
+
+        // Test for SUCCESS: NestJS, built to dist/ before it starts
+        $nestjs = \array_values(\array_filter($frameworks['body']['frameworks'], fn (array $framework): bool => $framework['key'] === 'nestjs'))[0] ?? null;
+        $this->assertNotNull($nestjs);
+        $this->assertSame('NestJS', $nestjs['name']);
+        $this->assertSame('dist/main.js', $nestjs['entrypoint']);
+        $this->assertSame('npm install && npm run build', $nestjs['installCommand']);
+
+        // Test for SUCCESS: Flask and Django, served by the Python runtime's gunicorn
+        $python = \array_column(\array_filter($frameworks['body']['frameworks'], fn (array $framework): bool => \in_array($framework['key'], ['flask', 'django'], true)), null, 'key');
+        $this->assertSame('Flask', $python['flask']['name'] ?? null);
+        $this->assertSame('app.py', $python['flask']['entrypoint']);
+        $this->assertSame('Django', $python['django']['name'] ?? null);
+        $this->assertSame('manage.py', $python['django']['entrypoint']);
+        foreach ($python as $framework) {
+            $this->assertSame('pip install -r requirements.txt', $framework['installCommand']);
+            foreach ($framework['runtimes'] as $runtime) {
+                $this->assertStringStartsWith('python-', $runtime);
+            }
+        }
+
+        // Test for SUCCESS: the total can be skipped
+        $frameworks = $this->client->call(Client::METHOD_GET, '/functions/frameworks', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), ['total' => false]);
+        $this->assertSame(0, $frameworks['body']['total']);
+        $this->assertNotEmpty($frameworks['body']['frameworks']);
+    }
+
+    public function testExpressFunction(): void
+    {
+        // Test for SUCCESS: an Express app needs only the framework; the entrypoint and
+        // install command default to the framework's.
+        $function = $this->createFunction([
+            'functionId' => Id::unique(),
+            'name' => 'Express app',
+            'runtime' => 'node-22',
+            'framework' => 'express',
+            'events' => ['users.*.create'],
+            'timeout' => 15,
+            'logging' => true,
+        ]);
+        $this->assertSame(201, $function['headers']['status-code'], \json_encode($function['body']));
+        $this->assertSame('express', $function['body']['framework']);
+        $this->assertSame('server.js', $function['body']['entrypoint']);
+        $this->assertSame('npm install', $function['body']['commands']);
+        $functionId = $function['body']['$id'];
+
+        $this->assertSame('express', $this->getFunction($functionId)['body']['framework']);
+
+        $this->setupDeployment($functionId, [
+            'code' => $this->packageFunction('express'),
+            'activate' => true,
+        ]);
+
+        // Routing, method and JSON response, served by Express itself
+        $execution = $this->createExecution($functionId, ['async' => 'false', 'path' => '/', 'method' => 'GET']);
+        $this->assertSame(201, $execution['headers']['status-code']);
+        $this->assertSame(['framework' => 'express', 'method' => 'GET', 'path' => '/'], $this->executionOutput($execution));
+
+        // JSON body, request header, status code and response header
+        $execution = $this->createExecution($functionId, [
+            'async' => 'false',
+            'path' => '/echo',
+            'method' => 'POST',
+            'body' => \json_encode(['hello' => 'world']),
+            'headers' => ['content-type' => 'application/json', 'x-test' => 'from-test'],
+        ]);
+        $this->assertSame(201, $execution['body']['responseStatusCode']);
+        $this->assertSame(['body' => ['hello' => 'world'], 'header' => 'from-test'], $this->executionOutput($execution));
+        $this->assertContains(['name' => 'x-echo', 'value' => 'yes'], $execution['body']['responseHeaders']);
+
+        // The function's variables and the port the app listens on; its logs reach the execution
+        $execution = $this->createExecution($functionId, ['async' => 'false', 'path' => '/env', 'method' => 'GET']);
+        $this->assertSame(['functionId' => $functionId, 'port' => '3000'], $this->executionOutput($execution));
+        $this->assertStringContainsString('express log line', (string) $execution['body']['logs']);
+
+        // Static files, served by express.static from the deployment
+        $execution = $this->createExecution($functionId, ['async' => 'false', 'path' => '/hello.txt', 'method' => 'GET']);
+        $this->assertSame(200, $execution['body']['responseStatusCode']);
+        $this->assertSame("served by express.static\n", $execution['body']['responseBody']);
+
+        // Events reach the app as POST /, told apart by x-appwrite-trigger and x-appwrite-event
+        $user = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => Id::unique(),
+            'name' => 'Express event user',
+        ]);
+        $this->assertSame(201, $user['headers']['status-code']);
+        $userId = $user['body']['$id'];
+
+        $this->assertEventually(function () use ($functionId, $userId) {
+            $executions = $this->listExecutions($functionId);
+            $events = \array_values(\array_filter($executions['body']['executions'], fn (array $execution): bool => $execution['trigger'] === 'event'));
+            $this->assertNotEmpty($events);
+            $this->assertSame('completed', $events[0]['status']);
+            $this->assertSame(200, $events[0]['responseStatusCode']);
+            $this->assertStringContainsString('trigger=event event=users.' . $userId . '.create', (string) $events[0]['logs']);
+        }, 20000, 500);
+
+        $this->client->call(Client::METHOD_DELETE, '/users/' . $userId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        // Test for SUCCESS: back to a classic function
+        $classic = $this->updateFunction($functionId, ['name' => 'Express app', 'framework' => '']);
+        $this->assertSame(200, $classic['headers']['status-code'], \json_encode($classic['body']));
+        $this->assertSame('', $classic['body']['framework']);
+
+        // Test for SUCCESS: a function without an entrypoint or build command,
+        // switched to Express, gets the framework's
+        $plain = $this->createFunction([
+            'functionId' => Id::unique(),
+            'name' => 'Plain function',
+            'runtime' => 'node-22',
+        ]);
+        $this->assertSame(201, $plain['headers']['status-code'], \json_encode($plain['body']));
+        $this->assertSame('', $plain['body']['entrypoint']);
+        $switched = $this->updateFunction($plain['body']['$id'], ['name' => 'Plain function', 'framework' => 'express']);
+        $this->assertSame(200, $switched['headers']['status-code'], \json_encode($switched['body']));
+        $this->assertSame('express', $switched['body']['framework']);
+        $this->assertSame('server.js', $switched['body']['entrypoint']);
+        $this->assertSame('npm install', $switched['body']['commands']);
+        $this->cleanupFunction($plain['body']['$id']);
+
+        // Test for FAILURE: an unknown framework
+        $unknown = $this->createFunction([
+            'functionId' => Id::unique(),
+            'name' => 'Unknown framework',
+            'runtime' => 'node-22',
+            'framework' => 'not-a-framework',
+        ]);
+        $this->assertSame(400, $unknown['headers']['status-code']);
+        $this->assertSame(400, $this->updateFunction($functionId, ['name' => 'Express app', 'framework' => 'not-a-framework'])['headers']['status-code']);
+
+        $this->cleanupFunction($functionId);
+    }
+
+    public function testNestJSFunction(): void
+    {
+        // Test for SUCCESS: a NestJS app needs only the framework; it's built to dist/
+        // by the default build command and started from there.
+        $function = $this->createFunction([
+            'functionId' => Id::unique(),
+            'name' => 'NestJS app',
+            'runtime' => 'node-22',
+            'framework' => 'nestjs',
+            'events' => ['users.*.create'],
+            'timeout' => 15,
+            'logging' => true,
+        ]);
+        $this->assertSame(201, $function['headers']['status-code'], \json_encode($function['body']));
+        $this->assertSame('nestjs', $function['body']['framework']);
+        $this->assertSame('dist/main.js', $function['body']['entrypoint']);
+        $this->assertSame('npm install && npm run build', $function['body']['commands']);
+        $functionId = $function['body']['$id'];
+
+        $this->setupDeployment($functionId, [
+            'code' => $this->packageFunction('nestjs'),
+            'activate' => true,
+        ]);
+
+        // Routing, method and JSON response, served by NestJS itself
+        $execution = $this->createExecution($functionId, ['async' => 'false', 'path' => '/', 'method' => 'GET']);
+        $this->assertSame(201, $execution['headers']['status-code']);
+        $this->assertSame(['framework' => 'nestjs', 'method' => 'GET', 'path' => '/'], $this->executionOutput($execution));
+
+        // JSON body, request header, status code and response header
+        $execution = $this->createExecution($functionId, [
+            'async' => 'false',
+            'path' => '/echo',
+            'method' => 'POST',
+            'body' => \json_encode(['hello' => 'world']),
+            'headers' => ['content-type' => 'application/json', 'x-test' => 'from-test'],
+        ]);
+        $this->assertSame(201, $execution['body']['responseStatusCode']);
+        $this->assertSame(['body' => ['hello' => 'world'], 'header' => 'from-test'], $this->executionOutput($execution));
+        $this->assertContains(['name' => 'x-echo', 'value' => 'yes'], $execution['body']['responseHeaders']);
+
+        // The function's variables and the port the app listens on; its logs reach the execution
+        $execution = $this->createExecution($functionId, ['async' => 'false', 'path' => '/env', 'method' => 'GET']);
+        $this->assertSame(['functionId' => $functionId, 'port' => '3000'], $this->executionOutput($execution));
+        $this->assertStringContainsString('nestjs log line', (string) $execution['body']['logs']);
+
+        // Events reach the app as POST /, told apart by x-appwrite-trigger and x-appwrite-event
+        $user = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => Id::unique(),
+            'name' => 'NestJS event user',
+        ]);
+        $this->assertSame(201, $user['headers']['status-code']);
+        $userId = $user['body']['$id'];
+
+        $this->assertEventually(function () use ($functionId, $userId) {
+            $executions = $this->listExecutions($functionId);
+            $events = \array_values(\array_filter($executions['body']['executions'], fn (array $execution): bool => $execution['trigger'] === 'event'));
+            $this->assertNotEmpty($events);
+            $this->assertSame('completed', $events[0]['status']);
+            $this->assertSame(200, $events[0]['responseStatusCode']);
+            $this->assertStringContainsString('trigger=event event=users.' . $userId . '.create', (string) $events[0]['logs']);
+        }, 20000, 500);
+
+        $this->client->call(Client::METHOD_DELETE, '/users/' . $userId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->cleanupFunction($functionId);
+    }
+
+    public function testFlaskFunction(): void
+    {
+        // Test for SUCCESS: a Flask app needs only the framework; the runtime serves its
+        // `app` with gunicorn, so it never calls app.run().
+        $function = $this->createFunction([
+            'functionId' => Id::unique(),
+            'name' => 'Flask app',
+            'runtime' => 'python-3.14',
+            'framework' => 'flask',
+            'events' => ['users.*.create'],
+            'timeout' => 15,
+            'logging' => true,
+        ]);
+        $this->assertSame(201, $function['headers']['status-code'], \json_encode($function['body']));
+        $this->assertSame('flask', $function['body']['framework']);
+        $this->assertSame('app.py', $function['body']['entrypoint']);
+        $this->assertSame('pip install -r requirements.txt', $function['body']['commands']);
+        $functionId = $function['body']['$id'];
+
+        $this->setupDeployment($functionId, [
+            'code' => $this->packageFunction('flask'),
+            'activate' => true,
+        ]);
+
+        // Routing, method and JSON response, served by Flask itself
+        $execution = $this->createExecution($functionId, ['async' => 'false', 'path' => '/', 'method' => 'GET']);
+        $this->assertSame(201, $execution['headers']['status-code']);
+        $this->assertSame(['framework' => 'flask', 'method' => 'GET', 'path' => '/'], $this->executionOutput($execution));
+
+        // JSON body, request header, status code and response header
+        $execution = $this->createExecution($functionId, [
+            'async' => 'false',
+            'path' => '/echo',
+            'method' => 'POST',
+            'body' => \json_encode(['hello' => 'world']),
+            'headers' => ['content-type' => 'application/json', 'x-test' => 'from-test'],
+        ]);
+        $this->assertSame(201, $execution['body']['responseStatusCode']);
+        $this->assertSame(['body' => ['hello' => 'world'], 'header' => 'from-test'], $this->executionOutput($execution));
+        $this->assertContains(['name' => 'x-echo', 'value' => 'yes'], $execution['body']['responseHeaders']);
+
+        // The function's variables and the port the app is served on; print() reaches the execution's logs
+        $execution = $this->createExecution($functionId, ['async' => 'false', 'path' => '/env', 'method' => 'GET']);
+        $this->assertSame(['functionId' => $functionId, 'port' => '3000'], $this->executionOutput($execution));
+        $this->assertStringContainsString('flask log line', (string) $execution['body']['logs']);
+
+        // Events reach the app as POST /, told apart by x-appwrite-trigger and x-appwrite-event
+        $user = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => Id::unique(),
+            'name' => 'Flask event user',
+        ]);
+        $this->assertSame(201, $user['headers']['status-code']);
+        $userId = $user['body']['$id'];
+
+        $this->assertEventually(function () use ($functionId, $userId) {
+            $executions = $this->listExecutions($functionId);
+            $events = \array_values(\array_filter($executions['body']['executions'], fn (array $execution): bool => $execution['trigger'] === 'event'));
+            $this->assertNotEmpty($events);
+            $this->assertSame('completed', $events[0]['status']);
+            $this->assertSame(200, $events[0]['responseStatusCode']);
+            $this->assertStringContainsString('trigger=event event=users.' . $userId . '.create', (string) $events[0]['logs']);
+        }, 20000, 500);
+
+        $this->client->call(Client::METHOD_DELETE, '/users/' . $userId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->cleanupFunction($functionId);
+    }
+
+    public function testDjangoFunction(): void
+    {
+        // Test for SUCCESS: a Django project needs only the framework; the runtime finds
+        // its WSGI_APPLICATION from manage.py and serves it with gunicorn.
+        $function = $this->createFunction([
+            'functionId' => Id::unique(),
+            'name' => 'Django app',
+            'runtime' => 'python-3.14',
+            'framework' => 'django',
+            'events' => ['users.*.create'],
+            'timeout' => 15,
+            'logging' => true,
+        ]);
+        $this->assertSame(201, $function['headers']['status-code'], \json_encode($function['body']));
+        $this->assertSame('django', $function['body']['framework']);
+        $this->assertSame('manage.py', $function['body']['entrypoint']);
+        $this->assertSame('pip install -r requirements.txt', $function['body']['commands']);
+        $functionId = $function['body']['$id'];
+
+        $this->setupDeployment($functionId, [
+            'code' => $this->packageFunction('django'),
+            'activate' => true,
+        ]);
+
+        // Routing, method and JSON response, served by Django itself
+        $execution = $this->createExecution($functionId, ['async' => 'false', 'path' => '/', 'method' => 'GET']);
+        $this->assertSame(201, $execution['headers']['status-code']);
+        $this->assertSame(['framework' => 'django', 'method' => 'GET', 'path' => '/'], $this->executionOutput($execution));
+
+        // JSON body, request header, status code and response header
+        $execution = $this->createExecution($functionId, [
+            'async' => 'false',
+            'path' => '/echo',
+            'method' => 'POST',
+            'body' => \json_encode(['hello' => 'world']),
+            'headers' => ['content-type' => 'application/json', 'x-test' => 'from-test'],
+        ]);
+        $this->assertSame(201, $execution['body']['responseStatusCode']);
+        $this->assertSame(['body' => ['hello' => 'world'], 'header' => 'from-test'], $this->executionOutput($execution));
+        $this->assertContains(['name' => 'x-echo', 'value' => 'yes'], $execution['body']['responseHeaders']);
+
+        // The function's variables and the port the app is served on; print() reaches the execution's logs
+        $execution = $this->createExecution($functionId, ['async' => 'false', 'path' => '/env', 'method' => 'GET']);
+        $this->assertSame(['functionId' => $functionId, 'port' => '3000'], $this->executionOutput($execution));
+        $this->assertStringContainsString('django log line', (string) $execution['body']['logs']);
+
+        // Events reach the app as POST /, told apart by x-appwrite-trigger and x-appwrite-event
+        $user = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => Id::unique(),
+            'name' => 'Django event user',
+        ]);
+        $this->assertSame(201, $user['headers']['status-code']);
+        $userId = $user['body']['$id'];
+
+        $this->assertEventually(function () use ($functionId, $userId) {
+            $executions = $this->listExecutions($functionId);
+            $events = \array_values(\array_filter($executions['body']['executions'], fn (array $execution): bool => $execution['trigger'] === 'event'));
+            $this->assertNotEmpty($events);
+            $this->assertSame('completed', $events[0]['status']);
+            $this->assertSame(200, $events[0]['responseStatusCode']);
+            $this->assertStringContainsString('trigger=event event=users.' . $userId . '.create', (string) $events[0]['logs']);
+        }, 20000, 500);
+
+        $this->client->call(Client::METHOD_DELETE, '/users/' . $userId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
 
         $this->cleanupFunction($functionId);
     }

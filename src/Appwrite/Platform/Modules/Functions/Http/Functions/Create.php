@@ -130,6 +130,7 @@ class Create extends Base
             ->param('providerComments', true, new Boolean(), 'Post a build summary on pull requests for the repo linked to the function. Commit statuses are still reported when disabled. Ignored in silent mode.', true)
             ->param('providerDeployments', true, new Boolean(), 'Deploy every push that matches the branch and path rules for the repo linked to the function. When disabled, deploy manually.', true)
             ->param('providerStatuses', true, new Boolean(), 'Report the build status on each commit for the repo linked to the function. Ignored in silent mode.', true)
+            ->param('framework', '', new WhiteList(['', ...\array_keys(Config::getParam('functionFrameworks'))], true), 'Web framework the function runs, such as `express`. The function\'s code is then an app of that framework, listening on the `PORT` environment variable. Leave empty for a function written for the Appwrite runtime.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('timelimit')
@@ -186,6 +187,7 @@ class Create extends Base
         bool $providerComments,
         bool $providerDeployments,
         bool $providerStatuses,
+        string $framework,
         Response $response,
         Database $dbForProject,
         callable $timelimit,
@@ -256,6 +258,16 @@ class Create extends Base
             throw new Exception(Exception::FUNCTION_RUNTIME_UNSUPPORTED, 'Runtime "' . $runtime . '" is not supported');
         }
 
+        if ($framework !== '') {
+            $configFramework = Config::getParam('functionFrameworks')[$framework];
+            if (!\in_array($runtime, $configFramework['runtimes'], true)) {
+                throw new Exception(Exception::FUNCTION_RUNTIME_UNSUPPORTED, $configFramework['name'] . ' does not support runtime "' . $runtime . '".');
+            }
+
+            $entrypoint = $entrypoint !== '' ? $entrypoint : $configFramework['entrypoint'];
+            $commands = $commands !== '' ? $commands : $configFramework['installCommand'];
+        }
+
         $installation = $dbForPlatform->getDocument('installations', $installationId);
 
         if (!empty($installationId) && $installation->isEmpty()) {
@@ -296,6 +308,7 @@ class Create extends Base
                 'timeout' => $timeout,
                 'entrypoint' => $entrypoint,
                 'commands' => $commands,
+                'framework' => $framework,
                 'scopes' => $scopes,
                 'startCommand' => '',
                 'search' => implode(' ', [$functionId, $name, $description, $runtime]),

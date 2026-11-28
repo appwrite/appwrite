@@ -446,7 +446,7 @@ class Create extends Base
 
         try {
             $version = $function->getAttribute('version', 'v2');
-            $command = Deployments::startCommand($deployment, $runtime['startCommand']);
+            $command = Deployments::startCommand($deployment, Deployments::defaultStartCommand($function, $deployment, $runtime));
 
             $source = $deployment->getAttribute('buildPath', '');
             $command = $version === 'v2' ? '' : "nohup helpers/start.sh \"$command\"";

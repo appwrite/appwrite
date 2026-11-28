@@ -54,6 +54,76 @@ final class DeploymentsTest extends TestCase
         $this->assertSame('npm install', Deployments::command($resource, $deployment));
     }
 
+    /**
+     * @return \Iterator<string, array{string, array<string, mixed>, array<string, mixed>, string}>
+     */
+    public static function defaultStartCommands(): \Iterator
+    {
+        $runtime = 'bash helpers/server.sh';
+        yield 'function with a framework' => ['functions', ['framework' => 'express'], [], 'bash helpers/express/server.sh'];
+        yield 'classic function' => ['functions', ['framework' => ''], [], $runtime];
+        yield 'function from before frameworks' => ['functions', [], [], $runtime];
+        yield 'function with a framework no longer offered' => ['functions', ['framework' => 'retired'], [], $runtime];
+        yield 'site adapter' => ['sites', ['framework' => 'nuxt'], ['adapter' => 'ssr'], 'bash helpers/nuxt/server.sh'];
+        yield 'site adapter without a start command' => ['sites', ['framework' => 'nuxt'], ['adapter' => 'static'], $runtime];
+        yield 'site with an unknown framework' => ['sites', ['framework' => 'retired'], ['adapter' => 'ssr'], $runtime];
+        // Sites and functions keep separate framework lists.
+        yield 'site named like a function framework' => ['sites', ['framework' => 'express'], ['adapter' => 'ssr'], $runtime];
+    }
+
+    /**
+     * @param array<string, mixed> $resource
+     * @param array<string, mixed> $deployment
+     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('defaultStartCommands')]
+    public function testDefaultStartCommand(string $collection, array $resource, array $deployment, string $expected): void
+    {
+        $frameworks = Config::getParam('frameworks');
+        $functionFrameworks = Config::getParam('functionFrameworks');
+        Config::setParam('frameworks', [
+            'nuxt' => ['adapters' => [
+                'ssr' => ['startCommand' => 'bash helpers/nuxt/server.sh'],
+                'static' => [],
+            ]],
+        ]);
+        Config::setParam('functionFrameworks', [
+            'express' => ['startCommand' => 'bash helpers/express/server.sh'],
+        ]);
+
+        try {
+            $this->assertSame($expected, Deployments::defaultStartCommand(
+                new Document(['$collection' => $collection, ...$resource]),
+                new Document($deployment),
+                ['startCommand' => 'bash helpers/server.sh'],
+            ));
+        } finally {
+            Config::setParam('frameworks', $frameworks);
+            Config::setParam('functionFrameworks', $functionFrameworks);
+        }
+    }
+
+    public function testFunctionFrameworkStartCommandIsNotRunFromTheSource(): void
+    {
+        $functionFrameworks = Config::getParam('functionFrameworks');
+        Config::setParam('functionFrameworks', [
+            'express' => ['startCommand' => 'bash helpers/express/server.sh'],
+        ]);
+
+        try {
+            $default = Deployments::defaultStartCommand(
+                new Document(['$collection' => 'functions', 'framework' => 'express']),
+                new Document(),
+                ['startCommand' => 'bash helpers/server.sh'],
+            );
+
+            // The helper path is relative to /usr/local/server: a function deployment
+            // carries no start command of its own, so it runs as is.
+            $this->assertSame('bash helpers/express/server.sh', Deployments::startCommand(new Document(['startCommand' => '']), $default));
+        } finally {
+            Config::setParam('functionFrameworks', $functionFrameworks);
+        }
+    }
+
     public function testEmptyStartCommandUsesDefault(): void
     {
         $this->assertSame(

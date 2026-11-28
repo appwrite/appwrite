@@ -2201,7 +2201,8 @@
             "description",
             "providerComments",
             "providerDeployments",
-            "providerStatuses"
+            "providerStatuses",
+            "framework"
         ],
         "functions.createDeployment": [
             "functionId",
@@ -2302,6 +2303,9 @@
             "queries",
             "total"
         ],
+        "functions.listFrameworks": [
+            "total"
+        ],
         "functions.listRuntimes": [
             "total"
         ],
@@ -2348,7 +2352,8 @@
             "description",
             "providerComments",
             "providerDeployments",
-            "providerStatuses"
+            "providerStatuses",
+            "framework"
         ],
         "functions.updateDeploymentStatus": [
             "functionId",
@@ -6806,7 +6811,8 @@
             "description",
             "providerComments",
             "providerDeployments",
-            "providerStatuses"
+            "providerStatuses",
+            "framework"
         ],
         "functions.createDeployment": [
             "functionId",
@@ -6904,6 +6910,9 @@
             "queries",
             "total"
         ],
+        "functions.listFrameworks": [
+            "total"
+        ],
         "functions.listRuntimes": [
             "total"
         ],
@@ -6943,7 +6952,8 @@
             "description",
             "providerComments",
             "providerDeployments",
-            "providerStatuses"
+            "providerStatuses",
+            "framework"
         ],
         "functions.updateDeploymentStatus": [
             "functionId",

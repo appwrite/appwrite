@@ -18,6 +18,7 @@ Config::setParam('platform', include __DIR__ . '/../config/platform.php');
 Config::setParam('console', include __DIR__ . '/../config/console.php');
 Config::setParam('collections', include __DIR__ . '/../config/collections.php');
 Config::setParam('frameworks', include __DIR__ . '/../config/frameworks.php');
+Config::setParam('functionFrameworks', include __DIR__ . '/../config/function-frameworks.php');
 Config::setParam('usage', include __DIR__ . '/../config/usage.php');
 Config::setParam('alerts', include __DIR__ . '/../config/alerts.php'); // Alert rule resources and metrics
 Config::setParam('roles', include __DIR__ . '/../config/roles.php');  // User roles and scopes
