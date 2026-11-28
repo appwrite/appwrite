@@ -417,7 +417,7 @@ services:
       - ./src:/usr/src/code/src
       - ./packages:/usr/src/code/packages
   dns:
-    image: alpinelinux/unbound:latest@sha256:8d2611fe8fcbd8e26b6f88e2eb0c3b803368195d50cfa0c30fdfaa5087076709
+    image: alpinelinux/unbound:latest@sha256:b6d8bfac6a327304175454c32e689ee66e699ec32caa44376202e13eac6b06c8
     container_name: appwrite-dns
     restart: unless-stopped
     logging:
