@@ -72,6 +72,7 @@ import {
 import { isAgentDocsPathname } from '@/lib/docs/agent-docs-feature'
 import { isAnalyticsDocsPathname } from '@/lib/docs/analytics-docs-feature'
 import { isPartnersDocsPathname } from '@/lib/docs/partners-docs-feature'
+import { getDocsRedirectTarget } from '@/lib/docs/redirects'
 import { isVideosDocsPathname } from '@/lib/docs/videos-docs-feature'
 import { isZeroDocsPathname } from '@/lib/docs/zero-docs-feature'
 import { isDocsProductNavNew } from '@/lib/products/new-badge'
@@ -564,6 +565,9 @@ export function DocsGlobalSidebar({
     // Wait until after mount so localStorage debug overrides are applied before
     // we decide to bounce feature-gated docs sections.
     if (!hasMounted) return
+    // During a navigation the location is the pending one. A redirected path
+    // is never rendered: the docs route forwards it and gates its target.
+    if (getDocsRedirectTarget(pathname.replace(/^\/docs\/?/, ''))) return
     if (!features.partnersDocs && isPartnersDocsPathname(pathname)) {
       navigate({ to: '/docs', replace: true })
       return

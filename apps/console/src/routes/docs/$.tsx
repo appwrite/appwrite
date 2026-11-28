@@ -73,6 +73,9 @@ export const Route = createFileRoute('/docs/$')({
   beforeLoad: ({ params }) => {
     const splat = params._splat ?? ''
     if (splat === DOCS_LLMS_TXT_SPLAT || splat.endsWith('.md')) return
+    // A redirected slug is never rendered, and the loader gates its target,
+    // so an old gated URL such as a moved Partners page still forwards.
+    if (getDocsRedirectTarget(splat)) return
 
     if (
       isFeatureGatedDocsSlugHidden(splat, {
