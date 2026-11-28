@@ -17,6 +17,8 @@ Two numbers decide how a rendition looks and how much data it needs:
 
 A good profile pairs the two: enough bitrate for its resolution to look clean, and no more. Fast motion, like sports or games, needs more bitrate than a talking head at the same resolution.
 
+A profile's video bitrate is the most its renditions stream at. Detailed, fast, dark, or grainy pictures use all of it. Simple pictures, like a screen recording, already look clean with less, so their renditions stay below it and use less bandwidth and storage.
+
 # Start with no profiles {% #start-with-no-profiles %}
 
 New projects have no profiles. Create the ones you need before you encode your first video. The [presets](#presets) are a good starting point.
