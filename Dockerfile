@@ -12,7 +12,7 @@ RUN composer install --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM appwrite/base:2.5.3@sha256:0da43bedda4b97af653bb48f0416eb1f752546e95eda2dea63071af8309b91d6 AS ffmpeg
+FROM appwrite/base:2.6.0@sha256:baf37ca0213eb6fabbaef181ca568d2e0de0c6d79f56f971a6ccb0efba3c9d05 AS ffmpeg
 
 # Same pin as utopia-php/video (docs/design.md, Dockerfile ARG FFMPEG_VERSION).
 # Alpine's apk ffmpeg is an older line and is not what the library CI tests against.
@@ -48,11 +48,17 @@ RUN apk add --no-cache \
 
 # The utopia extension, built against the base image's own PHP headers and
 # libheif so the ABI matches. The recipe is crates/extension/build.sh.
-FROM appwrite/base:2.5.3@sha256:0da43bedda4b97af653bb48f0416eb1f752546e95eda2dea63071af8309b91d6 AS extension-build
+FROM appwrite/base:2.6.0@sha256:baf37ca0213eb6fabbaef181ca568d2e0de0c6d79f56f971a6ccb0efba3c9d05 AS extension-toolchain
 
 WORKDIR /usr/local/src
 
-COPY Cargo.toml Cargo.lock rustfmt.toml rust-toolchain.toml ./
+COPY rust-toolchain.toml ./
+COPY crates/extension/build.sh /tmp/
+RUN /tmp/build.sh toolchain
+
+FROM extension-toolchain AS extension-build
+
+COPY Cargo.toml Cargo.lock rustfmt.toml ./
 COPY .cargo ./.cargo
 COPY crates ./crates
 
@@ -68,7 +74,7 @@ FROM scratch AS extension
 
 COPY --from=extension-build /usr/local/src/target/release/libutopia.so /utopia.so
 
-FROM appwrite/base:2.5.3@sha256:0da43bedda4b97af653bb48f0416eb1f752546e95eda2dea63071af8309b91d6 AS base
+FROM appwrite/base:2.6.0@sha256:baf37ca0213eb6fabbaef181ca568d2e0de0c6d79f56f971a6ccb0efba3c9d05 AS base
 
 LABEL maintainer="team@appwrite.io"
 
@@ -198,8 +204,9 @@ RUN chmod +x /usr/local/bin/doctor && \
 
 RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/
 
-# Registers Utopia\Image\Canvas; see crates/extension/README.md.
-COPY --from=extension-build /usr/local/src/target/release/libutopia.so /usr/local/lib/php/utopia.so
+# Registers Utopia\Image\Canvas; see crates/extension/README.md. CI's Extension job swaps in the
+# build it tested with --build-context extension=<dir holding utopia.so>.
+COPY --from=extension /utopia.so /usr/local/lib/php/utopia.so
 RUN echo 'extension=/usr/local/lib/php/utopia.so' > /usr/local/etc/php/conf.d/utopia.ini
 
 FROM base AS production
@@ -213,7 +220,7 @@ EXPOSE 80
 
 CMD [ "php", "app/http.php" ]
 
-FROM appwrite/base:2.5.3-xdebug@sha256:998e1c709bc4c976627f2fd6afc4b21daed5a628f3f46eeb16066826ac9cfa56 AS xdebug
+FROM appwrite/base:2.6.0-xdebug@sha256:6bdbcddaf834dfc18d6b40b02adb0cc9841d6e4142f86329b85b363d7ba37895 AS xdebug
 
 FROM base AS development
 

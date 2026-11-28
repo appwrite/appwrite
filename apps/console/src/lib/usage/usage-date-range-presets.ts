@@ -8,6 +8,7 @@ import {
   startOfWeek,
   subDays,
   subHours,
+  subMinutes,
   subYears,
 } from 'date-fns'
 import type { DateRange } from 'react-day-picker'
@@ -195,13 +196,38 @@ export const ANALYTICS_DATE_RANGE_PRESET_GROUPS: UsageDateRangePresetGroup[] = [
   LONG_DATE_RANGE_PRESET_GROUP,
 ]
 
+const LAST_15_MINUTES_PRESET: UsageDateRangePreset = {
+  label: 'Last 15 minutes',
+  value: '15m',
+  getRange: () => {
+    const now = new Date()
+    return { from: subMinutes(now, 15), to: now }
+  },
+}
+
+/**
+ * Runtime logs: rolling windows from minutes to a day, which every plan's
+ * log retention covers. Older windows are picked on the calendar.
+ */
+export const RUNTIME_LOG_DATE_RANGE_PRESET_GROUPS: UsageDateRangePresetGroup[] =
+  [
+    {
+      presets: [
+        LAST_15_MINUTES_PRESET,
+        ...USAGE_DATE_RANGE_PRESET_GROUPS[0].presets,
+      ],
+    },
+  ]
+
 /**
  * Every known preset, for lookups by id and matching. Includes the long
  * presets so a saved analytics selection ("Last 12 months") resolves; pickers
  * decide which groups they show.
  */
-export const USAGE_DATE_RANGE_PRESETS =
-  ANALYTICS_DATE_RANGE_PRESET_GROUPS.flatMap((group) => group.presets)
+export const USAGE_DATE_RANGE_PRESETS = [
+  ...ANALYTICS_DATE_RANGE_PRESET_GROUPS.flatMap((group) => group.presets),
+  LAST_15_MINUTES_PRESET,
+]
 
 export const ROLLING_USAGE_DATE_RANGE_PRESET_VALUES = [
   '1h',

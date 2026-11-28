@@ -143,6 +143,8 @@ import {
   MarketingSolutionsNavPopover,
 } from '@/components/pages/marketing/MarketingSolutionsNavMenu'
 import { MarketingGitHubStarsLink } from '@/components/pages/marketing/MarketingGitHubStarsLink'
+import { InitWordmark } from '@/components/pages/init/_components/InitWordmark'
+import { isInitSurfaceEnabled } from '@/lib/init/init-surface'
 import { useI18n } from '@/lib/i18n'
 import { useT } from '@/lib/i18n/translate'
 import { useIsZeroAccount } from '@/hooks/use-zero-account'
@@ -390,6 +392,27 @@ function MarketingMobileNavLink({
       )}
     </SheetClose>
   )
+}
+
+/** Init week wordmark linking to `/init`; sits before the GitHub stars link. */
+function MarketingInitLink({ mobile = false }: { mobile?: boolean }) {
+  const link = (
+    <Link
+      to="/init"
+      aria-label="Appwrite Init"
+      {...analyticsAttrs('marketing-nav-init')}
+      className={
+        mobile
+          ? 'link-unstyled flex h-10 w-full items-center justify-start rounded-md px-3 text-foreground transition-colors hover:bg-accent'
+          : cn(MARKETING_NAV_LINK_CLASS, 'text-foreground')
+      }
+      activeProps={{ className: MARKETING_NAV_LINK_ACTIVE_CLASS }}
+    >
+      <InitWordmark className="h-3.5" />
+    </Link>
+  )
+
+  return mobile ? <SheetClose asChild>{link}</SheetClose> : link
 }
 
 interface ConsoleHeaderProps {
@@ -781,6 +804,7 @@ export function ConsoleHeader({
                       />
                     ),
                   )}
+                  {isInitSurfaceEnabled() ? <MarketingInitLink mobile /> : null}
                   <MarketingGitHubStarsLink mobile />
                 </nav>
               </SheetContent>
@@ -1406,6 +1430,7 @@ export function ConsoleHeader({
                   />
                 ),
               )}
+              {isInitSurfaceEnabled() ? <MarketingInitLink /> : null}
               <MarketingGitHubStarsLink />
             </nav>
           </div>

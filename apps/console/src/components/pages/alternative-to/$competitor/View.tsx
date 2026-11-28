@@ -1,11 +1,15 @@
 import type { ComponentType } from 'react'
 import { AmplifyComparison } from './_components/AmplifyComparison'
 import { Auth0Comparison } from './_components/Auth0Comparison'
+import { BugbotComparison } from './_components/BugbotComparison'
 import { ClerkComparison } from './_components/ClerkComparison'
 import { CloudinaryComparison } from './_components/CloudinaryComparison'
+import { CodeRabbitComparison } from './_components/CodeRabbitComparison'
 import { ComparisonShell } from './_components/ComparisonParts'
 import { ConvexComparison } from './_components/ConvexComparison'
+import { CopilotComparison } from './_components/CopilotComparison'
 import { FirebaseComparison } from './_components/FirebaseComparison'
+import { GreptileComparison } from './_components/GreptileComparison'
 import { MuxComparison } from './_components/MuxComparison'
 import { NeonComparison } from './_components/NeonComparison'
 import { NetlifyComparison } from './_components/NetlifyComparison'
@@ -32,6 +36,10 @@ const COMPARISON_PAGES: Record<AlternativeId, ComponentType> = {
   posthog: PostHogComparison,
   plausible: PlausibleComparison,
   mux: MuxComparison,
+  coderabbit: CodeRabbitComparison,
+  copilot: CopilotComparison,
+  bugbot: BugbotComparison,
+  greptile: GreptileComparison,
 }
 
 export function View({ competitor }: { competitor: AlternativeId }) {

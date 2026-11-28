@@ -205,6 +205,7 @@ const LEGACY_REDIRECTS: Record<string, string> = {
   '/docs/advanced/self-hosting/environment-variables': '/docs/advanced/self-hosting/configuration/environment-variables',
   '/products/sites/offer-300-s': '/products/sites',
   '/docs/products/auth/preferences-storage': '/docs/products/auth/preferences',
+  '/docs/products/analytics/flutter': '/docs/products/analytics/mobile',
   '/docs/tooling/mcp': '/docs/tooling/ai/mcp-servers',
   '/docs/tooling/mcp/cursor': '/docs/tooling/ai/agents/cursor',
   '/docs/tooling/mcp/vscode': '/docs/tooling/ai/agents/vscode',

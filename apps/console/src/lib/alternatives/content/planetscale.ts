@@ -12,7 +12,7 @@ export const planetscaleAlternativeContent: AlternativeContent = {
         },
         {
           label: 'Managed PostgreSQL',
-          appwrite: { value: true, note: 'PostgreSQL 18, in beta' },
+          appwrite: { value: true, note: 'PostgreSQL 19, in beta' },
           competitor: true,
         },
         {

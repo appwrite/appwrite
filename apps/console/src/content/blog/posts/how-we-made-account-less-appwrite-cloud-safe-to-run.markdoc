@@ -1,0 +1,89 @@
+---
+layout: post
+title: "How we made account-less Appwrite Cloud safe to run"
+description: Appwrite Zero creates real Appwrite Cloud projects before signup. Here is how we limit usage, lock down temporary accounts, and clean up expired projects.
+date: 2026-12-02
+cover: /images/blog/how-we-made-account-less-appwrite-cloud-safe-to-run/cover.avif
+timeToRead: 4
+author: chirag-aggarwal
+category: architectures, security
+featured: false
+draft: true
+callToAction: true
+faqs:
+  - question: "Are Appwrite Zero projects separate sandboxes or real Appwrite Cloud projects?"
+    answer: "Each Zero project is a regular Appwrite Cloud project held by a temporary owner account inside a temporary organization. Claiming transfers that project into a regular organization, so its data, deployments, and settings stay intact."
+  - question: "How does Appwrite stop anonymous traffic from filling up a region?"
+    answer: "Each network can create at most five Zero projects per day. Each region also caps how many unclaimed projects can exist at once, including paused ones. Appwrite checks that regional count and reserves a slot inside a distributed lock, a shared lock across API servers, so only one creation runs at a time."
+  - question: "Why does Appwrite Zero enforce hourly limits on deployments and function executions?"
+    answer: "Standard Free plan limits count usage in periodic batches. That pace fits monthly billing, but it updates too slowly for a 60-minute build window. While unclaimed, each Zero project has live hourly limits of 500 function executions and 20 deployments across API calls, web traffic, event triggers, and schedules."
+  - question: "How does the Powered by Appwrite Zero banner work with strict Content Security Policies?"
+    answer: "A strict Content Security Policy restricts which styles and scripts a browser can run, so it would block a plain injected banner. For each HTML response, the edge router, the proxy in front of deployed sites, generates a one-time random token called a nonce. It updates the policy headers and `<meta>` tags so the browser allows only the banner's style and script. Existing inline code keeps working, and CSS padding prevents the banner from covering page content."
+  - question: "What happens if someone claims a project at the exact moment it is paused or deleted?"
+    answer: "Every state change runs inside a database transaction, locks resources in the same order, and checks that the project is still unclaimed before writing. A cleanup run never pauses or deletes a claimed project, and late deletes lose cleanly to a completed claim."
+---
+
+Appwrite Zero gives any developer or coding agent a live Appwrite Cloud project from a single command, before anyone signs up. Databases, functions, storage, authentication, and hosted sites run on real cloud infrastructure from the start.
+
+Opening that infrastructure to anonymous requests brings clear risks. A flood of new projects can crowd out paying customers. A looping function can burn through compute before monthly checks notice, and open hosting can attract phishing pages.
+
+# Running on regular Cloud projects
+
+Running Zero in a separate sandbox would require migrating databases, files, and deployments once someone signs up. Appwrite creates a regular Cloud project from the start instead. A temporary owner account holds the project inside a temporary organization, with an expiring API key and a pending project transfer.
+
+Because Zero reuses regular projects and transfers, ownership stays in one place. Claiming finishes the transfer in place, keeping the project ID, endpoint, stored data, deployments, and API key intact.
+
+# Limiting projects and live usage
+
+Before creating a Zero project, Appwrite checks two capacity limits. Each network can create at most five projects per day. Each region also caps how many unclaimed projects can exist at once, including paused ones. To stop bursts of requests from grabbing the last spot together, Appwrite checks the count and reserves a slot inside a distributed lock, a shared lock across API servers. Requests that miss the lock fail right away with a retryable error instead of queuing up.
+
+Standard Free plan limits count usage in periodic batches. That delay fits monthly billing, but a looping function on a 60-minute project could burn through compute before a batch job noticed. Unclaimed projects keep Free plan quotas and add live hourly caps of 500 function executions and 20 deployments. Appwrite checks executions across API calls, event triggers, schedules, and web requests through the edge router, the proxy in front of deployed sites and functions. Static sites serve only files and skip the counter.
+
+# Locking down temporary accounts
+
+{% only_dark %}
+![Appwrite Console open under a temporary Zero owner account showing the build countdown banner](/images/docs/zero/dark/console-banner.avif)
+{% /only_dark %}
+{% only_light %}
+![Appwrite Console open under a temporary Zero owner account showing the build countdown banner](/images/docs/zero/console-banner.avif)
+{% /only_light %}
+
+A temporary owner account can open the Appwrite Console without verifying an email address, so every API request restricts that account to its single project. It cannot create extra organizations or projects, change the organization's plan, or start a project transfer. It also cannot add an email address or password to turn itself into a regular account.
+
+Restricting the temporary account alone left a gap we caught before launch. Organization API keys act without a user session, so an account check missed them. Without a second guard, one temporary organization could have claimed another Zero project. Appwrite closes that path by blocking those keys on temporary organizations, checking the organization on Console requests, and rejecting temporary organizations as transfer targets.
+
+# Public sites without enabling phishing
+
+{% only_dark %}
+![Deployed Zero site showing the edge-injected Powered by Appwrite Zero banner with countdown, Claim button, and Report abuse link](/images/docs/zero/dark/site-banner.avif)
+{% /only_dark %}
+{% only_light %}
+![Deployed Zero site showing the edge-injected Powered by Appwrite Zero banner with countdown, Claim button, and Report abuse link](/images/docs/zero/site-banner.avif)
+{% /only_light %}
+
+Early prototypes locked unclaimed sites to the creator's IP address, and later to an owner token. Both broke a common workflow: when a coding agent deploys an app, teammates need to open the link right away. Sites and functions are now public on the first deploy. Every page shows a **Powered by Appwrite Zero** banner with the countdown, a **Claim** button, and a **Report abuse** link.
+
+The edge router injects that banner into every HTML response. A strict `Content-Security-Policy` header restricts which styles and scripts a browser can run, so it would block a plain banner. For each page, the router creates a nonce, a one-time random token. It updates policy headers and `<meta>` tags so the browser allows only the banner's style and script. Unclaimed pages skip shared caches, and claiming or extending clears edge caches so the banner updates or disappears on the next request.
+
+# Keeping claims, extensions, and expiry from colliding
+
+{% only_dark %}
+![Diagram of the Appwrite Zero project lifecycle across build, paused, and deleted states with claiming open until the deadline](/images/docs/zero/dark/lifecycle.avif)
+{% /only_dark %}
+{% only_light %}
+![Diagram of the Appwrite Zero project lifecycle across build, paused, and deleted states with claiming open until the deadline](/images/docs/zero/lifecycle.avif)
+{% /only_light %}
+
+A scheduled cleanup job moves each unclaimed project through three stages: active for 60 minutes, paused once that build window closes, and deleted 24 hours after the first hour ends. Each region cleans up only its own projects, so regions never pause, delete, or count the same project twice. While paused, sites display a notice under the countdown banner so visitors can still claim the project before deletion.
+
+A cleanup run, `appwrite zero extend`, `appwrite zero delete`, and a claim can all hit the same project at once. Every state change runs in a database transaction and locks resources in the same order, preventing conflicting writes and stalled locks. Inside the transaction, Appwrite checks that the project is still unclaimed before changing anything. A cleanup run never pauses a claimed project, and late deletes lose cleanly to a completed claim.
+
+# Build on Appwrite Zero
+
+When projects start before signup, the safety checks that email verification used to handle move into the API, the edge router, and the cleanup job. Building those checks on regular projects, plans, and transfers kept the system simple and reliable. Share projects or ask the team questions in the [Appwrite Discord](https://appwrite.io/discord).
+
+- [Introducing Appwrite Zero](/blog/post/introducing-appwrite-zero)
+- [Appwrite Zero documentation](/docs/zero)
+- [Zero commands in the Appwrite CLI](/docs/tooling/command-line/zero)
+- [Project transfers](/docs/advanced/billing/project-transfers)
+- [Appwrite Zero](/zero)

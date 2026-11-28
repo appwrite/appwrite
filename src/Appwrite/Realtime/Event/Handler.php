@@ -101,6 +101,7 @@ class Handler
             // After delivery, so revoked connections see the event that ended their access.
             $this->enter('close');
             foreach (\array_keys($closing) as $connection) {
+                $this->realtime->markClosing($connection);
                 $this->server->send([$connection], $this->unauthorizedPayload);
                 $this->server->close($connection, $this->unauthorized->getCode());
             }

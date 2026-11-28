@@ -728,8 +728,6 @@ export function useCreateVideoCaption(
         fileId: input.fileId,
         name: input.name,
         language: input.code,
-        // The preview SDK still lists the removed `code` param (previews keep pinned params); the API ignores it.
-        code: input.code,
         xdefault: input.isDefault,
       }),
     onSuccess: async () => {

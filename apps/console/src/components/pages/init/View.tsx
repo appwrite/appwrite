@@ -5,6 +5,7 @@ import {
   useEffect,
   useRef,
   type CSSProperties,
+  type ReactNode,
 } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
@@ -18,6 +19,7 @@ import { resolveInitBrowseDisplayCurrentDay } from '@/lib/init/init-event-browse
 import { applyInitEventVisibility } from '@/lib/init/event-visibility'
 import { Route } from '@/routes/_public/init'
 import { useInitLiveClock } from '@/lib/init/use-init-live-clock'
+import { useInitOffscreenLoops } from '@/lib/init/use-init-offscreen-loops'
 import { isLaunchEventDayLocked } from '@/lib/init/types'
 import {
   InitPresenceProvider,
@@ -66,22 +68,19 @@ import type { InitDisplayEvent } from '@/lib/init/types'
 /** Launch weeks that wear the hero's light: day card borders, the globe. */
 const ELECTRIC_EVENT_IDS = new Set(['init-nov-2026'])
 
-function InitPageContent({
+/**
+ * Merges live presence into the event for the parts that show who is online.
+ * Only this subtree re-renders on presence updates (heartbeats, hovers), not
+ * the schedule, day cards, tickets and prizes.
+ */
+function InitPresenceEvent({
   baseEvent,
-  account,
+  children,
 }: {
   baseEvent: InitDisplayEvent
-  account?: Models.User | null
+  children: (event: InitDisplayEvent) => ReactNode
 }) {
-  const [commandCenterOpen, setCommandCenterOpen] = useState(false)
-  const [onlineNavOpen, setOnlineNavOpen] = useState(false)
-  const preLaunch = isPreLaunchModeEnabled()
   const presence = useInitPresence()
-  const raffle = useInitGiveawayRaffleContext()
-  const communityGlobe = useInitCommunityGlobeData(baseEvent, {
-    enabled: Boolean(baseEvent.presenceEnabled && !baseEvent.isRecapMode),
-  })
-
   const event = useMemo(() => {
     if (!baseEvent.presenceEnabled) {
       return baseEvent
@@ -96,6 +95,45 @@ function InitPageContent({
       othersOnlineCount: presence.othersOnlineCount,
     }
   }, [baseEvent, presence])
+
+  return children(event)
+}
+
+function InitCommunityGlobeSection({
+  baseEvent,
+  isAuthenticated,
+}: {
+  baseEvent: InitDisplayEvent
+  isAuthenticated: boolean
+}) {
+  const communityGlobe = useInitCommunityGlobeData(baseEvent, { enabled: true })
+
+  return (
+    <InitGlobalCommunitySection
+      electric={ELECTRIC_EVENT_IDS.has(baseEvent.id)}
+      countries={communityGlobe.countries}
+      developerCount={communityGlobe.developerCount}
+      developerCountCapped={communityGlobe.developerCountCapped}
+      isLive={communityGlobe.isLive}
+      isAuthenticated={isAuthenticated}
+    />
+  )
+}
+
+function InitPageContent({
+  baseEvent,
+  account,
+}: {
+  baseEvent: InitDisplayEvent
+  account?: Models.User | null
+}) {
+  const [commandCenterOpen, setCommandCenterOpen] = useState(false)
+  const [onlineNavOpen, setOnlineNavOpen] = useState(false)
+  const preLaunch = isPreLaunchModeEnabled()
+  const raffle = useInitGiveawayRaffleContext()
+  useInitOffscreenLoops()
+  // Presence fields are merged in only where they are shown; see InitPresenceEvent.
+  const event = baseEvent
 
   useKeyboardShortcut(
     'meta+k',
@@ -141,12 +179,16 @@ function InitPageContent({
                 onMobileClose: () => setOnlineNavOpen(false),
                 onMenuClick: () => setOnlineNavOpen(true),
                 content: (
-                  <OnlineUsersNav
-                    event={event}
-                    showPanel
-                    mobileOpen={onlineNavOpen}
-                    onMobileClose={() => setOnlineNavOpen(false)}
-                  />
+                  <InitPresenceEvent baseEvent={baseEvent}>
+                    {(presenceEvent) => (
+                      <OnlineUsersNav
+                        event={presenceEvent}
+                        showPanel
+                        mobileOpen={onlineNavOpen}
+                        onMobileClose={() => setOnlineNavOpen(false)}
+                      />
+                    )}
+                  </InitPresenceEvent>
                 ),
               }
             : undefined
@@ -160,11 +202,21 @@ function InitPageContent({
             <LiveBannerBar liveBanner={event.liveBanner} />
           ) : null}
 
-          {event.id === 'init-nov-2026' ? (
-            <Init5EventHero event={event} liveBanner={event.liveBanner} />
-          ) : (
-            <EventHero event={event} liveBanner={event.liveBanner} />
-          )}
+          <InitPresenceEvent baseEvent={baseEvent}>
+            {(presenceEvent) =>
+              event.id === 'init-nov-2026' ? (
+                <Init5EventHero
+                  event={presenceEvent}
+                  liveBanner={event.liveBanner}
+                />
+              ) : (
+                <EventHero
+                  event={presenceEvent}
+                  liveBanner={event.liveBanner}
+                />
+              )
+            }
+          </InitPresenceEvent>
 
           <div className="mx-auto w-full max-w-7xl px-4 pb-8 pt-8 sm:px-6">
             <EventSchedule event={event} fullWidth />
@@ -261,12 +313,8 @@ function InitPageContent({
           <InitPrizesSection event={event} />
 
           {event.presenceEnabled && !event.isRecapMode ? (
-            <InitGlobalCommunitySection
-              electric={ELECTRIC_EVENT_IDS.has(event.id)}
-              countries={communityGlobe.countries}
-              developerCount={communityGlobe.developerCount}
-              developerCountCapped={communityGlobe.developerCountCapped}
-              isLive={communityGlobe.isLive}
+            <InitCommunityGlobeSection
+              baseEvent={baseEvent}
               isAuthenticated={Boolean(account)}
             />
           ) : null}
@@ -285,7 +333,11 @@ function InitPageContent({
 
       {event.presenceEnabled && account && !event.isRecapMode ? (
         <>
-          <InitReactionConfetti onlineUsers={event.onlineUsers} />
+          <InitPresenceEvent baseEvent={baseEvent}>
+            {(presenceEvent) => (
+              <InitReactionConfetti onlineUsers={presenceEvent.onlineUsers} />
+            )}
+          </InitPresenceEvent>
           {raffle ? (
             <InitGiveawayRaffleConfetti pulse={raffle.raffleWinnerPulse} />
           ) : null}

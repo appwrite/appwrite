@@ -186,8 +186,6 @@ const CAPTIONS = [
     fileId: 'file000000000000000002',
     name: 'English',
     language: 'eng',
-    // Preview SDK types keep the removed field.
-    code: 'eng',
     default: true,
     embedded: false,
     targetDuration: 6,
@@ -204,8 +202,6 @@ const CAPTIONS = [
     fileId: 'file000000000000000003',
     name: 'Hebrew',
     language: 'heb',
-    // Preview SDK types keep the removed field.
-    code: 'heb',
     default: false,
     embedded: false,
     targetDuration: 6,
@@ -490,6 +486,14 @@ async function screenshot(page: Page, name: string) {
     path: test.info().outputPath(name),
     fullPage: true,
   })
+}
+
+/** A duration as the inspector writes it, `412 ms` or `1.52 s`, in ms. */
+function duration(text: string | null | undefined): number {
+  const value = text?.trim() ?? ''
+  if (value.endsWith(' ms')) return Number(value.slice(0, -3))
+  if (value.endsWith(' s')) return Number(value.slice(0, -2)) * 1000
+  throw new Error(`Not a duration: "${value}"`)
 }
 
 const profileRow = (page: Page, name: string) =>
@@ -779,6 +783,38 @@ test.describe('videos (mocked API)', () => {
     await expect(player).toHaveCount(0)
   })
 
+  test('times the first frame from the loaded manifest', async ({ page }) => {
+    await enableVideos(page)
+    await mockAppwriteApi(page, VIDEO, RENDITIONS, PROFILES, true)
+    // A slow manifest is not counted; a slow first segment is.
+    const delays: Record<string, number> = {
+      'master.m3u8': 1500,
+      'segment0.m4s': 400,
+    }
+    await page.route(`**/v1/videos/${VIDEO_ID}/outputs/**`, async (route) => {
+      const name = new URL(route.request().url()).pathname.split('/').pop()
+      await new Promise((resolve) => setTimeout(resolve, delays[name!] ?? 0))
+      await route.fallback()
+    })
+    await open(page, `/${VIDEO_ID}`, (page) =>
+      page.getByText('Time to first frame', { exact: true }),
+    )
+
+    const tile = page
+      .locator('dl > div')
+      .filter({ hasText: 'Time to first frame' })
+    await expect(tile.locator('dd')).toHaveText(/\d/, { timeout: 30_000 })
+    const startupMs = duration(await tile.locator('dd').textContent())
+    expect(startupMs).toBeGreaterThanOrEqual(400)
+    expect(startupMs).toBeLessThan(1500)
+    const hint = (await tile.locator('p').textContent()) ?? ''
+    expect(hint.startsWith('Manifest (not counted): ')).toBe(true)
+    expect(duration(hint.split(': ')[1])).toBeGreaterThanOrEqual(1500)
+    await tile.screenshot({
+      path: test.info().outputPath('videos-inspector-first-frame.png'),
+    })
+  })
+
   for (const status of [404, 401] as const) {
     test(`lets a project member watch a private video on the player page (${status})`, async ({
       page,
@@ -821,6 +857,75 @@ test.describe('videos (mocked API)', () => {
       })
     })
   }
+
+  test('plays the player page with the options in its query string', async ({
+    page,
+  }) => {
+    await enableVideos(page)
+    await mockAppwriteApi(page, VIDEO, RENDITIONS, PROFILES, true)
+    await page.goto(
+      `/player/${VIDEO_ID}?project=${PROJECT_ID}&muted=1&loop=1&controls=0`,
+      { waitUntil: 'domcontentloaded' },
+    )
+
+    const video = page.locator('video')
+    await expect
+      .poll(
+        () => video.evaluate((element: HTMLVideoElement) => element.readyState),
+        { timeout: 60_000 },
+      )
+      .toBeGreaterThanOrEqual(2)
+    expect(
+      await video.evaluate((element: HTMLVideoElement) => ({
+        muted: element.muted,
+        loop: element.loop,
+      })),
+    ).toEqual({ muted: true, loop: true })
+    // `controls=0` leaves no control bar.
+    await expect(page.getByRole('slider', { name: 'Seek' })).toHaveCount(0)
+    await expect(page.getByRole('button', { name: 'Settings' })).toHaveCount(0)
+  })
+
+  test('edits the player through its query string from Preview', async ({
+    page,
+  }) => {
+    await enableVideos(page)
+    await mockAppwriteApi(page)
+    // The page header's Preview, after the one under the sidebar thumbnail.
+    const preview = page
+      .getByRole('button', { name: 'Preview', exact: true })
+      .last()
+    await open(page, `/${VIDEO_ID}`, () => preview)
+
+    await preview.click()
+    const panel = page.getByRole('dialog').filter({ hasText: 'Player preview' })
+    await expect(panel).toBeVisible()
+    const frame = panel.locator('iframe')
+    const query = panel.getByLabel('Query string')
+    await expect(query).toHaveValue(`?project=${PROJECT_ID}`)
+
+    // An option writes its parameter...
+    await panel.getByRole('switch', { name: 'Loop' }).click()
+    await expect(query).toHaveValue(`?project=${PROJECT_ID}&loop=1`)
+    await expect
+      .poll(() => frame.getAttribute('src'))
+      .toContain(`/player/${VIDEO_ID}?project=${PROJECT_ID}&loop=1`)
+
+    // ...and a typed parameter sets the option.
+    await query.fill(`?project=${PROJECT_ID}&loop=1&start=5&controls=0`)
+    await query.press('Enter')
+    await expect(
+      panel.getByRole('switch', { name: 'Player controls' }),
+    ).not.toBeChecked()
+    await expect(panel.getByText('0:05', { exact: true })).toBeVisible()
+    await expect(query).toHaveValue(
+      `?project=${PROJECT_ID}&start=5&loop=1&controls=0`,
+    )
+    await expect
+      .poll(() => frame.getAttribute('src'))
+      .toContain('start=5&loop=1&controls=0')
+    await screenshot(page, 'videos-player-preview.png')
+  })
 
   test('warns that a video is private', async ({ page }) => {
     await enableVideos(page)

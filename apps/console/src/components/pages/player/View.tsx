@@ -17,7 +17,7 @@ import {
   videoEmbedErrorFromUnknown,
   type VideoEmbedError,
 } from '@/lib/videos/embed-player-errors'
-import { parseEmbedStartParam } from '@/lib/videos/embed-start-time'
+import { parseEmbedPlayerOptions } from '@/lib/videos/embed-player-options'
 import { useLongWait } from '@/hooks/use-long-wait'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
@@ -51,12 +51,11 @@ function EmbedErrorScreen({ error }: { error: VideoEmbedError }) {
 
 export function View({ videoId, initialData }: EmbedViewProps) {
   const t = useT()
-  const search = useSearch({ strict: false }) as {
+  const search = useSearch({ strict: false }) as Record<string, unknown> & {
     project?: string
-    start?: number | string
   }
   const projectId = search.project?.trim() ?? ''
-  const initialStartSeconds = parseEmbedStartParam(search.start)
+  const options = parseEmbedPlayerOptions(search)
 
   const {
     data: videoFromHook,
@@ -149,7 +148,14 @@ export function View({ videoId, initialData }: EmbedViewProps) {
           video={video}
           renditions={renditions}
           layout="embed"
-          initialStartSeconds={initialStartSeconds}
+          initialStartSeconds={options.start}
+          autoPlay={options.autoplay}
+          muted={options.muted}
+          loop={options.loop}
+          controls={options.controls}
+          accentColor={options.color}
+          // Members can read the timeline; visitors only get the stream.
+          seekPreviews={Boolean(videoFromHook)}
         />
       </div>
     </VideoInspectorProvider>

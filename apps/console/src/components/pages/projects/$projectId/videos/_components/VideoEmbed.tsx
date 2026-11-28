@@ -77,8 +77,7 @@ export function VideoEmbed({
   const playerUrl = useMemo(
     () =>
       getVideoEmbedPlayerUrl(projectId, videoId, {
-        startSeconds:
-          effectiveStartSeconds > 0 ? effectiveStartSeconds : undefined,
+        start: effectiveStartSeconds > 0 ? effectiveStartSeconds : undefined,
       }),
     [projectId, videoId, effectiveStartSeconds],
   )

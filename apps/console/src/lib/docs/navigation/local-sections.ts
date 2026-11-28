@@ -51,6 +51,10 @@ const DOCS_TOOLING_SECTION_NAV: DocsNavTree = [
             href: '/docs/products/agent',
           },
           {
+            label: 'Appwrite Beep',
+            href: '/docs/tooling/beep',
+          },
+          {
             label: 'The Appwriter',
             href: '/docs/tooling/appwriter',
           },
@@ -278,6 +282,10 @@ export const DOCS_LOCAL_SECTION_NAVS: DocsSectionNavConfig[] = [
           {
             label: 'Presences',
             href: '/docs/products/auth/presences',
+          },
+          {
+            label: 'Analytics',
+            href: '/docs/products/auth/analytics',
           },
           {
             label: 'OAuth2 server',
@@ -694,8 +702,8 @@ export const DOCS_LOCAL_SECTION_NAVS: DocsSectionNavConfig[] = [
             href: '/docs/products/analytics/web',
           },
           {
-            label: 'Track a Flutter app',
-            href: '/docs/products/analytics/flutter',
+            label: 'Track a mobile app',
+            href: '/docs/products/analytics/mobile',
           },
           {
             label: 'Send events over REST',

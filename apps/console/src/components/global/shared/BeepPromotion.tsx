@@ -10,10 +10,9 @@ import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import { useDismissConsoleBanner } from '@/lib/react-query/hooks'
 import { isConsoleBannerDismissed, type UserPrefs } from '@/lib/user-prefs-keys'
+import { BEEP_APP_STORE_URL, BEEP_GOOGLE_PLAY_URL } from '@/lib/notifications/beep-links'
 
-export const BEEP_APP_STORE_URL = 'https://apps.apple.com/app/id6831213827'
-export const BEEP_GOOGLE_PLAY_URL =
-  'https://play.google.com/store/apps/details?id=io.appwrite.beep'
+export { BEEP_APP_STORE_URL, BEEP_GOOGLE_PLAY_URL }
 
 export const BEEP_ICON_SRC = '/images/console/beep/icon.avif'
 

@@ -63,8 +63,11 @@ type ProductNavigationItemsCopy = {
   domainsName: string
   domainsTagline: string
   analyticsTagline: string
+  monitorsTagline: string
+  beepTagline: string
   firewallName: string
   firewallTagline: string
+  reviewsTagline: string
   advisorName: string
   advisorTagline: string
 }
@@ -131,7 +134,10 @@ function getLocalizedProductNavItemName(
   if (navItemId === 'agent') return navigationItemsCopy.agentName
   if (navItemId === 'domains') return navigationItemsCopy.domainsName
   if (navItemId === 'analytics') return productNamesCopy.analytics
+  if (navItemId === 'monitors') return productNamesCopy.monitors
+  if (navItemId === 'beep') return productNamesCopy.beep
   if (navItemId === 'firewall') return navigationItemsCopy.firewallName
+  if (navItemId === 'reviews') return productNamesCopy.reviews
   if (navItemId === 'advisor') return navigationItemsCopy.advisorName
   return fallbackName
 }
@@ -154,7 +160,10 @@ function getLocalizedProductNavItemTagline(
   if (navItemId === 'zero') return navigationItemsCopy.zeroTagline
   if (navItemId === 'domains') return navigationItemsCopy.domainsTagline
   if (navItemId === 'analytics') return navigationItemsCopy.analyticsTagline
+  if (navItemId === 'monitors') return navigationItemsCopy.monitorsTagline
+  if (navItemId === 'beep') return navigationItemsCopy.beepTagline
   if (navItemId === 'firewall') return navigationItemsCopy.firewallTagline
+  if (navItemId === 'reviews') return navigationItemsCopy.reviewsTagline
   if (navItemId === 'advisor') return navigationItemsCopy.advisorTagline
   return fallbackTagline
 }

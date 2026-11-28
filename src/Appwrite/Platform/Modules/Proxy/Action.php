@@ -101,6 +101,7 @@ class Action extends PlatformAction
                 'name' => $record['name'],
                 'expected' => $record['expected'],
                 'current' => $record['current'],
+                'regions' => $record['regions'] ?? [],
                 'status' => $record['status'],
                 'message' => $record['message'],
                 'required' => $record['required'],
@@ -299,6 +300,12 @@ class Action extends PlatformAction
             'name' => $record['name'],
             'expected' => $record['expected'],
             'current' => \array_map(fn (string $value) => \mb_strcut($value, 0, 255), \array_slice($record['current'], 0, 10)),
+            'regions' => \array_map(fn (array $region) => [
+                'id' => $region['id'],
+                'name' => $region['name'],
+                'status' => $region['status'],
+                'current' => \array_map(fn (string $value) => \mb_strcut($value, 0, 255), \array_slice($region['current'], 0, 10)),
+            ], \array_slice($record['regions'], 0, 20)),
             'status' => $record['status'],
             'message' => \mb_strcut($record['message'], 0, 1000),
             'required' => $record['required'],
@@ -381,7 +388,7 @@ class Action extends PlatformAction
      * 'misplaced' when it was found one zone too deep, at the domain followed by its zone.
      *
      * @param Document $rule Rule to check
-     * @return array<array{type: string, name: string, expected: string, current: array<string>, status: string, message: string, required: bool, error: ?\Throwable}>
+     * @return array<array{type: string, name: string, expected: string, current: array<string>, regions: array<array{id: string, name: string, status: string, current: array<string>}>, status: string, message: string, required: bool, error: ?\Throwable}>
      */
     protected function checkRecords(Document $rule): array
     {
@@ -515,6 +522,8 @@ class Action extends PlatformAction
                 'name' => $type === 'CAA' && $status === 'mismatch' && $validator->value !== '' ? $validator->value : $domain->get(),
                 'expected' => $expected,
                 'current' => \array_values($current),
+                // Set by a validator that checks from several regions
+                'regions' => $validator->regions ?? [],
                 'status' => $status,
                 'message' => match (true) {
                     $verified => '',

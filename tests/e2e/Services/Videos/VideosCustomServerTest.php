@@ -2807,6 +2807,24 @@ final class VideosCustomServerTest extends Scope
         $dashProbe = $this->assertDashLadderPlayable((string) $mpd['body']);
         $this->assertGreaterThanOrEqual(2, $dashProbe['video'], 'Expected at least two DASH video representations');
 
+        // Every DASH URL carries the binding the request used. Environment forwarding is
+        // covered in BaseTest: a deployment with environments refuses an unknown one.
+        $projectId = $this->getProject()['$id'];
+        $this->assertStringNotContainsString('environment=', (string) $mpd['body']);
+
+        $boundMpd = $this->client->call(
+            Client::METHOD_GET,
+            '/videos/' . $videoId . '/outputs/dash/master.mpd',
+            $this->headers(),
+            ['project' => $projectId]
+        );
+        $this->assertEquals(200, $boundMpd['headers']['status-code']);
+        $this->assertGreaterThan(0, \substr_count((string) $boundMpd['body'], '?project='));
+        $this->assertSame(
+            \substr_count((string) $boundMpd['body'], '?project='),
+            \substr_count((string) $boundMpd['body'], '?project=' . $projectId . '&amp;updatedAt=')
+        );
+
         // CMAF: one encode, dual HLS + DASH masters over shared fMP4 segments.
         $cmafCreate = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
             'profileId' => $profile360['$id'],
@@ -2961,7 +2979,6 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals(200, $timeline['headers']['status-code']);
         $this->assertStringContainsString('WEBVTT', (string) $timeline['body']);
 
-        $projectId = $this->getProject()['$id'];
         $this->assertStringNotContainsString('sprites/', (string) $timeline['body']);
         $this->assertMatchesRegularExpression(
             '/thumbnails\/[a-zA-Z0-9]+\?project=' . \preg_quote($projectId, '/') . '#xywh=/',
@@ -2999,6 +3016,36 @@ final class VideosCustomServerTest extends Scope
 
         $hlsProbe = $this->assertHlsLadderPlayable((string) $master['body']);
         $this->assertGreaterThanOrEqual(1, $hlsProbe['subtitles']);
+
+        // Players cannot send headers, so nested URLs carry the binding the request
+        // used. Environment forwarding is covered in BaseTest: a deployment with
+        // environments refuses an unknown one.
+        $projectId = $this->getProject()['$id'];
+        $this->assertStringNotContainsString('environment=', (string) $master['body']);
+
+        $bound = $this->client->call(
+            Client::METHOD_GET,
+            '/videos/' . $videoId . '/outputs/hls/master.m3u8',
+            $this->headers(),
+            ['project' => $projectId]
+        );
+        $this->assertEquals(200, $bound['headers']['status-code']);
+        $this->assertGreaterThan(0, \substr_count((string) $bound['body'], '?project='));
+        $this->assertSame(
+            \substr_count((string) $bound['body'], '?project='),
+            \substr_count((string) $bound['body'], '?project=' . $projectId . '&updatedAt=')
+        );
+
+        $boundPlaylist = $this->client->call(
+            Client::METHOD_GET,
+            $this->manifestRequestPath($this->subtitleUri((string) $bound['body'], $captionId)),
+            $this->headers()
+        );
+        $this->assertEquals(200, $boundPlaylist['headers']['status-code']);
+        $this->assertStringContainsString(
+            '?project=' . $projectId . '&updatedAt=',
+            $this->firstPlaylistSegmentUri((string) $boundPlaylist['body'])
+        );
 
         $playlist = $this->client->call(
             Client::METHOD_GET,
@@ -3498,12 +3545,14 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals(200, $first['headers']['status-code']);
         $this->assertEquals('image/webp', $first['headers']['content-type'] ?? '');
 
-        $second = $this->client->call(Client::METHOD_GET, $path, \array_merge($this->headers(), [
-            'accept' => 'text/html,image/webp;q=0.9,*/*;q=0.5',
-        ]));
-        $this->assertEquals(200, $second['headers']['status-code']);
-        $this->assertEquals('image/webp', $second['headers']['content-type'] ?? '');
-        $this->assertEquals('hit', $second['headers']['x-appwrite-cache'] ?? '', 'a different Accept string that also lists webp must reuse the webp entry');
+        $this->assertEventually(function () use ($path) {
+            $second = $this->client->call(Client::METHOD_GET, $path, \array_merge($this->headers(), [
+                'accept' => 'text/html,image/webp;q=0.9,*/*;q=0.5',
+            ]));
+            $this->assertEquals(200, $second['headers']['status-code']);
+            $this->assertEquals('image/webp', $second['headers']['content-type'] ?? '');
+            $this->assertEquals('hit', $second['headers']['x-appwrite-cache'] ?? '', 'a different Accept string that also lists webp must reuse the webp entry');
+        });
 
         $plain = $this->client->call(Client::METHOD_GET, $path, \array_merge($this->headers(), ['accept' => 'image/jpeg']));
         $this->assertEquals(200, $plain['headers']['status-code']);
@@ -3515,9 +3564,10 @@ final class VideosCustomServerTest extends Scope
         foreach ($this->headers() as $name => $value) {
             $requestHeaders[] = $name . ': ' . $value;
         }
-        foreach (['miss', 'hit'] as $expected) {
+        $url = $this->client->getEndpoint() . $path . '?' . \http_build_query(['width' => 66, 'height' => 34]);
+        $fetch = function () use ($url, $requestHeaders): array {
             $received = [];
-            $handle = \curl_init($this->client->getEndpoint() . $path . '?' . \http_build_query(['width' => 66, 'height' => 34]));
+            $handle = \curl_init($url);
             \curl_setopt_array($handle, [
                 CURLOPT_HTTPHEADER => $requestHeaders,
                 CURLOPT_RETURNTRANSFER => true,
@@ -3534,11 +3584,23 @@ final class VideosCustomServerTest extends Scope
             $status = \curl_getinfo($handle, CURLINFO_RESPONSE_CODE);
             \curl_close($handle);
 
+            return [$status, $received];
+        };
+        $assertHeaders = function (int $status, array $received, string $expected): void {
             $this->assertSame(200, $status, $expected);
             $this->assertSame([$expected], $received['x-appwrite-cache'] ?? null, $expected);
             $this->assertSame(['private, max-age=15552000'], $received['cache-control'] ?? null, $expected);
             $this->assertArrayNotHasKey('pragma', $received, $expected);
-        }
+        };
+
+        [$status, $received] = $fetch();
+        $assertHeaders($status, $received, 'miss');
+
+        // The entry is written after the miss is sent; a remote cache device can take a moment.
+        $this->assertEventually(function () use ($fetch, $assertHeaders) {
+            [$status, $received] = $fetch();
+            $assertHeaders($status, $received, 'hit');
+        });
 
         $missing = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/thumbnails/nope', $this->headers());
         $this->assertEquals(404, $missing['headers']['status-code']);

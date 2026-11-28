@@ -1777,6 +1777,14 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 { category: 'Products' },
               ),
               createProfileFeatureFlagItem(
+                'Beep',
+                'Show the Appwrite Beep page (/products/beep) and its Products menu and footer links. Off until launch.',
+                'beep',
+                profileId,
+                features.beep,
+                { category: 'Products' },
+              ),
+              createProfileFeatureFlagItem(
                 'Usage alerts',
                 'Show usage monitors and alerts (Usage sidebar pages, quick actions, budget monitors in billing, alert webhook events).',
                 'alerts',
@@ -2161,6 +2169,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     features.videos,
     features.analytics,
     features.zero,
+    features.beep,
     features.alerts,
     features.reviews,
     features.appwritePush,

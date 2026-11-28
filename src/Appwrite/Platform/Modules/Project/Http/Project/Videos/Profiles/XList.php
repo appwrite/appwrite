@@ -19,7 +19,6 @@ use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Query\Method as QueryMethod;
-use Utopia\System\System;
 use Utopia\Validator\Boolean;
 
 class XList extends Base
@@ -44,8 +43,6 @@ class XList extends Base
                 namespace: 'project',
                 group: 'profiles',
                 name: 'listVideoProfiles',
-                // Hidden until videos is generally available; preview SDK builds show it.
-                hide: System::getEnv('_APP_SDK_PREVIEW', 'disabled') !== 'enabled',
                 description: '/docs/references/project/list-video-profiles.md',
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [

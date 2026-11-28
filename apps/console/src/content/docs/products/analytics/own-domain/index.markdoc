@@ -4,14 +4,25 @@ title: Serve tracking from your domain
 description: Send Appwrite Analytics events through a domain you own, with a custom API domain or a small proxy on your site, so tracking requests stay first-party.
 ---
 
-The tracking helpers send events to your project's Appwrite endpoint, such as `<REGION>.cloud.appwrite.io`. Ad blockers and privacy extensions decide what to block from filter lists, which name tracking hosts and URL patterns. When your events go to a domain you own, list entries written for third-party hosts don't apply to them.
+The `Tracking` class sends events to your project's Appwrite endpoint, such as `<REGION>.cloud.appwrite.io`. Ad blockers and privacy extensions block requests that match their filter lists, which name known tracking hosts and URL patterns. Sending events to a domain you own keeps them clear of entries written for third-party hosts.
 
-The **Ad blockers** card in a property's **Settings** tab offers two ways to do this.
+A site on Appwrite Sites with analytics turned on needs no setup here: Appwrite already sends its events through the site's own domain. See [Properties](/docs/products/analytics/properties#sites).
+
+# Choose a method {% #methods %}
+
+{% only_dark %}
+![Ad blockers card in a property's Settings tab with the Custom domain and Proxy options](/images/docs/analytics/dark/ad-blockers.avif)
+{% /only_dark %}
+{% only_light %}
+![Ad blockers card in a property's Settings tab with the Custom domain and Proxy options](/images/docs/analytics/ad-blockers.avif)
+{% /only_light %}
+
+For any other site, the **Ad blockers** card in a property's **Settings** tab offers two ways to send events through your own domain.
 
 | | Custom domain | Proxy |
 | --- | --- | --- |
 | Events go to | A subdomain you point at Appwrite, such as `appwrite.example.com` | A path on your own site, such as `example.com/relay` |
-| What you set up | A DNS record | A server route and an API key |
+| Setup | A DNS record | A server route and an API key |
 | Visitor location | Appwrite sees each visitor's IP address directly | Your proxy passes each visitor's IP address on |
 
 # Use a custom domain {% #custom-domain %}
@@ -33,7 +44,9 @@ const tracking = new Tracking(new Analytics(client), '<PROPERTY_ID>');
 tracking.start();
 ```
 
-Nothing else changes. Your site still needs a Web app under **Apps**, as described in [Track a website](/docs/products/analytics/web#before-you-start).
+With the [script tag](/docs/products/analytics/web#script-tag), set `data-endpoint` to the same URL, such as `https://appwrite.example.com/v1`.
+
+Your site still needs a Web app under **Apps**, as described in [Track a website](/docs/products/analytics/web#before-you-start).
 
 # Use a proxy {% #proxy %}
 
@@ -57,7 +70,16 @@ tracking.start();
 
 `Tracking` now sends each event to `/relay/analytics/properties/<PROPERTY_ID>/events` on your site.
 
+With the [script tag](/docs/products/analytics/web#script-tag), set `data-endpoint` to the full URL of the route, such as `https://example.com/relay`. The attribute takes a full URL, not a path.
+
 ## Create an API key {% #api-key %}
+
+{% only_dark %}
+![Create API key panel with the analytics.write scope selected](/images/docs/analytics/dark/api-key.avif)
+{% /only_dark %}
+{% only_light %}
+![Create API key panel with the analytics.write scope selected](/images/docs/analytics/api-key.avif)
+{% /only_light %}
 
 The proxy calls Appwrite with an API key, so it can pass on each visitor's IP address and user agent.
 
@@ -104,6 +126,7 @@ export async function POST(
             scrollDepth: event.scrollDepth,
             engagementTime: event.engagementTime,
             props: event.props,
+            interactive: event.interactive,
             // The visitor's address and browser, not this server's
             ip: request.headers.get('x-forwarded-for')?.split(',').at(-1)?.trim(),
             userAgent: request.headers.get('user-agent') ?? undefined,
@@ -114,7 +137,7 @@ export async function POST(
 }
 ```
 
-The route reads the last address in `X-Forwarded-For`. That's the visitor's address only when a proxy you trust sits in front of your app and adds the address it received the request from, or replaces the header. Vercel replaces it with the visitor's address. Without such a proxy, a client can set the header to any value, so read the visitor's address from your platform instead. Behind more than one proxy, read the address added by the proxy that faces the internet.
+The route reads the last address in `X-Forwarded-For`. That address is the visitor's only when a trusted proxy in front of your app appends the address it received the request from, or replaces the header with it, as Vercel does. Without such a proxy, a client can set the header to any value, so read the visitor's address from your platform instead. Behind more than one proxy, read the address set by the proxy that faces the internet.
 {% /tabsitem %}
 
 {% tabsitem #cloudflare title="Cloudflare Workers" %}
@@ -149,6 +172,7 @@ export default {
                 scrollDepth: event.scrollDepth,
                 engagementTime: event.engagementTime,
                 props: event.props,
+                interactive: event.interactive,
                 // The visitor's address and browser, not this Worker's
                 ip: request.headers.get('cf-connecting-ip') ?? undefined,
                 userAgent: request.headers.get('user-agent') ?? undefined,
@@ -197,6 +221,7 @@ app.post(`/relay/analytics/properties/${PROPERTY_ID}/events`, express.json(), as
                 scrollDepth: event.scrollDepth,
                 engagementTime: event.engagementTime,
                 props: event.props,
+                interactive: event.interactive,
                 // The visitor's address and browser, not this server's
                 ip: req.ip,
                 userAgent: req.get('user-agent'),
@@ -223,4 +248,4 @@ Appwrite counts visitors by IP address, user agent, and hostname. Without the `i
 
 The proxy copies only the event fields it knows, so a visitor can't set `userId`, `ip`, or anything else your API key would allow. It forwards only to your property, at one path.
 
-Because the proxy uses an API key, the property's allowed origins don't apply to proxied events, and your site doesn't need a Web app for tracking.
+Because the proxy uses an API key, the property's allowed origins don't apply to proxied events, and your site doesn't need a Web app for tracking. Proxied events also arrive without the visitor's Appwrite session, so [Identify signed-in users](/docs/products/analytics/properties#user-identification) doesn't apply to them.

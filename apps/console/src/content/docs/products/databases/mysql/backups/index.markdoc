@@ -699,6 +699,8 @@ Track progress with `getRestoration` or the database status.
 Everything written after the backup was taken is lost when you restore it. If you need the current state too, take a manual backup first, or use a [branch](/docs/products/databases/mysql/branches) to inspect data without touching the live database.
 {% /info %}
 
+Backups belong to the project. [Project environments](/docs/advanced/environments) don't have backups of their own, so back up the project instead.
+
 # Point-in-time recovery {% #pitr %}
 
 Scheduled backups recover to fixed snapshots. Point-in-time recovery (PITR) continuously archives the binary log, so you can restore to any moment inside the retention window, for example the second before a bad migration ran.

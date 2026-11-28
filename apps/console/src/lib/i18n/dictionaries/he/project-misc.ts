@@ -184,6 +184,63 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Ship a build to production and tune environments.':
     'שלחו בנייה לייצור וכווננו סביבות.',
   'View site': 'צפייה באתר',
+  // Onboarding: Init 5 products (Videos, Analytics, Monitors, Code review)
+  'Upload video once and stream it everywhere, with adaptive renditions and captions.':
+    'העלו סרטון פעם אחת והזרימו אותו לכל מקום, עם גרסאות קידוד מותאמות וכתוביות.',
+  'Upload a video':
+    'העלאת סרטון',
+  'Add a video file; Appwrite transcodes it into streaming renditions.':
+    'הוסיפו קובץ וידאו, ו-Appwrite יקודד אותו לגרסאות סטרימינג.',
+  'Upload video':
+    'העלאת סרטון',
+  'Manage videos':
+    'ניהול סרטונים',
+  'Attach captions in any language so every viewer can follow along.':
+    'צרפו כתוביות בכל שפה כדי שכל צופה יוכל לעקוב.',
+  'Open videos':
+    'פתיחת סרטונים',
+  'Play it in your app':
+    'ניגון באפליקציה שלכם',
+  'Point your player at the HLS or DASH manifest to start streaming.':
+    'כוונו את הנגן שלכם ל-manifest של HLS או DASH כדי להתחיל בסטרימינג.',
+  'Set up playback':
+    'הגדרת ניגון',
+  'See who visits your sites and apps, where they come from, and what they do.':
+    'ראו מי מבקר באתרים ובאפליקציות שלכם, מאיפה הם מגיעים ומה הם עושים.',
+  'Add a property':
+    'הוספת נכס',
+  'Track a website, mobile app, or AI agent as its own property.':
+    'עקבו אחרי אתר, אפליקציית מובייל או סוכן AI כנכס נפרד.',
+  'Add property':
+    'הוספת נכס',
+  'Manage properties':
+    'ניהול נכסים',
+  'Record your first visit':
+    'תיעוד הביקור הראשון',
+  'Turn on analytics for a site, or send page views and events from your app.':
+    'הפעילו אנליטיקה לאתר, או שלחו צפיות בדפים ואירועים מהאפליקציה שלכם.',
+  'Start tracking':
+    'התחלת מעקב',
+  'View traffic':
+    'צפייה בתנועה',
+  'Watch your endpoints and usage, and get alerted the moment something needs you.':
+    'עקבו אחרי ה-Endpoints והשימוש שלכם, וקבלו התראה ברגע שמשהו דורש את תשומת לבכם.',
+  'Create a monitor':
+    'יצירת מוניטור',
+  'Check an endpoint, a domain, or a usage limit on a schedule.':
+    'בדקו Endpoint, דומיין או מגבלת שימוש לפי לוח זמנים.',
+  'Manage monitors':
+    'ניהול מוניטורים',
+  'Get an AI review on every pull request, with findings that learn from your team.':
+    'קבלו סקירת AI לכל Pull request, עם ממצאים שלומדים מהצוות שלכם.',
+  'Turn on code review':
+    'הפעלת סקירת קוד',
+  'Add a repository, and its next pull request gets a review.':
+    'הוסיפו repo, וה-Pull request הבא שלו יקבל סקירה.',
+  'Manage repositories':
+    'ניהול Repos',
+  'Observe':
+    'ניטור',
   Build: 'בנייה',
   Deploy: 'פריסה',
 
@@ -561,6 +618,22 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'החלונות מיושרים לפי התנהגות אנושית. מאפשר פרצים קצרים שנצברו, ומתמלא מחדש לקצב מתמשך.',
   'Redirect location': 'יעד הפניה',
   'Status code': 'קוד סטטוס',
+  'Wrong guesses allowed': 'ניחושים שגויים מותרים',
+  '1 to 100 per visitor network.': '1 עד 100 לכל רשת של מבקר.',
+  'Counted over (seconds)': 'חלון ספירה (שניות)',
+  '60 (1 minute) to 86400 (24 hours).': '60 (דקה) עד 86400 (24 שעות).',
+  '{count} guesses / {window}': '{count} ניחושים / {window}',
+  '1 guess / {window}': 'ניחוש אחד / {window}',
+  '{count} min': '{count} דק׳',
+  '{count} h': '{count} שע׳',
+  '{count} sec': '{count} שנ׳',
+  'Challenge type': 'סוג אתגר',
+  'Password challenges apply to sites and functions only.':
+    'אתגרי סיסמה חלים על אתרים ופונקציות בלבד.',
+  'Use 8 to 256 bytes. Some characters, like emoji or non-Latin letters, take more than one byte.':
+    'השתמשו ב-8 עד 256 בתים. תווים מסוימים, כמו אימוג׳י או אותיות שאינן לטיניות, תופסים יותר מבית אחד.',
+  'Visitors must enter this password before they can continue.':
+    'מבקרים חייבים להזין את הסיסמה הזו לפני שיוכלו להמשיך.',
   'Match requests when all conditions are true.':
     'התאימו בקשות כאשר כל התנאים מתקיימים.',
   'Add condition': 'הוספת תנאי',
@@ -4326,6 +4399,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Server refused the session': 'השרת דחה את הסשן',
   'Target is in a denied network': 'היעד נמצא ברשת חסומה',
   'Timed out': 'הזמן הקצוב פג',
+  'A rule matched': 'אחד הכללים התקיים',
   '30 seconds': '30 שניות',
   '1 minute': 'דקה',
   '5 seconds': '5 שניות',
@@ -4503,4 +4577,82 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'signed in': 'מחוברים',
   'Signed in now': 'מחוברים עכשיו',
   'and {count} more': 'ועוד {count}',
+  // Runtime logs
+  '1 line': 'שורה אחת',
+  '1 line loaded': 'נטענה שורה אחת',
+  'All levels': 'כל הרמות',
+  'All resources': 'כל המשאבים',
+  'All sites': 'כל האתרים',
+  'All streams': 'כל הסטרימים',
+  'Copy line': 'העתקת השורה',
+  'Could not copy to the clipboard': 'ההעתקה ללוח נכשלה',
+  'Could not load logs': 'טעינת הלוגים נכשלה',
+  Debug: 'דיבאג',
+  'Details for log line': 'פרטי שורת הלוג',
+  'Drag across the bars to zoom in': 'גררו על העמודות כדי להתמקד בטווח',
+  'Every line in this time range is loaded': 'כל השורות בטווח הזמן הזה נטענו',
+  Fields: 'שדות',
+  'ID copied': 'המזהה הועתק',
+  'JSON copied': 'ה-JSON הועתק',
+  'Last 15 minutes': '15 הדקות האחרונות',
+  'Line copied': 'השורה הועתקה',
+  'Live tail paused on an error and will retry:':
+    'המעקב החי נעצר בגלל שגיאה וינסה שוב:',
+  'Load older': 'טעינת שורות ישנות יותר',
+  'Log ID': 'מזהה לוג',
+  'Log line': 'שורת לוג',
+  'Log volume': 'נפח לוגים',
+  'Message copied': 'ההודעה הועתקה',
+  'Newer line': 'שורה חדשה יותר',
+  'No deployment selected': 'לא נבחרה פריסה',
+  'No lines in this time range': 'אין שורות בטווח הזמן הזה',
+  'No matching lines': 'אין שורות תואמות',
+  'No resources found': 'לא נמצאו משאבים',
+  'Older line': 'שורה ישנה יותר',
+  'Only the lines loaded so far are searched and filtered. Load older lines or widen the time range to search further back.':
+    'החיפוש והסינון חלים רק על השורות שנטענו עד עכשיו. טענו שורות ישנות יותר או הרחיבו את טווח הזמן כדי לחפש אחורה יותר.',
+  'Only this resource': 'רק המשאב הזה',
+  'Open function': 'פתיחת הפונקציה',
+  'Open site': 'פתיחת האתר',
+  'Pick a deployment to see its logs.': 'בחרו פריסה כדי לראות את הלוגים שלה.',
+  'Reset zoom': 'איפוס זום',
+  'Search logs': 'חיפוש בלוגים',
+  'Search resources': 'חיפוש משאבים',
+  'The line names no level, so stderr counts as an error.':
+    'בשורה לא מצוינת רמה, ולכן stderr נחשב לשגיאה.',
+  'The line names no level, so stdout counts as info.':
+    'בשורה לא מצוינת רמה, ולכן stdout נחשב למידע.',
+  'Wrap lines': 'גלישת שורות',
+  'is any of': 'אחד מ-',
+  '{count} lines': '{count} שורות',
+  '{count} lines loaded': 'נטענו {count} שורות',
+  '{count} on stderr': '{count} ב-stderr',
+  '{shown} of {loaded} loaded lines': '{shown} מתוך {loaded} השורות שנטענו',
+  'Older than your plan keeps logs': 'ישן יותר ממה שהתוכנית שלכם שומרת',
+  'Your plan keeps logs for a limited time. Pick a more recent range, or upgrade your plan for longer retention.':
+    'התוכנית שלכם שומרת לוגים לזמן מוגבל. בחרו טווח עדכני יותר, או שדרגו את התוכנית לשמירה ארוכה יותר.',
+  'Show the last 24 hours': 'הצגת 24 השעות האחרונות',
+  "Your project's runtime logs": 'לוגי זמן הריצה של הפרויקט',
+  'Lines your functions, sites and dedicated databases write show up here within seconds, ready to search, filter and inspect. Nothing has been written in this time range yet.':
+    'השורות שהפונקציות, האתרים ומסדי הנתונים הייעודיים שלכם כותבים יופיעו כאן תוך שניות, מוכנות לחיפוש, לסינון ולבדיקה. עדיין לא נכתב דבר בטווח הזמן הזה.',
+  "Logs may not be collected in this project's region yet.":
+    'ייתכן שעדיין לא נאספים לוגים באזור של הפרויקט הזה.',
+  'Every line, as it is written': 'כל שורה, ברגע שנכתבת',
+  'What your functions, sites and dedicated databases write to stdout and stderr lands here, newest first. Turn on Live to follow along.':
+    'מה שהפונקציות, האתרים ומסדי הנתונים הייעודיים שלכם כותבים ל-stdout ול-stderr מגיע לכאן, מהחדש לישן. הפעילו Live כדי לעקוב בזמן אמת.',
+  'Narrow it down': 'צמצום התוצאות',
+  'Filter by resource, level, stream and time, or search the lines you have loaded.':
+    'סננו לפי משאב, רמה, סטרים וזמן, או חפשו בשורות שנטענו.',
+  'Inspect any line': 'בדיקת כל שורה',
+  'Open a line to read its fields, where it ran, and the line exactly as it was written.':
+    'פתחו שורה כדי לקרוא את השדות שלה, היכן היא רצה, ואת השורה בדיוק כפי שנכתבה.',
+  'No logs in this time range': 'אין לוגים בטווח הזמן הזה',
+  'Lines your functions, sites and databases write to stdout and stderr show up here.':
+    'השורות שהפונקציות, האתרים ומסדי הנתונים שלכם כותבים ל-stdout ול-stderr יופיעו כאן.',
+  'Lines your function writes to stdout and stderr show up here.':
+    'השורות שהפונקציה שלכם כותבת ל-stdout ול-stderr יופיעו כאן.',
+  'Lines your site writes to stdout and stderr show up here.':
+    'השורות שהאתר שלכם כותב ל-stdout ול-stderr יופיעו כאן.',
+  'Lines your database writes show up here.':
+    'השורות שמסד הנתונים שלכם כותב יופיעו כאן.',
 }

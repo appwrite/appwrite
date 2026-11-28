@@ -155,7 +155,7 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
           imageAlt:
             'A bandwidth monitor triggered as usage crosses its 80% threshold',
         },
-        films: [film('6b06b977275a9c08faf9', 'Appwrite Monitors')],
+        films: [film('6b08b6fdd3e2bf05152a', 'Appwrite Monitors')],
         resources: [
           {
             id: 'init5-day4-monitors-announce',
@@ -163,6 +163,13 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
             title: 'Introducing Appwrite Monitors',
             href: '/init',
             actionLabel: 'Coming soon',
+          },
+          {
+            id: 'init5-day4-monitors-product',
+            typeLabel: 'Product',
+            title: 'Appwrite Monitors',
+            href: '/products/monitors',
+            actionLabel: 'View product',
           },
         ],
       },
@@ -185,17 +192,29 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
             href: '/init',
             actionLabel: 'Coming soon',
           },
+          {
+            id: 'init5-day4-beep-product',
+            typeLabel: 'Product',
+            title: 'Appwrite Beep',
+            href: '/products/beep',
+            actionLabel: 'View product',
+          },
         ],
       },
     ],
     sessionCount: 1,
+    headerNavCta: {
+      label: 'Explore Appwrite Monitors',
+      href: '/products/monitors',
+      external: false,
+    },
     resources: [],
   },
   {
     day: 5,
     dateLabel: 'DECEMBER 4',
     weekdayLabel: 'FRIDAY, DECEMBER 4',
-    films: [film('6b06ba0983ebf4f23ebb', 'Appwrite Reviews')],
+    films: [film('6b08baf395df68853cc6', 'Appwrite Reviews')],
     title: 'Introducing Appwrite Reviews',
     description: 'Code review for your Sites, Functions and repositories.',
     longDescription:
@@ -204,9 +223,14 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
     visual: {
       mockVisualId: 'reviews',
       imageAlt:
-        'Every pull request, reviewed: Appwrite Reviews on Sites, Functions and repositories on GitHub, GitLab, Bitbucket or Gitea, with a finding posted beside the lines it is about',
+        'Every pull request, reviewed: Appwrite Reviews on Sites, Functions and repositories on GitHub, GitLab or Bitbucket, with a finding posted beside the lines it is about',
     },
     sessionCount: 1,
+    headerNavCta: {
+      label: 'Explore Appwrite Reviews',
+      href: '/products/reviews',
+      external: false,
+    },
     resources: [
       {
         id: 'init5-day5-announce',
@@ -214,6 +238,13 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
         title: 'Introducing Appwrite Reviews',
         href: '/init',
         actionLabel: 'Coming soon',
+      },
+      {
+        id: 'init5-day5-product',
+        typeLabel: 'Product',
+        title: 'Appwrite Reviews',
+        href: '/products/reviews',
+        actionLabel: 'View product',
       },
       {
         id: 'init5-day5-recap',

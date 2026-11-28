@@ -11,6 +11,7 @@ export const DOCS_GLOBAL_NAV: DocsNavTree = [
         isParent: true,
       },
       { label: 'Quick start', href: '/docs/quick-starts', icon: 'play' },
+      { label: 'Appwrite Zero', href: '/docs/zero', icon: 'zero' },
       { label: 'Tutorials', href: '/docs/tutorials', icon: 'book-open' },
       { label: 'SDKs', href: '/docs/sdks', icon: 'cog' },
       {
@@ -163,6 +164,7 @@ export const DOCS_GLOBAL_NAV: DocsNavTree = [
         href: '/docs/tooling/command-center',
         icon: 'command',
       },
+      { label: 'Appwrite Beep', href: '/docs/tooling/beep', icon: 'bell' },
       { label: 'The Appwriter', href: '/docs/tooling/appwriter', icon: 'text' },
     ],
     footerLink: { label: 'All tools', href: '/docs/tooling' },
@@ -175,6 +177,13 @@ export const DOCS_GLOBAL_NAV: DocsNavTree = [
         href: '/docs/advanced/billing',
         icon: 'billing',
         isParent: true,
+      },
+      {
+        label: 'Environments',
+        href: '/docs/advanced/environments',
+        icon: 'environments',
+        isParent: true,
+        new: true,
       },
       {
         label: 'Network',

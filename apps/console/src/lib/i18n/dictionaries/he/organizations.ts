@@ -1831,11 +1831,16 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Search scopes': 'חיפוש הרשאות גישה',
   'The app is created in your current organization. Switch organizations to create it in another one.': 'האפליקציה נוצרת בארגון הנוכחי. כדי ליצור אותה בארגון אחר, יש לעבור לארגון אחר.',
   'Store this secret in your deployment environment before continuing.': 'יש לשמור את הסוד בסביבת הפריסה לפני שממשיכים.',
-  'This app has no installation scopes to grant yet.': 'לאפליקציה הזו עדיין אין הרשאות גישה להתקנה.',
   'App installed': 'האפליקציה הותקנה',
   'Failed to install app': 'התקנת האפליקציה נכשלה',
   'Values have a maximum length of {count} characters': 'האורך המרבי של ערך הוא {count} תווים',
   'This email is already added': 'כתובת האימייל הזו כבר נוספה',
   'This value is already added': 'הערך הזה כבר נוסף',
   Organization: 'ארגון',
+  'Claim domain ownership': 'הוכחת בעלות על הדומיין',
+  'This domain is linked to another organization. Add this TXT record at your DNS provider, then verify to move it to this organization. You can remove the record after.':
+    'הדומיין הזה מקושר לארגון אחר. הוסיפו את רשומת ה-TXT הזו אצל ספק ה-DNS, ואז אמתו כדי להעביר אותו לארגון הזה. אחר כך אפשר להסיר את הרשומה.',
+  'DNS changes can take time to propagate.':
+    'שינויי DNS עשויים לקחת זמן עד שיתעדכנו.',
+  'Verify & claim': 'אימות והעברה',
 }

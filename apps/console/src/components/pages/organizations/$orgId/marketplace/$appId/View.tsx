@@ -231,34 +231,23 @@ export function View({ initialData }: ViewProps = {}) {
                       </Link>
                     </Button>
                   </div>
-                ) : (
+                ) : mapped.installationScopes.length > 0 ? (
                   <Button
                     disabled={
-                      !isInstallationResolved ||
-                      mapped.installationScopes.length === 0 ||
-                      installMutation.isPending
+                      !isInstallationResolved || installMutation.isPending
                     }
                     title={
                       !isInstallationResolved
                         ? t('Checking installation…')
-                        : mapped.installationScopes.length === 0
-                          ? t(
-                              'This app has no installation scopes to grant yet.',
-                            )
-                          : undefined
+                        : undefined
                     }
                     onClick={() => void handleInstall()}
                   >
                     {t('Install app')}
                   </Button>
-                )}
+                ) : null}
               </div>
             </div>
-            {!installation && mapped.installationScopes.length === 0 ? (
-              <p className="mt-3 text-[12px] text-muted-foreground sm:text-end">
-                {t('This app has no installation scopes to grant yet.')}
-              </p>
-            ) : null}
           </div>
         </div>
 

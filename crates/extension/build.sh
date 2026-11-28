@@ -11,4 +11,7 @@ apk add --no-cache rustup clang-dev libheif-dev build-base zlib-dev zstd-dev pkg
 rustup-init -y --default-toolchain none
 . "$HOME/.cargo/env"
 rustup toolchain install
+# `build.sh toolchain` stops here: the Dockerfile's extension-toolchain stage, which CI also checks
+# and builds the crates in.
+[ "${1:-}" != toolchain ] || exit 0
 ZSTD_SYS_USE_PKG_CONFIG=1 cargo build --release --locked -p utopia-extension
