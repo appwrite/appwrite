@@ -110,6 +110,9 @@ class Store
     /** Statuses of the snapshot that makes an execution readable. */
     private const array FIRST_STATUSES = ['waiting', 'scheduled'];
 
+    /** Milliseconds a first snapshot waits for the other replicas to have it. */
+    private const int FIRST_QUORUM_TIMEOUT_MS = 2000;
+
     private float $checkedAt = 0.0;
 
     /** @var array<int, int> */
@@ -472,7 +475,12 @@ class Store
         }
 
         if ($response->getStatusCode() !== 200) {
-            throw new \RuntimeException('ClickHouse execution insert failed with HTTP ' . $response->getStatusCode() . ': ' . (string) $response->getBody());
+            $body = (string) $response->getBody();
+            // The row is stored on the replica that took it; only the other replicas are late.
+            if (!$buffered && \str_contains($body, 'Timeout while waiting for quorum')) {
+                return;
+            }
+            throw new \RuntimeException('ClickHouse execution insert failed with HTTP ' . $response->getStatusCode() . ': ' . $body);
         }
     }
 
@@ -493,12 +501,21 @@ class Store
      * the create before the snapshot exists, so a buffered first write leaves
      * the execution unreadable for the whole window.
      *
-     * @return array<string, int>
+     * @return array<string, int|string>
      */
     private function insertSettings(bool $buffered): array
     {
-        if (!$buffered || $this->insertBuffer <= 0) {
+        if ($this->insertBuffer <= 0) {
             return ['async_insert' => 0];
+        }
+
+        if (!$buffered) {
+            return [
+                'async_insert' => 0,
+                'insert_quorum' => 'auto',
+                'insert_quorum_parallel' => 1,
+                'insert_quorum_timeout' => self::FIRST_QUORUM_TIMEOUT_MS,
+            ];
         }
 
         return [
