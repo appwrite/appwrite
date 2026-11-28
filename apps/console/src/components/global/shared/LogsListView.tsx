@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, Fragment } from 'react'
 import { useNavigate, useLocation } from '@tanstack/react-router'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Zap, Clock } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { EmptyState } from '@/components/global/shared/EmptyState'
@@ -38,11 +38,13 @@ import {
 import {
   deleteFunctionExecution,
   deleteSiteLog,
+  functionExecutionQueryOptions,
+  siteLogQueryOptions,
 } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
-import type { Models } from '@appwrite.io/console'
+import { AppwriteException, type Models } from '@appwrite.io/console'
 
 function formatDuration(ms: number): string {
   if (ms < 1000) return `${Math.round(ms)}ms`
@@ -344,8 +346,44 @@ export function LogsListView({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
   const canDelete = Boolean(projectId && resourceVariant && resourceId)
-  const selectedExecution =
+  const listMatch =
     executions.find((e) => e.$id === selectedExecutionId) || null
+
+  // The linked execution may not be on the loaded page (or may not match the
+  // active filters). Once the list has loaded, look it up directly by ID.
+  const needsDirectLookup =
+    selectedExecutionId !== null &&
+    listMatch === null &&
+    !isLoading &&
+    Boolean(projectId && resourceVariant && resourceId)
+
+  const functionLookupOptions = functionExecutionQueryOptions(
+    projectId,
+    resourceId,
+    selectedExecutionId,
+  )
+  const functionLookup = useQuery({
+    ...functionLookupOptions,
+    enabled:
+      functionLookupOptions.enabled &&
+      needsDirectLookup &&
+      resourceVariant === 'function',
+  })
+  const siteLookupOptions = siteLogQueryOptions(
+    projectId,
+    resourceId,
+    selectedExecutionId,
+  )
+  const siteLookup = useQuery({
+    ...siteLookupOptions,
+    enabled:
+      siteLookupOptions.enabled &&
+      needsDirectLookup &&
+      resourceVariant === 'site',
+  })
+  const directLookup = resourceVariant === 'site' ? siteLookup : functionLookup
+
+  const selectedExecution = listMatch ?? directLookup.data ?? null
   const drawerOpen = selectedExecutionId !== null
   const allSelected =
     executions.length > 0 && executions.every((e) => selectedIds.has(e.$id))
@@ -418,6 +456,50 @@ export function LogsListView({
       handleDrawerClose(false)
     }
   }
+
+  // If the linked execution can't be loaded (for example it was deleted),
+  // tell the user and remove the stale ID from the URL.
+  useEffect(() => {
+    if (!directLookup.isError || !selectedExecutionId) return
+    const error = directLookup.error
+    const isNotFound = error instanceof AppwriteException && error.code === 404
+    toast.error(
+      isNotFound
+        ? t(
+            resourceVariant === 'site'
+              ? 'This log is no longer available'
+              : 'This execution is no longer available',
+          )
+        : getErrorMessage(error) ||
+            t(
+              resourceVariant === 'site'
+                ? 'Failed to load log'
+                : 'Failed to load execution',
+            ),
+      { id: 'execution-link-error' },
+    )
+    handleDrawerClose(false)
+  }, [
+    directLookup.isError,
+    directLookup.error,
+    selectedExecutionId,
+    resourceVariant,
+    t,
+    handleDrawerClose,
+  ])
+
+  // Show a short loading toast while the linked execution is being fetched.
+  useEffect(() => {
+    if (!directLookup.isFetching) return
+    const toastId = 'execution-link-loading'
+    toast.loading(
+      t(resourceVariant === 'site' ? 'Loading log...' : 'Loading execution...'),
+      { id: toastId },
+    )
+    return () => {
+      toast.dismiss(toastId)
+    }
+  }, [directLookup.isFetching, resourceVariant, t])
 
   const toggleAll = () => {
     if (allSelected) {

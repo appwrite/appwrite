@@ -512,6 +512,30 @@ export async function fetchFunctionExecution(
 }
 
 /**
+ * Query options to look up a single function execution by its ID.
+ * The key starts with `execution` (singular) on purpose, so list refetches
+ * under `['executions', 'function', ...]` never refetch this query.
+ */
+export function functionExecutionQueryOptions(
+  projectId: string | null | undefined,
+  functionId: string | null | undefined,
+  executionId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['execution', 'function', projectId, functionId, executionId],
+    queryFn: () =>
+      fetchFunctionExecution(
+        projectId ?? '',
+        functionId ?? '',
+        executionId ?? '',
+      ),
+    enabled: !!projectId && !!functionId && !!executionId,
+    retry: false,
+    staleTime: DEFAULT_STALE_TIME,
+  })
+}
+
+/**
  * Delete a function execution by its unique ID.
  */
 export async function deleteFunctionExecution(
