@@ -1,4 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { z } from 'zod'
 import { View } from '@/components/pages/projects/$projectId/api-keys/View'
 import {
   apiKeysQueryOptions,
@@ -7,8 +8,21 @@ import {
 } from '@/lib/react-query/hooks'
 import { pageTitle } from '@/lib/utils/page-title'
 
+/** `?name=…&scopes=a,b` opens the create drawer filled in (see lib/api-keys/create-link). */
+const apiKeysSearchSchema = z.object({
+  name: z
+    .union([z.string(), z.number(), z.boolean()])
+    .optional()
+    .catch(undefined),
+  scopes: z
+    .union([z.string(), z.array(z.string())])
+    .optional()
+    .catch(undefined),
+})
+
 export const Route = createFileRoute('/_public/projects/$projectId/api-keys')({
   head: () => ({ meta: [{ title: pageTitle('API keys') }] }),
+  validateSearch: apiKeysSearchSchema,
   loader: async ({ params, context }) => {
     if (typeof window === 'undefined') return undefined
 
