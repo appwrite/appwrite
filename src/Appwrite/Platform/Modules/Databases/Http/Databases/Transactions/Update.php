@@ -756,13 +756,12 @@ class Update extends Action
         if ($documentId) {
             $data['$id'] = $documentId;
         }
-        $dbForDatabases->withRequestTimestamp($createdAt, function () use ($dbForDatabases, $collectionId, $data, &$state) {
-            $doc = $dbForDatabases->createDocument(
-                $collectionId,
-                $this->stripResponseMetadata(new Document($data)),
-            );
-            $state[$collectionId][$doc->getId()] = $doc;
-        });
+
+        $doc = $dbForDatabases->createDocument(
+            $collectionId,
+            $this->stripResponseMetadata(new Document($data)),
+        );
+        $state[$collectionId][$doc->getId()] = $doc;
     }
 
     /**
@@ -995,23 +994,19 @@ class Update extends Action
         array &$state,
         array &$affected
     ): int {
-        $count = 0;
-        $dbForDatabases->withRequestTimestamp($createdAt, function () use ($dbForDatabases, $collectionId, $data, &$state, &$affected, &$count) {
-            $documents = \array_map(function ($doc) {
-                return $doc instanceof Document ? $doc : new Document($doc);
-            }, $data);
+        $documents = \array_map(function ($doc) {
+            return $doc instanceof Document ? $doc : new Document($doc);
+        }, $data);
 
-            $count = $dbForDatabases->createDocuments(
-                $collectionId,
-                $documents,
-                onNext: function (Document $document) use (&$state, &$affected, $collectionId) {
-                    $state[$collectionId][$document->getId()] = $document;
-                    // Later operations change state documents in place, so the event keeps a copy
-                    $affected[] = clone $document;
-                }
-            );
-        });
-        return $count;
+        return $dbForDatabases->createDocuments(
+            $collectionId,
+            $documents,
+            onNext: function (Document $document) use (&$state, &$affected, $collectionId) {
+                $state[$collectionId][$document->getId()] = $document;
+                // Later operations change state documents in place, so the event keeps a copy
+                $affected[] = clone $document;
+            }
+        );
     }
 
     /**
