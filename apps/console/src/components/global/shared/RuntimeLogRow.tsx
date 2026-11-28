@@ -65,7 +65,7 @@ export const RUNTIME_LOG_COLUMNS = {
   time: 'w-[92px]',
   timeWithDate: 'w-[148px]',
   level: 'w-[52px]',
-  source: 'min-w-0 flex-1 @[640px]/logs:w-[176px] @[640px]/logs:flex-none',
+  source: 'min-w-0 flex-1 @[640px]/logs:w-[224px] @[640px]/logs:flex-none',
 } as const
 
 export const RUNTIME_LOG_SOURCE_ICONS: Record<
@@ -324,15 +324,30 @@ export const RuntimeLogRow = memo(function RuntimeLogRow({
               title={`${log.resourceType}/${log.resourceId}`}
             >
               <RuntimeLogSourceIcon type={log.resourceType} source={source} />
+              {/* Namespaced by kind, as the API names it: functions/Checkout */}
               <span
-                className={cn(
-                  'min-w-0 truncate text-[12.5px] leading-5',
-                  source
-                    ? 'text-foreground'
-                    : 'font-mono text-[12px] text-muted-foreground',
-                )}
+                dir="ltr"
+                className="flex min-w-0 items-baseline text-[12.5px] leading-5"
               >
-                {source?.name ?? log.resourceId}
+                <span className="shrink-0 font-mono text-[11.5px] text-muted-foreground">
+                  {log.resourceType}
+                </span>
+                <span
+                  aria-hidden
+                  className="shrink-0 px-0.5 font-mono text-[11.5px] text-muted-foreground/50"
+                >
+                  /
+                </span>
+                <span
+                  className={cn(
+                    'min-w-0 truncate',
+                    source
+                      ? 'text-foreground'
+                      : 'font-mono text-[12px] text-muted-foreground',
+                  )}
+                >
+                  {source?.name ?? log.resourceId}
+                </span>
               </span>
             </span>
           )}
