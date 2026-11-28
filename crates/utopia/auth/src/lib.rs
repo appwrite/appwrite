@@ -1,69 +1,112 @@
-//! The password hash algorithms of `utopia-php/auth` (`Utopia\Auth\Hashes`) that PHP
-//! itself does not provide: the scrypt KDF of the PECL `scrypt` extension, Firebase's
-//! modified scrypt, and phpass's portable hashes. The rest (`password_hash()`,
-//! `password_verify()`, `crypt()`, `hash()`) are PHP's own functions, ported in `php-std`.
+//! Authentication primitives: password hashes, one-time secrets, signed
+//! JWTs, session stores, OAuth2 request values and passkey ceremonies.
 //!
-//! Every function here returns what PHP returns for the same input, byte for byte, including
-//! where PHP fails: [`scrypt::scrypt`] fails as `scrypt()` does, with its `Error`s, its
-//! warnings and its `false`.
+//! Every value is stored byte for byte as other implementations of the same
+//! library store it, so hashes, tokens and sessions written by one can be
+//! read by the other.
+//!
+//! Values are bytes (`&[u8]`), and free-form documents (hash options, JWT
+//! claims, client metadata) are [`php_std::Array`] and [`php_std::Value`].
+//! Nothing reads the clock: functions that depend on the time take `now`
+//! (Unix seconds). Hashing is CPU bound, so async callers run it on the
+//! blocking pool. JWT keys are PEM, inline or as a `file://` path, of any
+//! type and curve OpenSSL reads.
+//!
+//! PHP: ports `utopia-php/auth`. The PHP classes map to Rust as follows.
+//!
+//! | PHP | Rust |
+//! |---|---|
+//! | `Utopia\Auth\Hash` (abstract) | [`Hash`] (trait), options [`Options`] |
+//! | `Hash::setOption()`, `setOptions()`, `getOption()`, `getOptions()` | [`Hash::options_mut`] / [`Options::set`], [`proofs::set_options`], [`Options::get`], [`Hash::options`] |
+//! | `Utopia\Auth\Hashes\Argon2` | [`hashes::Argon2`] |
+//! | `Utopia\Auth\Hashes\Bcrypt` | [`hashes::Bcrypt`] |
+//! | `Utopia\Auth\Hashes\MD5` | [`hashes::Md5`] |
+//! | `Utopia\Auth\Hashes\PHPass` | [`hashes::PHPass`] |
+//! | `Utopia\Auth\Hashes\Plaintext` | [`hashes::Plaintext`] |
+//! | `Utopia\Auth\Hashes\Scrypt` | [`hashes::Scrypt`] |
+//! | `Utopia\Auth\Hashes\ScryptModified` | [`hashes::ScryptModified`] |
+//! | `Utopia\Auth\Hashes\Sha` (+ `SHA*` constants) | [`hashes::Sha`], [`hashes::ShaVersion`] |
+//! | `Utopia\Auth\Proof` (abstract) | [`proofs::Proof`] (trait) |
+//! | `Utopia\Auth\Proofs\Code`, `Phrase`, `Token`, `Password` | [`proofs::Code`], [`proofs::Phrase`], [`proofs::Token`], [`proofs::Password`] |
+//! | `Password::createHash()` | [`proofs::Password::create_hash`] |
+//! | `Utopia\Auth\Store` | [`Store`] |
+//! | `Utopia\Auth\Issuer`, `Issuers\Symmetric`, `Issuers\Asymmetric` | [`jwt::Symmetric`], [`jwt::Asymmetric`] (`sign(typ, claims)`) |
+//! | `Issuers\Symmetric\Jwt`, `RefreshToken` | [`jwt::Jwt`], [`jwt::RefreshToken`] |
+//! | `Issuers\Asymmetric\AccessToken`, `IdToken` | [`jwt::AccessToken`], [`jwt::IdToken`] |
+//! | `Asymmetric::generateKeyPair()` | [`jwt::generate_key_pair`] |
+//! | `Utopia\Auth\Verifier`, `Verifiers\Symmetric`, `Verifiers\Asymmetric` | [`jwt::Verifier`] over [`jwt::Hs256`] / [`jwt::Rs256`] ([`jwt::SignatureCheck`]) |
+//! | `Verifiers\VerificationException` | [`Error::Verification`] |
+//! | `Utopia\Auth\Enums\Claim`, `Header` | [`jwt::Claim`], [`jwt::Header`] |
+//! | `Utopia\Auth\Enums\Prompt`, `AuthorizationDetail` | [`oauth2::Prompt`], [`oauth2::AuthorizationDetail`] |
+//! | `Utopia\Auth\OAuth2\PAR` | [`oauth2::Par`] |
+//! | `OAuth2\Prompts`, `RedirectUris`, `ResourceIndicators` | [`oauth2::Prompts`], [`oauth2::RedirectUris`], [`oauth2::ResourceIndicators`] |
+//! | `OAuth2\AuthorizationDetails` | [`oauth2::AuthorizationDetails`] |
+//! | `OAuth2\ClientIdentifierUrl`, `ClientIdMetadataDocument` | [`oauth2::ClientIdentifierUrl`], [`oauth2::ClientIdMetadataDocument`] |
+//! | `OAuth2\Invalid*Exception` | [`Error::InvalidPrompt`], [`Error::InvalidRequestUri`], [`Error::InvalidResource`], [`Error::InvalidClientMetadata`] ([`Error::oauth2_code`]) |
+//! | `Utopia\Auth\Passkeys\Ceremony`, `Challenge`, `Credential` | [`passkeys::Ceremony`], [`passkeys::Challenge`], [`passkeys::Credential`] |
+//! | `Passkeys\RelyingParty`, `Origin`, `Counter` | [`passkeys::RelyingParty`], [`passkeys::Origin`], [`passkeys::Counter`] |
+//! | `Passkeys\Exception` | [`Error::Passkey`] |
+//!
+//! Under the hashes are the algorithms PHP itself does not provide, each a
+//! function that returns what PHP returns, byte for byte, including where PHP
+//! fails; the utopia PHP extension serves `Utopia\Auth\Hashes\*` over them:
+//!
+//! | PHP | Rust |
+//! |---|---|
+//! | PECL `scrypt($password, $salt, $N, $r, $p, $keyLength, true)` | [`scrypt::scrypt`] ([`scrypt::Failure`]) |
+//! | `ScryptModified::generateDerivedKey()`, `hashKeys()` | [`firebase::derived_key`], [`firebase::aes_256_ctr`], [`firebase::hash`] |
+//! | `PHPass::encode64()`, `gensaltBlowfish()`, `cryptPrivate()`'s rounds | [`phpass::encode64`], [`phpass::blowfish_salt`], [`phpass::md5_rounds`] |
+//! | `random_bytes($length)`, `password_hash()`'s salt | [`random::random_bytes`], [`password_salt`] |
+//!
+//! PHP strings are bytes, so values are `&[u8]`, and every place PHP reads
+//! the clock (`time()`) takes `now` instead.
+//!
+//! Hash a password and check it later:
+//!
+//! ```
+//! use utopia_auth::Hash;
+//! use utopia_auth::hashes::Bcrypt;
+//!
+//! let mut bcrypt = Bcrypt::new();
+//! bcrypt.set_cost(10)?;
+//! let hash = bcrypt.hash(b"secret")?;
+//! assert!(hash.starts_with(b"$2y$10$"));
+//! assert!(bcrypt.verify(b"secret", &hash)?);
+//! # Ok::<(), utopia_auth::Error>(())
+//! ```
+//!
+//! ```php
+//! use Utopia\Auth\Hashes\Bcrypt;
+//!
+//! $bcrypt = (new Bcrypt())->setCost(10);
+//! $hash = $bcrypt->hash('secret');
+//! echo substr($hash, 0, 7), "\n";              // $2y$10$
+//! var_dump($bcrypt->verify('secret', $hash)); // bool(true)
+//! ```
 
+#![warn(missing_docs)]
+
+/// The getting started guide (`guide.md`), compiled and run with the doctests.
+#[cfg(doctest)]
+#[doc = include_str!("../guide.md")]
+pub struct GettingStarted;
+
+mod error;
 pub mod firebase;
+mod hash;
+pub mod hashes;
+pub mod jwt;
+pub mod oauth2;
+mod options;
+pub mod passkeys;
 pub mod phpass;
+pub mod proofs;
+pub mod random;
 pub mod scrypt;
+mod store;
 
-/// PHP `random_bytes($length)`: bytes from the operating system's CSPRNG.
-///
-/// # Panics
-///
-/// When the operating system cannot provide random bytes, where PHP throws its `Exception`
-/// ("Could not gather sufficient random data").
-#[must_use]
-pub fn random_bytes(length: usize) -> Vec<u8> {
-    let mut bytes = vec![0u8; length];
-    getrandom::fill(&mut bytes).expect("the operating system provides random bytes");
-    bytes
-}
-
-/// `php_password_make_salt($length)`, the salt `password_hash()` draws: `$length * 3 / 4 + 1`
-/// random bytes in base64, `+` as `.`, cut to `$length` characters (22 for bcrypt, 16 for
-/// Argon2, which hashes these characters as its salt).
-#[must_use]
-pub fn password_salt(length: usize) -> Vec<u8> {
-    let encoded = php_std::encoding::base64_encode(&random_bytes(length * 3 / 4 + 1));
-    encoded.bytes().take(length).map(|b| if b == b'+' { b'.' } else { b }).collect()
-}
-
-/// PHP `hash_equals($known, $user)`: false at once when the lengths differ (PHP leaks the
-/// length too), otherwise a comparison whose time does not depend on where they differ.
-#[must_use]
-pub fn hash_equals(known: &[u8], user: &[u8]) -> bool {
-    if known.len() != user.len() {
-        return false;
-    }
-    let difference = known.iter().zip(user).fold(0u8, |acc, (a, b)| acc | (a ^ b));
-    // `black_box` keeps the compiler from turning the fold into an early-exit comparison.
-    std::hint::black_box(difference) == 0
-}
-
-#[cfg(test)]
-mod tests {
-    use super::hash_equals;
-
-    #[test]
-    fn password_salts_are_php_salts() {
-        for length in [16, 22] {
-            let salt = super::password_salt(length);
-            assert_eq!(salt.len(), length);
-            assert!(salt.iter().all(|b| b.is_ascii_alphanumeric() || *b == b'.' || *b == b'/'));
-        }
-    }
-
-    #[test]
-    fn hash_equals_is_php_hash_equals() {
-        assert!(hash_equals(b"", b""));
-        assert!(hash_equals(b"abc", b"abc"));
-        assert!(!hash_equals(b"abc", b"abd"));
-        assert!(!hash_equals(b"abc", b"ab"));
-        assert!(!hash_equals(b"ab", b"abc"));
-    }
-}
+pub use error::Error;
+pub use hash::{Hash, hash_equals, random_bytes};
+pub use options::{OptionValue, Options};
+pub use random::password_salt;
+pub use store::Store;

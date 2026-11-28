@@ -1,0 +1,506 @@
+{
+  "source": "packages/orchestration/tests/OrchestrationTest.php",
+  "cases": [
+    {
+      "name": "parse \"sh -c 'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz && tail -f /dev/null'\"",
+      "op": "parse_command",
+      "args": {
+        "command": "sh -c 'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz && tail -f /dev/null'"
+      },
+      "expect": [
+        "sh",
+        "-c",
+        "'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz && tail -f /dev/null'"
+      ]
+    },
+    {
+      "name": "parse 'sudo apt-get update'",
+      "op": "parse_command",
+      "args": {
+        "command": "sudo apt-get update"
+      },
+      "expect": [
+        "sudo",
+        "apt-get",
+        "update"
+      ]
+    },
+    {
+      "name": "parse 'test'",
+      "op": "parse_command",
+      "args": {
+        "command": "test"
+      },
+      "expect": [
+        "test"
+      ]
+    },
+    {
+      "name": "parse \"sh -c 'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz && tail -f /dev/null\"",
+      "op": "parse_command",
+      "args": {
+        "command": "sh -c 'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz && tail -f /dev/null"
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "Invalid Command given, are you missing an `'` at the end?"
+        }
+      }
+    },
+    {
+      "name": "parse ''",
+      "op": "parse_command",
+      "args": {
+        "command": ""
+      },
+      "expect": [
+        ""
+      ]
+    },
+    {
+      "name": "parse ' '",
+      "op": "parse_command",
+      "args": {
+        "command": " "
+      },
+      "expect": [
+        ""
+      ]
+    },
+    {
+      "name": "parse '  '",
+      "op": "parse_command",
+      "args": {
+        "command": "  "
+      },
+      "expect": [
+        "",
+        ""
+      ]
+    },
+    {
+      "name": "parse 'a '",
+      "op": "parse_command",
+      "args": {
+        "command": "a "
+      },
+      "expect": [
+        "a"
+      ]
+    },
+    {
+      "name": "parse ' a'",
+      "op": "parse_command",
+      "args": {
+        "command": " a"
+      },
+      "expect": [
+        "",
+        "a"
+      ]
+    },
+    {
+      "name": "parse 'a  b'",
+      "op": "parse_command",
+      "args": {
+        "command": "a  b"
+      },
+      "expect": [
+        "a",
+        "",
+        "b"
+      ]
+    },
+    {
+      "name": "parse \"a '\"",
+      "op": "parse_command",
+      "args": {
+        "command": "a '"
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "Invalid Command given, are you missing an `'` at the end?"
+        }
+      }
+    },
+    {
+      "name": "parse \"a ''\"",
+      "op": "parse_command",
+      "args": {
+        "command": "a ''"
+      },
+      "expect": [
+        "a",
+        "''"
+      ]
+    },
+    {
+      "name": "parse \"a 'b' c\"",
+      "op": "parse_command",
+      "args": {
+        "command": "a 'b' c"
+      },
+      "expect": [
+        "a",
+        "'b' ",
+        "",
+        "c"
+      ]
+    },
+    {
+      "name": "parse \"a 'b c' d e\"",
+      "op": "parse_command",
+      "args": {
+        "command": "a 'b c' d e"
+      },
+      "expect": [
+        "a",
+        "'b c' ",
+        "",
+        "d",
+        "e"
+      ]
+    },
+    {
+      "name": "parse \"a 'x' 0\"",
+      "op": "parse_command",
+      "args": {
+        "command": "a 'x' 0"
+      },
+      "expect": [
+        "a",
+        "'x' ",
+        ""
+      ]
+    },
+    {
+      "name": "parse 'a 0'",
+      "op": "parse_command",
+      "args": {
+        "command": "a 0"
+      },
+      "expect": [
+        "a"
+      ]
+    },
+    {
+      "name": "parse \"'a b' c\"",
+      "op": "parse_command",
+      "args": {
+        "command": "'a b' c"
+      },
+      "expect": [
+        "'a",
+        "b'",
+        "c"
+      ]
+    },
+    {
+      "name": "parse \"a 'b'c d\"",
+      "op": "parse_command",
+      "args": {
+        "command": "a 'b'c d"
+      },
+      "expect": [
+        "a",
+        "'b'c",
+        "c",
+        "d"
+      ]
+    },
+    {
+      "name": "parse \"a 'é' ééé\"",
+      "op": "parse_command",
+      "args": {
+        "command": "a 'é' ééé"
+      },
+      "expect": [
+        "a",
+        "'é' ",
+        "",
+        "ééé"
+      ]
+    },
+    {
+      "name": "parse \"a 'bc' dé\"",
+      "op": "parse_command",
+      "args": {
+        "command": "a 'bc' dé"
+      },
+      "expect": [
+        "a",
+        "'bc' ",
+        "",
+        "dé"
+      ]
+    },
+    {
+      "name": "parse \"x 'a' 'b'\"",
+      "op": "parse_command",
+      "args": {
+        "command": "x 'a' 'b'"
+      },
+      "expect": [
+        "x",
+        "'a' ",
+        "",
+        "'b'"
+      ]
+    },
+    {
+      "name": "parse \"x 'a b' 'c d'\"",
+      "op": "parse_command",
+      "args": {
+        "command": "x 'a b' 'c d'"
+      },
+      "expect": [
+        "x",
+        "'a b' ",
+        "",
+        "'c d'"
+      ]
+    },
+    {
+      "name": "parse \"a b'c d\"",
+      "op": "parse_command",
+      "args": {
+        "command": "a b'c d"
+      },
+      "expect": [
+        "a",
+        "b'c",
+        "d"
+      ]
+    },
+    {
+      "name": "parse \"sh -c 'echo hi' && x\"",
+      "op": "parse_command",
+      "args": {
+        "command": "sh -c 'echo hi' && x"
+      },
+      "expect": [
+        "sh",
+        "-c",
+        "'echo hi' && x",
+        "",
+        "&&",
+        "x"
+      ]
+    },
+    {
+      "name": "env key 'test'",
+      "op": "filter_env_key",
+      "args": {
+        "key": "test"
+      },
+      "expect": "test"
+    },
+    {
+      "name": "env key 'A B!'",
+      "op": "filter_env_key",
+      "args": {
+        "key": "A B!"
+      },
+      "expect": "AB"
+    },
+    {
+      "name": "env key '_APP_REDIS.HOST-1'",
+      "op": "filter_env_key",
+      "args": {
+        "key": "_APP_REDIS.HOST-1"
+      },
+      "expect": "_APP_REDIS.HOST-1"
+    },
+    {
+      "name": "env key 'été'",
+      "op": "filter_env_key",
+      "args": {
+        "key": "été"
+      },
+      "expect": "t"
+    },
+    {
+      "name": "env key ''",
+      "op": "filter_env_key",
+      "args": {
+        "key": ""
+      },
+      "expect": ""
+    },
+    {
+      "name": "env key '$(rm -rf)'",
+      "op": "filter_env_key",
+      "args": {
+        "key": "$(rm -rf)"
+      },
+      "expect": "rm-rf"
+    },
+    {
+      "name": "env key 'a\\nb'",
+      "op": "filter_env_key",
+      "args": {
+        "key": "a\nb"
+      },
+      "expect": "ab"
+    },
+    {
+      "name": "env key '123'",
+      "op": "filter_env_key",
+      "args": {
+        "key": "123"
+      },
+      "expect": "123"
+    },
+    {
+      "name": "restart policies",
+      "op": "constants",
+      "args": {},
+      "expect": {
+        "RESTART_NO": "no",
+        "RESTART_ALWAYS": "always",
+        "RESTART_ON_FAILURE": "on-failure",
+        "RESTART_UNLESS_STOPPED": "unless-stopped"
+      }
+    },
+    {
+      "name": "container defaults",
+      "op": "container.new",
+      "args": {},
+      "expect": {
+        "name": "",
+        "id": "",
+        "status": "",
+        "labels": {}
+      }
+    },
+    {
+      "name": "container",
+      "op": "container.new",
+      "args": {
+        "name": "c",
+        "id": "abc",
+        "status": "Up",
+        "labels": [
+          [
+            "a",
+            "b"
+          ],
+          [
+            "c",
+            "d"
+          ]
+        ]
+      },
+      "expect": {
+        "name": "c",
+        "id": "abc",
+        "status": "Up",
+        "labels": {
+          "a": "b",
+          "c": "d"
+        }
+      }
+    },
+    {
+      "name": "container setters",
+      "op": "container.new",
+      "args": {
+        "name": "c",
+        "set": {
+          "name": "d",
+          "id": "x",
+          "status": "Exited",
+          "labels": [
+            [
+              "k",
+              "v"
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "name": "d",
+        "id": "x",
+        "status": "Exited",
+        "labels": {
+          "k": "v"
+        }
+      }
+    },
+    {
+      "name": "network defaults",
+      "op": "network.new",
+      "args": {},
+      "expect": {
+        "name": "",
+        "id": "",
+        "driver": "",
+        "scope": ""
+      }
+    },
+    {
+      "name": "network",
+      "op": "network.new",
+      "args": {
+        "name": "n",
+        "id": "i",
+        "driver": "bridge",
+        "scope": "local",
+        "set": {
+          "driver": "overlay",
+          "scope": "swarm",
+          "name": "m",
+          "id": "j"
+        }
+      },
+      "expect": {
+        "name": "m",
+        "id": "j",
+        "driver": "overlay",
+        "scope": "swarm"
+      }
+    },
+    {
+      "name": "stats",
+      "op": "stats.new",
+      "args": {
+        "container_id": "id",
+        "container_name": "name",
+        "cpu_usage": 0.5,
+        "memory_usage": 12.25,
+        "disk_io": {
+          "in": 1.0,
+          "out": 2.0
+        },
+        "memory_io": {
+          "in": 1048576.0,
+          "out": 2.5
+        },
+        "network_io": {
+          "in": 0.0,
+          "out": 7.0
+        }
+      },
+      "expect": {
+        "container_id": "id",
+        "container_name": "name",
+        "cpu_usage": 0.5,
+        "memory_usage": 12.25,
+        "disk_io": {
+          "in": 1.0,
+          "out": 2.0
+        },
+        "memory_io": {
+          "in": 1048576.0,
+          "out": 2.5
+        },
+        "network_io": {
+          "in": 0.0,
+          "out": 7.0
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,1644 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Authorization/CoroutineRolesTest.php"
+  ],
+  "cases": [
+    {
+      "name": "CoroutineRolesTest::testWithRolesReplacesTheRolesForItsCallback",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1338"
+          },
+          "bind": "s3903",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1338"
+            },
+            "method": "withRoles",
+            "args": {
+              "roles": [
+                "user:alice"
+              ],
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o1338"
+                      },
+                      "method": "getRoles",
+                      "args": {}
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o1338"
+                      },
+                      "method": "hasRole",
+                      "args": {
+                        "role": "any"
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.new",
+                    "args": {
+                      "class": "Validator\\Authorization\\Input",
+                      "args": {
+                        "action": {
+                          "$enum": "PermissionType::Read"
+                        },
+                        "permissions": [
+                          "user:alice"
+                        ]
+                      },
+                      "as": "o1339"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o1338"
+                      },
+                      "method": "isValid",
+                      "args": {
+                        "value": {
+                          "$obj": "o1339"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.new",
+                    "args": {
+                      "class": "Validator\\Authorization\\Input",
+                      "args": {
+                        "action": {
+                          "$enum": "PermissionType::Read"
+                        },
+                        "permissions": [
+                          "any"
+                        ]
+                      },
+                      "as": "o1340"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o1338"
+                      },
+                      "method": "isValid",
+                      "args": {
+                        "value": {
+                          "$obj": "o1340"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": [
+                        [
+                          "user:alice"
+                        ],
+                        false,
+                        true,
+                        false
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "s3904",
+          "expect": {
+            "result": [
+              [
+                "user:alice"
+              ],
+              false,
+              true,
+              false
+            ],
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    [
+                      "user:alice"
+                    ],
+                    false,
+                    {
+                      "$value": "Validator\\Authorization\\Input",
+                      "fields": {}
+                    },
+                    true,
+                    {
+                      "$value": "Validator\\Authorization\\Input",
+                      "fields": {}
+                    },
+                    false,
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1338"
+            },
+            "method": "getRoles",
+            "args": {}
+          },
+          "expect": [
+            "any"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "CoroutineRolesTest::testRoleChangesInsideWithRolesLastUntilItEnds",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1341"
+          },
+          "bind": "s3906",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1341"
+            },
+            "method": "withRoles",
+            "args": {
+              "roles": [
+                "user:alice"
+              ],
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o1341"
+                      },
+                      "method": "addRole",
+                      "args": {
+                        "role": "team:blue"
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o1341"
+                      },
+                      "method": "removeRole",
+                      "args": {
+                        "role": "user:alice"
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o1341"
+                      },
+                      "method": "getRoles",
+                      "args": {}
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o1341"
+                      },
+                      "method": "cleanRoles",
+                      "args": {}
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o1341"
+                      },
+                      "method": "getRoles",
+                      "args": {}
+                    }
+                  },
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": [
+                        [
+                          "team:blue"
+                        ],
+                        []
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": [
+              [
+                "team:blue"
+              ],
+              []
+            ],
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$authorization": true
+                    },
+                    {
+                      "$authorization": true
+                    },
+                    [
+                      "team:blue"
+                    ],
+                    {
+                      "$authorization": true
+                    },
+                    [],
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1341"
+            },
+            "method": "getRoles",
+            "args": {}
+          },
+          "expect": [
+            "any"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "CoroutineRolesTest::testWithRolesRestoresTheRolesWhenItsCallbackThrows",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1342"
+          },
+          "bind": "s3909",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1342"
+            },
+            "method": "withRoles",
+            "args": {
+              "roles": [
+                "user:alice"
+              ],
+              "callback": {
+                "steps": [
+                  {
+                    "op": "$throw",
+                    "args": {
+                      "class": "RuntimeException",
+                      "message": "failed"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "failed"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1342"
+            },
+            "method": "getRoles",
+            "args": {}
+          },
+          "expect": [
+            "any"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "CoroutineRolesTest::testWithNoRolesDeniesEveryPermission",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1343"
+          },
+          "bind": "s3912",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1343"
+            },
+            "method": "withRoles",
+            "args": {
+              "roles": [],
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.new",
+                    "args": {
+                      "class": "Validator\\Authorization\\Input",
+                      "args": {
+                        "action": {
+                          "$enum": "PermissionType::Read"
+                        },
+                        "permissions": [
+                          "any"
+                        ]
+                      },
+                      "as": "o1344"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o1343"
+                      },
+                      "method": "isValid",
+                      "args": {
+                        "value": {
+                          "$obj": "o1344"
+                        }
+                      }
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "s3913",
+          "expect": {
+            "result": false,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$value": "Validator\\Authorization\\Input",
+                      "fields": {}
+                    },
+                    false
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "CoroutineRolesTest::testWithRolesInOneSiblingIsSeenByItsChildrenButNotByTheParentOrAnotherSibling",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1345"
+          },
+          "bind": "s3914",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1345"
+            },
+            "method": "withRoles",
+            "args": {
+              "roles": [
+                "user:alice"
+              ],
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o1345"
+                      },
+                      "method": "getRoles",
+                      "args": {}
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o1345"
+                      },
+                      "method": "getRoles",
+                      "args": {}
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o1345"
+                      },
+                      "method": "addRole",
+                      "args": {
+                        "role": "team:blue"
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o1345"
+                      },
+                      "method": "getRoles",
+                      "args": {}
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o1345"
+                      },
+                      "method": "getRoles",
+                      "args": {}
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    [
+                      "user:alice"
+                    ],
+                    [
+                      "user:alice"
+                    ],
+                    {
+                      "$authorization": true
+                    },
+                    [
+                      "user:alice",
+                      "team:blue"
+                    ],
+                    [
+                      "user:alice",
+                      "team:blue"
+                    ]
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1345"
+            },
+            "method": "getRoles",
+            "args": {}
+          },
+          "expect": [
+            "any"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "CoroutineRolesTest::testOverlappingWithRolesInSiblingsLeaveTheSharedRoles",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1346"
+          },
+          "bind": "s3917",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1346"
+            },
+            "method": "withRoles",
+            "args": {
+              "roles": [
+                "user:alice"
+              ],
+              "callback": true
+            }
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": []
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1346"
+            },
+            "method": "getRoles",
+            "args": {}
+          },
+          "expect": [
+            "any"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "CoroutineRolesTest::testRoleChangesInACoroutineStartedInsideWithRolesStayInThatCoroutine",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1347"
+          },
+          "bind": "s3920",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1347"
+            },
+            "method": "withRoles",
+            "args": {
+              "roles": [
+                "user:alice"
+              ],
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o1347"
+                      },
+                      "method": "addRole",
+                      "args": {
+                        "role": "team:admins"
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o1347"
+                      },
+                      "method": "getRoles",
+                      "args": {}
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o1347"
+                      },
+                      "method": "removeRole",
+                      "args": {
+                        "role": "user:alice"
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o1347"
+                      },
+                      "method": "getRoles",
+                      "args": {}
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o1347"
+                      },
+                      "method": "getRoles",
+                      "args": {}
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$authorization": true
+                    },
+                    [
+                      "user:alice",
+                      "team:admins"
+                    ],
+                    {
+                      "$authorization": true
+                    },
+                    [
+                      "team:admins"
+                    ],
+                    [
+                      "team:admins"
+                    ]
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1347"
+            },
+            "method": "getRoles",
+            "args": {}
+          },
+          "expect": [
+            "any"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1347"
+            },
+            "method": "getRoles",
+            "args": {}
+          },
+          "expect": [
+            "any"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1347"
+            },
+            "method": "getRoles",
+            "args": {}
+          },
+          "expect": [
+            "any"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "CoroutineRolesTest::testCleanRolesInACoroutineStartedInsideWithRolesLeavesTheSharedRoles",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1348"
+          },
+          "bind": "s3925",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1348"
+            },
+            "method": "withRoles",
+            "args": {
+              "roles": [
+                "user:alice"
+              ],
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o1348"
+                      },
+                      "method": "cleanRoles",
+                      "args": {}
+                    }
+                  },
+                  {
+                    "op": "object.new",
+                    "args": {
+                      "class": "Validator\\Authorization\\Input",
+                      "args": {
+                        "action": {
+                          "$enum": "PermissionType::Read"
+                        },
+                        "permissions": [
+                          "user:alice"
+                        ]
+                      },
+                      "as": "o1349"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o1348"
+                      },
+                      "method": "isValid",
+                      "args": {
+                        "value": {
+                          "$obj": "o1349"
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "s3926",
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$authorization": true
+                    },
+                    {
+                      "$value": "Validator\\Authorization\\Input",
+                      "fields": {}
+                    },
+                    false
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1348"
+            },
+            "method": "getRoles",
+            "args": {}
+          },
+          "expect": [
+            "any"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "CoroutineRolesTest::testChangesInACoroutineWhoseStarterHasReturnedStayInThatCoroutine",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1350"
+          },
+          "bind": "s3928",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1350"
+            },
+            "method": "withRoles",
+            "args": {
+              "roles": [
+                "user:alice"
+              ],
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o1350"
+                      },
+                      "method": "addRole",
+                      "args": {
+                        "role": "team:admins"
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o1350"
+                      },
+                      "method": "disable",
+                      "args": {}
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o1350"
+                      },
+                      "method": "getRoles",
+                      "args": {}
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o1350"
+                      },
+                      "method": "getStatus",
+                      "args": {}
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o1350"
+                      },
+                      "method": "getRoles",
+                      "args": {}
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o1350"
+                      },
+                      "method": "getStatus",
+                      "args": {}
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$authorization": true
+                    },
+                    {
+                      "$authorization": true
+                    },
+                    [
+                      "user:alice",
+                      "team:admins"
+                    ],
+                    false,
+                    [
+                      "user:alice",
+                      "team:admins"
+                    ],
+                    false
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1350"
+            },
+            "method": "getRoles",
+            "args": {}
+          },
+          "expect": [
+            "any"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1350"
+            },
+            "method": "getStatus",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization\\Input",
+            "args": {
+              "action": {
+                "$enum": "PermissionType::Read"
+              },
+              "permissions": [
+                "team:admins"
+              ]
+            },
+            "as": "o1351"
+          },
+          "bind": "s3932",
+          "expect": {
+            "$value": "Validator\\Authorization\\Input",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1350"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1351"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1350"
+            },
+            "method": "getRoles",
+            "args": {}
+          },
+          "expect": [
+            "any"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1350"
+            },
+            "method": "getStatus",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "CoroutineRolesTest::testRoleChangesInACoroutineWhoseStarterHasReturnedStayInThatCoroutineWhileASkipIsOpen",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1352"
+          },
+          "bind": "s3936",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1352"
+            },
+            "method": "skip",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o1352"
+                      },
+                      "method": "addRole",
+                      "args": {
+                        "role": "team:admins"
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o1352"
+                      },
+                      "method": "getRoles",
+                      "args": {}
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o1352"
+                      },
+                      "method": "getRoles",
+                      "args": {}
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o1352"
+                      },
+                      "method": "getStatus",
+                      "args": {}
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$authorization": true
+                    },
+                    [
+                      "any",
+                      "team:admins"
+                    ],
+                    [
+                      "any",
+                      "team:admins"
+                    ],
+                    false
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1352"
+            },
+            "method": "getRoles",
+            "args": {}
+          },
+          "expect": [
+            "any",
+            "team:admins"
+          ]
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization\\Input",
+            "args": {
+              "action": {
+                "$enum": "PermissionType::Read"
+              },
+              "permissions": [
+                "team:admins"
+              ]
+            },
+            "as": "o1353"
+          },
+          "bind": "s3939",
+          "expect": {
+            "$value": "Validator\\Authorization\\Input",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1352"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1353"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1352"
+            },
+            "method": "getRoles",
+            "args": {}
+          },
+          "expect": [
+            "any",
+            "team:admins"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "CoroutineRolesTest::testDisableByTheOwnerOfWithRolesChangesTheSharedStatus",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1356"
+          },
+          "bind": "s3952",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1356"
+            },
+            "method": "withRoles",
+            "args": {
+              "roles": [
+                "user:alice"
+              ],
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o1356"
+                      },
+                      "method": "disable",
+                      "args": {}
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o1356"
+                      },
+                      "method": "getStatus",
+                      "args": {}
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$authorization": true
+                    },
+                    false
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1356"
+            },
+            "method": "getStatus",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1356"
+            },
+            "method": "enable",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1356"
+            },
+            "method": "getStatus",
+            "args": {}
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "CoroutineRolesTest::testDisableByALiveChildInsideWithRolesChangesTheSharedStatus",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1357"
+          },
+          "bind": "s3957",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1357"
+            },
+            "method": "withRoles",
+            "args": {
+              "roles": [
+                "user:alice"
+              ],
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o1357"
+                      },
+                      "method": "disable",
+                      "args": {}
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$authorization": true
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1357"
+            },
+            "method": "getStatus",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    }
+  ]
+}

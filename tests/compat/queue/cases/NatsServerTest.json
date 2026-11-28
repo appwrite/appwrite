@@ -1,0 +1,263 @@
+{
+  "source": "packages/queue/tests/E2E/NatsServerTest.php",
+  "cases": [
+    {
+      "name": "a worker drains a NATS queue",
+      "state": [],
+      "steps": [
+        {
+          "op": "nats.broker",
+          "args": {
+            "time": 1700000000,
+            "ack_wait": 2.0,
+            "max_deliver": 3
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "n"
+            },
+            "queue": {
+              "name": "${ns}-jobs",
+              "namespace": "utopia-queue"
+            },
+            "payload": {
+              "task": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "n"
+            },
+            "queue": {
+              "name": "${ns}-jobs",
+              "namespace": "utopia-queue"
+            },
+            "payload": {
+              "task": "b"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "server.run",
+          "args": {
+            "consumer": {
+              "$ref": "n"
+            },
+            "slow": true,
+            "jobs": [
+              {
+                "queue": "${ns}-jobs",
+                "params": [
+                  {
+                    "key": "task"
+                  }
+                ],
+                "inject": [
+                  "message"
+                ]
+              }
+            ],
+            "hooks": {
+              "error": [
+                {
+                  "inject": [
+                    "error"
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": [
+            [
+              "job:${ns}-jobs",
+              [
+                "a",
+                "message:pid0001"
+              ]
+            ],
+            [
+              "job:${ns}-jobs",
+              [
+                "b",
+                "message:pid0002"
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "broker.queue_size",
+          "args": {
+            "broker": {
+              "$ref": "n"
+            },
+            "queue": {
+              "name": "${ns}-jobs",
+              "namespace": "utopia-queue"
+            },
+            "failed": false
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\ConnectionException",
+              "message": "Not connected (status: closed)"
+            }
+          }
+        },
+        {
+          "op": "nats.delete",
+          "args": {
+            "queues": [
+              "${ns}-jobs"
+            ]
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "a failing job is redelivered until it is dead-lettered",
+      "state": [],
+      "steps": [
+        {
+          "op": "nats.broker",
+          "args": {
+            "time": 1700000000,
+            "ack_wait": 2.0,
+            "max_deliver": 3
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "n"
+            },
+            "queue": {
+              "name": "${ns}-jobs",
+              "namespace": "utopia-queue"
+            },
+            "payload": {
+              "task": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "server.run",
+          "args": {
+            "consumer": {
+              "$ref": "n"
+            },
+            "slow": true,
+            "jobs": [
+              {
+                "queue": "${ns}-jobs",
+                "fail": {
+                  "class": "RuntimeException",
+                  "message": "boom"
+                }
+              }
+            ],
+            "hooks": {
+              "error": [
+                {
+                  "inject": [
+                    "error",
+                    "message"
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": [
+            [
+              "job:${ns}-jobs",
+              []
+            ],
+            [
+              "error0",
+              [
+                "error:RuntimeException:boom",
+                "message:pid0001"
+              ]
+            ],
+            [
+              "job:${ns}-jobs",
+              []
+            ],
+            [
+              "error0",
+              [
+                "error:RuntimeException:boom",
+                "message:pid0001"
+              ]
+            ],
+            [
+              "job:${ns}-jobs",
+              []
+            ],
+            [
+              "error0",
+              [
+                "error:RuntimeException:boom",
+                "message:pid0001"
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "nats.broker",
+          "args": {
+            "time": 1700000000,
+            "ack_wait": 2.0,
+            "max_deliver": 3,
+            "continue": true
+          },
+          "bind": "n2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.queue_size",
+          "args": {
+            "broker": {
+              "$ref": "n2"
+            },
+            "queue": {
+              "name": "${ns}-jobs",
+              "namespace": "utopia-queue"
+            },
+            "failed": true
+          },
+          "expect": 1
+        },
+        {
+          "op": "nats.delete",
+          "args": {
+            "queues": [
+              "${ns}-jobs"
+            ]
+          },
+          "expect": null
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,5368 @@
+{
+  "source": "packages/query/tests/Schema/SQLiteTest.php",
+  "cases": [
+    {
+      "name": "testCreateTableBasic",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "id",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "name",
+              255
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "email",
+              255
+            ]
+          },
+          {
+            "call": "unique",
+            "on": {
+              "$o": 5
+            },
+            "args": []
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 5
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 6
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 5
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 5
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 6,
+          "props": {
+            "query": "CREATE TABLE `users` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` VARCHAR(255) NOT NULL, `email` VARCHAR(255) NOT NULL, UNIQUE (`email`))",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `users` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` VARCHAR(255) NOT NULL, `email` VARCHAR(255) NOT NULL, UNIQUE (`email`))",
+        [],
+        [],
+        "CREATE TABLE `users` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` VARCHAR(255) NOT NULL, `email` VARCHAR(255) NOT NULL, UNIQUE (`email`))",
+        "CREATE TABLE `users` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` VARCHAR(255) NOT NULL, `email` VARCHAR(255) NOT NULL, UNIQUE (`email`))",
+        []
+      ]
+    },
+    {
+      "name": "testCreateTableAllColumnTypes",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "test_types"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "int_col"
+            ]
+          },
+          {
+            "call": "bigInteger",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "big_col"
+            ]
+          },
+          {
+            "call": "float",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "float_col"
+            ]
+          },
+          {
+            "call": "boolean",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              "bool_col"
+            ]
+          },
+          {
+            "call": "text",
+            "on": {
+              "$o": 6
+            },
+            "args": [
+              "text_col"
+            ]
+          },
+          {
+            "call": "datetime",
+            "on": {
+              "$o": 7
+            },
+            "args": [
+              "dt_col",
+              3
+            ]
+          },
+          {
+            "call": "timestamp",
+            "on": {
+              "$o": 8
+            },
+            "args": [
+              "ts_col",
+              6
+            ]
+          },
+          {
+            "call": "json",
+            "on": {
+              "$o": 9
+            },
+            "args": [
+              "json_col"
+            ]
+          },
+          {
+            "call": "binary",
+            "on": {
+              "$o": 10
+            },
+            "args": [
+              "bin_col"
+            ]
+          },
+          {
+            "call": "enum",
+            "on": {
+              "$o": 11
+            },
+            "args": [
+              "status",
+              [
+                "active",
+                "inactive"
+              ]
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 12
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 13
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 13
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 13
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 13
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 13
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 5
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 6
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 7
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 8
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 9
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 10
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 11
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 12
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 13,
+          "props": {
+            "query": "CREATE TABLE `test_types` (`int_col` INTEGER NOT NULL, `big_col` INTEGER NOT NULL, `float_col` REAL NOT NULL, `bool_col` INTEGER NOT NULL, `text_col` TEXT NOT NULL, `dt_col` TEXT NOT NULL, `ts_col` TEXT NOT NULL, `json_col` TEXT NOT NULL, `bin_col` BLOB NOT NULL, `status` TEXT NOT NULL)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `test_types` (`int_col` INTEGER NOT NULL, `big_col` INTEGER NOT NULL, `float_col` REAL NOT NULL, `bool_col` INTEGER NOT NULL, `text_col` TEXT NOT NULL, `dt_col` TEXT NOT NULL, `ts_col` TEXT NOT NULL, `json_col` TEXT NOT NULL, `bin_col` BLOB NOT NULL, `status` TEXT NOT NULL)",
+        [],
+        [],
+        "CREATE TABLE `test_types` (`int_col` INTEGER NOT NULL, `big_col` INTEGER NOT NULL, `float_col` REAL NOT NULL, `bool_col` INTEGER NOT NULL, `text_col` TEXT NOT NULL, `dt_col` TEXT NOT NULL, `ts_col` TEXT NOT NULL, `json_col` TEXT NOT NULL, `bin_col` BLOB NOT NULL, `status` TEXT NOT NULL)",
+        "CREATE TABLE `test_types` (`int_col` INTEGER NOT NULL, `big_col` INTEGER NOT NULL, `float_col` REAL NOT NULL, `bool_col` INTEGER NOT NULL, `text_col` TEXT NOT NULL, `dt_col` TEXT NOT NULL, `ts_col` TEXT NOT NULL, `json_col` TEXT NOT NULL, `bin_col` BLOB NOT NULL, `status` TEXT NOT NULL)"
+      ]
+    },
+    {
+      "name": "testColumnTypeStringMapsToVarchar",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "name",
+              100
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "CREATE TABLE `t` (`name` VARCHAR(100) NOT NULL)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `t` (`name` VARCHAR(100) NOT NULL)",
+        [],
+        [],
+        "CREATE TABLE `t` (`name` VARCHAR(100) NOT NULL)",
+        "CREATE TABLE `t` (`name` VARCHAR(100) NOT NULL)"
+      ]
+    },
+    {
+      "name": "testColumnTypeBooleanMapsToInteger",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "boolean",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "active"
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "CREATE TABLE `t` (`active` INTEGER NOT NULL)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `t` (`active` INTEGER NOT NULL)",
+        [],
+        [],
+        "CREATE TABLE `t` (`active` INTEGER NOT NULL)",
+        "CREATE TABLE `t` (`active` INTEGER NOT NULL)"
+      ]
+    },
+    {
+      "name": "testColumnTypeDatetimeMapsToText",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "datetime",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "created_at"
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "CREATE TABLE `t` (`created_at` TEXT NOT NULL)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `t` (`created_at` TEXT NOT NULL)",
+        [],
+        [],
+        "CREATE TABLE `t` (`created_at` TEXT NOT NULL)",
+        "CREATE TABLE `t` (`created_at` TEXT NOT NULL)"
+      ]
+    },
+    {
+      "name": "testColumnTypeTimestampMapsToText",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "timestamp",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "updated_at"
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "CREATE TABLE `t` (`updated_at` TEXT NOT NULL)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `t` (`updated_at` TEXT NOT NULL)",
+        [],
+        [],
+        "CREATE TABLE `t` (`updated_at` TEXT NOT NULL)",
+        "CREATE TABLE `t` (`updated_at` TEXT NOT NULL)"
+      ]
+    },
+    {
+      "name": "testColumnTypeJsonMapsToText",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "json",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "data"
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "CREATE TABLE `t` (`data` TEXT NOT NULL)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `t` (`data` TEXT NOT NULL)",
+        [],
+        [],
+        "CREATE TABLE `t` (`data` TEXT NOT NULL)",
+        "CREATE TABLE `t` (`data` TEXT NOT NULL)"
+      ]
+    },
+    {
+      "name": "testColumnTypeBinaryMapsToBlob",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "binary",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "content"
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "CREATE TABLE `t` (`content` BLOB NOT NULL)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `t` (`content` BLOB NOT NULL)",
+        [],
+        [],
+        "CREATE TABLE `t` (`content` BLOB NOT NULL)",
+        "CREATE TABLE `t` (`content` BLOB NOT NULL)"
+      ]
+    },
+    {
+      "name": "testColumnTypeEnumMapsToText",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "enum",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "status",
+              [
+                "a",
+                "b"
+              ]
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "CREATE TABLE `t` (`status` TEXT NOT NULL)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `t` (`status` TEXT NOT NULL)",
+        [],
+        [],
+        "CREATE TABLE `t` (`status` TEXT NOT NULL)",
+        "CREATE TABLE `t` (`status` TEXT NOT NULL)"
+      ]
+    },
+    {
+      "name": "testColumnTypeSpatialMapsToText",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "point",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "coords",
+              4326
+            ]
+          },
+          {
+            "call": "linestring",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "path"
+            ]
+          },
+          {
+            "call": "polygon",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "area"
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 5
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 5
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 6,
+          "props": {
+            "query": "CREATE TABLE `t` (`coords` TEXT NOT NULL, `path` TEXT NOT NULL, `area` TEXT NOT NULL)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `t` (`coords` TEXT NOT NULL, `path` TEXT NOT NULL, `area` TEXT NOT NULL)",
+        [],
+        [],
+        "CREATE TABLE `t` (`coords` TEXT NOT NULL, `path` TEXT NOT NULL, `area` TEXT NOT NULL)",
+        "CREATE TABLE `t` (`coords` TEXT NOT NULL, `path` TEXT NOT NULL, `area` TEXT NOT NULL)"
+      ]
+    },
+    {
+      "name": "testColumnTypeUuid7MapsToVarchar36",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "uid",
+              36
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "CREATE TABLE `t` (`uid` VARCHAR(36) NOT NULL)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `t` (`uid` VARCHAR(36) NOT NULL)",
+        [],
+        [],
+        "CREATE TABLE `t` (`uid` VARCHAR(36) NOT NULL)",
+        "CREATE TABLE `t` (`uid` VARCHAR(36) NOT NULL)"
+      ]
+    },
+    {
+      "name": "testAutoIncrementUsesAutoincrement",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "id",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "CREATE TABLE `t` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `t` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL)",
+        [],
+        [],
+        "CREATE TABLE `t` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL)",
+        "CREATE TABLE `t` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL)",
+        "CREATE TABLE `t` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL)"
+      ]
+    },
+    {
+      "name": "testUnsignedIsEmptyString",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "age"
+            ]
+          },
+          {
+            "call": "unsigned",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "CREATE TABLE `t` (`age` INTEGER NOT NULL)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `t` (`age` INTEGER NOT NULL)",
+        [],
+        [],
+        "CREATE TABLE `t` (`age` INTEGER NOT NULL)",
+        "CREATE TABLE `t` (`age` INTEGER NOT NULL)"
+      ]
+    },
+    {
+      "name": "testRenameUsesAlterTable",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "old_table"
+            ]
+          },
+          {
+            "call": "rename",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "new_table"
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "ALTER TABLE `old_table` RENAME TO `new_table`",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "ALTER TABLE `old_table` RENAME TO `new_table`",
+        [],
+        [],
+        "ALTER TABLE `old_table` RENAME TO `new_table`",
+        "ALTER TABLE `old_table` RENAME TO `new_table`",
+        []
+      ]
+    },
+    {
+      "name": "testTruncateUsesDeleteFrom",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "truncate",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "DELETE FROM `users`",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "DELETE FROM `users`",
+        [],
+        [],
+        "DELETE FROM `users`",
+        "DELETE FROM `users`",
+        []
+      ]
+    },
+    {
+      "name": "testDropIndexWithoutTableName",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "dropIndex",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users",
+              "idx_email"
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "DROP INDEX `idx_email`",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "DROP INDEX `idx_email`",
+        [],
+        [],
+        "DROP INDEX `idx_email`",
+        "DROP INDEX `idx_email`",
+        []
+      ]
+    },
+    {
+      "name": "testCreateTableWithNullableAndDefault",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "posts"
+            ]
+          },
+          {
+            "call": "id",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "text",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "bio"
+            ]
+          },
+          {
+            "call": "nullable",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "call": "boolean",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "active"
+            ]
+          },
+          {
+            "call": "default",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              true
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              "score"
+            ]
+          },
+          {
+            "call": "default",
+            "on": {
+              "$o": 6
+            },
+            "args": [
+              0
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 6
+            },
+            "args": [
+              "status"
+            ]
+          },
+          {
+            "call": "default",
+            "on": {
+              "$o": 7
+            },
+            "args": [
+              "draft"
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 7
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 8
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 8
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 8
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 8
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 8
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 5
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 5
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 6
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 6
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 7
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 7
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 8,
+          "props": {
+            "query": "CREATE TABLE `posts` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `bio` TEXT NULL, `active` INTEGER NOT NULL DEFAULT 1, `score` INTEGER NOT NULL DEFAULT 0, `status` VARCHAR(255) NOT NULL DEFAULT 'draft')",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `posts` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `bio` TEXT NULL, `active` INTEGER NOT NULL DEFAULT 1, `score` INTEGER NOT NULL DEFAULT 0, `status` VARCHAR(255) NOT NULL DEFAULT 'draft')",
+        [],
+        [],
+        "CREATE TABLE `posts` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `bio` TEXT NULL, `active` INTEGER NOT NULL DEFAULT 1, `score` INTEGER NOT NULL DEFAULT 0, `status` VARCHAR(255) NOT NULL DEFAULT 'draft')",
+        "CREATE TABLE `posts` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `bio` TEXT NULL, `active` INTEGER NOT NULL DEFAULT 1, `score` INTEGER NOT NULL DEFAULT 0, `status` VARCHAR(255) NOT NULL DEFAULT 'draft')"
+      ]
+    },
+    {
+      "name": "testCreateTableWithForeignKey",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "posts"
+            ]
+          },
+          {
+            "call": "id",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "foreignKey",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "user_id"
+            ]
+          },
+          {
+            "call": "references",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "on",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "onDelete",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              {
+                "$enum": "Schema\\ForeignKeyAction::Cascade"
+              }
+            ]
+          },
+          {
+            "call": "onUpdate",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              {
+                "$enum": "Schema\\ForeignKeyAction::SetNull"
+              }
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\ForeignKey\\SQLite",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\ForeignKey\\SQLite",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\ForeignKey\\SQLite",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\ForeignKey\\SQLite",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\ForeignKey\\SQLite",
+          "id": 4
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "CREATE TABLE `posts` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE SET NULL)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `posts` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE SET NULL)",
+        [],
+        [],
+        "CREATE TABLE `posts` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE SET NULL)",
+        "CREATE TABLE `posts` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE SET NULL)"
+      ]
+    },
+    {
+      "name": "testCreateTableWithIndexes",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "id",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "name"
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "email"
+            ]
+          },
+          {
+            "call": "index",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              [
+                "name",
+                "email"
+              ]
+            ]
+          },
+          {
+            "call": "uniqueIndex",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              [
+                "email"
+              ]
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 5
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 6,
+          "props": {
+            "query": "CREATE TABLE `users` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` VARCHAR(255) NOT NULL, `email` VARCHAR(255) NOT NULL, INDEX `idx_name_email` (`name`, `email`), UNIQUE INDEX `uniq_email` (`email`))",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `users` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` VARCHAR(255) NOT NULL, `email` VARCHAR(255) NOT NULL, INDEX `idx_name_email` (`name`, `email`), UNIQUE INDEX `uniq_email` (`email`))",
+        [],
+        [],
+        "CREATE TABLE `users` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` VARCHAR(255) NOT NULL, `email` VARCHAR(255) NOT NULL, INDEX `idx_name_email` (`name`, `email`), UNIQUE INDEX `uniq_email` (`email`))",
+        "CREATE TABLE `users` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` VARCHAR(255) NOT NULL, `email` VARCHAR(255) NOT NULL, INDEX `idx_name_email` (`name`, `email`), UNIQUE INDEX `uniq_email` (`email`))"
+      ]
+    },
+    {
+      "name": "testDropTable",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "drop",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "DROP TABLE `users`",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "DROP TABLE `users`",
+        [],
+        [],
+        "DROP TABLE `users`",
+        "DROP TABLE `users`",
+        []
+      ]
+    },
+    {
+      "name": "testDropTableIfExists",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "dropIfExists",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "DROP TABLE IF EXISTS `users`",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "DROP TABLE IF EXISTS `users`"
+      ]
+    },
+    {
+      "name": "testAlterAddColumn",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "addColumn",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "avatar_url",
+              {
+                "$enum": "Schema\\ColumnType::String"
+              },
+              255
+            ]
+          },
+          {
+            "call": "nullable",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "call": "alter",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "ALTER TABLE `users` ADD COLUMN `avatar_url` VARCHAR(255) NULL",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "ALTER TABLE `users` ADD COLUMN `avatar_url` VARCHAR(255) NULL",
+        [],
+        [],
+        "ALTER TABLE `users` ADD COLUMN `avatar_url` VARCHAR(255) NULL",
+        "ALTER TABLE `users` ADD COLUMN `avatar_url` VARCHAR(255) NULL"
+      ]
+    },
+    {
+      "name": "testAlterDropColumn",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "dropColumn",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "age"
+            ]
+          },
+          {
+            "call": "alter",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "ALTER TABLE `users` DROP COLUMN `age`",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "ALTER TABLE `users` DROP COLUMN `age`",
+        [],
+        [],
+        "ALTER TABLE `users` DROP COLUMN `age`",
+        "ALTER TABLE `users` DROP COLUMN `age`"
+      ]
+    },
+    {
+      "name": "testAlterRenameColumn",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "renameColumn",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "bio",
+              "biography"
+            ]
+          },
+          {
+            "call": "alter",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "ALTER TABLE `users` RENAME COLUMN `bio` TO `biography`",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "ALTER TABLE `users` RENAME COLUMN `bio` TO `biography`",
+        [],
+        [],
+        "ALTER TABLE `users` RENAME COLUMN `bio` TO `biography`",
+        "ALTER TABLE `users` RENAME COLUMN `bio` TO `biography`"
+      ]
+    },
+    {
+      "name": "testCreateIndex",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "createIndex",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users",
+              "idx_email",
+              [
+                "email"
+              ]
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "CREATE INDEX `idx_email` ON `users` (`email`)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE INDEX `idx_email` ON `users` (`email`)"
+      ]
+    },
+    {
+      "name": "testCreateUniqueIndex",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "createIndex",
+            "on": {
+              "$o": 1
+            },
+            "args": {
+              "0": "users",
+              "1": "idx_email",
+              "2": [
+                "email"
+              ],
+              "unique": true
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "CREATE UNIQUE INDEX `idx_email` ON `users` (`email`)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE UNIQUE INDEX `idx_email` ON `users` (`email`)"
+      ]
+    },
+    {
+      "name": "testCreateView",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "new": "Builder\\SQLite",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "active",
+              [
+                true
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              [
+                {
+                  "$o": 3
+                }
+              ]
+            ]
+          },
+          {
+            "call": "createView",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "active_users",
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 2
+        },
+        {
+          "$value": "Query",
+          "id": 3,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "active",
+            "values": [
+              true
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "CREATE VIEW `active_users` AS SELECT * FROM `users` WHERE `active` IN (?)",
+            "bindings": [
+              true
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE VIEW `active_users` AS SELECT * FROM `users` WHERE `active` IN (?)",
+        [
+          true
+        ]
+      ]
+    },
+    {
+      "name": "testDropView",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "dropView",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "active_users"
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "DROP VIEW `active_users`",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "DROP VIEW `active_users`"
+      ]
+    },
+    {
+      "name": "testCreateTableWithMultiplePrimaryKeys",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "order_items"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "order_id"
+            ]
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "product_id"
+            ]
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "quantity"
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 5
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 5
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 6,
+          "props": {
+            "query": "CREATE TABLE `order_items` (`order_id` INTEGER NOT NULL, `product_id` INTEGER NOT NULL, `quantity` INTEGER NOT NULL, PRIMARY KEY (`order_id`, `product_id`))",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `order_items` (`order_id` INTEGER NOT NULL, `product_id` INTEGER NOT NULL, `quantity` INTEGER NOT NULL, PRIMARY KEY (`order_id`, `product_id`))",
+        [],
+        [],
+        "CREATE TABLE `order_items` (`order_id` INTEGER NOT NULL, `product_id` INTEGER NOT NULL, `quantity` INTEGER NOT NULL, PRIMARY KEY (`order_id`, `product_id`))",
+        "CREATE TABLE `order_items` (`order_id` INTEGER NOT NULL, `product_id` INTEGER NOT NULL, `quantity` INTEGER NOT NULL, PRIMARY KEY (`order_id`, `product_id`))"
+      ]
+    },
+    {
+      "name": "testCreateTableWithCompositePrimaryKey",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "order_items"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "order_id"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "product_id"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "quantity"
+            ]
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              [
+                "order_id",
+                "product_id"
+              ]
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 5
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 6,
+          "props": {
+            "query": "CREATE TABLE `order_items` (`order_id` INTEGER NOT NULL, `product_id` INTEGER NOT NULL, `quantity` INTEGER NOT NULL, PRIMARY KEY (`order_id`, `product_id`))",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `order_items` (`order_id` INTEGER NOT NULL, `product_id` INTEGER NOT NULL, `quantity` INTEGER NOT NULL, PRIMARY KEY (`order_id`, `product_id`))",
+        [],
+        [],
+        "CREATE TABLE `order_items` (`order_id` INTEGER NOT NULL, `product_id` INTEGER NOT NULL, `quantity` INTEGER NOT NULL, PRIMARY KEY (`order_id`, `product_id`))",
+        "CREATE TABLE `order_items` (`order_id` INTEGER NOT NULL, `product_id` INTEGER NOT NULL, `quantity` INTEGER NOT NULL, PRIMARY KEY (`order_id`, `product_id`))"
+      ]
+    },
+    {
+      "name": "testCreateTableRejectsMixedColumnAndTablePrimary",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "order_items"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "order_id"
+            ]
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "product_id"
+            ]
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              [
+                "order_id",
+                "product_id"
+              ]
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Cannot combine column-level primary() with Table::primary() composite key."
+          },
+          "id": 5
+        }
+      ]
+    },
+    {
+      "name": "testCreateTableWithDefaultNull",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "name"
+            ]
+          },
+          {
+            "call": "nullable",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "call": "default",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              null
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "CREATE TABLE `t` (`name` VARCHAR(255) NULL DEFAULT NULL)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `t` (`name` VARCHAR(255) NULL DEFAULT NULL)",
+        [],
+        [],
+        "CREATE TABLE `t` (`name` VARCHAR(255) NULL DEFAULT NULL)",
+        "CREATE TABLE `t` (`name` VARCHAR(255) NULL DEFAULT NULL)"
+      ]
+    },
+    {
+      "name": "testCreateTableWithNumericDefault",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "float",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "score"
+            ]
+          },
+          {
+            "call": "default",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              0.5
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "CREATE TABLE `t` (`score` REAL NOT NULL DEFAULT 0.5)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `t` (`score` REAL NOT NULL DEFAULT 0.5)",
+        [],
+        [],
+        "CREATE TABLE `t` (`score` REAL NOT NULL DEFAULT 0.5)",
+        "CREATE TABLE `t` (`score` REAL NOT NULL DEFAULT 0.5)"
+      ]
+    },
+    {
+      "name": "testCreateTableWithTimestamps",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "posts"
+            ]
+          },
+          {
+            "call": "id",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "timestamps",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "CREATE TABLE `posts` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `created_at` TEXT NOT NULL, `updated_at` TEXT NOT NULL)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `posts` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `created_at` TEXT NOT NULL, `updated_at` TEXT NOT NULL)",
+        [],
+        [],
+        "CREATE TABLE `posts` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `created_at` TEXT NOT NULL, `updated_at` TEXT NOT NULL)",
+        "CREATE TABLE `posts` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `created_at` TEXT NOT NULL, `updated_at` TEXT NOT NULL)"
+      ]
+    },
+    {
+      "name": "testExactCreateTableWithColumnsAndIndexes",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "products"
+            ]
+          },
+          {
+            "call": "id",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "name",
+              100
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "price"
+            ]
+          },
+          {
+            "call": "index",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              [
+                "name"
+              ]
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 6
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 5
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 6,
+          "props": {
+            "query": "CREATE TABLE `products` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` VARCHAR(100) NOT NULL, `price` INTEGER NOT NULL, INDEX `idx_name` (`name`))",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `products` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` VARCHAR(100) NOT NULL, `price` INTEGER NOT NULL, INDEX `idx_name` (`name`))",
+        [],
+        [],
+        "CREATE TABLE `products` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` VARCHAR(100) NOT NULL, `price` INTEGER NOT NULL, INDEX `idx_name` (`name`))",
+        "CREATE TABLE `products` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` VARCHAR(100) NOT NULL, `price` INTEGER NOT NULL, INDEX `idx_name` (`name`))",
+        []
+      ]
+    },
+    {
+      "name": "testExactDropTable",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "sessions"
+            ]
+          },
+          {
+            "call": "drop",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "DROP TABLE `sessions`",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "DROP TABLE `sessions`",
+        [],
+        "DROP TABLE `sessions`",
+        [],
+        [],
+        "DROP TABLE `sessions`"
+      ]
+    },
+    {
+      "name": "testExactRenameTable",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "old_name"
+            ]
+          },
+          {
+            "call": "rename",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "new_name"
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "ALTER TABLE `old_name` RENAME TO `new_name`",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "ALTER TABLE `old_name` RENAME TO `new_name`",
+        [],
+        "ALTER TABLE `old_name` RENAME TO `new_name`",
+        [],
+        [],
+        "ALTER TABLE `old_name` RENAME TO `new_name`"
+      ]
+    },
+    {
+      "name": "testExactTruncateTable",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "logs"
+            ]
+          },
+          {
+            "call": "truncate",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "DELETE FROM `logs`",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "DELETE FROM `logs`",
+        [],
+        "DELETE FROM `logs`",
+        [],
+        [],
+        "DELETE FROM `logs`"
+      ]
+    },
+    {
+      "name": "testExactDropIndex",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "dropIndex",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users",
+              "idx_email"
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "DROP INDEX `idx_email`",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "DROP INDEX `idx_email`",
+        [],
+        "DROP INDEX `idx_email`",
+        [],
+        [],
+        "DROP INDEX `idx_email`"
+      ]
+    },
+    {
+      "name": "testExactCreateTableWithForeignKey",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders"
+            ]
+          },
+          {
+            "call": "id",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "customer_id"
+            ]
+          },
+          {
+            "call": "foreignKey",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "customer_id"
+            ]
+          },
+          {
+            "call": "references",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "on",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              "customers"
+            ]
+          },
+          {
+            "call": "onDelete",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              {
+                "$enum": "Schema\\ForeignKeyAction::Cascade"
+              }
+            ]
+          },
+          {
+            "call": "onUpdate",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              {
+                "$enum": "Schema\\ForeignKeyAction::Cascade"
+              }
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 5
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\ForeignKey\\SQLite",
+          "id": 5
+        },
+        {
+          "$object": "Schema\\ForeignKey\\SQLite",
+          "id": 5
+        },
+        {
+          "$object": "Schema\\ForeignKey\\SQLite",
+          "id": 5
+        },
+        {
+          "$object": "Schema\\ForeignKey\\SQLite",
+          "id": 5
+        },
+        {
+          "$object": "Schema\\ForeignKey\\SQLite",
+          "id": 5
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 6,
+          "props": {
+            "query": "CREATE TABLE `orders` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `customer_id` INTEGER NOT NULL, FOREIGN KEY (`customer_id`) REFERENCES `customers` (`id`) ON DELETE CASCADE ON UPDATE CASCADE)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `orders` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `customer_id` INTEGER NOT NULL, FOREIGN KEY (`customer_id`) REFERENCES `customers` (`id`) ON DELETE CASCADE ON UPDATE CASCADE)",
+        [],
+        "CREATE TABLE `orders` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `customer_id` INTEGER NOT NULL, FOREIGN KEY (`customer_id`) REFERENCES `customers` (`id`) ON DELETE CASCADE ON UPDATE CASCADE)",
+        [],
+        [],
+        "CREATE TABLE `orders` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `customer_id` INTEGER NOT NULL, FOREIGN KEY (`customer_id`) REFERENCES `customers` (`id`) ON DELETE CASCADE ON UPDATE CASCADE)"
+      ]
+    },
+    {
+      "name": "testColumnTypeFloatMapsToReal",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "float",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "ratio"
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "CREATE TABLE `t` (`ratio` REAL NOT NULL)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `t` (`ratio` REAL NOT NULL)",
+        [],
+        [],
+        "CREATE TABLE `t` (`ratio` REAL NOT NULL)",
+        "CREATE TABLE `t` (`ratio` REAL NOT NULL)"
+      ]
+    },
+    {
+      "name": "testCreateIfNotExists",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "call": "createIfNotExists",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "CREATE TABLE IF NOT EXISTS `t` (`id` INTEGER NOT NULL, PRIMARY KEY (`id`))",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE IF NOT EXISTS `t` (`id` INTEGER NOT NULL, PRIMARY KEY (`id`))",
+        [],
+        [],
+        "CREATE TABLE IF NOT EXISTS `t` (`id` INTEGER NOT NULL, PRIMARY KEY (`id`))",
+        "CREATE TABLE IF NOT EXISTS `t` (`id` INTEGER NOT NULL, PRIMARY KEY (`id`))"
+      ]
+    },
+    {
+      "name": "testAlterMultipleOperations",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "addColumn",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "avatar",
+              {
+                "$enum": "Schema\\ColumnType::String"
+              },
+              255
+            ]
+          },
+          {
+            "call": "nullable",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "call": "dropColumn",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "age"
+            ]
+          },
+          {
+            "call": "renameColumn",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "bio",
+              "biography"
+            ]
+          },
+          {
+            "call": "alter",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "ALTER TABLE `users` ADD COLUMN `avatar` VARCHAR(255) NULL, RENAME COLUMN `bio` TO `biography`, DROP COLUMN `age`",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "ALTER TABLE `users` ADD COLUMN `avatar` VARCHAR(255) NULL, RENAME COLUMN `bio` TO `biography`, DROP COLUMN `age`",
+        [],
+        [],
+        "ALTER TABLE `users` ADD COLUMN `avatar` VARCHAR(255) NULL, RENAME COLUMN `bio` TO `biography`, DROP COLUMN `age`",
+        "ALTER TABLE `users` ADD COLUMN `avatar` VARCHAR(255) NULL, RENAME COLUMN `bio` TO `biography`, DROP COLUMN `age`"
+      ]
+    },
+    {
+      "name": "testSerialColumnMapsToInteger",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "serial",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "CREATE TABLE `t` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `t` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL)"
+      ]
+    },
+    {
+      "name": "testColumnDoesNotExposeAfter",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "b"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        }
+      ]
+    },
+    {
+      "name": "testEmittedAlterExecutesAgainstRealSqlite",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "b"
+            ]
+          },
+          {
+            "call": "alter",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "ALTER TABLE `t` ADD COLUMN `b` INTEGER NOT NULL",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "ALTER TABLE `t` ADD COLUMN `b` INTEGER NOT NULL"
+      ]
+    },
+    {
+      "name": "testEmittedCollationExecutesAgainstRealSqlite",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "name"
+            ]
+          },
+          {
+            "call": "collation",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "NOCASE"
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "CREATE TABLE `t` (`name` VARCHAR(255) COLLATE NOCASE NOT NULL)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `t` (`name` VARCHAR(255) COLLATE NOCASE NOT NULL)"
+      ]
+    },
+    {
+      "name": "testColumnCollationIsEmitted",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "name"
+            ]
+          },
+          {
+            "call": "collation",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "NOCASE"
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "CREATE TABLE `t` (`name` VARCHAR(255) COLLATE NOCASE NOT NULL)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `t` (`name` VARCHAR(255) COLLATE NOCASE NOT NULL)"
+      ]
+    },
+    {
+      "name": "testColumnDoesNotExposeUserType",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "mood"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        }
+      ]
+    },
+    {
+      "name": "testTinyIntegerMapsToInteger",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "tinyInteger",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "depth"
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "CREATE TABLE `t` (`depth` INTEGER NOT NULL)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `t` (`depth` INTEGER NOT NULL)"
+      ]
+    },
+    {
+      "name": "testSmallIntegerMapsToInteger",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "smallInteger",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "year"
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "CREATE TABLE `t` (`year` INTEGER NOT NULL)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `t` (`year` INTEGER NOT NULL)"
+      ]
+    },
+    {
+      "name": "testDecimalMapsToNumeric",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders"
+            ]
+          },
+          {
+            "call": "decimal",
+            "on": {
+              "$o": 2
+            },
+            "args": {
+              "0": "amount",
+              "precision": 18,
+              "scale": 3
+            }
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "CREATE TABLE `orders` (`amount` NUMERIC(18, 3) NOT NULL)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `orders` (`amount` NUMERIC(18, 3) NOT NULL)"
+      ]
+    },
+    {
+      "name": "testUuidMapsToText",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "uuid",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "CREATE TABLE `t` (`id` TEXT NOT NULL, PRIMARY KEY (`id`))",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `t` (`id` TEXT NOT NULL, PRIMARY KEY (`id`))"
+      ]
+    }
+  ]
+}

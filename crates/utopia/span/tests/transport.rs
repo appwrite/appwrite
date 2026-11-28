@@ -65,10 +65,10 @@ fn sends_outside_a_runtime() {
 #[test]
 fn sends_on_the_current_runtime() {
     let (url, received) = server();
-    let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
+    let runtime = utopia_async::Builder::current_thread().build().unwrap();
     runtime.block_on(async {
         HttpTransport::new().send(request(url));
         // The send is spawned on this runtime, so keep it running until the server has the envelope.
-        tokio::task::spawn_blocking(move || arrives(received)).await.unwrap();
+        utopia_async::spawn_blocking(move || arrives(received)).await.unwrap();
     });
 }

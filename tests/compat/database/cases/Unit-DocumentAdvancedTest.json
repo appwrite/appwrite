@@ -1,0 +1,1963 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/DocumentAdvancedTest.php"
+  ],
+  "cases": [
+    {
+      "name": "DocumentAdvancedTest::testDeepCloneWithNestedDocuments",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "inner",
+                "value": "original"
+              }
+            },
+            "as": "o170"
+          },
+          "bind": "s324",
+          "expect": {
+            "$document": {
+              "$id": "inner",
+              "value": "original"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "middle",
+                "child": {
+                  "$obj": "o170"
+                }
+              }
+            },
+            "as": "o171"
+          },
+          "bind": "s325",
+          "expect": {
+            "$document": {
+              "$id": "middle",
+              "child": {
+                "$document": {
+                  "$id": "inner",
+                  "value": "original"
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "outer",
+                "child": {
+                  "$obj": "o171"
+                }
+              }
+            },
+            "as": "o172"
+          },
+          "expect": {
+            "$document": {
+              "$id": "outer",
+              "child": {
+                "$document": {
+                  "$id": "middle",
+                  "child": {
+                    "$document": {
+                      "$id": "inner",
+                      "value": "original"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "$id": "outer",
+                "child": {
+                  "$id": "middle",
+                  "child": {
+                    "$id": "inner",
+                    "value": "original"
+                  }
+                }
+              }
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "child"
+            },
+            "as": "o173"
+          },
+          "bind": "s327",
+          "expect": {
+            "$document": {
+              "$id": "middle",
+              "child": {
+                "$document": {
+                  "$id": "inner",
+                  "value": "original"
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o173"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "child"
+            },
+            "as": "o174"
+          },
+          "bind": "s328",
+          "expect": {
+            "$document": {
+              "$id": "inner",
+              "value": "original"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o174"
+            },
+            "method": "setAttribute",
+            "args": {
+              "key": "value",
+              "value": "modified"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "inner",
+              "value": "modified"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o170"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "value"
+            }
+          },
+          "expect": "original"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o174"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "value"
+            }
+          },
+          "expect": "modified"
+        }
+      ]
+    },
+    {
+      "name": "DocumentAdvancedTest::testDeepCloneWithArrayOfDocuments",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "a",
+                "val": 1
+              }
+            },
+            "as": "o175"
+          },
+          "bind": "s332",
+          "expect": {
+            "$document": {
+              "$id": "a",
+              "val": 1
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "b",
+                "val": 2
+              }
+            },
+            "as": "o176"
+          },
+          "bind": "s333",
+          "expect": {
+            "$document": {
+              "$id": "b",
+              "val": 2
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "parent",
+                "items": [
+                  {
+                    "$obj": "o175"
+                  },
+                  {
+                    "$obj": "o176"
+                  }
+                ]
+              }
+            },
+            "as": "o177"
+          },
+          "bind": "s334",
+          "expect": {
+            "$document": {
+              "$id": "parent",
+              "items": [
+                {
+                  "$document": {
+                    "$id": "a",
+                    "val": 1
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "b",
+                    "val": 2
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "$id": "parent",
+                "items": [
+                  {
+                    "$id": "a",
+                    "val": 1
+                  },
+                  {
+                    "$id": "b",
+                    "val": 2
+                  }
+                ]
+              }
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "items"
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "$id": "a",
+                "val": 1
+              }
+            },
+            {
+              "$document": {
+                "$id": "b",
+                "val": 2
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "$id": "a",
+                "val": 1
+              }
+            },
+            "method": "setAttribute",
+            "args": {
+              "key": "val",
+              "value": 99
+            },
+            "as": "o178"
+          },
+          "bind": "s336",
+          "expect": {
+            "$document": {
+              "$id": "a",
+              "val": 99
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o177"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "items"
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "$id": "a",
+                "val": 1
+              }
+            },
+            {
+              "$document": {
+                "$id": "b",
+                "val": 2
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o175"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "val"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o178"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "val"
+            }
+          },
+          "expect": 99
+        }
+      ]
+    },
+    {
+      "name": "DocumentAdvancedTest::testOnlyKeepsTheGivenKeys",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "test",
+                "name": "John",
+                "email": "john@example.com",
+                "age": 30
+              }
+            },
+            "as": "o179"
+          },
+          "bind": "s340",
+          "expect": {
+            "$document": {
+              "$id": "test",
+              "name": "John",
+              "email": "john@example.com",
+              "age": 30
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o179"
+            },
+            "method": "only",
+            "args": {
+              "keys": [
+                "name",
+                "email"
+              ]
+            }
+          },
+          "expect": {
+            "name": "John",
+            "email": "john@example.com"
+          }
+        }
+      ]
+    },
+    {
+      "name": "DocumentAdvancedTest::testExceptDropsTheGivenKeys",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "test",
+                "name": "John",
+                "secret": "hidden",
+                "password": "12345"
+              }
+            },
+            "as": "o180"
+          },
+          "bind": "s342",
+          "expect": {
+            "$document": {
+              "$id": "test",
+              "name": "John",
+              "secret": "hidden",
+              "password": "12345"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o180"
+            },
+            "method": "except",
+            "args": {
+              "keys": [
+                "secret",
+                "password"
+              ]
+            }
+          },
+          "expect": {
+            "$id": "test",
+            "name": "John"
+          }
+        }
+      ]
+    },
+    {
+      "name": "DocumentAdvancedTest::testGetArrayCopyWithNestedDocuments",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "child",
+                "value": "test"
+              }
+            },
+            "as": "o181"
+          },
+          "bind": "s344",
+          "expect": {
+            "$document": {
+              "$id": "child",
+              "value": "test"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "parent",
+                "child": {
+                  "$obj": "o181"
+                }
+              }
+            },
+            "as": "o182"
+          },
+          "bind": "s345",
+          "expect": {
+            "$document": {
+              "$id": "parent",
+              "child": {
+                "$document": {
+                  "$id": "child",
+                  "value": "test"
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o182"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "parent",
+            "child": {
+              "$id": "child",
+              "value": "test"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "DocumentAdvancedTest::testGetArrayCopyWithArrayOfDocuments",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "a"
+              }
+            },
+            "as": "o183"
+          },
+          "bind": "s347",
+          "expect": {
+            "$document": {
+              "$id": "a"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "b"
+              }
+            },
+            "as": "o184"
+          },
+          "bind": "s348",
+          "expect": {
+            "$document": {
+              "$id": "b"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "parent",
+                "children": [
+                  {
+                    "$obj": "o183"
+                  },
+                  {
+                    "$obj": "o184"
+                  }
+                ]
+              }
+            },
+            "as": "o185"
+          },
+          "bind": "s349",
+          "expect": {
+            "$document": {
+              "$id": "parent",
+              "children": [
+                {
+                  "$document": {
+                    "$id": "a"
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "b"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o185"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "parent",
+            "children": [
+              {
+                "$id": "a"
+              },
+              {
+                "$id": "b"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "DocumentAdvancedTest::testIsEmptyOnDifferentStates",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {},
+            "as": "o186"
+          },
+          "bind": "s351",
+          "expect": {
+            "$document": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o186"
+            },
+            "method": "isEmpty",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "test"
+              }
+            },
+            "as": "o187"
+          },
+          "bind": "s353",
+          "expect": {
+            "$document": {
+              "$id": "test"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o187"
+            },
+            "method": "isEmpty",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "name": "test"
+              }
+            },
+            "as": "o188"
+          },
+          "bind": "s355",
+          "expect": {
+            "$document": {
+              "name": "test"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o188"
+            },
+            "method": "isEmpty",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "DocumentAdvancedTest::testGetAttributeWithDefaultValue",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "test",
+                "name": "John"
+              }
+            },
+            "as": "o189"
+          },
+          "bind": "s357",
+          "expect": {
+            "$document": {
+              "$id": "test",
+              "name": "John"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o189"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "name",
+              "default": "default"
+            }
+          },
+          "expect": "John"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o189"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "missing",
+              "default": "default"
+            }
+          },
+          "expect": "default"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o189"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "missing"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o189"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "missing",
+              "default": 0
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o189"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "missing",
+              "default": []
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o189"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "missing",
+              "default": false
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "DocumentAdvancedTest::testRemoveAttribute",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "test",
+                "name": "John",
+                "email": "john@example.com"
+              }
+            },
+            "as": "o190"
+          },
+          "bind": "s364",
+          "expect": {
+            "$document": {
+              "$id": "test",
+              "name": "John",
+              "email": "john@example.com"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o190"
+            },
+            "method": "removeAttribute",
+            "args": {
+              "key": "name"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "test",
+              "email": "john@example.com"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o190"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "name"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o190"
+            },
+            "method": "isSet",
+            "args": {
+              "key": "name"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o190"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "email"
+            }
+          },
+          "expect": "john@example.com"
+        }
+      ]
+    },
+    {
+      "name": "DocumentAdvancedTest::testRemoveAttributeReturnsSelf",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "test",
+                "a": 1,
+                "b": 2
+              }
+            },
+            "as": "o191"
+          },
+          "bind": "s369",
+          "expect": {
+            "$document": {
+              "$id": "test",
+              "a": 1,
+              "b": 2
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o191"
+            },
+            "method": "removeAttribute",
+            "args": {
+              "key": "a"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "test",
+              "b": 2
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o191"
+            },
+            "method": "removeAttribute",
+            "args": {
+              "key": "b"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "test"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o191"
+            },
+            "method": "isSet",
+            "args": {
+              "key": "a"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o191"
+            },
+            "method": "isSet",
+            "args": {
+              "key": "b"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "DocumentAdvancedTest::testSetAttributesBatch",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "test"
+              }
+            },
+            "as": "o192"
+          },
+          "bind": "s374",
+          "expect": {
+            "$document": {
+              "$id": "test"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o192"
+            },
+            "method": "setAttributes",
+            "args": {
+              "attributes": {
+                "name": "John",
+                "email": "john@example.com",
+                "age": 25
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "test",
+              "name": "John",
+              "email": "john@example.com",
+              "age": 25
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o192"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "name"
+            }
+          },
+          "expect": "John"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o192"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "email"
+            }
+          },
+          "expect": "john@example.com"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o192"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "age"
+            }
+          },
+          "expect": 25
+        }
+      ]
+    },
+    {
+      "name": "DocumentAdvancedTest::testSetAttributesBatchOverwrites",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "test",
+                "name": "Old"
+              }
+            },
+            "as": "o193"
+          },
+          "bind": "s379",
+          "expect": {
+            "$document": {
+              "$id": "test",
+              "name": "Old"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o193"
+            },
+            "method": "setAttributes",
+            "args": {
+              "attributes": {
+                "name": "New",
+                "extra": "added"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "test",
+              "name": "New",
+              "extra": "added"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o193"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "name"
+            }
+          },
+          "expect": "New"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o193"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "extra"
+            }
+          },
+          "expect": "added"
+        }
+      ]
+    },
+    {
+      "name": "DocumentAdvancedTest::testSetAttributesBatchReturnsSelf",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "test"
+              }
+            },
+            "as": "o194"
+          },
+          "bind": "s383",
+          "expect": {
+            "$document": {
+              "$id": "test"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o194"
+            },
+            "method": "setAttributes",
+            "args": {
+              "attributes": {
+                "a": 1
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "test",
+              "a": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "DocumentAdvancedTest::testGetAttributesFiltersInternalKeys",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "test",
+                "$collection": "users",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$createdAt": "2024-01-01T00:00:00.000+00:00",
+                "$updatedAt": "2024-01-01T00:00:00.000+00:00",
+                "name": "John",
+                "email": "john@example.com"
+              }
+            },
+            "as": "o195"
+          },
+          "bind": "s385",
+          "expect": {
+            "$document": {
+              "$id": "test",
+              "$collection": "users",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$createdAt": "2024-01-01T00:00:00.000+00:00",
+              "$updatedAt": "2024-01-01T00:00:00.000+00:00",
+              "name": "John",
+              "email": "john@example.com"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o195"
+            },
+            "method": "getAttributes",
+            "args": {}
+          },
+          "expect": {
+            "name": "John",
+            "email": "john@example.com"
+          }
+        }
+      ]
+    },
+    {
+      "name": "DocumentAdvancedTest::testSetTypeAppend",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "test",
+                "tags": [
+                  "php"
+                ]
+              }
+            },
+            "as": "o196"
+          },
+          "bind": "s387",
+          "expect": {
+            "$document": {
+              "$id": "test",
+              "tags": [
+                "php"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o196"
+            },
+            "method": "setAttribute",
+            "args": {
+              "key": "tags",
+              "value": "laravel",
+              "type": {
+                "$enum": "SetType::Append"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "test",
+              "tags": [
+                "php",
+                "laravel"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o196"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "tags"
+            }
+          },
+          "expect": [
+            "php",
+            "laravel"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "DocumentAdvancedTest::testSetTypeAppendOnNonArray",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "test",
+                "value": "scalar"
+              }
+            },
+            "as": "o197"
+          },
+          "bind": "s390",
+          "expect": {
+            "$document": {
+              "$id": "test",
+              "value": "scalar"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o197"
+            },
+            "method": "setAttribute",
+            "args": {
+              "key": "value",
+              "value": "item",
+              "type": {
+                "$enum": "SetType::Append"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "test",
+              "value": [
+                "item"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o197"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "value"
+            }
+          },
+          "expect": [
+            "item"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "DocumentAdvancedTest::testSetTypeAppendOnMissing",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "test"
+              }
+            },
+            "as": "o198"
+          },
+          "bind": "s393",
+          "expect": {
+            "$document": {
+              "$id": "test"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o198"
+            },
+            "method": "setAttribute",
+            "args": {
+              "key": "newList",
+              "value": "first",
+              "type": {
+                "$enum": "SetType::Append"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "test",
+              "newList": [
+                "first"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o198"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "newList"
+            }
+          },
+          "expect": [
+            "first"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "DocumentAdvancedTest::testSetTypePrepend",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "test",
+                "tags": [
+                  "php"
+                ]
+              }
+            },
+            "as": "o199"
+          },
+          "bind": "s396",
+          "expect": {
+            "$document": {
+              "$id": "test",
+              "tags": [
+                "php"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o199"
+            },
+            "method": "setAttribute",
+            "args": {
+              "key": "tags",
+              "value": "html",
+              "type": {
+                "$enum": "SetType::Prepend"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "test",
+              "tags": [
+                "html",
+                "php"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o199"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "tags"
+            }
+          },
+          "expect": [
+            "html",
+            "php"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "DocumentAdvancedTest::testSetTypePrependOnNonArray",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "test",
+                "value": "scalar"
+              }
+            },
+            "as": "o200"
+          },
+          "bind": "s399",
+          "expect": {
+            "$document": {
+              "$id": "test",
+              "value": "scalar"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o200"
+            },
+            "method": "setAttribute",
+            "args": {
+              "key": "value",
+              "value": "item",
+              "type": {
+                "$enum": "SetType::Prepend"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "test",
+              "value": [
+                "item"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o200"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "value"
+            }
+          },
+          "expect": [
+            "item"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "DocumentAdvancedTest::testSetTypePrependOnMissing",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "test"
+              }
+            },
+            "as": "o201"
+          },
+          "bind": "s402",
+          "expect": {
+            "$document": {
+              "$id": "test"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o201"
+            },
+            "method": "setAttribute",
+            "args": {
+              "key": "newList",
+              "value": "first",
+              "type": {
+                "$enum": "SetType::Prepend"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "test",
+              "newList": [
+                "first"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o201"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "newList"
+            }
+          },
+          "expect": [
+            "first"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "DocumentAdvancedTest::testSetTypeAssign",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "test",
+                "name": "old"
+              }
+            },
+            "as": "o202"
+          },
+          "bind": "s405",
+          "expect": {
+            "$document": {
+              "$id": "test",
+              "name": "old"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o202"
+            },
+            "method": "setAttribute",
+            "args": {
+              "key": "name",
+              "value": "new",
+              "type": {
+                "$enum": "SetType::Assign"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "test",
+              "name": "new"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o202"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "name"
+            }
+          },
+          "expect": "new"
+        }
+      ]
+    },
+    {
+      "name": "DocumentAdvancedTest::testConstructorAutoConvertsNestedArraysToDocuments",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "parent",
+                "child": {
+                  "$id": "child_id",
+                  "name": "nested"
+                }
+              }
+            },
+            "as": "o203"
+          },
+          "bind": "s408",
+          "expect": {
+            "$document": {
+              "$id": "parent",
+              "child": {
+                "$document": {
+                  "$id": "child_id",
+                  "name": "nested"
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o203"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "child"
+            },
+            "as": "o204"
+          },
+          "bind": "s409",
+          "expect": {
+            "$document": {
+              "$id": "child_id",
+              "name": "nested"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o204"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "child_id"
+        }
+      ]
+    },
+    {
+      "name": "DocumentAdvancedTest::testConstructorAutoConvertsArrayOfNestedDocuments",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "parent",
+                "children": [
+                  {
+                    "$id": "a",
+                    "name": "first"
+                  },
+                  {
+                    "$id": "b",
+                    "name": "second"
+                  }
+                ]
+              }
+            },
+            "as": "o205"
+          },
+          "bind": "s411",
+          "expect": {
+            "$document": {
+              "$id": "parent",
+              "children": [
+                {
+                  "$document": {
+                    "$id": "a",
+                    "name": "first"
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "b",
+                    "name": "second"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o205"
+            },
+            "method": "getDocuments",
+            "args": {
+              "key": "children"
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "$id": "a",
+                "name": "first"
+              }
+            },
+            {
+              "$document": {
+                "$id": "b",
+                "name": "second"
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "$id": "a",
+                "name": "first"
+              }
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "a"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "$id": "b",
+                "name": "second"
+              }
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "b"
+        }
+      ]
+    },
+    {
+      "name": "DocumentAdvancedTest::testGetArrayCopyWithEmptyArrayValues",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "test",
+                "empty_list": [],
+                "non_empty": [
+                  "a"
+                ]
+              }
+            },
+            "as": "o206"
+          },
+          "bind": "s415",
+          "expect": {
+            "$document": {
+              "$id": "test",
+              "empty_list": [],
+              "non_empty": [
+                "a"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o206"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "test",
+            "empty_list": [],
+            "non_empty": [
+              "a"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

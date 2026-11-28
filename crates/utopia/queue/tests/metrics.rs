@@ -9,14 +9,16 @@
 //! NATS_URL=nats://127.0.0.1:4222 cargo test -p utopia-queue --test metrics -- --ignored
 //! ```
 
+#![cfg(feature = "nats")]
+
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use async_nats::jetstream::{self, consumer, stream};
 use opentelemetry_sdk::metrics::data::{AggregatedMetrics, MetricData};
 use opentelemetry_sdk::metrics::{InMemoryMetricExporter, PeriodicReader, SdkMeterProvider};
-use utopia_queue::Worker;
+use utopia_queue::jetstream::Worker;
 
-#[tokio::test(flavor = "multi_thread")]
+#[utopia_async::test(threads = 2)]
 #[ignore = "needs a JetStream server at NATS_URL"]
 async fn a_committed_message_exports_what_php_workers_do() {
     let url = std::env::var("NATS_URL").expect("NATS_URL");

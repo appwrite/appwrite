@@ -1,0 +1,239 @@
+{
+  "source": "packages/query/tests/Exception/ExceptionTest.php",
+  "cases": [
+    {
+      "name": "testStringCodeCoercedToInt",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Exception",
+            "args": [
+              "test",
+              "42"
+            ]
+          },
+          {
+            "call": "getCode",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Exception",
+          "id": 1,
+          "props": {
+            "message": "test",
+            "code": 42
+          }
+        },
+        42
+      ]
+    },
+    {
+      "name": "testNonNumericStringCodeBecomesZero",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Exception",
+            "args": [
+              "test",
+              "abc"
+            ]
+          },
+          {
+            "call": "getCode",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Exception",
+          "id": 1,
+          "props": {
+            "message": "test",
+            "code": 0
+          }
+        },
+        0
+      ]
+    },
+    {
+      "name": "testIntCodePassedThrough",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Exception",
+            "args": [
+              "test",
+              123
+            ]
+          },
+          {
+            "call": "getCode",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Exception",
+          "id": 1,
+          "props": {
+            "message": "test",
+            "code": 123
+          }
+        },
+        123
+      ]
+    },
+    {
+      "name": "testDefaultCodeIsZero",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Exception",
+            "args": [
+              "test"
+            ]
+          },
+          {
+            "call": "getCode",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Exception",
+          "id": 1,
+          "props": {
+            "message": "test",
+            "code": 0
+          }
+        },
+        0
+      ]
+    },
+    {
+      "name": "testMessageIsPreserved",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Exception",
+            "args": [
+              "Something went wrong"
+            ]
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Exception",
+          "id": 1,
+          "props": {
+            "message": "Something went wrong",
+            "code": 0
+          }
+        },
+        "Something went wrong"
+      ]
+    },
+    {
+      "name": "testPreviousExceptionPreserved",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Exception",
+            "args": [
+              "wrapper",
+              0,
+              {
+                "$throwable": {
+                  "class": "\\RuntimeException",
+                  "message": "root cause",
+                  "code": 0
+                }
+              }
+            ]
+          },
+          {
+            "call": "getPrevious",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Exception",
+          "id": 1,
+          "props": {
+            "message": "wrapper",
+            "code": 0
+          }
+        },
+        {
+          "$value": "\\RuntimeException",
+          "id": 2,
+          "props": {
+            "message": "root cause",
+            "code": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "testExtendsBaseException",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Exception",
+            "args": [
+              "test"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Exception",
+          "id": 1,
+          "props": {
+            "message": "test",
+            "code": 0
+          }
+        }
+      ]
+    }
+  ]
+}

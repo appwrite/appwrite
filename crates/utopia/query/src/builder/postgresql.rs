@@ -217,18 +217,6 @@ fn quote_array_element(element: &str) -> String {
     format!("\"{}\"", element.replace('\\', "\\\\").replace('"', "\\\""))
 }
 
-/// A JSON key as a string literal (`E'...'` when it has a backslash).
-fn quote_json_key(key: &str) -> Result<String> {
-    if key.contains('\0') {
-        return Err(Error::Validation("JSON key contains a NUL byte".into()));
-    }
-    let escaped = key.replace('\'', "''");
-    if !key.contains('\\') {
-        return Ok(format!("'{escaped}'"));
-    }
-    Ok(format!("E'{}'", escaped.replace('\\', "\\\\")))
-}
-
 impl Builder<PostgreSqlDialect> {
     /// `"col"->'a'->>'b'` for `col.a.b`.
     fn jsonb_path(&mut self, path: &str) -> Result<String> {
@@ -246,10 +234,10 @@ impl Builder<PostgreSqlDialect> {
         let last = parts.pop().unwrap_or_default();
         for key in &parts[1..] {
             chain.push_str("->");
-            chain.push_str(&quote_json_key(key)?);
+            chain.push_str(&PostgreSqlDialect::LITERAL.quote(key)?);
         }
         chain.push_str("->>");
-        chain.push_str(&quote_json_key(last)?);
+        chain.push_str(&PostgreSqlDialect::LITERAL.quote(last)?);
         Ok(chain)
     }
 
@@ -884,7 +872,7 @@ impl SqlDialect for PostgreSqlDialect {
         attribute: &str,
         values: &Array,
     ) -> Result<String> {
-        let filter = sql::distance_filter(values, "Builder/PostgreSQL.php", 815)?;
+        let filter = sql::distance_filter(values, "Builder/PostgreSQL.php", 806)?;
         let operator = distance_operator(method);
         let wkt = wkt_of(b, &filter.geometry)?;
         b.add_binding(wkt, None);
@@ -904,7 +892,7 @@ impl SqlDialect for PostgreSqlDialect {
         values: &Array,
         not: bool,
     ) -> Result<String> {
-        let wkt = sql::predicate_wkt(b, values, Self::CLASS, "Builder/PostgreSQL.php", 844)?;
+        let wkt = sql::predicate_wkt(b, values, Self::CLASS, "Builder/PostgreSQL.php", 835)?;
         b.add_binding(value::string(wkt), None);
         let expression = format!("{function}({attribute}, ST_GeomFromText(?, 4326))");
         Ok(if not { format!("NOT {expression}") } else { expression })

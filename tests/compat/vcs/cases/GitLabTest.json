@@ -1,0 +1,1078 @@
+{
+  "source": "packages/vcs/tests/GitLabTest.php",
+  "cases": [
+    {
+      "name": "testWebhookHeaderNames",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gitlab"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_event_header_name",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            }
+          },
+          "expect": "x-gitlab-event"
+        },
+        {
+          "op": "vcs.get_signature_header_name",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            }
+          },
+          "expect": "x-gitlab-token"
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetSupportedWebhookScopes",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gitlab"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_supported_webhook_scopes",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            }
+          },
+          "expect": [
+            "repository"
+          ]
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testValidateWebhookEvent",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gitlab"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.validate_webhook_event",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "payload": "{\"object_kind\":\"push\",\"action\":\"push\"}",
+            "signature": "my-webhook-secret",
+            "signatureKey": "my-webhook-secret"
+          },
+          "expect": true
+        },
+        {
+          "op": "vcs.validate_webhook_event",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "payload": "{\"object_kind\":\"push\",\"action\":\"push\"}",
+            "signature": "not-the-signature",
+            "signatureKey": "my-webhook-secret"
+          },
+          "expect": false
+        },
+        {
+          "op": "vcs.validate_webhook_event",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "payload": "{\"object_kind\":\"push\",\"action\":\"push\"}",
+            "signature": "another-secret",
+            "signatureKey": "my-webhook-secret"
+          },
+          "expect": false
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetEventPush",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gitlab"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "Push Hook",
+            "payload": "{\"object_kind\":\"push\",\"ref\":\"refs\\/heads\\/main\",\"before\":\"abc123\",\"after\":\"def456\",\"checkout_sha\":\"def456\",\"user_avatar\":\"http:\\/\\/example.com\\/avatar.png\",\"project\":{\"id\":123,\"name\":\"test-repo\",\"namespace\":\"test-owner\",\"web_url\":\"http:\\/\\/example.com\\/test-owner\\/test-repo\"},\"commits\":[{\"id\":\"def456\",\"message\":\"Test commit message\",\"url\":\"http:\\/\\/example.com\\/test-owner\\/test-repo\\/-\\/commit\\/def456\",\"author\":{\"name\":\"Test Author\",\"email\":\"author@example.com\"},\"added\":[\"file1.txt\"],\"removed\":[\"file2.txt\"],\"modified\":[\"file3.txt\"]}]}"
+          },
+          "expect": [
+            {
+              "branchCreated": false,
+              "branchDeleted": false,
+              "branch": "main",
+              "branchUrl": "http://example.com/test-owner/test-repo/-/tree/main",
+              "repositoryId": "123",
+              "repositoryName": "test-repo",
+              "repositoryUrl": "http://example.com/test-owner/test-repo",
+              "installationId": "",
+              "commitHash": "def456",
+              "owner": "test-owner",
+              "authorUrl": "",
+              "authorAvatarUrl": "http://example.com/avatar.png",
+              "headCommitAuthorName": "Test Author",
+              "headCommitAuthorEmail": "author@example.com",
+              "headCommitMessage": "Test commit message",
+              "headCommitUrl": "http://example.com/test-owner/test-repo/-/commit/def456",
+              "external": false,
+              "pullRequestNumber": "",
+              "action": "",
+              "affectedFiles": [
+                "file1.txt",
+                "file3.txt",
+                "file2.txt"
+              ]
+            }
+          ]
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetEventPushKeepsBranchNamedLikeRef",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gitlab"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "Push Hook",
+            "payload": "{\"object_kind\":\"push\",\"ref\":\"refs\\/heads\\/refs\\/heads\\/main\",\"before\":\"abc123\",\"after\":\"def456\",\"checkout_sha\":\"def456\",\"user_avatar\":\"http:\\/\\/example.com\\/avatar.png\",\"project\":{\"id\":123,\"name\":\"test-repo\",\"namespace\":\"test-owner\",\"web_url\":\"http:\\/\\/example.com\\/test-owner\\/test-repo\"},\"commits\":[{\"id\":\"def456\",\"message\":\"Test commit message\",\"url\":\"http:\\/\\/example.com\\/test-owner\\/test-repo\\/-\\/commit\\/def456\",\"author\":{\"name\":\"Test Author\",\"email\":\"author@example.com\"},\"added\":[],\"removed\":[],\"modified\":[]}]}"
+          },
+          "expect": [
+            {
+              "branchCreated": false,
+              "branchDeleted": false,
+              "branch": "refs/heads/main",
+              "branchUrl": "http://example.com/test-owner/test-repo/-/tree/refs/heads/main",
+              "repositoryId": "123",
+              "repositoryName": "test-repo",
+              "repositoryUrl": "http://example.com/test-owner/test-repo",
+              "installationId": "",
+              "commitHash": "def456",
+              "owner": "test-owner",
+              "authorUrl": "",
+              "authorAvatarUrl": "http://example.com/avatar.png",
+              "headCommitAuthorName": "Test Author",
+              "headCommitAuthorEmail": "author@example.com",
+              "headCommitMessage": "Test commit message",
+              "headCommitUrl": "http://example.com/test-owner/test-repo/-/commit/def456",
+              "external": false,
+              "pullRequestNumber": "",
+              "action": "",
+              "affectedFiles": []
+            }
+          ]
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetEventPushDetectsBranchCreated",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gitlab"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "Push Hook",
+            "payload": "{\"object_kind\":\"push\",\"ref\":\"refs\\/heads\\/main\",\"before\":\"0000000000000000000000000000000000000000\",\"after\":\"def456\",\"checkout_sha\":\"def456\",\"user_avatar\":\"http:\\/\\/example.com\\/avatar.png\",\"project\":{\"id\":123,\"name\":\"test-repo\",\"namespace\":\"test-owner\",\"web_url\":\"http:\\/\\/example.com\\/test-owner\\/test-repo\"},\"commits\":[{\"id\":\"def456\",\"message\":\"Test commit message\",\"url\":\"http:\\/\\/example.com\\/test-owner\\/test-repo\\/-\\/commit\\/def456\",\"author\":{\"name\":\"Test Author\",\"email\":\"author@example.com\"},\"added\":[],\"removed\":[],\"modified\":[]}]}"
+          },
+          "expect": [
+            {
+              "branchCreated": true,
+              "branchDeleted": false,
+              "branch": "main",
+              "branchUrl": "http://example.com/test-owner/test-repo/-/tree/main",
+              "repositoryId": "123",
+              "repositoryName": "test-repo",
+              "repositoryUrl": "http://example.com/test-owner/test-repo",
+              "installationId": "",
+              "commitHash": "def456",
+              "owner": "test-owner",
+              "authorUrl": "",
+              "authorAvatarUrl": "http://example.com/avatar.png",
+              "headCommitAuthorName": "Test Author",
+              "headCommitAuthorEmail": "author@example.com",
+              "headCommitMessage": "Test commit message",
+              "headCommitUrl": "http://example.com/test-owner/test-repo/-/commit/def456",
+              "external": false,
+              "pullRequestNumber": "",
+              "action": "",
+              "affectedFiles": []
+            }
+          ]
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetEventPushDetectsBranchDeleted",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gitlab"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "Push Hook",
+            "payload": "{\"object_kind\":\"push\",\"ref\":\"refs\\/heads\\/main\",\"before\":\"abc123\",\"after\":\"0000000000000000000000000000000000000000\",\"checkout_sha\":\"\",\"user_avatar\":\"http:\\/\\/example.com\\/avatar.png\",\"project\":{\"id\":123,\"name\":\"test-repo\",\"namespace\":\"test-owner\",\"web_url\":\"http:\\/\\/example.com\\/test-owner\\/test-repo\"},\"commits\":[]}"
+          },
+          "expect": [
+            {
+              "branchCreated": false,
+              "branchDeleted": true,
+              "branch": "main",
+              "branchUrl": "http://example.com/test-owner/test-repo/-/tree/main",
+              "repositoryId": "123",
+              "repositoryName": "test-repo",
+              "repositoryUrl": "http://example.com/test-owner/test-repo",
+              "installationId": "",
+              "commitHash": "",
+              "owner": "test-owner",
+              "authorUrl": "",
+              "authorAvatarUrl": "http://example.com/avatar.png",
+              "headCommitAuthorName": "",
+              "headCommitAuthorEmail": "",
+              "headCommitMessage": "",
+              "headCommitUrl": "",
+              "external": false,
+              "pullRequestNumber": "",
+              "action": "",
+              "affectedFiles": []
+            }
+          ]
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetEventPullRequest",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gitlab"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "Merge Request Hook",
+            "payload": "{\"object_kind\":\"merge_request\",\"project\":{\"id\":123,\"name\":\"test-repo\",\"namespace\":\"test-owner\",\"web_url\":\"http:\\/\\/example.com\\/test-owner\\/test-repo\"},\"object_attributes\":{\"iid\":42,\"title\":\"Test MR\",\"action\":\"open\",\"source_branch\":\"feature-branch\",\"target_branch\":\"main\",\"source_project_id\":123,\"target_project_id\":123,\"url\":\"http:\\/\\/example.com\\/mr\\/42\",\"last_commit\":{\"id\":\"def456\",\"message\":\"Test commit message\",\"url\":\"http:\\/\\/example.com\\/commit\\/def456\",\"author\":{\"name\":\"Test Author\",\"email\":\"author@example.com\"}}}}"
+          },
+          "expect": [
+            {
+              "branch": "feature-branch",
+              "branchUrl": "http://example.com/test-owner/test-repo/-/tree/feature-branch",
+              "repositoryId": "123",
+              "repositoryName": "test-repo",
+              "repositoryUrl": "http://example.com/test-owner/test-repo",
+              "installationId": "",
+              "commitHash": "def456",
+              "owner": "test-owner",
+              "authorUrl": "",
+              "authorAvatarUrl": "",
+              "headCommitUrl": "http://example.com/commit/def456",
+              "external": false,
+              "pullRequestNumber": 42,
+              "pullRequestAuthor": "",
+              "action": "opened"
+            }
+          ]
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetEventPullRequestDetectsExternal",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gitlab"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "Merge Request Hook",
+            "payload": "{\"object_kind\":\"merge_request\",\"project\":{\"id\":123,\"name\":\"test-repo\",\"namespace\":\"test-owner\",\"web_url\":\"http:\\/\\/example.com\\/test-owner\\/test-repo\"},\"object_attributes\":{\"iid\":42,\"title\":\"Test MR\",\"action\":\"open\",\"source_branch\":\"feature-branch\",\"target_branch\":\"main\",\"source_project_id\":456,\"target_project_id\":123,\"url\":\"http:\\/\\/example.com\\/mr\\/42\",\"last_commit\":{\"id\":\"def456\",\"message\":\"Test commit message\",\"url\":\"http:\\/\\/example.com\\/commit\\/def456\",\"author\":{\"name\":\"Test Author\",\"email\":\"author@example.com\"}}}}"
+          },
+          "expect": [
+            {
+              "branch": "feature-branch",
+              "branchUrl": "http://example.com/test-owner/test-repo/-/tree/feature-branch",
+              "repositoryId": "123",
+              "repositoryName": "test-repo",
+              "repositoryUrl": "http://example.com/test-owner/test-repo",
+              "installationId": "",
+              "commitHash": "def456",
+              "owner": "test-owner",
+              "authorUrl": "",
+              "authorAvatarUrl": "",
+              "headCommitUrl": "http://example.com/commit/def456",
+              "external": true,
+              "pullRequestNumber": 42,
+              "pullRequestAuthor": "",
+              "action": "opened"
+            }
+          ]
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetEventInvalidPayload",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gitlab"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "push",
+            "payload": "invalid json"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Invalid payload.",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetEventUnsupportedEvent",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gitlab"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "unsupported_event",
+            "payload": "{\"test\":\"data\"}"
+          },
+          "expect": []
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGenerateCloneCommandRejectsAnOptionAsTheVersion with data set \"branch\"",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gitlab"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.generate_clone_command",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "owner": "owner",
+            "repositoryName": "repo",
+            "version": "--upload-pack=id",
+            "versionType": "branch",
+            "directory": "/tmp/clone",
+            "rootDirectory": ""
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid clone version: --upload-pack=id",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGenerateCloneCommandRejectsAnOptionAsTheVersion with data set \"commit\"",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gitlab"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.generate_clone_command",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "owner": "owner",
+            "repositoryName": "repo",
+            "version": "--upload-pack=id",
+            "versionType": "commit",
+            "directory": "/tmp/clone",
+            "rootDirectory": ""
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid clone version: --upload-pack=id",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGenerateCloneCommandRejectsAnUnknownCloneType",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gitlab"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.generate_clone_command",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "owner": "owner",
+            "repositoryName": "repo",
+            "version": "main",
+            "versionType": "unknown",
+            "directory": "/tmp/clone",
+            "rootDirectory": ""
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Unsupported clone type: unknown",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetEventPushMatchesCheckoutSha",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gitlab"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "Push Hook",
+            "payload": "{\"object_kind\":\"push\",\"ref\":\"refs\\/heads\\/main\",\"checkout_sha\":\"def456\",\"project\":{\"name\":\"test-repo\",\"namespace\":\"test-org\"},\"commits\":[{\"id\":\"abc123\",\"message\":\"Older commit\",\"url\":\"http:\\/\\/example.com\\/commit\\/abc123\",\"author\":{\"name\":\"Old Author\"}},{\"id\":\"def456\",\"message\":\"Head commit\",\"url\":\"http:\\/\\/example.com\\/commit\\/def456\",\"author\":{\"name\":\"Head Author\"}}]}"
+          },
+          "expect": [
+            {
+              "branchCreated": false,
+              "branchDeleted": false,
+              "branch": "main",
+              "branchUrl": "",
+              "repositoryId": "",
+              "repositoryName": "test-repo",
+              "repositoryUrl": "",
+              "installationId": "",
+              "commitHash": "def456",
+              "owner": "test-org",
+              "authorUrl": "",
+              "authorAvatarUrl": "",
+              "headCommitAuthorName": "Head Author",
+              "headCommitAuthorEmail": "",
+              "headCommitMessage": "Head commit",
+              "headCommitUrl": "http://example.com/commit/def456",
+              "external": false,
+              "pullRequestNumber": "",
+              "action": "",
+              "affectedFiles": []
+            }
+          ]
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetEventPullRequestActionMapping",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gitlab"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "Merge Request Hook",
+            "payload": "{\"object_kind\":\"merge_request\",\"project\":{\"id\":1,\"name\":\"r\",\"namespace\":\"o\",\"web_url\":\"http:\\/\\/example.com\\/o\\/r\"},\"object_attributes\":{\"iid\":1,\"action\":\"open\",\"source_branch\":\"f\",\"target_branch\":\"main\"}}"
+          },
+          "expect": [
+            {
+              "branch": "f",
+              "branchUrl": "http://example.com/o/r/-/tree/f",
+              "repositoryId": "1",
+              "repositoryName": "r",
+              "repositoryUrl": "http://example.com/o/r",
+              "installationId": "",
+              "commitHash": "",
+              "owner": "o",
+              "authorUrl": "",
+              "authorAvatarUrl": "",
+              "headCommitUrl": "",
+              "external": false,
+              "pullRequestNumber": 1,
+              "pullRequestAuthor": "",
+              "action": "opened"
+            }
+          ]
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "Merge Request Hook",
+            "payload": "{\"object_kind\":\"merge_request\",\"project\":{\"id\":1,\"name\":\"r\",\"namespace\":\"o\",\"web_url\":\"http:\\/\\/example.com\\/o\\/r\"},\"object_attributes\":{\"iid\":1,\"action\":\"reopen\",\"source_branch\":\"f\",\"target_branch\":\"main\"}}"
+          },
+          "expect": [
+            {
+              "branch": "f",
+              "branchUrl": "http://example.com/o/r/-/tree/f",
+              "repositoryId": "1",
+              "repositoryName": "r",
+              "repositoryUrl": "http://example.com/o/r",
+              "installationId": "",
+              "commitHash": "",
+              "owner": "o",
+              "authorUrl": "",
+              "authorAvatarUrl": "",
+              "headCommitUrl": "",
+              "external": false,
+              "pullRequestNumber": 1,
+              "pullRequestAuthor": "",
+              "action": "reopened"
+            }
+          ]
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "Merge Request Hook",
+            "payload": "{\"object_kind\":\"merge_request\",\"project\":{\"id\":1,\"name\":\"r\",\"namespace\":\"o\",\"web_url\":\"http:\\/\\/example.com\\/o\\/r\"},\"object_attributes\":{\"iid\":1,\"action\":\"update\",\"source_branch\":\"f\",\"target_branch\":\"main\"}}"
+          },
+          "expect": [
+            {
+              "branch": "f",
+              "branchUrl": "http://example.com/o/r/-/tree/f",
+              "repositoryId": "1",
+              "repositoryName": "r",
+              "repositoryUrl": "http://example.com/o/r",
+              "installationId": "",
+              "commitHash": "",
+              "owner": "o",
+              "authorUrl": "",
+              "authorAvatarUrl": "",
+              "headCommitUrl": "",
+              "external": false,
+              "pullRequestNumber": 1,
+              "pullRequestAuthor": "",
+              "action": "synchronize"
+            }
+          ]
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "Merge Request Hook",
+            "payload": "{\"object_kind\":\"merge_request\",\"project\":{\"id\":1,\"name\":\"r\",\"namespace\":\"o\",\"web_url\":\"http:\\/\\/example.com\\/o\\/r\"},\"object_attributes\":{\"iid\":1,\"action\":\"close\",\"source_branch\":\"f\",\"target_branch\":\"main\"}}"
+          },
+          "expect": [
+            {
+              "branch": "f",
+              "branchUrl": "http://example.com/o/r/-/tree/f",
+              "repositoryId": "1",
+              "repositoryName": "r",
+              "repositoryUrl": "http://example.com/o/r",
+              "installationId": "",
+              "commitHash": "",
+              "owner": "o",
+              "authorUrl": "",
+              "authorAvatarUrl": "",
+              "headCommitUrl": "",
+              "external": false,
+              "pullRequestNumber": 1,
+              "pullRequestAuthor": "",
+              "action": "closed"
+            }
+          ]
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "Merge Request Hook",
+            "payload": "{\"object_kind\":\"merge_request\",\"project\":{\"id\":1,\"name\":\"r\",\"namespace\":\"o\",\"web_url\":\"http:\\/\\/example.com\\/o\\/r\"},\"object_attributes\":{\"iid\":1,\"action\":\"merge\",\"source_branch\":\"f\",\"target_branch\":\"main\"}}"
+          },
+          "expect": [
+            {
+              "branch": "f",
+              "branchUrl": "http://example.com/o/r/-/tree/f",
+              "repositoryId": "1",
+              "repositoryName": "r",
+              "repositoryUrl": "http://example.com/o/r",
+              "installationId": "",
+              "commitHash": "",
+              "owner": "o",
+              "authorUrl": "",
+              "authorAvatarUrl": "",
+              "headCommitUrl": "",
+              "external": false,
+              "pullRequestNumber": 1,
+              "pullRequestAuthor": "",
+              "action": "closed"
+            }
+          ]
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetEventMergeRequestComment",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gitlab"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "Note Hook",
+            "payload": "{\"object_kind\":\"note\",\"user\":{\"id\":7,\"username\":\"octo\"},\"project\":{\"id\":123,\"name\":\"test-repo\",\"namespace\":\"test-owner\",\"web_url\":\"http:\\/\\/example.com\\/test-owner\\/test-repo\"},\"object_attributes\":{\"id\":1244,\"note\":\"@appwrite review\",\"noteable_type\":\"MergeRequest\",\"system\":false,\"discussion_id\":\"d0c1e2f3\",\"type\":null,\"action\":\"create\",\"url\":\"http:\\/\\/example.com\\/mr\\/42#note_1244\"},\"merge_request\":{\"iid\":42,\"author_id\":7}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testGetEventMergeRequestDiffComment",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gitlab"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "Note Hook",
+            "payload": "{\"object_kind\":\"note\",\"user\":{\"id\":7,\"username\":\"octo\"},\"project\":{\"id\":123,\"name\":\"test-repo\",\"namespace\":\"test-owner\",\"web_url\":\"http:\\/\\/example.com\\/test-owner\\/test-repo\"},\"object_attributes\":{\"id\":1244,\"note\":\"@appwrite review\",\"noteable_type\":\"MergeRequest\",\"system\":false,\"discussion_id\":\"d0c1e2f3\",\"type\":\"DiffNote\",\"action\":\"create\",\"url\":\"http:\\/\\/example.com\\/mr\\/42#note_1244\"},\"merge_request\":{\"iid\":42,\"author_id\":7}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testGetEventIgnoresOtherNotes",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gitlab"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "Note Hook",
+            "payload": "{\"object_kind\":\"note\",\"user\":{\"id\":7,\"username\":\"octo\"},\"project\":{\"id\":123,\"name\":\"test-repo\",\"namespace\":\"test-owner\",\"web_url\":\"http:\\/\\/example.com\\/test-owner\\/test-repo\"},\"object_attributes\":{\"id\":1244,\"note\":\"@appwrite review\",\"noteable_type\":\"Issue\",\"system\":false,\"discussion_id\":\"d0c1e2f3\",\"type\":null,\"action\":\"create\",\"url\":\"http:\\/\\/example.com\\/mr\\/42#note_1244\"},\"merge_request\":{\"iid\":42,\"author_id\":7}}"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "Note Hook",
+            "payload": "{\"object_kind\":\"note\",\"user\":{\"id\":7,\"username\":\"octo\"},\"project\":{\"id\":123,\"name\":\"test-repo\",\"namespace\":\"test-owner\",\"web_url\":\"http:\\/\\/example.com\\/test-owner\\/test-repo\"},\"object_attributes\":{\"id\":1244,\"note\":\"@appwrite review\",\"noteable_type\":\"MergeRequest\",\"system\":true,\"discussion_id\":\"d0c1e2f3\",\"type\":null,\"action\":\"create\",\"url\":\"http:\\/\\/example.com\\/mr\\/42#note_1244\"},\"merge_request\":{\"iid\":42,\"author_id\":7}}"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "Note Hook",
+            "payload": "{\"object_kind\":\"note\",\"user\":{\"id\":7,\"username\":\"octo\"},\"project\":{\"id\":123,\"name\":\"test-repo\",\"namespace\":\"test-owner\",\"web_url\":\"http:\\/\\/example.com\\/test-owner\\/test-repo\"},\"object_attributes\":{\"id\":1244,\"note\":\"@appwrite review\",\"noteable_type\":\"MergeRequest\",\"system\":false,\"discussion_id\":\"d0c1e2f3\",\"type\":null,\"action\":\"update\",\"url\":\"http:\\/\\/example.com\\/mr\\/42#note_1244\"},\"merge_request\":{\"iid\":42,\"author_id\":7}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testGetEventMergeRequestAuthor",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gitlab"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "Merge Request Hook",
+            "payload": "{\"object_kind\":\"merge_request\",\"user\":{\"id\":7,\"username\":\"octo\"},\"project\":{\"id\":1,\"name\":\"r\",\"namespace\":\"o\",\"web_url\":\"http:\\/\\/example.com\\/o\\/r\"},\"object_attributes\":{\"iid\":1,\"action\":\"update\",\"author_id\":8}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testGetEventProjectPaths (push)",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gitlab"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "Push Hook",
+            "payload": "{\"object_kind\":\"push\",\"ref\":\"refs\\/heads\\/main\",\"checkout_sha\":\"abc123\",\"project\":{\"id\":89442539,\"name\":\"Magic Portfolio\",\"namespace\":\"Jane Doe\",\"path_with_namespace\":\"jane-doe\\/magic-portfolio\",\"web_url\":\"https:\\/\\/gitlab.com\\/jane-doe\\/magic-portfolio\"},\"commits\":[]}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testGetEventProjectPaths (merge request)",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gitlab"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "Merge Request Hook",
+            "payload": "{\"object_kind\":\"merge_request\",\"project\":{\"id\":89442539,\"name\":\"Magic Portfolio\",\"namespace\":\"Jane Doe\",\"path_with_namespace\":\"jane-doe\\/magic-portfolio\",\"web_url\":\"https:\\/\\/gitlab.com\\/jane-doe\\/magic-portfolio\"},\"object_attributes\":{\"iid\":1,\"action\":\"open\",\"source_branch\":\"feature\",\"target_branch\":\"main\"}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testGetEventProjectPaths (note)",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gitlab"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "Note Hook",
+            "payload": "{\"object_kind\":\"note\",\"project\":{\"id\":89442539,\"name\":\"Magic Portfolio\",\"namespace\":\"Jane Doe\",\"path_with_namespace\":\"jane-doe\\/magic-portfolio\",\"web_url\":\"https:\\/\\/gitlab.com\\/jane-doe\\/magic-portfolio\"},\"object_attributes\":{\"id\":1,\"note\":\"@appwrite review\",\"noteable_type\":\"MergeRequest\",\"action\":\"create\"},\"merge_request\":{\"iid\":1}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testGetEventSubgroupProjectPath",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gitlab"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "Merge Request Hook",
+            "payload": "{\"object_kind\":\"merge_request\",\"project\":{\"id\":1,\"name\":\"App\",\"namespace\":\"Sub\",\"path_with_namespace\":\"group\\/sub\\/app\"},\"object_attributes\":{\"iid\":1,\"action\":\"open\",\"source_branch\":\"feature\",\"target_branch\":\"main\"}}"
+          }
+        }
+      ]
+    }
+  ]
+}

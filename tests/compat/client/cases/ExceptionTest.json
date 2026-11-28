@@ -1,0 +1,161 @@
+{
+  "source": "packages/client/tests/ExceptionTest.php",
+  "cases": [
+    {
+      "name": "RequestException kind",
+      "op": "exception.kind",
+      "args": {
+        "class": "RequestException"
+      },
+      "expect": {
+        "client": true,
+        "network": false,
+        "request": true
+      }
+    },
+    {
+      "name": "AdapterInitializationException kind",
+      "op": "exception.kind",
+      "args": {
+        "class": "AdapterInitializationException"
+      },
+      "expect": {
+        "client": true,
+        "network": false,
+        "request": true
+      }
+    },
+    {
+      "name": "AdapterPreconditionException kind",
+      "op": "exception.kind",
+      "args": {
+        "class": "AdapterPreconditionException"
+      },
+      "expect": {
+        "client": true,
+        "network": false,
+        "request": true
+      }
+    },
+    {
+      "name": "InvalidResponseException kind",
+      "op": "exception.kind",
+      "args": {
+        "class": "InvalidResponseException"
+      },
+      "expect": {
+        "client": true,
+        "network": false,
+        "request": true
+      }
+    },
+    {
+      "name": "InvalidUriException kind",
+      "op": "exception.kind",
+      "args": {
+        "class": "InvalidUriException"
+      },
+      "expect": {
+        "client": true,
+        "network": false,
+        "request": true
+      }
+    },
+    {
+      "name": "NetworkException kind",
+      "op": "exception.kind",
+      "args": {
+        "class": "NetworkException"
+      },
+      "expect": {
+        "client": true,
+        "network": true,
+        "request": false
+      }
+    },
+    {
+      "name": "ConnectionException kind",
+      "op": "exception.kind",
+      "args": {
+        "class": "ConnectionException"
+      },
+      "expect": {
+        "client": true,
+        "network": true,
+        "request": false
+      }
+    },
+    {
+      "name": "DestinationException kind",
+      "op": "exception.kind",
+      "args": {
+        "class": "DestinationException"
+      },
+      "expect": {
+        "client": true,
+        "network": true,
+        "request": false
+      }
+    },
+    {
+      "name": "DnsException kind",
+      "op": "exception.kind",
+      "args": {
+        "class": "DnsException"
+      },
+      "expect": {
+        "client": true,
+        "network": true,
+        "request": false
+      }
+    },
+    {
+      "name": "ProtocolException kind",
+      "op": "exception.kind",
+      "args": {
+        "class": "ProtocolException"
+      },
+      "expect": {
+        "client": true,
+        "network": true,
+        "request": false
+      }
+    },
+    {
+      "name": "ProxyException kind",
+      "op": "exception.kind",
+      "args": {
+        "class": "ProxyException"
+      },
+      "expect": {
+        "client": true,
+        "network": true,
+        "request": false
+      }
+    },
+    {
+      "name": "TimeoutException kind",
+      "op": "exception.kind",
+      "args": {
+        "class": "TimeoutException"
+      },
+      "expect": {
+        "client": true,
+        "network": true,
+        "request": false
+      }
+    },
+    {
+      "name": "TlsException kind",
+      "op": "exception.kind",
+      "args": {
+        "class": "TlsException"
+      },
+      "expect": {
+        "client": true,
+        "network": true,
+        "request": false
+      }
+    }
+  ]
+}

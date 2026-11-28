@@ -528,7 +528,8 @@ impl<D: Dialect> Builder<D> {
 
     // ----- SQLite -------------------------------------------------------
 
-    /// `compileLike()` with SQLite's `ESCAPE '\'`.
+    /// `compileLike()` with SQLite's `ESCAPE '\'`, once: the dialect's own LIKE predicate
+    /// may name it already (utopia-database 10.2.5, `str_ends_with($like, self::ESCAPE)`).
     pub(crate) fn sqlite_like(
         &mut self,
         attribute: &str,
@@ -538,7 +539,9 @@ impl<D: Dialect> Builder<D> {
         not: bool,
         column: Option<&str>,
     ) -> Result<String> {
-        Ok(self.base_compile_like(attribute, values, prefix, suffix, not, column)? + " ESCAPE '\\'")
+        let like = self.base_compile_like(attribute, values, prefix, suffix, not, column)?;
+        const ESCAPE: &str = " ESCAPE '\\'";
+        Ok(if like.ends_with(ESCAPE) { like } else { like + ESCAPE })
     }
 
     /// `SQLite::compileSubstrings()`.

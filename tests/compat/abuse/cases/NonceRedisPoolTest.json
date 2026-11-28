@@ -1,0 +1,212 @@
+{
+  "source": "packages/abuse/tests/E2E/Challenge/Nonce/RedisPoolTest.php",
+  "cases": [
+    {
+      "name": "testFirstClaimSucceedsAndLaterClaimsFail",
+      "steps": [
+        {
+          "op": "nonce.new",
+          "args": {
+            "kind": "pool",
+            "key": "abuse__${ns}:nonce"
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "nonce.consume",
+          "args": {
+            "nonces": {
+              "$ref": "n"
+            },
+            "nonce": "a1b2c3",
+            "ttl": 60
+          },
+          "expect": true
+        },
+        {
+          "op": "nonce.consume",
+          "args": {
+            "nonces": {
+              "$ref": "n"
+            },
+            "nonce": "a1b2c3",
+            "ttl": 60
+          },
+          "expect": false
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testParamsSeparateKeySpaces",
+      "steps": [
+        {
+          "op": "nonce.new",
+          "args": {
+            "kind": "pool",
+            "key": "abuse__${ns}:nonce:{project}"
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "nonce.with_param",
+          "args": {
+            "nonces": {
+              "$ref": "n"
+            },
+            "name": "{project}",
+            "value": "p1"
+          },
+          "bind": "p1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "nonce.with_param",
+          "args": {
+            "nonces": {
+              "$ref": "n"
+            },
+            "name": "{project}",
+            "value": "p2"
+          },
+          "bind": "p2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "nonce.consume",
+          "args": {
+            "nonces": {
+              "$ref": "p1"
+            },
+            "nonce": "a1b2c3",
+            "ttl": 60
+          },
+          "expect": true
+        },
+        {
+          "op": "nonce.consume",
+          "args": {
+            "nonces": {
+              "$ref": "p2"
+            },
+            "nonce": "a1b2c3",
+            "ttl": 60
+          },
+          "expect": true
+        },
+        {
+          "op": "nonce.consume",
+          "args": {
+            "nonces": {
+              "$ref": "p1"
+            },
+            "nonce": "a1b2c3",
+            "ttl": 60
+          },
+          "expect": false
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testClaimExpires",
+      "steps": [
+        {
+          "op": "nonce.new",
+          "args": {
+            "kind": "pool",
+            "key": "abuse__${ns}:nonce"
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "nonce.consume",
+          "args": {
+            "nonces": {
+              "$ref": "n"
+            },
+            "nonce": "a1b2c3",
+            "ttl": 1
+          },
+          "expect": true
+        },
+        {
+          "op": "nonce.consume",
+          "args": {
+            "nonces": {
+              "$ref": "n"
+            },
+            "nonce": "a1b2c3",
+            "ttl": 1
+          },
+          "expect": false
+        },
+        {
+          "op": "clock.fresh_second",
+          "args": {}
+        },
+        {
+          "op": "clock.fresh_second",
+          "args": {}
+        },
+        {
+          "op": "clock.fresh_second",
+          "args": {}
+        },
+        {
+          "op": "nonce.consume",
+          "args": {
+            "nonces": {
+              "$ref": "n"
+            },
+            "nonce": "a1b2c3",
+            "ttl": 1
+          },
+          "expect": true
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testEmptyNonceNeverClaims",
+      "steps": [
+        {
+          "op": "nonce.new",
+          "args": {
+            "kind": "pool",
+            "key": "abuse__${ns}:nonce"
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "nonce.consume",
+          "args": {
+            "nonces": {
+              "$ref": "n"
+            },
+            "nonce": "",
+            "ttl": 60
+          },
+          "expect": false
+        }
+      ],
+      "state": []
+    }
+  ]
+}

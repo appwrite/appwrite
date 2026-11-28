@@ -1,0 +1,2439 @@
+{
+  "source": "packages/abuse/tests/Challenge/ProofOfWorkTest.php",
+  "cases": [
+    {
+      "name": "testDifficultyOfCountsWholeZeroBytes",
+      "steps": [
+        {
+          "op": "pow.difficulty_of",
+          "args": {
+            "hash": {
+              "$bytes": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+            }
+          },
+          "expect": 256
+        },
+        {
+          "op": "pow.difficulty_of",
+          "args": {
+            "hash": {
+              "$bytes": "/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "pow.difficulty_of",
+          "args": {
+            "hash": {
+              "$bytes": "AP8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+            }
+          },
+          "expect": 8
+        },
+        {
+          "op": "pow.difficulty_of",
+          "args": {
+            "hash": {
+              "$bytes": "AAAPAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+            }
+          },
+          "expect": 20
+        },
+        {
+          "op": "pow.difficulty_of",
+          "args": {
+            "hash": {
+              "$bytes": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+            }
+          },
+          "expect": 4
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testByteAndHexCountingAgree (the hex side)",
+      "steps": [
+        {
+          "op": "pow.difficulty_of_hex",
+          "args": {
+            "hex": "0000000000000000000000000000000000000000000000000000000000000000"
+          },
+          "expect": 256
+        },
+        {
+          "op": "pow.difficulty_of_hex",
+          "args": {
+            "hex": "0800000000000000000000000000000000000000000000000000000000000000"
+          },
+          "expect": 4
+        },
+        {
+          "op": "pow.difficulty_of_hex",
+          "args": {
+            "hex": "000f000000000000000000000000000000000000000000000000000000000000"
+          },
+          "expect": 12
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testIsSolutionAcceptsAValidAnswerAndRejectsOthers",
+      "steps": [
+        {
+          "op": "pow.solve",
+          "args": {
+            "nonce": "abcdef0123456789",
+            "difficulty": 8
+          },
+          "bind": "s"
+        },
+        {
+          "op": "pow.is_solution",
+          "args": {
+            "nonce": "abcdef0123456789",
+            "answer": {
+              "$ref": "s"
+            },
+            "difficulty": 8
+          },
+          "expect": true
+        },
+        {
+          "op": "pow.is_solution",
+          "args": {
+            "nonce": "abcdef0123456789",
+            "answer": {
+              "$ref": "s"
+            },
+            "difficulty": 32
+          },
+          "expect": false
+        },
+        {
+          "op": "pow.is_solution",
+          "args": {
+            "nonce": "abcdef0123456789",
+            "answer": "0",
+            "difficulty": 0
+          },
+          "expect": true
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testIssueSignsNonceDifficultyBindingAndClaims",
+      "steps": [
+        {
+          "op": "nonce.new",
+          "args": {
+            "kind": "memory"
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.new",
+          "args": {
+            "secret": "pow-secret",
+            "nonces": {
+              "$ref": "n"
+            },
+            "difficulty": 8,
+            "ttl": 120,
+            "accept": false,
+            "label": "label"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.with_params",
+          "args": {
+            "pow": {
+              "$ref": "p"
+            },
+            "params": {
+              "ip": "203.0.113.0/24",
+              "ua": "ua-hash"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.issue",
+          "args": {
+            "pow": {
+              "$ref": "b"
+            },
+            "claims": {
+              "project": "p1",
+              "ttl": 3600
+            },
+            "difficulty": 12
+          },
+          "bind": "t"
+        },
+        {
+          "op": "issuer.new",
+          "args": {
+            "secret": "pow-secret",
+            "label": "label",
+            "purpose": "challenge",
+            "ttl": 120
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.verify",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "token": {
+              "$ref": "t",
+              "path": "/value"
+            }
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testTheTokenCarriesTheNonceItWasSignedWith",
+      "steps": [
+        {
+          "op": "nonce.new",
+          "args": {
+            "kind": "memory"
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.new",
+          "args": {
+            "secret": "pow-secret",
+            "nonces": {
+              "$ref": "n"
+            },
+            "difficulty": 8,
+            "ttl": 120,
+            "accept": false,
+            "label": "label"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.issue",
+          "args": {
+            "pow": {
+              "$ref": "p"
+            }
+          },
+          "bind": "t"
+        },
+        {
+          "op": "issuer.new",
+          "args": {
+            "secret": "pow-secret",
+            "label": "label",
+            "purpose": "challenge",
+            "ttl": 120
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.verify",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "token": {
+              "$ref": "t",
+              "path": "/value"
+            }
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testIssueRejectsDifficultyOutsideTheDigestRange (negative)",
+      "steps": [
+        {
+          "op": "nonce.new",
+          "args": {
+            "kind": "memory"
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.new",
+          "args": {
+            "secret": "pow-secret",
+            "nonces": {
+              "$ref": "n"
+            },
+            "difficulty": 8,
+            "ttl": 120,
+            "accept": false,
+            "label": "label"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.issue",
+          "args": {
+            "pow": {
+              "$ref": "p"
+            },
+            "difficulty": -1
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "difficulty must be between 0 and 256, got -1"
+            }
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testConstructorRejectsDifficultyOutsideTheDigestRange (negative)",
+      "steps": [
+        {
+          "op": "nonce.new",
+          "args": {
+            "kind": "memory"
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.new",
+          "args": {
+            "secret": "pow-secret",
+            "nonces": {
+              "$ref": "n"
+            },
+            "difficulty": -1
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "difficulty must be between 0 and 256, got -1"
+            }
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testIssueRejectsDifficultyOutsideTheDigestRange (wider than the digest)",
+      "steps": [
+        {
+          "op": "nonce.new",
+          "args": {
+            "kind": "memory"
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.new",
+          "args": {
+            "secret": "pow-secret",
+            "nonces": {
+              "$ref": "n"
+            },
+            "difficulty": 8,
+            "ttl": 120,
+            "accept": false,
+            "label": "label"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.issue",
+          "args": {
+            "pow": {
+              "$ref": "p"
+            },
+            "difficulty": 257
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "difficulty must be between 0 and 256, got 257"
+            }
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testConstructorRejectsDifficultyOutsideTheDigestRange (wider than the digest)",
+      "steps": [
+        {
+          "op": "nonce.new",
+          "args": {
+            "kind": "memory"
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.new",
+          "args": {
+            "secret": "pow-secret",
+            "nonces": {
+              "$ref": "n"
+            },
+            "difficulty": 257
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "difficulty must be between 0 and 256, got 257"
+            }
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testIssueUsesTheConstructorDifficultyUnlessOverridden",
+      "steps": [
+        {
+          "op": "nonce.new",
+          "args": {
+            "kind": "memory"
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.new",
+          "args": {
+            "secret": "pow-secret",
+            "nonces": {
+              "$ref": "n"
+            },
+            "difficulty": 10,
+            "label": "label"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.issue",
+          "args": {
+            "pow": {
+              "$ref": "p"
+            }
+          },
+          "bind": "a"
+        },
+        {
+          "op": "pow.issue",
+          "args": {
+            "pow": {
+              "$ref": "p"
+            },
+            "difficulty": 12
+          },
+          "bind": "b"
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testIssueAcceptsTheDigestRangeBounds",
+      "steps": [
+        {
+          "op": "nonce.new",
+          "args": {
+            "kind": "memory"
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.new",
+          "args": {
+            "secret": "pow-secret",
+            "nonces": {
+              "$ref": "n"
+            },
+            "difficulty": 8,
+            "ttl": 120,
+            "accept": false,
+            "label": "label"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.issue",
+          "args": {
+            "pow": {
+              "$ref": "p"
+            },
+            "difficulty": 0
+          },
+          "bind": "a"
+        },
+        {
+          "op": "pow.issue",
+          "args": {
+            "pow": {
+              "$ref": "p"
+            },
+            "difficulty": 256
+          },
+          "bind": "b"
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testIssueRefusesReservedClaimNames (nonce)",
+      "steps": [
+        {
+          "op": "nonce.new",
+          "args": {
+            "kind": "memory"
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.new",
+          "args": {
+            "secret": "pow-secret",
+            "nonces": {
+              "$ref": "n"
+            },
+            "difficulty": 8,
+            "ttl": 120,
+            "accept": false,
+            "label": "label"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.issue",
+          "args": {
+            "pow": {
+              "$ref": "p"
+            },
+            "claims": {
+              "nonce": "x"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "claim 'nonce' is reserved"
+            }
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testIssueRefusesReservedClaimNames (difficulty)",
+      "steps": [
+        {
+          "op": "nonce.new",
+          "args": {
+            "kind": "memory"
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.new",
+          "args": {
+            "secret": "pow-secret",
+            "nonces": {
+              "$ref": "n"
+            },
+            "difficulty": 8,
+            "ttl": 120,
+            "accept": false,
+            "label": "label"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.issue",
+          "args": {
+            "pow": {
+              "$ref": "p"
+            },
+            "claims": {
+              "difficulty": "x"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "claim 'difficulty' is reserved"
+            }
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testIssueRefusesReservedClaimNames (iatMs)",
+      "steps": [
+        {
+          "op": "nonce.new",
+          "args": {
+            "kind": "memory"
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.new",
+          "args": {
+            "secret": "pow-secret",
+            "nonces": {
+              "$ref": "n"
+            },
+            "difficulty": 8,
+            "ttl": 120,
+            "accept": false,
+            "label": "label"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.issue",
+          "args": {
+            "pow": {
+              "$ref": "p"
+            },
+            "claims": {
+              "iatMs": "x"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "claim 'iatMs' is reserved"
+            }
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testIssueRefusesReservedClaimNames (purpose)",
+      "steps": [
+        {
+          "op": "nonce.new",
+          "args": {
+            "kind": "memory"
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.new",
+          "args": {
+            "secret": "pow-secret",
+            "nonces": {
+              "$ref": "n"
+            },
+            "difficulty": 8,
+            "ttl": 120,
+            "accept": false,
+            "label": "label"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.issue",
+          "args": {
+            "pow": {
+              "$ref": "p"
+            },
+            "claims": {
+              "purpose": "x"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "claim 'purpose' is reserved"
+            }
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testIssueRefusesABindingThatSharesANameWithAClaim",
+      "steps": [
+        {
+          "op": "nonce.new",
+          "args": {
+            "kind": "memory"
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.new",
+          "args": {
+            "secret": "pow-secret",
+            "nonces": {
+              "$ref": "n"
+            },
+            "difficulty": 8,
+            "ttl": 120,
+            "accept": false,
+            "label": "label"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.with_params",
+          "args": {
+            "pow": {
+              "$ref": "p"
+            },
+            "params": {
+              "ip": "a"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.issue",
+          "args": {
+            "pow": {
+              "$ref": "b"
+            },
+            "claims": {
+              "ip": "b"
+            },
+            "difficulty": 8
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "binding and claims must not share names"
+            }
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testVerifyAcceptsAValidSolutionAndReturnsTheClaims",
+      "steps": [
+        {
+          "op": "nonce.new",
+          "args": {
+            "kind": "memory"
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.new",
+          "args": {
+            "secret": "pow-secret",
+            "nonces": {
+              "$ref": "n"
+            },
+            "difficulty": 8,
+            "ttl": 120,
+            "accept": false,
+            "label": "label"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.with_params",
+          "args": {
+            "pow": {
+              "$ref": "p"
+            },
+            "params": {
+              "ip": "203.0.113.0/24",
+              "ua": "ua-hash"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.issue",
+          "args": {
+            "pow": {
+              "$ref": "b"
+            },
+            "claims": {
+              "project": "p1"
+            },
+            "difficulty": 8
+          },
+          "bind": "t"
+        },
+        {
+          "op": "pow.solve",
+          "args": {
+            "nonce": {
+              "$ref": "t",
+              "path": "/nonce"
+            },
+            "difficulty": 8
+          },
+          "bind": "s",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "an answer to the random nonce each runtime's pow.issue drew: it is only bound and sent back to verify, whose status both runtimes must agree on"
+          }
+        },
+        {
+          "op": "pow.verify",
+          "args": {
+            "pow": {
+              "$ref": "b"
+            },
+            "token": {
+              "$ref": "t",
+              "path": "/value"
+            },
+            "answer": {
+              "$ref": "s"
+            }
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testVerifyReturnsAProofOfWorkResultEvenForAnUnreadableToken",
+      "steps": [
+        {
+          "op": "nonce.new",
+          "args": {
+            "kind": "memory"
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.new",
+          "args": {
+            "secret": "pow-secret",
+            "nonces": {
+              "$ref": "n"
+            },
+            "difficulty": 8,
+            "ttl": 120,
+            "accept": false,
+            "label": "label"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.with_params",
+          "args": {
+            "pow": {
+              "$ref": "p"
+            },
+            "params": {
+              "ip": "203.0.113.0/24",
+              "ua": "ua-hash"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.issue",
+          "args": {
+            "pow": {
+              "$ref": "b"
+            }
+          },
+          "bind": "t"
+        },
+        {
+          "op": "pow.verify",
+          "args": {
+            "pow": {
+              "$ref": "b"
+            },
+            "token": "not-a-token",
+            "answer": "x"
+          },
+          "expect": {
+            "status": "invalid_token",
+            "claims": [],
+            "isValid": false,
+            "difficulty": 0,
+            "elapsedMs": "<masked>",
+            "error": null
+          }
+        },
+        {
+          "op": "pow.with_params",
+          "args": {
+            "pow": {
+              "$ref": "p"
+            },
+            "params": {
+              "ip": "other"
+            }
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.verify",
+          "args": {
+            "pow": {
+              "$ref": "o"
+            },
+            "token": {
+              "$ref": "t",
+              "path": "/value"
+            },
+            "answer": "x"
+          },
+          "expect": {
+            "status": "binding_mismatch",
+            "claims": [],
+            "isValid": false,
+            "difficulty": 0,
+            "elapsedMs": "<masked>",
+            "error": null
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testVerifyRejectsReplayOfTheSameSubmission",
+      "steps": [
+        {
+          "op": "nonce.new",
+          "args": {
+            "kind": "memory"
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.new",
+          "args": {
+            "secret": "pow-secret",
+            "nonces": {
+              "$ref": "n"
+            },
+            "difficulty": 8,
+            "ttl": 120,
+            "accept": false,
+            "label": "label"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.with_params",
+          "args": {
+            "pow": {
+              "$ref": "p"
+            },
+            "params": {
+              "ip": "203.0.113.0/24",
+              "ua": "ua-hash"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.issue",
+          "args": {
+            "pow": {
+              "$ref": "b"
+            },
+            "difficulty": 8
+          },
+          "bind": "t"
+        },
+        {
+          "op": "pow.solve",
+          "args": {
+            "nonce": {
+              "$ref": "t",
+              "path": "/nonce"
+            },
+            "difficulty": 8
+          },
+          "bind": "s",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "an answer to the random nonce each runtime's pow.issue drew: it is only bound and sent back to verify, whose status both runtimes must agree on"
+          }
+        },
+        {
+          "op": "pow.verify",
+          "args": {
+            "pow": {
+              "$ref": "b"
+            },
+            "token": {
+              "$ref": "t",
+              "path": "/value"
+            },
+            "answer": {
+              "$ref": "s"
+            }
+          }
+        },
+        {
+          "op": "pow.verify",
+          "args": {
+            "pow": {
+              "$ref": "b"
+            },
+            "token": {
+              "$ref": "t",
+              "path": "/value"
+            },
+            "answer": {
+              "$ref": "s"
+            }
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testNonceIsUsedEvenWhenTheSolutionIsWrong",
+      "steps": [
+        {
+          "op": "nonce.new",
+          "args": {
+            "kind": "memory"
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.new",
+          "args": {
+            "secret": "pow-secret",
+            "nonces": {
+              "$ref": "n"
+            },
+            "difficulty": 8,
+            "ttl": 120,
+            "accept": false,
+            "label": "label"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.with_params",
+          "args": {
+            "pow": {
+              "$ref": "p"
+            },
+            "params": {
+              "ip": "203.0.113.0/24",
+              "ua": "ua-hash"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.issue",
+          "args": {
+            "pow": {
+              "$ref": "b"
+            },
+            "difficulty": 12
+          },
+          "bind": "t"
+        },
+        {
+          "op": "pow.wrong",
+          "args": {
+            "nonce": {
+              "$ref": "t",
+              "path": "/nonce"
+            },
+            "difficulty": 12
+          },
+          "bind": "w",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "an answer to the random nonce each runtime's pow.issue drew: it is only bound and sent back to verify, whose status both runtimes must agree on"
+          }
+        },
+        {
+          "op": "pow.solve",
+          "args": {
+            "nonce": {
+              "$ref": "t",
+              "path": "/nonce"
+            },
+            "difficulty": 12
+          },
+          "bind": "s",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "an answer to the random nonce each runtime's pow.issue drew: it is only bound and sent back to verify, whose status both runtimes must agree on"
+          }
+        },
+        {
+          "op": "pow.verify",
+          "args": {
+            "pow": {
+              "$ref": "b"
+            },
+            "token": {
+              "$ref": "t",
+              "path": "/value"
+            },
+            "answer": {
+              "$ref": "w"
+            }
+          }
+        },
+        {
+          "op": "pow.verify",
+          "args": {
+            "pow": {
+              "$ref": "b"
+            },
+            "token": {
+              "$ref": "t",
+              "path": "/value"
+            },
+            "answer": {
+              "$ref": "s"
+            }
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testBindingMismatchDoesNotUseTheNonce",
+      "steps": [
+        {
+          "op": "nonce.new",
+          "args": {
+            "kind": "memory"
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.new",
+          "args": {
+            "secret": "pow-secret",
+            "nonces": {
+              "$ref": "n"
+            },
+            "difficulty": 8,
+            "ttl": 120,
+            "accept": false,
+            "label": "label"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.with_params",
+          "args": {
+            "pow": {
+              "$ref": "p"
+            },
+            "params": {
+              "ip": "203.0.113.0/24",
+              "ua": "ua-hash"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.issue",
+          "args": {
+            "pow": {
+              "$ref": "b"
+            },
+            "difficulty": 8
+          },
+          "bind": "t"
+        },
+        {
+          "op": "pow.solve",
+          "args": {
+            "nonce": {
+              "$ref": "t",
+              "path": "/nonce"
+            },
+            "difficulty": 8
+          },
+          "bind": "s",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "an answer to the random nonce each runtime's pow.issue drew: it is only bound and sent back to verify, whose status both runtimes must agree on"
+          }
+        },
+        {
+          "op": "pow.with_params",
+          "args": {
+            "pow": {
+              "$ref": "p"
+            },
+            "params": {
+              "ip": "198.51.100.0/24",
+              "ua": "ua-hash"
+            }
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.verify",
+          "args": {
+            "pow": {
+              "$ref": "o"
+            },
+            "token": {
+              "$ref": "t",
+              "path": "/value"
+            },
+            "answer": {
+              "$ref": "s"
+            }
+          }
+        },
+        {
+          "op": "pow.verify",
+          "args": {
+            "pow": {
+              "$ref": "b"
+            },
+            "token": {
+              "$ref": "t",
+              "path": "/value"
+            },
+            "answer": {
+              "$ref": "s"
+            }
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testVerifyingWithPartOfTheBindingIsRejected",
+      "steps": [
+        {
+          "op": "nonce.new",
+          "args": {
+            "kind": "memory"
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.new",
+          "args": {
+            "secret": "pow-secret",
+            "nonces": {
+              "$ref": "n"
+            },
+            "difficulty": 8,
+            "ttl": 120,
+            "accept": false,
+            "label": "label"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.with_params",
+          "args": {
+            "pow": {
+              "$ref": "p"
+            },
+            "params": {
+              "ip": "203.0.113.0/24",
+              "ua": "ua-hash"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.issue",
+          "args": {
+            "pow": {
+              "$ref": "b"
+            },
+            "difficulty": 8
+          },
+          "bind": "t"
+        },
+        {
+          "op": "pow.solve",
+          "args": {
+            "nonce": {
+              "$ref": "t",
+              "path": "/nonce"
+            },
+            "difficulty": 8
+          },
+          "bind": "s",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "an answer to the random nonce each runtime's pow.issue drew: it is only bound and sent back to verify, whose status both runtimes must agree on"
+          }
+        },
+        {
+          "op": "pow.with_params",
+          "args": {
+            "pow": {
+              "$ref": "p"
+            },
+            "params": {
+              "ip": "203.0.113.0/24"
+            }
+          },
+          "bind": "ip",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.verify",
+          "args": {
+            "pow": {
+              "$ref": "ip"
+            },
+            "token": {
+              "$ref": "t",
+              "path": "/value"
+            },
+            "answer": {
+              "$ref": "s"
+            }
+          }
+        },
+        {
+          "op": "pow.verify",
+          "args": {
+            "pow": {
+              "$ref": "p"
+            },
+            "token": {
+              "$ref": "t",
+              "path": "/value"
+            },
+            "answer": {
+              "$ref": "s"
+            }
+          }
+        },
+        {
+          "op": "pow.verify",
+          "args": {
+            "pow": {
+              "$ref": "b"
+            },
+            "token": {
+              "$ref": "t",
+              "path": "/value"
+            },
+            "answer": {
+              "$ref": "s"
+            }
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testWithParamsReturnsACopyAndMerges",
+      "steps": [
+        {
+          "op": "nonce.new",
+          "args": {
+            "kind": "memory"
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.new",
+          "args": {
+            "secret": "pow-secret",
+            "nonces": {
+              "$ref": "n"
+            },
+            "difficulty": 8,
+            "ttl": 120,
+            "accept": false,
+            "label": "label"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.with_params",
+          "args": {
+            "pow": {
+              "$ref": "p"
+            },
+            "params": {
+              "ip": "203.0.113.0/24"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.with_params",
+          "args": {
+            "pow": {
+              "$ref": "a"
+            },
+            "params": {
+              "ua": "ua-hash"
+            }
+          },
+          "bind": "ab",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.issue",
+          "args": {
+            "pow": {
+              "$ref": "ab"
+            },
+            "difficulty": 8
+          },
+          "bind": "t"
+        },
+        {
+          "op": "pow.solve",
+          "args": {
+            "nonce": {
+              "$ref": "t",
+              "path": "/nonce"
+            },
+            "difficulty": 8
+          },
+          "bind": "s",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "an answer to the random nonce each runtime's pow.issue drew: it is only bound and sent back to verify, whose status both runtimes must agree on"
+          }
+        },
+        {
+          "op": "pow.verify",
+          "args": {
+            "pow": {
+              "$ref": "p"
+            },
+            "token": {
+              "$ref": "t",
+              "path": "/value"
+            },
+            "answer": {
+              "$ref": "s"
+            }
+          }
+        },
+        {
+          "op": "pow.with_params",
+          "args": {
+            "pow": {
+              "$ref": "p"
+            },
+            "params": {
+              "ip": "203.0.113.0/24",
+              "ua": "ua-hash"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.verify",
+          "args": {
+            "pow": {
+              "$ref": "b"
+            },
+            "token": {
+              "$ref": "t",
+              "path": "/value"
+            },
+            "answer": {
+              "$ref": "s"
+            }
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testDefaultsWork",
+      "steps": [
+        {
+          "op": "nonce.new",
+          "args": {
+            "kind": "memory"
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.new",
+          "args": {
+            "secret": "pow-secret",
+            "nonces": {
+              "$ref": "n"
+            },
+            "difficulty": 8
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.issue",
+          "args": {
+            "pow": {
+              "$ref": "p"
+            },
+            "difficulty": 8
+          },
+          "bind": "t"
+        },
+        {
+          "op": "pow.solve",
+          "args": {
+            "nonce": {
+              "$ref": "t",
+              "path": "/nonce"
+            },
+            "difficulty": 8
+          },
+          "bind": "s",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "an answer to the random nonce each runtime's pow.issue drew: it is only bound and sent back to verify, whose status both runtimes must agree on"
+          }
+        },
+        {
+          "op": "pow.verify",
+          "args": {
+            "pow": {
+              "$ref": "p"
+            },
+            "token": {
+              "$ref": "t",
+              "path": "/value"
+            },
+            "answer": {
+              "$ref": "s"
+            }
+          }
+        },
+        {
+          "op": "issuer.new",
+          "args": {
+            "secret": "pow-secret",
+            "label": "challenge",
+            "purpose": "challenge",
+            "ttl": 1
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.verify",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "token": {
+              "$ref": "t",
+              "path": "/value"
+            }
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testBindingIsMissingFromTheToken",
+      "steps": [
+        {
+          "op": "nonce.new",
+          "args": {
+            "kind": "memory"
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.new",
+          "args": {
+            "secret": "pow-secret",
+            "nonces": {
+              "$ref": "n"
+            },
+            "difficulty": 8,
+            "ttl": 120,
+            "accept": false,
+            "label": "label"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.issue",
+          "args": {
+            "pow": {
+              "$ref": "p"
+            },
+            "difficulty": 8
+          },
+          "bind": "t"
+        },
+        {
+          "op": "pow.solve",
+          "args": {
+            "nonce": {
+              "$ref": "t",
+              "path": "/nonce"
+            },
+            "difficulty": 8
+          },
+          "bind": "s",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "an answer to the random nonce each runtime's pow.issue drew: it is only bound and sent back to verify, whose status both runtimes must agree on"
+          }
+        },
+        {
+          "op": "pow.with_params",
+          "args": {
+            "pow": {
+              "$ref": "p"
+            },
+            "params": {
+              "ip": "203.0.113.0/24",
+              "ua": "ua-hash"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.verify",
+          "args": {
+            "pow": {
+              "$ref": "b"
+            },
+            "token": {
+              "$ref": "t",
+              "path": "/value"
+            },
+            "answer": {
+              "$ref": "s"
+            }
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testNonceParamsAreFilledFromTheTokenClaims",
+      "steps": [
+        {
+          "op": "nonce.new",
+          "args": {
+            "kind": "memory",
+            "key": "pow:{project}"
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.new",
+          "args": {
+            "secret": "pow-secret",
+            "nonces": {
+              "$ref": "n"
+            },
+            "difficulty": 8,
+            "ttl": 120,
+            "accept": false,
+            "label": "label"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.issue",
+          "args": {
+            "pow": {
+              "$ref": "p"
+            },
+            "claims": {
+              "project": "p1"
+            },
+            "difficulty": 8
+          },
+          "bind": "t"
+        },
+        {
+          "op": "pow.solve",
+          "args": {
+            "nonce": {
+              "$ref": "t",
+              "path": "/nonce"
+            },
+            "difficulty": 8
+          },
+          "bind": "s",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "an answer to the random nonce each runtime's pow.issue drew: it is only bound and sent back to verify, whose status both runtimes must agree on"
+          }
+        },
+        {
+          "op": "pow.verify",
+          "args": {
+            "pow": {
+              "$ref": "p"
+            },
+            "token": {
+              "$ref": "t",
+              "path": "/value"
+            },
+            "answer": {
+              "$ref": "s"
+            }
+          }
+        },
+        {
+          "op": "nonce.claimed",
+          "args": {
+            "nonces": {
+              "$ref": "n"
+            },
+            "nonce": {
+              "$ref": "t",
+              "path": "/nonce"
+            }
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testVerifyRejectsGarbageTamperedAndForeignTokens",
+      "steps": [
+        {
+          "op": "nonce.new",
+          "args": {
+            "kind": "memory"
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.new",
+          "args": {
+            "secret": "pow-secret",
+            "nonces": {
+              "$ref": "n"
+            },
+            "difficulty": 8,
+            "ttl": 120,
+            "accept": false,
+            "label": "label"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.verify",
+          "args": {
+            "pow": {
+              "$ref": "p"
+            },
+            "token": "not.a.jwt",
+            "answer": "0"
+          },
+          "expect": {
+            "status": "invalid_token",
+            "claims": [],
+            "isValid": false,
+            "difficulty": 0,
+            "elapsedMs": "<masked>",
+            "error": null
+          }
+        },
+        {
+          "op": "pow.new",
+          "args": {
+            "secret": "other-secret",
+            "nonces": {
+              "$ref": "n"
+            },
+            "difficulty": 8,
+            "ttl": 120,
+            "accept": false,
+            "label": "label"
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.issue",
+          "args": {
+            "pow": {
+              "$ref": "o"
+            },
+            "difficulty": 8
+          },
+          "bind": "f"
+        },
+        {
+          "op": "pow.solve",
+          "args": {
+            "nonce": {
+              "$ref": "f",
+              "path": "/nonce"
+            },
+            "difficulty": 8
+          },
+          "bind": "s",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "an answer to the random nonce each runtime's pow.issue drew: it is only bound and sent back to verify, whose status both runtimes must agree on"
+          }
+        },
+        {
+          "op": "pow.verify",
+          "args": {
+            "pow": {
+              "$ref": "p"
+            },
+            "token": {
+              "$ref": "f",
+              "path": "/value"
+            },
+            "answer": {
+              "$ref": "s"
+            }
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testATokenIssuedForAnotherPurposeIsNotAPuzzle",
+      "steps": [
+        {
+          "op": "nonce.new",
+          "args": {
+            "kind": "memory"
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.new",
+          "args": {
+            "secret": "pow-secret",
+            "nonces": {
+              "$ref": "n"
+            },
+            "difficulty": 8,
+            "ttl": 120,
+            "accept": false,
+            "label": "label"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.new",
+          "args": {
+            "secret": "pow-secret",
+            "label": "label",
+            "purpose": "clearance",
+            "ttl": 120
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "claims": {
+              "nonce": "00112233445566778899aabbccddeeff",
+              "difficulty": 0
+            }
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a token carries its expiry (time()) and, for puzzles, a random nonce"
+          }
+        },
+        {
+          "op": "pow.verify",
+          "args": {
+            "pow": {
+              "$ref": "p"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "answer": "0"
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testATokenWithoutANonceOrWithABadDifficultyIsInvalid",
+      "steps": [
+        {
+          "op": "nonce.new",
+          "args": {
+            "kind": "memory"
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.new",
+          "args": {
+            "secret": "pow-secret",
+            "nonces": {
+              "$ref": "n"
+            },
+            "difficulty": 8,
+            "ttl": 120,
+            "accept": false,
+            "label": "label"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.new",
+          "args": {
+            "secret": "pow-secret",
+            "label": "label",
+            "purpose": "challenge",
+            "ttl": 120
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "claims": {
+              "difficulty": 0
+            }
+          },
+          "bind": "a",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a token carries its expiry (time()) and, for puzzles, a random nonce"
+          }
+        },
+        {
+          "op": "pow.verify",
+          "args": {
+            "pow": {
+              "$ref": "p"
+            },
+            "token": {
+              "$ref": "a"
+            },
+            "answer": "0"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "claims": {
+              "nonce": "n",
+              "difficulty": -1
+            }
+          },
+          "bind": "b",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a token carries its expiry (time()) and, for puzzles, a random nonce"
+          }
+        },
+        {
+          "op": "pow.verify",
+          "args": {
+            "pow": {
+              "$ref": "p"
+            },
+            "token": {
+              "$ref": "b"
+            },
+            "answer": "0"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "claims": {
+              "nonce": "n",
+              "difficulty": "8"
+            }
+          },
+          "bind": "c",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a token carries its expiry (time()) and, for puzzles, a random nonce"
+          }
+        },
+        {
+          "op": "pow.verify",
+          "args": {
+            "pow": {
+              "$ref": "p"
+            },
+            "token": {
+              "$ref": "c"
+            },
+            "answer": "0"
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testStoreOutageRejectsByDefault",
+      "steps": [
+        {
+          "op": "nonce.new",
+          "args": {
+            "kind": "memory",
+            "error": "down"
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.new",
+          "args": {
+            "secret": "pow-secret",
+            "nonces": {
+              "$ref": "n"
+            },
+            "difficulty": 8,
+            "ttl": 120,
+            "accept": false,
+            "label": "label"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.issue",
+          "args": {
+            "pow": {
+              "$ref": "p"
+            },
+            "difficulty": 8
+          },
+          "bind": "t"
+        },
+        {
+          "op": "pow.solve",
+          "args": {
+            "nonce": {
+              "$ref": "t",
+              "path": "/nonce"
+            },
+            "difficulty": 8
+          },
+          "bind": "s",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "an answer to the random nonce each runtime's pow.issue drew: it is only bound and sent back to verify, whose status both runtimes must agree on"
+          }
+        },
+        {
+          "op": "pow.verify",
+          "args": {
+            "pow": {
+              "$ref": "p"
+            },
+            "token": {
+              "$ref": "t",
+              "path": "/value"
+            },
+            "answer": {
+              "$ref": "s"
+            }
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testStoreOutageChecksTheSolutionWhenTheCallerAcceptsIt",
+      "steps": [
+        {
+          "op": "nonce.new",
+          "args": {
+            "kind": "memory",
+            "error": "down"
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.new",
+          "args": {
+            "secret": "pow-secret",
+            "nonces": {
+              "$ref": "n"
+            },
+            "difficulty": 8,
+            "ttl": 120,
+            "accept": true,
+            "label": "label"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.issue",
+          "args": {
+            "pow": {
+              "$ref": "p"
+            },
+            "difficulty": 8
+          },
+          "bind": "t"
+        },
+        {
+          "op": "pow.solve",
+          "args": {
+            "nonce": {
+              "$ref": "t",
+              "path": "/nonce"
+            },
+            "difficulty": 8
+          },
+          "bind": "s",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "an answer to the random nonce each runtime's pow.issue drew: it is only bound and sent back to verify, whose status both runtimes must agree on"
+          }
+        },
+        {
+          "op": "pow.verify",
+          "args": {
+            "pow": {
+              "$ref": "p"
+            },
+            "token": {
+              "$ref": "t",
+              "path": "/value"
+            },
+            "answer": {
+              "$ref": "s"
+            }
+          }
+        },
+        {
+          "op": "pow.issue",
+          "args": {
+            "pow": {
+              "$ref": "p"
+            },
+            "difficulty": 12
+          },
+          "bind": "u"
+        },
+        {
+          "op": "pow.wrong",
+          "args": {
+            "nonce": {
+              "$ref": "u",
+              "path": "/nonce"
+            },
+            "difficulty": 12
+          },
+          "bind": "w",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "an answer to the random nonce each runtime's pow.issue drew: it is only bound and sent back to verify, whose status both runtimes must agree on"
+          }
+        },
+        {
+          "op": "pow.verify",
+          "args": {
+            "pow": {
+              "$ref": "p"
+            },
+            "token": {
+              "$ref": "u",
+              "path": "/value"
+            },
+            "answer": {
+              "$ref": "w"
+            }
+          }
+        }
+      ],
+      "state": []
+    }
+  ]
+}

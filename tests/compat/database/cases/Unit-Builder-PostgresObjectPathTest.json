@@ -1,0 +1,1552 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Builder/PostgresObjectPathTest.php"
+  ],
+  "cases": [
+    {
+      "name": "PostgresObjectPathTest::testAFilterOnAnUnsafeObjectPathIsAQueryError#quote in the last key",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o1895"
+          },
+          "bind": "s5039",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "meta.a' IN ('x') OR secret='s2' OR 'x",
+              "values": [
+                "x"
+              ]
+            },
+            "as": "o1896"
+          },
+          "bind": "s5040",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "meta.a' IN ('x') OR secret='s2' OR 'x",
+              "values": [
+                "x"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1896"
+            },
+            "method": "setAttributeType",
+            "args": {
+              "type": "object"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1895"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o1896"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid object path \"meta.a' IN ('x') OR secret='s2' OR 'x\": Object path keys must be non-empty and contain only a-z, A-Z, 0-9, underscore and hyphen"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "PostgresObjectPathTest::testAFilterOnAnUnsafeObjectPathIsAQueryError#operator in the last key",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o1897"
+          },
+          "bind": "s5043",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "meta.a'||(select 1)||'",
+              "values": [
+                "x"
+              ]
+            },
+            "as": "o1898"
+          },
+          "bind": "s5044",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "meta.a'||(select 1)||'",
+              "values": [
+                "x"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1898"
+            },
+            "method": "setAttributeType",
+            "args": {
+              "type": "object"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1897"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o1898"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid object path \"meta.a'||(select 1)||'\": Object path keys must be non-empty and contain only a-z, A-Z, 0-9, underscore and hyphen"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "PostgresObjectPathTest::testAFilterOnAnUnsafeObjectPathIsAQueryError#comment in the last key",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o1899"
+          },
+          "bind": "s5047",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "meta.a' OR 1=1 --",
+              "values": [
+                "x"
+              ]
+            },
+            "as": "o1900"
+          },
+          "bind": "s5048",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "meta.a' OR 1=1 --",
+              "values": [
+                "x"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1900"
+            },
+            "method": "setAttributeType",
+            "args": {
+              "type": "object"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1899"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o1900"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid object path \"meta.a' OR 1=1 --\": Object path keys must be non-empty and contain only a-z, A-Z, 0-9, underscore and hyphen"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "PostgresObjectPathTest::testAFilterOnAnUnsafeObjectPathIsAQueryError#quote in a middle key",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o1901"
+          },
+          "bind": "s5051",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "meta.a'b.c",
+              "values": [
+                "x"
+              ]
+            },
+            "as": "o1902"
+          },
+          "bind": "s5052",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "meta.a'b.c",
+              "values": [
+                "x"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1902"
+            },
+            "method": "setAttributeType",
+            "args": {
+              "type": "object"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1901"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o1902"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid object path \"meta.a'b.c\": Object path keys must be non-empty and contain only a-z, A-Z, 0-9, underscore and hyphen"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "PostgresObjectPathTest::testAFilterOnAnUnsafeObjectPathIsAQueryError#empty key",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o1903"
+          },
+          "bind": "s5055",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "meta..a",
+              "values": [
+                "x"
+              ]
+            },
+            "as": "o1904"
+          },
+          "bind": "s5056",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "meta..a",
+              "values": [
+                "x"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1904"
+            },
+            "method": "setAttributeType",
+            "args": {
+              "type": "object"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1903"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o1904"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid object path \"meta..a\": Object path keys must be non-empty and contain only a-z, A-Z, 0-9, underscore and hyphen"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "PostgresObjectPathTest::testAStatementWithAnUnsafeObjectPathInsideOrIsAQueryError#quote in the last key",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o1905"
+          },
+          "bind": "s5059",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1905"
+            },
+            "method": "from",
+            "args": {
+              "table": "docs"
+            }
+          },
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "meta.a",
+              "values": [
+                "x"
+              ]
+            },
+            "as": "o1906"
+          },
+          "bind": "s5061",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "meta.a",
+              "values": [
+                "x"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1906"
+            },
+            "method": "setAttributeType",
+            "args": {
+              "type": "object"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "startsWith",
+            "args": {
+              "attribute": "meta.a' IN ('x') OR secret='s2' OR 'x",
+              "value": "x"
+            },
+            "as": "o1907"
+          },
+          "bind": "s5063",
+          "expect": {
+            "$query": {
+              "method": "startsWith",
+              "attribute": "meta.a' IN ('x') OR secret='s2' OR 'x",
+              "values": [
+                "x"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1907"
+            },
+            "method": "setAttributeType",
+            "args": {
+              "type": "object"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "or",
+            "args": {
+              "queries": [
+                {
+                  "$obj": "o1906"
+                },
+                {
+                  "$obj": "o1907"
+                }
+              ]
+            },
+            "as": "o1908"
+          },
+          "bind": "s5065",
+          "expect": {
+            "$query": {
+              "method": "or",
+              "attribute": "",
+              "values": [
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "meta.a",
+                    "values": [
+                      "x"
+                    ]
+                  }
+                },
+                {
+                  "$query": {
+                    "method": "startsWith",
+                    "attribute": "meta.a' IN ('x') OR secret='s2' OR 'x",
+                    "values": [
+                      "x"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1905"
+            },
+            "method": "filter",
+            "args": {
+              "queries": [
+                {
+                  "$obj": "o1908"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1905"
+            },
+            "method": "build",
+            "args": {}
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid object path \"meta.a' IN ('x') OR secret='s2' OR 'x\": Object path keys must be non-empty and contain only a-z, A-Z, 0-9, underscore and hyphen"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "PostgresObjectPathTest::testAStatementWithAnUnsafeObjectPathInsideOrIsAQueryError#operator in the last key",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o1909"
+          },
+          "bind": "s5068",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1909"
+            },
+            "method": "from",
+            "args": {
+              "table": "docs"
+            }
+          },
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "meta.a",
+              "values": [
+                "x"
+              ]
+            },
+            "as": "o1910"
+          },
+          "bind": "s5070",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "meta.a",
+              "values": [
+                "x"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1910"
+            },
+            "method": "setAttributeType",
+            "args": {
+              "type": "object"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "startsWith",
+            "args": {
+              "attribute": "meta.a'||(select 1)||'",
+              "value": "x"
+            },
+            "as": "o1911"
+          },
+          "bind": "s5072",
+          "expect": {
+            "$query": {
+              "method": "startsWith",
+              "attribute": "meta.a'||(select 1)||'",
+              "values": [
+                "x"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1911"
+            },
+            "method": "setAttributeType",
+            "args": {
+              "type": "object"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "or",
+            "args": {
+              "queries": [
+                {
+                  "$obj": "o1910"
+                },
+                {
+                  "$obj": "o1911"
+                }
+              ]
+            },
+            "as": "o1912"
+          },
+          "bind": "s5074",
+          "expect": {
+            "$query": {
+              "method": "or",
+              "attribute": "",
+              "values": [
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "meta.a",
+                    "values": [
+                      "x"
+                    ]
+                  }
+                },
+                {
+                  "$query": {
+                    "method": "startsWith",
+                    "attribute": "meta.a'||(select 1)||'",
+                    "values": [
+                      "x"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1909"
+            },
+            "method": "filter",
+            "args": {
+              "queries": [
+                {
+                  "$obj": "o1912"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1909"
+            },
+            "method": "build",
+            "args": {}
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid object path \"meta.a'||(select 1)||'\": Object path keys must be non-empty and contain only a-z, A-Z, 0-9, underscore and hyphen"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "PostgresObjectPathTest::testAStatementWithAnUnsafeObjectPathInsideOrIsAQueryError#comment in the last key",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o1913"
+          },
+          "bind": "s5077",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1913"
+            },
+            "method": "from",
+            "args": {
+              "table": "docs"
+            }
+          },
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "meta.a",
+              "values": [
+                "x"
+              ]
+            },
+            "as": "o1914"
+          },
+          "bind": "s5079",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "meta.a",
+              "values": [
+                "x"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1914"
+            },
+            "method": "setAttributeType",
+            "args": {
+              "type": "object"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "startsWith",
+            "args": {
+              "attribute": "meta.a' OR 1=1 --",
+              "value": "x"
+            },
+            "as": "o1915"
+          },
+          "bind": "s5081",
+          "expect": {
+            "$query": {
+              "method": "startsWith",
+              "attribute": "meta.a' OR 1=1 --",
+              "values": [
+                "x"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1915"
+            },
+            "method": "setAttributeType",
+            "args": {
+              "type": "object"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "or",
+            "args": {
+              "queries": [
+                {
+                  "$obj": "o1914"
+                },
+                {
+                  "$obj": "o1915"
+                }
+              ]
+            },
+            "as": "o1916"
+          },
+          "bind": "s5083",
+          "expect": {
+            "$query": {
+              "method": "or",
+              "attribute": "",
+              "values": [
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "meta.a",
+                    "values": [
+                      "x"
+                    ]
+                  }
+                },
+                {
+                  "$query": {
+                    "method": "startsWith",
+                    "attribute": "meta.a' OR 1=1 --",
+                    "values": [
+                      "x"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1913"
+            },
+            "method": "filter",
+            "args": {
+              "queries": [
+                {
+                  "$obj": "o1916"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1913"
+            },
+            "method": "build",
+            "args": {}
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid object path \"meta.a' OR 1=1 --\": Object path keys must be non-empty and contain only a-z, A-Z, 0-9, underscore and hyphen"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "PostgresObjectPathTest::testAStatementWithAnUnsafeObjectPathInsideOrIsAQueryError#quote in a middle key",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o1917"
+          },
+          "bind": "s5086",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1917"
+            },
+            "method": "from",
+            "args": {
+              "table": "docs"
+            }
+          },
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "meta.a",
+              "values": [
+                "x"
+              ]
+            },
+            "as": "o1918"
+          },
+          "bind": "s5088",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "meta.a",
+              "values": [
+                "x"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1918"
+            },
+            "method": "setAttributeType",
+            "args": {
+              "type": "object"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "startsWith",
+            "args": {
+              "attribute": "meta.a'b.c",
+              "value": "x"
+            },
+            "as": "o1919"
+          },
+          "bind": "s5090",
+          "expect": {
+            "$query": {
+              "method": "startsWith",
+              "attribute": "meta.a'b.c",
+              "values": [
+                "x"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1919"
+            },
+            "method": "setAttributeType",
+            "args": {
+              "type": "object"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "or",
+            "args": {
+              "queries": [
+                {
+                  "$obj": "o1918"
+                },
+                {
+                  "$obj": "o1919"
+                }
+              ]
+            },
+            "as": "o1920"
+          },
+          "bind": "s5092",
+          "expect": {
+            "$query": {
+              "method": "or",
+              "attribute": "",
+              "values": [
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "meta.a",
+                    "values": [
+                      "x"
+                    ]
+                  }
+                },
+                {
+                  "$query": {
+                    "method": "startsWith",
+                    "attribute": "meta.a'b.c",
+                    "values": [
+                      "x"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1917"
+            },
+            "method": "filter",
+            "args": {
+              "queries": [
+                {
+                  "$obj": "o1920"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1917"
+            },
+            "method": "build",
+            "args": {}
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid object path \"meta.a'b.c\": Object path keys must be non-empty and contain only a-z, A-Z, 0-9, underscore and hyphen"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "PostgresObjectPathTest::testAStatementWithAnUnsafeObjectPathInsideOrIsAQueryError#empty key",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o1921"
+          },
+          "bind": "s5095",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1921"
+            },
+            "method": "from",
+            "args": {
+              "table": "docs"
+            }
+          },
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "meta.a",
+              "values": [
+                "x"
+              ]
+            },
+            "as": "o1922"
+          },
+          "bind": "s5097",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "meta.a",
+              "values": [
+                "x"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1922"
+            },
+            "method": "setAttributeType",
+            "args": {
+              "type": "object"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "startsWith",
+            "args": {
+              "attribute": "meta..a",
+              "value": "x"
+            },
+            "as": "o1923"
+          },
+          "bind": "s5099",
+          "expect": {
+            "$query": {
+              "method": "startsWith",
+              "attribute": "meta..a",
+              "values": [
+                "x"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1923"
+            },
+            "method": "setAttributeType",
+            "args": {
+              "type": "object"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "or",
+            "args": {
+              "queries": [
+                {
+                  "$obj": "o1922"
+                },
+                {
+                  "$obj": "o1923"
+                }
+              ]
+            },
+            "as": "o1924"
+          },
+          "bind": "s5101",
+          "expect": {
+            "$query": {
+              "method": "or",
+              "attribute": "",
+              "values": [
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "meta.a",
+                    "values": [
+                      "x"
+                    ]
+                  }
+                },
+                {
+                  "$query": {
+                    "method": "startsWith",
+                    "attribute": "meta..a",
+                    "values": [
+                      "x"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1921"
+            },
+            "method": "filter",
+            "args": {
+              "queries": [
+                {
+                  "$obj": "o1924"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1921"
+            },
+            "method": "build",
+            "args": {}
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid object path \"meta..a\": Object path keys must be non-empty and contain only a-z, A-Z, 0-9, underscore and hyphen"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "PostgresObjectPathTest::testAFilterOnAPlainObjectPathBindsItsValue",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o1925"
+          },
+          "bind": "s5104",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "meta.user-info.home_city2",
+              "values": [
+                "x"
+              ]
+            },
+            "as": "o1926"
+          },
+          "bind": "s5105",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "meta.user-info.home_city2",
+              "values": [
+                "x"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1926"
+            },
+            "method": "setAttributeType",
+            "args": {
+              "type": "object"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1925"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o1926"
+                }
+              ]
+            },
+            "as": "o1927"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "\"meta\"->'user-info'->>'home_city2' IN (?)",
+              "bindings": [
+                "x"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

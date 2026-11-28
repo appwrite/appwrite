@@ -16,7 +16,9 @@ crate-type = ["cdylib"]
 [dependencies]
 ext-php-rs.workspace = true
 foldhash.workspace = true
-mimalloc.workspace = true
+# The extension's allocator: musl's, on the Alpine image, is slow. `local_dynamic_tls` is what a
+# library PHP loads with dlopen needs there.
+mimalloc = { workspace = true, features = ["local_dynamic_tls"] }
 # Not the default `ravif`: libheif writes AVIF as ImageMagick does, and rav1e
 # would bring its thread pool (rayon) into a process that forks.
 php-std.workspace = true

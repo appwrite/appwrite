@@ -1,0 +1,438 @@
+{
+  "source": "packages/abuse/tests/Challenge/ChallengeTest.php",
+  "cases": [
+    {
+      "name": "testANewKindNeedsOnlyIssueAndVerify",
+      "steps": [
+        {
+          "op": "riddle.new",
+          "args": {
+            "secret": "secret",
+            "answer": "echo"
+          },
+          "bind": "r0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "riddle.with_params",
+          "args": {
+            "riddle": {
+              "$ref": "r0"
+            },
+            "params": {
+              "ip": "203.0.113.0/24",
+              "ua": "ua-hash"
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "riddle.issue",
+          "args": {
+            "riddle": {
+              "$ref": "r"
+            },
+            "claims": {
+              "project": "p1"
+            }
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a token carries its expiry (time()) and, for puzzles, a random nonce"
+          }
+        },
+        {
+          "op": "riddle.verify",
+          "args": {
+            "riddle": {
+              "$ref": "r"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "answer": "echo"
+          }
+        },
+        {
+          "op": "riddle.verify",
+          "args": {
+            "riddle": {
+              "$ref": "r"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "answer": "wrong"
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testParamsAreEnforcedByTheBase",
+      "steps": [
+        {
+          "op": "riddle.new",
+          "args": {
+            "secret": "secret",
+            "answer": "echo"
+          },
+          "bind": "r0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "riddle.with_params",
+          "args": {
+            "riddle": {
+              "$ref": "r0"
+            },
+            "params": {
+              "ip": "203.0.113.0/24",
+              "ua": "ua-hash"
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "riddle.issue",
+          "args": {
+            "riddle": {
+              "$ref": "r"
+            }
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a token carries its expiry (time()) and, for puzzles, a random nonce"
+          }
+        },
+        {
+          "op": "riddle.verify",
+          "args": {
+            "riddle": {
+              "$ref": "r0"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "answer": "echo"
+          }
+        },
+        {
+          "op": "riddle.with_param",
+          "args": {
+            "riddle": {
+              "$ref": "r0"
+            },
+            "name": "ip",
+            "value": "203.0.113.0/24"
+          },
+          "bind": "ip",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "riddle.verify",
+          "args": {
+            "riddle": {
+              "$ref": "ip"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "answer": "echo"
+          }
+        },
+        {
+          "op": "riddle.with_param",
+          "args": {
+            "riddle": {
+              "$ref": "ip"
+            },
+            "name": "ua",
+            "value": "ua-hash"
+          },
+          "bind": "both",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "riddle.verify",
+          "args": {
+            "riddle": {
+              "$ref": "both"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "answer": "echo"
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testWithParamsReturnsACopy",
+      "steps": [
+        {
+          "op": "riddle.new",
+          "args": {
+            "secret": "secret",
+            "answer": "echo"
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "riddle.with_params",
+          "args": {
+            "riddle": {
+              "$ref": "r"
+            },
+            "params": {
+              "ip": "203.0.113.0/24",
+              "ua": "ua-hash"
+            }
+          },
+          "bind": "copy",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "riddle.issue",
+          "args": {
+            "riddle": {
+              "$ref": "r"
+            }
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a token carries its expiry (time()) and, for puzzles, a random nonce"
+          }
+        },
+        {
+          "op": "riddle.verify",
+          "args": {
+            "riddle": {
+              "$ref": "r"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "answer": "echo"
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testInvalidTokensAreRejectedByTheBase",
+      "steps": [
+        {
+          "op": "riddle.new",
+          "args": {
+            "secret": "secret",
+            "answer": "echo"
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "riddle.new",
+          "args": {
+            "secret": "other",
+            "answer": "echo"
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "riddle.verify",
+          "args": {
+            "riddle": {
+              "$ref": "r"
+            },
+            "token": "not.a.jwt",
+            "answer": "echo"
+          }
+        },
+        {
+          "op": "riddle.issue",
+          "args": {
+            "riddle": {
+              "$ref": "o"
+            }
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a token carries its expiry (time()) and, for puzzles, a random nonce"
+          }
+        },
+        {
+          "op": "riddle.verify",
+          "args": {
+            "riddle": {
+              "$ref": "r"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "answer": "echo"
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testTheKindsOwnClaimsCannotBeOverridden",
+      "steps": [
+        {
+          "op": "riddle.new",
+          "args": {
+            "secret": "secret",
+            "answer": "echo"
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "riddle.issue",
+          "args": {
+            "riddle": {
+              "$ref": "r"
+            },
+            "claims": {
+              "answer": "x"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "claim 'answer' is reserved"
+            }
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testParamsCannotReuseTheKindsOwnClaims",
+      "steps": [
+        {
+          "op": "riddle.new",
+          "args": {
+            "secret": "secret",
+            "answer": "echo"
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "riddle.with_param",
+          "args": {
+            "riddle": {
+              "$ref": "r"
+            },
+            "name": "answer",
+            "value": "x"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "riddle.issue",
+          "args": {
+            "riddle": {
+              "$ref": "b"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "claim 'answer' is reserved"
+            }
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "Result and Token: a status and its validity",
+      "steps": [
+        {
+          "op": "challenge.result",
+          "args": {
+            "status": "valid",
+            "claims": {
+              "a": "b"
+            }
+          },
+          "expect": {
+            "status": "valid",
+            "claims": {
+              "a": "b"
+            },
+            "isValid": true,
+            "error": null
+          }
+        },
+        {
+          "op": "challenge.result",
+          "args": {
+            "status": "replay"
+          },
+          "expect": {
+            "status": "replay",
+            "claims": [],
+            "isValid": false,
+            "error": null
+          }
+        },
+        {
+          "op": "challenge.token",
+          "args": {
+            "value": "v"
+          },
+          "expect": "v"
+        }
+      ],
+      "state": []
+    }
+  ]
+}

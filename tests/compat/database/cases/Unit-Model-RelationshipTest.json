@@ -1,0 +1,2372 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Model/RelationshipTest.php"
+  ],
+  "cases": [
+    {
+      "name": "RelationshipTest::testInverseSwapsKeysAndPointsAtTheGivenCollection",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "oneToMany",
+            "args": {
+              "relatedCollection": "comments",
+              "key": "comments",
+              "twoWay": true,
+              "twoWayKey": "post",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Cascade"
+              }
+            },
+            "as": "o4273"
+          },
+          "bind": "s6452",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "comments",
+              "type": {
+                "$enum": "RelationshipType::OneToMany"
+              },
+              "twoWay": true,
+              "key": "comments",
+              "twoWayKey": "post",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Cascade"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4273"
+            },
+            "method": "inverse",
+            "args": {
+              "collection": "posts"
+            },
+            "as": "o4274"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "posts",
+              "type": {
+                "$enum": "RelationshipType::OneToMany"
+              },
+              "twoWay": true,
+              "key": "post",
+              "twoWayKey": "comments",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Cascade"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RelationshipTest::testInverseLeavesTheOriginalUntouched",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "manyToMany",
+            "args": {
+              "relatedCollection": "tags",
+              "key": "tags",
+              "twoWay": true,
+              "twoWayKey": "posts"
+            },
+            "as": "o4275"
+          },
+          "bind": "s6454",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "tags",
+              "type": {
+                "$enum": "RelationshipType::ManyToMany"
+              },
+              "twoWay": true,
+              "key": "tags",
+              "twoWayKey": "posts",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4275"
+            },
+            "method": "inverse",
+            "args": {
+              "collection": "posts"
+            },
+            "as": "o4276"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "posts",
+              "type": {
+                "$enum": "RelationshipType::ManyToMany"
+              },
+              "twoWay": true,
+              "key": "posts",
+              "twoWayKey": "tags",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RelationshipTest::testInverseOfInverseRestoresTheKeys",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "manyToOne",
+            "args": {
+              "relatedCollection": "users",
+              "key": "author",
+              "twoWay": true,
+              "twoWayKey": "posts",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::SetNull"
+              }
+            },
+            "as": "o4277"
+          },
+          "bind": "s6456",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "users",
+              "type": {
+                "$enum": "RelationshipType::ManyToOne"
+              },
+              "twoWay": true,
+              "key": "author",
+              "twoWayKey": "posts",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::SetNull"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4277"
+            },
+            "method": "inverse",
+            "args": {
+              "collection": "posts"
+            },
+            "as": "o4278"
+          },
+          "bind": "s6457",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "posts",
+              "type": {
+                "$enum": "RelationshipType::ManyToOne"
+              },
+              "twoWay": true,
+              "key": "posts",
+              "twoWayKey": "author",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::SetNull"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4278"
+            },
+            "method": "inverse",
+            "args": {
+              "collection": "users"
+            },
+            "as": "o4279"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "users",
+              "type": {
+                "$enum": "RelationshipType::ManyToOne"
+              },
+              "twoWay": true,
+              "key": "author",
+              "twoWayKey": "posts",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::SetNull"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RelationshipTest::testInverseWithUnresolvedKeysKeepsThemUnresolved",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "oneToOne",
+            "args": {
+              "relatedCollection": "profiles",
+              "key": "profile"
+            },
+            "as": "o4280"
+          },
+          "bind": "s6459",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "profiles",
+              "type": {
+                "$enum": "RelationshipType::OneToOne"
+              },
+              "twoWay": false,
+              "key": "profile",
+              "twoWayKey": null,
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4280"
+            },
+            "method": "inverse",
+            "args": {
+              "collection": "users"
+            },
+            "as": "o4281"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "users",
+              "type": {
+                "$enum": "RelationshipType::OneToOne"
+              },
+              "twoWay": false,
+              "key": null,
+              "twoWayKey": "profile",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RelationshipTest::testToDocumentWritesTheStoredOptionsShape",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "oneToMany",
+            "args": {
+              "relatedCollection": "comments",
+              "key": "comments",
+              "twoWay": true,
+              "twoWayKey": "post",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::SetNull"
+              }
+            },
+            "as": "o4282"
+          },
+          "bind": "s6461",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "comments",
+              "type": {
+                "$enum": "RelationshipType::OneToMany"
+              },
+              "twoWay": true,
+              "key": "comments",
+              "twoWayKey": "post",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::SetNull"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4282"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4283"
+          },
+          "bind": "s6462",
+          "expect": {
+            "$document": {
+              "relatedCollection": "comments",
+              "relationType": "oneToMany",
+              "twoWay": true,
+              "key": "comments",
+              "twoWayKey": "post",
+              "onDelete": "setNull"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4283"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "relatedCollection": "comments",
+            "relationType": "oneToMany",
+            "twoWay": true,
+            "key": "comments",
+            "twoWayKey": "post",
+            "onDelete": "setNull"
+          }
+        }
+      ]
+    },
+    {
+      "name": "RelationshipTest::testDocumentRoundTrip#oneToOne defaults",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "oneToOne",
+            "args": {
+              "relatedCollection": "profiles"
+            },
+            "as": "o4284"
+          },
+          "bind": "s6464",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "profiles",
+              "type": {
+                "$enum": "RelationshipType::OneToOne"
+              },
+              "twoWay": false,
+              "key": null,
+              "twoWayKey": null,
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4284"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4288"
+          },
+          "bind": "s6468",
+          "expect": {
+            "$document": {
+              "relatedCollection": "profiles",
+              "relationType": "oneToOne",
+              "twoWay": false,
+              "key": null,
+              "twoWayKey": null,
+              "onDelete": "restrict"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "fromDocument",
+            "args": {
+              "document": {
+                "$obj": "o4288"
+              }
+            },
+            "as": "o4289"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "profiles",
+              "type": {
+                "$enum": "RelationshipType::OneToOne"
+              },
+              "twoWay": false,
+              "key": null,
+              "twoWayKey": null,
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RelationshipTest::testDocumentRoundTrip#oneToMany two-way cascade",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "oneToMany",
+            "args": {
+              "relatedCollection": "comments",
+              "key": "comments",
+              "twoWay": true,
+              "twoWayKey": "post",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Cascade"
+              }
+            },
+            "as": "o4285"
+          },
+          "bind": "s6465",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "comments",
+              "type": {
+                "$enum": "RelationshipType::OneToMany"
+              },
+              "twoWay": true,
+              "key": "comments",
+              "twoWayKey": "post",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Cascade"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4285"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4290"
+          },
+          "bind": "s6470",
+          "expect": {
+            "$document": {
+              "relatedCollection": "comments",
+              "relationType": "oneToMany",
+              "twoWay": true,
+              "key": "comments",
+              "twoWayKey": "post",
+              "onDelete": "cascade"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "fromDocument",
+            "args": {
+              "document": {
+                "$obj": "o4290"
+              }
+            },
+            "as": "o4291"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "comments",
+              "type": {
+                "$enum": "RelationshipType::OneToMany"
+              },
+              "twoWay": true,
+              "key": "comments",
+              "twoWayKey": "post",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Cascade"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RelationshipTest::testDocumentRoundTrip#manyToOne set null",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "manyToOne",
+            "args": {
+              "relatedCollection": "users",
+              "key": "author",
+              "twoWayKey": "posts",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::SetNull"
+              }
+            },
+            "as": "o4286"
+          },
+          "bind": "s6466",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "users",
+              "type": {
+                "$enum": "RelationshipType::ManyToOne"
+              },
+              "twoWay": false,
+              "key": "author",
+              "twoWayKey": "posts",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::SetNull"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4286"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4292"
+          },
+          "bind": "s6472",
+          "expect": {
+            "$document": {
+              "relatedCollection": "users",
+              "relationType": "manyToOne",
+              "twoWay": false,
+              "key": "author",
+              "twoWayKey": "posts",
+              "onDelete": "setNull"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "fromDocument",
+            "args": {
+              "document": {
+                "$obj": "o4292"
+              }
+            },
+            "as": "o4293"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "users",
+              "type": {
+                "$enum": "RelationshipType::ManyToOne"
+              },
+              "twoWay": false,
+              "key": "author",
+              "twoWayKey": "posts",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::SetNull"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RelationshipTest::testDocumentRoundTrip#manyToMany two-way",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "manyToMany",
+            "args": {
+              "relatedCollection": "tags",
+              "key": "tags",
+              "twoWay": true,
+              "twoWayKey": "posts"
+            },
+            "as": "o4287"
+          },
+          "bind": "s6467",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "tags",
+              "type": {
+                "$enum": "RelationshipType::ManyToMany"
+              },
+              "twoWay": true,
+              "key": "tags",
+              "twoWayKey": "posts",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4287"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4294"
+          },
+          "bind": "s6474",
+          "expect": {
+            "$document": {
+              "relatedCollection": "tags",
+              "relationType": "manyToMany",
+              "twoWay": true,
+              "key": "tags",
+              "twoWayKey": "posts",
+              "onDelete": "restrict"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "fromDocument",
+            "args": {
+              "document": {
+                "$obj": "o4294"
+              }
+            },
+            "as": "o4295"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "tags",
+              "type": {
+                "$enum": "RelationshipType::ManyToMany"
+              },
+              "twoWay": true,
+              "key": "tags",
+              "twoWayKey": "posts",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RelationshipTest::testArrayRoundTrip#oneToOne defaults",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "oneToOne",
+            "args": {
+              "relatedCollection": "profiles"
+            },
+            "as": "o4296"
+          },
+          "bind": "s6476",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "profiles",
+              "type": {
+                "$enum": "RelationshipType::OneToOne"
+              },
+              "twoWay": false,
+              "key": null,
+              "twoWayKey": null,
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4296"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4300"
+          },
+          "bind": "s6480",
+          "expect": {
+            "$document": {
+              "relatedCollection": "profiles",
+              "relationType": "oneToOne",
+              "twoWay": false,
+              "key": null,
+              "twoWayKey": null,
+              "onDelete": "restrict"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4300"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "relatedCollection": "profiles",
+            "relationType": "oneToOne",
+            "twoWay": false,
+            "key": null,
+            "twoWayKey": null,
+            "onDelete": "restrict"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "relatedCollection": "profiles",
+                "relationType": "oneToOne",
+                "twoWay": false,
+                "key": null,
+                "twoWayKey": null,
+                "onDelete": "restrict"
+              }
+            },
+            "as": "o4301"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "profiles",
+              "type": {
+                "$enum": "RelationshipType::OneToOne"
+              },
+              "twoWay": false,
+              "key": null,
+              "twoWayKey": null,
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RelationshipTest::testArrayRoundTrip#oneToMany two-way cascade",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "oneToMany",
+            "args": {
+              "relatedCollection": "comments",
+              "key": "comments",
+              "twoWay": true,
+              "twoWayKey": "post",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Cascade"
+              }
+            },
+            "as": "o4297"
+          },
+          "bind": "s6477",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "comments",
+              "type": {
+                "$enum": "RelationshipType::OneToMany"
+              },
+              "twoWay": true,
+              "key": "comments",
+              "twoWayKey": "post",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Cascade"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4297"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4302"
+          },
+          "bind": "s6483",
+          "expect": {
+            "$document": {
+              "relatedCollection": "comments",
+              "relationType": "oneToMany",
+              "twoWay": true,
+              "key": "comments",
+              "twoWayKey": "post",
+              "onDelete": "cascade"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4302"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "relatedCollection": "comments",
+            "relationType": "oneToMany",
+            "twoWay": true,
+            "key": "comments",
+            "twoWayKey": "post",
+            "onDelete": "cascade"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "relatedCollection": "comments",
+                "relationType": "oneToMany",
+                "twoWay": true,
+                "key": "comments",
+                "twoWayKey": "post",
+                "onDelete": "cascade"
+              }
+            },
+            "as": "o4303"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "comments",
+              "type": {
+                "$enum": "RelationshipType::OneToMany"
+              },
+              "twoWay": true,
+              "key": "comments",
+              "twoWayKey": "post",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Cascade"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RelationshipTest::testArrayRoundTrip#manyToOne set null",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "manyToOne",
+            "args": {
+              "relatedCollection": "users",
+              "key": "author",
+              "twoWayKey": "posts",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::SetNull"
+              }
+            },
+            "as": "o4298"
+          },
+          "bind": "s6478",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "users",
+              "type": {
+                "$enum": "RelationshipType::ManyToOne"
+              },
+              "twoWay": false,
+              "key": "author",
+              "twoWayKey": "posts",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::SetNull"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4298"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4304"
+          },
+          "bind": "s6486",
+          "expect": {
+            "$document": {
+              "relatedCollection": "users",
+              "relationType": "manyToOne",
+              "twoWay": false,
+              "key": "author",
+              "twoWayKey": "posts",
+              "onDelete": "setNull"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4304"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "relatedCollection": "users",
+            "relationType": "manyToOne",
+            "twoWay": false,
+            "key": "author",
+            "twoWayKey": "posts",
+            "onDelete": "setNull"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "relatedCollection": "users",
+                "relationType": "manyToOne",
+                "twoWay": false,
+                "key": "author",
+                "twoWayKey": "posts",
+                "onDelete": "setNull"
+              }
+            },
+            "as": "o4305"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "users",
+              "type": {
+                "$enum": "RelationshipType::ManyToOne"
+              },
+              "twoWay": false,
+              "key": "author",
+              "twoWayKey": "posts",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::SetNull"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RelationshipTest::testArrayRoundTrip#manyToMany two-way",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "manyToMany",
+            "args": {
+              "relatedCollection": "tags",
+              "key": "tags",
+              "twoWay": true,
+              "twoWayKey": "posts"
+            },
+            "as": "o4299"
+          },
+          "bind": "s6479",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "tags",
+              "type": {
+                "$enum": "RelationshipType::ManyToMany"
+              },
+              "twoWay": true,
+              "key": "tags",
+              "twoWayKey": "posts",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4299"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4306"
+          },
+          "bind": "s6489",
+          "expect": {
+            "$document": {
+              "relatedCollection": "tags",
+              "relationType": "manyToMany",
+              "twoWay": true,
+              "key": "tags",
+              "twoWayKey": "posts",
+              "onDelete": "restrict"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4306"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "relatedCollection": "tags",
+            "relationType": "manyToMany",
+            "twoWay": true,
+            "key": "tags",
+            "twoWayKey": "posts",
+            "onDelete": "restrict"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "relatedCollection": "tags",
+                "relationType": "manyToMany",
+                "twoWay": true,
+                "key": "tags",
+                "twoWayKey": "posts",
+                "onDelete": "restrict"
+              }
+            },
+            "as": "o4307"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "tags",
+              "type": {
+                "$enum": "RelationshipType::ManyToMany"
+              },
+              "twoWay": true,
+              "key": "tags",
+              "twoWayKey": "posts",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RelationshipTest::testSevenXStoredOptionsHydrate",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "relatedCollection": "comments",
+                "relationType": "oneToMany",
+                "twoWay": true,
+                "twoWayKey": "post",
+                "onDelete": "cascade",
+                "side": "parent"
+              }
+            },
+            "as": "o4308"
+          },
+          "bind": "s6492",
+          "expect": {
+            "$document": {
+              "relatedCollection": "comments",
+              "relationType": "oneToMany",
+              "twoWay": true,
+              "twoWayKey": "post",
+              "onDelete": "cascade",
+              "side": "parent"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "fromDocument",
+            "args": {
+              "document": {
+                "$obj": "o4308"
+              }
+            },
+            "as": "o4309"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "comments",
+              "type": {
+                "$enum": "RelationshipType::OneToMany"
+              },
+              "twoWay": true,
+              "key": null,
+              "twoWayKey": "post",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Cascade"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RelationshipTest::testSideIsIgnored",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "relatedCollection": "users",
+                "relationType": "manyToOne",
+                "key": "author",
+                "twoWayKey": "posts"
+              }
+            },
+            "as": "o4310"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "users",
+              "type": {
+                "$enum": "RelationshipType::ManyToOne"
+              },
+              "twoWay": false,
+              "key": "author",
+              "twoWayKey": "posts",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "relatedCollection": "users",
+                "relationType": "manyToOne",
+                "key": "author",
+                "twoWayKey": "posts",
+                "side": "child"
+              }
+            },
+            "as": "o4311"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "users",
+              "type": {
+                "$enum": "RelationshipType::ManyToOne"
+              },
+              "twoWay": false,
+              "key": "author",
+              "twoWayKey": "posts",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "relatedCollection": "users",
+                "relationType": "manyToOne",
+                "key": "author",
+                "twoWayKey": "posts",
+                "side": "child"
+              }
+            },
+            "as": "o4312"
+          },
+          "bind": "s6496",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "users",
+              "type": {
+                "$enum": "RelationshipType::ManyToOne"
+              },
+              "twoWay": false,
+              "key": "author",
+              "twoWayKey": "posts",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4312"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4313"
+          },
+          "bind": "s6497",
+          "expect": {
+            "$document": {
+              "relatedCollection": "users",
+              "relationType": "manyToOne",
+              "twoWay": false,
+              "key": "author",
+              "twoWayKey": "posts",
+              "onDelete": "restrict"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4313"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "relatedCollection": "users",
+            "relationType": "manyToOne",
+            "twoWay": false,
+            "key": "author",
+            "twoWayKey": "posts",
+            "onDelete": "restrict"
+          }
+        }
+      ]
+    },
+    {
+      "name": "RelationshipTest::testMissingOptionalKeysFallBackToDefaults",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "relatedCollection": "users",
+                "relationType": "oneToOne"
+              }
+            },
+            "as": "o4314"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "users",
+              "type": {
+                "$enum": "RelationshipType::OneToOne"
+              },
+              "twoWay": false,
+              "key": null,
+              "twoWayKey": null,
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RelationshipTest::testEmptyStoredKeysHydrateAsUnresolved",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "relatedCollection": "users",
+                "relationType": "oneToOne",
+                "key": "",
+                "twoWayKey": ""
+              }
+            },
+            "as": "o4315"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "users",
+              "type": {
+                "$enum": "RelationshipType::OneToOne"
+              },
+              "twoWay": false,
+              "key": null,
+              "twoWayKey": null,
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RelationshipTest::testEnumValuesAreAcceptedInPlaceOfStrings",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "relatedCollection": "users",
+                "relationType": {
+                  "$enum": "RelationshipType::ManyToMany"
+                },
+                "onDelete": {
+                  "$enum": "RelationshipDeleteAction::SetNull"
+                }
+              }
+            },
+            "as": "o4316"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "users",
+              "type": {
+                "$enum": "RelationshipType::ManyToMany"
+              },
+              "twoWay": false,
+              "key": null,
+              "twoWayKey": null,
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::SetNull"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RelationshipTest::testToOptionsIsTheStoredShapeWithoutTheKeyPlusTheSide",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "manyToMany",
+            "args": {
+              "relatedCollection": "tags",
+              "key": "tags",
+              "twoWay": true,
+              "twoWayKey": "posts",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::SetNull"
+              }
+            },
+            "as": "o4317"
+          },
+          "bind": "s6502",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "tags",
+              "type": {
+                "$enum": "RelationshipType::ManyToMany"
+              },
+              "twoWay": true,
+              "key": "tags",
+              "twoWayKey": "posts",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::SetNull"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4317"
+            },
+            "method": "toOptions",
+            "args": {
+              "side": {
+                "$enum": "RelationshipSide::Child"
+              }
+            }
+          },
+          "expect": {
+            "relatedCollection": "tags",
+            "relationType": "manyToMany",
+            "twoWay": true,
+            "twoWayKey": "posts",
+            "onDelete": "setNull",
+            "side": "child"
+          }
+        }
+      ]
+    },
+    {
+      "name": "RelationshipTest::testToOptionsHydratesBackWithTheKey",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "oneToMany",
+            "args": {
+              "relatedCollection": "comments",
+              "key": "comments",
+              "twoWayKey": "post"
+            },
+            "as": "o4318"
+          },
+          "bind": "s6504",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "comments",
+              "type": {
+                "$enum": "RelationshipType::OneToMany"
+              },
+              "twoWay": false,
+              "key": "comments",
+              "twoWayKey": "post",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4318"
+            },
+            "method": "toOptions",
+            "args": {
+              "side": {
+                "$enum": "RelationshipSide::Parent"
+              }
+            }
+          },
+          "expect": {
+            "relatedCollection": "comments",
+            "relationType": "oneToMany",
+            "twoWay": false,
+            "twoWayKey": "post",
+            "onDelete": "restrict",
+            "side": "parent"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "relatedCollection": "comments",
+                "relationType": "oneToMany",
+                "twoWay": false,
+                "twoWayKey": "post",
+                "onDelete": "restrict",
+                "key": "comments"
+              }
+            },
+            "as": "o4319"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "comments",
+              "type": {
+                "$enum": "RelationshipType::OneToMany"
+              },
+              "twoWay": false,
+              "key": "comments",
+              "twoWayKey": "post",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RelationshipTest::testSupportedForeignKeyActionIsAccepted",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "relatedCollection": "users",
+                "relationType": "oneToOne",
+                "onDelete": {
+                  "$enum": "Query\\Schema\\ForeignKeyAction::Cascade"
+                }
+              }
+            },
+            "as": "o4320"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "users",
+              "type": {
+                "$enum": "RelationshipType::OneToOne"
+              },
+              "twoWay": false,
+              "key": null,
+              "twoWayKey": null,
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Cascade"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RelationshipTest::testInvalidArrayIsRejected#missing related collection",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "relationType": "oneToOne"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Relationship",
+              "message": "Relationship has no related collection"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RelationshipTest::testInvalidArrayIsRejected#empty related collection",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "relatedCollection": "",
+                "relationType": "oneToOne"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Relationship",
+              "message": "Relationship has no related collection"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RelationshipTest::testInvalidArrayIsRejected#non-string related collection",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "relatedCollection": 7,
+                "relationType": "oneToOne"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Relationship",
+              "message": "Relationship has no related collection"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RelationshipTest::testInvalidArrayIsRejected#missing type",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "relatedCollection": "users"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Relationship",
+              "message": "Unknown relationship type \"null\""
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RelationshipTest::testInvalidArrayIsRejected#unknown type",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "relatedCollection": "users",
+                "relationType": "oneToFew"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Relationship",
+              "message": "Unknown relationship type \"oneToFew\""
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RelationshipTest::testInvalidArrayIsRejected#non-string type",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "relatedCollection": "users",
+                "relationType": 1
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Relationship",
+              "message": "Unknown relationship type \"int\""
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RelationshipTest::testInvalidArrayIsRejected#non-string key",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "relatedCollection": "users",
+                "relationType": "oneToOne",
+                "key": 5
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Relationship",
+              "message": "Relationship key must be a string, got int"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RelationshipTest::testInvalidArrayIsRejected#non-string two-way key",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "relatedCollection": "users",
+                "relationType": "oneToOne",
+                "twoWayKey": [
+                  "posts"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Relationship",
+              "message": "Relationship twoWayKey must be a string, got array"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RelationshipTest::testInvalidArrayIsRejected#unknown delete action",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "relatedCollection": "users",
+                "relationType": "oneToOne",
+                "onDelete": "explode"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Relationship",
+              "message": "Unsupported relationship onDelete action \"explode\"; expected one of: cascade, restrict, setNull"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RelationshipTest::testInvalidArrayIsRejected#unrelated enum as delete action",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "relatedCollection": "users",
+                "relationType": "oneToOne",
+                "onDelete": {
+                  "$enum": "RelationshipSide::Parent"
+                }
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Relationship",
+              "message": "Unsupported relationship onDelete action \"Utopia\\Database\\RelationshipSide\"; expected one of: cascade, restrict, setNull"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RelationshipTest::testInvalidDocumentIsRejected#missing related collection",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "relationType": "oneToOne"
+              }
+            },
+            "as": "o4321"
+          },
+          "bind": "s6518",
+          "expect": {
+            "$document": {
+              "relationType": "oneToOne"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "fromDocument",
+            "args": {
+              "document": {
+                "$obj": "o4321"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Relationship",
+              "message": "Relationship has no related collection"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RelationshipTest::testInvalidDocumentIsRejected#empty related collection",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "relatedCollection": "",
+                "relationType": "oneToOne"
+              }
+            },
+            "as": "o4322"
+          },
+          "bind": "s6520",
+          "expect": {
+            "$document": {
+              "relatedCollection": "",
+              "relationType": "oneToOne"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "fromDocument",
+            "args": {
+              "document": {
+                "$obj": "o4322"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Relationship",
+              "message": "Relationship has no related collection"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RelationshipTest::testInvalidDocumentIsRejected#non-string related collection",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "relatedCollection": 7,
+                "relationType": "oneToOne"
+              }
+            },
+            "as": "o4323"
+          },
+          "bind": "s6522",
+          "expect": {
+            "$document": {
+              "relatedCollection": 7,
+              "relationType": "oneToOne"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "fromDocument",
+            "args": {
+              "document": {
+                "$obj": "o4323"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Relationship",
+              "message": "Relationship has no related collection"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RelationshipTest::testInvalidDocumentIsRejected#missing type",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "relatedCollection": "users"
+              }
+            },
+            "as": "o4324"
+          },
+          "bind": "s6524",
+          "expect": {
+            "$document": {
+              "relatedCollection": "users"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "fromDocument",
+            "args": {
+              "document": {
+                "$obj": "o4324"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Relationship",
+              "message": "Unknown relationship type \"null\""
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RelationshipTest::testInvalidDocumentIsRejected#unknown type",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "relatedCollection": "users",
+                "relationType": "oneToFew"
+              }
+            },
+            "as": "o4325"
+          },
+          "bind": "s6526",
+          "expect": {
+            "$document": {
+              "relatedCollection": "users",
+              "relationType": "oneToFew"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "fromDocument",
+            "args": {
+              "document": {
+                "$obj": "o4325"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Relationship",
+              "message": "Unknown relationship type \"oneToFew\""
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RelationshipTest::testInvalidDocumentIsRejected#non-string type",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "relatedCollection": "users",
+                "relationType": 1
+              }
+            },
+            "as": "o4326"
+          },
+          "bind": "s6528",
+          "expect": {
+            "$document": {
+              "relatedCollection": "users",
+              "relationType": 1
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "fromDocument",
+            "args": {
+              "document": {
+                "$obj": "o4326"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Relationship",
+              "message": "Unknown relationship type \"int\""
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RelationshipTest::testInvalidDocumentIsRejected#non-string key",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "relatedCollection": "users",
+                "relationType": "oneToOne",
+                "key": 5
+              }
+            },
+            "as": "o4327"
+          },
+          "bind": "s6530",
+          "expect": {
+            "$document": {
+              "relatedCollection": "users",
+              "relationType": "oneToOne",
+              "key": 5
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "fromDocument",
+            "args": {
+              "document": {
+                "$obj": "o4327"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Relationship",
+              "message": "Relationship key must be a string, got int"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RelationshipTest::testInvalidDocumentIsRejected#non-string two-way key",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "relatedCollection": "users",
+                "relationType": "oneToOne",
+                "twoWayKey": [
+                  "posts"
+                ]
+              }
+            },
+            "as": "o4328"
+          },
+          "bind": "s6532",
+          "expect": {
+            "$document": {
+              "relatedCollection": "users",
+              "relationType": "oneToOne",
+              "twoWayKey": [
+                "posts"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "fromDocument",
+            "args": {
+              "document": {
+                "$obj": "o4328"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Relationship",
+              "message": "Relationship twoWayKey must be a string, got array"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RelationshipTest::testInvalidDocumentIsRejected#unknown delete action",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "relatedCollection": "users",
+                "relationType": "oneToOne",
+                "onDelete": "explode"
+              }
+            },
+            "as": "o4329"
+          },
+          "bind": "s6534",
+          "expect": {
+            "$document": {
+              "relatedCollection": "users",
+              "relationType": "oneToOne",
+              "onDelete": "explode"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "fromDocument",
+            "args": {
+              "document": {
+                "$obj": "o4329"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Relationship",
+              "message": "Unsupported relationship onDelete action \"explode\"; expected one of: cascade, restrict, setNull"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RelationshipTest::testInvalidDocumentIsRejected#unrelated enum as delete action",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "relatedCollection": "users",
+                "relationType": "oneToOne",
+                "onDelete": {
+                  "$enum": "RelationshipSide::Parent"
+                }
+              }
+            },
+            "as": "o4330"
+          },
+          "bind": "s6536",
+          "expect": {
+            "$document": {
+              "relatedCollection": "users",
+              "relationType": "oneToOne",
+              "onDelete": {
+                "$enum": "RelationshipSide::Parent"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "fromDocument",
+            "args": {
+              "document": {
+                "$obj": "o4330"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Relationship",
+              "message": "Unsupported relationship onDelete action \"Utopia\\Database\\RelationshipSide\"; expected one of: cascade, restrict, setNull"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

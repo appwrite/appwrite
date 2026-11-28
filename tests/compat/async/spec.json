@@ -1,0 +1,29 @@
+{
+  "lib": "async",
+  "description": "utopia-php/async 0.2: Promises/A+ promises over Sync, Swoole coroutine, Amp and React adapters (Promise::async, run, map, all, race, any, allSettled, delay, timeout), timers (Timer::after, tick, clear, clearAll, exists, getTimers over Swoole, Amp, React and a sync fallback), and parallel execution of closures in worker threads or processes (Parallel::run, all, map, forEach, pool). Rust: utopia-async, the same three facades over one engine adapter (Tokio) that every crate uses for tasks, timers and I/O. In progress: the facades and the engine are ported and tested in the crate; the compat operations and cases are not written yet.",
+  "complete": false,
+  "php": {
+    "src": [
+      "vendor/utopia-php/async/src"
+    ],
+    "tests": [
+      "vendor/utopia-php/async/tests"
+    ]
+  },
+  "rust": {
+    "crate": "crates/utopia/async"
+  },
+  "ops": {},
+  "waivers": {
+    "Utopia\\Async\\Serializer::*": "PHP runtime plumbing: serialises closures (opis/closure) to ship them to worker processes and threads. Rust's Parallel runs closures on the engine's thread pool, which shares memory, so nothing is serialised.",
+    "Utopia\\Async\\GarbageCollection::*": "PHP runtime plumbing: triggers PHP's cycle collector in long-lived workers past a memory threshold. Rust frees memory deterministically.",
+    "Utopia\\Async\\Parallel\\Pool\\*": "PHP runtime plumbing: pools of Swoole threads or processes and ext-parallel runtimes that receive serialised tasks. Rust's Parallel uses the engine's blocking pool.",
+    "Utopia\\Async\\Parallel::createPool": "PHP runtime plumbing: an explicit pool of Swoole workers. The engine's blocking pool is sized by utopia_async::Builder::blocking_threads.",
+    "Utopia\\Async\\Parallel::shutdown": "PHP runtime plumbing: stops the default worker pool's processes. Rust's blocking pool stops with its runtime.",
+    "Utopia\\Async\\Parallel::*Config": "PHP runtime plumbing: serialisation limits, worker polling intervals and GC thresholds of PHP's worker processes, with no Rust counterpart.",
+    "Utopia\\Async\\Promise::*Config": "PHP runtime plumbing: the polling sleeps PHP's await() loops back off with. A Rust future is woken by the engine instead of polled.",
+    "Utopia\\Async\\Promise::setAdapter": "The engine is chosen at compile time (utopia_async::Engine, a cargo feature), so every call goes straight to it.",
+    "Utopia\\Async\\Timer::setAdapter": "The engine is chosen at compile time (utopia_async::Engine, a cargo feature), so every call goes straight to it.",
+    "Utopia\\Async\\Parallel::setAdapter": "The engine is chosen at compile time (utopia_async::Engine, a cargo feature), so every call goes straight to it."
+  }
+}

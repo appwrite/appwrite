@@ -1,0 +1,563 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Validator/Query/AggregateTest.php"
+  ],
+  "cases": [
+    {
+      "name": "AggregateTest::testValueSuccess",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "price",
+                "key": "price",
+                "type": "double",
+                "array": false
+              }
+            },
+            "as": "o1127"
+          },
+          "bind": "s1861",
+          "expect": {
+            "$document": {
+              "$id": "price",
+              "key": "price",
+              "type": "double",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Aggregate",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o1127"
+                }
+              ]
+            },
+            "as": "o1128"
+          },
+          "bind": "s1862",
+          "expect": {
+            "$value": "Validator\\Query\\Aggregate",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "sum",
+            "args": {
+              "attribute": "price"
+            },
+            "as": "o1129"
+          },
+          "bind": "s1863",
+          "expect": {
+            "$query": {
+              "method": "sum",
+              "attribute": "price",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1128"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1129"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "avg",
+            "args": {
+              "attribute": "price",
+              "alias": "avg_price"
+            },
+            "as": "o1130"
+          },
+          "bind": "s1865",
+          "expect": {
+            "$query": {
+              "method": "avg",
+              "attribute": "price",
+              "values": [],
+              "alias": "avg_price"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1128"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1130"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "count",
+            "args": {
+              "attribute": "*",
+              "alias": "cnt"
+            },
+            "as": "o1131"
+          },
+          "bind": "s1867",
+          "expect": {
+            "$query": {
+              "method": "count",
+              "attribute": "*",
+              "values": [],
+              "alias": "cnt"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1128"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1131"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "count",
+            "args": {},
+            "as": "o1132"
+          },
+          "bind": "s1869",
+          "expect": {
+            "$query": {
+              "method": "count",
+              "attribute": "*",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1128"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1132"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "countDistinct",
+            "args": {
+              "attribute": "$id"
+            },
+            "as": "o1133"
+          },
+          "bind": "s1871",
+          "expect": {
+            "$query": {
+              "method": "countDistinct",
+              "attribute": "$id",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1128"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1133"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "AggregateTest::testUnknownAttributeRejected",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "price",
+                "key": "price",
+                "type": "double",
+                "array": false
+              }
+            },
+            "as": "o1134"
+          },
+          "bind": "s1873",
+          "expect": {
+            "$document": {
+              "$id": "price",
+              "key": "price",
+              "type": "double",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Aggregate",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o1134"
+                }
+              ]
+            },
+            "as": "o1135"
+          },
+          "bind": "s1874",
+          "expect": {
+            "$value": "Validator\\Query\\Aggregate",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "sum",
+            "args": {
+              "attribute": "nonexistent"
+            },
+            "as": "o1136"
+          },
+          "bind": "s1875",
+          "expect": {
+            "$query": {
+              "method": "sum",
+              "attribute": "nonexistent",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1135"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1136"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1135"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Attribute not found in schema: nonexistent"
+        }
+      ]
+    },
+    {
+      "name": "AggregateTest::testInvalidAliasRejected",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "price",
+                "key": "price",
+                "type": "double",
+                "array": false
+              }
+            },
+            "as": "o1137"
+          },
+          "bind": "s1878",
+          "expect": {
+            "$document": {
+              "$id": "price",
+              "key": "price",
+              "type": "double",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Aggregate",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o1137"
+                }
+              ]
+            },
+            "as": "o1138"
+          },
+          "bind": "s1879",
+          "expect": {
+            "$value": "Validator\\Query\\Aggregate",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "sum",
+            "args": {
+              "attribute": "price",
+              "alias": "a b"
+            },
+            "as": "o1139"
+          },
+          "bind": "s1880",
+          "expect": {
+            "$query": {
+              "method": "sum",
+              "attribute": "price",
+              "values": [],
+              "alias": "a b"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1138"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1139"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1138"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid aggregate alias"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "sum",
+            "args": {
+              "attribute": "price",
+              "alias": "1alias"
+            },
+            "as": "o1140"
+          },
+          "bind": "s1883",
+          "expect": {
+            "$query": {
+              "method": "sum",
+              "attribute": "price",
+              "values": [],
+              "alias": "1alias"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1138"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1140"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1138"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid aggregate alias"
+        }
+      ]
+    },
+    {
+      "name": "AggregateTest::testUnknownAttributeAllowedWithoutAttributeSupport",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "price",
+                "key": "price",
+                "type": "double",
+                "array": false
+              }
+            },
+            "as": "o1141"
+          },
+          "bind": "s1886",
+          "expect": {
+            "$document": {
+              "$id": "price",
+              "key": "price",
+              "type": "double",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Aggregate",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o1141"
+                }
+              ]
+            },
+            "as": "o1142"
+          },
+          "expect": {
+            "$value": "Validator\\Query\\Aggregate",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Aggregate",
+            "args": {
+              "attributes": [],
+              "supportForAttributes": false
+            },
+            "as": "o1143"
+          },
+          "bind": "s1888",
+          "expect": {
+            "$value": "Validator\\Query\\Aggregate",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "sum",
+            "args": {
+              "attribute": "anything"
+            },
+            "as": "o1144"
+          },
+          "bind": "s1889",
+          "expect": {
+            "$query": {
+              "method": "sum",
+              "attribute": "anything",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1143"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1144"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    }
+  ]
+}

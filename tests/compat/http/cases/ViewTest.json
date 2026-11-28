@@ -1,0 +1,299 @@
+{
+  "source": "packages/http/src/View.php",
+  "cases": [
+    {
+      "name": "params and filters",
+      "op": "view.run",
+      "args": {
+        "steps": [
+          {
+            "new": [
+              "v",
+              ""
+            ]
+          },
+          {
+            "set_param": [
+              "v",
+              "title",
+              "<b>\"Hi\" & 'you'</b>"
+            ]
+          },
+          {
+            "set_param": [
+              "v",
+              "raw",
+              "<b>raw</b>",
+              false
+            ]
+          },
+          {
+            "set_param": [
+              "v",
+              "list",
+              {
+                "lit": {
+                  "a": {
+                    "b": "deep"
+                  },
+                  "n": [
+                    1,
+                    2
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "set_param": [
+              "v",
+              "bad.key",
+              "x"
+            ]
+          },
+          {
+            "get_param": [
+              "v",
+              "title"
+            ]
+          },
+          {
+            "get_param": [
+              "v",
+              "raw"
+            ]
+          },
+          {
+            "get_param": [
+              "v",
+              "list.a.b"
+            ]
+          },
+          {
+            "get_param": [
+              "v",
+              "list.n.1"
+            ]
+          },
+          {
+            "get_param": [
+              "v",
+              "missing",
+              "default"
+            ]
+          },
+          {
+            "get_param": [
+              "v",
+              "raw.0"
+            ]
+          },
+          {
+            "get_param": [
+              "v",
+              "list.a.zz",
+              "dflt"
+            ]
+          },
+          {
+            "print": [
+              "v",
+              "<i>café</i>",
+              "escape"
+            ]
+          },
+          {
+            "print": [
+              "v",
+              "a\nb\n\nc\n\n\n\n0\n\nd",
+              "nl2p"
+            ]
+          },
+          {
+            "print": [
+              "v",
+              "x\n\ny",
+              [
+                "nl2p",
+                "escape"
+              ]
+            ]
+          },
+          {
+            "print": [
+              "v",
+              "plain",
+              ""
+            ]
+          },
+          {
+            "print": [
+              "v",
+              "x",
+              "nope"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$error": {
+            "class": "Exception",
+            "message": "$key can't contain a dot \".\" character",
+            "code": 0,
+            "previous": null
+          }
+        },
+        "&lt;b&gt;&quot;Hi&quot; &amp; &#039;you&#039;&lt;/b&gt;",
+        "<b>raw</b>",
+        null,
+        null,
+        "default",
+        "<",
+        "dflt",
+        "&lt;i&gt;caf&eacute;&lt;/i&gt;",
+        "<p>a<br />b</p><p>c</p><p>d</p>",
+        "&lt;p&gt;x&lt;/p&gt;&lt;p&gt;y&lt;/p&gt;",
+        "plain",
+        {
+          "$error": {
+            "class": "Exception",
+            "message": "Filter \"nope\" is not registered",
+            "code": 0,
+            "previous": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "render templates",
+      "op": "view.run",
+      "args": {
+        "steps": [
+          {
+            "write": [
+              "/tmp/compat-fs/${ns}/views/page.phtml",
+              "<div>\n  <p> a   b </p>\n  <pre>  keep\n  this  </pre>\n<textarea>  t  </textarea>\n</div>\n"
+            ]
+          },
+          {
+            "new": [
+              "v",
+              "/tmp/compat-fs/${ns}/views/page.phtml"
+            ]
+          },
+          {
+            "render": [
+              "v",
+              true
+            ]
+          },
+          {
+            "render": [
+              "v",
+              false
+            ]
+          },
+          {
+            "is_rendered": [
+              "v"
+            ]
+          },
+          {
+            "set_rendered": [
+              "v",
+              true
+            ]
+          },
+          {
+            "is_rendered": [
+              "v"
+            ]
+          },
+          {
+            "render": [
+              "v"
+            ]
+          },
+          {
+            "set_rendered": [
+              "v",
+              false
+            ]
+          },
+          {
+            "set_path": [
+              "v",
+              "/tmp/compat-fs/${ns}/views/missing.phtml"
+            ]
+          },
+          {
+            "render": [
+              "v"
+            ]
+          },
+          {
+            "new": [
+              "child",
+              "/tmp/compat-fs/${ns}/views/page.phtml"
+            ]
+          },
+          {
+            "new": [
+              "layout",
+              ""
+            ]
+          },
+          {
+            "exec": [
+              "layout",
+              [
+                "child"
+              ]
+            ]
+          },
+          {
+            "parent": [
+              "child"
+            ]
+          },
+          {
+            "set_parent": [
+              "child",
+              "layout"
+            ]
+          },
+          {
+            "parent": [
+              "child"
+            ]
+          },
+          {
+            "parent": [
+              "layout"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        "<div> <p> a b </p> <pre>  keep\n  this  </pre><textarea>  t  </textarea></div>",
+        "<div>\n  <p> a   b </p>\n  <pre>  keep\n  this  </pre>\n<textarea>  t  </textarea>\n</div>\n",
+        false,
+        true,
+        "",
+        {
+          "$error": {
+            "class": "Exception",
+            "message": "\"/tmp/compat-fs/${ns}/views/missing.phtml\" view template is not readable",
+            "code": 0,
+            "previous": null
+          }
+        },
+        "<div> <p> a b </p> <pre>  keep\n  this  </pre><textarea>  t  </textarea></div>",
+        "layout",
+        "layout",
+        null
+      ]
+    }
+  ]
+}

@@ -1,0 +1,3739 @@
+{
+  "source": "packages/domains/tests/E2E/Registrar/OpenSRSTest.php",
+  "cases": [
+    {
+      "name": "getName",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "opensrs",
+              "key": "reseller-key",
+              "username": "reseller",
+              "password": "pw-1234"
+            },
+            "nameservers": [
+              "ns1.systemdns.com",
+              "ns2.systemdns.com"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getName",
+            "args": {}
+          },
+          "expect": {
+            "result": "opensrs",
+            "requests": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "available",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "opensrs",
+              "key": "reseller-key",
+              "username": "reseller",
+              "password": "pw-1234"
+            },
+            "nameservers": [
+              "ns1.systemdns.com",
+              "ns2.systemdns.com"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "available",
+            "args": {
+              "domains": [
+                "kqzxwvbnmt.net",
+                "google.com",
+                "kqzxwvbnmt.net"
+              ]
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"protocol\">XCP</item><item key=\"response_code\">210</item><item key=\"response_text\">Domain available</item><item key=\"is_success\">1</item></dt_assoc></data_block></body></OPS_envelope>"
+              },
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"protocol\">XCP</item><item key=\"response_code\">211</item><item key=\"response_text\">Domain taken</item><item key=\"is_success\">1</item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "kqzxwvbnmt.net": true,
+              "google.com": false
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "36511b1d990e6a8c10b40e1c5902172f",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>LOOKUP</item>\n\n<item key=\"attributes\">\n<dt_assoc>\n<item key='domain'>kqzxwvbnmt.net</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              },
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "b7387717acf8ed0789f990508210c41a",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>LOOKUP</item>\n\n<item key=\"attributes\">\n<dt_assoc>\n<item key='domain'>google.com</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "purchase",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "opensrs",
+              "key": "reseller-key",
+              "username": "reseller",
+              "password": "pw-1234"
+            },
+            "nameservers": [
+              "ns1.systemdns.com",
+              "ns2.systemdns.com"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "purchase",
+            "args": {
+              "domain": "kqzxwvbnmt.net",
+              "contacts": {
+                "owner": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "admin": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "tech": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "billing": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                }
+              },
+              "periodYears": 1
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"protocol\">XCP</item><item key=\"response_code\">200</item><item key=\"response_text\">Command completed successfully</item><item key=\"is_success\">1</item><item key=\"attributes\"><dt_assoc><item key=\"id\">3735281</item><item key=\"domain_id\">77</item></dt_assoc></item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "result": "3735281",
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "a4965999e2fbca42591cca3d6d319100",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>SW_REGISTER</item>\n\n<item key=\"attributes\">\n<dt_assoc>\n<item key='domain'>kqzxwvbnmt.net</item>\n<item key='periodYears'>1</item>\n<item key=\"contact_set\">\n<dt_assoc>\n<item key='owner'>\n<dt_assoc>\n<item key='first_name'>Test</item>\n<item key='last_name'>Tester</item>\n<item key='email'>testing@test.com</item>\n<item key='phone'>+18031234567</item>\n<item key='address1'>123 Main St</item>\n<item key='city'>San Francisco</item>\n<item key='state'>CA</item>\n<item key='postal_code'>94105</item>\n<item key='country'>US</item>\n<item key='owner'>Test Tester</item>\n<item key='org_name'>Test Inc</item>\n</dt_assoc>\n</item>\n<item key='admin'>\n<dt_assoc>\n<item key='first_name'>Test</item>\n<item key='last_name'>Tester</item>\n<item key='email'>testing@test.com</item>\n<item key='phone'>+18031234567</item>\n<item key='address1'>123 Main St</item>\n<item key='city'>San Francisco</item>\n<item key='state'>CA</item>\n<item key='postal_code'>94105</item>\n<item key='country'>US</item>\n<item key='owner'>Test Tester</item>\n<item key='org_name'>Test Inc</item>\n</dt_assoc>\n</item>\n<item key='tech'>\n<dt_assoc>\n<item key='first_name'>Test</item>\n<item key='last_name'>Tester</item>\n<item key='email'>testing@test.com</item>\n<item key='phone'>+18031234567</item>\n<item key='address1'>123 Main St</item>\n<item key='city'>San Francisco</item>\n<item key='state'>CA</item>\n<item key='postal_code'>94105</item>\n<item key='country'>US</item>\n<item key='owner'>Test Tester</item>\n<item key='org_name'>Test Inc</item>\n</dt_assoc>\n</item>\n<item key='billing'>\n<dt_assoc>\n<item key='first_name'>Test</item>\n<item key='last_name'>Tester</item>\n<item key='email'>testing@test.com</item>\n<item key='phone'>+18031234567</item>\n<item key='address1'>123 Main St</item>\n<item key='city'>San Francisco</item>\n<item key='state'>CA</item>\n<item key='postal_code'>94105</item>\n<item key='country'>US</item>\n<item key='owner'>Test Tester</item>\n<item key='org_name'>Test Inc</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</item>\n<item key='custom_tech_contact'>0</item>\n<item key='custom_nameservers'>1</item>\n<item key='reg_username'>reseller</item>\n<item key='reg_password'>pw-1234</item>\n<item key='reg_type'>new</item>\n<item key='handle'>process</item>\n<item key='f_whois_privacy'>1</item>\n<item key='auto_renew'>0</item>\n<item key=\"nameserver_list\">\n<dt_array>\n<dt_assoc>\n<item key='name'>ns1.systemdns.com</item>\n<item key='sortorder'>0</item>\n</dt_assoc>\n<dt_assoc>\n<item key='name'>ns2.systemdns.com</item>\n<item key='sortorder'>1</item>\n</dt_assoc>\n</dt_array>\n</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "purchase",
+            "args": {
+              "domain": "kqzxwvbnmt.org",
+              "contact": {
+                "firstname": "Test",
+                "lastname": "Tester",
+                "phone": "+18031234567",
+                "email": "testing@test.com",
+                "address1": "123 Main St",
+                "address2": "Suite 100",
+                "address3": "",
+                "city": "San Francisco",
+                "state": "CA",
+                "country": "US",
+                "postalcode": "94105",
+                "org": "Test Inc"
+              },
+              "nameservers": [
+                "ns1.a.com",
+                "ns2.a.com"
+              ],
+              "autorenewEnabled": true,
+              "purchasePrice": 120.0,
+              "periodYears": 2
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"protocol\">XCP</item><item key=\"response_code\">200</item><item key=\"response_text\">Command completed successfully</item><item key=\"is_success\">1</item><item key=\"attributes\"><dt_assoc><item key=\"id\">A</item></dt_assoc></item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "result": "A",
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "351837254cba7ecdd6cd44e395874cda",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>SW_REGISTER</item>\n\n<item key=\"attributes\">\n<dt_assoc>\n<item key='domain'>kqzxwvbnmt.org</item>\n<item key='periodYears'>2</item>\n<item key=\"contact_set\">\n<dt_assoc>\n<item key='owner'>\n<dt_assoc>\n<item key='first_name'>Test</item>\n<item key='last_name'>Tester</item>\n<item key='email'>testing@test.com</item>\n<item key='phone'>+18031234567</item>\n<item key='address1'>123 Main St</item>\n<item key='city'>San Francisco</item>\n<item key='state'>CA</item>\n<item key='postal_code'>94105</item>\n<item key='country'>US</item>\n<item key='owner'>Test Tester</item>\n<item key='org_name'>Test Inc</item>\n</dt_assoc>\n</item>\n<item key='admin'>\n<dt_assoc>\n<item key='first_name'>Test</item>\n<item key='last_name'>Tester</item>\n<item key='email'>testing@test.com</item>\n<item key='phone'>+18031234567</item>\n<item key='address1'>123 Main St</item>\n<item key='city'>San Francisco</item>\n<item key='state'>CA</item>\n<item key='postal_code'>94105</item>\n<item key='country'>US</item>\n<item key='owner'>Test Tester</item>\n<item key='org_name'>Test Inc</item>\n</dt_assoc>\n</item>\n<item key='tech'>\n<dt_assoc>\n<item key='first_name'>Test</item>\n<item key='last_name'>Tester</item>\n<item key='email'>testing@test.com</item>\n<item key='phone'>+18031234567</item>\n<item key='address1'>123 Main St</item>\n<item key='city'>San Francisco</item>\n<item key='state'>CA</item>\n<item key='postal_code'>94105</item>\n<item key='country'>US</item>\n<item key='owner'>Test Tester</item>\n<item key='org_name'>Test Inc</item>\n</dt_assoc>\n</item>\n<item key='billing'>\n<dt_assoc>\n<item key='first_name'>Test</item>\n<item key='last_name'>Tester</item>\n<item key='email'>testing@test.com</item>\n<item key='phone'>+18031234567</item>\n<item key='address1'>123 Main St</item>\n<item key='city'>San Francisco</item>\n<item key='state'>CA</item>\n<item key='postal_code'>94105</item>\n<item key='country'>US</item>\n<item key='owner'>Test Tester</item>\n<item key='org_name'>Test Inc</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</item>\n<item key='custom_tech_contact'>0</item>\n<item key='custom_nameservers'>1</item>\n<item key='reg_username'>reseller</item>\n<item key='reg_password'>pw-1234</item>\n<item key='reg_type'>new</item>\n<item key='handle'>process</item>\n<item key='f_whois_privacy'>1</item>\n<item key='auto_renew'>1</item>\n<item key=\"nameserver_list\">\n<dt_array>\n<dt_assoc>\n<item key='name'>ns1.a.com</item>\n<item key='sortorder'>0</item>\n</dt_assoc>\n<dt_assoc>\n<item key='name'>ns2.a.com</item>\n<item key='sortorder'>1</item>\n</dt_assoc>\n</dt_array>\n</item>\n<item key='premium_price_to_display'>120</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "purchase",
+            "args": {
+              "domain": "kqzxwvbnmt.info",
+              "contact": {
+                "firstname": "Test",
+                "lastname": "Tester",
+                "phone": "+18031234567",
+                "email": "testing@test.com",
+                "address1": "123 Main St",
+                "address2": "Suite 100",
+                "address3": "",
+                "city": "San Francisco",
+                "state": "CA",
+                "country": "US",
+                "postalcode": "94105",
+                "org": "Test Inc"
+              },
+              "purchasePrice": 99.5
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"protocol\">XCP</item><item key=\"response_code\">200</item><item key=\"response_text\">Command completed successfully</item><item key=\"is_success\">1</item><item key=\"attributes\"><dt_assoc></dt_assoc></item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "result": "",
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "de85a6a79e44b8cac7638c031644b4b9",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>SW_REGISTER</item>\n\n<item key=\"attributes\">\n<dt_assoc>\n<item key='domain'>kqzxwvbnmt.info</item>\n<item key='periodYears'>1</item>\n<item key=\"contact_set\">\n<dt_assoc>\n<item key='owner'>\n<dt_assoc>\n<item key='first_name'>Test</item>\n<item key='last_name'>Tester</item>\n<item key='email'>testing@test.com</item>\n<item key='phone'>+18031234567</item>\n<item key='address1'>123 Main St</item>\n<item key='city'>San Francisco</item>\n<item key='state'>CA</item>\n<item key='postal_code'>94105</item>\n<item key='country'>US</item>\n<item key='owner'>Test Tester</item>\n<item key='org_name'>Test Inc</item>\n</dt_assoc>\n</item>\n<item key='admin'>\n<dt_assoc>\n<item key='first_name'>Test</item>\n<item key='last_name'>Tester</item>\n<item key='email'>testing@test.com</item>\n<item key='phone'>+18031234567</item>\n<item key='address1'>123 Main St</item>\n<item key='city'>San Francisco</item>\n<item key='state'>CA</item>\n<item key='postal_code'>94105</item>\n<item key='country'>US</item>\n<item key='owner'>Test Tester</item>\n<item key='org_name'>Test Inc</item>\n</dt_assoc>\n</item>\n<item key='tech'>\n<dt_assoc>\n<item key='first_name'>Test</item>\n<item key='last_name'>Tester</item>\n<item key='email'>testing@test.com</item>\n<item key='phone'>+18031234567</item>\n<item key='address1'>123 Main St</item>\n<item key='city'>San Francisco</item>\n<item key='state'>CA</item>\n<item key='postal_code'>94105</item>\n<item key='country'>US</item>\n<item key='owner'>Test Tester</item>\n<item key='org_name'>Test Inc</item>\n</dt_assoc>\n</item>\n<item key='billing'>\n<dt_assoc>\n<item key='first_name'>Test</item>\n<item key='last_name'>Tester</item>\n<item key='email'>testing@test.com</item>\n<item key='phone'>+18031234567</item>\n<item key='address1'>123 Main St</item>\n<item key='city'>San Francisco</item>\n<item key='state'>CA</item>\n<item key='postal_code'>94105</item>\n<item key='country'>US</item>\n<item key='owner'>Test Tester</item>\n<item key='org_name'>Test Inc</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</item>\n<item key='custom_tech_contact'>0</item>\n<item key='custom_nameservers'>1</item>\n<item key='reg_username'>reseller</item>\n<item key='reg_password'>pw-1234</item>\n<item key='reg_type'>new</item>\n<item key='handle'>process</item>\n<item key='f_whois_privacy'>1</item>\n<item key='auto_renew'>0</item>\n<item key=\"nameserver_list\">\n<dt_array>\n<dt_assoc>\n<item key='name'>ns1.systemdns.com</item>\n<item key='sortorder'>0</item>\n</dt_assoc>\n<dt_assoc>\n<item key='name'>ns2.systemdns.com</item>\n<item key='sortorder'>1</item>\n</dt_assoc>\n</dt_array>\n</item>\n<item key='premium_price_to_display'>99</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "purchase taken domain",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "opensrs",
+              "key": "reseller-key",
+              "username": "reseller",
+              "password": "pw-1234"
+            },
+            "nameservers": [
+              "ns1.systemdns.com",
+              "ns2.systemdns.com"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "purchase",
+            "args": {
+              "domain": "google.com",
+              "contacts": {
+                "owner": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "admin": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "tech": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "billing": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                }
+              }
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"protocol\">XCP</item><item key=\"response_code\">485</item><item key=\"response_text\">Domain taken</item><item key=\"is_success\">0</item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Registrar\\Exception\\DomainTakenException",
+              "message": "Failed to purchase domain: Domain taken",
+              "code": 485
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "1d69586d9e26bcd30b80a0db4fcfe702",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>SW_REGISTER</item>\n\n<item key=\"attributes\">\n<dt_assoc>\n<item key='domain'>google.com</item>\n<item key='periodYears'>1</item>\n<item key=\"contact_set\">\n<dt_assoc>\n<item key='owner'>\n<dt_assoc>\n<item key='first_name'>Test</item>\n<item key='last_name'>Tester</item>\n<item key='email'>testing@test.com</item>\n<item key='phone'>+18031234567</item>\n<item key='address1'>123 Main St</item>\n<item key='city'>San Francisco</item>\n<item key='state'>CA</item>\n<item key='postal_code'>94105</item>\n<item key='country'>US</item>\n<item key='owner'>Test Tester</item>\n<item key='org_name'>Test Inc</item>\n</dt_assoc>\n</item>\n<item key='admin'>\n<dt_assoc>\n<item key='first_name'>Test</item>\n<item key='last_name'>Tester</item>\n<item key='email'>testing@test.com</item>\n<item key='phone'>+18031234567</item>\n<item key='address1'>123 Main St</item>\n<item key='city'>San Francisco</item>\n<item key='state'>CA</item>\n<item key='postal_code'>94105</item>\n<item key='country'>US</item>\n<item key='owner'>Test Tester</item>\n<item key='org_name'>Test Inc</item>\n</dt_assoc>\n</item>\n<item key='tech'>\n<dt_assoc>\n<item key='first_name'>Test</item>\n<item key='last_name'>Tester</item>\n<item key='email'>testing@test.com</item>\n<item key='phone'>+18031234567</item>\n<item key='address1'>123 Main St</item>\n<item key='city'>San Francisco</item>\n<item key='state'>CA</item>\n<item key='postal_code'>94105</item>\n<item key='country'>US</item>\n<item key='owner'>Test Tester</item>\n<item key='org_name'>Test Inc</item>\n</dt_assoc>\n</item>\n<item key='billing'>\n<dt_assoc>\n<item key='first_name'>Test</item>\n<item key='last_name'>Tester</item>\n<item key='email'>testing@test.com</item>\n<item key='phone'>+18031234567</item>\n<item key='address1'>123 Main St</item>\n<item key='city'>San Francisco</item>\n<item key='state'>CA</item>\n<item key='postal_code'>94105</item>\n<item key='country'>US</item>\n<item key='owner'>Test Tester</item>\n<item key='org_name'>Test Inc</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</item>\n<item key='custom_tech_contact'>0</item>\n<item key='custom_nameservers'>1</item>\n<item key='reg_username'>reseller</item>\n<item key='reg_password'>pw-1234</item>\n<item key='reg_type'>new</item>\n<item key='handle'>process</item>\n<item key='f_whois_privacy'>1</item>\n<item key='auto_renew'>0</item>\n<item key=\"nameserver_list\">\n<dt_array>\n<dt_assoc>\n<item key='name'>ns1.systemdns.com</item>\n<item key='sortorder'>0</item>\n</dt_assoc>\n<dt_assoc>\n<item key='name'>ns2.systemdns.com</item>\n<item key='sortorder'>1</item>\n</dt_assoc>\n</dt_array>\n</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "purchase with invalid contact",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "opensrs",
+              "key": "reseller-key",
+              "username": "reseller",
+              "password": "pw-1234"
+            },
+            "nameservers": [
+              "ns1.systemdns.com",
+              "ns2.systemdns.com"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "purchase",
+            "args": {
+              "domain": "kqzxwvbnmt.net",
+              "contacts": [
+                {
+                  "firstname": "John",
+                  "lastname": "Doe",
+                  "phone": "+1234567890",
+                  "email": "invalid-email",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "InvalidCountry",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                }
+              ]
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"protocol\">XCP</item><item key=\"response_code\">465</item><item key=\"response_text\">Invalid data: email</item><item key=\"is_success\">0</item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Registrar\\Exception\\InvalidContactException",
+              "message": "Failed to purchase domain: Invalid data: email",
+              "code": 465
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "ab22b8cf25d1cd8f199b79e75f7a68f5",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>SW_REGISTER</item>\n\n<item key=\"attributes\">\n<dt_assoc>\n<item key='domain'>kqzxwvbnmt.net</item>\n<item key='periodYears'>1</item>\n<item key=\"contact_set\">\n<dt_assoc>\n<item key='owner'>\n<dt_assoc>\n<item key='first_name'>John</item>\n<item key='last_name'>Doe</item>\n<item key='email'>invalid-email</item>\n<item key='phone'>+1234567890</item>\n<item key='address1'>123 Main St</item>\n<item key='city'>San Francisco</item>\n<item key='state'>CA</item>\n<item key='postal_code'>94105</item>\n<item key='country'>InvalidCountry</item>\n<item key='owner'>John Doe</item>\n<item key='org_name'>Test Inc</item>\n</dt_assoc>\n</item>\n<item key='admin'>\n<dt_assoc>\n<item key='first_name'>John</item>\n<item key='last_name'>Doe</item>\n<item key='email'>invalid-email</item>\n<item key='phone'>+1234567890</item>\n<item key='address1'>123 Main St</item>\n<item key='city'>San Francisco</item>\n<item key='state'>CA</item>\n<item key='postal_code'>94105</item>\n<item key='country'>InvalidCountry</item>\n<item key='owner'>John Doe</item>\n<item key='org_name'>Test Inc</item>\n</dt_assoc>\n</item>\n<item key='tech'>\n<dt_assoc>\n<item key='first_name'>John</item>\n<item key='last_name'>Doe</item>\n<item key='email'>invalid-email</item>\n<item key='phone'>+1234567890</item>\n<item key='address1'>123 Main St</item>\n<item key='city'>San Francisco</item>\n<item key='state'>CA</item>\n<item key='postal_code'>94105</item>\n<item key='country'>InvalidCountry</item>\n<item key='owner'>John Doe</item>\n<item key='org_name'>Test Inc</item>\n</dt_assoc>\n</item>\n<item key='billing'>\n<dt_assoc>\n<item key='first_name'>John</item>\n<item key='last_name'>Doe</item>\n<item key='email'>invalid-email</item>\n<item key='phone'>+1234567890</item>\n<item key='address1'>123 Main St</item>\n<item key='city'>San Francisco</item>\n<item key='state'>CA</item>\n<item key='postal_code'>94105</item>\n<item key='country'>InvalidCountry</item>\n<item key='owner'>John Doe</item>\n<item key='org_name'>Test Inc</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</item>\n<item key='custom_tech_contact'>0</item>\n<item key='custom_nameservers'>1</item>\n<item key='reg_username'>reseller</item>\n<item key='reg_password'>pw-1234</item>\n<item key='reg_type'>new</item>\n<item key='handle'>process</item>\n<item key='f_whois_privacy'>1</item>\n<item key='auto_renew'>0</item>\n<item key=\"nameserver_list\">\n<dt_array>\n<dt_assoc>\n<item key='name'>ns1.systemdns.com</item>\n<item key='sortorder'>0</item>\n</dt_assoc>\n<dt_assoc>\n<item key='name'>ns2.systemdns.com</item>\n<item key='sortorder'>1</item>\n</dt_assoc>\n</dt_array>\n</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "purchase with invalid password",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "opensrs",
+              "key": "reseller-key",
+              "username": "reseller",
+              "password": "pw-1234"
+            },
+            "nameservers": [
+              "ns1.systemdns.com",
+              "ns2.systemdns.com"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "purchase",
+            "args": {
+              "domain": "kqzxwvbnmt.net",
+              "contacts": {
+                "owner": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "admin": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "tech": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "billing": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                }
+              }
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"protocol\">XCP</item><item key=\"response_code\">465</item><item key=\"response_text\">Invalid password</item><item key=\"is_success\">0</item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Registrar\\Exception\\AuthException",
+              "message": "Failed to purchase domain: Invalid password",
+              "code": 465
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "a4965999e2fbca42591cca3d6d319100",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>SW_REGISTER</item>\n\n<item key=\"attributes\">\n<dt_assoc>\n<item key='domain'>kqzxwvbnmt.net</item>\n<item key='periodYears'>1</item>\n<item key=\"contact_set\">\n<dt_assoc>\n<item key='owner'>\n<dt_assoc>\n<item key='first_name'>Test</item>\n<item key='last_name'>Tester</item>\n<item key='email'>testing@test.com</item>\n<item key='phone'>+18031234567</item>\n<item key='address1'>123 Main St</item>\n<item key='city'>San Francisco</item>\n<item key='state'>CA</item>\n<item key='postal_code'>94105</item>\n<item key='country'>US</item>\n<item key='owner'>Test Tester</item>\n<item key='org_name'>Test Inc</item>\n</dt_assoc>\n</item>\n<item key='admin'>\n<dt_assoc>\n<item key='first_name'>Test</item>\n<item key='last_name'>Tester</item>\n<item key='email'>testing@test.com</item>\n<item key='phone'>+18031234567</item>\n<item key='address1'>123 Main St</item>\n<item key='city'>San Francisco</item>\n<item key='state'>CA</item>\n<item key='postal_code'>94105</item>\n<item key='country'>US</item>\n<item key='owner'>Test Tester</item>\n<item key='org_name'>Test Inc</item>\n</dt_assoc>\n</item>\n<item key='tech'>\n<dt_assoc>\n<item key='first_name'>Test</item>\n<item key='last_name'>Tester</item>\n<item key='email'>testing@test.com</item>\n<item key='phone'>+18031234567</item>\n<item key='address1'>123 Main St</item>\n<item key='city'>San Francisco</item>\n<item key='state'>CA</item>\n<item key='postal_code'>94105</item>\n<item key='country'>US</item>\n<item key='owner'>Test Tester</item>\n<item key='org_name'>Test Inc</item>\n</dt_assoc>\n</item>\n<item key='billing'>\n<dt_assoc>\n<item key='first_name'>Test</item>\n<item key='last_name'>Tester</item>\n<item key='email'>testing@test.com</item>\n<item key='phone'>+18031234567</item>\n<item key='address1'>123 Main St</item>\n<item key='city'>San Francisco</item>\n<item key='state'>CA</item>\n<item key='postal_code'>94105</item>\n<item key='country'>US</item>\n<item key='owner'>Test Tester</item>\n<item key='org_name'>Test Inc</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</item>\n<item key='custom_tech_contact'>0</item>\n<item key='custom_nameservers'>1</item>\n<item key='reg_username'>reseller</item>\n<item key='reg_password'>pw-1234</item>\n<item key='reg_type'>new</item>\n<item key='handle'>process</item>\n<item key='f_whois_privacy'>1</item>\n<item key='auto_renew'>0</item>\n<item key=\"nameserver_list\">\n<dt_array>\n<dt_assoc>\n<item key='name'>ns1.systemdns.com</item>\n<item key='sortorder'>0</item>\n</dt_assoc>\n<dt_assoc>\n<item key='name'>ns2.systemdns.com</item>\n<item key='sortorder'>1</item>\n</dt_assoc>\n</dt_array>\n</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "purchase failure",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "opensrs",
+              "key": "reseller-key",
+              "username": "reseller",
+              "password": "pw-1234"
+            },
+            "nameservers": [
+              "ns1.systemdns.com",
+              "ns2.systemdns.com"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "purchase",
+            "args": {
+              "domain": "kqzxwvbnmt.net",
+              "contacts": {
+                "owner": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "admin": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "tech": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "billing": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                }
+              }
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"protocol\">XCP</item><item key=\"response_code\">400</item><item key=\"response_text\">Something else</item><item key=\"is_success\">0</item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Exception",
+              "message": "Failed to purchase domain: Something else",
+              "code": 400
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "a4965999e2fbca42591cca3d6d319100",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>SW_REGISTER</item>\n\n<item key=\"attributes\">\n<dt_assoc>\n<item key='domain'>kqzxwvbnmt.net</item>\n<item key='periodYears'>1</item>\n<item key=\"contact_set\">\n<dt_assoc>\n<item key='owner'>\n<dt_assoc>\n<item key='first_name'>Test</item>\n<item key='last_name'>Tester</item>\n<item key='email'>testing@test.com</item>\n<item key='phone'>+18031234567</item>\n<item key='address1'>123 Main St</item>\n<item key='city'>San Francisco</item>\n<item key='state'>CA</item>\n<item key='postal_code'>94105</item>\n<item key='country'>US</item>\n<item key='owner'>Test Tester</item>\n<item key='org_name'>Test Inc</item>\n</dt_assoc>\n</item>\n<item key='admin'>\n<dt_assoc>\n<item key='first_name'>Test</item>\n<item key='last_name'>Tester</item>\n<item key='email'>testing@test.com</item>\n<item key='phone'>+18031234567</item>\n<item key='address1'>123 Main St</item>\n<item key='city'>San Francisco</item>\n<item key='state'>CA</item>\n<item key='postal_code'>94105</item>\n<item key='country'>US</item>\n<item key='owner'>Test Tester</item>\n<item key='org_name'>Test Inc</item>\n</dt_assoc>\n</item>\n<item key='tech'>\n<dt_assoc>\n<item key='first_name'>Test</item>\n<item key='last_name'>Tester</item>\n<item key='email'>testing@test.com</item>\n<item key='phone'>+18031234567</item>\n<item key='address1'>123 Main St</item>\n<item key='city'>San Francisco</item>\n<item key='state'>CA</item>\n<item key='postal_code'>94105</item>\n<item key='country'>US</item>\n<item key='owner'>Test Tester</item>\n<item key='org_name'>Test Inc</item>\n</dt_assoc>\n</item>\n<item key='billing'>\n<dt_assoc>\n<item key='first_name'>Test</item>\n<item key='last_name'>Tester</item>\n<item key='email'>testing@test.com</item>\n<item key='phone'>+18031234567</item>\n<item key='address1'>123 Main St</item>\n<item key='city'>San Francisco</item>\n<item key='state'>CA</item>\n<item key='postal_code'>94105</item>\n<item key='country'>US</item>\n<item key='owner'>Test Tester</item>\n<item key='org_name'>Test Inc</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</item>\n<item key='custom_tech_contact'>0</item>\n<item key='custom_nameservers'>1</item>\n<item key='reg_username'>reseller</item>\n<item key='reg_password'>pw-1234</item>\n<item key='reg_type'>new</item>\n<item key='handle'>process</item>\n<item key='f_whois_privacy'>1</item>\n<item key='auto_renew'>0</item>\n<item key=\"nameserver_list\">\n<dt_array>\n<dt_assoc>\n<item key='name'>ns1.systemdns.com</item>\n<item key='sortorder'>0</item>\n</dt_assoc>\n<dt_assoc>\n<item key='name'>ns2.systemdns.com</item>\n<item key='sortorder'>1</item>\n</dt_assoc>\n</dt_array>\n</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "purchase",
+            "args": {
+              "domain": "kqzxwvbnmt.net",
+              "contacts": {
+                "owner": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                }
+              }
+            }
+          },
+          "expect": {
+            "error": {
+              "class": "Error",
+              "message": "Call to a member function toArray() on null",
+              "code": 0
+            },
+            "requests": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "domain info",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "opensrs",
+              "key": "reseller-key",
+              "username": "reseller",
+              "password": "pw-1234"
+            },
+            "nameservers": [
+              "ns1.systemdns.com",
+              "ns2.systemdns.com"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getDomain",
+            "args": {
+              "domain": "kffsfudlvc.net"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"protocol\">XCP</item><item key=\"response_code\">200</item><item key=\"response_text\">Command completed successfully</item><item key=\"is_success\">1</item><item key=\"attributes\"><dt_assoc><item key=\"registry_createdate\">2024-01-01 10:00:00</item><item key=\"registry_expiredate\">2026-01-01 10:00:00</item><item key=\"auto_renew\">1</item><item key=\"nameserver_list\"><dt_array><item key=\"0\"><dt_assoc><item key=\"name\"> ns1.systemdns.com </item><item key=\"sortorder\">1</item></dt_assoc></item><item key=\"1\"><dt_assoc><item key=\"name\">0</item></dt_assoc></item><item key=\"2\"><dt_assoc><item key=\"ipaddress\">1.2.3.4</item></dt_assoc></item></dt_array></item></dt_assoc></item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "domain": "kffsfudlvc.net",
+              "createdAt": "2024-01-01T10:00:00.000000+00:00",
+              "expiresAt": "2026-01-01T10:00:00.000000+00:00",
+              "autoRenew": true,
+              "nameservers": [
+                "ns1.systemdns.com"
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "7a2b4e0c947303596aed3116c480a7dd",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>GET</item>\n<item key='domain'>kffsfudlvc.net</item>\n<item key=\"attributes\">\n<dt_assoc>\n<item key='type'>all_info</item>\n<item key='clean_ca_subset'>1</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getDomain",
+            "args": {
+              "domain": "kffsfudlvc.net"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"protocol\">XCP</item><item key=\"response_code\">200</item><item key=\"response_text\">Command completed successfully</item><item key=\"is_success\">1</item><item key=\"attributes\"><dt_assoc><item key=\"auto_renew\">0</item></dt_assoc></item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "domain": "kffsfudlvc.net",
+              "createdAt": null,
+              "expiresAt": null,
+              "autoRenew": false,
+              "nameservers": null
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "7a2b4e0c947303596aed3116c480a7dd",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>GET</item>\n<item key='domain'>kffsfudlvc.net</item>\n<item key=\"attributes\">\n<dt_assoc>\n<item key='type'>all_info</item>\n<item key='clean_ca_subset'>1</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getDomain",
+            "args": {
+              "domain": "gone.net"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"protocol\">XCP</item><item key=\"response_code\">404</item><item key=\"response_text\">Domain not found</item><item key=\"is_success\">0</item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Exception",
+              "message": "Domain not found",
+              "code": 404
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "9106328f38a18491b46c3fb8db882eb9",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>GET</item>\n<item key='domain'>gone.net</item>\n<item key=\"attributes\">\n<dt_assoc>\n<item key='type'>all_info</item>\n<item key='clean_ca_subset'>1</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getDomain",
+            "args": {
+              "domain": "odd.net"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"protocol\">XCP</item><item key=\"response_code\">200</item><item key=\"response_text\">Command completed successfully</item><item key=\"is_success\">1</item><item key=\"attributes\"><dt_assoc><item key=\"registry_createdate\">soon</item></dt_assoc></item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "DateMalformedStringException",
+              "message": "Failed to parse time string (soon) at position 0 (s): The timezone could not be found in the database",
+              "code": 0
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "ec1f4b7af41e0ae60c2afba1543aeb92",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>GET</item>\n<item key='domain'>odd.net</item>\n<item key=\"attributes\">\n<dt_assoc>\n<item key='type'>all_info</item>\n<item key='clean_ca_subset'>1</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "cancel purchase",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "opensrs",
+              "key": "reseller-key",
+              "username": "reseller",
+              "password": "pw-1234"
+            },
+            "nameservers": [
+              "ns1.systemdns.com",
+              "ns2.systemdns.com"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "cancelPurchase",
+            "args": {},
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"protocol\">XCP</item><item key=\"response_code\">200</item><item key=\"response_text\">Command completed successfully</item><item key=\"is_success\">1</item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "mask": {
+            "paths": [
+              "/requests/0/body",
+              "/requests/0/headers/x-signature"
+            ],
+            "reason": "cancelPurchase sends the current time"
+          },
+          "expect": {
+            "result": true,
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "<masked>",
+                  "x-username": "reseller"
+                },
+                "body": "<masked>"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "cancelPurchase",
+            "args": {},
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"protocol\">XCP</item><item key=\"response_code\">200</item><item key=\"response_text\">Command completed successfully</item><item key=\"is_success\">0</item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "mask": {
+            "paths": [
+              "/requests/0/body",
+              "/requests/0/headers/x-signature"
+            ],
+            "reason": "cancelPurchase sends the current time"
+          },
+          "expect": {
+            "result": false,
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "<masked>",
+                  "x-username": "reseller"
+                },
+                "body": "<masked>"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "tlds",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "opensrs",
+              "key": "reseller-key",
+              "username": "reseller",
+              "password": "pw-1234"
+            },
+            "nameservers": [
+              "ns1.systemdns.com",
+              "ns2.systemdns.com"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "tlds",
+            "args": {}
+          },
+          "expect": {
+            "result": [],
+            "requests": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "suggest",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "opensrs",
+              "key": "reseller-key",
+              "username": "reseller",
+              "password": "pw-1234"
+            },
+            "nameservers": [
+              "ns1.systemdns.com",
+              "ns2.systemdns.com"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "suggest",
+            "args": {
+              "query": "example",
+              "tlds": [
+                "com",
+                "net",
+                "org"
+              ],
+              "limit": 5
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"protocol\">XCP</item><item key=\"response_code\">200</item><item key=\"response_text\">Command completed successfully</item><item key=\"is_success\">1</item><item key=\"attributes\"><dt_assoc><item key=\"suggestion\"><dt_assoc><item key=\"items\"><dt_array><item key=\"0\"><dt_assoc><item key=\"domain\">example.com</item><item key=\"status\">taken</item></dt_assoc></item><item key=\"1\"><dt_assoc><item key=\"domain\">example.net</item><item key=\"status\">Available</item></dt_assoc></item><item key=\"2\"><dt_assoc><item key=\"domain\">example.org</item><item key=\"status\">available</item></dt_assoc></item><item key=\"3\"><dt_assoc><item key=\"domain\"></item><item key=\"status\">available</item></dt_assoc></item></dt_array></item></dt_assoc></item><item key=\"premium\"><dt_assoc><item key=\"items\"><dt_array><item key=\"0\"><dt_assoc><item key=\"domain\">premium.com</item><item key=\"status\">available</item><item key=\"price\">5000.00</item></dt_assoc></item><item key=\"1\"><dt_assoc><item key=\"domain\">rich.net</item><item key=\"status\">taken</item><item key=\"price\">n/a</item></dt_assoc></item><item key=\"2\"><dt_assoc><item key=\"domain\">gold.org</item><item key=\"status\">available</item><item key=\"price\">1e3</item></dt_assoc></item></dt_array></item></dt_assoc></item></dt_assoc></item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "example.com": {
+                "available": false,
+                "price": null,
+                "type": "suggestion"
+              },
+              "example.net": {
+                "available": true,
+                "price": null,
+                "type": "suggestion"
+              },
+              "example.org": {
+                "available": true,
+                "price": null,
+                "type": "suggestion"
+              },
+              "premium.com": {
+                "available": true,
+                "price": 5000.0,
+                "type": "premium"
+              },
+              "rich.net": {
+                "available": false,
+                "price": null,
+                "type": "premium"
+              }
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "80d806d83b78c84cba742944da1df832",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>NAME_SUGGEST</item>\n\n<item key=\"attributes\">\n<dt_assoc>\n<item key=\"services\">\n<dt_array>\n<item key='0'>suggestion</item>\n<item key='1'>premium</item>\n<item key='2'>lookup</item>\n</dt_array>\n</item>\n<item key='searchstring'>example</item>\n<item key='skip_registry_lookup'>1</item>\n<item key=\"tlds\">\n<dt_array>\n<item key='0'>.com</item>\n<item key='1'>.net</item>\n<item key='2'>.org</item>\n</dt_array>\n</item>\n<item key=\"service_override\">\n<dt_assoc>\n<item key=\"premium\">\n<dt_assoc>\n<item key=\"tlds\">\n<dt_array>\n<item key='0'>.com</item>\n<item key='1'>.net</item>\n<item key='2'>.org</item>\n</dt_array>\n</item>\n<item key='maximum'>5</item>\n</dt_assoc>\n</item>\n<item key=\"suggestion\">\n<dt_assoc>\n<item key=\"tlds\">\n<dt_array>\n<item key='0'>.com</item>\n<item key='1'>.net</item>\n<item key='2'>.org</item>\n</dt_array>\n</item>\n<item key='maximum'>5</item>\n</dt_assoc>\n</item>\n<item key=\"lookup\">\n<dt_assoc>\n<item key=\"tlds\">\n<dt_array>\n<item key='0'>.com</item>\n<item key='1'>.net</item>\n<item key='2'>.org</item>\n</dt_array>\n</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "suggest",
+            "args": {
+              "query": "example",
+              "limit": 2
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"protocol\">XCP</item><item key=\"response_code\">200</item><item key=\"response_text\">Command completed successfully</item><item key=\"is_success\">1</item><item key=\"attributes\"><dt_assoc><item key=\"suggestion\"><dt_assoc><item key=\"items\"><dt_array><item key=\"0\"><dt_assoc><item key=\"domain\">example.com</item><item key=\"status\">taken</item></dt_assoc></item><item key=\"1\"><dt_assoc><item key=\"domain\">example.net</item><item key=\"status\">Available</item></dt_assoc></item><item key=\"2\"><dt_assoc><item key=\"domain\">example.org</item><item key=\"status\">available</item></dt_assoc></item><item key=\"3\"><dt_assoc><item key=\"domain\"></item><item key=\"status\">available</item></dt_assoc></item></dt_array></item></dt_assoc></item><item key=\"premium\"><dt_assoc><item key=\"items\"><dt_array><item key=\"0\"><dt_assoc><item key=\"domain\">premium.com</item><item key=\"status\">available</item><item key=\"price\">5000.00</item></dt_assoc></item><item key=\"1\"><dt_assoc><item key=\"domain\">rich.net</item><item key=\"status\">taken</item><item key=\"price\">n/a</item></dt_assoc></item><item key=\"2\"><dt_assoc><item key=\"domain\">gold.org</item><item key=\"status\">available</item><item key=\"price\">1e3</item></dt_assoc></item></dt_array></item></dt_assoc></item></dt_assoc></item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "example.com": {
+                "available": false,
+                "price": null,
+                "type": "suggestion"
+              },
+              "example.net": {
+                "available": true,
+                "price": null,
+                "type": "suggestion"
+              }
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "4d99c8162f4940cf5dea5779e563d5f9",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>NAME_SUGGEST</item>\n\n<item key=\"attributes\">\n<dt_assoc>\n<item key=\"services\">\n<dt_array>\n<item key='0'>suggestion</item>\n<item key='1'>premium</item>\n<item key='2'>lookup</item>\n</dt_array>\n</item>\n<item key='searchstring'>example</item>\n<item key='skip_registry_lookup'>1</item>\n<item key=\"service_override\">\n<dt_assoc>\n<item key=\"premium\">\n<dt_assoc>\n<item key='maximum'>2</item>\n</dt_assoc>\n</item>\n<item key=\"suggestion\">\n<dt_assoc>\n<item key='maximum'>2</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "suggest",
+            "args": {
+              "query": "example",
+              "limit": 0
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"protocol\">XCP</item><item key=\"response_code\">200</item><item key=\"response_text\">Command completed successfully</item><item key=\"is_success\">1</item><item key=\"attributes\"><dt_assoc><item key=\"suggestion\"><dt_assoc><item key=\"items\"><dt_array><item key=\"0\"><dt_assoc><item key=\"domain\">example.com</item><item key=\"status\">taken</item></dt_assoc></item><item key=\"1\"><dt_assoc><item key=\"domain\">example.net</item><item key=\"status\">Available</item></dt_assoc></item><item key=\"2\"><dt_assoc><item key=\"domain\">example.org</item><item key=\"status\">available</item></dt_assoc></item><item key=\"3\"><dt_assoc><item key=\"domain\"></item><item key=\"status\">available</item></dt_assoc></item></dt_array></item></dt_assoc></item><item key=\"premium\"><dt_assoc><item key=\"items\"><dt_array><item key=\"0\"><dt_assoc><item key=\"domain\">premium.com</item><item key=\"status\">available</item><item key=\"price\">5000.00</item></dt_assoc></item><item key=\"1\"><dt_assoc><item key=\"domain\">rich.net</item><item key=\"status\">taken</item><item key=\"price\">n/a</item></dt_assoc></item><item key=\"2\"><dt_assoc><item key=\"domain\">gold.org</item><item key=\"status\">available</item><item key=\"price\">1e3</item></dt_assoc></item></dt_array></item></dt_assoc></item></dt_assoc></item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "premium.com": {
+                "available": true,
+                "price": 5000.0,
+                "type": "premium"
+              },
+              "rich.net": {
+                "available": false,
+                "price": null,
+                "type": "premium"
+              },
+              "gold.org": {
+                "available": true,
+                "price": 1000.0,
+                "type": "premium"
+              }
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "99e3858306d15f7770f2ccb07c0e2205",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>NAME_SUGGEST</item>\n\n<item key=\"attributes\">\n<dt_assoc>\n<item key=\"services\">\n<dt_array>\n<item key='0'>suggestion</item>\n<item key='1'>premium</item>\n<item key='2'>lookup</item>\n</dt_array>\n</item>\n<item key='searchstring'>example</item>\n<item key='skip_registry_lookup'>1</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "suggest",
+            "args": {
+              "query": "example"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"protocol\">XCP</item><item key=\"response_code\">200</item><item key=\"response_text\">Command completed successfully</item><item key=\"is_success\">1</item><item key=\"attributes\"><dt_assoc><item key=\"suggestion\"><dt_assoc><item key=\"items\"><dt_array><item key=\"0\"><dt_assoc><item key=\"domain\">example.com</item><item key=\"status\">taken</item></dt_assoc></item><item key=\"1\"><dt_assoc><item key=\"domain\">example.net</item><item key=\"status\">Available</item></dt_assoc></item><item key=\"2\"><dt_assoc><item key=\"domain\">example.org</item><item key=\"status\">available</item></dt_assoc></item><item key=\"3\"><dt_assoc><item key=\"domain\"></item><item key=\"status\">available</item></dt_assoc></item></dt_array></item></dt_assoc></item><item key=\"premium\"><dt_assoc><item key=\"items\"><dt_array><item key=\"0\"><dt_assoc><item key=\"domain\">premium.com</item><item key=\"status\">available</item><item key=\"price\">5000.00</item></dt_assoc></item><item key=\"1\"><dt_assoc><item key=\"domain\">rich.net</item><item key=\"status\">taken</item><item key=\"price\">n/a</item></dt_assoc></item><item key=\"2\"><dt_assoc><item key=\"domain\">gold.org</item><item key=\"status\">available</item><item key=\"price\">1e3</item></dt_assoc></item></dt_array></item></dt_assoc></item></dt_assoc></item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "example.com": {
+                "available": false,
+                "price": null,
+                "type": "suggestion"
+              },
+              "example.net": {
+                "available": true,
+                "price": null,
+                "type": "suggestion"
+              },
+              "example.org": {
+                "available": true,
+                "price": null,
+                "type": "suggestion"
+              },
+              "premium.com": {
+                "available": true,
+                "price": 5000.0,
+                "type": "premium"
+              },
+              "rich.net": {
+                "available": false,
+                "price": null,
+                "type": "premium"
+              },
+              "gold.org": {
+                "available": true,
+                "price": 1000.0,
+                "type": "premium"
+              }
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "99e3858306d15f7770f2ccb07c0e2205",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>NAME_SUGGEST</item>\n\n<item key=\"attributes\">\n<dt_assoc>\n<item key=\"services\">\n<dt_array>\n<item key='0'>suggestion</item>\n<item key='1'>premium</item>\n<item key='2'>lookup</item>\n</dt_array>\n</item>\n<item key='searchstring'>example</item>\n<item key='skip_registry_lookup'>1</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "suggest with multiple keywords",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "opensrs",
+              "key": "reseller-key",
+              "username": "reseller",
+              "password": "pw-1234"
+            },
+            "nameservers": [
+              "ns1.systemdns.com",
+              "ns2.systemdns.com"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "suggest",
+            "args": {
+              "query": [
+                "monkeys",
+                "kittens"
+              ],
+              "tlds": [
+                "com",
+                "net",
+                "org"
+              ],
+              "limit": 5,
+              "filterType": "suggestion"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"protocol\">XCP</item><item key=\"response_code\">200</item><item key=\"response_text\">Command completed successfully</item><item key=\"is_success\">1</item><item key=\"attributes\"><dt_assoc><item key=\"suggestion\"><dt_assoc><item key=\"items\"><dt_array><item key=\"0\"><dt_assoc><item key=\"domain\">example.com</item><item key=\"status\">taken</item></dt_assoc></item><item key=\"1\"><dt_assoc><item key=\"domain\">example.net</item><item key=\"status\">Available</item></dt_assoc></item><item key=\"2\"><dt_assoc><item key=\"domain\">example.org</item><item key=\"status\">available</item></dt_assoc></item><item key=\"3\"><dt_assoc><item key=\"domain\"></item><item key=\"status\">available</item></dt_assoc></item></dt_array></item></dt_assoc></item><item key=\"premium\"><dt_assoc><item key=\"items\"><dt_array><item key=\"0\"><dt_assoc><item key=\"domain\">premium.com</item><item key=\"status\">available</item><item key=\"price\">5000.00</item></dt_assoc></item><item key=\"1\"><dt_assoc><item key=\"domain\">rich.net</item><item key=\"status\">taken</item><item key=\"price\">n/a</item></dt_assoc></item><item key=\"2\"><dt_assoc><item key=\"domain\">gold.org</item><item key=\"status\">available</item><item key=\"price\">1e3</item></dt_assoc></item></dt_array></item></dt_assoc></item></dt_assoc></item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "example.com": {
+                "available": false,
+                "price": null,
+                "type": "suggestion"
+              },
+              "example.net": {
+                "available": true,
+                "price": null,
+                "type": "suggestion"
+              },
+              "example.org": {
+                "available": true,
+                "price": null,
+                "type": "suggestion"
+              }
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "ece3b6a0e172d4230b67bf42a8023720",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>NAME_SUGGEST</item>\n\n<item key=\"attributes\">\n<dt_assoc>\n<item key=\"services\">\n<dt_array>\n<item key='0'>suggestion</item>\n<item key='1'>premium</item>\n<item key='2'>lookup</item>\n</dt_array>\n</item>\n<item key='searchstring'>monkeys kittens</item>\n<item key='skip_registry_lookup'>1</item>\n<item key=\"tlds\">\n<dt_array>\n<item key='0'>.com</item>\n<item key='1'>.net</item>\n<item key='2'>.org</item>\n</dt_array>\n</item>\n<item key=\"service_override\">\n<dt_assoc>\n<item key=\"suggestion\">\n<dt_assoc>\n<item key=\"tlds\">\n<dt_array>\n<item key='0'>.com</item>\n<item key='1'>.net</item>\n<item key='2'>.org</item>\n</dt_array>\n</item>\n<item key='maximum'>5</item>\n</dt_assoc>\n</item>\n<item key=\"lookup\">\n<dt_assoc>\n<item key=\"tlds\">\n<dt_array>\n<item key='0'>.com</item>\n<item key='1'>.net</item>\n<item key='2'>.org</item>\n</dt_array>\n</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "suggest premium with price filter",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "opensrs",
+              "key": "reseller-key",
+              "username": "reseller",
+              "password": "pw-1234"
+            },
+            "nameservers": [
+              "ns1.systemdns.com",
+              "ns2.systemdns.com"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "suggest",
+            "args": {
+              "query": "computer",
+              "tlds": [
+                "com",
+                "net"
+              ],
+              "limit": 5,
+              "filterType": "premium",
+              "priceMax": 10000,
+              "priceMin": 100
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"protocol\">XCP</item><item key=\"response_code\">200</item><item key=\"response_text\">Command completed successfully</item><item key=\"is_success\">1</item><item key=\"attributes\"><dt_assoc><item key=\"suggestion\"><dt_assoc><item key=\"items\"><dt_array><item key=\"0\"><dt_assoc><item key=\"domain\">example.com</item><item key=\"status\">taken</item></dt_assoc></item><item key=\"1\"><dt_assoc><item key=\"domain\">example.net</item><item key=\"status\">Available</item></dt_assoc></item><item key=\"2\"><dt_assoc><item key=\"domain\">example.org</item><item key=\"status\">available</item></dt_assoc></item><item key=\"3\"><dt_assoc><item key=\"domain\"></item><item key=\"status\">available</item></dt_assoc></item></dt_array></item></dt_assoc></item><item key=\"premium\"><dt_assoc><item key=\"items\"><dt_array><item key=\"0\"><dt_assoc><item key=\"domain\">premium.com</item><item key=\"status\">available</item><item key=\"price\">5000.00</item></dt_assoc></item><item key=\"1\"><dt_assoc><item key=\"domain\">rich.net</item><item key=\"status\">taken</item><item key=\"price\">n/a</item></dt_assoc></item><item key=\"2\"><dt_assoc><item key=\"domain\">gold.org</item><item key=\"status\">available</item><item key=\"price\">1e3</item></dt_assoc></item></dt_array></item></dt_assoc></item></dt_assoc></item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "premium.com": {
+                "available": true,
+                "price": 5000.0,
+                "type": "premium"
+              },
+              "rich.net": {
+                "available": false,
+                "price": null,
+                "type": "premium"
+              },
+              "gold.org": {
+                "available": true,
+                "price": 1000.0,
+                "type": "premium"
+              }
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "0cbac97a63dfefb757a5faee6edf6407",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>NAME_SUGGEST</item>\n\n<item key=\"attributes\">\n<dt_assoc>\n<item key=\"services\">\n<dt_array>\n<item key='0'>suggestion</item>\n<item key='1'>premium</item>\n<item key='2'>lookup</item>\n</dt_array>\n</item>\n<item key='searchstring'>computer</item>\n<item key='skip_registry_lookup'>1</item>\n<item key=\"tlds\">\n<dt_array>\n<item key='0'>.com</item>\n<item key='1'>.net</item>\n</dt_array>\n</item>\n<item key=\"service_override\">\n<dt_assoc>\n<item key=\"premium\">\n<dt_assoc>\n<item key=\"tlds\">\n<dt_array>\n<item key='0'>.com</item>\n<item key='1'>.net</item>\n</dt_array>\n</item>\n<item key='maximum'>5</item>\n<item key='price_min'>100</item>\n<item key='price_max'>10000</item>\n</dt_assoc>\n</item>\n<item key=\"lookup\">\n<dt_assoc>\n<item key=\"tlds\">\n<dt_array>\n<item key='0'>.com</item>\n<item key='1'>.net</item>\n</dt_array>\n</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "suggest",
+            "args": {
+              "query": "computer",
+              "priceMin": 100
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"protocol\">XCP</item><item key=\"response_code\">200</item><item key=\"response_text\">Command completed successfully</item><item key=\"is_success\">1</item><item key=\"attributes\"><dt_assoc><item key=\"suggestion\"><dt_assoc><item key=\"items\"><dt_array><item key=\"0\"><dt_assoc><item key=\"domain\">example.com</item><item key=\"status\">taken</item></dt_assoc></item><item key=\"1\"><dt_assoc><item key=\"domain\">example.net</item><item key=\"status\">Available</item></dt_assoc></item><item key=\"2\"><dt_assoc><item key=\"domain\">example.org</item><item key=\"status\">available</item></dt_assoc></item><item key=\"3\"><dt_assoc><item key=\"domain\"></item><item key=\"status\">available</item></dt_assoc></item></dt_array></item></dt_assoc></item><item key=\"premium\"><dt_assoc><item key=\"items\"><dt_array><item key=\"0\"><dt_assoc><item key=\"domain\">premium.com</item><item key=\"status\">available</item><item key=\"price\">5000.00</item></dt_assoc></item><item key=\"1\"><dt_assoc><item key=\"domain\">rich.net</item><item key=\"status\">taken</item><item key=\"price\">n/a</item></dt_assoc></item><item key=\"2\"><dt_assoc><item key=\"domain\">gold.org</item><item key=\"status\">available</item><item key=\"price\">1e3</item></dt_assoc></item></dt_array></item></dt_assoc></item></dt_assoc></item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "example.com": {
+                "available": false,
+                "price": null,
+                "type": "suggestion"
+              },
+              "example.net": {
+                "available": true,
+                "price": null,
+                "type": "suggestion"
+              },
+              "example.org": {
+                "available": true,
+                "price": null,
+                "type": "suggestion"
+              },
+              "premium.com": {
+                "available": true,
+                "price": 5000.0,
+                "type": "premium"
+              },
+              "rich.net": {
+                "available": false,
+                "price": null,
+                "type": "premium"
+              },
+              "gold.org": {
+                "available": true,
+                "price": 1000.0,
+                "type": "premium"
+              }
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "574e67435ddb453a2bbd02057a6f41c1",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>NAME_SUGGEST</item>\n\n<item key=\"attributes\">\n<dt_assoc>\n<item key=\"services\">\n<dt_array>\n<item key='0'>suggestion</item>\n<item key='1'>premium</item>\n<item key='2'>lookup</item>\n</dt_array>\n</item>\n<item key='searchstring'>computer</item>\n<item key='skip_registry_lookup'>1</item>\n<item key=\"service_override\">\n<dt_assoc>\n<item key=\"premium\">\n<dt_assoc>\n<item key='price_min'>100</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "suggest with invalid filters",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "opensrs",
+              "key": "reseller-key",
+              "username": "reseller",
+              "password": "pw-1234"
+            },
+            "nameservers": [
+              "ns1.systemdns.com",
+              "ns2.systemdns.com"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "suggest",
+            "args": {
+              "query": "x",
+              "priceMin": 10,
+              "priceMax": 5
+            }
+          },
+          "expect": {
+            "error": {
+              "class": "Exception",
+              "message": "Invalid price range: priceMin (10) must be less than priceMax (5).",
+              "code": 0
+            },
+            "requests": []
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "suggest",
+            "args": {
+              "query": "x",
+              "filterType": "suggestion",
+              "priceMax": 5
+            }
+          },
+          "expect": {
+            "error": {
+              "class": "Exception",
+              "message": "Invalid price range: priceMin () and priceMax (5) cannot be set when filterType is 'suggestion'.",
+              "code": 0
+            },
+            "requests": []
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "suggest",
+            "args": {
+              "query": "x",
+              "filterType": "suggestion",
+              "priceMin": 5
+            }
+          },
+          "expect": {
+            "error": {
+              "class": "Exception",
+              "message": "Invalid price range: priceMin (5) and priceMax () cannot be set when filterType is 'suggestion'.",
+              "code": 0
+            },
+            "requests": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "get price",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "opensrs",
+              "key": "reseller-key",
+              "username": "reseller",
+              "password": "pw-1234"
+            },
+            "nameservers": [
+              "ns1.systemdns.com",
+              "ns2.systemdns.com"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "example.net",
+              "periodYears": 1,
+              "regType": "new"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"protocol\">XCP</item><item key=\"response_code\">200</item><item key=\"response_text\">Command completed successfully</item><item key=\"is_success\">1</item><item key=\"attributes\"><dt_assoc><item key=\"price\">13.50</item><item key=\"is_registry_premium\">0</item></dt_assoc></item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "price": 13.5,
+              "premium": false
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "4931f77b0b6fffa88c07e1461048ac8c",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>GET_PRICE</item>\n\n<item key=\"attributes\">\n<dt_assoc>\n<item key='domain'>example.net</item>\n<item key='periodYears'>1</item>\n<item key='reg_type'>new</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "example.net",
+              "periodYears": 2,
+              "regType": "renewal"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"protocol\">XCP</item><item key=\"response_code\">200</item><item key=\"response_text\">Command completed successfully</item><item key=\"is_success\">1</item><item key=\"attributes\"><dt_assoc><item key=\"price\">27</item></dt_assoc></item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "price": 27.0,
+              "premium": false
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "7c65db88c50be85ae79e9804de640b45",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>GET_PRICE</item>\n\n<item key=\"attributes\">\n<dt_assoc>\n<item key='domain'>example.net</item>\n<item key='periodYears'>2</item>\n<item key='reg_type'>renewal</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "get price with invalid domain",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "opensrs",
+              "key": "reseller-key",
+              "username": "reseller",
+              "password": "pw-1234"
+            },
+            "nameservers": [
+              "ns1.systemdns.com",
+              "ns2.systemdns.com"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "invalid.invalidtld"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"protocol\">XCP</item><item key=\"response_code\">400</item><item key=\"response_text\">Invalid domain</item><item key=\"is_success\">0</item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Registrar\\Exception\\PriceNotFoundException",
+              "message": "Failed to get price for domain: Invalid domain",
+              "code": 400
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "45a0232111f92d2a9892b976fb62e35e",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>GET_PRICE</item>\n\n<item key=\"attributes\">\n<dt_assoc>\n<item key='domain'>invalid.invalidtld</item>\n<item key='periodYears'>1</item>\n<item key='reg_type'>new</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "example.net"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"protocol\">XCP</item><item key=\"response_code\">200</item><item key=\"response_text\">Command completed successfully</item><item key=\"is_success\">1</item><item key=\"attributes\"><dt_assoc></dt_assoc></item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Registrar\\Exception\\PriceNotFoundException",
+              "message": "Failed to get price for domain: Price not found for domain: example.net",
+              "code": 400
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "4931f77b0b6fffa88c07e1461048ac8c",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>GET_PRICE</item>\n\n<item key=\"attributes\">\n<dt_assoc>\n<item key='domain'>example.net</item>\n<item key='periodYears'>1</item>\n<item key='reg_type'>new</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "example.net"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"protocol\">XCP</item><item key=\"response_code\">415</item><item key=\"response_text\">Authentication error</item><item key=\"is_success\">0</item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Exception",
+              "message": "Failed to get price for domain: Authentication error",
+              "code": 415
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "4931f77b0b6fffa88c07e1461048ac8c",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>GET_PRICE</item>\n\n<item key=\"attributes\">\n<dt_assoc>\n<item key='domain'>example.net</item>\n<item key='periodYears'>1</item>\n<item key='reg_type'>new</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "get price with cache",
+      "steps": [
+        {
+          "op": "cache.new",
+          "args": {
+            "store": "memory"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "opensrs",
+              "key": "reseller-key",
+              "username": "reseller",
+              "password": "pw-1234"
+            },
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "example.net",
+              "ttl": 3600
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"protocol\">XCP</item><item key=\"response_code\">200</item><item key=\"response_text\">Command completed successfully</item><item key=\"is_success\">1</item><item key=\"attributes\"><dt_assoc><item key=\"price\">13.50</item></dt_assoc></item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "price": 13.5,
+              "premium": false
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "4931f77b0b6fffa88c07e1461048ac8c",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>GET_PRICE</item>\n\n<item key=\"attributes\">\n<dt_assoc>\n<item key='domain'>example.net</item>\n<item key='periodYears'>1</item>\n<item key='reg_type'>new</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "example.net",
+              "ttl": 3600
+            }
+          },
+          "expect": {
+            "result": {
+              "price": 13.5,
+              "premium": false
+            },
+            "requests": []
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "example.net",
+              "regType": "renewal",
+              "periodYears": 5
+            }
+          },
+          "expect": {
+            "result": {
+              "price": 13.5,
+              "premium": false
+            },
+            "requests": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "get price with no cache",
+      "steps": [
+        {
+          "op": "cache.new",
+          "args": {
+            "store": "none"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "opensrs",
+              "key": "reseller-key",
+              "username": "reseller",
+              "password": "pw-1234"
+            },
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "example.net"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"protocol\">XCP</item><item key=\"response_code\">200</item><item key=\"response_text\">Command completed successfully</item><item key=\"is_success\">1</item><item key=\"attributes\"><dt_assoc><item key=\"price\">13.50</item></dt_assoc></item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "price": 13.5,
+              "premium": false
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "4931f77b0b6fffa88c07e1461048ac8c",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>GET_PRICE</item>\n\n<item key=\"attributes\">\n<dt_assoc>\n<item key='domain'>example.net</item>\n<item key='periodYears'>1</item>\n<item key='reg_type'>new</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getPrice",
+            "args": {
+              "domain": "example.net"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"protocol\">XCP</item><item key=\"response_code\">200</item><item key=\"response_text\">Command completed successfully</item><item key=\"is_success\">1</item><item key=\"attributes\"><dt_assoc><item key=\"price\">13.50</item></dt_assoc></item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "price": 13.5,
+              "premium": false
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "4931f77b0b6fffa88c07e1461048ac8c",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>GET_PRICE</item>\n\n<item key=\"attributes\">\n<dt_assoc>\n<item key='domain'>example.net</item>\n<item key='periodYears'>1</item>\n<item key='reg_type'>new</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "update nameservers",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "opensrs",
+              "key": "reseller-key",
+              "username": "reseller",
+              "password": "pw-1234"
+            },
+            "nameservers": [
+              "ns1.systemdns.com",
+              "ns2.systemdns.com"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "updateNameservers",
+            "args": {
+              "domain": "kffsfudlvc.net",
+              "nameservers": [
+                "ns1.systemdns.com",
+                "ns2.systemdns.com"
+              ]
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"protocol\">XCP</item><item key=\"response_code\">200</item><item key=\"response_text\">Command completed successfully</item><item key=\"is_success\">1</item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "code": "200",
+              "text": "Command completed successfully",
+              "successful": true,
+              "nameservers": [
+                "ns1.systemdns.com",
+                "ns2.systemdns.com"
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "4e6bdf580a81137441999dd507dc12f0",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>ADVANCED_UPDATE_NAMESERVERS</item>\n<item key='domain'>kffsfudlvc.net</item>\n<item key=\"attributes\">\n<dt_assoc>\n<item key=\"add_ns\">\n<dt_array>\n<item key='0'>ns1.systemdns.com</item>\n<item key='1'>ns2.systemdns.com</item>\n</dt_array>\n</item>\n<item key='op_type'>add_remove</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "updateNameservers",
+            "args": {
+              "domain": "kffsfudlvc.net",
+              "nameservers": [
+                "ns1.systemdns.com"
+              ]
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"protocol\">XCP</item><item key=\"response_code\">250</item><item key=\"response_text\">Partial</item><item key=\"is_success\">0</item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "code": "250",
+              "text": "Partial",
+              "successful": false,
+              "nameservers": [
+                "ns1.systemdns.com"
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "214e92ec070e1aca76acc3f92da6b297",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>ADVANCED_UPDATE_NAMESERVERS</item>\n<item key='domain'>kffsfudlvc.net</item>\n<item key=\"attributes\">\n<dt_assoc>\n<item key=\"add_ns\">\n<dt_array>\n<item key='0'>ns1.systemdns.com</item>\n</dt_array>\n</item>\n<item key='op_type'>add_remove</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "updateNameservers",
+            "args": {
+              "domain": "kffsfudlvc.net",
+              "nameservers": []
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"protocol\">XCP</item><item key=\"response_code\">480</item><item key=\"response_text\">Nameserver error</item><item key=\"is_success\">0</item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Exception",
+              "message": "Nameserver error",
+              "code": 480
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "4e5f488655621b95d05b359c7555e1d9",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>ADVANCED_UPDATE_NAMESERVERS</item>\n<item key='domain'>kffsfudlvc.net</item>\n<item key=\"attributes\">\n<dt_assoc>\n<item key=\"add_ns\">\n<dt_array>\n</dt_array>\n</item>\n<item key='op_type'>add_remove</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "update domain",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "opensrs",
+              "key": "reseller-key",
+              "username": "reseller",
+              "password": "pw-1234"
+            },
+            "nameservers": [
+              "ns1.systemdns.com",
+              "ns2.systemdns.com"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "updateDomain",
+            "args": {
+              "domain": "kffsfudlvc.net",
+              "autoRenew": true
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"protocol\">XCP</item><item key=\"response_code\">220</item><item key=\"response_text\">Nothing to do</item><item key=\"is_success\">1</item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "result": true,
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "921fa98bf7d0db49b8d682d39f721d62",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>MODIFY</item>\n<item key='domain'>kffsfudlvc.net</item>\n<item key=\"attributes\">\n<dt_assoc>\n<item key='data'>expire_action</item>\n<item key='affect_domains'>0</item>\n<item key='auto_renew'>1</item>\n<item key='let_expire'>0</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "updateDomain",
+            "args": {
+              "domain": "kffsfudlvc.net",
+              "autoRenew": false
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"protocol\">XCP</item><item key=\"response_code\">200</item><item key=\"response_text\">Command completed successfully</item><item key=\"is_success\">0</item><item key=\"attributes\"><dt_assoc><item key=\"details\"><dt_assoc><item key=\"kffsfudlvc.net\"><dt_assoc><item key=\"is_success\">1</item></dt_assoc></item></dt_assoc></item></dt_assoc></item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "result": true,
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "467be17d9e7a04e0c2edbda25b5e02dc",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>MODIFY</item>\n<item key='domain'>kffsfudlvc.net</item>\n<item key=\"attributes\">\n<dt_assoc>\n<item key='data'>expire_action</item>\n<item key='affect_domains'>0</item>\n<item key='auto_renew'>0</item>\n<item key='let_expire'>1</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "updateDomain",
+            "args": {
+              "domain": "kffsfudlvc.net",
+              "autoRenew": false
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"protocol\">XCP</item><item key=\"response_code\">200</item><item key=\"response_text\">Command completed successfully</item><item key=\"is_success\">0</item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "result": false,
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "467be17d9e7a04e0c2edbda25b5e02dc",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>MODIFY</item>\n<item key='domain'>kffsfudlvc.net</item>\n<item key=\"attributes\">\n<dt_assoc>\n<item key='data'>expire_action</item>\n<item key='affect_domains'>0</item>\n<item key='auto_renew'>0</item>\n<item key='let_expire'>1</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "updateDomain",
+            "args": {
+              "domain": "kffsfudlvc.net",
+              "autoRenew": false
+            },
+            "responses": [
+              {
+                "status": 200,
+                "body": "<OPS_envelope><body><data_block><dt_assoc><item key=\"response_code\">200</item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Exception",
+              "message": "Failed to update domain: invalid response from OpenSRS",
+              "code": 500
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "467be17d9e7a04e0c2edbda25b5e02dc",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>MODIFY</item>\n<item key='domain'>kffsfudlvc.net</item>\n<item key=\"attributes\">\n<dt_assoc>\n<item key='data'>expire_action</item>\n<item key='affect_domains'>0</item>\n<item key='auto_renew'>0</item>\n<item key='let_expire'>1</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "updateDomain",
+            "args": {
+              "domain": "kffsfudlvc.net"
+            }
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Exception",
+              "message": "Details must include autoRenew",
+              "code": 400
+            },
+            "requests": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "renew domain",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "opensrs",
+              "key": "reseller-key",
+              "username": "reseller",
+              "password": "pw-1234"
+            },
+            "nameservers": [
+              "ns1.systemdns.com",
+              "ns2.systemdns.com"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "renew",
+            "args": {
+              "domain": "kffsfudlvc.net",
+              "periodYears": 1
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"protocol\">XCP</item><item key=\"response_code\">200</item><item key=\"response_text\">Command completed successfully</item><item key=\"is_success\">1</item><item key=\"attributes\"><dt_assoc><item key=\"order_id\">123</item><item key=\"registration expiration date\">2027-03-04 05:06:07</item><item key=\"admin_email\">a@b.c</item></dt_assoc></item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "orderId": "123",
+              "expiresAt": "2027-03-04T05:06:07.000000+00:00"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "55c5c601b05ebec88efb626a41890ad5",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>RENEW</item>\n\n<item key=\"attributes\">\n<dt_assoc>\n<item key='domain'>kffsfudlvc.net</item>\n<item key='auto_renew'>0</item>\n<item key='currentexpirationyear'>2022</item>\n<item key='periodYears'>1</item>\n<item key='handle'>process</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "renew",
+            "args": {
+              "domain": "kffsfudlvc.net",
+              "periodYears": 2
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"protocol\">XCP</item><item key=\"response_code\">400</item><item key=\"response_text\">Cannot renew</item><item key=\"is_success\">0</item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "orderId": null,
+              "expiresAt": null
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "5dfcc75188192572f2290574ef1ffd93",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>RENEW</item>\n\n<item key=\"attributes\">\n<dt_assoc>\n<item key='domain'>kffsfudlvc.net</item>\n<item key='auto_renew'>0</item>\n<item key='currentexpirationyear'>2022</item>\n<item key='periodYears'>2</item>\n<item key='handle'>process</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "renew",
+            "args": {
+              "domain": "kffsfudlvc.net",
+              "periodYears": 1
+            },
+            "responses": [
+              {
+                "status": 200,
+                "body": "not xml"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Error",
+              "message": "Call to a member function xpath() on false",
+              "code": 0
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "55c5c601b05ebec88efb626a41890ad5",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>RENEW</item>\n\n<item key=\"attributes\">\n<dt_assoc>\n<item key='domain'>kffsfudlvc.net</item>\n<item key='auto_renew'>0</item>\n<item key='currentexpirationyear'>2022</item>\n<item key='periodYears'>1</item>\n<item key='handle'>process</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "transfer not registered",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "opensrs",
+              "key": "reseller-key",
+              "username": "reseller",
+              "password": "pw-1234"
+            },
+            "nameservers": [
+              "ns1.systemdns.com",
+              "ns2.systemdns.com"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "transfer",
+            "args": {
+              "domain": "kqzxwvbnmt.net",
+              "authCode": "test-auth-code"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"protocol\">XCP</item><item key=\"response_code\">487</item><item key=\"response_text\">Domain not transferable\nDomain not registered</item><item key=\"is_success\">0</item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Registrar\\Exception\\DomainNotTransferableException",
+              "message": "Domain is not transferable: Domain not registered",
+              "code": 487
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "364cacf6e39b15df103255c2cb1b0e4c",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>SW_REGISTER</item>\n\n<item key=\"attributes\">\n<dt_assoc>\n<item key='domain'>kqzxwvbnmt.net</item>\n<item key='periodYears'>1</item>\n<item key=\"contact_set\">\n<dt_assoc>\n</dt_assoc>\n</item>\n<item key='custom_tech_contact'>0</item>\n<item key='custom_nameservers'>0</item>\n<item key='reg_username'>reseller</item>\n<item key='reg_password'>pw-1234</item>\n<item key='reg_type'>transfer</item>\n<item key='handle'>process</item>\n<item key='f_whois_privacy'>1</item>\n<item key='auto_renew'>0</item>\n<item key='auth_info'>test-auth-code</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "transfer already exists",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "opensrs",
+              "key": "reseller-key",
+              "username": "reseller",
+              "password": "pw-1234"
+            },
+            "nameservers": [
+              "ns1.systemdns.com",
+              "ns2.systemdns.com"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "transfer",
+            "args": {
+              "domain": "kffsfudlvc.net",
+              "authCode": "test-auth-code"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"protocol\">XCP</item><item key=\"response_code\">487</item><item key=\"response_text\">Domain already exists in this account</item><item key=\"is_success\">0</item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Registrar\\Exception\\DomainNotTransferableException",
+              "message": "Domain is not transferable: Domain already exists in this account",
+              "code": 487
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "466bb0d5fe25385cc294e093a2aedc17",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>SW_REGISTER</item>\n\n<item key=\"attributes\">\n<dt_assoc>\n<item key='domain'>kffsfudlvc.net</item>\n<item key='periodYears'>1</item>\n<item key=\"contact_set\">\n<dt_assoc>\n</dt_assoc>\n</item>\n<item key='custom_tech_contact'>0</item>\n<item key='custom_nameservers'>0</item>\n<item key='reg_username'>reseller</item>\n<item key='reg_password'>pw-1234</item>\n<item key='reg_type'>transfer</item>\n<item key='handle'>process</item>\n<item key='f_whois_privacy'>1</item>\n<item key='auto_renew'>0</item>\n<item key='auth_info'>test-auth-code</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "transfer",
+            "args": {
+              "domain": "kffsfudlvc.net",
+              "authCode": "test-auth-code"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"protocol\">XCP</item><item key=\"response_code\">485</item><item key=\"response_text\">Taken</item><item key=\"is_success\">0</item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Registrar\\Exception\\DomainTakenException",
+              "message": "Domain is already in this account",
+              "code": 485
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "466bb0d5fe25385cc294e093a2aedc17",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>SW_REGISTER</item>\n\n<item key=\"attributes\">\n<dt_assoc>\n<item key='domain'>kffsfudlvc.net</item>\n<item key='periodYears'>1</item>\n<item key=\"contact_set\">\n<dt_assoc>\n</dt_assoc>\n</item>\n<item key='custom_tech_contact'>0</item>\n<item key='custom_nameservers'>0</item>\n<item key='reg_username'>reseller</item>\n<item key='reg_password'>pw-1234</item>\n<item key='reg_type'>transfer</item>\n<item key='handle'>process</item>\n<item key='f_whois_privacy'>1</item>\n<item key='auto_renew'>0</item>\n<item key='auth_info'>test-auth-code</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "transfer",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "opensrs",
+              "key": "reseller-key",
+              "username": "reseller",
+              "password": "pw-1234"
+            },
+            "nameservers": [
+              "ns1.systemdns.com",
+              "ns2.systemdns.com"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "transfer",
+            "args": {
+              "domain": "kqzxwvbnmt.net",
+              "authCode": "abc",
+              "purchasePrice": 10.25
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"protocol\">XCP</item><item key=\"response_code\">200</item><item key=\"response_text\">Command completed successfully</item><item key=\"is_success\">1</item><item key=\"attributes\"><dt_assoc><item key=\"id\">999</item></dt_assoc></item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "result": "999",
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "d67f04ca135789cd2b859cfbec17fdf4",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>SW_REGISTER</item>\n\n<item key=\"attributes\">\n<dt_assoc>\n<item key='domain'>kqzxwvbnmt.net</item>\n<item key='periodYears'>1</item>\n<item key=\"contact_set\">\n<dt_assoc>\n</dt_assoc>\n</item>\n<item key='custom_tech_contact'>0</item>\n<item key='custom_nameservers'>0</item>\n<item key='reg_username'>reseller</item>\n<item key='reg_password'>pw-1234</item>\n<item key='reg_type'>transfer</item>\n<item key='handle'>process</item>\n<item key='f_whois_privacy'>1</item>\n<item key='auto_renew'>0</item>\n<item key='auth_info'>abc</item>\n<item key='premium_price_to_display'>10</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "transfer",
+            "args": {
+              "domain": "kqzxwvbnmt.net",
+              "authCode": "0"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"protocol\">XCP</item><item key=\"response_code\">400</item><item key=\"response_text\">Bad request</item><item key=\"is_success\">0</item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Exception",
+              "message": "Failed to transfer domain: Bad request",
+              "code": 400
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "f636e251a57e3a21a1555ae3024cc82e",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>SW_REGISTER</item>\n\n<item key=\"attributes\">\n<dt_assoc>\n<item key='domain'>kqzxwvbnmt.net</item>\n<item key='periodYears'>1</item>\n<item key=\"contact_set\">\n<dt_assoc>\n</dt_assoc>\n</item>\n<item key='custom_tech_contact'>0</item>\n<item key='custom_nameservers'>0</item>\n<item key='reg_username'>reseller</item>\n<item key='reg_password'>pw-1234</item>\n<item key='reg_type'>transfer</item>\n<item key='handle'>process</item>\n<item key='f_whois_privacy'>1</item>\n<item key='auto_renew'>0</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "get auth code",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "opensrs",
+              "key": "reseller-key",
+              "username": "reseller",
+              "password": "pw-1234"
+            },
+            "nameservers": [
+              "ns1.systemdns.com",
+              "ns2.systemdns.com"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getAuthCode",
+            "args": {
+              "domain": "kffsfudlvc.net"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"protocol\">XCP</item><item key=\"response_code\">200</item><item key=\"response_text\">Command completed successfully</item><item key=\"is_success\">1</item><item key=\"attributes\"><dt_assoc><item key=\"domain_auth_info\">a&amp;b</item></dt_assoc></item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "result": "a&b",
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "71af89ab85a71556234b7a443102a58d",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>GET</item>\n<item key='domain'>kffsfudlvc.net</item>\n<item key=\"attributes\">\n<dt_assoc>\n<item key='type'>domain_auth_info</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getAuthCode",
+            "args": {
+              "domain": "kffsfudlvc.net"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"protocol\">XCP</item><item key=\"response_code\">200</item><item key=\"response_text\">Command completed successfully</item><item key=\"is_success\">1</item><item key=\"attributes\"><dt_assoc></dt_assoc></item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Exception",
+              "message": "Failed to get auth code: Auth code not found in response",
+              "code": 404
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "71af89ab85a71556234b7a443102a58d",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>GET</item>\n<item key='domain'>kffsfudlvc.net</item>\n<item key=\"attributes\">\n<dt_assoc>\n<item key='type'>domain_auth_info</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "getAuthCode",
+            "args": {
+              "domain": "kffsfudlvc.net"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"protocol\">XCP</item><item key=\"response_code\">405</item><item key=\"response_text\">Not EPP</item><item key=\"is_success\">0</item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Exception",
+              "message": "Failed to get auth code: Not EPP",
+              "code": 405
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "71af89ab85a71556234b7a443102a58d",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>GET</item>\n<item key='domain'>kffsfudlvc.net</item>\n<item key=\"attributes\">\n<dt_assoc>\n<item key='type'>domain_auth_info</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "check transfer status",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "opensrs",
+              "key": "reseller-key",
+              "username": "reseller",
+              "password": "pw-1234"
+            },
+            "nameservers": [
+              "ns1.systemdns.com",
+              "ns2.systemdns.com"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "checkTransferStatus",
+            "args": {
+              "domain": "kffsfudlvc.net"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"protocol\">XCP</item><item key=\"response_code\">200</item><item key=\"response_text\">Command completed successfully</item><item key=\"is_success\">1</item><item key=\"attributes\"><dt_assoc><item key=\"transferrable\">1</item></dt_assoc></item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "status": "transferrable",
+              "reason": null,
+              "timestamp": null
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "95cfd687af2189f410e8d204c78d733d",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>CHECK_TRANSFER</item>\n\n<item key=\"attributes\">\n<dt_assoc>\n<item key='domain'>kffsfudlvc.net</item>\n<item key='check_status'>1</item>\n<item key='get_request_address'>0</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "checkTransferStatus",
+            "args": {
+              "domain": "kffsfudlvc.net"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"protocol\">XCP</item><item key=\"response_code\">200</item><item key=\"response_text\">Command completed successfully</item><item key=\"is_success\">1</item><item key=\"attributes\"><dt_assoc><item key=\"transferrable\">0</item><item key=\"noservice\">1</item></dt_assoc></item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "status": "service_unavailable",
+              "reason": null,
+              "timestamp": null
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "95cfd687af2189f410e8d204c78d733d",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>CHECK_TRANSFER</item>\n\n<item key=\"attributes\">\n<dt_assoc>\n<item key='domain'>kffsfudlvc.net</item>\n<item key='check_status'>1</item>\n<item key='get_request_address'>0</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "checkTransferStatus",
+            "args": {
+              "domain": "kffsfudlvc.net"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"protocol\">XCP</item><item key=\"response_code\">200</item><item key=\"response_text\">Command completed successfully</item><item key=\"is_success\">1</item><item key=\"attributes\"><dt_assoc><item key=\"transferrable\">0</item><item key=\"reason\">Waiting for owner</item><item key=\"status\">pending_owner</item><item key=\"timestamp\">2025-05-06 07:08:09</item></dt_assoc></item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "status": "pending_owner",
+              "reason": "Waiting for owner",
+              "timestamp": "2025-05-06T07:08:09.000000+00:00"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "95cfd687af2189f410e8d204c78d733d",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>CHECK_TRANSFER</item>\n\n<item key=\"attributes\">\n<dt_assoc>\n<item key='domain'>kffsfudlvc.net</item>\n<item key='check_status'>1</item>\n<item key='get_request_address'>0</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "checkTransferStatus",
+            "args": {
+              "domain": "kffsfudlvc.net"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"protocol\">XCP</item><item key=\"response_code\">200</item><item key=\"response_text\">Command completed successfully</item><item key=\"is_success\">1</item><item key=\"attributes\"><dt_assoc><item key=\"status\">cancelled</item></dt_assoc></item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "status": "cancelled",
+              "reason": null,
+              "timestamp": null
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "95cfd687af2189f410e8d204c78d733d",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>CHECK_TRANSFER</item>\n\n<item key=\"attributes\">\n<dt_assoc>\n<item key='domain'>kffsfudlvc.net</item>\n<item key='check_status'>1</item>\n<item key='get_request_address'>0</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "checkTransferStatus",
+            "args": {
+              "domain": "kffsfudlvc.net"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"protocol\">XCP</item><item key=\"response_code\">200</item><item key=\"response_text\">Command completed successfully</item><item key=\"is_success\">1</item><item key=\"attributes\"><dt_assoc><item key=\"status\">other</item></dt_assoc></item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "status": "not_transferrable",
+              "reason": null,
+              "timestamp": null
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "95cfd687af2189f410e8d204c78d733d",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>CHECK_TRANSFER</item>\n\n<item key=\"attributes\">\n<dt_assoc>\n<item key='domain'>kffsfudlvc.net</item>\n<item key='check_status'>1</item>\n<item key='get_request_address'>0</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "checkTransferStatus",
+            "args": {
+              "domain": "kffsfudlvc.net"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"protocol\">XCP</item><item key=\"response_code\">200</item><item key=\"response_text\">Command completed successfully</item><item key=\"is_success\">1</item><item key=\"attributes\"><dt_assoc><item key=\"timestamp\">never</item></dt_assoc></item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Exception",
+              "message": "Failed to check transfer status: Failed to parse time string (never) at position 0 (n): The timezone could not be found in the database",
+              "code": 0
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "95cfd687af2189f410e8d204c78d733d",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>CHECK_TRANSFER</item>\n\n<item key=\"attributes\">\n<dt_assoc>\n<item key='domain'>kffsfudlvc.net</item>\n<item key='check_status'>1</item>\n<item key='get_request_address'>0</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "checkTransferStatus",
+            "args": {
+              "domain": "kffsfudlvc.net"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"protocol\">XCP</item><item key=\"response_code\">500</item><item key=\"response_text\">Down</item><item key=\"is_success\">0</item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Exception",
+              "message": "Failed to check transfer status: Down",
+              "code": 500
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "95cfd687af2189f410e8d204c78d733d",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>CHECK_TRANSFER</item>\n\n<item key=\"attributes\">\n<dt_assoc>\n<item key='domain'>kffsfudlvc.net</item>\n<item key='check_status'>1</item>\n<item key='get_request_address'>0</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "invalid answers",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "opensrs",
+              "key": "reseller-key",
+              "username": "reseller",
+              "password": "pw-1234"
+            },
+            "nameservers": [
+              "ns1.systemdns.com",
+              "ns2.systemdns.com"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "available",
+            "args": {
+              "domains": [
+                "x.net"
+              ]
+            },
+            "responses": [
+              {
+                "status": 200,
+                "body": ""
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Exception",
+              "message": "OpenSRS returned an invalid XML response",
+              "code": 0
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "870c9b614d283a512dc318dcc968a57c",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>LOOKUP</item>\n\n<item key=\"attributes\">\n<dt_assoc>\n<item key='domain'>x.net</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "available",
+            "args": {
+              "domains": [
+                "x.net"
+              ]
+            },
+            "responses": [
+              {
+                "status": 200,
+                "body": "<a><b></a>"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Exception",
+              "message": "OpenSRS returned an invalid XML response",
+              "code": 0
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "870c9b614d283a512dc318dcc968a57c",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>LOOKUP</item>\n\n<item key=\"attributes\">\n<dt_assoc>\n<item key='domain'>x.net</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "available",
+            "args": {
+              "domains": [
+                "x.net"
+              ]
+            },
+            "responses": [
+              {
+                "status": 200,
+                "body": "<a/>"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "x.net": false
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "870c9b614d283a512dc318dcc968a57c",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>LOOKUP</item>\n\n<item key=\"attributes\">\n<dt_assoc>\n<item key='domain'>x.net</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "available",
+            "args": {
+              "domains": [
+                "x.net"
+              ]
+            }
+          },
+          "expect": {
+            "error": {
+              "class": "Exception",
+              "message": "Failed to send request to OpenSRS: no recorded response",
+              "code": 0
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "870c9b614d283a512dc318dcc968a57c",
+                  "x-username": "reseller"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>LOOKUP</item>\n\n<item key=\"attributes\">\n<dt_assoc>\n<item key='domain'>x.net</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "endpoint without https",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "opensrs",
+              "key": "k",
+              "username": "u",
+              "password": "p",
+              "endpoint": "http://rr-n1-tor.opensrs.net:55443"
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "available",
+            "args": {
+              "domains": [
+                "a.net"
+              ]
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"protocol\">XCP</item><item key=\"response_code\">210</item><item key=\"response_text\">Command completed successfully</item><item key=\"is_success\">1</item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "a.net": true
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://rr-n1-tor.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "846664214e1ce7c0e6f458b2e3f58e87",
+                  "x-username": "u"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>LOOKUP</item>\n\n<item key=\"attributes\">\n<dt_assoc>\n<item key='domain'>a.net</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "bare endpoint",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "opensrs",
+              "key": "k",
+              "username": "u",
+              "password": "p",
+              "endpoint": "rr-n1-tor.opensrs.net:55443"
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "available",
+            "args": {
+              "domains": [
+                "a.net"
+              ]
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"protocol\">XCP</item><item key=\"response_code\">210</item><item key=\"response_text\">Command completed successfully</item><item key=\"is_success\">1</item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "a.net": true
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://rr-n1-tor.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "846664214e1ce7c0e6f458b2e3f58e87",
+                  "x-username": "u"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>LOOKUP</item>\n\n<item key=\"attributes\">\n<dt_assoc>\n<item key='domain'>a.net</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

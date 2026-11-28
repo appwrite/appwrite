@@ -1,0 +1,605 @@
+{
+  "source": "packages/auth/tests/Algorithms/ShaTest.php",
+  "cases": [
+    {
+      "name": "hash",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "sha"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "test123"
+          },
+          "bind": "out",
+          "expect": "ecd71870d1963316a97e3ac3408c9835ad8cf0f3c1bc703527c30265534f75ae"
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "test123",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "wrongpassword",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "hash.options",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            }
+          },
+          "expect": {
+            "version": "sha256"
+          }
+        }
+      ]
+    },
+    {
+      "name": "custom version",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "sha"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setVersion",
+            "value": "sha256"
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "test123"
+          },
+          "bind": "out",
+          "expect": "ecd71870d1963316a97e3ac3408c9835ad8cf0f3c1bc703527c30265534f75ae"
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "test123",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "wrongpassword",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "every version",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "sha"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setVersion",
+            "value": "sha1"
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "appwrite"
+          },
+          "expect": "31c315b0262695ce861bc17c63d2362684d5724c"
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setVersion",
+            "value": "sha224"
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "appwrite"
+          },
+          "expect": "fd66925d38680d7a9a075ab17223d00a60c4c532a81ba3591f9167a4"
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setVersion",
+            "value": "sha256"
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "appwrite"
+          },
+          "expect": "ece375199f9118cf29e19e171742f668b6b13367dc1797d11da1c74795e758cc"
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setVersion",
+            "value": "sha384"
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "appwrite"
+          },
+          "expect": "ed6436743c51a62d3454de8559beb59d923fbb730ae6028043112ecc8520cee566c539b98383c12259a133043c1e4495"
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setVersion",
+            "value": "sha512"
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "appwrite"
+          },
+          "expect": "4243da0a694e8a2f727c8060fe0507c8fa01ca68146c76d2c190805b638c20c6bf6ba04e21f11ae138785d0bff63c416e6f87badbffad37f6dee50094cc38c70"
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setVersion",
+            "value": "sha3-224"
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "appwrite"
+          },
+          "expect": "abb4739db875dd10d24c0ac3d675f847dbab1d1a9c9b613fffdbabe1"
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setVersion",
+            "value": "sha3-256"
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "appwrite"
+          },
+          "expect": "867a758eea6f62ccb37cc3f8945137def93d0638259ff4dcfc0f21629d2666fb"
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setVersion",
+            "value": "sha3-384"
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "appwrite"
+          },
+          "expect": "ed16007b12ad357e455ec14cf692bf1add54809948a3d4d9f07cb8ebe09cd8ac2e5bf8aa8a558af4a5a5ed7890cef5ab"
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setVersion",
+            "value": "sha3-512"
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "appwrite"
+          },
+          "expect": "a721f80a3f2d1c08137a2ffaad4ac23298f01916e3314111adcba471b21354145e4c6fc1cc6d1974608e2e5a96a20df4fba9ac0d52660f3fdc6e2124d5958913"
+        }
+      ]
+    },
+    {
+      "name": "invalid version",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "sha"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setVersion",
+            "value": "invalid-version"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid SHA version. Valid versions are: sha1, sha224, sha256, sha384, sha512, sha3-224, sha3-256, sha3-384, sha3-512"
+            }
+          }
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setVersion",
+            "value": "SHA256"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid SHA version. Valid versions are: sha1, sha224, sha256, sha384, sha512, sha3-224, sha3-256, sha3-384, sha3-512"
+            }
+          }
+        },
+        {
+          "op": "hash.options",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            }
+          },
+          "expect": {
+            "version": "sha256"
+          }
+        }
+      ]
+    },
+    {
+      "name": "the version option goes to hash()",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "sha"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.set_option",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "key": "version",
+            "value": "md5"
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "x"
+          },
+          "expect": "9dd4e461268c8034f5c8564e155c67a6"
+        },
+        {
+          "op": "hash.set_option",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "key": "version",
+            "value": "SHA512/256"
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "x"
+          },
+          "expect": "6a1db6c1dd481f7aab2adb9c262b210edcca35624ec64c29ffca6857b1e30253"
+        },
+        {
+          "op": "hash.set_option",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "key": "version",
+            "value": 5
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "x"
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "SHA version must be a string"
+            }
+          }
+        },
+        {
+          "op": "hash.set_option",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "key": "version",
+            "value": "zz"
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "x"
+          },
+          "expect": {
+            "$error": {
+              "class": "ValueError",
+              "message": "hash(): Argument #1 ($algo) must be a valid hashing algorithm"
+            }
+          }
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "x",
+            "hash_value": "x"
+          },
+          "expect": {
+            "$error": {
+              "class": "ValueError",
+              "message": "hash(): Argument #1 ($algo) must be a valid hashing algorithm"
+            }
+          }
+        },
+        {
+          "op": "hash.set_option",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "key": "version",
+            "value": null
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "x"
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "SHA version must be a string"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "verifies PHP fixtures",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "sha"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setVersion",
+            "value": "sha512"
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "appwrite",
+            "hash_value": "4243da0a694e8a2f727c8060fe0507c8fa01ca68146c76d2c190805b638c20c6bf6ba04e21f11ae138785d0bff63c416e6f87badbffad37f6dee50094cc38c70"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "name",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "sha"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.name",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            }
+          },
+          "expect": "sha"
+        }
+      ]
+    }
+  ]
+}

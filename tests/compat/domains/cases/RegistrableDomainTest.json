@@ -1,0 +1,215 @@
+{
+  "source": "packages/domains/tests/Validator/RegistrableDomainTest.php",
+  "cases": [
+    {
+      "name": "description",
+      "op": "validator.describe",
+      "args": {
+        "validator": "registrable"
+      },
+      "expect": {
+        "description": "Value must be a lowercase domain name such as \"example.com\". IP addresses and public suffixes are not allowed.",
+        "type": "string",
+        "array": false
+      }
+    },
+    {
+      "name": "apex",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "registrable",
+        "value": "example.com"
+      },
+      "expect": true
+    },
+    {
+      "name": "subdomain",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "registrable",
+        "value": "app.example.com"
+      },
+      "expect": true
+    },
+    {
+      "name": "under a multi-label suffix",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "registrable",
+        "value": "bbc.co.uk"
+      },
+      "expect": true
+    },
+    {
+      "name": "under a private suffix",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "registrable",
+        "value": "user.github.io"
+      },
+      "expect": true
+    },
+    {
+      "name": "hyphenated",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "registrable",
+        "value": "my-app.example.com"
+      },
+      "expect": true
+    },
+    {
+      "name": "tld",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "registrable",
+        "value": "com"
+      },
+      "expect": false
+    },
+    {
+      "name": "multi-label suffix",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "registrable",
+        "value": "co.uk"
+      },
+      "expect": false
+    },
+    {
+      "name": "private suffix",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "registrable",
+        "value": "github.io"
+      },
+      "expect": false
+    },
+    {
+      "name": "unknown suffix",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "registrable",
+        "value": "example.notatld"
+      },
+      "expect": false
+    },
+    {
+      "name": "single label",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "registrable",
+        "value": "localhost"
+      },
+      "expect": false
+    },
+    {
+      "name": "ipv4",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "registrable",
+        "value": "127.0.0.1"
+      },
+      "expect": false
+    },
+    {
+      "name": "ipv6",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "registrable",
+        "value": "::1"
+      },
+      "expect": false
+    },
+    {
+      "name": "uppercase",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "registrable",
+        "value": "Example.com"
+      },
+      "expect": false
+    },
+    {
+      "name": "underscore",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "registrable",
+        "value": "exa_mple.com"
+      },
+      "expect": false
+    },
+    {
+      "name": "leading hyphen",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "registrable",
+        "value": "-example.com"
+      },
+      "expect": false
+    },
+    {
+      "name": "trailing dot",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "registrable",
+        "value": "example.com."
+      },
+      "expect": false
+    },
+    {
+      "name": "empty label",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "registrable",
+        "value": "app..example.com"
+      },
+      "expect": false
+    },
+    {
+      "name": "url",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "registrable",
+        "value": "https://example.com"
+      },
+      "expect": false
+    },
+    {
+      "name": "port",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "registrable",
+        "value": "example.com:443"
+      },
+      "expect": false
+    },
+    {
+      "name": "path",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "registrable",
+        "value": "example.com/login"
+      },
+      "expect": false
+    },
+    {
+      "name": "empty",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "registrable",
+        "value": ""
+      },
+      "expect": false
+    },
+    {
+      "name": "not a string",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "registrable",
+        "value": 123
+      },
+      "expect": false
+    }
+  ]
+}

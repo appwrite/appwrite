@@ -7,7 +7,8 @@
 # ext-zstd load (ZSTD_SYS_USE_PKG_CONFIG), rather than copies built from source.
 set -eu
 
-apk add --no-cache rustup clang-dev libheif-dev build-base zlib-dev zstd-dev pkgconf
+# openssl-dev: utopia-auth's RSA keys link OpenSSL.
+apk add --no-cache rustup clang-dev libheif-dev openssl-dev build-base zlib-dev zstd-dev pkgconf
 rustup-init -y --default-toolchain none
 . "$HOME/.cargo/env"
 rustup toolchain install

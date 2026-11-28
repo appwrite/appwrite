@@ -1,0 +1,17 @@
+[package]
+name = "utopia-di"
+description = "A dependency injection container: factories with declared dependencies, built once, resolved through parent containers."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository = "https://github.com/utopia-rs/di"
+publish.workspace = true
+
+[dependencies]
+foldhash.workspace = true
+thiserror.workspace = true
+
+[package.metadata.utopia]
+category = "platform"
+php-sync = "9e9d55ef65613b898b0c084a08b0f7a9fa7df8cf"

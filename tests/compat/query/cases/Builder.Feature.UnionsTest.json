@@ -1,0 +1,1522 @@
+{
+  "source": "packages/query/tests/Builder/Feature/UnionsTest.php",
+  "cases": [
+    {
+      "name": "testUnionWrapsEachArmInParensByDefault",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "admins"
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "role",
+              [
+                "admin"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "status",
+              [
+                "active"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              [
+                {
+                  "$o": 4
+                }
+              ]
+            ]
+          },
+          {
+            "call": "union",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              {
+                "$o": 1
+              }
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 5
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "role",
+            "values": [
+              "admin"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 3
+        },
+        {
+          "$value": "Query",
+          "id": 4,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "status",
+            "values": [
+              "active"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "(SELECT * FROM `users` WHERE `status` IN (?)) UNION (SELECT * FROM `admins` WHERE `role` IN (?))",
+            "bindings": [
+              "active",
+              "admin"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "(SELECT * FROM `users` WHERE `status` IN (?)) UNION (SELECT * FROM `admins` WHERE `role` IN (?))",
+        [
+          "active",
+          "admin"
+        ],
+        [
+          "active",
+          "admin"
+        ],
+        "(SELECT * FROM `users` WHERE `status` IN (?)) UNION (SELECT * FROM `admins` WHERE `role` IN (?))",
+        "(SELECT * FROM `users` WHERE `status` IN (?)) UNION (SELECT * FROM `admins` WHERE `role` IN (?))",
+        [
+          "active",
+          "admin"
+        ]
+      ]
+    },
+    {
+      "name": "testUnionAllEmitsAllKeyword",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "archive"
+            ]
+          },
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "current"
+            ]
+          },
+          {
+            "call": "unionAll",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              {
+                "$o": 1
+              }
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "(SELECT * FROM `current`) UNION ALL (SELECT * FROM `archive`)",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "(SELECT * FROM `current`) UNION ALL (SELECT * FROM `archive`)",
+        [],
+        [],
+        "(SELECT * FROM `current`) UNION ALL (SELECT * FROM `archive`)",
+        "(SELECT * FROM `current`) UNION ALL (SELECT * FROM `archive`)"
+      ]
+    },
+    {
+      "name": "testIntersectEmitsIntersectKeyword",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "b"
+            ]
+          },
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "a"
+            ]
+          },
+          {
+            "call": "intersect",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              {
+                "$o": 1
+              }
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "(SELECT * FROM \"a\") INTERSECT (SELECT * FROM \"b\")",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "(SELECT * FROM \"a\") INTERSECT (SELECT * FROM \"b\")",
+        [],
+        [],
+        "(SELECT * FROM \"a\") INTERSECT (SELECT * FROM \"b\")",
+        "(SELECT * FROM \"a\") INTERSECT (SELECT * FROM \"b\")"
+      ]
+    },
+    {
+      "name": "testIntersectAllEmitsIntersectAllKeyword",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "b"
+            ]
+          },
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "a"
+            ]
+          },
+          {
+            "call": "intersectAll",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              {
+                "$o": 1
+              }
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "(SELECT * FROM \"a\") INTERSECT ALL (SELECT * FROM \"b\")",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "(SELECT * FROM \"a\") INTERSECT ALL (SELECT * FROM \"b\")",
+        [],
+        [],
+        "(SELECT * FROM \"a\") INTERSECT ALL (SELECT * FROM \"b\")",
+        "(SELECT * FROM \"a\") INTERSECT ALL (SELECT * FROM \"b\")"
+      ]
+    },
+    {
+      "name": "testExceptEmitsExceptKeyword",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "b"
+            ]
+          },
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "a"
+            ]
+          },
+          {
+            "call": "except",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              {
+                "$o": 1
+              }
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "(SELECT * FROM \"a\") EXCEPT (SELECT * FROM \"b\")",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "(SELECT * FROM \"a\") EXCEPT (SELECT * FROM \"b\")",
+        [],
+        [],
+        "(SELECT * FROM \"a\") EXCEPT (SELECT * FROM \"b\")",
+        "(SELECT * FROM \"a\") EXCEPT (SELECT * FROM \"b\")"
+      ]
+    },
+    {
+      "name": "testExceptAllEmitsExceptAllKeyword",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "b"
+            ]
+          },
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "a"
+            ]
+          },
+          {
+            "call": "exceptAll",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              {
+                "$o": 1
+              }
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "(SELECT * FROM \"a\") EXCEPT ALL (SELECT * FROM \"b\")",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "(SELECT * FROM \"a\") EXCEPT ALL (SELECT * FROM \"b\")",
+        [],
+        [],
+        "(SELECT * FROM \"a\") EXCEPT ALL (SELECT * FROM \"b\")",
+        "(SELECT * FROM \"a\") EXCEPT ALL (SELECT * FROM \"b\")"
+      ]
+    },
+    {
+      "name": "testBindingsAppendInArmOrder",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t2"
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "year",
+              [
+                2023
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "t3"
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "year",
+              [
+                2022
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              [
+                {
+                  "$o": 4
+                }
+              ]
+            ]
+          },
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              "t1"
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "year",
+              [
+                2024
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              [
+                {
+                  "$o": 6
+                }
+              ]
+            ]
+          },
+          {
+            "call": "union",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              {
+                "$o": 1
+              }
+            ]
+          },
+          {
+            "call": "unionAll",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              {
+                "$o": 3
+              }
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 5
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 7
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 7
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 7
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 7
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 7
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "year",
+            "values": [
+              2023
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 3
+        },
+        {
+          "$value": "Query",
+          "id": 4,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "year",
+            "values": [
+              2022
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 5
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 5
+        },
+        {
+          "$value": "Query",
+          "id": 6,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "year",
+            "values": [
+              2024
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 5
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 5
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 5
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 7,
+          "props": {
+            "query": "(SELECT * FROM `t1` WHERE `year` IN (?)) UNION (SELECT * FROM `t2` WHERE `year` IN (?)) UNION ALL (SELECT * FROM `t3` WHERE `year` IN (?))",
+            "bindings": [
+              2024,
+              2023,
+              2022
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "(SELECT * FROM `t1` WHERE `year` IN (?)) UNION (SELECT * FROM `t2` WHERE `year` IN (?)) UNION ALL (SELECT * FROM `t3` WHERE `year` IN (?))",
+        [
+          2024,
+          2023,
+          2022
+        ],
+        [
+          2024,
+          2023,
+          2022
+        ],
+        "(SELECT * FROM `t1` WHERE `year` IN (?)) UNION (SELECT * FROM `t2` WHERE `year` IN (?)) UNION ALL (SELECT * FROM `t3` WHERE `year` IN (?))",
+        [
+          2024,
+          2023,
+          2022
+        ]
+      ]
+    },
+    {
+      "name": "testSQLiteStripsParensFromUnionArms",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\SQLite",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "archived_users"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "id",
+                "name"
+              ]
+            ]
+          },
+          {
+            "new": "Builder\\SQLite",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              [
+                "id",
+                "name"
+              ]
+            ]
+          },
+          {
+            "call": "union",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              {
+                "$o": 1
+              }
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "SELECT `id`, `name` FROM `users` UNION SELECT `id`, `name` FROM `archived_users`",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT `id`, `name` FROM `users` UNION SELECT `id`, `name` FROM `archived_users`",
+        [],
+        [],
+        "SELECT `id`, `name` FROM `users` UNION SELECT `id`, `name` FROM `archived_users`",
+        "SELECT `id`, `name` FROM `users` UNION SELECT `id`, `name` FROM `archived_users`",
+        "SELECT `id`, `name` FROM `users` UNION SELECT `id`, `name` FROM `archived_users`"
+      ]
+    },
+    {
+      "name": "testSQLiteStripsParensAcrossMultipleCompoundOps",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\SQLite",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t2"
+            ]
+          },
+          {
+            "new": "Builder\\SQLite",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "t3"
+            ]
+          },
+          {
+            "new": "Builder\\SQLite",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "t1"
+            ]
+          },
+          {
+            "call": "union",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              {
+                "$o": 1
+              }
+            ]
+          },
+          {
+            "call": "unionAll",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "SELECT * FROM `t1` UNION SELECT * FROM `t2` UNION ALL SELECT * FROM `t3`",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM `t1` UNION SELECT * FROM `t2` UNION ALL SELECT * FROM `t3`",
+        [],
+        [],
+        "SELECT * FROM `t1` UNION SELECT * FROM `t2` UNION ALL SELECT * FROM `t3`",
+        "SELECT * FROM `t1` UNION SELECT * FROM `t2` UNION ALL SELECT * FROM `t3`",
+        "SELECT * FROM `t1` UNION SELECT * FROM `t2` UNION ALL SELECT * FROM `t3`"
+      ]
+    },
+    {
+      "name": "testChainableReturnsSameInstance",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "t2"
+            ]
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t1"
+            ]
+          },
+          {
+            "call": "unionAll",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "same": [
+              {
+                "$o": 1
+              },
+              {
+                "$o": 1
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        true
+      ]
+    }
+  ]
+}

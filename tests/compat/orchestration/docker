@@ -1,0 +1,6 @@
+#!/bin/sh
+# The docker client the Rust side's DockerCli runs in the orchestration cases:
+# the PHP side's own client, in compat-orchestration-php (services.sh), so
+# both runtimes send their commands through the same client version to the
+# same daemon.
+exec docker exec -i compat-orchestration-php docker "$@"

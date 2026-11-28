@@ -13,7 +13,7 @@ This library is maintained by the [Appwrite team](https://appwrite.io).
 
 ```toml
 [dependencies]
-utopia-span = { git = "https://github.com/appwrite/appwrite" }
+utopia-span = { git = "https://github.com/utopia-rs/span" }
 ```
 
 A span records one unit of work, such as a request, a job or a query: what it was, the attributes that describe it, how long it took and whether it failed. Start a span when the work starts, add attributes from anywhere while it runs, and finish it to send it to your exporters.

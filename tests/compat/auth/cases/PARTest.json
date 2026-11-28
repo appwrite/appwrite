@@ -1,0 +1,160 @@
+{
+  "source": "packages/auth/tests/OAuth2/PARTest.php",
+  "cases": [
+    {
+      "name": "builds and parses a request_uri",
+      "steps": [
+        {
+          "op": "par.from_id",
+          "args": {
+            "prefix": "urn:appwrite:oauth2:request:",
+            "id": "grant123"
+          },
+          "bind": "p",
+          "expect": {
+            "id": "grant123",
+            "requestUri": "urn:appwrite:oauth2:request:grant123"
+          }
+        },
+        {
+          "op": "par.from_request_uri",
+          "args": {
+            "prefix": "urn:appwrite:oauth2:request:",
+            "request_uri": {
+              "$ref": "p",
+              "path": "/requestUri"
+            }
+          },
+          "expect": {
+            "id": "grant123",
+            "requestUri": "urn:appwrite:oauth2:request:grant123"
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid request_uri (empty prefix)",
+      "steps": [
+        {
+          "op": "par.from_request_uri",
+          "args": {
+            "prefix": "",
+            "request_uri": "urn:appwrite:oauth2:request:grant123"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidRequestUriException",
+              "message": "Invalid request_uri."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid request_uri (wrong prefix)",
+      "steps": [
+        {
+          "op": "par.from_request_uri",
+          "args": {
+            "prefix": "urn:appwrite:oauth2:request:",
+            "request_uri": "urn:example:oauth2:request:grant123"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidRequestUriException",
+              "message": "Invalid request_uri."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid request_uri (empty id)",
+      "steps": [
+        {
+          "op": "par.from_request_uri",
+          "args": {
+            "prefix": "urn:appwrite:oauth2:request:",
+            "request_uri": "urn:appwrite:oauth2:request:"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidRequestUriException",
+              "message": "Invalid request_uri."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid request_uri (prefix only partially)",
+      "steps": [
+        {
+          "op": "par.from_request_uri",
+          "args": {
+            "prefix": "urn:appwrite:oauth2:request:",
+            "request_uri": "urn:appwrite:oauth2:request"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidRequestUriException",
+              "message": "Invalid request_uri."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects empty request_uri parts (empty prefix)",
+      "steps": [
+        {
+          "op": "par.from_id",
+          "args": {
+            "prefix": "",
+            "id": "grant123"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidRequestUriException",
+              "message": "request_uri prefix and id must be non-empty strings."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects empty request_uri parts (empty id)",
+      "steps": [
+        {
+          "op": "par.from_id",
+          "args": {
+            "prefix": "urn:appwrite:oauth2:request:",
+            "id": ""
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidRequestUriException",
+              "message": "request_uri prefix and id must be non-empty strings."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects empty request_uri parts (zero)",
+      "steps": [
+        {
+          "op": "par.from_id",
+          "args": {
+            "prefix": "0",
+            "id": "0"
+          },
+          "expect": {
+            "id": "0",
+            "requestUri": "00"
+          }
+        }
+      ]
+    }
+  ]
+}

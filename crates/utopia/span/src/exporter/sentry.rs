@@ -403,10 +403,10 @@ impl Sentry {
         let handled = get("span.handled").as_bool();
         let mut payload = vec![
             ("level", Php::from(SentryLevel::from_span(level).as_str())),
-            ("platform", Php::from("native")),
+            ("platform", Php::from("php")),
             (
                 "sdk",
-                object(vec![("name", Php::from("utopia-span")), ("version", Php::from(env!("CARGO_PKG_VERSION")))]),
+                object(vec![("name", Php::from("utopia-php/span")), ("version", Php::from(env!("CARGO_PKG_VERSION")))]),
             ),
             ("start_timestamp", Php::Float(started)),
             ("timestamp", Php::Float(finished)),
@@ -595,8 +595,7 @@ mod http {
     use http_body_util::{BodyExt, Full};
     use hyper_rustls::HttpsConnector;
     use hyper_util::client::legacy::Client;
-    use hyper_util::client::legacy::connect::HttpConnector as Connector;
-    use hyper_util::rt::TokioExecutor;
+    use utopia_async::hyper::{Connector, Executor};
 
     use super::{Request, Transport};
 
@@ -634,7 +633,7 @@ mod http {
                         .https_or_http()
                         .enable_http1()
                         .wrap_connector(http);
-                    Some(Client::builder(TokioExecutor::new()).build(https))
+                    Some(Client::builder(Executor).build(https))
                 })
                 .clone()
         }
@@ -662,20 +661,20 @@ mod http {
                 return;
             };
             let job = async move {
-                let result = tokio::time::timeout(Duration::from_secs(1), exchange(client, request)).await;
+                let result = utopia_async::timeout(Duration::from_secs(1), exchange(client, request)).await;
                 match result {
                     Ok(Ok(())) => {}
                     Ok(Err(message)) => eprintln!("Sentry exporter: {message}"),
                     Err(_) => eprintln!("Sentry exporter: Operation timed out after 1000 milliseconds"),
                 }
             };
-            match tokio::runtime::Handle::try_current() {
-                Ok(runtime) => {
+            match utopia_async::Handle::current() {
+                Some(runtime) => {
                     runtime.spawn(job);
                 }
-                Err(_) => {
+                None => {
                     std::thread::spawn(move || {
-                        if let Ok(runtime) = tokio::runtime::Builder::new_current_thread().enable_all().build() {
+                        if let Ok(runtime) = utopia_async::Builder::current_thread().build() {
                             runtime.block_on(job);
                         }
                     });

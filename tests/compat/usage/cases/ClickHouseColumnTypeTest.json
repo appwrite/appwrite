@@ -1,0 +1,319 @@
+{
+  "source": "packages/usage/tests/Adapter/ClickHouseColumnTypeTest.php",
+  "cases": [
+    {
+      "name": "low cardinality premium geo columns",
+      "steps": [
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "continentCode",
+            "type": "event"
+          },
+          "expect": "LowCardinality(Nullable(String))"
+        },
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "subdivisions",
+            "type": "event"
+          },
+          "expect": "LowCardinality(Nullable(String))"
+        },
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "connectionType",
+            "type": "event"
+          },
+          "expect": "LowCardinality(Nullable(String))"
+        },
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "connectionUsageType",
+            "type": "event"
+          },
+          "expect": "LowCardinality(Nullable(String))"
+        },
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "autonomousSystemNumber",
+            "type": "event"
+          },
+          "expect": "LowCardinality(Nullable(String))"
+        }
+      ]
+    },
+    {
+      "name": "high cardinality premium geo columns",
+      "steps": [
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "city",
+            "type": "event"
+          },
+          "expect": "Nullable(String)"
+        },
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "isp",
+            "type": "event"
+          },
+          "expect": "Nullable(String)"
+        },
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "autonomousSystemOrganization",
+            "type": "event"
+          },
+          "expect": "Nullable(String)"
+        },
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "connectionOrganization",
+            "type": "event"
+          },
+          "expect": "Nullable(String)"
+        }
+      ]
+    },
+    {
+      "name": "low cardinality request and geo columns",
+      "steps": [
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "protocol",
+            "type": "event"
+          },
+          "expect": "LowCardinality(Nullable(String))"
+        },
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "ipReputation",
+            "type": "event"
+          },
+          "expect": "LowCardinality(Nullable(String))"
+        },
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "timeZone",
+            "type": "event"
+          },
+          "expect": "LowCardinality(Nullable(String))"
+        },
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "weatherCode",
+            "type": "event"
+          },
+          "expect": "LowCardinality(Nullable(String))"
+        }
+      ]
+    },
+    {
+      "name": "high cardinality request and geo columns",
+      "steps": [
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "accept",
+            "type": "event"
+          },
+          "expect": "Nullable(String)"
+        },
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "acceptLanguage",
+            "type": "event"
+          },
+          "expect": "Nullable(String)"
+        },
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "queryKeys",
+            "type": "event"
+          },
+          "expect": "Nullable(String)"
+        },
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "postalCode",
+            "type": "event"
+          },
+          "expect": "Nullable(String)"
+        },
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "latitude",
+            "type": "event"
+          },
+          "expect": "Nullable(String)"
+        },
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "longitude",
+            "type": "event"
+          },
+          "expect": "Nullable(String)"
+        }
+      ]
+    },
+    {
+      "name": "low cardinality sdk columns",
+      "steps": [
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "sdk",
+            "type": "event"
+          },
+          "expect": "LowCardinality(Nullable(String))"
+        },
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "sdkVersion",
+            "type": "event"
+          },
+          "expect": "LowCardinality(Nullable(String))"
+        }
+      ]
+    },
+    {
+      "name": "low cardinality ordinal column",
+      "steps": [
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "ordinal",
+            "type": "gauge"
+          },
+          "expect": "LowCardinality(Nullable(String))"
+        }
+      ]
+    },
+    {
+      "name": "core columns",
+      "steps": [
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "metric",
+            "type": "event"
+          },
+          "expect": "String"
+        },
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "value",
+            "type": "event"
+          },
+          "expect": "Int64"
+        },
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "time",
+            "type": "event"
+          },
+          "expect": "Nullable(DateTime64(3, 'UTC'))"
+        },
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "path",
+            "type": "event"
+          },
+          "expect": "Nullable(String)"
+        },
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "nope",
+            "type": "event"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Attribute nope not found in event schema"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "gauge columns",
+      "steps": [
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "metric",
+            "type": "gauge"
+          },
+          "expect": "String"
+        },
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "value",
+            "type": "gauge"
+          },
+          "expect": "Int64"
+        },
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "time",
+            "type": "gauge"
+          },
+          "expect": "Nullable(DateTime64(3, 'UTC'))"
+        },
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "service",
+            "type": "gauge"
+          },
+          "expect": "LowCardinality(Nullable(String))"
+        },
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "teamId",
+            "type": "gauge"
+          },
+          "expect": "Nullable(String)"
+        },
+        {
+          "op": "clickhouse.column_type",
+          "args": {
+            "id": "path",
+            "type": "gauge"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Attribute path not found in gauge schema"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

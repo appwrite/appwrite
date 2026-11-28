@@ -1,0 +1,155 @@
+{
+  "lib": "detector",
+  "environment": {
+    "date": "2026-10-18T14:19:41Z",
+    "commit": "398712d31e",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "compat-cache-php",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.97",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "framework",
+      "description": "Score 15 frameworks on 10 file names and a package.json",
+      "php": {
+        "ns": 14824.532356532356,
+        "min": 14233.617826617827,
+        "max": 23387.108669108668,
+        "samples": 15,
+        "calls": 819,
+        "cpu": 16324.379324379324,
+        "peak": 45368.0,
+        "retained": 0.030606430606430608,
+        "rss": 107462656.0
+      },
+      "rust": {
+        "ns": 1661.5921713581652,
+        "min": 1636.3535209932709,
+        "max": 1783.8514832717278,
+        "samples": 15,
+        "calls": 10551,
+        "cpu": 1673.6175528385936,
+        "rss": 22822912.0,
+        "allocations": 40.000069503680535,
+        "bytes": 5242.017748712602,
+        "peak": 3057.0,
+        "retained": 0.010450826146020914
+      },
+      "speedup": 8.921883848558918,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "runtime",
+      "description": "Find the runtime of 10 file names by extension among 11 runtimes",
+      "php": {
+        "ns": 3074.520498026116,
+        "min": 3007.7563012450655,
+        "max": 3298.315821439417,
+        "samples": 15,
+        "calls": 6586,
+        "cpu": 3084.4923575260655,
+        "peak": 7536.0,
+        "retained": 0.0038060532442554915,
+        "rss": 107462656.0
+      },
+      "rust": {
+        "ns": 321.0667387880427,
+        "min": 316.18992315891626,
+        "max": 329.4647692381119,
+        "samples": 15,
+        "calls": 62857,
+        "cpu": 321.655194064835,
+        "rss": 22822912.0,
+        "allocations": 18.000011666693183,
+        "bytes": 1401.0029792491953,
+        "peak": 1650.0,
+        "retained": 0.001754246411166086
+      },
+      "speedup": 9.575954549610975,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "rendering",
+      "description": "Tell the rendering of a 6-file Next.js build",
+      "php": {
+        "ns": 1608.3884457336235,
+        "min": 1569.0516477318508,
+        "max": 1759.7292724196277,
+        "samples": 15,
+        "calls": 12411,
+        "cpu": 1624.4514274971127,
+        "peak": 4264.0,
+        "retained": 0.0020197136948405985,
+        "rss": 107462656.0
+      },
+      "rust": {
+        "ns": 225.02047064199223,
+        "min": 221.1726981951108,
+        "max": 240.649508795979,
+        "samples": 15,
+        "calls": 87540,
+        "cpu": 227.11912573299824,
+        "rss": 22822912.0,
+        "allocations": 13.000008377122839,
+        "bytes": 560.0021392125504,
+        "peak": 1650.0,
+        "retained": 0.0012596146523494022
+      },
+      "speedup": 7.147742785999994,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "adapter",
+      "description": "Read the rendering adapter of a TanStack Start vite.config.ts",
+      "php": {
+        "ns": 203.34279608048712,
+        "min": 199.7354530424614,
+        "max": 210.53394290092342,
+        "samples": 15,
+        "calls": 99196,
+        "cpu": 204.65408551420083,
+        "peak": 57752.0,
+        "retained": 0.000252698361493071,
+        "rss": 107462656.0
+      },
+      "rust": {
+        "ns": 121.52946307303154,
+        "min": 119.78368409903679,
+        "max": 132.75567891542994,
+        "samples": 15,
+        "calls": 160506,
+        "cpu": 123.35587537745214,
+        "rss": 22822912.0,
+        "allocations": 1.000004568884237,
+        "bytes": 166.00116672689288,
+        "peak": 1650.0,
+        "retained": 0.0006869940479898986
+      },
+      "speedup": 1.6731975188460344,
+      "bound": null,
+      "compat": null
+    }
+  ]
+}

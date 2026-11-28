@@ -159,7 +159,7 @@ impl SqlDialect for MariaDbDialect {
     fn compile_spatial_filter(b: &mut Builder<Self>, method: Method, attribute: &str, query: &Query) -> Result<String> {
         use Method::*;
         if matches!(method, DistanceLessThan | DistanceGreaterThan | DistanceEqual | DistanceNotEqual) {
-            let filter = sql::distance_filter(query.values(), "Builder/MariaDB.php", 83)?;
+            let filter = sql::distance_filter(query.values(), "Builder/MariaDB.php", 99)?;
             if filter.meters && !query.attribute_type().is_empty() {
                 let wkt = crate::value::to_php_string(&wkt_of(b, &filter.geometry)?);
                 let wkt_type = match wkt.find('(') {
@@ -185,7 +185,7 @@ impl SqlDialect for MariaDbDialect {
         attribute: &str,
         values: &Array,
     ) -> Result<String> {
-        let filter = sql::distance_filter(values, "Builder/MariaDB.php", 111)?;
+        let filter = sql::distance_filter(values, "Builder/MariaDB.php", 127)?;
         let operator = distance_operator(method);
         let wkt = wkt_of(b, &filter.geometry)?;
         b.add_binding(wkt, None);

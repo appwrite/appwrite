@@ -1,28 +1,45 @@
 [package]
 name = "utopia-queue"
-description = "Queue consumers that share queues with utopia-php/queue: a JetStream worker that reads, settles and dead-letters the way Broker\\Nats does."
+description = "A task queue: messages, publishers and consumers on Redis, Redis Cluster and NATS JetStream, and a worker server with hooks, retries and concurrency."
 version = "0.1.1"
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-repository.workspace = true
+repository = "https://github.com/utopia-rs/queue"
 publish.workspace = true
 
+[features]
+default = ["cluster", "nats"]
+# Redis Cluster connection.
+cluster = ["redis/cluster-async"]
+# NATS JetStream broker.
+nats = ["dep:async-nats", "dep:xxhash-rust", "dep:utopia-nats", "dep:opentelemetry"]
+
 [dependencies]
-async-nats.workspace = true
+async-nats = { workspace = true, optional = true }
 bytes.workspace = true
+futures-util.workspace = true
+getrandom.workspace = true
+hex.workspace = true
+indexmap.workspace = true
+opentelemetry = { workspace = true, optional = true }
+php-std.workspace = true
+redis.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+sha1.workspace = true
 thiserror.workspace = true
-tokio = { workspace = true, features = ["macros"] }
+utopia-async.workspace = true
 utopia-dsn.workspace = true
-xxhash-rust.workspace = true
-futures-util.workspace = true
-opentelemetry.workspace = true
+utopia-lock.workspace = true
+utopia-nats = { workspace = true, optional = true }
+utopia-validators.workspace = true
+xxhash-rust = { workspace = true, optional = true }
 
 [dev-dependencies]
 opentelemetry_sdk = { workspace = true, features = ["testing"] }
-tokio = { workspace = true, features = ["rt-multi-thread"] }
+
 
 [package.metadata.utopia]
-category = "transport"
+category = "servers"
+php-sync = "31e6c54766ceb505208e1ffc4c85723282050c16"

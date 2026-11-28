@@ -1,0 +1,918 @@
+{
+  "cases": [
+    {
+      "name": "traceparent 0: 00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.init",
+          "args": {
+            "action": "test",
+            "traceparent": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.describe",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "span.trace_id"
+          },
+          "expect": {
+            "type": "string",
+            "length": 32,
+            "hex": true
+          }
+        },
+        {
+          "op": "span.get",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "span.parent_id"
+          },
+          "expect": null
+        },
+        {
+          "op": "span.get",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "span.trace_id"
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "random when the header is refused"
+          },
+          "expect": "<masked>"
+        }
+      ]
+    },
+    {
+      "name": "traceparent 1: 01-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.init",
+          "args": {
+            "action": "test",
+            "traceparent": "01-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.describe",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "span.trace_id"
+          },
+          "expect": {
+            "type": "string",
+            "length": 32,
+            "hex": true
+          }
+        },
+        {
+          "op": "span.get",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "span.parent_id"
+          },
+          "expect": null
+        },
+        {
+          "op": "span.get",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "span.trace_id"
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "random when the header is refused"
+          },
+          "expect": "<masked>"
+        }
+      ]
+    },
+    {
+      "name": "traceparent 2: 00-0AF7651916CD43DD8448EB211C80319C-B7AD6B7169203331-0F",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.init",
+          "args": {
+            "action": "test",
+            "traceparent": "00-0AF7651916CD43DD8448EB211C80319C-B7AD6B7169203331-0F"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.describe",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "span.trace_id"
+          },
+          "expect": {
+            "type": "string",
+            "length": 32,
+            "hex": true
+          }
+        },
+        {
+          "op": "span.get",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "span.parent_id"
+          },
+          "expect": "B7AD6B7169203331"
+        },
+        {
+          "op": "span.get",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "span.trace_id"
+          },
+          "expect": "0AF7651916CD43DD8448EB211C80319C"
+        }
+      ]
+    },
+    {
+      "name": "traceparent 3: 00-0af7651916cd43dd8448eb211c80319g-b7ad6b7169203331-01",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.init",
+          "args": {
+            "action": "test",
+            "traceparent": "00-0af7651916cd43dd8448eb211c80319g-b7ad6b7169203331-01"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.describe",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "span.trace_id"
+          },
+          "expect": {
+            "type": "string",
+            "length": 32,
+            "hex": true
+          }
+        },
+        {
+          "op": "span.get",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "span.parent_id"
+          },
+          "expect": null
+        },
+        {
+          "op": "span.get",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "span.trace_id"
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "random when the header is refused"
+          },
+          "expect": "<masked>"
+        }
+      ]
+    },
+    {
+      "name": "traceparent 4: 00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01-",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.init",
+          "args": {
+            "action": "test",
+            "traceparent": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01-"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.describe",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "span.trace_id"
+          },
+          "expect": {
+            "type": "string",
+            "length": 32,
+            "hex": true
+          }
+        },
+        {
+          "op": "span.get",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "span.parent_id"
+          },
+          "expect": null
+        },
+        {
+          "op": "span.get",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "span.trace_id"
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "random when the header is refused"
+          },
+          "expect": "<masked>"
+        }
+      ]
+    },
+    {
+      "name": "traceparent 5: 00-0af7651916cd43dd8448eb211c80319c-b7ad6b716920333-01",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.init",
+          "args": {
+            "action": "test",
+            "traceparent": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b716920333-01"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.describe",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "span.trace_id"
+          },
+          "expect": {
+            "type": "string",
+            "length": 32,
+            "hex": true
+          }
+        },
+        {
+          "op": "span.get",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "span.parent_id"
+          },
+          "expect": null
+        },
+        {
+          "op": "span.get",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "span.trace_id"
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "random when the header is refused"
+          },
+          "expect": "<masked>"
+        }
+      ]
+    },
+    {
+      "name": "traceparent 6: ",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.init",
+          "args": {
+            "action": "test",
+            "traceparent": ""
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.describe",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "span.trace_id"
+          },
+          "expect": {
+            "type": "string",
+            "length": 32,
+            "hex": true
+          }
+        },
+        {
+          "op": "span.get",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "span.parent_id"
+          },
+          "expect": null
+        },
+        {
+          "op": "span.get",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "span.trace_id"
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "random when the header is refused"
+          },
+          "expect": "<masked>"
+        }
+      ]
+    },
+    {
+      "name": "finish clears whatever span is current",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.init",
+          "args": {
+            "action": "test"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.new",
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.finish",
+          "args": {
+            "span": {
+              "$ref": "b"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "span.current",
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "finish with a level and no error",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.finish",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "level": "debug"
+          },
+          "expect": null
+        },
+        {
+          "op": "span.get",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "level"
+          },
+          "expect": "debug"
+        },
+        {
+          "op": "span.error",
+          "args": {
+            "span": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "finish with an unknown level",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.finish",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "level": "warning"
+          },
+          "expect": {
+            "$error": {
+              "class": "ValueError",
+              "message": "\"warning\" is not a valid backing value for enum Utopia\\Span\\Level"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "an error with causes",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.set_error",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "error": {
+              "class": "RuntimeException",
+              "message": "outer",
+              "file": "/app/src/Test.php",
+              "line": 10,
+              "previous": {
+                "class": "LogicException",
+                "message": "root",
+                "file": "/app/src/Test.php",
+                "line": 10,
+                "code": 7
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "span.error",
+          "args": {
+            "span": {
+              "$ref": "s"
+            }
+          },
+          "expect": {
+            "class": "RuntimeException",
+            "message": "outer",
+            "code": 0,
+            "previous": {
+              "class": "LogicException",
+              "message": "root",
+              "code": 7,
+              "previous": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "init replaces the current span",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.init",
+          "args": {
+            "action": "test"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.init",
+          "args": {
+            "action": "test"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.current",
+          "args": {
+            "span": {
+              "$ref": "b"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "span.add",
+          "args": {
+            "key": "k",
+            "value": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "span.get",
+          "args": {
+            "span": {
+              "$ref": "a"
+            },
+            "key": "k"
+          },
+          "expect": null
+        },
+        {
+          "op": "span.get",
+          "args": {
+            "span": {
+              "$ref": "b"
+            },
+            "key": "k"
+          },
+          "expect": 1
+        }
+      ]
+    },
+    {
+      "name": "levels",
+      "steps": [
+        {
+          "op": "level.parse",
+          "args": {
+            "name": "debug"
+          },
+          "expect": "debug"
+        },
+        {
+          "op": "level.parse",
+          "args": {
+            "name": "info"
+          },
+          "expect": "info"
+        },
+        {
+          "op": "level.parse",
+          "args": {
+            "name": "warn"
+          },
+          "expect": "warn"
+        },
+        {
+          "op": "level.parse",
+          "args": {
+            "name": "warning"
+          },
+          "expect": null
+        },
+        {
+          "op": "level.parse",
+          "args": {
+            "name": "error"
+          },
+          "expect": "error"
+        },
+        {
+          "op": "level.parse",
+          "args": {
+            "name": "fatal"
+          },
+          "expect": "fatal"
+        },
+        {
+          "op": "level.parse",
+          "args": {
+            "name": "Error"
+          },
+          "expect": null
+        },
+        {
+          "op": "level.parse",
+          "args": {
+            "name": ""
+          },
+          "expect": null
+        },
+        {
+          "op": "sentry.level",
+          "args": {
+            "level": "debug"
+          },
+          "expect": "debug"
+        },
+        {
+          "op": "sentry.level",
+          "args": {
+            "level": "info"
+          },
+          "expect": "info"
+        },
+        {
+          "op": "sentry.level",
+          "args": {
+            "level": "warn"
+          },
+          "expect": "warning"
+        },
+        {
+          "op": "sentry.level",
+          "args": {
+            "level": "error"
+          },
+          "expect": "error"
+        },
+        {
+          "op": "sentry.level",
+          "args": {
+            "level": "fatal"
+          },
+          "expect": "fatal"
+        },
+        {
+          "op": "sentry.level",
+          "args": {
+            "level": "warning"
+          },
+          "expect": {
+            "$error": {
+              "class": "ValueError",
+              "message": "\"warning\" is not a valid backing value for enum Utopia\\Span\\Level"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "auto storage in and out of a coroutine",
+      "steps": [
+        {
+          "op": "storage.coroutine",
+          "args": {
+            "kind": "auto"
+          },
+          "expect": {
+            "inside": true,
+            "outside": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "coroutine storage in and out of a coroutine",
+      "steps": [
+        {
+          "op": "storage.coroutine",
+          "args": {
+            "kind": "coroutine"
+          },
+          "expect": {
+            "inside": true,
+            "outside": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "memory storage in a coroutine",
+      "steps": [
+        {
+          "op": "storage.coroutine",
+          "args": {
+            "kind": "memory"
+          },
+          "expect": {
+            "inside": true,
+            "outside": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "duration with a numeric string start",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.set",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "span.started_at",
+            "value": "1700000000"
+          },
+          "expect": true
+        },
+        {
+          "op": "span.finish",
+          "args": {
+            "span": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "span.describe",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "span.duration"
+          },
+          "expect": {
+            "type": "float"
+          }
+        }
+      ]
+    },
+    {
+      "name": "script",
+      "steps": [
+        {
+          "op": "span.script",
+          "args": {
+            "action": "s",
+            "calls": [
+              {
+                "op": "set",
+                "key": "a",
+                "value": 1
+              },
+              {
+                "op": "get",
+                "key": "a"
+              },
+              {
+                "op": "set",
+                "key": "1",
+                "value": "x"
+              },
+              {
+                "op": "set",
+                "key": "a",
+                "value": null
+              },
+              {
+                "op": "get",
+                "key": "missing"
+              },
+              {
+                "op": "set",
+                "key": "span.id",
+                "value": 2.5
+              }
+            ]
+          },
+          "expect": {
+            "results": [
+              true,
+              1,
+              true,
+              true,
+              null,
+              true
+            ],
+            "attributes": [
+              [
+                "a",
+                null
+              ],
+              [
+                "1",
+                "x"
+              ]
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,16 +1,17 @@
 [package]
 name = "utopia-balancer"
-description = "Choosing between endpoints: options with state, filters, and the First, Last, Random and RoundRobin algorithms."
+description = "Choosing between endpoints: options with state, filters, the First, Last, Random and RoundRobin algorithms, and groups of balancers tried in order."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-repository.workspace = true
+repository = "https://github.com/utopia-rs/balancer"
 publish.workspace = true
 
 [dependencies]
 php-std.workspace = true
 thiserror.workspace = true
+utopia-telemetry.workspace = true
 
 [package.metadata.utopia]
 category = "utilities"

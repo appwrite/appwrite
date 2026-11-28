@@ -1,8 +1,11 @@
 # Utopia Balancer
 
+> [!IMPORTANT]
+> This repository is a read-only mirror of [`crates/utopia/balancer`](https://github.com/appwrite/appwrite/tree/main/crates/utopia/balancer) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there — please open issues and pull requests against appwrite/appwrite.
+
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://discord.gg/GSeTUeA)
 
-Choosing between endpoints: options with state, filters, and the First, Last, Random and RoundRobin algorithms.
+Choosing between endpoints: options with state, filters, the First, Last, Random and RoundRobin algorithms, and groups of balancers tried in order.
 
 This library is maintained by the [Appwrite team](https://appwrite.io).
 
@@ -10,7 +13,7 @@ This library is maintained by the [Appwrite team](https://appwrite.io).
 
 ```toml
 [dependencies]
-utopia-balancer = { git = "https://github.com/appwrite/appwrite" }
+utopia-balancer = { git = "https://github.com/utopia-rs/balancer" }
 ```
 
 A balancer picks one endpoint out of many: a worker for the next job, a region for the next request. You give it options, filters that rule out the options that cannot serve right now, and an algorithm that chooses among the rest. Options can be any type; `Candidate` is a ready-made one holding named values such as a hostname or a CPU load. This guide covers the common tasks.
@@ -53,6 +56,32 @@ assert_eq!(balancer.filtered().len(), 2);
 
 balancer.add_filter(|c| c.get("cpu").is_some_and(|v| v.to_double() < 50.0));
 assert_eq!(balancer.run()?.and_then(|c| c.get("hostname")), Some(&"worker-3".into()));
+```
+
+## Fall back when nothing qualifies
+
+A `Group` tries its balancers in order and returns the first option one of them chooses: prefer idle workers, then any online one, then anything.
+
+```rust
+use utopia_balancer::{Balancer, Candidate, First, Group};
+
+let options = [
+    Candidate::from([("dc", "fra-1".into()), ("cpu", 91.into()), ("online", false.into())]),
+    Candidate::from([("dc", "lon-1".into()), ("cpu", 87.into()), ("online", true.into())]),
+];
+
+let mut idle = Balancer::new(First);
+idle.add_filter(|c: &Candidate| c.get("cpu").is_some_and(|v| v.to_double() < 80.0));
+let mut online = Balancer::new(First);
+online.add_filter(|c: &Candidate| c.get("online").is_some_and(|v| v.truthy()));
+for option in &options {
+    idle.add_option(option.clone());
+    online.add_option(option.clone());
+}
+
+let mut group = Group::new(None);
+group.add(idle).add(online);
+assert_eq!(group.run()?.and_then(|c| c.get("dc")), Some(&"lon-1".into()));
 ```
 
 ## Reproduce random choices

@@ -1,0 +1,29 @@
+{
+  "source": "packages/query/tests/Schema/OrderTest.php",
+  "cases": [
+    {
+      "name": "testValues",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "get": "value",
+            "on": {
+              "$enum": "Schema\\Order::Asc"
+            }
+          },
+          {
+            "get": "value",
+            "on": {
+              "$enum": "Schema\\Order::Desc"
+            }
+          }
+        ]
+      },
+      "expect": [
+        "ASC",
+        "DESC"
+      ]
+    }
+  ]
+}

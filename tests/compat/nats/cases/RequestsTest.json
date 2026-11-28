@@ -1,0 +1,2920 @@
+{
+  "source": "packages/nats/tests/RequestsTest.php",
+  "cases": [
+    {
+      "name": "a failed PONG fails every pending request and disconnects (reconnect false)",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "rules": [
+              {
+                "when": {
+                  "prefix": "PUB "
+                },
+                "do": [
+                  {
+                    "push": "PING\r\n"
+                  }
+                ]
+              },
+              {
+                "when": {
+                  "equals": "PONG\r\n"
+                },
+                "do": [
+                  {
+                    "throw": {
+                      "class": "ConnectionException",
+                      "message": "PONG write failed"
+                    }
+                  }
+                ]
+              }
+            ],
+            "options": {
+              "allowReconnect": false
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.request_batch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "requests": [
+              {
+                "subject": "one"
+              },
+              {
+                "subject": "two"
+              }
+            ]
+          },
+          "expect": [
+            [
+              0,
+              {
+                "error": [
+                  "Utopia\\NATS\\Exception\\ConnectionException",
+                  "PONG write failed"
+                ]
+              }
+            ],
+            [
+              1,
+              {
+                "error": [
+                  "Utopia\\NATS\\Exception\\ConnectionException",
+                  "PONG write failed"
+                ]
+              }
+            ]
+          ]
+        },
+        {
+          "op": "conn.state",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": false,
+            "closed": false,
+            "reconnecting": false,
+            "status": "disconnected",
+            "subscriptions": 1
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "a failed PONG fails every pending request and disconnects (reconnect true)",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "rules": [
+              {
+                "when": {
+                  "prefix": "PUB "
+                },
+                "do": [
+                  {
+                    "push": "PING\r\n"
+                  }
+                ]
+              },
+              {
+                "when": {
+                  "equals": "PONG\r\n"
+                },
+                "do": [
+                  {
+                    "throw": {
+                      "class": "ConnectionException",
+                      "message": "PONG write failed"
+                    }
+                  }
+                ]
+              }
+            ],
+            "options": {
+              "allowReconnect": true
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.request_batch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "requests": [
+              {
+                "subject": "one"
+              },
+              {
+                "subject": "two"
+              }
+            ]
+          },
+          "expect": [
+            [
+              0,
+              {
+                "error": [
+                  "Utopia\\NATS\\Exception\\ConnectionException",
+                  "PONG write failed"
+                ]
+              }
+            ],
+            [
+              1,
+              {
+                "error": [
+                  "Utopia\\NATS\\Exception\\ConnectionException",
+                  "PONG write failed"
+                ]
+              }
+            ]
+          ]
+        },
+        {
+          "op": "conn.state",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": false,
+            "closed": false,
+            "reconnecting": false,
+            "status": "disconnected",
+            "subscriptions": 1
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "a closing error disconnects before the throwing callback (reconnect false)",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "rules": [
+              {
+                "when": {
+                  "prefix": "PUB "
+                },
+                "do": [
+                  {
+                    "push": "-ERR 'Stale Connection'\r\n"
+                  }
+                ]
+              }
+            ],
+            "options": {
+              "allowReconnect": false,
+              "hooks": {
+                "onError": {
+                  "throw": {
+                    "class": "ConnectionException",
+                    "message": "Application callback failed"
+                  }
+                }
+              }
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.request_batch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "requests": [
+              {
+                "subject": "one"
+              },
+              {
+                "subject": "two"
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\ConnectionException",
+              "message": "Application callback failed"
+            }
+          }
+        },
+        {
+          "op": "conn.log",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            [
+              "transport",
+              "nats"
+            ],
+            [
+              "onError",
+              [
+                "Utopia\\NATS\\Exception\\NatsException",
+                "Stale Connection"
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "conn.state",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": false,
+            "closed": false,
+            "reconnecting": false,
+            "status": "disconnected",
+            "subscriptions": 1
+          }
+        },
+        {
+          "op": "fake.count",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "needle": "PUB one "
+          },
+          "expect": 1
+        },
+        {
+          "op": "fake.count",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "needle": "PUB two "
+          },
+          "expect": 1
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "a closing error disconnects before the throwing callback (reconnect true)",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "rules": [
+              {
+                "when": {
+                  "prefix": "PUB "
+                },
+                "do": [
+                  {
+                    "push": "-ERR 'Stale Connection'\r\n"
+                  }
+                ]
+              }
+            ],
+            "options": {
+              "allowReconnect": true,
+              "hooks": {
+                "onError": {
+                  "throw": {
+                    "class": "ConnectionException",
+                    "message": "Application callback failed"
+                  }
+                }
+              }
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.request_batch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "requests": [
+              {
+                "subject": "one"
+              },
+              {
+                "subject": "two"
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\ConnectionException",
+              "message": "Application callback failed"
+            }
+          }
+        },
+        {
+          "op": "conn.log",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            [
+              "transport",
+              "nats"
+            ],
+            [
+              "onError",
+              [
+                "Utopia\\NATS\\Exception\\NatsException",
+                "Stale Connection"
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "conn.state",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": false,
+            "closed": false,
+            "reconnecting": false,
+            "status": "disconnected",
+            "subscriptions": 1
+          }
+        },
+        {
+          "op": "fake.count",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "needle": "PUB one "
+          },
+          "expect": 1
+        },
+        {
+          "op": "fake.count",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "needle": "PUB two "
+          },
+          "expect": 1
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "buffered PONG and replies are read before the keepalive (reconnect false, PONG last false)",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "rules": [
+              {
+                "when": {
+                  "prefix": "PUB "
+                },
+                "do": [
+                  {
+                    "capture": "work"
+                  }
+                ]
+              },
+              {
+                "when": {
+                  "equals": "PING\r\n"
+                },
+                "do": [
+                  {
+                    "push": "+OK\r\nPONG\r\n"
+                  },
+                  {
+                    "reply_captured": "ok"
+                  }
+                ]
+              }
+            ],
+            "options": {
+              "allowReconnect": false,
+              "pingInterval": 0.0,
+              "maxPingsOut": 1
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.answer_pings",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "answer": false
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.request_batch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "requests": [
+              {
+                "subject": "work"
+              },
+              {
+                "subject": "work"
+              }
+            ]
+          },
+          "expect": [
+            [
+              0,
+              {
+                "subject": "_INBOX.*.*",
+                "data": "ok",
+                "reply": null,
+                "headers": null,
+                "sid": "1"
+              }
+            ],
+            [
+              1,
+              {
+                "subject": "_INBOX.*.*",
+                "data": "ok",
+                "reply": null,
+                "headers": null,
+                "sid": "1"
+              }
+            ]
+          ]
+        },
+        {
+          "op": "conn.state",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": true,
+            "closed": false,
+            "reconnecting": false,
+            "status": "connected",
+            "subscriptions": 1
+          }
+        },
+        {
+          "op": "fake.count",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "needle": "PUB work "
+          },
+          "expect": 2
+        },
+        {
+          "op": "conn.request",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "work"
+          },
+          "expect": {
+            "subject": "_INBOX.*.*",
+            "data": "ok",
+            "reply": null,
+            "headers": null,
+            "sid": "1"
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "buffered PONG and replies are read before the keepalive (reconnect false, PONG last true)",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "rules": [
+              {
+                "when": {
+                  "prefix": "PUB "
+                },
+                "do": [
+                  {
+                    "capture": "work"
+                  }
+                ]
+              },
+              {
+                "when": {
+                  "equals": "PING\r\n"
+                },
+                "do": [
+                  {
+                    "push": "+OK\r\n"
+                  },
+                  {
+                    "reply_captured": "ok"
+                  },
+                  {
+                    "push": "PONG\r\n"
+                  }
+                ]
+              }
+            ],
+            "options": {
+              "allowReconnect": false,
+              "pingInterval": 0.0,
+              "maxPingsOut": 1
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.answer_pings",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "answer": false
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.request_batch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "requests": [
+              {
+                "subject": "work"
+              },
+              {
+                "subject": "work"
+              }
+            ]
+          },
+          "expect": [
+            [
+              0,
+              {
+                "subject": "_INBOX.*.*",
+                "data": "ok",
+                "reply": null,
+                "headers": null,
+                "sid": "1"
+              }
+            ],
+            [
+              1,
+              {
+                "subject": "_INBOX.*.*",
+                "data": "ok",
+                "reply": null,
+                "headers": null,
+                "sid": "1"
+              }
+            ]
+          ]
+        },
+        {
+          "op": "conn.state",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": true,
+            "closed": false,
+            "reconnecting": false,
+            "status": "connected",
+            "subscriptions": 1
+          }
+        },
+        {
+          "op": "fake.count",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "needle": "PUB work "
+          },
+          "expect": 2
+        },
+        {
+          "op": "conn.request",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "work"
+          },
+          "expect": {
+            "subject": "_INBOX.*.*",
+            "data": "ok",
+            "reply": null,
+            "headers": null,
+            "sid": "1"
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "buffered PONG and replies are read before the keepalive (reconnect true, PONG last false)",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "rules": [
+              {
+                "when": {
+                  "prefix": "PUB "
+                },
+                "do": [
+                  {
+                    "capture": "work"
+                  }
+                ]
+              },
+              {
+                "when": {
+                  "equals": "PING\r\n"
+                },
+                "do": [
+                  {
+                    "push": "+OK\r\nPONG\r\n"
+                  },
+                  {
+                    "reply_captured": "ok"
+                  }
+                ]
+              }
+            ],
+            "options": {
+              "allowReconnect": true,
+              "pingInterval": 0.0,
+              "maxPingsOut": 1
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.answer_pings",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "answer": false
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.request_batch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "requests": [
+              {
+                "subject": "work"
+              },
+              {
+                "subject": "work"
+              }
+            ]
+          },
+          "expect": [
+            [
+              0,
+              {
+                "subject": "_INBOX.*.*",
+                "data": "ok",
+                "reply": null,
+                "headers": null,
+                "sid": "1"
+              }
+            ],
+            [
+              1,
+              {
+                "subject": "_INBOX.*.*",
+                "data": "ok",
+                "reply": null,
+                "headers": null,
+                "sid": "1"
+              }
+            ]
+          ]
+        },
+        {
+          "op": "conn.state",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": true,
+            "closed": false,
+            "reconnecting": false,
+            "status": "connected",
+            "subscriptions": 1
+          }
+        },
+        {
+          "op": "fake.count",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "needle": "PUB work "
+          },
+          "expect": 2
+        },
+        {
+          "op": "conn.request",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "work"
+          },
+          "expect": {
+            "subject": "_INBOX.*.*",
+            "data": "ok",
+            "reply": null,
+            "headers": null,
+            "sid": "1"
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "buffered PONG and replies are read before the keepalive (reconnect true, PONG last true)",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "rules": [
+              {
+                "when": {
+                  "prefix": "PUB "
+                },
+                "do": [
+                  {
+                    "capture": "work"
+                  }
+                ]
+              },
+              {
+                "when": {
+                  "equals": "PING\r\n"
+                },
+                "do": [
+                  {
+                    "push": "+OK\r\n"
+                  },
+                  {
+                    "reply_captured": "ok"
+                  },
+                  {
+                    "push": "PONG\r\n"
+                  }
+                ]
+              }
+            ],
+            "options": {
+              "allowReconnect": true,
+              "pingInterval": 0.0,
+              "maxPingsOut": 1
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.answer_pings",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "answer": false
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.request_batch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "requests": [
+              {
+                "subject": "work"
+              },
+              {
+                "subject": "work"
+              }
+            ]
+          },
+          "expect": [
+            [
+              0,
+              {
+                "subject": "_INBOX.*.*",
+                "data": "ok",
+                "reply": null,
+                "headers": null,
+                "sid": "1"
+              }
+            ],
+            [
+              1,
+              {
+                "subject": "_INBOX.*.*",
+                "data": "ok",
+                "reply": null,
+                "headers": null,
+                "sid": "1"
+              }
+            ]
+          ]
+        },
+        {
+          "op": "conn.state",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": true,
+            "closed": false,
+            "reconnecting": false,
+            "status": "connected",
+            "subscriptions": 1
+          }
+        },
+        {
+          "op": "fake.count",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "needle": "PUB work "
+          },
+          "expect": 2
+        },
+        {
+          "op": "conn.request",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "work"
+          },
+          "expect": {
+            "subject": "_INBOX.*.*",
+            "data": "ok",
+            "reply": null,
+            "headers": null,
+            "sid": "1"
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "a keepalive failure does not replay requests (request, silent peer)",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "allowReconnect": true,
+              "maxReconnectAttempts": 1,
+              "pingInterval": 0.0,
+              "maxPingsOut": 1
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.answer_pings",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "answer": false
+          },
+          "expect": null
+        },
+        {
+          "op": "fake.count",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "needle": "PING\r\n"
+          },
+          "expect": 1
+        },
+        {
+          "op": "conn.request",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "work",
+            "timeout": 0.01
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\TimeoutException",
+              "message": "Request timed out after 0.01s"
+            }
+          }
+        },
+        {
+          "op": "conn.request",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "work",
+            "timeout": 0.01
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\ConnectionException",
+              "message": "Stale connection: too many outstanding pings"
+            }
+          }
+        },
+        {
+          "op": "fake.count",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "needle": "PING\r\n"
+          },
+          "expect": 2
+        },
+        {
+          "op": "fake.count",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "needle": "PUB work "
+          },
+          "expect": 1
+        },
+        {
+          "op": "conn.state",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": false,
+            "closed": false,
+            "reconnecting": false,
+            "status": "disconnected",
+            "subscriptions": 1
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "a keepalive failure does not replay requests (request, failed ping)",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "allowReconnect": true,
+              "maxReconnectAttempts": 1,
+              "pingInterval": 0.0,
+              "maxPingsOut": 1
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.answer_pings",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "answer": false
+          },
+          "expect": null
+        },
+        {
+          "op": "fake.count",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "needle": "PING\r\n"
+          },
+          "expect": 1
+        },
+        {
+          "op": "fake.rules",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "rules": [
+              {
+                "when": {
+                  "equals": "PING\r\n"
+                },
+                "do": [
+                  {
+                    "throw": {
+                      "class": "ConnectionException",
+                      "message": "PING write failed"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.request",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "work",
+            "timeout": 0.01
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\ConnectionException",
+              "message": "PING write failed"
+            }
+          }
+        },
+        {
+          "op": "fake.count",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "needle": "PING\r\n"
+          },
+          "expect": 2
+        },
+        {
+          "op": "fake.count",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "needle": "PUB work "
+          },
+          "expect": 1
+        },
+        {
+          "op": "conn.state",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": false,
+            "closed": false,
+            "reconnecting": false,
+            "status": "disconnected",
+            "subscriptions": 1
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "a keepalive failure does not replay requests (batch, silent peer)",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "allowReconnect": true,
+              "maxReconnectAttempts": 1,
+              "pingInterval": 0.0,
+              "maxPingsOut": 1
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.answer_pings",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "answer": false
+          },
+          "expect": null
+        },
+        {
+          "op": "fake.count",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "needle": "PING\r\n"
+          },
+          "expect": 1
+        },
+        {
+          "op": "conn.request_batch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "requests": [
+              {
+                "subject": "work"
+              }
+            ],
+            "timeout": 0.01
+          },
+          "expect": [
+            [
+              0,
+              {
+                "error": [
+                  "Utopia\\NATS\\Exception\\TimeoutException",
+                  "Request timed out after 0.01s"
+                ]
+              }
+            ]
+          ]
+        },
+        {
+          "op": "conn.request_batch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "requests": [
+              {
+                "subject": "work"
+              }
+            ],
+            "timeout": 0.01
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\ConnectionException",
+              "message": "Stale connection: too many outstanding pings"
+            }
+          }
+        },
+        {
+          "op": "fake.count",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "needle": "PING\r\n"
+          },
+          "expect": 2
+        },
+        {
+          "op": "fake.count",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "needle": "PUB work "
+          },
+          "expect": 1
+        },
+        {
+          "op": "conn.state",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": false,
+            "closed": false,
+            "reconnecting": false,
+            "status": "disconnected",
+            "subscriptions": 1
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "a keepalive failure does not replay requests (batch, failed ping)",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "allowReconnect": true,
+              "maxReconnectAttempts": 1,
+              "pingInterval": 0.0,
+              "maxPingsOut": 1
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.answer_pings",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "answer": false
+          },
+          "expect": null
+        },
+        {
+          "op": "fake.count",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "needle": "PING\r\n"
+          },
+          "expect": 1
+        },
+        {
+          "op": "fake.rules",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "rules": [
+              {
+                "when": {
+                  "equals": "PING\r\n"
+                },
+                "do": [
+                  {
+                    "throw": {
+                      "class": "ConnectionException",
+                      "message": "PING write failed"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.request_batch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "requests": [
+              {
+                "subject": "work"
+              }
+            ],
+            "timeout": 0.01
+          },
+          "expect": [
+            [
+              0,
+              {
+                "error": [
+                  "Utopia\\NATS\\Exception\\ConnectionException",
+                  "PING write failed"
+                ]
+              }
+            ]
+          ]
+        },
+        {
+          "op": "fake.count",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "needle": "PING\r\n"
+          },
+          "expect": 2
+        },
+        {
+          "op": "fake.count",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "needle": "PUB work "
+          },
+          "expect": 1
+        },
+        {
+          "op": "conn.state",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": false,
+            "closed": false,
+            "reconnecting": false,
+            "status": "disconnected",
+            "subscriptions": 1
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "pipelines requests and keeps out-of-order partial replies",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "rules": [
+              {
+                "when": {
+                  "prefix": "PUB "
+                },
+                "do": [
+                  {
+                    "reply": {
+                      "subject": "work.",
+                      "payload": "$suffix",
+                      "reverse": true,
+                      "skip": [
+                        "2"
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.request_batch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "requests": [
+              {
+                "subject": "work.1"
+              },
+              {
+                "subject": "work.2"
+              },
+              {
+                "subject": "work.3"
+              }
+            ],
+            "timeout": 0.01
+          },
+          "expect": [
+            [
+              2,
+              {
+                "subject": "_INBOX.*.*",
+                "data": "3",
+                "reply": null,
+                "headers": null,
+                "sid": "1"
+              }
+            ],
+            [
+              0,
+              {
+                "subject": "_INBOX.*.*",
+                "data": "1",
+                "reply": null,
+                "headers": null,
+                "sid": "1"
+              }
+            ],
+            [
+              1,
+              {
+                "error": [
+                  "Utopia\\NATS\\Exception\\TimeoutException",
+                  "Request timed out after 0.01s"
+                ]
+              }
+            ]
+          ]
+        },
+        {
+          "op": "fake.writes",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            "CONNECT {\"verbose\":false,\"pedantic\":false,\"lang\":\"php\",\"version\":\"0.1.0\",\"protocol\":1,\"echo\":true,\"headers\":true,\"no_responders\":true}\r\n",
+            "PING\r\n",
+            "SUB _INBOX.*.* 1\r\n",
+            "PUB work.1 _INBOX.*.* 0\r\n\r\nPUB work.2 _INBOX.*.* 0\r\n\r\nPUB work.3 _INBOX.*.* 0\r\n\r\n"
+          ]
+        },
+        {
+          "op": "conn.request",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "work.1"
+          },
+          "expect": {
+            "subject": "_INBOX.*.*",
+            "data": "1",
+            "reply": null,
+            "headers": null,
+            "sid": "1"
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "a subscription callback exception is not a transport failure",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "rules": [
+              {
+                "when": {
+                  "prefix": "PUB "
+                },
+                "do": [
+                  {
+                    "push": "MSG events 1 1\r\nx\r\n"
+                  }
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.subscribe",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "events",
+            "mode": "throw",
+            "error": {
+              "class": "ConnectionException",
+              "message": "Application callback failed"
+            }
+          },
+          "bind": "sub",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.request_batch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "requests": [
+              {
+                "subject": "work"
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\ConnectionException",
+              "message": "Application callback failed"
+            }
+          }
+        },
+        {
+          "op": "conn.state",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": true,
+            "closed": false,
+            "reconnecting": false,
+            "status": "connected",
+            "subscriptions": 2
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "single and batch requests share subject validation",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.mark",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "m",
+          "expect": 142
+        },
+        {
+          "op": "request.new",
+          "args": {
+            "subject": ""
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid request subject"
+            }
+          }
+        },
+        {
+          "op": "conn.request",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": ""
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid request subject"
+            }
+          }
+        },
+        {
+          "op": "request.new",
+          "args": {
+            "subject": "bad subject"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid request subject"
+            }
+          }
+        },
+        {
+          "op": "conn.request",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "bad subject"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid request subject"
+            }
+          }
+        },
+        {
+          "op": "request.new",
+          "args": {
+            "subject": "work.*"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid request subject"
+            }
+          }
+        },
+        {
+          "op": "conn.request",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "work.*"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid request subject"
+            }
+          }
+        },
+        {
+          "op": "request.new",
+          "args": {
+            "subject": "work..x"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid request subject"
+            }
+          }
+        },
+        {
+          "op": "conn.request",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "work..x"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid request subject"
+            }
+          }
+        },
+        {
+          "op": "request.new",
+          "args": {
+            "subject": "a>b"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid request subject"
+            }
+          }
+        },
+        {
+          "op": "conn.request",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "a>b"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid request subject"
+            }
+          }
+        },
+        {
+          "op": "request.new",
+          "args": {
+            "subject": ".x"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid request subject"
+            }
+          }
+        },
+        {
+          "op": "conn.request",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": ".x"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid request subject"
+            }
+          }
+        },
+        {
+          "op": "request.new",
+          "args": {
+            "subject": "x."
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid request subject"
+            }
+          }
+        },
+        {
+          "op": "conn.request",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "x."
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid request subject"
+            }
+          }
+        },
+        {
+          "op": "request.new",
+          "args": {
+            "subject": "nul\u0000"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid request subject"
+            }
+          }
+        },
+        {
+          "op": "conn.request",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "nul\u0000"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid request subject"
+            }
+          }
+        },
+        {
+          "op": "fake.written",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "from": {
+              "$ref": "m"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "an ambiguous write is not replayed and disconnects",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "rules": [
+              {
+                "when": {
+                  "prefix": "PUB "
+                },
+                "do": [
+                  {
+                    "throw": {
+                      "class": "ConnectionException",
+                      "message": "Lost connection after write"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.request_batch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "requests": [
+              {
+                "subject": "first"
+              },
+              {
+                "subject": "second"
+              }
+            ]
+          },
+          "expect": [
+            [
+              0,
+              {
+                "error": [
+                  "Utopia\\NATS\\Exception\\ConnectionException",
+                  "Lost connection after write"
+                ]
+              }
+            ],
+            [
+              1,
+              {
+                "error": [
+                  "Utopia\\NATS\\Exception\\ConnectionException",
+                  "Lost connection after write"
+                ]
+              }
+            ]
+          ]
+        },
+        {
+          "op": "fake.writes",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            "CONNECT {\"verbose\":false,\"pedantic\":false,\"lang\":\"php\",\"version\":\"0.1.0\",\"protocol\":1,\"echo\":true,\"headers\":true,\"no_responders\":true}\r\n",
+            "PING\r\n",
+            "SUB _INBOX.*.* 1\r\n",
+            "PUB first _INBOX.*.* 0\r\n\r\nPUB second _INBOX.*.* 0\r\n\r\n"
+          ]
+        },
+        {
+          "op": "conn.state",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": false,
+            "closed": false,
+            "reconnecting": false,
+            "status": "disconnected",
+            "subscriptions": 1
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "a callback failure aborts and leaves the connection usable",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "rules": [
+              {
+                "when": {
+                  "prefix": "PUB "
+                },
+                "do": [
+                  {
+                    "reply": {
+                      "subject": "work",
+                      "payload": "ok"
+                    }
+                  }
+                ]
+              }
+            ],
+            "options": {
+              "subPendingMsgsLimit": 1,
+              "hooks": {
+                "onSlowConsumer": true
+              }
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.request_batch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "requests": [
+              {
+                "subject": "work"
+              },
+              {
+                "subject": "work"
+              },
+              {
+                "subject": "work"
+              },
+              {
+                "subject": "work"
+              }
+            ],
+            "callback": "throw",
+            "error": {
+              "class": "ConnectionException",
+              "message": "Callback failed"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\ConnectionException",
+              "message": "Callback failed"
+            }
+          }
+        },
+        {
+          "op": "conn.request",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "work"
+          },
+          "expect": {
+            "subject": "_INBOX.*.*",
+            "data": "ok",
+            "reply": null,
+            "headers": null,
+            "sid": "1"
+          }
+        },
+        {
+          "op": "conn.log",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            [
+              "transport",
+              "nats"
+            ]
+          ]
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "headers and no responders keep independent outcomes",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "rules": [
+              {
+                "when": {
+                  "prefix": "HPUB work"
+                },
+                "do": [
+                  {
+                    "reply": {
+                      "subject": "work",
+                      "payload": "ok"
+                    }
+                  }
+                ]
+              },
+              {
+                "when": {
+                  "contains": "PUB missing"
+                },
+                "do": [
+                  {
+                    "reply": {
+                      "subject": "missing",
+                      "payload": "",
+                      "status": "503"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.request_batch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "requests": [
+              {
+                "subject": "work",
+                "data": "payload",
+                "headers": [
+                  [
+                    "set",
+                    "Trace",
+                    "example"
+                  ]
+                ]
+              },
+              {
+                "subject": "missing"
+              }
+            ]
+          },
+          "expect": [
+            [
+              0,
+              {
+                "subject": "_INBOX.*.*",
+                "data": "ok",
+                "reply": null,
+                "headers": null,
+                "sid": "1"
+              }
+            ],
+            [
+              1,
+              {
+                "error": [
+                  "Utopia\\NATS\\Exception\\NoRespondersException",
+                  "No responders for request"
+                ]
+              }
+            ]
+          ]
+        },
+        {
+          "op": "fake.written",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": "CONNECT {\"verbose\":false,\"pedantic\":false,\"lang\":\"php\",\"version\":\"0.1.0\",\"protocol\":1,\"echo\":true,\"headers\":true,\"no_responders\":true}\r\nPING\r\nSUB _INBOX.*.* 1\r\nHPUB work _INBOX.*.* 28 35\r\nNATS/1.0\r\nTrace: example\r\n\r\npayload\r\nPUB missing _INBOX.*.* 0\r\n\r\n"
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "a zero timeout is refused without writing or calling back",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.mark",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "m",
+          "expect": 142
+        },
+        {
+          "op": "conn.request_batch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "requests": [
+              {
+                "subject": "work"
+              }
+            ],
+            "timeout": 0.0
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Requests must be a list with a finite positive timeout"
+            }
+          }
+        },
+        {
+          "op": "fake.written",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "from": {
+              "$ref": "m"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "empty input needs no connection",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "fake.mark",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "m",
+          "expect": 142
+        },
+        {
+          "op": "conn.request_batch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "requests": []
+          },
+          "expect": []
+        },
+        {
+          "op": "fake.written",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "from": {
+              "$ref": "m"
+            }
+          },
+          "expect": ""
+        }
+      ]
+    },
+    {
+      "name": "an oversized later request publishes no earlier request",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "info": {
+              "max_payload": 16
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.request_batch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "requests": [
+              {
+                "subject": "work"
+              },
+              {
+                "subject": "work",
+                "data": "xxxxxxxxxxxxxxxxx"
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\MaxPayloadException",
+              "message": "Payload size 17 exceeds server maximum of 16"
+            }
+          }
+        },
+        {
+          "op": "fake.count",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "needle": "PUB "
+          },
+          "expect": 0
+        },
+        {
+          "op": "fake.rules",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "rules": [
+              {
+                "when": {
+                  "prefix": "PUB "
+                },
+                "do": [
+                  {
+                    "reply": {
+                      "subject": "work",
+                      "payload": "ok"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.request",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "work"
+          },
+          "expect": {
+            "subject": "_INBOX.*.*",
+            "data": "ok",
+            "reply": null,
+            "headers": null,
+            "sid": "1"
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "a batch's callback runs while the batch collects; the connection is usable after",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "rules": [
+              {
+                "when": {
+                  "prefix": "PUB "
+                },
+                "do": [
+                  {
+                    "reply": {
+                      "subject": "work",
+                      "payload": "ok"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.request_batch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "requests": [
+              {
+                "subject": "work"
+              }
+            ]
+          },
+          "expect": [
+            [
+              0,
+              {
+                "subject": "_INBOX.*.*",
+                "data": "ok",
+                "reply": null,
+                "headers": null,
+                "sid": "1"
+              }
+            ]
+          ]
+        },
+        {
+          "op": "conn.request",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "work"
+          },
+          "expect": {
+            "subject": "_INBOX.*.*",
+            "data": "ok",
+            "reply": null,
+            "headers": null,
+            "sid": "1"
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "the shared deadline starts after the write and includes callbacks",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "rules": [
+              {
+                "when": {
+                  "prefix": "PUB "
+                },
+                "do": [
+                  {
+                    "sleep_ms": 30
+                  },
+                  {
+                    "reply": {
+                      "subject": "work",
+                      "payload": "ok"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.request_batch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "requests": [
+              {
+                "subject": "work"
+              },
+              {
+                "subject": "work"
+              }
+            ],
+            "timeout": 0.01,
+            "callback": "sleep_first",
+            "sleep_ms": 30
+          },
+          "expect": [
+            [
+              0,
+              {
+                "subject": "_INBOX.*.*",
+                "data": "ok",
+                "reply": null,
+                "headers": null,
+                "sid": "1"
+              }
+            ],
+            [
+              1,
+              {
+                "error": [
+                  "Utopia\\NATS\\Exception\\TimeoutException",
+                  "Request timed out after 0.01s"
+                ]
+              }
+            ]
+          ]
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "no responders to a single request",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "rules": [
+              {
+                "when": {
+                  "prefix": "PUB "
+                },
+                "do": [
+                  {
+                    "reply": {
+                      "subject": "work",
+                      "payload": "",
+                      "status": "503"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.request",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "work"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\NoRespondersException",
+              "message": "No responders for request"
+            }
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "a request with headers",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "rules": [
+              {
+                "when": {
+                  "prefix": "HPUB "
+                },
+                "do": [
+                  {
+                    "reply": {
+                      "subject": "work",
+                      "payload": "ok"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.request",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "work",
+            "headers": [
+              [
+                "set",
+                "A",
+                "b"
+              ]
+            ]
+          },
+          "expect": {
+            "subject": "_INBOX.*.*",
+            "data": "ok",
+            "reply": null,
+            "headers": null,
+            "sid": "1"
+          }
+        },
+        {
+          "op": "fake.written",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": "CONNECT {\"verbose\":false,\"pedantic\":false,\"lang\":\"php\",\"version\":\"0.1.0\",\"protocol\":1,\"echo\":true,\"headers\":true,\"no_responders\":true}\r\nPING\r\nSUB _INBOX.*.* 1\r\nHPUB work _INBOX.*.* 18 18\r\nNATS/1.0\r\nA: b\r\n\r\n\r\n"
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "a stale -ERR answering a request is retried once after reconnecting",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "reconnectWait": 0.0,
+              "reconnectJitter": 0.0,
+              "hooks": {
+                "onReconnect": true
+              }
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.rules",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "rules": [
+              {
+                "when": {
+                  "prefix": "PUB "
+                },
+                "do": [
+                  {
+                    "push": "-ERR 'Stale Connection'\r\n"
+                  }
+                ]
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.request",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "work",
+            "timeout": 0.05
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\ProtocolException",
+              "message": "Server error: Stale Connection"
+            }
+          }
+        },
+        {
+          "op": "conn.log",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            [
+              "transport",
+              "nats"
+            ],
+            [
+              "transport",
+              "nats"
+            ],
+            [
+              "onReconnect"
+            ]
+          ]
+        },
+        {
+          "op": "conn.state",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": false,
+            "closed": false,
+            "reconnecting": false,
+            "status": "disconnected",
+            "subscriptions": 1
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    }
+  ]
+}

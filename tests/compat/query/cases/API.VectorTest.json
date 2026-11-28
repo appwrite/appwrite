@@ -1,0 +1,175 @@
+{
+  "source": "packages/query/tests/API/VectorTest.php",
+  "cases": [
+    {
+      "name": "testVectorDot",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "vectorDot",
+            "class": "Query",
+            "args": [
+              "embedding",
+              [
+                0.1,
+                0.2,
+                0.3
+              ]
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::VectorDot"
+            },
+            "attribute": "embedding",
+            "values": [
+              [
+                0.1,
+                0.2,
+                0.3
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::VectorDot"
+        },
+        [
+          [
+            0.1,
+            0.2,
+            0.3
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "testVectorCosine",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "vectorCosine",
+            "class": "Query",
+            "args": [
+              "embedding",
+              [
+                0.1,
+                0.2,
+                0.3
+              ]
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::VectorCosine"
+            },
+            "attribute": "embedding",
+            "values": [
+              [
+                0.1,
+                0.2,
+                0.3
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::VectorCosine"
+        }
+      ]
+    },
+    {
+      "name": "testVectorEuclidean",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "vectorEuclidean",
+            "class": "Query",
+            "args": [
+              "embedding",
+              [
+                0.1,
+                0.2,
+                0.3
+              ]
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::VectorEuclidean"
+            },
+            "attribute": "embedding",
+            "values": [
+              [
+                0.1,
+                0.2,
+                0.3
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::VectorEuclidean"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,296 @@
+{
+  "source": "interop",
+  "cases": [
+    {
+      "name": "a lease held by one runtime excludes the other",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "distributed.new",
+          "args": {
+            "key": "${ns}:k",
+            "ttl": 30
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "a",
+          "op": "lock.try_acquire",
+          "args": {
+            "lock": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "side": "b",
+          "op": "distributed.new",
+          "args": {
+            "key": "${ns}:k",
+            "ttl": 30
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "b",
+          "op": "lock.try_acquire",
+          "args": {
+            "lock": {
+              "$ref": "b"
+            }
+          },
+          "expect": false
+        },
+        {
+          "side": "b",
+          "op": "lock.with_lock",
+          "args": {
+            "lock": {
+              "$ref": "b"
+            },
+            "timeout": 0.1
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Lock\\Exception\\Contention",
+              "message": "Failed to acquire distributed lock: ${ns}:k"
+            }
+          }
+        },
+        {
+          "side": "a",
+          "op": "lock.release",
+          "args": {
+            "lock": {
+              "$ref": "a"
+            }
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "lock.try_acquire",
+          "args": {
+            "lock": {
+              "$ref": "b"
+            }
+          },
+          "expect": true
+        },
+        {
+          "side": "b",
+          "op": "lock.release",
+          "args": {
+            "lock": {
+              "$ref": "b"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "a token minted by one runtime is adopted by the other",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "distributed.new",
+          "args": {
+            "key": "${ns}:k",
+            "ttl": 30
+          },
+          "bind": "holder",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "a",
+          "op": "lock.try_acquire",
+          "args": {
+            "lock": {
+              "$ref": "holder"
+            }
+          },
+          "expect": true
+        },
+        {
+          "side": "a",
+          "op": "distributed.token",
+          "args": {
+            "lock": {
+              "$ref": "holder"
+            }
+          },
+          "bind": "token",
+          "expect": "<masked>"
+        },
+        {
+          "side": "b",
+          "op": "distributed.new",
+          "args": {
+            "key": "${ns}:k",
+            "ttl": 30
+          },
+          "bind": "refresher",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "b",
+          "op": "distributed.adopt",
+          "args": {
+            "lock": {
+              "$ref": "refresher"
+            },
+            "token": {
+              "$ref": "token"
+            }
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "distributed.refresh",
+          "args": {
+            "lock": {
+              "$ref": "refresher"
+            }
+          },
+          "expect": true
+        },
+        {
+          "side": "b",
+          "op": "distributed.is_held",
+          "args": {
+            "lock": {
+              "$ref": "refresher"
+            }
+          },
+          "expect": true
+        },
+        {
+          "side": "b",
+          "op": "lock.release",
+          "args": {
+            "lock": {
+              "$ref": "refresher"
+            }
+          },
+          "expect": null
+        },
+        {
+          "side": "a",
+          "op": "distributed.is_held",
+          "args": {
+            "lock": {
+              "$ref": "holder"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "a release by one runtime cannot remove the other's lease",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "distributed.new",
+          "args": {
+            "key": "${ns}:k",
+            "ttl": 30
+          },
+          "bind": "holder",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "a",
+          "op": "lock.try_acquire",
+          "args": {
+            "lock": {
+              "$ref": "holder"
+            }
+          },
+          "expect": true
+        },
+        {
+          "side": "b",
+          "op": "distributed.new",
+          "args": {
+            "key": "${ns}:k",
+            "ttl": 30
+          },
+          "bind": "other",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "b",
+          "op": "distributed.adopt",
+          "args": {
+            "lock": {
+              "$ref": "other"
+            },
+            "token": "not-the-token"
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "lock.release",
+          "args": {
+            "lock": {
+              "$ref": "other"
+            }
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "distributed.refresh",
+          "args": {
+            "lock": {
+              "$ref": "other"
+            }
+          },
+          "expect": false
+        },
+        {
+          "side": "a",
+          "op": "distributed.is_held",
+          "args": {
+            "lock": {
+              "$ref": "holder"
+            }
+          },
+          "expect": true
+        },
+        {
+          "side": "a",
+          "op": "lock.release",
+          "args": {
+            "lock": {
+              "$ref": "holder"
+            }
+          },
+          "expect": null
+        }
+      ]
+    }
+  ]
+}

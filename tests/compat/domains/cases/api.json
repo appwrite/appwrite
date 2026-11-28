@@ -1,0 +1,389 @@
+{
+  "source": "packages/domains/src/Adapter.php",
+  "cases": [
+    {
+      "name": "get with fields",
+      "op": "api.call",
+      "args": {
+        "key": "key",
+        "secret": "secret",
+        "method": "GET",
+        "path": "/json",
+        "params": {
+          "a": 1,
+          "b": [
+            "x",
+            "y"
+          ],
+          "c": {
+            "d": "e f"
+          }
+        }
+      },
+      "expect": {
+        "method": "GET",
+        "path": "/json",
+        "query": "a=1&b%5B0%5D=x&b%5B1%5D=y&c%5Bd%5D=e+f",
+        "headers": {
+          "authorization": "sso-key key:secret",
+          "accept": "application/json",
+          "content-type": "application/json"
+        },
+        "body": "",
+        "fields": []
+      }
+    },
+    {
+      "name": "get without fields",
+      "op": "api.call",
+      "args": {
+        "key": "key",
+        "secret": "secret",
+        "method": "GET",
+        "path": "/json"
+      },
+      "expect": {
+        "method": "GET",
+        "path": "/json",
+        "query": "",
+        "headers": {
+          "authorization": "sso-key key:secret",
+          "accept": "application/json",
+          "content-type": "application/json"
+        },
+        "body": "",
+        "fields": []
+      }
+    },
+    {
+      "name": "post json",
+      "op": "api.call",
+      "args": {
+        "key": "key",
+        "secret": "secret",
+        "method": "POST",
+        "path": "/json",
+        "params": {
+          "url": "https://a/b",
+          "n": 1.5,
+          "u": "é"
+        }
+      },
+      "expect": {
+        "method": "POST",
+        "path": "/json",
+        "query": "",
+        "headers": {
+          "authorization": "sso-key key:secret",
+          "accept": "application/json",
+          "content-type": "application/json"
+        },
+        "body": "{\"url\":\"https://a/b\",\"n\":1.5,\"u\":\"\\u00e9\"}",
+        "fields": []
+      }
+    },
+    {
+      "name": "post string as json",
+      "op": "api.call",
+      "args": {
+        "key": "key",
+        "secret": "secret",
+        "method": "POST",
+        "path": "/json",
+        "params": "raw"
+      },
+      "expect": {
+        "method": "POST",
+        "path": "/json",
+        "query": "",
+        "headers": {
+          "authorization": "sso-key key:secret",
+          "accept": "application/json",
+          "content-type": "application/json"
+        },
+        "body": "\"raw\"",
+        "fields": []
+      }
+    },
+    {
+      "name": "post form",
+      "op": "api.call",
+      "args": {
+        "key": "key",
+        "secret": "secret",
+        "method": "POST",
+        "path": "/json",
+        "params": {
+          "a": 1,
+          "b": [
+            1,
+            2
+          ]
+        },
+        "headers": {
+          "Content-Type": "application/x-www-form-urlencoded"
+        }
+      },
+      "expect": {
+        "method": "POST",
+        "path": "/json",
+        "query": "",
+        "headers": {
+          "authorization": "sso-key key:secret",
+          "accept": "application/json",
+          "content-type": "application/x-www-form-urlencoded"
+        },
+        "body": "a=1&b%5B0%5D=1&b%5B1%5D=2",
+        "fields": {
+          "a": "1",
+          "b": [
+            "1",
+            "2"
+          ]
+        }
+      }
+    },
+    {
+      "name": "post xml",
+      "op": "api.call",
+      "args": {
+        "key": "key",
+        "secret": "secret",
+        "method": "POST",
+        "path": "/json",
+        "params": "<a>1</a>",
+        "headers": {
+          "Content-Type": "text/xml"
+        }
+      },
+      "expect": {
+        "method": "POST",
+        "path": "/json",
+        "query": "",
+        "headers": {
+          "authorization": "sso-key key:secret",
+          "accept": "application/json",
+          "content-type": "text/xml"
+        },
+        "body": "<a>1</a>",
+        "fields": []
+      }
+    },
+    {
+      "name": "get xml keeps fields out of the url",
+      "op": "api.call",
+      "args": {
+        "key": "key",
+        "secret": "secret",
+        "method": "GET",
+        "path": "/json",
+        "params": "<a/>",
+        "headers": {
+          "Content-Type": "text/xml"
+        }
+      },
+      "expect": {
+        "method": "GET",
+        "path": "/json",
+        "query": "",
+        "headers": {
+          "authorization": "sso-key key:secret",
+          "accept": "application/json",
+          "content-type": "text/xml"
+        },
+        "body": "",
+        "fields": []
+      }
+    },
+    {
+      "name": "post multipart",
+      "op": "api.call",
+      "args": {
+        "key": "key",
+        "secret": "secret",
+        "method": "POST",
+        "path": "/json",
+        "params": {
+          "a": "x",
+          "b": {
+            "c": "y",
+            "d": [
+              1,
+              2
+            ]
+          },
+          "e": null
+        },
+        "headers": {
+          "Content-Type": "multipart/form-data"
+        }
+      },
+      "expect": {
+        "method": "POST",
+        "path": "/json",
+        "query": "",
+        "headers": {
+          "authorization": "sso-key key:secret",
+          "accept": "application/json",
+          "content-type": "multipart/form-data"
+        },
+        "body": "",
+        "fields": {
+          "a": "x",
+          "b": {
+            "c": "y",
+            "d": [
+              "1",
+              "2"
+            ]
+          },
+          "e": ""
+        }
+      }
+    },
+    {
+      "name": "extra header",
+      "op": "api.call",
+      "args": {
+        "key": "key",
+        "secret": "secret",
+        "method": "PATCH",
+        "path": "/json",
+        "params": {
+          "a": 1
+        },
+        "headers": {
+          "X-Custom": "yes"
+        }
+      },
+      "expect": {
+        "method": "PATCH",
+        "path": "/json",
+        "query": "",
+        "headers": {
+          "authorization": "sso-key key:secret",
+          "accept": "application/json",
+          "content-type": "application/json",
+          "x-custom": "yes"
+        },
+        "body": "{\"a\":1}",
+        "fields": []
+      }
+    },
+    {
+      "name": "zero params are none",
+      "op": "api.call",
+      "args": {
+        "key": "key",
+        "secret": "secret",
+        "method": "POST",
+        "path": "/json",
+        "params": "0"
+      },
+      "expect": {
+        "method": "POST",
+        "path": "/json",
+        "query": "",
+        "headers": {
+          "authorization": "sso-key key:secret",
+          "accept": "application/json",
+          "content-type": "application/json"
+        },
+        "body": "",
+        "fields": []
+      }
+    },
+    {
+      "name": "text answer",
+      "op": "api.call",
+      "args": {
+        "key": "key",
+        "secret": "secret",
+        "method": "GET",
+        "path": "/text"
+      },
+      "expect": "echo {\"method\":\"GET\",\"path\":\"\\/text\",\"query\":\"\",\"headers\":{\"authorization\":\"sso-key key:secret\",\"accept\":\"application\\/json\",\"content-type\":\"application\\/json\"},\"body\":\"\",\"fields\":[]}"
+    },
+    {
+      "name": "json without parameters is text",
+      "op": "api.call",
+      "args": {
+        "key": "key",
+        "secret": "secret",
+        "method": "GET",
+        "path": "/bare-json"
+      },
+      "expect": "{\"method\":\"GET\",\"path\":\"\\/bare-json\",\"query\":\"\",\"headers\":{\"authorization\":\"sso-key key:secret\",\"accept\":\"application\\/json\",\"content-type\":\"application\\/json\"},\"body\":\"\",\"fields\":[]}"
+    },
+    {
+      "name": "redirect",
+      "op": "api.call",
+      "args": {
+        "key": "key",
+        "secret": "secret",
+        "method": "GET",
+        "path": "/redirect"
+      },
+      "expect": {
+        "method": "GET",
+        "path": "/json",
+        "query": "redirected=1",
+        "headers": {
+          "authorization": "sso-key key:secret",
+          "accept": "application/json",
+          "content-type": "application/json"
+        },
+        "body": "",
+        "fields": []
+      }
+    },
+    {
+      "name": "error json",
+      "op": "api.call",
+      "args": {
+        "key": "key",
+        "secret": "secret",
+        "method": "GET",
+        "path": "/status/404/json"
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "{\"method\":\"GET\",\"path\":\"\\/status\\/404\\/json\",\"query\":\"\",\"headers\":{\"authorization\":\"sso-key key:secret\",\"accept\":\"application\\/json\",\"content-type\":\"application\\/json\"},\"body\":\"\",\"fields\":[]}"
+        }
+      }
+    },
+    {
+      "name": "error text",
+      "op": "api.call",
+      "args": {
+        "key": "key",
+        "secret": "secret",
+        "method": "DELETE",
+        "path": "/status/500/text"
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "500: echo {\"method\":\"DELETE\",\"path\":\"\\/status\\/500\\/text\",\"query\":\"\",\"headers\":{\"authorization\":\"sso-key key:secret\",\"accept\":\"application\\/json\",\"content-type\":\"application\\/json\"},\"body\":\"\",\"fields\":[]}"
+        }
+      }
+    },
+    {
+      "name": "error bare json",
+      "op": "api.call",
+      "args": {
+        "key": "key",
+        "secret": "secret",
+        "method": "GET",
+        "path": "/status/422/bare-json"
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "422: {\"method\":\"GET\",\"path\":\"\\/status\\/422\\/bare-json\",\"query\":\"\",\"headers\":{\"authorization\":\"sso-key key:secret\",\"accept\":\"application\\/json\",\"content-type\":\"application\\/json\"},\"body\":\"\",\"fields\":[]}"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "source": "packages/nats/tests/Transport/WebSocketTransportPollTest.php",
+  "cases": [
+    {
+      "name": "ws: pending data, idle and closed transports as poll() sees them",
+      "op": "transport.poll",
+      "args": {
+        "kind": "ws",
+        "service": "nats-ws"
+      },
+      "expect": [
+        [
+          "info_waiting",
+          true
+        ],
+        [
+          "info",
+          true
+        ],
+        [
+          "idle",
+          false
+        ],
+        [
+          "pong_waiting",
+          true
+        ],
+        [
+          "pong",
+          "PONG\r\n"
+        ],
+        [
+          "idle_again",
+          false
+        ],
+        [
+          "closed",
+          true
+        ]
+      ]
+    }
+  ]
+}

@@ -1,0 +1,3168 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Validator/QueryShapeLengthTest.php"
+  ],
+  "cases": [
+    {
+      "name": "QueryShapeLengthTest::testLengthCapsEveryNestedGroup",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "size": 1000,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o1179"
+          },
+          "bind": "s1628",
+          "expect": {
+            "$document": {
+              "$id": "name",
+              "key": "name",
+              "type": "string",
+              "size": 1000,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "body",
+                "key": "body",
+                "type": "string",
+                "size": 1000,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o1180"
+          },
+          "bind": "s1629",
+          "expect": {
+            "$document": {
+              "$id": "body",
+              "key": "body",
+              "type": "string",
+              "size": 1000,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "price",
+                "key": "price",
+                "type": "integer",
+                "size": 0,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o1181"
+          },
+          "bind": "s1630",
+          "expect": {
+            "$document": {
+              "$id": "price",
+              "key": "price",
+              "type": "integer",
+              "size": 0,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "stock",
+                "key": "stock",
+                "type": "biginteger",
+                "size": 0,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o1182"
+          },
+          "bind": "s1631",
+          "expect": {
+            "$document": {
+              "$id": "stock",
+              "key": "stock",
+              "type": "biginteger",
+              "size": 0,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "rating",
+                "key": "rating",
+                "type": "double",
+                "size": 0,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o1183"
+          },
+          "bind": "s1632",
+          "expect": {
+            "$document": {
+              "$id": "rating",
+              "key": "rating",
+              "type": "double",
+              "size": 0,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "active",
+                "key": "active",
+                "type": "boolean",
+                "size": 0,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o1184"
+          },
+          "bind": "s1633",
+          "expect": {
+            "$document": {
+              "$id": "active",
+              "key": "active",
+              "type": "boolean",
+              "size": 0,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "created",
+                "key": "created",
+                "type": "datetime",
+                "size": 0,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o1185"
+          },
+          "bind": "s1634",
+          "expect": {
+            "$document": {
+              "$id": "created",
+              "key": "created",
+              "type": "datetime",
+              "size": 0,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "tags",
+                "key": "tags",
+                "type": "string",
+                "size": 1000,
+                "signed": true,
+                "array": true
+              }
+            },
+            "as": "o1186"
+          },
+          "bind": "s1635",
+          "expect": {
+            "$document": {
+              "$id": "tags",
+              "key": "tags",
+              "type": "string",
+              "size": 1000,
+              "signed": true,
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "scores",
+                "key": "scores",
+                "type": "integer",
+                "size": 0,
+                "signed": true,
+                "array": true
+              }
+            },
+            "as": "o1187"
+          },
+          "bind": "s1636",
+          "expect": {
+            "$document": {
+              "$id": "scores",
+              "key": "scores",
+              "type": "integer",
+              "size": 0,
+              "signed": true,
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o1179"
+                },
+                {
+                  "$obj": "o1180"
+                },
+                {
+                  "$obj": "o1181"
+                },
+                {
+                  "$obj": "o1182"
+                },
+                {
+                  "$obj": "o1183"
+                },
+                {
+                  "$obj": "o1184"
+                },
+                {
+                  "$obj": "o1185"
+                },
+                {
+                  "$obj": "o1186"
+                },
+                {
+                  "$obj": "o1187"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o1188"
+          },
+          "bind": "s1637",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Queries\\Base",
+            "args": {
+              "validators": [
+                {
+                  "$obj": "o1188"
+                }
+              ],
+              "length": 2
+            },
+            "as": "o1189"
+          },
+          "bind": "s1638",
+          "expect": {
+            "$value": "Validator\\Queries\\Base",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "name",
+              "values": [
+                "a"
+              ]
+            },
+            "as": "o1190"
+          },
+          "bind": "s1639",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "name",
+              "values": [
+                "a"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "name",
+              "values": [
+                "b"
+              ]
+            },
+            "as": "o1191"
+          },
+          "bind": "s1640",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "name",
+              "values": [
+                "b"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "or",
+            "args": {
+              "queries": [
+                {
+                  "$obj": "o1190"
+                },
+                {
+                  "$obj": "o1191"
+                }
+              ]
+            },
+            "as": "o1192"
+          },
+          "bind": "s1641",
+          "expect": {
+            "$query": {
+              "method": "or",
+              "attribute": "",
+              "values": [
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "name",
+                    "values": [
+                      "a"
+                    ]
+                  }
+                },
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "name",
+                    "values": [
+                      "b"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1189"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                {
+                  "$obj": "o1192"
+                }
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1189"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid queries"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "name",
+              "values": [
+                "a"
+              ]
+            },
+            "as": "o1193"
+          },
+          "bind": "s1644",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "name",
+              "values": [
+                "a"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "name",
+              "values": [
+                "b"
+              ]
+            },
+            "as": "o1194"
+          },
+          "bind": "s1645",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "name",
+              "values": [
+                "b"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "name",
+              "values": [
+                "c"
+              ]
+            },
+            "as": "o1195"
+          },
+          "bind": "s1646",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "name",
+              "values": [
+                "c"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1189"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                {
+                  "$obj": "o1193"
+                },
+                {
+                  "$obj": "o1194"
+                },
+                {
+                  "$obj": "o1195"
+                }
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "name",
+              "values": [
+                "a"
+              ]
+            },
+            "as": "o1196"
+          },
+          "bind": "s1648",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "name",
+              "values": [
+                "a"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "name",
+              "values": [
+                "b"
+              ]
+            },
+            "as": "o1197"
+          },
+          "bind": "s1649",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "name",
+              "values": [
+                "b"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "name",
+              "values": [
+                "c"
+              ]
+            },
+            "as": "o1198"
+          },
+          "bind": "s1650",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "name",
+              "values": [
+                "c"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "or",
+            "args": {
+              "queries": [
+                {
+                  "$obj": "o1196"
+                },
+                {
+                  "$obj": "o1197"
+                },
+                {
+                  "$obj": "o1198"
+                }
+              ]
+            },
+            "as": "o1199"
+          },
+          "bind": "s1651",
+          "expect": {
+            "$query": {
+              "method": "or",
+              "attribute": "",
+              "values": [
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "name",
+                    "values": [
+                      "a"
+                    ]
+                  }
+                },
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "name",
+                    "values": [
+                      "b"
+                    ]
+                  }
+                },
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "name",
+                    "values": [
+                      "c"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1189"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                {
+                  "$obj": "o1199"
+                }
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "name",
+              "values": [
+                "a"
+              ]
+            },
+            "as": "o1200"
+          },
+          "bind": "s1653",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "name",
+              "values": [
+                "a"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "name",
+              "values": [
+                "b"
+              ]
+            },
+            "as": "o1201"
+          },
+          "bind": "s1654",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "name",
+              "values": [
+                "b"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "name",
+              "values": [
+                "c"
+              ]
+            },
+            "as": "o1202"
+          },
+          "bind": "s1655",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "name",
+              "values": [
+                "c"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "and",
+            "args": {
+              "queries": [
+                {
+                  "$obj": "o1200"
+                },
+                {
+                  "$obj": "o1201"
+                },
+                {
+                  "$obj": "o1202"
+                }
+              ]
+            },
+            "as": "o1203"
+          },
+          "bind": "s1656",
+          "expect": {
+            "$query": {
+              "method": "and",
+              "attribute": "",
+              "values": [
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "name",
+                    "values": [
+                      "a"
+                    ]
+                  }
+                },
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "name",
+                    "values": [
+                      "b"
+                    ]
+                  }
+                },
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "name",
+                    "values": [
+                      "c"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1189"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                {
+                  "$obj": "o1203"
+                }
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "name",
+              "values": [
+                "a"
+              ]
+            },
+            "as": "o1204"
+          },
+          "bind": "s1658",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "name",
+              "values": [
+                "a"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "name",
+              "values": [
+                "b"
+              ]
+            },
+            "as": "o1205"
+          },
+          "bind": "s1659",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "name",
+              "values": [
+                "b"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "name",
+              "values": [
+                "c"
+              ]
+            },
+            "as": "o1206"
+          },
+          "bind": "s1660",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "name",
+              "values": [
+                "c"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "or",
+            "args": {
+              "queries": [
+                {
+                  "$obj": "o1204"
+                },
+                {
+                  "$obj": "o1205"
+                },
+                {
+                  "$obj": "o1206"
+                }
+              ]
+            },
+            "as": "o1207"
+          },
+          "bind": "s1661",
+          "expect": {
+            "$query": {
+              "method": "or",
+              "attribute": "",
+              "values": [
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "name",
+                    "values": [
+                      "a"
+                    ]
+                  }
+                },
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "name",
+                    "values": [
+                      "b"
+                    ]
+                  }
+                },
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "name",
+                    "values": [
+                      "c"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "name",
+              "values": [
+                "d"
+              ]
+            },
+            "as": "o1208"
+          },
+          "bind": "s1662",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "name",
+              "values": [
+                "d"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "and",
+            "args": {
+              "queries": [
+                {
+                  "$obj": "o1207"
+                },
+                {
+                  "$obj": "o1208"
+                }
+              ]
+            },
+            "as": "o1209"
+          },
+          "bind": "s1663",
+          "expect": {
+            "$query": {
+              "method": "and",
+              "attribute": "",
+              "values": [
+                {
+                  "$query": {
+                    "method": "or",
+                    "attribute": "",
+                    "values": [
+                      {
+                        "$query": {
+                          "method": "equal",
+                          "attribute": "name",
+                          "values": [
+                            "a"
+                          ]
+                        }
+                      },
+                      {
+                        "$query": {
+                          "method": "equal",
+                          "attribute": "name",
+                          "values": [
+                            "b"
+                          ]
+                        }
+                      },
+                      {
+                        "$query": {
+                          "method": "equal",
+                          "attribute": "name",
+                          "values": [
+                            "c"
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "name",
+                    "values": [
+                      "d"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1189"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                {
+                  "$obj": "o1209"
+                }
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "size": 1000,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o1210"
+          },
+          "bind": "s1665",
+          "expect": {
+            "$document": {
+              "$id": "name",
+              "key": "name",
+              "type": "string",
+              "size": 1000,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "body",
+                "key": "body",
+                "type": "string",
+                "size": 1000,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o1211"
+          },
+          "bind": "s1666",
+          "expect": {
+            "$document": {
+              "$id": "body",
+              "key": "body",
+              "type": "string",
+              "size": 1000,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "price",
+                "key": "price",
+                "type": "integer",
+                "size": 0,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o1212"
+          },
+          "bind": "s1667",
+          "expect": {
+            "$document": {
+              "$id": "price",
+              "key": "price",
+              "type": "integer",
+              "size": 0,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "stock",
+                "key": "stock",
+                "type": "biginteger",
+                "size": 0,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o1213"
+          },
+          "bind": "s1668",
+          "expect": {
+            "$document": {
+              "$id": "stock",
+              "key": "stock",
+              "type": "biginteger",
+              "size": 0,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "rating",
+                "key": "rating",
+                "type": "double",
+                "size": 0,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o1214"
+          },
+          "bind": "s1669",
+          "expect": {
+            "$document": {
+              "$id": "rating",
+              "key": "rating",
+              "type": "double",
+              "size": 0,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "active",
+                "key": "active",
+                "type": "boolean",
+                "size": 0,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o1215"
+          },
+          "bind": "s1670",
+          "expect": {
+            "$document": {
+              "$id": "active",
+              "key": "active",
+              "type": "boolean",
+              "size": 0,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "created",
+                "key": "created",
+                "type": "datetime",
+                "size": 0,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o1216"
+          },
+          "bind": "s1671",
+          "expect": {
+            "$document": {
+              "$id": "created",
+              "key": "created",
+              "type": "datetime",
+              "size": 0,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "tags",
+                "key": "tags",
+                "type": "string",
+                "size": 1000,
+                "signed": true,
+                "array": true
+              }
+            },
+            "as": "o1217"
+          },
+          "bind": "s1672",
+          "expect": {
+            "$document": {
+              "$id": "tags",
+              "key": "tags",
+              "type": "string",
+              "size": 1000,
+              "signed": true,
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "scores",
+                "key": "scores",
+                "type": "integer",
+                "size": 0,
+                "signed": true,
+                "array": true
+              }
+            },
+            "as": "o1218"
+          },
+          "bind": "s1673",
+          "expect": {
+            "$document": {
+              "$id": "scores",
+              "key": "scores",
+              "type": "integer",
+              "size": 0,
+              "signed": true,
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o1210"
+                },
+                {
+                  "$obj": "o1211"
+                },
+                {
+                  "$obj": "o1212"
+                },
+                {
+                  "$obj": "o1213"
+                },
+                {
+                  "$obj": "o1214"
+                },
+                {
+                  "$obj": "o1215"
+                },
+                {
+                  "$obj": "o1216"
+                },
+                {
+                  "$obj": "o1217"
+                },
+                {
+                  "$obj": "o1218"
+                }
+              ],
+              "idAttributeType": "integer",
+              "supportForAttributes": false
+            },
+            "as": "o1219"
+          },
+          "bind": "s1674",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Queries\\Base",
+            "args": {
+              "validators": [
+                {
+                  "$obj": "o1219"
+                }
+              ],
+              "length": 2
+            },
+            "as": "o1220"
+          },
+          "bind": "s1675",
+          "expect": {
+            "$value": "Validator\\Queries\\Base",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "sku",
+              "values": [
+                "a"
+              ]
+            },
+            "as": "o1221"
+          },
+          "bind": "s1676",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "sku",
+              "values": [
+                "a"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "sku",
+              "values": [
+                "b"
+              ]
+            },
+            "as": "o1222"
+          },
+          "bind": "s1677",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "sku",
+              "values": [
+                "b"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "elemMatch",
+            "args": {
+              "attribute": "items",
+              "queries": [
+                {
+                  "$obj": "o1221"
+                },
+                {
+                  "$obj": "o1222"
+                }
+              ]
+            },
+            "as": "o1223"
+          },
+          "bind": "s1678",
+          "expect": {
+            "$query": {
+              "method": "elemMatch",
+              "attribute": "items",
+              "values": [
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "sku",
+                    "values": [
+                      "a"
+                    ]
+                  }
+                },
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "sku",
+                    "values": [
+                      "b"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1220"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                {
+                  "$obj": "o1223"
+                }
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1220"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid queries"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "sku",
+              "values": [
+                "a"
+              ]
+            },
+            "as": "o1224"
+          },
+          "bind": "s1681",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "sku",
+              "values": [
+                "a"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "sku",
+              "values": [
+                "b"
+              ]
+            },
+            "as": "o1225"
+          },
+          "bind": "s1682",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "sku",
+              "values": [
+                "b"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "sku",
+              "values": [
+                "c"
+              ]
+            },
+            "as": "o1226"
+          },
+          "bind": "s1683",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "sku",
+              "values": [
+                "c"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "elemMatch",
+            "args": {
+              "attribute": "items",
+              "queries": [
+                {
+                  "$obj": "o1224"
+                },
+                {
+                  "$obj": "o1225"
+                },
+                {
+                  "$obj": "o1226"
+                }
+              ]
+            },
+            "as": "o1227"
+          },
+          "bind": "s1684",
+          "expect": {
+            "$query": {
+              "method": "elemMatch",
+              "attribute": "items",
+              "values": [
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "sku",
+                    "values": [
+                      "a"
+                    ]
+                  }
+                },
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "sku",
+                    "values": [
+                      "b"
+                    ]
+                  }
+                },
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "sku",
+                    "values": [
+                      "c"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1220"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                {
+                  "$obj": "o1227"
+                }
+              ]
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "QueryShapeLengthTest::testLengthRejectionsNameTheGroupThatIsTooLong",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "size": 1000,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o1228"
+          },
+          "bind": "s1686",
+          "expect": {
+            "$document": {
+              "$id": "name",
+              "key": "name",
+              "type": "string",
+              "size": 1000,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "body",
+                "key": "body",
+                "type": "string",
+                "size": 1000,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o1229"
+          },
+          "bind": "s1687",
+          "expect": {
+            "$document": {
+              "$id": "body",
+              "key": "body",
+              "type": "string",
+              "size": 1000,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "price",
+                "key": "price",
+                "type": "integer",
+                "size": 0,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o1230"
+          },
+          "bind": "s1688",
+          "expect": {
+            "$document": {
+              "$id": "price",
+              "key": "price",
+              "type": "integer",
+              "size": 0,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "stock",
+                "key": "stock",
+                "type": "biginteger",
+                "size": 0,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o1231"
+          },
+          "bind": "s1689",
+          "expect": {
+            "$document": {
+              "$id": "stock",
+              "key": "stock",
+              "type": "biginteger",
+              "size": 0,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "rating",
+                "key": "rating",
+                "type": "double",
+                "size": 0,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o1232"
+          },
+          "bind": "s1690",
+          "expect": {
+            "$document": {
+              "$id": "rating",
+              "key": "rating",
+              "type": "double",
+              "size": 0,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "active",
+                "key": "active",
+                "type": "boolean",
+                "size": 0,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o1233"
+          },
+          "bind": "s1691",
+          "expect": {
+            "$document": {
+              "$id": "active",
+              "key": "active",
+              "type": "boolean",
+              "size": 0,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "created",
+                "key": "created",
+                "type": "datetime",
+                "size": 0,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o1234"
+          },
+          "bind": "s1692",
+          "expect": {
+            "$document": {
+              "$id": "created",
+              "key": "created",
+              "type": "datetime",
+              "size": 0,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "tags",
+                "key": "tags",
+                "type": "string",
+                "size": 1000,
+                "signed": true,
+                "array": true
+              }
+            },
+            "as": "o1235"
+          },
+          "bind": "s1693",
+          "expect": {
+            "$document": {
+              "$id": "tags",
+              "key": "tags",
+              "type": "string",
+              "size": 1000,
+              "signed": true,
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "scores",
+                "key": "scores",
+                "type": "integer",
+                "size": 0,
+                "signed": true,
+                "array": true
+              }
+            },
+            "as": "o1236"
+          },
+          "bind": "s1694",
+          "expect": {
+            "$document": {
+              "$id": "scores",
+              "key": "scores",
+              "type": "integer",
+              "size": 0,
+              "signed": true,
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o1228"
+                },
+                {
+                  "$obj": "o1229"
+                },
+                {
+                  "$obj": "o1230"
+                },
+                {
+                  "$obj": "o1231"
+                },
+                {
+                  "$obj": "o1232"
+                },
+                {
+                  "$obj": "o1233"
+                },
+                {
+                  "$obj": "o1234"
+                },
+                {
+                  "$obj": "o1235"
+                },
+                {
+                  "$obj": "o1236"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o1237"
+          },
+          "bind": "s1695",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Queries\\Base",
+            "args": {
+              "validators": [
+                {
+                  "$obj": "o1237"
+                }
+              ],
+              "length": 2
+            },
+            "as": "o1238"
+          },
+          "bind": "s1696",
+          "expect": {
+            "$value": "Validator\\Queries\\Base",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "name",
+              "values": [
+                "a"
+              ]
+            },
+            "as": "o1239"
+          },
+          "bind": "s1697",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "name",
+              "values": [
+                "a"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "name",
+              "values": [
+                "b"
+              ]
+            },
+            "as": "o1240"
+          },
+          "bind": "s1698",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "name",
+              "values": [
+                "b"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "name",
+              "values": [
+                "c"
+              ]
+            },
+            "as": "o1241"
+          },
+          "bind": "s1699",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "name",
+              "values": [
+                "c"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1238"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                {
+                  "$obj": "o1239"
+                },
+                {
+                  "$obj": "o1240"
+                },
+                {
+                  "$obj": "o1241"
+                }
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1238"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Too many queries: at most 2 are allowed"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "name",
+              "values": [
+                "a"
+              ]
+            },
+            "as": "o1242"
+          },
+          "bind": "s1702",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "name",
+              "values": [
+                "a"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "name",
+              "values": [
+                "b"
+              ]
+            },
+            "as": "o1243"
+          },
+          "bind": "s1703",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "name",
+              "values": [
+                "b"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "name",
+              "values": [
+                "c"
+              ]
+            },
+            "as": "o1244"
+          },
+          "bind": "s1704",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "name",
+              "values": [
+                "c"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "or",
+            "args": {
+              "queries": [
+                {
+                  "$obj": "o1242"
+                },
+                {
+                  "$obj": "o1243"
+                },
+                {
+                  "$obj": "o1244"
+                }
+              ]
+            },
+            "as": "o1245"
+          },
+          "bind": "s1705",
+          "expect": {
+            "$query": {
+              "method": "or",
+              "attribute": "",
+              "values": [
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "name",
+                    "values": [
+                      "a"
+                    ]
+                  }
+                },
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "name",
+                    "values": [
+                      "b"
+                    ]
+                  }
+                },
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "name",
+                    "values": [
+                      "c"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "name",
+              "values": [
+                "d"
+              ]
+            },
+            "as": "o1246"
+          },
+          "bind": "s1706",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "name",
+              "values": [
+                "d"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "and",
+            "args": {
+              "queries": [
+                {
+                  "$obj": "o1245"
+                },
+                {
+                  "$obj": "o1246"
+                }
+              ]
+            },
+            "as": "o1247"
+          },
+          "bind": "s1707",
+          "expect": {
+            "$query": {
+              "method": "and",
+              "attribute": "",
+              "values": [
+                {
+                  "$query": {
+                    "method": "or",
+                    "attribute": "",
+                    "values": [
+                      {
+                        "$query": {
+                          "method": "equal",
+                          "attribute": "name",
+                          "values": [
+                            "a"
+                          ]
+                        }
+                      },
+                      {
+                        "$query": {
+                          "method": "equal",
+                          "attribute": "name",
+                          "values": [
+                            "b"
+                          ]
+                        }
+                      },
+                      {
+                        "$query": {
+                          "method": "equal",
+                          "attribute": "name",
+                          "values": [
+                            "c"
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "name",
+                    "values": [
+                      "d"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1238"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                {
+                  "$obj": "o1247"
+                }
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1238"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Too many queries in or: at most 2 are allowed"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "name",
+              "values": [
+                "a"
+              ]
+            },
+            "as": "o1248"
+          },
+          "bind": "s1710",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "name",
+              "values": [
+                "a"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "name",
+              "values": [
+                "b"
+              ]
+            },
+            "as": "o1249"
+          },
+          "bind": "s1711",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "name",
+              "values": [
+                "b"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "name",
+              "values": [
+                "c"
+              ]
+            },
+            "as": "o1250"
+          },
+          "bind": "s1712",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "name",
+              "values": [
+                "c"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "and",
+            "args": {
+              "queries": [
+                {
+                  "$obj": "o1248"
+                },
+                {
+                  "$obj": "o1249"
+                },
+                {
+                  "$obj": "o1250"
+                }
+              ]
+            },
+            "as": "o1251"
+          },
+          "bind": "s1713",
+          "expect": {
+            "$query": {
+              "method": "and",
+              "attribute": "",
+              "values": [
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "name",
+                    "values": [
+                      "a"
+                    ]
+                  }
+                },
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "name",
+                    "values": [
+                      "b"
+                    ]
+                  }
+                },
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "name",
+                    "values": [
+                      "c"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1238"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                {
+                  "$obj": "o1251"
+                }
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1238"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Too many queries in and: at most 2 are allowed"
+        }
+      ]
+    },
+    {
+      "name": "QueryShapeLengthTest::testLengthCapsHavingConditions",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "size": 1000,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o1252"
+          },
+          "bind": "s1716",
+          "expect": {
+            "$document": {
+              "$id": "name",
+              "key": "name",
+              "type": "string",
+              "size": 1000,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "body",
+                "key": "body",
+                "type": "string",
+                "size": 1000,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o1253"
+          },
+          "bind": "s1717",
+          "expect": {
+            "$document": {
+              "$id": "body",
+              "key": "body",
+              "type": "string",
+              "size": 1000,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "price",
+                "key": "price",
+                "type": "integer",
+                "size": 0,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o1254"
+          },
+          "bind": "s1718",
+          "expect": {
+            "$document": {
+              "$id": "price",
+              "key": "price",
+              "type": "integer",
+              "size": 0,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "stock",
+                "key": "stock",
+                "type": "biginteger",
+                "size": 0,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o1255"
+          },
+          "bind": "s1719",
+          "expect": {
+            "$document": {
+              "$id": "stock",
+              "key": "stock",
+              "type": "biginteger",
+              "size": 0,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "rating",
+                "key": "rating",
+                "type": "double",
+                "size": 0,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o1256"
+          },
+          "bind": "s1720",
+          "expect": {
+            "$document": {
+              "$id": "rating",
+              "key": "rating",
+              "type": "double",
+              "size": 0,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "active",
+                "key": "active",
+                "type": "boolean",
+                "size": 0,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o1257"
+          },
+          "bind": "s1721",
+          "expect": {
+            "$document": {
+              "$id": "active",
+              "key": "active",
+              "type": "boolean",
+              "size": 0,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "created",
+                "key": "created",
+                "type": "datetime",
+                "size": 0,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o1258"
+          },
+          "bind": "s1722",
+          "expect": {
+            "$document": {
+              "$id": "created",
+              "key": "created",
+              "type": "datetime",
+              "size": 0,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "tags",
+                "key": "tags",
+                "type": "string",
+                "size": 1000,
+                "signed": true,
+                "array": true
+              }
+            },
+            "as": "o1259"
+          },
+          "bind": "s1723",
+          "expect": {
+            "$document": {
+              "$id": "tags",
+              "key": "tags",
+              "type": "string",
+              "size": 1000,
+              "signed": true,
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "scores",
+                "key": "scores",
+                "type": "integer",
+                "size": 0,
+                "signed": true,
+                "array": true
+              }
+            },
+            "as": "o1260"
+          },
+          "bind": "s1724",
+          "expect": {
+            "$document": {
+              "$id": "scores",
+              "key": "scores",
+              "type": "integer",
+              "size": 0,
+              "signed": true,
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o1252"
+                },
+                {
+                  "$obj": "o1253"
+                },
+                {
+                  "$obj": "o1254"
+                },
+                {
+                  "$obj": "o1255"
+                },
+                {
+                  "$obj": "o1256"
+                },
+                {
+                  "$obj": "o1257"
+                },
+                {
+                  "$obj": "o1258"
+                },
+                {
+                  "$obj": "o1259"
+                },
+                {
+                  "$obj": "o1260"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o1261"
+          },
+          "bind": "s1725",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Aggregate",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o1252"
+                },
+                {
+                  "$obj": "o1253"
+                },
+                {
+                  "$obj": "o1254"
+                },
+                {
+                  "$obj": "o1255"
+                },
+                {
+                  "$obj": "o1256"
+                },
+                {
+                  "$obj": "o1257"
+                },
+                {
+                  "$obj": "o1258"
+                },
+                {
+                  "$obj": "o1259"
+                },
+                {
+                  "$obj": "o1260"
+                }
+              ]
+            },
+            "as": "o1262"
+          },
+          "bind": "s1726",
+          "expect": {
+            "$value": "Validator\\Query\\Aggregate",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\GroupBy",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o1252"
+                },
+                {
+                  "$obj": "o1253"
+                },
+                {
+                  "$obj": "o1254"
+                },
+                {
+                  "$obj": "o1255"
+                },
+                {
+                  "$obj": "o1256"
+                },
+                {
+                  "$obj": "o1257"
+                },
+                {
+                  "$obj": "o1258"
+                },
+                {
+                  "$obj": "o1259"
+                },
+                {
+                  "$obj": "o1260"
+                }
+              ]
+            },
+            "as": "o1263"
+          },
+          "bind": "s1727",
+          "expect": {
+            "$value": "Validator\\Query\\GroupBy",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Having",
+            "args": {},
+            "as": "o1264"
+          },
+          "bind": "s1728",
+          "expect": {
+            "$value": "Validator\\Query\\Having",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Queries\\Base",
+            "args": {
+              "validators": [
+                {
+                  "$obj": "o1261"
+                },
+                {
+                  "$obj": "o1262"
+                },
+                {
+                  "$obj": "o1263"
+                },
+                {
+                  "$obj": "o1264"
+                }
+              ],
+              "length": 3
+            },
+            "as": "o1265"
+          },
+          "bind": "s1729",
+          "expect": {
+            "$value": "Validator\\Queries\\Base",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "sum",
+            "args": {
+              "attribute": "price",
+              "alias": "total"
+            },
+            "as": "o1266"
+          },
+          "bind": "s1730",
+          "expect": {
+            "$query": {
+              "method": "sum",
+              "attribute": "price",
+              "values": [],
+              "alias": "total"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "groupBy",
+            "args": {
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o1267"
+          },
+          "bind": "s1731",
+          "expect": {
+            "$query": {
+              "method": "groupBy",
+              "attribute": "",
+              "values": [
+                "name"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "greaterThan",
+            "args": {
+              "attribute": "total",
+              "value": 1
+            },
+            "as": "o1268"
+          },
+          "bind": "s1732",
+          "expect": {
+            "$query": {
+              "method": "greaterThan",
+              "attribute": "total",
+              "values": [
+                1
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "lessThan",
+            "args": {
+              "attribute": "total",
+              "value": 9
+            },
+            "as": "o1269"
+          },
+          "bind": "s1733",
+          "expect": {
+            "$query": {
+              "method": "lessThan",
+              "attribute": "total",
+              "values": [
+                9
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "name",
+              "values": [
+                "a"
+              ]
+            },
+            "as": "o1270"
+          },
+          "bind": "s1734",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "name",
+              "values": [
+                "a"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notEqual",
+            "args": {
+              "attribute": "name",
+              "value": "b"
+            },
+            "as": "o1271"
+          },
+          "bind": "s1735",
+          "expect": {
+            "$query": {
+              "method": "notEqual",
+              "attribute": "name",
+              "values": [
+                "b"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "having",
+            "args": {
+              "queries": [
+                {
+                  "$obj": "o1268"
+                },
+                {
+                  "$obj": "o1269"
+                },
+                {
+                  "$obj": "o1270"
+                },
+                {
+                  "$obj": "o1271"
+                }
+              ]
+            },
+            "as": "o1272"
+          },
+          "bind": "s1736",
+          "expect": {
+            "$query": {
+              "method": "having",
+              "attribute": "",
+              "values": [
+                {
+                  "$query": {
+                    "method": "greaterThan",
+                    "attribute": "total",
+                    "values": [
+                      1
+                    ]
+                  }
+                },
+                {
+                  "$query": {
+                    "method": "lessThan",
+                    "attribute": "total",
+                    "values": [
+                      9
+                    ]
+                  }
+                },
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "name",
+                    "values": [
+                      "a"
+                    ]
+                  }
+                },
+                {
+                  "$query": {
+                    "method": "notEqual",
+                    "attribute": "name",
+                    "values": [
+                      "b"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1265"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                {
+                  "$obj": "o1266"
+                },
+                {
+                  "$obj": "o1267"
+                },
+                {
+                  "$obj": "o1272"
+                }
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1265"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Too many queries in having: at most 3 are allowed"
+        }
+      ]
+    }
+  ]
+}

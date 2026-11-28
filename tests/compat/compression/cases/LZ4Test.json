@@ -1,0 +1,126 @@
+{
+  "source": "packages/compression/tests/Algorithms/LZ4Test.php",
+  "cases": [
+    {
+      "name": "name",
+      "op": "describe",
+      "args": {
+        "algorithm": {
+          "class": "LZ4"
+        }
+      },
+      "expect": {
+        "class": "LZ4",
+        "name": "lz4",
+        "encoding": "lz4",
+        "supported": true,
+        "level": 0
+      }
+    },
+    {
+      "name": "compress text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "LZ4"
+        },
+        "data": "This is a demo string"
+      },
+      "expect": {
+        "value": {
+          "$bytes": "FQAAAPAGVGhpcyBpcyBhIGRlbW8gc3RyaW5n"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "round trip text",
+      "op": "roundtrip",
+      "args": {
+        "algorithm": {
+          "class": "LZ4"
+        },
+        "data": "This is a demo string"
+      },
+      "expect": {
+        "value": "This is a demo string",
+        "warning": null,
+        "smaller": false
+      }
+    },
+    {
+      "name": "compress JPG image",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "LZ4"
+        },
+        "file": "packages/compression/tests/resources/disk-a/kitten-1.jpg",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 601828,
+          "sha256": "de385cdac88bab07bf3d461d9ecf6d052d3ab6e53853e3b6efe28dfe30bd5364"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "round trip JPG image",
+      "op": "roundtrip",
+      "args": {
+        "algorithm": {
+          "class": "LZ4"
+        },
+        "file": "packages/compression/tests/resources/disk-a/kitten-1.jpg",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 599639,
+          "sha256": "ac20844d0d8a7e2ffeb17322f279ef8651b300d9bd86b69512aa933678153d3e"
+        },
+        "warning": null,
+        "smaller": false
+      }
+    },
+    {
+      "name": "compress PNG image",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "LZ4"
+        },
+        "file": "packages/compression/tests/resources/disk-b/kitten-1.png",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 3049975,
+          "sha256": "6f0f6eaae8b2bbf7f756757ab1dcc2235cba15320a73e6c72350f94b5cb665a5"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "round trip PNG image",
+      "op": "roundtrip",
+      "args": {
+        "algorithm": {
+          "class": "LZ4"
+        },
+        "file": "packages/compression/tests/resources/disk-b/kitten-1.png",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 3038056,
+          "sha256": "07b78c11dab6ab70719e9ed46f5ef7ad5c20b27259be3a3af2968964934edace"
+        },
+        "warning": null,
+        "smaller": false
+      }
+    }
+  ]
+}

@@ -4,7 +4,8 @@
 //!
 //! A [`Balancer`] holds options of any type, [filters](Balancer::add_filter)
 //! and an [`Algorithm`]: [`First`], [`Last`], [`Random`] or [`RoundRobin`], or
-//! your own. [`Candidate`] is a ready-made option: a bag of named values such as
+//! your own. A [`Group`] tries several balancers in order, for fallbacks.
+//! [`Candidate`] is a ready-made option: a bag of named values such as
 //! `hostname`, `online` or `cpu`.
 //!
 //! ```
@@ -46,10 +47,9 @@
 //! | `RoundRobin::getIndex()`, `setIndex()` | [`RoundRobin::index`], [`RoundRobin::set_index`] |
 //! | `Utopia\Balancer\Option` | [`Candidate`] |
 //! | `Option::getState()`, `setState()`, `deleteState()`, `getStates()` | [`Candidate::get`] / [`Candidate::get_or`], [`Candidate::set`], [`Candidate::remove`], [`Candidate::states`] |
+//! | `Utopia\Balancer\Group` | [`Group`] |
+//! | `Group::add()`, `getOptions()`, `run()`, `setTelemetry()` | [`Group::add`], [`Group::options`], [`Group::run`], [`Group::set_telemetry`] |
 //! | `\ValueError`, `\TypeError` | [`Error::Value`], [`Error::Type`] |
-//!
-//! `Utopia\Balancer\Group` has no counterpart here yet: it records to
-//! `utopia-telemetry`, which is not in this repository yet.
 //!
 //! PHP shares `Option` objects between balancers by reference, so state set
 //! on one is seen by all. In Rust, share a `Arc<Mutex<Candidate>>` (or any
@@ -66,11 +66,13 @@ mod algorithm;
 mod balancer;
 mod candidate;
 mod error;
+mod group;
 
 pub use algorithm::{Algorithm, First, Last, Random, RoundRobin};
 pub use balancer::{Balancer, Filter};
 pub use candidate::Candidate;
 pub use error::Error;
+pub use group::Group;
 
 /// The getting started guide (`guide.md`), compiled and run with the doctests.
 #[cfg(doctest)]

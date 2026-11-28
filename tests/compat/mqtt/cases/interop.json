@@ -1,0 +1,800 @@
+{
+  "cases": [
+    {
+      "name": "a v5 session over TCP",
+      "steps": [
+        {
+          "op": "v5.connect",
+          "args": {
+            "client_id": "interop-5",
+            "keep_alive": 60,
+            "clean_start": true,
+            "properties": [
+              {
+                "id": 21,
+                "value": "test"
+              },
+              {
+                "id": 22,
+                "value": "ok"
+              },
+              {
+                "id": 38,
+                "value": {
+                  "pair": [
+                    [
+                      "projectId",
+                      "p1"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "bind": "connect",
+          "side": "b",
+          "expect": "\u00102\u0000\u0004MQTT\u0005\u0002\u0000<\u001c\u0015\u0000\u0004test\u0016\u0000\u0002ok&\u0000\tprojectId\u0000\u0002p1\u0000\tinterop-5"
+        },
+        {
+          "op": "v5.subscribe",
+          "args": {
+            "packet_id": 1,
+            "filters": [
+              "interop/+/t"
+            ],
+            "qos": 1
+          },
+          "bind": "subscribe",
+          "side": "b",
+          "expect": {
+            "$bytes": "ghEAAQAAC2ludGVyb3AvKy90AQ=="
+          }
+        },
+        {
+          "op": "v5.publish",
+          "args": {
+            "topic": "interop/a/t",
+            "payload": "21.5",
+            "qos": 1,
+            "packet_id": 4,
+            "properties": [
+              {
+                "id": 38,
+                "value": {
+                  "pair": [
+                    [
+                      "unit",
+                      "C"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "bind": "publish",
+          "side": "b",
+          "expect": "2\u001e\u0000\u000binterop/a/t\u0000\u0004\n&\u0000\u0004unit\u0000\u0001C21.5"
+        },
+        {
+          "op": "v5.auth",
+          "args": {
+            "code": 25,
+            "properties": [
+              {
+                "id": 21,
+                "value": "test"
+              },
+              {
+                "id": 22,
+                "value": "fresh"
+              },
+              {
+                "id": 38,
+                "value": {
+                  "pair": [
+                    [
+                      "projectId",
+                      "p1"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "bind": "reauth",
+          "side": "b",
+          "expect": {
+            "$bytes": "8CEZHxUABHRlc3QWAAVmcmVzaCYACXByb2plY3RJZAACcDE="
+          }
+        },
+        {
+          "op": "v5.unsubscribe",
+          "args": {
+            "packet_id": 2,
+            "filters": [
+              "interop/+/t"
+            ]
+          },
+          "bind": "unsubscribe",
+          "side": "b",
+          "expect": {
+            "$bytes": "ohAAAgAAC2ludGVyb3AvKy90"
+          }
+        },
+        {
+          "op": "v5.disconnect",
+          "args": {
+            "code": 0
+          },
+          "bind": "disconnect",
+          "side": "b",
+          "expect": {
+            "$bytes": "4AIAAA=="
+          }
+        },
+        {
+          "op": "broker.start",
+          "args": {},
+          "bind": "broker",
+          "side": "a",
+          "mask": {
+            "paths": [
+              "/runtime",
+              "/tcp",
+              "/ws",
+              "/tls",
+              "/broker"
+            ],
+            "reason": "where each runtime's broker listens"
+          },
+          "expect": {
+            "runtime": "<masked>",
+            "tcp": "<masked>",
+            "ws": "<masked>",
+            "tls": "<masked>",
+            "broker": "<masked>"
+          }
+        },
+        {
+          "op": "client.session",
+          "args": {
+            "broker": {
+              "$ref": "broker"
+            },
+            "steps": [
+              {
+                "connect": "c"
+              },
+              {
+                "send": "c",
+                "data": {
+                  "$ref": "connect"
+                }
+              },
+              {
+                "receive": "c"
+              },
+              {
+                "send": "c",
+                "data": {
+                  "$ref": "subscribe"
+                }
+              },
+              {
+                "receive": "c"
+              },
+              {
+                "send": "c",
+                "data": {
+                  "$ref": "publish"
+                }
+              },
+              {
+                "receive": "c"
+              },
+              {
+                "receive": "c"
+              },
+              {
+                "send": "c",
+                "data": {
+                  "$ref": "reauth"
+                }
+              },
+              {
+                "receive": "c"
+              },
+              {
+                "send": "c",
+                "data": {
+                  "$ref": "unsubscribe"
+                }
+              },
+              {
+                "receive": "c"
+              },
+              {
+                "send": "c",
+                "data": {
+                  "$ref": "disconnect"
+                }
+              },
+              {
+                "receive": "c"
+              },
+              {
+                "connected": "c"
+              }
+            ]
+          },
+          "side": "b",
+          "expect": [
+            null,
+            null,
+            " \u001a\u0000\u0000\u0017\u0015\u0000\u0004test&\u0000\tprojectId\u0000\u0002p1",
+            null,
+            {
+              "$bytes": "kAQAAQAB"
+            },
+            null,
+            "0\u001c\u0000\u000binterop/a/t\n&\u0000\u0004unit\u0000\u0001C21.5",
+            "@\u0002\u0000\u0004",
+            null,
+            {
+              "$bytes": "8AIAAA=="
+            },
+            null,
+            {
+              "$bytes": "sAQAAgAA"
+            },
+            null,
+            null,
+            false
+          ]
+        },
+        {
+          "op": "broker.stop",
+          "args": {
+            "broker": {
+              "$ref": "broker"
+            }
+          },
+          "side": "a",
+          "expect": null
+        }
+      ],
+      "interop": true
+    },
+    {
+      "name": "a v3 session over TCP, with a refused client",
+      "steps": [
+        {
+          "op": "v3.connect",
+          "args": {
+            "client_id": "interop-3",
+            "keep_alive": 60,
+            "clean_session": true,
+            "username": "u",
+            "password": "ok"
+          },
+          "bind": "connect",
+          "side": "b",
+          "expect": {
+            "$bytes": "EBwABE1RVFQEwgA8AAlpbnRlcm9wLTMAAXUAAm9r"
+          }
+        },
+        {
+          "op": "v3.subscribe",
+          "args": {
+            "packet_id": 1,
+            "filters": [
+              "interop3/#"
+            ],
+            "qos": 1
+          },
+          "bind": "subscribe",
+          "side": "b",
+          "expect": {
+            "$bytes": "gg8AAQAKaW50ZXJvcDMvIwE="
+          }
+        },
+        {
+          "op": "v3.publish",
+          "args": {
+            "topic": "interop3/x",
+            "payload": "hello",
+            "qos": 0,
+            "packet_id": 0
+          },
+          "bind": "publish",
+          "side": "b",
+          "expect": "0\u0011\u0000\ninterop3/xhello"
+        },
+        {
+          "op": "v3.connect",
+          "args": {
+            "client_id": "interop-3d",
+            "keep_alive": 60,
+            "clean_session": true,
+            "username": "u",
+            "password": "deny"
+          },
+          "bind": "deny",
+          "side": "b",
+          "expect": {
+            "$bytes": "EB8ABE1RVFQEwgA8AAppbnRlcm9wLTNkAAF1AARkZW55"
+          }
+        },
+        {
+          "op": "v3.disconnect",
+          "args": {},
+          "bind": "disconnect",
+          "side": "b",
+          "expect": {
+            "$bytes": "4AA="
+          }
+        },
+        {
+          "op": "broker.start",
+          "args": {},
+          "bind": "broker",
+          "side": "a",
+          "mask": {
+            "paths": [
+              "/runtime",
+              "/tcp",
+              "/ws",
+              "/tls",
+              "/broker"
+            ],
+            "reason": "where each runtime's broker listens"
+          },
+          "expect": {
+            "runtime": "<masked>",
+            "tcp": "<masked>",
+            "ws": "<masked>",
+            "tls": "<masked>",
+            "broker": "<masked>"
+          }
+        },
+        {
+          "op": "client.session",
+          "args": {
+            "broker": {
+              "$ref": "broker"
+            },
+            "steps": [
+              {
+                "connect": "c"
+              },
+              {
+                "send": "c",
+                "data": {
+                  "$ref": "connect"
+                }
+              },
+              {
+                "receive": "c"
+              },
+              {
+                "send": "c",
+                "data": {
+                  "$ref": "subscribe"
+                }
+              },
+              {
+                "receive": "c"
+              },
+              {
+                "send": "c",
+                "data": {
+                  "$ref": "publish"
+                }
+              },
+              {
+                "receive": "c"
+              },
+              {
+                "connect": "d"
+              },
+              {
+                "send": "d",
+                "data": {
+                  "$ref": "deny"
+                }
+              },
+              {
+                "receive": "d"
+              },
+              {
+                "receive": "d"
+              },
+              {
+                "connected": "d"
+              },
+              {
+                "send": "c",
+                "data": {
+                  "$ref": "disconnect"
+                }
+              },
+              {
+                "receive": "c"
+              }
+            ]
+          },
+          "side": "b",
+          "expect": [
+            null,
+            null,
+            " \u0002\u0000\u0000",
+            null,
+            {
+              "$bytes": "kAMAAQE="
+            },
+            null,
+            "0\u0011\u0000\ninterop3/xhello",
+            null,
+            null,
+            " \u0002\u0000\u0005",
+            null,
+            false,
+            null,
+            null
+          ]
+        },
+        {
+          "op": "broker.stop",
+          "args": {
+            "broker": {
+              "$ref": "broker"
+            }
+          },
+          "side": "a",
+          "expect": null
+        }
+      ],
+      "interop": true
+    },
+    {
+      "name": "a v5 session over WebSocket, with the mqtt subprotocol",
+      "steps": [
+        {
+          "op": "v5.connect",
+          "args": {
+            "client_id": "interop-ws",
+            "keep_alive": 60,
+            "clean_start": true,
+            "properties": [
+              {
+                "id": 21,
+                "value": "test"
+              },
+              {
+                "id": 22,
+                "value": "ok"
+              },
+              {
+                "id": 38,
+                "value": {
+                  "pair": [
+                    [
+                      "projectId",
+                      "p1"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "bind": "connect",
+          "side": "b",
+          "expect": "\u00103\u0000\u0004MQTT\u0005\u0002\u0000<\u001c\u0015\u0000\u0004test\u0016\u0000\u0002ok&\u0000\tprojectId\u0000\u0002p1\u0000\ninterop-ws"
+        },
+        {
+          "op": "v5.subscribe",
+          "args": {
+            "packet_id": 1,
+            "filters": [
+              "interopws/#"
+            ],
+            "qos": 1
+          },
+          "bind": "subscribe",
+          "side": "b",
+          "expect": {
+            "$bytes": "ghEAAQAAC2ludGVyb3B3cy8jAQ=="
+          }
+        },
+        {
+          "op": "v5.publish",
+          "args": {
+            "topic": "interopws/1",
+            "payload": "over ws",
+            "qos": 0,
+            "packet_id": 0
+          },
+          "bind": "publish",
+          "side": "b",
+          "expect": "0\u0015\u0000\u000binteropws/1\u0000over ws"
+        },
+        {
+          "op": "packet.ping",
+          "args": {},
+          "bind": "ping",
+          "side": "b",
+          "expect": [
+            {
+              "$bytes": "wAA="
+            },
+            {
+              "$bytes": "0AA="
+            }
+          ]
+        },
+        {
+          "op": "broker.start",
+          "args": {},
+          "bind": "broker",
+          "side": "a",
+          "mask": {
+            "paths": [
+              "/runtime",
+              "/tcp",
+              "/ws",
+              "/tls",
+              "/broker"
+            ],
+            "reason": "where each runtime's broker listens"
+          },
+          "expect": {
+            "runtime": "<masked>",
+            "tcp": "<masked>",
+            "ws": "<masked>",
+            "tls": "<masked>",
+            "broker": "<masked>"
+          }
+        },
+        {
+          "op": "client.session",
+          "args": {
+            "broker": {
+              "$ref": "broker"
+            },
+            "steps": [
+              {
+                "ws_connect": "w",
+                "protocol": "mqtt"
+              },
+              {
+                "ws_send": "w",
+                "data": {
+                  "$ref": "connect"
+                }
+              },
+              {
+                "ws_receive": "w"
+              },
+              {
+                "ws_send": "w",
+                "data": {
+                  "$ref": "subscribe"
+                }
+              },
+              {
+                "ws_receive": "w"
+              },
+              {
+                "ws_send": "w",
+                "data": {
+                  "$ref": "publish"
+                }
+              },
+              {
+                "ws_receive": "w"
+              },
+              {
+                "ws_send": "w",
+                "data": {
+                  "$ref": "ping",
+                  "path": "/0"
+                }
+              },
+              {
+                "ws_receive": "w"
+              },
+              {
+                "ws_close": "w"
+              }
+            ]
+          },
+          "side": "b",
+          "expect": [
+            {
+              "upgraded": true,
+              "protocol": "mqtt"
+            },
+            true,
+            " \u001a\u0000\u0000\u0017\u0015\u0000\u0004test&\u0000\tprojectId\u0000\u0002p1",
+            true,
+            {
+              "$bytes": "kAQAAQAB"
+            },
+            true,
+            "0\u0015\u0000\u000binteropws/1\u0000over ws",
+            true,
+            {
+              "$bytes": "0AA="
+            },
+            null
+          ]
+        },
+        {
+          "op": "broker.stop",
+          "args": {
+            "broker": {
+              "$ref": "broker"
+            }
+          },
+          "side": "a",
+          "expect": null
+        }
+      ],
+      "interop": true
+    },
+    {
+      "name": "a session over TLS",
+      "steps": [
+        {
+          "op": "v5.connect",
+          "args": {
+            "client_id": "interop-tls",
+            "keep_alive": 60,
+            "clean_start": true,
+            "properties": [
+              {
+                "id": 21,
+                "value": "test"
+              },
+              {
+                "id": 22,
+                "value": "ok"
+              },
+              {
+                "id": 38,
+                "value": {
+                  "pair": [
+                    [
+                      "projectId",
+                      "p1"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "bind": "connect",
+          "side": "b",
+          "expect": "\u00104\u0000\u0004MQTT\u0005\u0002\u0000<\u001c\u0015\u0000\u0004test\u0016\u0000\u0002ok&\u0000\tprojectId\u0000\u0002p1\u0000\u000binterop-tls"
+        },
+        {
+          "op": "packet.ping",
+          "args": {},
+          "bind": "pings",
+          "side": "b",
+          "expect": [
+            {
+              "$bytes": "wAA="
+            },
+            {
+              "$bytes": "0AA="
+            }
+          ]
+        },
+        {
+          "op": "v5.disconnect",
+          "args": {
+            "code": 0
+          },
+          "bind": "disconnect",
+          "side": "b",
+          "expect": {
+            "$bytes": "4AIAAA=="
+          }
+        },
+        {
+          "op": "broker.start",
+          "args": {},
+          "bind": "broker",
+          "side": "a",
+          "mask": {
+            "paths": [
+              "/runtime",
+              "/tcp",
+              "/ws",
+              "/tls",
+              "/broker"
+            ],
+            "reason": "where each runtime's broker listens"
+          },
+          "expect": {
+            "runtime": "<masked>",
+            "tcp": "<masked>",
+            "ws": "<masked>",
+            "tls": "<masked>",
+            "broker": "<masked>"
+          }
+        },
+        {
+          "op": "client.session",
+          "args": {
+            "broker": {
+              "$ref": "broker"
+            },
+            "steps": [
+              {
+                "connect": "c",
+                "transport": "tls"
+              },
+              {
+                "send": "c",
+                "data": {
+                  "$ref": "connect"
+                }
+              },
+              {
+                "receive": "c"
+              },
+              {
+                "send": "c",
+                "data": {
+                  "$ref": "pings",
+                  "path": "/0"
+                }
+              },
+              {
+                "receive": "c"
+              },
+              {
+                "send": "c",
+                "data": {
+                  "$ref": "disconnect"
+                }
+              },
+              {
+                "receive": "c"
+              },
+              {
+                "connected": "c"
+              }
+            ]
+          },
+          "side": "b",
+          "expect": [
+            null,
+            null,
+            " \u001a\u0000\u0000\u0017\u0015\u0000\u0004test&\u0000\tprojectId\u0000\u0002p1",
+            null,
+            {
+              "$bytes": "0AA="
+            },
+            null,
+            null,
+            false
+          ]
+        },
+        {
+          "op": "broker.stop",
+          "args": {
+            "broker": {
+              "$ref": "broker"
+            }
+          },
+          "side": "a",
+          "expect": null
+        }
+      ],
+      "interop": true
+    }
+  ]
+}

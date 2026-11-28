@@ -353,7 +353,7 @@ impl<'f> Param<'f> {
     }
 
     /// Parameter `position` (`$name`) of a library closure, named as PHP names
-    /// it (`Utopia\Query\Builder::{closure:Utopia\Query\Builder::compileSelect():1362}`).
+    /// it (`Utopia\Query\Builder::{closure:Utopia\Query\Builder::compileSelect():1374}`).
     pub(crate) const fn closure(function: &'f str, position: u8, name: &'static str) -> Self {
         Param { function, position, name, callee: Callee::Closure }
     }

@@ -1,0 +1,350 @@
+{
+  "source": "packages/cdn/tests/CacheTest.php",
+  "cases": [
+    {
+      "name": "delegates cache operations",
+      "steps": [
+        {
+          "op": "log.new",
+          "args": {},
+          "bind": "log",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "recorder",
+            "name": "adapter",
+            "log": {
+              "$ref": "log"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "facade",
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "method": "purgePaths",
+            "domain": "example.com",
+            "paths": [
+              "/file.png"
+            ]
+          },
+          "expect": {
+            "result": null
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "method": "purgeDomain",
+            "domain": "example.com"
+          },
+          "expect": {
+            "result": null
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "method": "purgeKeys",
+            "keys": [
+              "key"
+            ]
+          },
+          "expect": {
+            "result": null
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "method": "purgeZone"
+          },
+          "expect": {
+            "result": null
+          }
+        },
+        {
+          "op": "log.take",
+          "args": {
+            "log": {
+              "$ref": "log"
+            }
+          },
+          "expect": [
+            {
+              "call": "adapter:paths",
+              "args": [
+                "example.com",
+                [
+                  "/file.png"
+                ]
+              ]
+            },
+            {
+              "call": "adapter:domain",
+              "args": [
+                "example.com"
+              ]
+            },
+            {
+              "call": "adapter:keys",
+              "args": [
+                [
+                  "key"
+                ]
+              ]
+            },
+            {
+              "call": "adapter:zone",
+              "args": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid input",
+      "steps": [
+        {
+          "op": "log.new",
+          "args": {},
+          "bind": "log",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "recorder",
+            "name": "adapter",
+            "log": {
+              "$ref": "log"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "facade",
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "method": "purgePaths",
+            "domain": "https://example.com",
+            "paths": [
+              "relative"
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "InvalidArgumentException",
+              "message": "Domain must be a hostname without a scheme, port, path, or trailing slash."
+            }
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "method": "purgePaths",
+            "domain": "example.com",
+            "paths": [
+              "relative"
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "InvalidArgumentException",
+              "message": "Every cache path must be a string beginning with \"/\"."
+            }
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "method": "purgeDomain",
+            "domain": "https://example.com"
+          },
+          "expect": {
+            "error": {
+              "class": "InvalidArgumentException",
+              "message": "Domain must be a hostname without a scheme, port, path, or trailing slash."
+            }
+          }
+        },
+        {
+          "op": "log.take",
+          "args": {
+            "log": {
+              "$ref": "log"
+            }
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "folds the domain before the adapter sees it",
+      "steps": [
+        {
+          "op": "log.new",
+          "args": {},
+          "bind": "log",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "recorder",
+            "name": "adapter",
+            "log": {
+              "$ref": "log"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "facade",
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "method": "purgePaths",
+            "domain": "Example.COM",
+            "paths": []
+          },
+          "expect": {
+            "result": null
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "method": "purgeDomain",
+            "domain": "Example.COM"
+          },
+          "expect": {
+            "result": null
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "method": "purgeKeys",
+            "keys": []
+          },
+          "expect": {
+            "result": null
+          }
+        },
+        {
+          "op": "log.take",
+          "args": {
+            "log": {
+              "$ref": "log"
+            }
+          },
+          "expect": [
+            {
+              "call": "adapter:paths",
+              "args": [
+                "example.com",
+                []
+              ]
+            },
+            {
+              "call": "adapter:domain",
+              "args": [
+                "example.com"
+              ]
+            },
+            {
+              "call": "adapter:keys",
+              "args": [
+                []
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

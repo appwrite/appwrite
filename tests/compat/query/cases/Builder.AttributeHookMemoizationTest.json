@@ -1,0 +1,669 @@
+{
+  "source": "packages/query/tests/Builder/AttributeHookMemoizationTest.php",
+  "cases": [
+    {
+      "name": "testAttributeResolvedAtMostOncePerBuild",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "addHook",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$impl": 1
+              }
+            ]
+          },
+          {
+            "static": "select",
+            "class": "Query",
+            "args": [
+              [
+                "id",
+                "name",
+                "age"
+              ]
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "name",
+              [
+                "alice"
+              ]
+            ]
+          },
+          {
+            "static": "greaterThan",
+            "class": "Query",
+            "args": [
+              "age",
+              18
+            ]
+          },
+          {
+            "static": "orderAsc",
+            "class": "Query",
+            "args": [
+              "name"
+            ]
+          },
+          {
+            "static": "orderDesc",
+            "class": "Query",
+            "args": [
+              "age"
+            ]
+          },
+          {
+            "call": "queries",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                },
+                {
+                  "$o": 3
+                },
+                {
+                  "$o": 4
+                },
+                {
+                  "$o": 5
+                },
+                {
+                  "$o": 6
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": [],
+            "cb": [
+              {
+                "impl": 1,
+                "m": "resolve",
+                "ret": "id"
+              },
+              {
+                "impl": 1,
+                "m": "resolve",
+                "ret": "name"
+              },
+              {
+                "impl": 1,
+                "m": "resolve",
+                "ret": "age"
+              }
+            ]
+          }
+        ],
+        "impls": {
+          "1": [
+            "Hook",
+            "Hook\\Attribute"
+          ]
+        }
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Select"
+            },
+            "attribute": "",
+            "values": [
+              "id",
+              "name",
+              "age"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 3,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "name",
+            "values": [
+              "alice"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 4,
+          "props": {
+            "method": {
+              "$enum": "Method::GreaterThan"
+            },
+            "attribute": "age",
+            "values": [
+              18
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 5,
+          "props": {
+            "method": {
+              "$enum": "Method::OrderAsc"
+            },
+            "attribute": "name",
+            "values": [],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 6,
+          "props": {
+            "method": {
+              "$enum": "Method::OrderDesc"
+            },
+            "attribute": "age",
+            "values": [],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$cb": "impl:1:resolve",
+          "args": [
+            "id"
+          ]
+        },
+        {
+          "$cb": "impl:1:resolve",
+          "args": [
+            "name"
+          ]
+        },
+        {
+          "$cb": "impl:1:resolve",
+          "args": [
+            "age"
+          ]
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 7,
+          "props": {
+            "query": "SELECT `id`, `name`, `age` FROM `users` WHERE `name` IN (?) AND `age` > ? ORDER BY `name` ASC, `age` DESC",
+            "bindings": [
+              "alice",
+              18
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testMemoClearedBetweenBuilds",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "addHook",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$impl": 1
+              }
+            ]
+          },
+          {
+            "static": "select",
+            "class": "Query",
+            "args": [
+              [
+                "name"
+              ]
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "name",
+              [
+                "alice"
+              ]
+            ]
+          },
+          {
+            "call": "queries",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                },
+                {
+                  "$o": 3
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": [],
+            "cb": [
+              {
+                "impl": 1,
+                "m": "resolve",
+                "ret": "name"
+              }
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": [],
+            "cb": [
+              {
+                "impl": 1,
+                "m": "resolve",
+                "ret": "name"
+              }
+            ]
+          }
+        ],
+        "impls": {
+          "1": [
+            "Hook",
+            "Hook\\Attribute"
+          ]
+        }
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Select"
+            },
+            "attribute": "",
+            "values": [
+              "name"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 3,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "name",
+            "values": [
+              "alice"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$cb": "impl:1:resolve",
+          "args": [
+            "name"
+          ]
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "SELECT `name` FROM `users` WHERE `name` IN (?)",
+            "bindings": [
+              "alice"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        {
+          "$cb": "impl:1:resolve",
+          "args": [
+            "name"
+          ]
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "SELECT `name` FROM `users` WHERE `name` IN (?)",
+            "bindings": [
+              "alice"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testMemoClearedOnReset",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "addHook",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$impl": 1
+              }
+            ]
+          },
+          {
+            "static": "select",
+            "class": "Query",
+            "args": [
+              [
+                "name"
+              ]
+            ]
+          },
+          {
+            "call": "queries",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": [],
+            "cb": [
+              {
+                "impl": 1,
+                "m": "resolve",
+                "ret": "name"
+              }
+            ]
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "static": "select",
+            "class": "Query",
+            "args": [
+              [
+                "name"
+              ]
+            ]
+          },
+          {
+            "call": "queries",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 4
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": [],
+            "cb": [
+              {
+                "impl": 1,
+                "m": "resolve",
+                "ret": "name"
+              }
+            ]
+          }
+        ],
+        "impls": {
+          "1": [
+            "Hook",
+            "Hook\\Attribute"
+          ]
+        }
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Select"
+            },
+            "attribute": "",
+            "values": [
+              "name"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$cb": "impl:1:resolve",
+          "args": [
+            "name"
+          ]
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "SELECT `name` FROM `users`",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 4,
+          "props": {
+            "method": {
+              "$enum": "Method::Select"
+            },
+            "attribute": "",
+            "values": [
+              "name"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$cb": "impl:1:resolve",
+          "args": [
+            "name"
+          ]
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "SELECT `name` FROM `users`",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        }
+      ]
+    }
+  ]
+}

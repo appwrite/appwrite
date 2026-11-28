@@ -1,0 +1,130 @@
+{
+  "source": "packages/http/src/Http.php",
+  "cases": [
+    {
+      "name": "server metrics of run()",
+      "op": "http.run",
+      "args": {
+        "telemetry": true,
+        "app": {
+          "routes": [
+            {
+              "path": "/x/:id",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "send": "ok"
+                }
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "/x/1",
+            "headers": [
+              [
+                "Host",
+                "h"
+              ],
+              [
+                "X-A",
+                "b"
+              ]
+            ]
+          },
+          {
+            "method": "POST",
+            "uri": "/missing",
+            "headers": [
+              [
+                "Host",
+                "h"
+              ]
+            ]
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-debug-speed": "<masked>"
+              },
+              "order": [
+                "x-debug-speed"
+              ],
+              "cookies": [],
+              "body": "ok",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [],
+            "error": null
+          }
+        ],
+        "telemetry": {
+          "instruments": [
+            "http.server.active_requests",
+            "http.server.request.duration",
+            "http.server.request.body.size",
+            "http.server.response.body.size"
+          ],
+          "active": [
+            1,
+            -1,
+            1,
+            -1
+          ],
+          "durations": 2,
+          "request_sizes": [
+            14,
+            7
+          ],
+          "response_sizes": 2
+        }
+      }
+    },
+    {
+      "name": "no metrics before a request",
+      "op": "http.run",
+      "args": {
+        "telemetry": true,
+        "app": {},
+        "requests": []
+      },
+      "expect": {
+        "setup": [],
+        "responses": [],
+        "telemetry": {
+          "instruments": [],
+          "active": [],
+          "durations": 0,
+          "request_sizes": [],
+          "response_sizes": 0
+        }
+      }
+    }
+  ]
+}

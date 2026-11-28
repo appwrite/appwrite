@@ -1,0 +1,125 @@
+{
+  "source": "packages/domains/tests/Validator/ApexDomainTest.php",
+  "cases": [
+    {
+      "name": "description",
+      "op": "validator.describe",
+      "args": {
+        "validator": "apex"
+      },
+      "expect": {
+        "description": "Value must be a public apex domain",
+        "type": "string",
+        "array": false
+      }
+    },
+    {
+      "name": "example.com",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "apex",
+        "value": "example.com"
+      },
+      "expect": true
+    },
+    {
+      "name": "google.com",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "apex",
+        "value": "google.com"
+      },
+      "expect": true
+    },
+    {
+      "name": "bbc.co.uk",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "apex",
+        "value": "bbc.co.uk"
+      },
+      "expect": true
+    },
+    {
+      "name": "appwrite.io",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "apex",
+        "value": "appwrite.io"
+      },
+      "expect": true
+    },
+    {
+      "name": "usa.gov",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "apex",
+        "value": "usa.gov"
+      },
+      "expect": true
+    },
+    {
+      "name": "stanford.edu",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "apex",
+        "value": "stanford.edu"
+      },
+      "expect": true
+    },
+    {
+      "name": "http://google.com",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "apex",
+        "value": "http://google.com"
+      },
+      "expect": true
+    },
+    {
+      "name": "blog.bbc.co.uk",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "apex",
+        "value": "blog.bbc.co.uk"
+      },
+      "expect": false
+    },
+    {
+      "name": "www.google.com",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "apex",
+        "value": "www.google.com"
+      },
+      "expect": false
+    },
+    {
+      "name": "test.usa.gov",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "apex",
+        "value": "test.usa.gov"
+      },
+      "expect": false
+    },
+    {
+      "name": "test.com.test",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "apex",
+        "value": "test.com.test"
+      },
+      "expect": false
+    },
+    {
+      "name": "http://www.google.com",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "apex",
+        "value": "http://www.google.com"
+      },
+      "expect": false
+    }
+  ]
+}

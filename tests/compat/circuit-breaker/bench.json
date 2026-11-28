@@ -1,0 +1,155 @@
+{
+  "lib": "circuit-breaker",
+  "environment": {
+    "date": "2026-10-19T07:41:41Z",
+    "commit": "7b1eced40d",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "appwrite-dev",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.97",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "call_closed",
+      "description": "A successful call through a closed in-process breaker",
+      "php": {
+        "ns": 603.7380825292548,
+        "min": 545.8735372613427,
+        "max": 868.2114966126052,
+        "samples": 15,
+        "calls": 24355,
+        "cpu": 605.970026688565,
+        "peak": 3008.0,
+        "retained": 0.0010292205570382536,
+        "rss": 106926080.0
+      },
+      "rust": {
+        "ns": 62.96378078135982,
+        "min": 62.07989002991833,
+        "max": 66.77510247494884,
+        "samples": 15,
+        "calls": 321542,
+        "cpu": 63.32707329058101,
+        "rss": 21925888.0,
+        "allocations": 1.000002280676656,
+        "bytes": 384.00058240188423,
+        "peak": 1650.0,
+        "retained": 0.00034293083537039224
+      },
+      "speedup": 9.58865676484264,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "call_open",
+      "description": "A call short-circuited by an open in-process breaker",
+      "php": {
+        "ns": 359.71203139691755,
+        "min": 349.29749396999307,
+        "max": 517.1735824373493,
+        "samples": 15,
+        "calls": 24461,
+        "cpu": 394.9252551680907,
+        "peak": 3008.0,
+        "retained": 0.0010247605031138002,
+        "rss": 106926080.0
+      },
+      "rust": {
+        "ns": 52.88451208128902,
+        "min": 52.418662880944765,
+        "max": 56.981266396777976,
+        "samples": 15,
+        "calls": 384603,
+        "cpu": 53.21730737063067,
+        "rss": 21925888.0,
+        "allocations": 1.0000019067280632,
+        "bytes": 384.0004869090118,
+        "peak": 1650.0,
+        "retained": 0.00028670256515593134
+      },
+      "speedup": 6.801840789303352,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "call_telemetry",
+      "description": "A successful call through a closed breaker recording telemetry",
+      "php": {
+        "ns": 570.0120512531046,
+        "min": 558.2547979227817,
+        "max": 613.5237920523821,
+        "samples": 15,
+        "calls": 35432,
+        "cpu": 574.1232031308798,
+        "peak": 8391616.0,
+        "retained": 15.784195077895687,
+        "rss": 120705024.0
+      },
+      "rust": {
+        "ns": 95.0227235565356,
+        "min": 93.38545486823234,
+        "max": 104.39451345707332,
+        "samples": 15,
+        "calls": 214051,
+        "cpu": 95.7742933537646,
+        "rss": 234319872.0,
+        "allocations": 2.0000040488793167,
+        "bytes": 606.7044959690292,
+        "peak": 100664946.0,
+        "retained": 31.352325691852254
+      },
+      "speedup": 5.998691996172526,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "state",
+      "description": "Read the state of an in-process breaker",
+      "php": {
+        "ns": 67.47358955896216,
+        "min": 60.61531022919775,
+        "max": 72.24332390662339,
+        "samples": 15,
+        "calls": 287481,
+        "cpu": 67.2454875278714,
+        "peak": 123288.0,
+        "retained": 0.00008719416819430385,
+        "rss": 120705024.0
+      },
+      "rust": {
+        "ns": 31.276577866803432,
+        "min": 31.12221996432523,
+        "max": 31.9229008815475,
+        "samples": 15,
+        "calls": 620046,
+        "cpu": 31.412042009786372,
+        "rss": 234450944.0,
+        "allocations": 1.0000011827079496,
+        "bytes": 80.00030202060277,
+        "peak": 1650.0,
+        "retained": 0.00017783626806183196
+      },
+      "speedup": 2.1573200829806187,
+      "bound": null,
+      "compat": null
+    }
+  ]
+}

@@ -1,0 +1,778 @@
+{
+  "source": "packages/usage/tests/E2E/Adapter/ClickHouseInspectTest.php",
+  "cases": [
+    {
+      "name": "a migrated schema with data reports nothing",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_inspect",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.migrate",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 1,
+                "tags": {
+                  "path": "/v1/ping",
+                  "resourceType": "site"
+                }
+              }
+            ],
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "storage",
+                "value": 1,
+                "tags": {
+                  "service": "storage",
+                  "resourceType": "bucket",
+                  "resourceId": "b1"
+                }
+              }
+            ],
+            "type": "gauge"
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.inspect",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "reports each difference migrate then removes",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_inspect",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.migrate",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 1,
+                "tags": {
+                  "path": "/v1/ping",
+                  "resourceType": "site"
+                }
+              }
+            ],
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "storage",
+                "value": 1,
+                "tags": {
+                  "service": "storage",
+                  "resourceType": "bucket",
+                  "resourceId": "b1"
+                }
+              }
+            ],
+            "type": "gauge"
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "DROP TABLE `${ns}`.`utopia_usage_inspect_usage_events_daily_mv`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "ALTER TABLE `${ns}`.`utopia_usage_inspect_usage_events` DROP INDEX `index-protocol` SETTINGS mutations_sync = 2"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "ALTER TABLE `${ns}`.`utopia_usage_inspect_usage_events` DROP COLUMN `sdkVersion` SETTINGS mutations_sync = 2"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "ALTER TABLE `${ns}`.`utopia_usage_inspect_usage_events` MODIFY COLUMN `protocol` Nullable(String) SETTINGS mutations_sync = 2"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "ALTER TABLE `${ns}`.`utopia_usage_inspect_usage_gauges` DROP INDEX `index-resourceType`, DROP INDEX `index-resourceId` SETTINGS mutations_sync = 2"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "ALTER TABLE `${ns}`.`utopia_usage_inspect_usage_gauges` ADD INDEX `index-resource` (`resourceType`) TYPE set(0) GRANULARITY 1, ADD INDEX `index-resourceId` (`resourceId`) TYPE set(0) GRANULARITY 1"
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.inspect",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": [
+            {
+              "table": "utopia_usage_inspect_usage_events_daily_mv",
+              "kind": "table.missing",
+              "name": "utopia_usage_inspect_usage_events_daily_mv",
+              "detail": "migrate() creates it"
+            },
+            {
+              "table": "utopia_usage_inspect_usage_events",
+              "kind": "column.drifted",
+              "name": "protocol",
+              "detail": "is Nullable(String), expected LowCardinality(Nullable(String))"
+            },
+            {
+              "table": "utopia_usage_inspect_usage_events",
+              "kind": "column.missing",
+              "name": "sdkVersion",
+              "detail": "expected LowCardinality(Nullable(String)) CODEC(ZSTD(3))"
+            },
+            {
+              "table": "utopia_usage_inspect_usage_events",
+              "kind": "index.missing",
+              "name": "index-protocol",
+              "detail": "expected (protocol) TYPE set(0)"
+            },
+            {
+              "table": "utopia_usage_inspect_usage_gauges",
+              "kind": "index.missing",
+              "name": "index-resourceType",
+              "detail": "expected (resourceType) TYPE set(0)"
+            },
+            {
+              "table": "utopia_usage_inspect_usage_gauges",
+              "kind": "index.drifted",
+              "name": "index-resourceId",
+              "detail": "is (resourceId) TYPE set(0), expected (resourceId) TYPE bloom_filter"
+            },
+            {
+              "table": "utopia_usage_inspect_usage_gauges",
+              "kind": "index.duplicate",
+              "name": "index-resource",
+              "detail": "duplicates index-resourceType"
+            }
+          ]
+        },
+        {
+          "op": "usage.migrate",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "clickhouse.wait_mutations",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "table": "utopia_usage_inspect_usage_events"
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.wait_mutations",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "table": "utopia_usage_inspect_usage_gauges"
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.inspect",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "reports a projection until it is added and built for existing parts",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_inspect",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.migrate",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 1,
+                "tags": {
+                  "path": "/v1/ping",
+                  "resourceType": "site"
+                },
+                "time": "2024-03-10 12:00:00"
+              }
+            ],
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "storage",
+                "value": 1,
+                "tags": {
+                  "service": "storage",
+                  "resourceType": "bucket",
+                  "resourceId": "b1"
+                },
+                "time": "2024-03-10 12:00:00"
+              }
+            ],
+            "type": "gauge"
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "ALTER TABLE `${ns}`.`utopia_usage_inspect_usage_events` DROP PROJECTION p_by_path SETTINGS mutations_sync = 2"
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.inspect",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": [
+            {
+              "table": "utopia_usage_inspect_usage_events",
+              "kind": "projection.missing",
+              "name": "p_by_path",
+              "detail": "migrate() adds it; existing parts then need MATERIALIZE PROJECTION"
+            }
+          ]
+        },
+        {
+          "op": "usage.migrate",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.inspect",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": [
+            {
+              "table": "utopia_usage_inspect_usage_events",
+              "kind": "projection.unmaterialized",
+              "name": "p_by_path",
+              "detail": "parts without it, by partition: 202403 (1)"
+            }
+          ]
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 1,
+                "tags": {
+                  "path": "/v1/ping",
+                  "resourceType": "site"
+                },
+                "time": "2024-03-10 12:00:00"
+              }
+            ],
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "storage",
+                "value": 1,
+                "tags": {
+                  "service": "storage",
+                  "resourceType": "bucket",
+                  "resourceId": "b1"
+                },
+                "time": "2024-03-10 12:00:00"
+              }
+            ],
+            "type": "gauge"
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.inspect",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": [
+            {
+              "table": "utopia_usage_inspect_usage_events",
+              "kind": "projection.unmaterialized",
+              "name": "p_by_path",
+              "detail": "parts without it, by partition: 202403 (1)"
+            }
+          ]
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "ALTER TABLE `${ns}`.`utopia_usage_inspect_usage_events` MATERIALIZE PROJECTION p_by_path SETTINGS mutations_sync = 2"
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.inspect",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "reports a mutation that has not finished and why it fails",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_inspect",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.migrate",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "requests",
+                "value": 1,
+                "tags": {
+                  "path": "/v1/ping",
+                  "resourceType": "site"
+                }
+              }
+            ],
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "storage",
+                "value": 1,
+                "tags": {
+                  "service": "storage",
+                  "resourceType": "bucket",
+                  "resourceId": "b1"
+                }
+              }
+            ],
+            "type": "gauge"
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "ALTER TABLE `${ns}`.`utopia_usage_inspect_usage_gauges` UPDATE value = throwIf(1, 'inspect-test') WHERE 1"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.wait_mutations",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "table": "utopia_usage_inspect_usage_gauges",
+            "failing": true
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.inspect",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": [
+            {
+              "table": "utopia_usage_inspect_usage_gauges",
+              "kind": "mutation.failing",
+              "name": "<masked>",
+              "detail": "<masked>"
+            }
+          ],
+          "mask": {
+            "paths": [
+              "/*/name",
+              "/*/detail"
+            ],
+            "reason": "the mutation's id counts the table's blocks, and its detail carries when it was created and the server's exception text"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "KILL MUTATION WHERE database = {database:String} AND table = {table:String} FORMAT Null",
+            "params": {
+              "database": "${ns}",
+              "table": "utopia_usage_inspect_usage_gauges"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.wait_mutations",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "table": "utopia_usage_inspect_usage_gauges"
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.inspect",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": []
+        }
+      ]
+    }
+  ]
+}

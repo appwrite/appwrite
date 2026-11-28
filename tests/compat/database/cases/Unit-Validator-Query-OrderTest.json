@@ -1,0 +1,1836 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Validator/Query/OrderTest.php"
+  ],
+  "cases": [
+    {
+      "name": "OrderTest::test_value_success",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "attr",
+                "key": "attr",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o2080"
+          },
+          "bind": "s3157",
+          "expect": {
+            "$document": {
+              "$id": "attr",
+              "key": "attr",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "$sequence",
+                "key": "$sequence",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o2081"
+          },
+          "bind": "s3158",
+          "expect": {
+            "$document": {
+              "$id": "$sequence",
+              "key": "$sequence",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Order",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o2080"
+                },
+                {
+                  "$obj": "o2081"
+                }
+              ]
+            },
+            "as": "o2082"
+          },
+          "bind": "s3159",
+          "expect": {
+            "$value": "Validator\\Query\\Order",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "orderAsc",
+            "args": {
+              "attribute": "attr"
+            },
+            "as": "o2083"
+          },
+          "bind": "s3160",
+          "expect": {
+            "$query": {
+              "method": "orderAsc",
+              "attribute": "attr",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2082"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o2083"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "orderAsc",
+            "args": {},
+            "as": "o2084"
+          },
+          "bind": "s3162",
+          "expect": {
+            "$query": {
+              "method": "orderAsc",
+              "attribute": "$sequence",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2082"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o2084"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "orderDesc",
+            "args": {
+              "attribute": "attr"
+            },
+            "as": "o2085"
+          },
+          "bind": "s3164",
+          "expect": {
+            "$query": {
+              "method": "orderDesc",
+              "attribute": "attr",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2082"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o2085"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "orderDesc",
+            "args": {},
+            "as": "o2086"
+          },
+          "bind": "s3166",
+          "expect": {
+            "$query": {
+              "method": "orderDesc",
+              "attribute": "$sequence",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2082"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o2086"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "OrderTest::test_value_failure",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "attr",
+                "key": "attr",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o2087"
+          },
+          "bind": "s3168",
+          "expect": {
+            "$document": {
+              "$id": "attr",
+              "key": "attr",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "$sequence",
+                "key": "$sequence",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o2088"
+          },
+          "bind": "s3169",
+          "expect": {
+            "$document": {
+              "$id": "$sequence",
+              "key": "$sequence",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Order",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o2087"
+                },
+                {
+                  "$obj": "o2088"
+                }
+              ]
+            },
+            "as": "o2089"
+          },
+          "bind": "s3170",
+          "expect": {
+            "$value": "Validator\\Query\\Order",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "limit",
+            "args": {
+              "value": -1
+            },
+            "as": "o2090"
+          },
+          "bind": "s3171",
+          "expect": {
+            "$query": {
+              "method": "limit",
+              "attribute": "",
+              "values": [
+                -1
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2089"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o2090"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2089"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "limit",
+            "args": {
+              "value": 101
+            },
+            "as": "o2091"
+          },
+          "bind": "s3174",
+          "expect": {
+            "$query": {
+              "method": "limit",
+              "attribute": "",
+              "values": [
+                101
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2089"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o2091"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "offset",
+            "args": {
+              "value": -1
+            },
+            "as": "o2092"
+          },
+          "bind": "s3176",
+          "expect": {
+            "$query": {
+              "method": "offset",
+              "attribute": "",
+              "values": [
+                -1
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2089"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o2092"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "offset",
+            "args": {
+              "value": 5001
+            },
+            "as": "o2093"
+          },
+          "bind": "s3178",
+          "expect": {
+            "$query": {
+              "method": "offset",
+              "attribute": "",
+              "values": [
+                5001
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2089"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o2093"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "attr",
+              "values": [
+                "v"
+              ]
+            },
+            "as": "o2094"
+          },
+          "bind": "s3180",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "attr",
+              "values": [
+                "v"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2089"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o2094"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "dne",
+              "values": [
+                "v"
+              ]
+            },
+            "as": "o2095"
+          },
+          "bind": "s3182",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "dne",
+              "values": [
+                "v"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2089"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o2095"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "",
+              "values": [
+                "v"
+              ]
+            },
+            "as": "o2096"
+          },
+          "bind": "s3184",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "",
+              "values": [
+                "v"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2089"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o2096"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "orderDesc",
+            "args": {
+              "attribute": "dne"
+            },
+            "as": "o2097"
+          },
+          "bind": "s3186",
+          "expect": {
+            "$query": {
+              "method": "orderDesc",
+              "attribute": "dne",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2089"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o2097"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "orderAsc",
+            "args": {
+              "attribute": "dne"
+            },
+            "as": "o2098"
+          },
+          "bind": "s3188",
+          "expect": {
+            "$query": {
+              "method": "orderAsc",
+              "attribute": "dne",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2089"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o2098"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "OrderTest::test_dotted_attribute_with_relationship_base",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "attr",
+                "key": "attr",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o2099"
+          },
+          "bind": "s3190",
+          "expect": {
+            "$document": {
+              "$id": "attr",
+              "key": "attr",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "$sequence",
+                "key": "$sequence",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o2100"
+          },
+          "bind": "s3191",
+          "expect": {
+            "$document": {
+              "$id": "$sequence",
+              "key": "$sequence",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Order",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o2099"
+                },
+                {
+                  "$obj": "o2100"
+                }
+              ]
+            },
+            "as": "o2101"
+          },
+          "expect": {
+            "$value": "Validator\\Query\\Order",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "oneToOne",
+            "args": {
+              "relatedCollection": "profiles"
+            },
+            "as": "o2102"
+          },
+          "bind": "s3193",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "profiles",
+              "type": {
+                "$enum": "RelationshipType::OneToOne"
+              },
+              "twoWay": false,
+              "key": null,
+              "twoWayKey": null,
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "relationship",
+            "args": {
+              "key": "profile",
+              "relationship": {
+                "$obj": "o2102"
+              },
+              "side": {
+                "$enum": "RelationshipSide::Parent"
+              }
+            },
+            "as": "o2103"
+          },
+          "bind": "s3194",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "profile",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Relationship"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": {
+                "$value": "Relationship",
+                "fields": {
+                  "relatedCollection": "profiles",
+                  "type": {
+                    "$enum": "RelationshipType::OneToOne"
+                  },
+                  "twoWay": false,
+                  "key": "profile",
+                  "twoWayKey": null,
+                  "onDelete": {
+                    "$enum": "RelationshipDeleteAction::Restrict"
+                  }
+                }
+              },
+              "side": {
+                "$enum": "RelationshipSide::Parent"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2103"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o2104"
+          },
+          "bind": "s3195",
+          "expect": {
+            "$document": {
+              "$id": "profile",
+              "key": "profile",
+              "type": "relationship",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": [],
+              "options": {
+                "relatedCollection": "profiles",
+                "relationType": "oneToOne",
+                "twoWay": false,
+                "twoWayKey": null,
+                "onDelete": "restrict",
+                "side": "parent"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Order",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o2104"
+                }
+              ]
+            },
+            "as": "o2105"
+          },
+          "bind": "s3196",
+          "expect": {
+            "$value": "Validator\\Query\\Order",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "orderAsc",
+            "args": {
+              "attribute": "profile.name"
+            },
+            "as": "o2106"
+          },
+          "bind": "s3197",
+          "expect": {
+            "$query": {
+              "method": "orderAsc",
+              "attribute": "profile.name",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2105"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o2106"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2105"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Cannot order by nested attribute: profile"
+        }
+      ]
+    },
+    {
+      "name": "OrderTest::test_dotted_attribute_not_in_schema",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "attr",
+                "key": "attr",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o2107"
+          },
+          "bind": "s3200",
+          "expect": {
+            "$document": {
+              "$id": "attr",
+              "key": "attr",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "$sequence",
+                "key": "$sequence",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o2108"
+          },
+          "bind": "s3201",
+          "expect": {
+            "$document": {
+              "$id": "$sequence",
+              "key": "$sequence",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Order",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o2107"
+                },
+                {
+                  "$obj": "o2108"
+                }
+              ]
+            },
+            "as": "o2109"
+          },
+          "bind": "s3202",
+          "expect": {
+            "$value": "Validator\\Query\\Order",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "orderAsc",
+            "args": {
+              "attribute": "unknown.field"
+            },
+            "as": "o2110"
+          },
+          "bind": "s3203",
+          "expect": {
+            "$query": {
+              "method": "orderAsc",
+              "attribute": "unknown.field",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2109"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o2110"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2109"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Attribute not found in schema: unknown"
+        }
+      ]
+    },
+    {
+      "name": "OrderTest::test_non_query_input_returns_false",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "attr",
+                "key": "attr",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o2111"
+          },
+          "bind": "s3206",
+          "expect": {
+            "$document": {
+              "$id": "attr",
+              "key": "attr",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "$sequence",
+                "key": "$sequence",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o2112"
+          },
+          "bind": "s3207",
+          "expect": {
+            "$document": {
+              "$id": "$sequence",
+              "key": "$sequence",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Order",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o2111"
+                },
+                {
+                  "$obj": "o2112"
+                }
+              ]
+            },
+            "as": "o2113"
+          },
+          "bind": "s3208",
+          "expect": {
+            "$value": "Validator\\Query\\Order",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2113"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "not_a_query"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2113"
+            },
+            "method": "isValid",
+            "args": {
+              "value": 42
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2113"
+            },
+            "method": "isValid",
+            "args": {
+              "value": null
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "OrderTest::test_order_random_is_valid",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "attr",
+                "key": "attr",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o2114"
+          },
+          "bind": "s3212",
+          "expect": {
+            "$document": {
+              "$id": "attr",
+              "key": "attr",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "$sequence",
+                "key": "$sequence",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o2115"
+          },
+          "bind": "s3213",
+          "expect": {
+            "$document": {
+              "$id": "$sequence",
+              "key": "$sequence",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Order",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o2114"
+                },
+                {
+                  "$obj": "o2115"
+                }
+              ]
+            },
+            "as": "o2116"
+          },
+          "bind": "s3214",
+          "expect": {
+            "$value": "Validator\\Query\\Order",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "orderRandom",
+            "args": {},
+            "as": "o2117"
+          },
+          "bind": "s3215",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "Query::orderRandom() returns the documents in a random order"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2116"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o2117"
+              }
+            }
+          },
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "Query::orderRandom() returns the documents in a random order"
+          }
+        }
+      ]
+    },
+    {
+      "name": "OrderTest::test_add_aggregation_aliases",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "attr",
+                "key": "attr",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o2118"
+          },
+          "bind": "s3217",
+          "expect": {
+            "$document": {
+              "$id": "attr",
+              "key": "attr",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "$sequence",
+                "key": "$sequence",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o2119"
+          },
+          "bind": "s3218",
+          "expect": {
+            "$document": {
+              "$id": "$sequence",
+              "key": "$sequence",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Order",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o2118"
+                },
+                {
+                  "$obj": "o2119"
+                }
+              ]
+            },
+            "as": "o2120"
+          },
+          "bind": "s3219",
+          "expect": {
+            "$value": "Validator\\Query\\Order",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2120"
+            },
+            "method": "addAggregationAliases",
+            "args": {
+              "aliases": [
+                "total_count",
+                "avg_price"
+              ]
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "orderAsc",
+            "args": {
+              "attribute": "total_count"
+            },
+            "as": "o2121"
+          },
+          "bind": "s3221",
+          "expect": {
+            "$query": {
+              "method": "orderAsc",
+              "attribute": "total_count",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2120"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o2121"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "orderDesc",
+            "args": {
+              "attribute": "avg_price"
+            },
+            "as": "o2122"
+          },
+          "bind": "s3223",
+          "expect": {
+            "$query": {
+              "method": "orderDesc",
+              "attribute": "avg_price",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2120"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o2122"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "OrderTest::testDottedJoinAliasIsAcceptedAfterAllowJoinAliases",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "attr",
+                "key": "attr",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o2123"
+          },
+          "bind": "s3225",
+          "expect": {
+            "$document": {
+              "$id": "attr",
+              "key": "attr",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "$sequence",
+                "key": "$sequence",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o2124"
+          },
+          "bind": "s3226",
+          "expect": {
+            "$document": {
+              "$id": "$sequence",
+              "key": "$sequence",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Order",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o2123"
+                },
+                {
+                  "$obj": "o2124"
+                }
+              ]
+            },
+            "as": "o2125"
+          },
+          "bind": "s3227",
+          "expect": {
+            "$value": "Validator\\Query\\Order",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2125"
+            },
+            "method": "allowJoinAliases",
+            "args": {
+              "aliases": [
+                "sec"
+              ]
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "orderAsc",
+            "args": {
+              "attribute": "sec.amount"
+            },
+            "as": "o2126"
+          },
+          "bind": "s3229",
+          "expect": {
+            "$query": {
+              "method": "orderAsc",
+              "attribute": "sec.amount",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2125"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o2126"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "orderDesc",
+            "args": {
+              "attribute": "sec.$id"
+            },
+            "as": "o2127"
+          },
+          "bind": "s3231",
+          "expect": {
+            "$query": {
+              "method": "orderDesc",
+              "attribute": "sec.$id",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2125"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o2127"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "OrderTest::testUnknownJoinAliasIsRejected",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "attr",
+                "key": "attr",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o2128"
+          },
+          "bind": "s3233",
+          "expect": {
+            "$document": {
+              "$id": "attr",
+              "key": "attr",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "$sequence",
+                "key": "$sequence",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o2129"
+          },
+          "bind": "s3234",
+          "expect": {
+            "$document": {
+              "$id": "$sequence",
+              "key": "$sequence",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Order",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o2128"
+                },
+                {
+                  "$obj": "o2129"
+                }
+              ]
+            },
+            "as": "o2130"
+          },
+          "bind": "s3235",
+          "expect": {
+            "$value": "Validator\\Query\\Order",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2130"
+            },
+            "method": "allowJoinAliases",
+            "args": {
+              "aliases": [
+                "sec"
+              ]
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "orderAsc",
+            "args": {
+              "attribute": "other.amount"
+            },
+            "as": "o2131"
+          },
+          "bind": "s3237",
+          "expect": {
+            "$query": {
+              "method": "orderAsc",
+              "attribute": "other.amount",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2130"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o2131"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2130"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Attribute not found in schema: other"
+        }
+      ]
+    },
+    {
+      "name": "OrderTest::testJoinAliasIsRejectedAfterReset",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "attr",
+                "key": "attr",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o2132"
+          },
+          "bind": "s3240",
+          "expect": {
+            "$document": {
+              "$id": "attr",
+              "key": "attr",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "$sequence",
+                "key": "$sequence",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o2133"
+          },
+          "bind": "s3241",
+          "expect": {
+            "$document": {
+              "$id": "$sequence",
+              "key": "$sequence",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Order",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o2132"
+                },
+                {
+                  "$obj": "o2133"
+                }
+              ]
+            },
+            "as": "o2134"
+          },
+          "bind": "s3242",
+          "expect": {
+            "$value": "Validator\\Query\\Order",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2134"
+            },
+            "method": "allowJoinAliases",
+            "args": {
+              "aliases": [
+                "sec"
+              ]
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2134"
+            },
+            "method": "resetJoinAliases",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "orderAsc",
+            "args": {
+              "attribute": "sec.amount"
+            },
+            "as": "o2135"
+          },
+          "bind": "s3245",
+          "expect": {
+            "$query": {
+              "method": "orderAsc",
+              "attribute": "sec.amount",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2134"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o2135"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2134"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Attribute not found in schema: sec"
+        }
+      ]
+    }
+  ]
+}

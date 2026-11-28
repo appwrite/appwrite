@@ -1,0 +1,355 @@
+{
+  "source": "packages/emails/tests/Canonicals/Providers/IcloudTest.php",
+  "cases": [
+    {
+      "name": "supports",
+      "steps": [
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "icloud",
+            "domain": "icloud.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "icloud",
+            "domain": "me.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "icloud",
+            "domain": "mac.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "icloud",
+            "domain": "gmail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "icloud",
+            "domain": "outlook.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "icloud",
+            "domain": "example.com"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "get canonical",
+      "steps": [
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "icloud",
+            "local": "user.name+tag",
+            "domain": "icloud.com"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "icloud.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "icloud",
+            "local": "user.name+spam",
+            "domain": "icloud.com"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "icloud.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "icloud",
+            "local": "user.name+newsletter",
+            "domain": "icloud.com"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "icloud.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "icloud",
+            "local": "user.name+work",
+            "domain": "icloud.com"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "icloud.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "icloud",
+            "local": "user.name+personal",
+            "domain": "icloud.com"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "icloud.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "icloud",
+            "local": "user.name+test123",
+            "domain": "icloud.com"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "icloud.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "icloud",
+            "local": "user.name+anything",
+            "domain": "icloud.com"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "icloud.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "icloud",
+            "local": "user.name+verylongtag",
+            "domain": "icloud.com"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "icloud.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "icloud",
+            "local": "user.name+tag.with.dots",
+            "domain": "icloud.com"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "icloud.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "icloud",
+            "local": "user.name+tag-with-hyphens",
+            "domain": "icloud.com"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "icloud.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "icloud",
+            "local": "user.name+tag_with_underscores",
+            "domain": "icloud.com"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "icloud.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "icloud",
+            "local": "user.name+tag123",
+            "domain": "icloud.com"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "icloud.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "icloud",
+            "local": "u.s.e.r.n.a.m.e+tag",
+            "domain": "icloud.com"
+          },
+          "expect": {
+            "local": "u.s.e.r.n.a.m.e",
+            "domain": "icloud.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "icloud",
+            "local": "user+",
+            "domain": "icloud.com"
+          },
+          "expect": {
+            "local": "user",
+            "domain": "icloud.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "icloud",
+            "local": "user.name",
+            "domain": "icloud.com"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "icloud.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "icloud",
+            "local": "u.s.e.r.n.a.m.e",
+            "domain": "icloud.com"
+          },
+          "expect": {
+            "local": "u.s.e.r.n.a.m.e",
+            "domain": "icloud.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "icloud",
+            "local": "user.",
+            "domain": "icloud.com"
+          },
+          "expect": {
+            "local": "user.",
+            "domain": "icloud.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "icloud",
+            "local": ".user",
+            "domain": "icloud.com"
+          },
+          "expect": {
+            "local": ".user",
+            "domain": "icloud.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "icloud",
+            "local": "user.name+tag",
+            "domain": "me.com"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "icloud.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "icloud",
+            "local": "user.name+tag",
+            "domain": "mac.com"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "icloud.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "icloud",
+            "local": "user.name",
+            "domain": "me.com"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "icloud.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "icloud",
+            "local": "user.name",
+            "domain": "mac.com"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "icloud.com"
+          }
+        }
+      ]
+    },
+    {
+      "name": "get canonical domain",
+      "steps": [
+        {
+          "op": "provider.canonical_domain",
+          "args": {
+            "provider": "icloud"
+          },
+          "expect": "icloud.com"
+        }
+      ]
+    },
+    {
+      "name": "get supported domains",
+      "steps": [
+        {
+          "op": "provider.supported_domains",
+          "args": {
+            "provider": "icloud"
+          },
+          "expect": [
+            "icloud.com",
+            "me.com",
+            "mac.com"
+          ]
+        }
+      ]
+    }
+  ]
+}

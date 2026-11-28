@@ -1,0 +1,964 @@
+{
+  "source": "packages/auth/tests/OAuth2/AuthorizationDetailsTest.php",
+  "cases": [
+    {
+      "name": "grants",
+      "steps": [
+        {
+          "op": "authorization_details.grants",
+          "args": {
+            "details": [
+              {
+                "type": "project",
+                "identifiers": [
+                  "p1"
+                ],
+                "actions": [
+                  "read"
+                ]
+              }
+            ],
+            "type": "project",
+            "value": "p1",
+            "field": "identifiers"
+          },
+          "expect": true
+        },
+        {
+          "op": "authorization_details.grants",
+          "args": {
+            "details": [
+              {
+                "type": "project",
+                "identifiers": [
+                  "p1"
+                ],
+                "actions": [
+                  "read"
+                ]
+              }
+            ],
+            "type": "project",
+            "value": "p2",
+            "field": "identifiers"
+          },
+          "expect": false
+        },
+        {
+          "op": "authorization_details.grants",
+          "args": {
+            "details": [
+              {
+                "type": "project",
+                "identifiers": [
+                  "p1"
+                ],
+                "actions": [
+                  "read"
+                ]
+              }
+            ],
+            "type": "organization",
+            "value": "p1",
+            "field": "identifiers"
+          },
+          "expect": false
+        },
+        {
+          "op": "authorization_details.grants",
+          "args": {
+            "details": [
+              {
+                "type": "project",
+                "identifiers": [
+                  "p1"
+                ],
+                "actions": [
+                  "read"
+                ]
+              }
+            ],
+            "type": "project",
+            "value": "p1",
+            "field": "actions"
+          },
+          "expect": false
+        },
+        {
+          "op": "authorization_details.grants",
+          "args": {
+            "details": [
+              {
+                "type": "project",
+                "identifiers": [
+                  "p1"
+                ],
+                "actions": [
+                  "read"
+                ]
+              }
+            ],
+            "type": "project",
+            "value": "read",
+            "field": "actions"
+          },
+          "expect": true
+        },
+        {
+          "op": "authorization_details.grants",
+          "args": {
+            "details": [
+              {
+                "type": "project",
+                "identifiers": [
+                  "*"
+                ]
+              }
+            ],
+            "type": "project",
+            "value": "anything",
+            "field": "identifiers",
+            "wildcard": "*"
+          },
+          "expect": true
+        },
+        {
+          "op": "authorization_details.grants",
+          "args": {
+            "details": [
+              {
+                "type": "project",
+                "identifiers": [
+                  "*"
+                ]
+              }
+            ],
+            "type": "project",
+            "value": "anything",
+            "field": "identifiers"
+          },
+          "expect": false
+        },
+        {
+          "op": "authorization_details.grants",
+          "args": {
+            "details": [
+              {
+                "type": "project",
+                "identifiers": [
+                  "p1"
+                ],
+                "actions": [
+                  "read"
+                ]
+              }
+            ],
+            "type": "",
+            "value": "p1",
+            "field": "identifiers"
+          },
+          "expect": false
+        },
+        {
+          "op": "authorization_details.grants",
+          "args": {
+            "details": [
+              {
+                "type": "project",
+                "identifiers": [
+                  "p1"
+                ],
+                "actions": [
+                  "read"
+                ]
+              }
+            ],
+            "type": "project",
+            "value": "",
+            "field": "identifiers"
+          },
+          "expect": false
+        },
+        {
+          "op": "authorization_details.grants",
+          "args": {
+            "details": [
+              {
+                "type": "project",
+                "identifiers": [
+                  "p1"
+                ],
+                "actions": [
+                  "read"
+                ]
+              }
+            ],
+            "type": "project",
+            "value": "p1",
+            "field": ""
+          },
+          "expect": false
+        },
+        {
+          "op": "authorization_details.grants",
+          "args": {
+            "details": null,
+            "type": "project",
+            "value": "p1",
+            "field": "identifiers"
+          },
+          "expect": false
+        },
+        {
+          "op": "authorization_details.grants",
+          "args": {
+            "details": "nonsense",
+            "type": "project",
+            "value": "p1",
+            "field": "identifiers"
+          },
+          "expect": false
+        },
+        {
+          "op": "authorization_details.grants",
+          "args": {
+            "details": {
+              "named": {
+                "type": "project",
+                "identifiers": [
+                  "p1"
+                ]
+              }
+            },
+            "type": "project",
+            "value": "p1",
+            "field": "identifiers"
+          },
+          "expect": false
+        },
+        {
+          "op": "authorization_details.grants",
+          "args": {
+            "details": [
+              {
+                "type": "project",
+                "identifiers": {
+                  "alias": "p1"
+                }
+              }
+            ],
+            "type": "project",
+            "value": "p1",
+            "field": "identifiers"
+          },
+          "expect": false
+        },
+        {
+          "op": "authorization_details.grants",
+          "args": {
+            "details": [
+              "scalar",
+              {
+                "type": "project",
+                "identifiers": "not-a-list"
+              },
+              {
+                "type": "project"
+              },
+              {
+                "type": "project",
+                "identifiers": [
+                  "p1"
+                ]
+              }
+            ],
+            "type": "project",
+            "value": "p1",
+            "field": "identifiers"
+          },
+          "expect": true
+        },
+        {
+          "op": "authorization_details.grants",
+          "args": {
+            "details": [
+              {
+                "type": "project",
+                "identifiers": [
+                  1
+                ]
+              }
+            ],
+            "type": "project",
+            "value": "1",
+            "field": "identifiers"
+          },
+          "expect": false
+        },
+        {
+          "op": "authorization_details.grants",
+          "args": {
+            "details": [
+              {
+                "type": "project",
+                "0": [
+                  "p1"
+                ]
+              }
+            ],
+            "type": "project",
+            "value": "p1",
+            "field": "0"
+          },
+          "expect": true
+        },
+        {
+          "op": "authorization_details.grants",
+          "args": {
+            "details": [
+              {
+                "type": "project",
+                "identifiers": null
+              }
+            ],
+            "type": "project",
+            "value": "p1",
+            "field": "identifiers"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "restrict",
+      "steps": [
+        {
+          "op": "authorization_details.restrict",
+          "args": {
+            "details": [
+              {
+                "type": "project",
+                "identifiers": [
+                  "p1",
+                  "p2"
+                ],
+                "actions": [
+                  "read"
+                ]
+              }
+            ],
+            "field": "identifiers",
+            "allow": {
+              "project": [
+                "p1",
+                1
+              ],
+              "organization": [
+                "o1"
+              ]
+            }
+          },
+          "expect": {
+            "details": [
+              {
+                "type": "project",
+                "identifiers": [
+                  "p1"
+                ],
+                "actions": [
+                  "read"
+                ]
+              }
+            ],
+            "calls": [
+              [
+                "project",
+                [
+                  "p1",
+                  "p2"
+                ]
+              ]
+            ]
+          }
+        },
+        {
+          "op": "authorization_details.restrict",
+          "args": {
+            "details": [
+              {
+                "type": "project",
+                "identifiers": [
+                  "p2"
+                ]
+              }
+            ],
+            "field": "identifiers",
+            "allow": {
+              "project": [
+                "p1",
+                1
+              ],
+              "organization": [
+                "o1"
+              ]
+            }
+          },
+          "expect": {
+            "details": [],
+            "calls": [
+              [
+                "project",
+                [
+                  "p2"
+                ]
+              ]
+            ]
+          }
+        },
+        {
+          "op": "authorization_details.restrict",
+          "args": {
+            "details": [
+              {
+                "type": "organization",
+                "identifiers": [
+                  "o1",
+                  "o2"
+                ]
+              },
+              {
+                "type": "payment",
+                "actions": [
+                  "initiate"
+                ]
+              },
+              {
+                "type": "project",
+                "identifiers": [
+                  "p1",
+                  "p2"
+                ]
+              }
+            ],
+            "field": "identifiers",
+            "allow": {
+              "project": [
+                "p1",
+                1
+              ],
+              "organization": [
+                "o1"
+              ]
+            }
+          },
+          "expect": {
+            "details": [
+              {
+                "type": "organization",
+                "identifiers": [
+                  "o1"
+                ]
+              },
+              {
+                "type": "payment",
+                "actions": [
+                  "initiate"
+                ]
+              },
+              {
+                "type": "project",
+                "identifiers": [
+                  "p1"
+                ]
+              }
+            ],
+            "calls": [
+              [
+                "organization",
+                [
+                  "o1",
+                  "o2"
+                ]
+              ],
+              [
+                "payment",
+                []
+              ],
+              [
+                "project",
+                [
+                  "p1",
+                  "p2"
+                ]
+              ]
+            ]
+          }
+        },
+        {
+          "op": "authorization_details.restrict",
+          "args": {
+            "details": [
+              {
+                "type": "project"
+              },
+              {
+                "type": "project",
+                "identifiers": {
+                  "alias": "p1"
+                }
+              }
+            ],
+            "field": "identifiers",
+            "allow": {
+              "project": [
+                "p1",
+                1
+              ],
+              "organization": [
+                "o1"
+              ]
+            }
+          },
+          "expect": {
+            "details": [],
+            "calls": [
+              [
+                "project",
+                []
+              ],
+              [
+                "project",
+                []
+              ]
+            ]
+          }
+        },
+        {
+          "op": "authorization_details.restrict",
+          "args": {
+            "details": [
+              {
+                "type": "project",
+                "identifiers": [
+                  1,
+                  "p1"
+                ]
+              }
+            ],
+            "field": "identifiers",
+            "allow": {
+              "project": [
+                "p1",
+                1
+              ],
+              "organization": [
+                "o1"
+              ]
+            }
+          },
+          "expect": {
+            "details": [
+              {
+                "type": "project",
+                "identifiers": [
+                  "p1"
+                ]
+              }
+            ],
+            "calls": [
+              [
+                "project",
+                [
+                  "p1"
+                ]
+              ]
+            ]
+          }
+        },
+        {
+          "op": "authorization_details.restrict",
+          "args": {
+            "details": [
+              {
+                "type": 5,
+                "identifiers": [
+                  "p1"
+                ]
+              },
+              {
+                "type": "",
+                "identifiers": [
+                  "p1"
+                ]
+              }
+            ],
+            "field": "identifiers",
+            "allow": {
+              "project": [
+                "p1",
+                1
+              ],
+              "organization": [
+                "o1"
+              ]
+            }
+          },
+          "expect": {
+            "details": [
+              {
+                "type": 5,
+                "identifiers": [
+                  "p1"
+                ]
+              },
+              {
+                "type": "",
+                "identifiers": [
+                  "p1"
+                ]
+              }
+            ],
+            "calls": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "restrict does not modify the receiver",
+      "steps": [
+        {
+          "op": "authorization_details.restrict",
+          "args": {
+            "details": [
+              {
+                "type": "project",
+                "identifiers": [
+                  "p1",
+                  "p2"
+                ]
+              }
+            ],
+            "field": "identifiers",
+            "allow": {
+              "project": [
+                "p1"
+              ]
+            }
+          },
+          "expect": {
+            "details": [
+              {
+                "type": "project",
+                "identifiers": [
+                  "p1"
+                ]
+              }
+            ],
+            "calls": [
+              [
+                "project",
+                [
+                  "p1",
+                  "p2"
+                ]
+              ]
+            ]
+          }
+        },
+        {
+          "op": "authorization_details.grants",
+          "args": {
+            "details": [
+              {
+                "type": "project",
+                "identifiers": [
+                  "p1",
+                  "p2"
+                ]
+              }
+            ],
+            "type": "project",
+            "value": "p2",
+            "field": "identifiers"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "restrict cannot widen the grant",
+      "steps": [
+        {
+          "op": "authorization_details.restrict",
+          "args": {
+            "details": [
+              {
+                "type": "project",
+                "identifiers": [
+                  "p2",
+                  "p1"
+                ]
+              }
+            ],
+            "field": "identifiers",
+            "allow": {
+              "project": [
+                "p1",
+                "p3",
+                "p2"
+              ]
+            }
+          },
+          "expect": {
+            "details": [
+              {
+                "type": "project",
+                "identifiers": [
+                  "p2",
+                  "p1"
+                ]
+              }
+            ],
+            "calls": [
+              [
+                "project",
+                [
+                  "p2",
+                  "p1"
+                ]
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "restrict expands a wildcard from the resolver",
+      "steps": [
+        {
+          "op": "authorization_details.restrict",
+          "args": {
+            "details": [
+              {
+                "type": "project",
+                "identifiers": [
+                  "*"
+                ]
+              },
+              {
+                "type": "organization",
+                "identifiers": [
+                  "o1"
+                ]
+              }
+            ],
+            "field": "identifiers",
+            "allow": {
+              "project": [
+                "x1",
+                "x2"
+              ],
+              "organization": [
+                "x1",
+                "x2"
+              ]
+            },
+            "wildcard": "*"
+          },
+          "expect": {
+            "details": [
+              {
+                "type": "project",
+                "identifiers": [
+                  "x1",
+                  "x2"
+                ]
+              }
+            ],
+            "calls": [
+              [
+                "project",
+                [
+                  "*"
+                ]
+              ],
+              [
+                "organization",
+                [
+                  "o1"
+                ]
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "restrict drops an entry when the resolver returns only ungranted values",
+      "steps": [
+        {
+          "op": "authorization_details.restrict",
+          "args": {
+            "details": [
+              {
+                "type": "project",
+                "identifiers": [
+                  "p1"
+                ]
+              }
+            ],
+            "field": "identifiers",
+            "allow": {
+              "project": [
+                "p2"
+              ]
+            }
+          },
+          "expect": {
+            "details": [],
+            "calls": [
+              [
+                "project",
+                [
+                  "p1"
+                ]
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "restrict with an empty field keeps every entry",
+      "steps": [
+        {
+          "op": "authorization_details.restrict",
+          "args": {
+            "details": [
+              {
+                "type": "project",
+                "identifiers": [
+                  "p1"
+                ]
+              }
+            ],
+            "field": "",
+            "allow": {
+              "project": []
+            }
+          },
+          "expect": {
+            "details": [
+              {
+                "type": "project",
+                "identifiers": [
+                  "p1"
+                ]
+              }
+            ],
+            "calls": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "restrict replaces a field in place",
+      "steps": [
+        {
+          "op": "authorization_details.restrict",
+          "args": {
+            "details": [
+              {
+                "identifiers": [
+                  "p1",
+                  "p2"
+                ],
+                "type": "project",
+                "z": 1
+              }
+            ],
+            "field": "identifiers",
+            "allow": {
+              "project": [
+                "p2",
+                "p2"
+              ]
+            }
+          },
+          "expect": {
+            "details": [
+              {
+                "identifiers": [
+                  "p2"
+                ],
+                "type": "project",
+                "z": 1
+              }
+            ],
+            "calls": [
+              [
+                "project",
+                [
+                  "p1",
+                  "p2"
+                ]
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "entries",
+      "steps": [
+        {
+          "op": "authorization_details.new",
+          "args": {
+            "value": [
+              {
+                "type": "a"
+              },
+              5,
+              {
+                "type": "b",
+                "x": {}
+              }
+            ]
+          },
+          "expect": [
+            {
+              "type": "a"
+            },
+            {
+              "type": "b",
+              "x": {}
+            }
+          ]
+        },
+        {
+          "op": "authorization_details.new",
+          "args": {
+            "value": {
+              "type": "a"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "authorization_details.new",
+          "args": {
+            "value": []
+          },
+          "expect": []
+        },
+        {
+          "op": "authorization_details.new",
+          "args": {
+            "value": {}
+          },
+          "expect": []
+        }
+      ]
+    }
+  ]
+}

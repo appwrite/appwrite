@@ -1,5 +1,8 @@
 # Utopia Compression
 
+> [!IMPORTANT]
+> This repository is a read-only mirror of [`crates/utopia/compression`](https://github.com/appwrite/appwrite/tree/main/crates/utopia/compression) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there — please open issues and pull requests against appwrite/appwrite.
+
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://discord.gg/GSeTUeA)
 
 Compression algorithms (Brotli, Deflate, GZIP, LZ4, Snappy, XZ, Zstd) and Accept-Encoding negotiation, byte for byte as PHP's extensions.
@@ -10,7 +13,7 @@ This library is maintained by the [Appwrite team](https://appwrite.io).
 
 ```toml
 [dependencies]
-utopia-compression = { git = "https://github.com/appwrite/appwrite" }
+utopia-compression = { git = "https://github.com/utopia-rs/compression" }
 ```
 
 This library compresses and decompresses data with seven algorithms behind one `Algorithm` trait: Brotli, Deflate, Gzip, LZ4, Snappy, XZ and Zstd. It also picks the algorithm to answer an HTTP request with, from the client's `Accept-Encoding` header. The output matches what PHP's extensions write, so either runtime reads what the other wrote. This guide covers the common tasks.

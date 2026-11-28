@@ -1,0 +1,24 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Adapter/PoolTest.php"
+  ],
+  "cases": [
+    {
+      "name": "PoolTest::testTimeoutRaisedWhilePinnedReachesTheSubclassPin",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o404"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        }
+      ]
+    }
+  ]
+}

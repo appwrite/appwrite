@@ -75,6 +75,56 @@ $balancer->addFilter(fn (Option $o) => $o->getState('cpu') < 50);
 echo $balancer->run()->getState('hostname'), "\n"; // worker-3
 ```
 
+## Fall back when nothing qualifies
+
+A `Group` tries its balancers in order and returns the first option one of them chooses: prefer idle workers, then any online one, then anything.
+
+```
+use utopia_balancer::{Balancer, Candidate, First, Group};
+
+let options = [
+    Candidate::from([("dc", "fra-1".into()), ("cpu", 91.into()), ("online", false.into())]),
+    Candidate::from([("dc", "lon-1".into()), ("cpu", 87.into()), ("online", true.into())]),
+];
+
+let mut idle = Balancer::new(First);
+idle.add_filter(|c: &Candidate| c.get("cpu").is_some_and(|v| v.to_double() < 80.0));
+let mut online = Balancer::new(First);
+online.add_filter(|c: &Candidate| c.get("online").is_some_and(|v| v.truthy()));
+for option in &options {
+    idle.add_option(option.clone());
+    online.add_option(option.clone());
+}
+
+let mut group = Group::new(None);
+group.add(idle).add(online);
+assert_eq!(group.run()?.and_then(|c| c.get("dc")), Some(&"lon-1".into()));
+# Ok::<(), utopia_balancer::Error>(())
+```
+
+```php
+use Utopia\Balancer\Algorithm\First;
+use Utopia\Balancer\Balancer;
+use Utopia\Balancer\Group;
+use Utopia\Balancer\Option;
+
+$options = [
+    new Option(['dc' => 'fra-1', 'cpu' => 91, 'online' => false]),
+    new Option(['dc' => 'lon-1', 'cpu' => 87, 'online' => true]),
+];
+
+$idle = (new Balancer(new First()))->addFilter(fn (Option $o) => $o->getState('cpu') < 80);
+$online = (new Balancer(new First()))->addFilter(fn (Option $o) => $o->getState('online') === true);
+foreach ($options as $option) {
+    $idle->addOption($option);
+    $online->addOption($option);
+}
+
+$group = new Group();
+$group->add($idle)->add($online);
+echo $group->run()->getState('dc'), "\n"; // lon-1
+```
+
 ## Reproduce random choices
 
 `Random` picks uniformly with PHP's Mersenne Twister. Seed it to replay a sequence in a test: `Random::seeded(7)` picks what PHP picks after `mt_srand(7)`.

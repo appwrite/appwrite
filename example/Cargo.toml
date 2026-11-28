@@ -1,0 +1,13 @@
+[package]
+name = "example"
+description = "A minimal Utopia HTTP server."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+# Stays in this repository: only crates/utopia is published.
+publish = false
+
+[dependencies]
+utopia-async.workspace = true
+utopia-http.workspace = true

@@ -1,0 +1,236 @@
+{
+  "service": "webhooks",
+  "file": "tests/benchmarks/results/webhooks.json",
+  "workload": {
+    "script": "tests/benchmarks/api/webhooks.js",
+    "duration": "60s",
+    "hashing": false,
+    "seed": 200,
+    "run": "webhooks-20261012-014701"
+  },
+  "environment": {
+    "date": "2026-10-12T00:49:19Z",
+    "commit": "d6407e639f",
+    "branch": "feat/rust-utopia-conversion",
+    "machine": {
+      "os": "Darwin",
+      "arch": "arm64",
+      "cpu": "Apple M4 Max",
+      "cores": 16,
+      "memory_gib": 128
+    },
+    "docker": "28.5.1",
+    "k6": "k6 v1.7.1",
+    "cpu_source": "docker stats",
+    "php": {
+      "container": "appwrite",
+      "image": "appwrite-dev",
+      "id": "88b87c5028a0",
+      "created": "2026-10-09T07:39:19.618591965Z"
+    },
+    "rust": {
+      "container": "appwrite-rust",
+      "image": "appwrite-rust-dev",
+      "id": "b0b46302463d",
+      "created": "2026-10-11T19:37:06.64190413Z"
+    },
+    "database": {
+      "container": "appwrite-postgresql",
+      "image": "appwrite/postgres:0.1.0",
+      "id": "77156232a16d",
+      "created": "2026-10-09T08:32:40.317530502Z"
+    },
+    "endpoint": {
+      "php": "http://localhost:9501/v1",
+      "rust": "http://localhost:9530/v1"
+    }
+  },
+  "steps": [
+    {
+      "target": "php",
+      "mode": "rate",
+      "level": 50,
+      "rps": 50.0,
+      "requests": 3000,
+      "failures": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 9.365,
+        "p50": 6.225,
+        "p90": 15.436,
+        "p95": 23.362,
+        "p99": 70.474,
+        "max": 206.31
+      },
+      "cpu_ms_per_request": 5.744,
+      "db_cpu_ms_per_request": 2.702,
+      "memory_mib": {
+        "baseline": 3158.0,
+        "avg": 3223.4,
+        "peak": 3278.8
+      },
+      "endpoints": {
+        "webhooks.list": {
+          "route": "GET /v1/webhooks",
+          "count": 1073,
+          "rps": 17.88,
+          "avg": 9.389,
+          "p50": 6.138,
+          "p90": 15.146,
+          "p95": 22.874,
+          "p99": 70.464,
+          "max": 154.725
+        },
+        "webhooks.get": {
+          "route": "GET /v1/webhooks/:webhookId",
+          "count": 1015,
+          "rps": 16.92,
+          "avg": 7.839,
+          "p50": 4.557,
+          "p90": 12.13,
+          "p95": 19.167,
+          "p99": 93.27,
+          "max": 179.61
+        },
+        "webhooks.create": {
+          "route": "POST /v1/webhooks",
+          "count": 212,
+          "rps": 3.53,
+          "avg": 10.554,
+          "p50": 6.432,
+          "p90": 17.381,
+          "p95": 26.771,
+          "p99": 70.271,
+          "max": 204.132
+        },
+        "webhooks.update": {
+          "route": "PUT /v1/webhooks/:webhookId",
+          "count": 294,
+          "rps": 4.9,
+          "avg": 9.955,
+          "p50": 6.963,
+          "p90": 15.993,
+          "p95": 22.708,
+          "p99": 45.173,
+          "max": 172.454
+        },
+        "webhooks.delete": {
+          "route": "DELETE /v1/webhooks/:webhookId",
+          "count": 208,
+          "rps": 3.47,
+          "avg": 13.45,
+          "p50": 8.474,
+          "p90": 23.58,
+          "p95": 30.826,
+          "p99": 79.426,
+          "max": 206.31
+        },
+        "webhooks.secret.update": {
+          "route": "PATCH /v1/webhooks/:webhookId/secret",
+          "note": "generates a new secret",
+          "count": 198,
+          "rps": 3.3,
+          "avg": 10.623,
+          "p50": 7.929,
+          "p90": 18.266,
+          "p95": 22.805,
+          "p99": 63.56,
+          "max": 116.521
+        }
+      }
+    },
+    {
+      "target": "php",
+      "mode": "vus",
+      "level": 50,
+      "rps": 477.7,
+      "requests": 28664,
+      "failures": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 90.5,
+        "p50": 72.72,
+        "p90": 173.836,
+        "p95": 216.374,
+        "p99": 314.351,
+        "max": 979.009
+      },
+      "cpu_ms_per_request": 14.202,
+      "db_cpu_ms_per_request": 3.696,
+      "memory_mib": {
+        "baseline": 3263.5,
+        "avg": 3386.9,
+        "peak": 3409.9
+      },
+      "endpoints": {
+        "webhooks.list": {
+          "route": "GET /v1/webhooks",
+          "count": 9975,
+          "rps": 166.25,
+          "avg": 90.618,
+          "p50": 73.229,
+          "p90": 172.698,
+          "p95": 214.484,
+          "p99": 313.791,
+          "max": 565.34
+        },
+        "webhooks.get": {
+          "route": "GET /v1/webhooks/:webhookId",
+          "count": 9916,
+          "rps": 165.27,
+          "avg": 76.211,
+          "p50": 61.273,
+          "p90": 146.649,
+          "p95": 184.253,
+          "p99": 266.195,
+          "max": 826.062
+        },
+        "webhooks.create": {
+          "route": "POST /v1/webhooks",
+          "count": 1916,
+          "rps": 31.93,
+          "avg": 95.444,
+          "p50": 78.088,
+          "p90": 177.873,
+          "p95": 223.498,
+          "p99": 303.47,
+          "max": 462.949
+        },
+        "webhooks.update": {
+          "route": "PUT /v1/webhooks/:webhookId",
+          "count": 2926,
+          "rps": 48.77,
+          "avg": 107.436,
+          "p50": 87.834,
+          "p90": 200.334,
+          "p95": 248.419,
+          "p99": 350.934,
+          "max": 979.009
+        },
+        "webhooks.delete": {
+          "route": "DELETE /v1/webhooks/:webhookId",
+          "count": 2007,
+          "rps": 33.45,
+          "avg": 112.478,
+          "p50": 90.661,
+          "p90": 205.904,
+          "p95": 250.876,
+          "p99": 355.545,
+          "max": 831.267
+        },
+        "webhooks.secret.update": {
+          "route": "PATCH /v1/webhooks/:webhookId/secret",
+          "note": "generates a new secret",
+          "count": 1924,
+          "rps": 32.07,
+          "avg": 109.928,
+          "p50": 91.307,
+          "p90": 203.06,
+          "p95": 250.169,
+          "p99": 358.466,
+          "max": 652.473
+        }
+      }
+    }
+  ]
+}

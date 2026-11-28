@@ -1,0 +1,231 @@
+{
+  "source": "packages/cdn/src",
+  "cases": [
+    {
+      "name": "cache once",
+      "op": "cache.once",
+      "args": {
+        "type": "fastly",
+        "token": "token",
+        "prefix": "domain-",
+        "service": "s",
+        "method": "purgeDomain",
+        "domain": "Example.com",
+        "responses": [
+          {
+            "status": 200,
+            "body": "{\"status\":\"ok\"}"
+          }
+        ]
+      },
+      "expect": {
+        "result": null,
+        "requests": [
+          {
+            "method": "POST",
+            "url": "https://api.fastly.com/service/s/purge",
+            "headers": {
+              "accept": "application/json",
+              "content-type": "application/json",
+              "fastly-key": "token",
+              "user-agent": "Utopia CDN Fastly Adapter"
+            },
+            "body": "{\"surrogate_keys\":[\"domain-example.com\"]}"
+          }
+        ]
+      }
+    },
+    {
+      "name": "cache once unsupported",
+      "op": "cache.once",
+      "args": {
+        "type": "fastly",
+        "token": "token",
+        "prefix": "",
+        "method": "purgeZone"
+      },
+      "expect": {
+        "error": {
+          "class": "Utopia\\Cdn\\Exception\\UnsupportedOperation",
+          "message": "Fastly service ID is required for zone purging."
+        },
+        "requests": []
+      }
+    },
+    {
+      "name": "certificates once",
+      "op": "certificates.once",
+      "args": {
+        "type": "fastly_tls",
+        "token": "token",
+        "tls_config": "",
+        "method": "getCertificateStatus",
+        "domain": "example.com",
+        "responses": [
+          {
+            "status": 200,
+            "json": {
+              "data": [
+                {
+                  "id": "sub_123",
+                  "type": "tls_subscription",
+                  "attributes": {
+                    "certificate_authority": "certainly",
+                    "state": "failed",
+                    "has_active_order": true
+                  },
+                  "relationships": {
+                    "tls_authorizations": {
+                      "data": [
+                        {
+                          "id": "auth_1",
+                          "type": "tls_authorization"
+                        }
+                      ]
+                    },
+                    "tls_certificates": {
+                      "data": []
+                    },
+                    "tls_domains": {
+                      "data": [
+                        {
+                          "id": "example.com",
+                          "type": "tls_domain"
+                        }
+                      ]
+                    }
+                  }
+                }
+              ],
+              "included": [
+                {
+                  "id": "auth_1",
+                  "type": "tls_authorization",
+                  "attributes": {
+                    "challenges": [
+                      {
+                        "type": "managed-dns",
+                        "record_type": "CNAME",
+                        "record_name": "_acme-challenge.example.com",
+                        "values": [
+                          "token.fastly-validations.com"
+                        ]
+                      }
+                    ],
+                    "state": "blocked",
+                    "warnings": []
+                  },
+                  "relationships": {
+                    "tls_domain": {
+                      "data": {
+                        "id": "example.com",
+                        "type": "tls_domain"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "expect": {
+        "error": {
+          "class": "Utopia\\Cdn\\Exception\\Certificate",
+          "message": "Fastly stopped trying to issue a certificate for example.com. Create a CNAME record for _acme-challenge.example.com pointing to token.fastly-validations.com.",
+          "status": "failed",
+          "blocked": false,
+          "challenges": [
+            {
+              "type": "managed-dns",
+              "record_type": "CNAME",
+              "record_name": "_acme-challenge.example.com",
+              "values": [
+                "token.fastly-validations.com"
+              ]
+            }
+          ],
+          "warnings": []
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "url": "https://api.fastly.com/tls/subscriptions?filter%5Btls_domains.id%5D=example.com&include=tls_certificates%2Ctls_authorizations&page%5Bsize%5D=1",
+            "headers": {
+              "accept": "application/vnd.api+json",
+              "content-type": "application/vnd.api+json",
+              "fastly-key": "token",
+              "user-agent": "Utopia CDN Fastly TLS Provider"
+            },
+            "body": ""
+          }
+        ]
+      }
+    },
+    {
+      "name": "certificates once with a bad constructor",
+      "op": "certificates.once",
+      "args": {
+        "type": "fastly",
+        "token": "token",
+        "service": "s",
+        "poll_attempts": 0,
+        "method": "isInstantGeneration",
+        "domain": "example.com"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Deployment poll attempts must be at least one."
+        }
+      }
+    },
+    {
+      "name": "cloudfront tenant whose processing instruction has no valid target is not XML",
+      "op": "certificates.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "",
+        "secret_access_key": "",
+        "distribution": "",
+        "connection_group": "",
+        "method": "issueCertificate",
+        "domain": "example.com",
+        "responses": [
+          {
+            "status": 200,
+            "headers": {
+              "ETag": "E"
+            },
+            "body": "<?lversion=\"1.0\" encoding=\"UTF-8\"?><DistributionTenant xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>t</Id></DistributionTenant>"
+          },
+          {
+            "status": 200,
+            "headers": {
+              "ETag": "E"
+            },
+            "body": "<? version=\"1.0\" encoding=\"UTF-8\"?><DistributionTenant xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>t</Id></DistributionTenant>"
+          }
+        ]
+      },
+      "expect": {
+        "error": {
+          "class": "RuntimeException",
+          "message": "CloudFront distribution tenant response was not valid XML."
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant?domain=example.com",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          }
+        ]
+      }
+    }
+  ]
+}

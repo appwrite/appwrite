@@ -1,0 +1,33 @@
+{
+  "suite": "Storage",
+  "dir": "tests/e2e/Services/Storage",
+  "runtime": "rust",
+  "endpoint": "http://appwrite.test/v1",
+  "date": "2026-10-19T16:19:30Z",
+  "commit": "25d0e0adfb",
+  "branch": "feat/rust-storage",
+  "command": "docker exec -e _APP_E2E_ENDPOINT=http://appwrite.test/v1 appwrite vendor/bin/paratest --processes 4 --functional /usr/src/code/tests/e2e/Services/Storage --exclude-group abuseEnabled --log-junit /tmp/compat-e2e-storage.xml",
+  "tests": 109,
+  "assertions": 2711,
+  "passed": 108,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 1,
+  "wall": 24.7,
+  "failed": [],
+  "environment": {
+    "php": {
+      "container": "appwrite",
+      "image": "appwrite-dev",
+      "id": "f49f76c97837",
+      "created": "2026-10-16T10:47:34.041512547Z"
+    },
+    "rust": {
+      "container": "appwrite-rust",
+      "image": "appwrite-rust-dev",
+      "id": "ba7835e3a898",
+      "created": "2026-10-19T15:21:23.729760255Z"
+    },
+    "processes": 4
+  }
+}

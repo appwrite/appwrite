@@ -1,0 +1,50 @@
+{
+  "categories": [
+    {
+      "id": "servers",
+      "title": "Servers",
+      "description": "Serving requests and running work: the HTTP framework and its request and response values, WebSockets, DNS and MQTT brokers, job queues and schedules, and the base for building servers."
+    },
+    {
+      "id": "transport",
+      "title": "Transport",
+      "description": "Reaching other services: HTTP and SMTP clients, NATS, and connection strings."
+    },
+    {
+      "id": "data",
+      "title": "Data",
+      "description": "Keeping data: databases and the queries over them, caches and file storage."
+    },
+    {
+      "id": "security",
+      "title": "Security",
+      "description": "Who is calling and how often: password hashing, sessions, tokens, OAuth2 and passkeys, and abuse limits."
+    },
+    {
+      "id": "observability",
+      "title": "Observability",
+      "description": "Seeing what a service does: audit trails, telemetry, tracing spans and usage metrics."
+    },
+    {
+      "id": "platform",
+      "title": "Platform",
+      "description": "The ground a service runs on: CLIs and consoles, configuration, dependency injection and registries, system information, locks, pools, circuit breakers, events, and the PHP engine semantics the Rust crates share."
+    },
+    {
+      "id": "utilities",
+      "title": "Utilities",
+      "description": "Focused helpers: input validation, translations, domain and email parsing, user-agent and device detection, OpenAPI documents, compression, load balancing and image processing."
+    },
+    {
+      "id": "integrations",
+      "title": "Integrations",
+      "description": "Third-party services: AI agents, version control, orchestration, CDNs, messaging providers for email, SMS and push, and moving data between backends."
+    }
+  ],
+  "external": {
+    "database": "data",
+    "migration": "integrations",
+    "mongo": "data",
+    "psr7": "servers"
+  }
+}

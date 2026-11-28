@@ -1,0 +1,93 @@
+{
+  "lib": "registry",
+  "environment": {
+    "date": "2026-10-18T14:22:48Z",
+    "commit": "398712d31e",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "compat-cache-php",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.97",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "get",
+      "description": "Read a cached resource",
+      "php": {
+        "ns": 55.34743425386577,
+        "min": 54.26806600717802,
+        "max": 60.872976910608216,
+        "samples": 15,
+        "calls": 365839,
+        "cpu": 56.14528066535644,
+        "peak": 3008.0,
+        "retained": 0.0000685183008554765,
+        "rss": 107716608.0
+      },
+      "rust": {
+        "ns": 27.806307056683934,
+        "min": 27.13974180882509,
+        "max": 31.4967929170206,
+        "samples": 15,
+        "calls": 726361,
+        "cpu": 28.49148765788178,
+        "rss": 22441984.0,
+        "allocations": 1.0095989918695158e-6,
+        "bytes": 0.0002578148698328609,
+        "peak": 1650.0,
+        "retained": 0.00015180697568656173
+      },
+      "speedup": 1.9904633197439157,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "get_fresh",
+      "description": "Build a new instance of a resource on read",
+      "php": {
+        "ns": 171.77737769498836,
+        "min": 169.3646289182613,
+        "max": 180.11673009563364,
+        "samples": 15,
+        "calls": 112199,
+        "cpu": 172.91895055511486,
+        "peak": 3008.0,
+        "retained": 0.0002234125675511071,
+        "rss": 107716608.0
+      },
+      "rust": {
+        "ns": 62.70313171298042,
+        "min": 60.288236316588666,
+        "max": 67.60644183750775,
+        "samples": 15,
+        "calls": 304913,
+        "cpu": 62.906568540315874,
+        "rss": 22835200.0,
+        "allocations": 4.000002405057618,
+        "bytes": 60.00061416425888,
+        "peak": 1650.0,
+        "retained": 0.00036163320903558283
+      },
+      "speedup": 2.7395342625195873,
+      "bound": null,
+      "compat": null
+    }
+  ]
+}

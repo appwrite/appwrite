@@ -1,0 +1,172 @@
+{
+  "service": "notifications",
+  "file": "tests/benchmarks/results/notifications.json",
+  "workload": {
+    "script": "tests/benchmarks/api/notifications.js",
+    "duration": "60s",
+    "hashing": false,
+    "seed": 200,
+    "run": "notifications-20261012-010249"
+  },
+  "environment": {
+    "date": "2026-10-12T00:05:11Z",
+    "commit": "5075396361",
+    "branch": "feat/rust-utopia-conversion",
+    "machine": {
+      "os": "Darwin",
+      "arch": "arm64",
+      "cpu": "Apple M4 Max",
+      "cores": 16,
+      "memory_gib": 128
+    },
+    "docker": "28.5.1",
+    "k6": "k6 v1.7.1",
+    "cpu_source": "docker stats",
+    "php": {
+      "container": "appwrite",
+      "image": "appwrite-dev",
+      "id": "88b87c5028a0",
+      "created": "2026-10-09T07:39:19.618591965Z"
+    },
+    "rust": {
+      "container": "appwrite-rust",
+      "image": "appwrite-rust-dev",
+      "id": "b0b46302463d",
+      "created": "2026-10-11T19:37:06.64190413Z"
+    },
+    "database": {
+      "container": "appwrite-postgresql",
+      "image": "appwrite/postgres:0.1.0",
+      "id": "77156232a16d",
+      "created": "2026-10-09T08:32:40.317530502Z"
+    },
+    "endpoint": {
+      "php": "http://localhost:9501/v1",
+      "rust": "http://localhost:9530/v1"
+    }
+  },
+  "steps": [
+    {
+      "target": "php",
+      "mode": "rate",
+      "level": 50,
+      "rps": 50.0,
+      "requests": 3000,
+      "failures": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 6.1,
+        "p50": 2.873,
+        "p90": 19.463,
+        "p95": 28.991,
+        "p99": 46.285,
+        "max": 141.681
+      },
+      "cpu_ms_per_request": 3.485,
+      "db_cpu_ms_per_request": 9.374,
+      "memory_mib": {
+        "baseline": 3015.7,
+        "avg": 3022.6,
+        "peak": 3025.9
+      },
+      "endpoints": {
+        "notifications.list": {
+          "route": "GET /v1/notifications",
+          "count": 1667,
+          "rps": 27.78,
+          "avg": 6.829,
+          "p50": 2.965,
+          "p90": 21.402,
+          "p95": 26.81,
+          "p99": 34.295,
+          "max": 41.968
+        },
+        "notifications.update": {
+          "route": "PATCH /v1/notifications/:notificationId",
+          "note": "marks a console alert read or unread",
+          "count": 475,
+          "rps": 7.92,
+          "avg": 12.837,
+          "p50": 4.297,
+          "p90": 40.952,
+          "p95": 47.226,
+          "p99": 59.393,
+          "max": 141.681
+        },
+        "notifications.logos.get": {
+          "route": "GET /v1/notifications/logos/appwrite",
+          "note": "without a tracking token: serves the SVG",
+          "count": 858,
+          "rps": 14.3,
+          "avg": 0.953,
+          "p50": 0.926,
+          "p90": 1.083,
+          "p95": 1.159,
+          "p99": 1.37,
+          "max": 3.953
+        }
+      }
+    },
+    {
+      "target": "php",
+      "mode": "vus",
+      "level": 50,
+      "rps": 2656.1,
+      "requests": 159364,
+      "failures": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 18.758,
+        "p50": 3.461,
+        "p90": 43.133,
+        "p95": 103.577,
+        "p99": 273.965,
+        "max": 3226.421
+      },
+      "cpu_ms_per_request": 1.836,
+      "db_cpu_ms_per_request": 0.874,
+      "memory_mib": {
+        "baseline": 3021.8,
+        "avg": 2850.5,
+        "peak": 3024.9
+      },
+      "endpoints": {
+        "notifications.list": {
+          "route": "GET /v1/notifications",
+          "count": 88226,
+          "rps": 1470.43,
+          "avg": 4.67,
+          "p50": 3.648,
+          "p90": 5.815,
+          "p95": 8.289,
+          "p99": 29.726,
+          "max": 58.195
+        },
+        "notifications.update": {
+          "route": "PATCH /v1/notifications/:notificationId",
+          "note": "marks a console alert read or unread",
+          "count": 26581,
+          "rps": 443.02,
+          "avg": 95.344,
+          "p50": 57.528,
+          "p90": 212.924,
+          "p95": 295.566,
+          "p99": 585.872,
+          "max": 3226.421
+        },
+        "notifications.logos.get": {
+          "route": "GET /v1/notifications/logos/appwrite",
+          "note": "without a tracking token: serves the SVG",
+          "count": 44557,
+          "rps": 742.62,
+          "avg": 0.965,
+          "p50": 0.81,
+          "p90": 1.353,
+          "p95": 1.757,
+          "p99": 3.666,
+          "max": 84.286
+        }
+      }
+    }
+  ]
+}

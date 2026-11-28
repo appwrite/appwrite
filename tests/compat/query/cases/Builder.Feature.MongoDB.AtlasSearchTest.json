@@ -1,0 +1,615 @@
+{
+  "source": "packages/query/tests/Builder/Feature/MongoDB/AtlasSearchTest.php",
+  "cases": [
+    {
+      "name": "testSearchEmitsSearchStageWithIndex",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "articles"
+            ]
+          },
+          {
+            "call": "search",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "text": {
+                  "query": "hello",
+                  "path": "body"
+                }
+              },
+              "default"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "{\"collection\":\"articles\",\"operation\":\"aggregate\",\"pipeline\":[{\"$search\":{\"text\":{\"query\":\"hello\",\"path\":\"body\"},\"index\":\"default\"}}]}",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "{\"collection\":\"articles\",\"operation\":\"aggregate\",\"pipeline\":[{\"$search\":{\"text\":{\"query\":\"hello\",\"path\":\"body\"},\"index\":\"default\"}}]}",
+        [],
+        [],
+        "{\"collection\":\"articles\",\"operation\":\"aggregate\",\"pipeline\":[{\"$search\":{\"text\":{\"query\":\"hello\",\"path\":\"body\"},\"index\":\"default\"}}]}",
+        "{\"collection\":\"articles\",\"operation\":\"aggregate\",\"pipeline\":[{\"$search\":{\"text\":{\"query\":\"hello\",\"path\":\"body\"},\"index\":\"default\"}}]}"
+      ]
+    },
+    {
+      "name": "testSearchWithoutIndexOmitsIndexKey",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "articles"
+            ]
+          },
+          {
+            "call": "search",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "text": {
+                  "query": "t",
+                  "path": "t"
+                }
+              }
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "{\"collection\":\"articles\",\"operation\":\"aggregate\",\"pipeline\":[{\"$search\":{\"text\":{\"query\":\"t\",\"path\":\"t\"}}}]}",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "{\"collection\":\"articles\",\"operation\":\"aggregate\",\"pipeline\":[{\"$search\":{\"text\":{\"query\":\"t\",\"path\":\"t\"}}}]}",
+        [],
+        [],
+        "{\"collection\":\"articles\",\"operation\":\"aggregate\",\"pipeline\":[{\"$search\":{\"text\":{\"query\":\"t\",\"path\":\"t\"}}}]}",
+        "{\"collection\":\"articles\",\"operation\":\"aggregate\",\"pipeline\":[{\"$search\":{\"text\":{\"query\":\"t\",\"path\":\"t\"}}}]}"
+      ]
+    },
+    {
+      "name": "testSearchIsFirstStageEvenAfterLaterFilter",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "articles"
+            ]
+          },
+          {
+            "call": "search",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "text": {
+                  "query": "t",
+                  "path": "t"
+                }
+              }
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "{\"collection\":\"articles\",\"operation\":\"aggregate\",\"pipeline\":[{\"$search\":{\"text\":{\"query\":\"t\",\"path\":\"t\"}}}]}",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "{\"collection\":\"articles\",\"operation\":\"aggregate\",\"pipeline\":[{\"$search\":{\"text\":{\"query\":\"t\",\"path\":\"t\"}}}]}",
+        [],
+        [],
+        "{\"collection\":\"articles\",\"operation\":\"aggregate\",\"pipeline\":[{\"$search\":{\"text\":{\"query\":\"t\",\"path\":\"t\"}}}]}",
+        "{\"collection\":\"articles\",\"operation\":\"aggregate\",\"pipeline\":[{\"$search\":{\"text\":{\"query\":\"t\",\"path\":\"t\"}}}]}"
+      ]
+    },
+    {
+      "name": "testSearchMetaEmitsSearchMetaStage",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "articles"
+            ]
+          },
+          {
+            "call": "searchMeta",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "facet": []
+              },
+              "default"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "{\"collection\":\"articles\",\"operation\":\"aggregate\",\"pipeline\":[{\"$searchMeta\":{\"facet\":[],\"index\":\"default\"}}]}",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "{\"collection\":\"articles\",\"operation\":\"aggregate\",\"pipeline\":[{\"$searchMeta\":{\"facet\":[],\"index\":\"default\"}}]}",
+        [],
+        [],
+        "{\"collection\":\"articles\",\"operation\":\"aggregate\",\"pipeline\":[{\"$searchMeta\":{\"facet\":[],\"index\":\"default\"}}]}",
+        "{\"collection\":\"articles\",\"operation\":\"aggregate\",\"pipeline\":[{\"$searchMeta\":{\"facet\":[],\"index\":\"default\"}}]}"
+      ]
+    },
+    {
+      "name": "testVectorSearchPopulatesAllFields",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "products"
+            ]
+          },
+          {
+            "call": "vectorSearch",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "embedding",
+              [
+                0.1,
+                0.2
+              ],
+              50,
+              5,
+              "vi",
+              {
+                "category": "x"
+              }
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "{\"collection\":\"products\",\"operation\":\"aggregate\",\"pipeline\":[{\"$vectorSearch\":{\"path\":\"embedding\",\"queryVector\":[0.1,0.2],\"numCandidates\":50,\"limit\":5,\"index\":\"vi\",\"filter\":{\"category\":\"x\"}}}]}",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "{\"collection\":\"products\",\"operation\":\"aggregate\",\"pipeline\":[{\"$vectorSearch\":{\"path\":\"embedding\",\"queryVector\":[0.1,0.2],\"numCandidates\":50,\"limit\":5,\"index\":\"vi\",\"filter\":{\"category\":\"x\"}}}]}",
+        [],
+        [],
+        "{\"collection\":\"products\",\"operation\":\"aggregate\",\"pipeline\":[{\"$vectorSearch\":{\"path\":\"embedding\",\"queryVector\":[0.1,0.2],\"numCandidates\":50,\"limit\":5,\"index\":\"vi\",\"filter\":{\"category\":\"x\"}}}]}",
+        "{\"collection\":\"products\",\"operation\":\"aggregate\",\"pipeline\":[{\"$vectorSearch\":{\"path\":\"embedding\",\"queryVector\":[0.1,0.2],\"numCandidates\":50,\"limit\":5,\"index\":\"vi\",\"filter\":{\"category\":\"x\"}}}]}"
+      ]
+    },
+    {
+      "name": "testVectorSearchNullableFilterOmitsFilterKey",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "products"
+            ]
+          },
+          {
+            "call": "vectorSearch",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "embedding",
+              [
+                0.1
+              ],
+              10,
+              1
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "{\"collection\":\"products\",\"operation\":\"aggregate\",\"pipeline\":[{\"$vectorSearch\":{\"path\":\"embedding\",\"queryVector\":[0.1],\"numCandidates\":10,\"limit\":1}}]}",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "{\"collection\":\"products\",\"operation\":\"aggregate\",\"pipeline\":[{\"$vectorSearch\":{\"path\":\"embedding\",\"queryVector\":[0.1],\"numCandidates\":10,\"limit\":1}}]}",
+        [],
+        [],
+        "{\"collection\":\"products\",\"operation\":\"aggregate\",\"pipeline\":[{\"$vectorSearch\":{\"path\":\"embedding\",\"queryVector\":[0.1],\"numCandidates\":10,\"limit\":1}}]}",
+        "{\"collection\":\"products\",\"operation\":\"aggregate\",\"pipeline\":[{\"$vectorSearch\":{\"path\":\"embedding\",\"queryVector\":[0.1],\"numCandidates\":10,\"limit\":1}}]}"
+      ]
+    }
+  ]
+}

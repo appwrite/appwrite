@@ -1,0 +1,137 @@
+{
+  "source": "packages/http/src/Response.php",
+  "cases": [
+    {
+      "name": "trusted headers are normalized",
+      "op": "trusted.new",
+      "args": {
+        "ip": [
+          " X-Forwarded-For ",
+          "",
+          "0",
+          "X-Real-IP"
+        ],
+        "proto": [
+          "X-CDN"
+        ]
+      },
+      "expect": {
+        "ip": [
+          "x-forwarded-for",
+          "x-real-ip"
+        ],
+        "proto": [
+          "x-cdn"
+        ]
+      }
+    },
+    {
+      "name": "trusted headers default",
+      "op": "trusted.new",
+      "args": {
+        "ip": []
+      },
+      "expect": {
+        "ip": [],
+        "proto": [
+          "x-forwarded-proto"
+        ]
+      }
+    },
+    {
+      "name": "negotiate 'gzip, deflate, br' []",
+      "op": "compression.negotiate",
+      "args": {
+        "accept": "gzip, deflate, br",
+        "supported": []
+      },
+      "expect": "gzip"
+    },
+    {
+      "name": "negotiate 'gzip;q=0.5, br' []",
+      "op": "compression.negotiate",
+      "args": {
+        "accept": "gzip;q=0.5, br",
+        "supported": []
+      },
+      "expect": "br"
+    },
+    {
+      "name": "negotiate 'foo' []",
+      "op": "compression.negotiate",
+      "args": {
+        "accept": "foo",
+        "supported": []
+      },
+      "expect": null
+    },
+    {
+      "name": "negotiate '' []",
+      "op": "compression.negotiate",
+      "args": {
+        "accept": "",
+        "supported": []
+      },
+      "expect": null
+    },
+    {
+      "name": "negotiate '0' []",
+      "op": "compression.negotiate",
+      "args": {
+        "accept": "0",
+        "supported": []
+      },
+      "expect": null
+    },
+    {
+      "name": "negotiate 'identity, gzip' []",
+      "op": "compression.negotiate",
+      "args": {
+        "accept": "identity, gzip",
+        "supported": []
+      },
+      "expect": null
+    },
+    {
+      "name": "negotiate 'zstd;q=0, gzip;q=0.1' []",
+      "op": "compression.negotiate",
+      "args": {
+        "accept": "zstd;q=0, gzip;q=0.1",
+        "supported": []
+      },
+      "expect": "gzip"
+    },
+    {
+      "name": "negotiate 'br' ['gzip', 'brotli']",
+      "op": "compression.negotiate",
+      "args": {
+        "accept": "br",
+        "supported": [
+          "gzip",
+          "brotli"
+        ]
+      },
+      "expect": "br"
+    },
+    {
+      "name": "negotiate 'BR;q=0.2, GZIP;q=0.2' []",
+      "op": "compression.negotiate",
+      "args": {
+        "accept": "BR;q=0.2, GZIP;q=0.2",
+        "supported": []
+      },
+      "expect": "br"
+    },
+    {
+      "name": "negotiate 'gzip; q=0.9, deflate' ['deflate']",
+      "op": "compression.negotiate",
+      "args": {
+        "accept": "gzip; q=0.9, deflate",
+        "supported": [
+          "deflate"
+        ]
+      },
+      "expect": "deflate"
+    }
+  ]
+}

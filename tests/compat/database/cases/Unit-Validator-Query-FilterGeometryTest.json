@@ -1,0 +1,3642 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Validator/Query/FilterGeometryTest.php"
+  ],
+  "cases": [
+    {
+      "name": "FilterGeometryTest::testAMalformedGeometryIsRefused#nested too deep",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "intersects",
+            "args": {
+              "attribute": "pg",
+              "values": [
+                [
+                  [
+                    [
+                      [
+                        1
+                      ]
+                    ]
+                  ]
+                ]
+              ]
+            },
+            "as": "o5035"
+          },
+          "bind": "s8916",
+          "expect": {
+            "$query": {
+              "method": "intersects",
+              "attribute": "pg",
+              "values": [
+                [
+                  [
+                    [
+                      [
+                        [
+                          1
+                        ]
+                      ]
+                    ]
+                  ]
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pt",
+                "key": "pt",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o5047"
+          },
+          "bind": "s8928",
+          "expect": {
+            "$document": {
+              "$id": "pt",
+              "key": "pt",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pg",
+                "key": "pg",
+                "type": "polygon",
+                "array": false
+              }
+            },
+            "as": "o5048"
+          },
+          "bind": "s8929",
+          "expect": {
+            "$document": {
+              "$id": "pg",
+              "key": "pg",
+              "type": "polygon",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o5047"
+                },
+                {
+                  "$obj": "o5048"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o5049"
+          },
+          "bind": "s8930",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5049"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o5035"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "FilterGeometryTest::testAMalformedGeometryIsRefused#longitude and latitude out of range",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "intersects",
+            "args": {
+              "attribute": "pt",
+              "values": [
+                [
+                  999,
+                  999
+                ]
+              ]
+            },
+            "as": "o5036"
+          },
+          "bind": "s8917",
+          "expect": {
+            "$query": {
+              "method": "intersects",
+              "attribute": "pt",
+              "values": [
+                [
+                  [
+                    999,
+                    999
+                  ]
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pt",
+                "key": "pt",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o5050"
+          },
+          "bind": "s8932",
+          "expect": {
+            "$document": {
+              "$id": "pt",
+              "key": "pt",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pg",
+                "key": "pg",
+                "type": "polygon",
+                "array": false
+              }
+            },
+            "as": "o5051"
+          },
+          "bind": "s8933",
+          "expect": {
+            "$document": {
+              "$id": "pg",
+              "key": "pg",
+              "type": "polygon",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o5050"
+                },
+                {
+                  "$obj": "o5051"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o5052"
+          },
+          "bind": "s8934",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5052"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o5036"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "FilterGeometryTest::testAMalformedGeometryIsRefused#latitude out of range",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "intersects",
+            "args": {
+              "attribute": "pt",
+              "values": [
+                10,
+                91
+              ]
+            },
+            "as": "o5037"
+          },
+          "bind": "s8918",
+          "expect": {
+            "$query": {
+              "method": "intersects",
+              "attribute": "pt",
+              "values": [
+                [
+                  10,
+                  91
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pt",
+                "key": "pt",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o5053"
+          },
+          "bind": "s8936",
+          "expect": {
+            "$document": {
+              "$id": "pt",
+              "key": "pt",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pg",
+                "key": "pg",
+                "type": "polygon",
+                "array": false
+              }
+            },
+            "as": "o5054"
+          },
+          "bind": "s8937",
+          "expect": {
+            "$document": {
+              "$id": "pg",
+              "key": "pg",
+              "type": "polygon",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o5053"
+                },
+                {
+                  "$obj": "o5054"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o5055"
+          },
+          "bind": "s8938",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5055"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o5037"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "FilterGeometryTest::testAMalformedGeometryIsRefused#coordinates that are not numbers",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "intersects",
+            "args": {
+              "attribute": "pt",
+              "values": [
+                [
+                  "a",
+                  "b"
+                ]
+              ]
+            },
+            "as": "o5038"
+          },
+          "bind": "s8919",
+          "expect": {
+            "$query": {
+              "method": "intersects",
+              "attribute": "pt",
+              "values": [
+                [
+                  [
+                    "a",
+                    "b"
+                  ]
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pt",
+                "key": "pt",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o5056"
+          },
+          "bind": "s8940",
+          "expect": {
+            "$document": {
+              "$id": "pt",
+              "key": "pt",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pg",
+                "key": "pg",
+                "type": "polygon",
+                "array": false
+              }
+            },
+            "as": "o5057"
+          },
+          "bind": "s8941",
+          "expect": {
+            "$document": {
+              "$id": "pg",
+              "key": "pg",
+              "type": "polygon",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o5056"
+                },
+                {
+                  "$obj": "o5057"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o5058"
+          },
+          "bind": "s8942",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5058"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o5038"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "FilterGeometryTest::testAMalformedGeometryIsRefused#a point of three coordinates",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "intersects",
+            "args": {
+              "attribute": "pt",
+              "values": [
+                1,
+                2,
+                3
+              ]
+            },
+            "as": "o5039"
+          },
+          "bind": "s8920",
+          "expect": {
+            "$query": {
+              "method": "intersects",
+              "attribute": "pt",
+              "values": [
+                [
+                  1,
+                  2,
+                  3
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pt",
+                "key": "pt",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o5059"
+          },
+          "bind": "s8944",
+          "expect": {
+            "$document": {
+              "$id": "pt",
+              "key": "pt",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pg",
+                "key": "pg",
+                "type": "polygon",
+                "array": false
+              }
+            },
+            "as": "o5060"
+          },
+          "bind": "s8945",
+          "expect": {
+            "$document": {
+              "$id": "pg",
+              "key": "pg",
+              "type": "polygon",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o5059"
+                },
+                {
+                  "$obj": "o5060"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o5061"
+          },
+          "bind": "s8946",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5061"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o5039"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "FilterGeometryTest::testAMalformedGeometryIsRefused#a point given as an object",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "intersects",
+            "args": {
+              "attribute": "pt",
+              "values": [
+                {
+                  "x": 1,
+                  "y": 2
+                }
+              ]
+            },
+            "as": "o5040"
+          },
+          "bind": "s8921",
+          "expect": {
+            "$query": {
+              "method": "intersects",
+              "attribute": "pt",
+              "values": [
+                [
+                  {
+                    "x": 1,
+                    "y": 2
+                  }
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pt",
+                "key": "pt",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o5062"
+          },
+          "bind": "s8948",
+          "expect": {
+            "$document": {
+              "$id": "pt",
+              "key": "pt",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pg",
+                "key": "pg",
+                "type": "polygon",
+                "array": false
+              }
+            },
+            "as": "o5063"
+          },
+          "bind": "s8949",
+          "expect": {
+            "$document": {
+              "$id": "pg",
+              "key": "pg",
+              "type": "polygon",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o5062"
+                },
+                {
+                  "$obj": "o5063"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o5064"
+          },
+          "bind": "s8950",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5064"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o5040"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "FilterGeometryTest::testAMalformedGeometryIsRefused#a ring that is not closed",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "intersects",
+            "args": {
+              "attribute": "pg",
+              "values": [
+                [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    0,
+                    10
+                  ],
+                  [
+                    10,
+                    10
+                  ],
+                  [
+                    10,
+                    0
+                  ]
+                ]
+              ]
+            },
+            "as": "o5041"
+          },
+          "bind": "s8922",
+          "expect": {
+            "$query": {
+              "method": "intersects",
+              "attribute": "pg",
+              "values": [
+                [
+                  [
+                    [
+                      0,
+                      0
+                    ],
+                    [
+                      0,
+                      10
+                    ],
+                    [
+                      10,
+                      10
+                    ],
+                    [
+                      10,
+                      0
+                    ]
+                  ]
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pt",
+                "key": "pt",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o5065"
+          },
+          "bind": "s8952",
+          "expect": {
+            "$document": {
+              "$id": "pt",
+              "key": "pt",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pg",
+                "key": "pg",
+                "type": "polygon",
+                "array": false
+              }
+            },
+            "as": "o5066"
+          },
+          "bind": "s8953",
+          "expect": {
+            "$document": {
+              "$id": "pg",
+              "key": "pg",
+              "type": "polygon",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o5065"
+                },
+                {
+                  "$obj": "o5066"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o5067"
+          },
+          "bind": "s8954",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5067"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o5041"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "FilterGeometryTest::testAMalformedGeometryIsRefused#a ring of too few points",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "intersects",
+            "args": {
+              "attribute": "pg",
+              "values": [
+                [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    0,
+                    10
+                  ],
+                  [
+                    0,
+                    0
+                  ]
+                ]
+              ]
+            },
+            "as": "o5042"
+          },
+          "bind": "s8923",
+          "expect": {
+            "$query": {
+              "method": "intersects",
+              "attribute": "pg",
+              "values": [
+                [
+                  [
+                    [
+                      0,
+                      0
+                    ],
+                    [
+                      0,
+                      10
+                    ],
+                    [
+                      0,
+                      0
+                    ]
+                  ]
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pt",
+                "key": "pt",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o5068"
+          },
+          "bind": "s8956",
+          "expect": {
+            "$document": {
+              "$id": "pt",
+              "key": "pt",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pg",
+                "key": "pg",
+                "type": "polygon",
+                "array": false
+              }
+            },
+            "as": "o5069"
+          },
+          "bind": "s8957",
+          "expect": {
+            "$document": {
+              "$id": "pg",
+              "key": "pg",
+              "type": "polygon",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o5068"
+                },
+                {
+                  "$obj": "o5069"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o5070"
+          },
+          "bind": "s8958",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5070"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o5042"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "FilterGeometryTest::testAMalformedGeometryIsRefused#a linestring with a point of strings",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crosses",
+            "args": {
+              "attribute": "pg",
+              "values": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  "a",
+                  "b"
+                ]
+              ]
+            },
+            "as": "o5043"
+          },
+          "bind": "s8924",
+          "expect": {
+            "$query": {
+              "method": "crosses",
+              "attribute": "pg",
+              "values": [
+                [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    "a",
+                    "b"
+                  ]
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pt",
+                "key": "pt",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o5071"
+          },
+          "bind": "s8960",
+          "expect": {
+            "$document": {
+              "$id": "pt",
+              "key": "pt",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pg",
+                "key": "pg",
+                "type": "polygon",
+                "array": false
+              }
+            },
+            "as": "o5072"
+          },
+          "bind": "s8961",
+          "expect": {
+            "$document": {
+              "$id": "pg",
+              "key": "pg",
+              "type": "polygon",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o5071"
+                },
+                {
+                  "$obj": "o5072"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o5073"
+          },
+          "bind": "s8962",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5073"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o5043"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "FilterGeometryTest::testAMalformedGeometryIsRefused#a distance from a point out of range",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "distanceLessThan",
+            "args": {
+              "attribute": "pt",
+              "values": [
+                999,
+                999
+              ],
+              "distance": 10
+            },
+            "as": "o5044"
+          },
+          "bind": "s8925",
+          "expect": {
+            "$query": {
+              "method": "distanceLessThan",
+              "attribute": "pt",
+              "values": [
+                [
+                  [
+                    999,
+                    999
+                  ],
+                  10,
+                  false
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pt",
+                "key": "pt",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o5074"
+          },
+          "bind": "s8964",
+          "expect": {
+            "$document": {
+              "$id": "pt",
+              "key": "pt",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pg",
+                "key": "pg",
+                "type": "polygon",
+                "array": false
+              }
+            },
+            "as": "o5075"
+          },
+          "bind": "s8965",
+          "expect": {
+            "$document": {
+              "$id": "pg",
+              "key": "pg",
+              "type": "polygon",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o5074"
+                },
+                {
+                  "$obj": "o5075"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o5076"
+          },
+          "bind": "s8966",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5076"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o5044"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "FilterGeometryTest::testAMalformedGeometryIsRefused#a distance from a point of strings",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "distanceLessThan",
+            "args": {
+              "attribute": "pt",
+              "values": [
+                [
+                  "a",
+                  "b"
+                ]
+              ],
+              "distance": 10
+            },
+            "as": "o5045"
+          },
+          "bind": "s8926",
+          "expect": {
+            "$query": {
+              "method": "distanceLessThan",
+              "attribute": "pt",
+              "values": [
+                [
+                  [
+                    [
+                      "a",
+                      "b"
+                    ]
+                  ],
+                  10,
+                  false
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pt",
+                "key": "pt",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o5077"
+          },
+          "bind": "s8968",
+          "expect": {
+            "$document": {
+              "$id": "pt",
+              "key": "pt",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pg",
+                "key": "pg",
+                "type": "polygon",
+                "array": false
+              }
+            },
+            "as": "o5078"
+          },
+          "bind": "s8969",
+          "expect": {
+            "$document": {
+              "$id": "pg",
+              "key": "pg",
+              "type": "polygon",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o5077"
+                },
+                {
+                  "$obj": "o5078"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o5079"
+          },
+          "bind": "s8970",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5079"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o5045"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "FilterGeometryTest::testAMalformedGeometryIsRefused#a distance from text that is not WKT",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::DistanceLessThan"
+              },
+              "attribute": "pt",
+              "values": [
+                [
+                  "nowhere",
+                  10,
+                  false
+                ]
+              ]
+            },
+            "as": "o5046"
+          },
+          "bind": "s8927",
+          "expect": {
+            "$query": {
+              "method": "distanceLessThan",
+              "attribute": "pt",
+              "values": [
+                [
+                  "nowhere",
+                  10,
+                  false
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pt",
+                "key": "pt",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o5080"
+          },
+          "bind": "s8972",
+          "expect": {
+            "$document": {
+              "$id": "pt",
+              "key": "pt",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pg",
+                "key": "pg",
+                "type": "polygon",
+                "array": false
+              }
+            },
+            "as": "o5081"
+          },
+          "bind": "s8973",
+          "expect": {
+            "$document": {
+              "$id": "pg",
+              "key": "pg",
+              "type": "polygon",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o5080"
+                },
+                {
+                  "$obj": "o5081"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o5082"
+          },
+          "bind": "s8974",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5082"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o5046"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "FilterGeometryTest::testAWellFormedGeometryIsValid#a point",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "intersects",
+            "args": {
+              "attribute": "pt",
+              "values": [
+                1,
+                2
+              ]
+            },
+            "as": "o5083"
+          },
+          "bind": "s8976",
+          "expect": {
+            "$query": {
+              "method": "intersects",
+              "attribute": "pt",
+              "values": [
+                [
+                  1,
+                  2
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pt",
+                "key": "pt",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o5092"
+          },
+          "bind": "s8985",
+          "expect": {
+            "$document": {
+              "$id": "pt",
+              "key": "pt",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pg",
+                "key": "pg",
+                "type": "polygon",
+                "array": false
+              }
+            },
+            "as": "o5093"
+          },
+          "bind": "s8986",
+          "expect": {
+            "$document": {
+              "$id": "pg",
+              "key": "pg",
+              "type": "polygon",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o5092"
+                },
+                {
+                  "$obj": "o5093"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o5094"
+          },
+          "bind": "s8987",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5094"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o5083"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5094"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query"
+        }
+      ]
+    },
+    {
+      "name": "FilterGeometryTest::testAWellFormedGeometryIsValid#a wrapped point",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "intersects",
+            "args": {
+              "attribute": "pt",
+              "values": [
+                [
+                  1,
+                  2
+                ]
+              ]
+            },
+            "as": "o5084"
+          },
+          "bind": "s8977",
+          "expect": {
+            "$query": {
+              "method": "intersects",
+              "attribute": "pt",
+              "values": [
+                [
+                  [
+                    1,
+                    2
+                  ]
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pt",
+                "key": "pt",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o5095"
+          },
+          "bind": "s8990",
+          "expect": {
+            "$document": {
+              "$id": "pt",
+              "key": "pt",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pg",
+                "key": "pg",
+                "type": "polygon",
+                "array": false
+              }
+            },
+            "as": "o5096"
+          },
+          "bind": "s8991",
+          "expect": {
+            "$document": {
+              "$id": "pg",
+              "key": "pg",
+              "type": "polygon",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o5095"
+                },
+                {
+                  "$obj": "o5096"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o5097"
+          },
+          "bind": "s8992",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5097"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o5084"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5097"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query"
+        }
+      ]
+    },
+    {
+      "name": "FilterGeometryTest::testAWellFormedGeometryIsValid#a linestring",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crosses",
+            "args": {
+              "attribute": "pg",
+              "values": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  5,
+                  5
+                ]
+              ]
+            },
+            "as": "o5085"
+          },
+          "bind": "s8978",
+          "expect": {
+            "$query": {
+              "method": "crosses",
+              "attribute": "pg",
+              "values": [
+                [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    5,
+                    5
+                  ]
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pt",
+                "key": "pt",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o5098"
+          },
+          "bind": "s8995",
+          "expect": {
+            "$document": {
+              "$id": "pt",
+              "key": "pt",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pg",
+                "key": "pg",
+                "type": "polygon",
+                "array": false
+              }
+            },
+            "as": "o5099"
+          },
+          "bind": "s8996",
+          "expect": {
+            "$document": {
+              "$id": "pg",
+              "key": "pg",
+              "type": "polygon",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o5098"
+                },
+                {
+                  "$obj": "o5099"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o5100"
+          },
+          "bind": "s8997",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5100"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o5085"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5100"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query"
+        }
+      ]
+    },
+    {
+      "name": "FilterGeometryTest::testAWellFormedGeometryIsValid#a polygon",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "intersects",
+            "args": {
+              "attribute": "pt",
+              "values": [
+                [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    0,
+                    10
+                  ],
+                  [
+                    10,
+                    10
+                  ],
+                  [
+                    10,
+                    0
+                  ],
+                  [
+                    0,
+                    0
+                  ]
+                ]
+              ]
+            },
+            "as": "o5086"
+          },
+          "bind": "s8979",
+          "expect": {
+            "$query": {
+              "method": "intersects",
+              "attribute": "pt",
+              "values": [
+                [
+                  [
+                    [
+                      0,
+                      0
+                    ],
+                    [
+                      0,
+                      10
+                    ],
+                    [
+                      10,
+                      10
+                    ],
+                    [
+                      10,
+                      0
+                    ],
+                    [
+                      0,
+                      0
+                    ]
+                  ]
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pt",
+                "key": "pt",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o5101"
+          },
+          "bind": "s9000",
+          "expect": {
+            "$document": {
+              "$id": "pt",
+              "key": "pt",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pg",
+                "key": "pg",
+                "type": "polygon",
+                "array": false
+              }
+            },
+            "as": "o5102"
+          },
+          "bind": "s9001",
+          "expect": {
+            "$document": {
+              "$id": "pg",
+              "key": "pg",
+              "type": "polygon",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o5101"
+                },
+                {
+                  "$obj": "o5102"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o5103"
+          },
+          "bind": "s9002",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5103"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o5086"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5103"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query"
+        }
+      ]
+    },
+    {
+      "name": "FilterGeometryTest::testAWellFormedGeometryIsValid#a polygon on a polygon",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "covers",
+            "args": {
+              "attribute": "pg",
+              "values": [
+                [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    0,
+                    10
+                  ],
+                  [
+                    10,
+                    10
+                  ],
+                  [
+                    10,
+                    0
+                  ],
+                  [
+                    0,
+                    0
+                  ]
+                ]
+              ]
+            },
+            "as": "o5087"
+          },
+          "bind": "s8980",
+          "expect": {
+            "$query": {
+              "method": "covers",
+              "attribute": "pg",
+              "values": [
+                [
+                  [
+                    [
+                      0,
+                      0
+                    ],
+                    [
+                      0,
+                      10
+                    ],
+                    [
+                      10,
+                      10
+                    ],
+                    [
+                      10,
+                      0
+                    ],
+                    [
+                      0,
+                      0
+                    ]
+                  ]
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pt",
+                "key": "pt",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o5104"
+          },
+          "bind": "s9005",
+          "expect": {
+            "$document": {
+              "$id": "pt",
+              "key": "pt",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pg",
+                "key": "pg",
+                "type": "polygon",
+                "array": false
+              }
+            },
+            "as": "o5105"
+          },
+          "bind": "s9006",
+          "expect": {
+            "$document": {
+              "$id": "pg",
+              "key": "pg",
+              "type": "polygon",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o5104"
+                },
+                {
+                  "$obj": "o5105"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o5106"
+          },
+          "bind": "s9007",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5106"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o5087"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5106"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query"
+        }
+      ]
+    },
+    {
+      "name": "FilterGeometryTest::testAWellFormedGeometryIsValid#equal to a stored polygon",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "pg",
+              "values": [
+                [
+                  [
+                    [
+                      0,
+                      0
+                    ],
+                    [
+                      0,
+                      10
+                    ],
+                    [
+                      10,
+                      10
+                    ],
+                    [
+                      10,
+                      0
+                    ],
+                    [
+                      0,
+                      0
+                    ]
+                  ]
+                ]
+              ]
+            },
+            "as": "o5088"
+          },
+          "bind": "s8981",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "pg",
+              "values": [
+                [
+                  [
+                    [
+                      0,
+                      0
+                    ],
+                    [
+                      0,
+                      10
+                    ],
+                    [
+                      10,
+                      10
+                    ],
+                    [
+                      10,
+                      0
+                    ],
+                    [
+                      0,
+                      0
+                    ]
+                  ]
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pt",
+                "key": "pt",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o5107"
+          },
+          "bind": "s9010",
+          "expect": {
+            "$document": {
+              "$id": "pt",
+              "key": "pt",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pg",
+                "key": "pg",
+                "type": "polygon",
+                "array": false
+              }
+            },
+            "as": "o5108"
+          },
+          "bind": "s9011",
+          "expect": {
+            "$document": {
+              "$id": "pg",
+              "key": "pg",
+              "type": "polygon",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o5107"
+                },
+                {
+                  "$obj": "o5108"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o5109"
+          },
+          "bind": "s9012",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5109"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o5088"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5109"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query"
+        }
+      ]
+    },
+    {
+      "name": "FilterGeometryTest::testAWellFormedGeometryIsValid#a distance from a point",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "distanceLessThan",
+            "args": {
+              "attribute": "pt",
+              "values": [
+                1,
+                2
+              ],
+              "distance": 10,
+              "meters": true
+            },
+            "as": "o5089"
+          },
+          "bind": "s8982",
+          "expect": {
+            "$query": {
+              "method": "distanceLessThan",
+              "attribute": "pt",
+              "values": [
+                [
+                  [
+                    1,
+                    2
+                  ],
+                  10,
+                  true
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pt",
+                "key": "pt",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o5110"
+          },
+          "bind": "s9015",
+          "expect": {
+            "$document": {
+              "$id": "pt",
+              "key": "pt",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pg",
+                "key": "pg",
+                "type": "polygon",
+                "array": false
+              }
+            },
+            "as": "o5111"
+          },
+          "bind": "s9016",
+          "expect": {
+            "$document": {
+              "$id": "pg",
+              "key": "pg",
+              "type": "polygon",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o5110"
+                },
+                {
+                  "$obj": "o5111"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o5112"
+          },
+          "bind": "s9017",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5112"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o5089"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5112"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query"
+        }
+      ]
+    },
+    {
+      "name": "FilterGeometryTest::testAWellFormedGeometryIsValid#a distance from WKT",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::DistanceGreaterThan"
+              },
+              "attribute": "pt",
+              "values": [
+                [
+                  "POINT(1 2)",
+                  10,
+                  false
+                ]
+              ]
+            },
+            "as": "o5090"
+          },
+          "bind": "s8983",
+          "expect": {
+            "$query": {
+              "method": "distanceGreaterThan",
+              "attribute": "pt",
+              "values": [
+                [
+                  "POINT(1 2)",
+                  10,
+                  false
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pt",
+                "key": "pt",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o5113"
+          },
+          "bind": "s9020",
+          "expect": {
+            "$document": {
+              "$id": "pt",
+              "key": "pt",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pg",
+                "key": "pg",
+                "type": "polygon",
+                "array": false
+              }
+            },
+            "as": "o5114"
+          },
+          "bind": "s9021",
+          "expect": {
+            "$document": {
+              "$id": "pg",
+              "key": "pg",
+              "type": "polygon",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o5113"
+                },
+                {
+                  "$obj": "o5114"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o5115"
+          },
+          "bind": "s9022",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5115"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o5090"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5115"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query"
+        }
+      ]
+    },
+    {
+      "name": "FilterGeometryTest::testAWellFormedGeometryIsValid#numeric strings",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "intersects",
+            "args": {
+              "attribute": "pt",
+              "values": [
+                "1.5",
+                "2"
+              ]
+            },
+            "as": "o5091"
+          },
+          "bind": "s8984",
+          "expect": {
+            "$query": {
+              "method": "intersects",
+              "attribute": "pt",
+              "values": [
+                [
+                  "1.5",
+                  "2"
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pt",
+                "key": "pt",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o5116"
+          },
+          "bind": "s9025",
+          "expect": {
+            "$document": {
+              "$id": "pt",
+              "key": "pt",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pg",
+                "key": "pg",
+                "type": "polygon",
+                "array": false
+              }
+            },
+            "as": "o5117"
+          },
+          "bind": "s9026",
+          "expect": {
+            "$document": {
+              "$id": "pg",
+              "key": "pg",
+              "type": "polygon",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o5116"
+                },
+                {
+                  "$obj": "o5117"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o5118"
+          },
+          "bind": "s9027",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5118"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o5091"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5118"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query"
+        }
+      ]
+    },
+    {
+      "name": "FilterGeometryTest::testTheRefusalNamesWhatIsWrong",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pt",
+                "key": "pt",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o5119"
+          },
+          "bind": "s9030",
+          "expect": {
+            "$document": {
+              "$id": "pt",
+              "key": "pt",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pg",
+                "key": "pg",
+                "type": "polygon",
+                "array": false
+              }
+            },
+            "as": "o5120"
+          },
+          "bind": "s9031",
+          "expect": {
+            "$document": {
+              "$id": "pg",
+              "key": "pg",
+              "type": "polygon",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o5119"
+                },
+                {
+                  "$obj": "o5120"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o5121"
+          },
+          "bind": "s9032",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "intersects",
+            "args": {
+              "attribute": "pt",
+              "values": [
+                [
+                  999,
+                  999
+                ]
+              ]
+            },
+            "as": "o5122"
+          },
+          "bind": "s9033",
+          "expect": {
+            "$query": {
+              "method": "intersects",
+              "attribute": "pt",
+              "values": [
+                [
+                  [
+                    999,
+                    999
+                  ]
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5121"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o5122"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5121"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid spatial data for attribute \"pt\": Value must be a valid point: Longitude (x) must be between -180 and 180, got 999"
+        }
+      ]
+    },
+    {
+      "name": "FilterGeometryTest::testAStoredCoordinateGivenAsAnObjectIsRefused#point",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "point"
+            },
+            "as": "o5123"
+          },
+          "bind": "s9036",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5123"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "x": 1,
+                "y": 2
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "FilterGeometryTest::testAStoredCoordinateGivenAsAnObjectIsRefused#linestring point",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "linestring"
+            },
+            "as": "o5124"
+          },
+          "bind": "s9038",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5124"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                [
+                  0,
+                  0
+                ],
+                {
+                  "x": 1,
+                  "y": 2
+                }
+              ]
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "FilterGeometryTest::testAStoredCoordinateGivenAsAnObjectIsRefused#polygon ring",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "polygon"
+            },
+            "as": "o5125"
+          },
+          "bind": "s9040",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5125"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                {
+                  "a": [
+                    0,
+                    0
+                  ],
+                  "b": [
+                    0,
+                    1
+                  ],
+                  "c": [
+                    1,
+                    1
+                  ],
+                  "d": [
+                    0,
+                    0
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "FilterGeometryTest::testAStoredCoordinateGivenAsAnObjectIsRefused#polygon point",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "polygon"
+            },
+            "as": "o5126"
+          },
+          "bind": "s9042",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5126"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                [
+                  [
+                    0,
+                    0
+                  ],
+                  {
+                    "x": 0,
+                    "y": 1
+                  },
+                  [
+                    1,
+                    1
+                  ],
+                  [
+                    0,
+                    0
+                  ]
+                ]
+              ]
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "FilterGeometryTest::testAStoredCoordinateGivenAsAnObjectIsRefused#polygon single ring",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "polygon"
+            },
+            "as": "o5127"
+          },
+          "bind": "s9044",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5127"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                [
+                  0,
+                  1
+                ],
+                [
+                  1,
+                  1
+                ],
+                [
+                  0,
+                  0
+                ]
+              ]
+            }
+          },
+          "expect": false
+        }
+      ]
+    }
+  ]
+}

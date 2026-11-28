@@ -1,0 +1,1087 @@
+{
+  "source": "interop",
+  "cases": [
+    {
+      "name": "a argon2 hash made by one runtime verifies in the other",
+      "steps": [
+        {
+          "op": "hash.new",
+          "side": "a",
+          "args": {
+            "algo": "argon2"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.setter",
+          "side": "a",
+          "args": {
+            "hash": {
+              "$ref": "a"
+            },
+            "method": "setMemoryCost",
+            "value": 1024
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.setter",
+          "side": "a",
+          "args": {
+            "hash": {
+              "$ref": "a"
+            },
+            "method": "setTimeCost",
+            "value": 2
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.setter",
+          "side": "a",
+          "args": {
+            "hash": {
+              "$ref": "a"
+            },
+            "method": "setThreads",
+            "value": 2
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.hash",
+          "side": "a",
+          "args": {
+            "hash": {
+              "$ref": "a"
+            },
+            "value": "pässwörd"
+          },
+          "bind": "out",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "salted"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "hash.new",
+          "side": "b",
+          "args": {
+            "algo": "argon2"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.setter",
+          "side": "b",
+          "args": {
+            "hash": {
+              "$ref": "b"
+            },
+            "method": "setMemoryCost",
+            "value": 1024
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.setter",
+          "side": "b",
+          "args": {
+            "hash": {
+              "$ref": "b"
+            },
+            "method": "setTimeCost",
+            "value": 2
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.setter",
+          "side": "b",
+          "args": {
+            "hash": {
+              "$ref": "b"
+            },
+            "method": "setThreads",
+            "value": 2
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.verify",
+          "side": "b",
+          "args": {
+            "hash": {
+              "$ref": "b"
+            },
+            "value": "pässwörd",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "hash.verify",
+          "side": "b",
+          "args": {
+            "hash": {
+              "$ref": "b"
+            },
+            "value": "password",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": false
+        }
+      ],
+      "interop": true
+    },
+    {
+      "name": "a bcrypt hash made by one runtime verifies in the other",
+      "steps": [
+        {
+          "op": "hash.new",
+          "side": "a",
+          "args": {
+            "algo": "bcrypt"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.setter",
+          "side": "a",
+          "args": {
+            "hash": {
+              "$ref": "a"
+            },
+            "method": "setCost",
+            "value": 5
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.hash",
+          "side": "a",
+          "args": {
+            "hash": {
+              "$ref": "a"
+            },
+            "value": "pässwörd"
+          },
+          "bind": "out",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "salted"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "hash.new",
+          "side": "b",
+          "args": {
+            "algo": "bcrypt"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.setter",
+          "side": "b",
+          "args": {
+            "hash": {
+              "$ref": "b"
+            },
+            "method": "setCost",
+            "value": 5
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.verify",
+          "side": "b",
+          "args": {
+            "hash": {
+              "$ref": "b"
+            },
+            "value": "pässwörd",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "hash.verify",
+          "side": "b",
+          "args": {
+            "hash": {
+              "$ref": "b"
+            },
+            "value": "password",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": false
+        }
+      ],
+      "interop": true
+    },
+    {
+      "name": "a phpass hash made by one runtime verifies in the other",
+      "steps": [
+        {
+          "op": "hash.new",
+          "side": "a",
+          "args": {
+            "algo": "phpass"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.hash",
+          "side": "a",
+          "args": {
+            "hash": {
+              "$ref": "a"
+            },
+            "value": "pässwörd"
+          },
+          "bind": "out",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "salted"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "hash.new",
+          "side": "b",
+          "args": {
+            "algo": "phpass"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.verify",
+          "side": "b",
+          "args": {
+            "hash": {
+              "$ref": "b"
+            },
+            "value": "pässwörd",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "hash.verify",
+          "side": "b",
+          "args": {
+            "hash": {
+              "$ref": "b"
+            },
+            "value": "password",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": false
+        }
+      ],
+      "interop": true
+    },
+    {
+      "name": "a phpass setPortableHashes hash made by one runtime verifies in the other",
+      "steps": [
+        {
+          "op": "hash.new",
+          "side": "a",
+          "args": {
+            "algo": "phpass"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.setter",
+          "side": "a",
+          "args": {
+            "hash": {
+              "$ref": "a"
+            },
+            "method": "setPortableHashes",
+            "value": true
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.hash",
+          "side": "a",
+          "args": {
+            "hash": {
+              "$ref": "a"
+            },
+            "value": "pässwörd"
+          },
+          "bind": "out",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "salted"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "hash.new",
+          "side": "b",
+          "args": {
+            "algo": "phpass"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.setter",
+          "side": "b",
+          "args": {
+            "hash": {
+              "$ref": "b"
+            },
+            "method": "setPortableHashes",
+            "value": true
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.verify",
+          "side": "b",
+          "args": {
+            "hash": {
+              "$ref": "b"
+            },
+            "value": "pässwörd",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "hash.verify",
+          "side": "b",
+          "args": {
+            "hash": {
+              "$ref": "b"
+            },
+            "value": "password",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": false
+        }
+      ],
+      "interop": true
+    },
+    {
+      "name": "a md5 hash made by one runtime verifies in the other",
+      "steps": [
+        {
+          "op": "hash.new",
+          "side": "a",
+          "args": {
+            "algo": "md5"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.hash",
+          "side": "a",
+          "args": {
+            "hash": {
+              "$ref": "a"
+            },
+            "value": "pässwörd"
+          },
+          "bind": "out",
+          "expect": "12841e4ba5e37d2fbfc78458c6714ade"
+        },
+        {
+          "op": "hash.new",
+          "side": "b",
+          "args": {
+            "algo": "md5"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.verify",
+          "side": "b",
+          "args": {
+            "hash": {
+              "$ref": "b"
+            },
+            "value": "pässwörd",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "hash.verify",
+          "side": "b",
+          "args": {
+            "hash": {
+              "$ref": "b"
+            },
+            "value": "password",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": false
+        }
+      ],
+      "interop": true
+    },
+    {
+      "name": "a sha hash made by one runtime verifies in the other",
+      "steps": [
+        {
+          "op": "hash.new",
+          "side": "a",
+          "args": {
+            "algo": "sha"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.setter",
+          "side": "a",
+          "args": {
+            "hash": {
+              "$ref": "a"
+            },
+            "method": "setVersion",
+            "value": "sha3-256"
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.hash",
+          "side": "a",
+          "args": {
+            "hash": {
+              "$ref": "a"
+            },
+            "value": "pässwörd"
+          },
+          "bind": "out",
+          "expect": "86af672dcda3af24dfdd063e6897c5deccbb163939bba7698f9e73ce1417fa45"
+        },
+        {
+          "op": "hash.new",
+          "side": "b",
+          "args": {
+            "algo": "sha"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.setter",
+          "side": "b",
+          "args": {
+            "hash": {
+              "$ref": "b"
+            },
+            "method": "setVersion",
+            "value": "sha3-256"
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.verify",
+          "side": "b",
+          "args": {
+            "hash": {
+              "$ref": "b"
+            },
+            "value": "pässwörd",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "hash.verify",
+          "side": "b",
+          "args": {
+            "hash": {
+              "$ref": "b"
+            },
+            "value": "password",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": false
+        }
+      ],
+      "interop": true
+    },
+    {
+      "name": "a scrypt hash made by one runtime verifies in the other",
+      "steps": [
+        {
+          "op": "hash.new",
+          "side": "a",
+          "args": {
+            "algo": "scrypt"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.setter",
+          "side": "a",
+          "args": {
+            "hash": {
+              "$ref": "a"
+            },
+            "method": "setSalt",
+            "value": "fixed-salt"
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.setter",
+          "side": "a",
+          "args": {
+            "hash": {
+              "$ref": "a"
+            },
+            "method": "setCpuCost",
+            "value": 32
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.setter",
+          "side": "a",
+          "args": {
+            "hash": {
+              "$ref": "a"
+            },
+            "method": "setMemoryCost",
+            "value": 4
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.hash",
+          "side": "a",
+          "args": {
+            "hash": {
+              "$ref": "a"
+            },
+            "value": "pässwörd"
+          },
+          "bind": "out",
+          "expect": "b523cd81eadb000e40f3c08f323b2c8c1542fa13dfe0a9e7dc1ba7ae50c092302e4257b03477e1989f365523569562f2373de3d3c831be2d3bc14c3356cd05dd"
+        },
+        {
+          "op": "hash.new",
+          "side": "b",
+          "args": {
+            "algo": "scrypt"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.setter",
+          "side": "b",
+          "args": {
+            "hash": {
+              "$ref": "b"
+            },
+            "method": "setSalt",
+            "value": "fixed-salt"
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.setter",
+          "side": "b",
+          "args": {
+            "hash": {
+              "$ref": "b"
+            },
+            "method": "setCpuCost",
+            "value": 32
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.setter",
+          "side": "b",
+          "args": {
+            "hash": {
+              "$ref": "b"
+            },
+            "method": "setMemoryCost",
+            "value": 4
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.verify",
+          "side": "b",
+          "args": {
+            "hash": {
+              "$ref": "b"
+            },
+            "value": "pässwörd",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "hash.verify",
+          "side": "b",
+          "args": {
+            "hash": {
+              "$ref": "b"
+            },
+            "value": "password",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": false
+        }
+      ],
+      "interop": true
+    },
+    {
+      "name": "a scryptMod hash made by one runtime verifies in the other",
+      "steps": [
+        {
+          "op": "hash.new",
+          "side": "a",
+          "args": {
+            "algo": "scryptMod"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.setter",
+          "side": "a",
+          "args": {
+            "hash": {
+              "$ref": "a"
+            },
+            "method": "setSalt",
+            "value": "c2FsdA=="
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.setter",
+          "side": "a",
+          "args": {
+            "hash": {
+              "$ref": "a"
+            },
+            "method": "setSaltSeparator",
+            "value": "Bw=="
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.setter",
+          "side": "a",
+          "args": {
+            "hash": {
+              "$ref": "a"
+            },
+            "method": "setSignerKey",
+            "value": "a2V5LWZvci1zaWduaW5n"
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.hash",
+          "side": "a",
+          "args": {
+            "hash": {
+              "$ref": "a"
+            },
+            "value": "pässwörd"
+          },
+          "bind": "out",
+          "expect": "35qpZZhMJPLKimbA9qRg"
+        },
+        {
+          "op": "hash.new",
+          "side": "b",
+          "args": {
+            "algo": "scryptMod"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.setter",
+          "side": "b",
+          "args": {
+            "hash": {
+              "$ref": "b"
+            },
+            "method": "setSalt",
+            "value": "c2FsdA=="
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.setter",
+          "side": "b",
+          "args": {
+            "hash": {
+              "$ref": "b"
+            },
+            "method": "setSaltSeparator",
+            "value": "Bw=="
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.setter",
+          "side": "b",
+          "args": {
+            "hash": {
+              "$ref": "b"
+            },
+            "method": "setSignerKey",
+            "value": "a2V5LWZvci1zaWduaW5n"
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.verify",
+          "side": "b",
+          "args": {
+            "hash": {
+              "$ref": "b"
+            },
+            "value": "pässwörd",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "hash.verify",
+          "side": "b",
+          "args": {
+            "hash": {
+              "$ref": "b"
+            },
+            "value": "password",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": false
+        }
+      ],
+      "interop": true
+    },
+    {
+      "name": "stored hash options round trip between runtimes",
+      "steps": [
+        {
+          "op": "hash.new",
+          "side": "a",
+          "args": {
+            "algo": "scrypt"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.options",
+          "side": "a",
+          "args": {
+            "hash": {
+              "$ref": "a"
+            }
+          },
+          "bind": "opts",
+          "mask": {
+            "paths": [
+              "/salt"
+            ],
+            "reason": "random salt"
+          },
+          "expect": {
+            "type": "scrypt",
+            "costCpu": 8,
+            "costMemory": 14,
+            "costParallel": 1,
+            "length": 64,
+            "salt": "<masked>"
+          }
+        },
+        {
+          "op": "hash.hash",
+          "side": "a",
+          "args": {
+            "hash": {
+              "$ref": "a"
+            },
+            "value": "pw"
+          },
+          "bind": "out",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "random salt"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "password.create_hash",
+          "side": "b",
+          "args": {
+            "type": "scrypt",
+            "options": {
+              "$ref": "opts"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.verify",
+          "side": "b",
+          "args": {
+            "hash": {
+              "$ref": "b"
+            },
+            "value": "pw",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": true
+        }
+      ],
+      "interop": true
+    },
+    {
+      "name": "a store encoded by one runtime decodes in the other",
+      "steps": [
+        {
+          "op": "store.new",
+          "side": "a",
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "store.set_property",
+          "side": "a",
+          "args": {
+            "store": {
+              "$ref": "a"
+            },
+            "key": "id",
+            "value": "user/1"
+          },
+          "expect": null
+        },
+        {
+          "op": "store.set_property",
+          "side": "a",
+          "args": {
+            "store": {
+              "$ref": "a"
+            },
+            "key": "secret",
+            "value": "s3cr3t é"
+          },
+          "expect": null
+        },
+        {
+          "op": "store.set_property",
+          "side": "a",
+          "args": {
+            "store": {
+              "$ref": "a"
+            },
+            "key": "n",
+            "value": [
+              1,
+              2.5,
+              null,
+              {
+                "k": false
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "store.encode",
+          "side": "a",
+          "args": {
+            "store": {
+              "$ref": "a"
+            }
+          },
+          "bind": "e",
+          "expect": "eyJpZCI6InVzZXJcLzEiLCJzZWNyZXQiOiJzM2NyM3QgXHUwMGU5IiwibiI6WzEsMi41LG51bGwseyJrIjpmYWxzZX1dfQ=="
+        },
+        {
+          "op": "store.new",
+          "side": "b",
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "store.decode",
+          "side": "b",
+          "args": {
+            "store": {
+              "$ref": "b"
+            },
+            "data": {
+              "$ref": "e"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "store.get_property",
+          "side": "b",
+          "args": {
+            "store": {
+              "$ref": "b"
+            },
+            "key": "id"
+          },
+          "expect": "user/1"
+        },
+        {
+          "op": "store.get_property",
+          "side": "b",
+          "args": {
+            "store": {
+              "$ref": "b"
+            },
+            "key": "secret"
+          },
+          "expect": "s3cr3t é"
+        },
+        {
+          "op": "store.get_property",
+          "side": "b",
+          "args": {
+            "store": {
+              "$ref": "b"
+            },
+            "key": "n"
+          },
+          "expect": [
+            1,
+            2.5,
+            null,
+            {
+              "k": false
+            }
+          ]
+        },
+        {
+          "op": "store.encode",
+          "side": "b",
+          "args": {
+            "store": {
+              "$ref": "b"
+            }
+          },
+          "expect": "eyJpZCI6InVzZXJcLzEiLCJzZWNyZXQiOiJzM2NyM3QgXHUwMGU5IiwibiI6WzEsMi41LG51bGwseyJrIjpmYWxzZX1dfQ=="
+        }
+      ],
+      "interop": true
+    }
+  ]
+}

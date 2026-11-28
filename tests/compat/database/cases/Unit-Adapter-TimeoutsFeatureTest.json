@@ -1,0 +1,89 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Adapter/TimeoutsFeatureTest.php"
+  ],
+  "cases": [
+    {
+      "name": "TimeoutsFeatureTest::testADatabaseOverAnAdapterWithoutTimeoutsRefusesOne",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o19"
+          },
+          "bind": "s43",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o19"
+              },
+              "cache": "none"
+            },
+            "as": "o20"
+          },
+          "bind": "s44",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o21"
+          },
+          "bind": "s45",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o20"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o21"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o20"
+            },
+            "method": "setTimeout",
+            "args": {
+              "milliseconds": 500
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Adapter does not support timeouts"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

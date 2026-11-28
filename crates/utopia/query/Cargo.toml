@@ -15,4 +15,4 @@ thiserror.workspace = true
 
 [package.metadata.utopia]
 category = "data"
-php-sync = "ec474f794b02055fc53040441c8063e0be767c86"
+php-sync = "4782543eb7188dda1ad51b551dfcd7c056e7976a"

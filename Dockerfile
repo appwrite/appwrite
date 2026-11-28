@@ -47,7 +47,7 @@ RUN apk add --no-cache \
     && rm -rf /tmp/ffmpeg
 
 # The utopia extension, built against the base image's own PHP headers and
-# libheif so the ABI matches. The recipe is crates/extension/build.sh.
+# libheif and OpenSSL (utopia-auth's RSA keys) so the ABI matches. The recipe is crates/extension/build.sh.
 FROM appwrite/base:2.6.0@sha256:baf37ca0213eb6fabbaef181ca568d2e0de0c6d79f56f971a6ccb0efba3c9d05 AS extension-toolchain
 
 WORKDIR /usr/local/src
@@ -61,6 +61,8 @@ FROM extension-toolchain AS extension-build
 COPY Cargo.toml Cargo.lock rustfmt.toml ./
 COPY .cargo ./.cargo
 COPY crates ./crates
+# A workspace member: Cargo reads every member's manifest.
+COPY example ./example
 
 # Stamped into phpversion('utopia') by the published image; empty here keeps the crate version.
 ARG UTOPIA_EXTENSION_VERSION=""

@@ -1,5 +1,8 @@
 # Utopia User Agent
 
+> [!IMPORTANT]
+> This repository is a read-only mirror of [`crates/utopia/user-agent`](https://github.com/appwrite/appwrite/tree/main/crates/utopia/user-agent) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there — please open issues and pull requests against appwrite/appwrite.
+
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://discord.gg/GSeTUeA)
 
 User-agent parsing: operating system, client, device and bot.
@@ -10,7 +13,7 @@ This library is maintained by the [Appwrite team](https://appwrite.io).
 
 ```toml
 [dependencies]
-utopia-user-agent = { git = "https://github.com/appwrite/appwrite" }
+utopia-user-agent = { git = "https://github.com/utopia-rs/user-agent" }
 ```
 
 A user-agent string tells a server what made a request: the browser, its operating system, the device it runs on, or the bot or HTTP library behind it. This library reads those facts from the `User-Agent` header without data files or network calls. Each category is detected only when you ask for it, and unknown fields are `None`, so any header is safe to parse. This guide covers the common tasks.

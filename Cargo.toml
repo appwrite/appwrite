@@ -6,11 +6,17 @@
 #
 #   crates/utopia/<name>    Generic Utopia libraries (Rust equivalents of packages/<name>), and
 #                           php-std, the PHP engine semantics they share.
+#   crates/appwrite/<name>  Appwrite domain crates: core, service modules, server binary (not published)
 #   crates/extension        The `utopia` PHP extension: Utopia crates as the PHP classes of
 #                           packages/<name>, so PHP runs the Rust implementation.
+#   crates/tools/<name>     Development tools (not shipped): compat, the PHP/Rust differential tester
+#   example                 A minimal HTTP server demo (not shipped)
+#
+# See rfc/rust.md for the migration plan, mirrors and crates/CONVERSION.md for the
+# standard each Utopia crate is converted to.
 [workspace]
 resolver = "3"
-members = ["crates/utopia/*", "crates/extension"]
+members = ["crates/utopia/*", "crates/appwrite/*", "crates/tools/*", "crates/extension", "example"]
 
 [workspace.package]
 version = "0.1.0"
@@ -21,86 +27,162 @@ repository = "https://github.com/appwrite/appwrite"
 # The crates under crates/utopia are published to crates.io. See rfc/monorepo.md.
 publish = true
 
+# The license the Utopia crates' mirrors on github.com/utopia-rs are published under.
+# bin/monorepo writes it into each mirror's Cargo.toml, LICENSE and README; the source
+# in this repository stays under the license above.
+[workspace.metadata.utopia]
+mirror-license = "MIT"
+
 [workspace.dependencies]
 # The version is what a published crate asks crates.io for; this checkout uses the path.
 php-std = { package = "utopia-php-std", path = "crates/utopia/php-std", version = "0.1.0" }
-utopia-auth = { path = "crates/utopia/auth", version = "0.1.0" }
-utopia-balancer = { path = "crates/utopia/balancer", version = "0.1.0" }
-utopia-compression = { path = "crates/utopia/compression", version = "0.1.0" }
+
+# Utopia crates
+utopia-async = { path = "crates/utopia/async" }
+utopia-system = { path = "crates/utopia/system" }
+utopia-validators = { path = "crates/utopia/validators", version = "0.1.0" }
+utopia-http = { path = "crates/utopia/http" }
 utopia-database = { path = "crates/utopia/database", version = "0.1.0" }
-utopia-detector = { path = "crates/utopia/detector", version = "0.1.0" }
+utopia-cache = { path = "crates/utopia/cache" }
+utopia-queue = { path = "crates/utopia/queue" }
+utopia-lock = { path = "crates/utopia/lock" }
+utopia-auth = { path = "crates/utopia/auth", version = "0.1.0" }
 utopia-domains = { path = "crates/utopia/domains", version = "0.1.0" }
 utopia-emails = { path = "crates/utopia/emails", version = "0.1.0" }
-utopia-dsn = { path = "crates/utopia/dsn", version = "0.1.0" }
-utopia-image = { path = "crates/utopia/image", version = "0.1.0", default-features = false }
 utopia-locale = { path = "crates/utopia/locale", version = "0.1.0" }
-utopia-query = { path = "crates/utopia/query", version = "0.1.0" }
 utopia-user-agent = { path = "crates/utopia/user-agent", version = "0.1.0" }
-utopia-validators = { path = "crates/utopia/validators", version = "0.1.0" }
+utopia-dsn = { path = "crates/utopia/dsn", version = "0.1.0" }
+utopia-telemetry = { path = "crates/utopia/telemetry", default-features = false }
+utopia-pools = { path = "crates/utopia/pools" }
+utopia-circuit-breaker = { path = "crates/utopia/circuit-breaker", default-features = false }
+utopia-config = { path = "crates/utopia/config" }
+utopia-span = { path = "crates/utopia/span" }
+utopia-di = { path = "crates/utopia/di" }
+utopia-registry = { path = "crates/utopia/registry" }
+utopia-abuse = { path = "crates/utopia/abuse" }
+utopia-image = { path = "crates/utopia/image", version = "0.1.0", default-features = false }
+utopia-compression = { path = "crates/utopia/compression", version = "0.1.0" }
+utopia-client = { path = "crates/utopia/client" }
+utopia-smtp = { path = "crates/utopia/smtp" }
+utopia-balancer = { path = "crates/utopia/balancer", version = "0.1.0" }
+utopia-detector = { path = "crates/utopia/detector", version = "0.1.0" }
+utopia-schedule = { path = "crates/utopia/schedule" }
+utopia-websocket = { path = "crates/utopia/websocket" }
+utopia-storage = { path = "crates/utopia/storage" }
+utopia-bus = { path = "crates/utopia/bus" }
+utopia-cli = { path = "crates/utopia/cli" }
+utopia-console = { path = "crates/utopia/console" }
+utopia-platform = { path = "crates/utopia/platform" }
+utopia-servers = { path = "crates/utopia/servers" }
+utopia-openapi = { path = "crates/utopia/openapi" }
+utopia-dns = { path = "crates/utopia/dns" }
+utopia-nats = { path = "crates/utopia/nats" }
+utopia-mqtt = { path = "crates/utopia/mqtt" }
+utopia-cdn = { path = "crates/utopia/cdn" }
+utopia-orchestration = { path = "crates/utopia/orchestration" }
+utopia-query = { path = "crates/utopia/query", version = "0.1.0" }
+utopia-mongo = { path = "crates/utopia/mongo" }
+utopia-agents = { path = "crates/utopia/agents" }
+utopia-audit = { path = "crates/utopia/audit" }
+utopia-messaging = { path = "crates/utopia/messaging" }
+utopia-vcs = { path = "crates/utopia/vcs" }
+utopia-usage = { path = "crates/utopia/usage" }
+utopia-migration = { path = "crates/utopia/migration" }
 
-# 0.16.5: #[php(sensitive(...))] (extphprs/ext-php-rs#840), which `Utopia\DSN\DSN` needs to keep
+# Appwrite crates
+appwrite-core = { path = "crates/appwrite/core" }
+appwrite-account = { path = "crates/appwrite/account" }
+appwrite-users = { path = "crates/appwrite/users" }
+appwrite-teams = { path = "crates/appwrite/teams" }
+appwrite-storage = { path = "crates/appwrite/storage" }
+
+# Third party
+# The `utopia` PHP extension (crates/extension) on ext-php-rs. 0.16.5:
+# #[php(sensitive(...))] (extphprs/ext-php-rs#840), which `Utopia\DSN\DSN` needs to keep
 # credentials out of exception traces, and the clone of a PHP subclass (extphprs/ext-php-rs#838).
 ext-php-rs = "0.16.5"
-# Multi-needle substring search (utopia-user-agent: the bot table, in one pass).
+# Multi-needle substring search (utopia-user-agent: the bot table, in one
+# case-insensitive pass); pure Rust, already a dependency of regex.
 aho-corasick = "1"
-# JetStream for utopia-queue, which shares queues with utopia-php/queue's Broker\Nats.
-async-nats = "0.53"
-futures-util = { version = "0.3", default-features = false, features = ["std"] }
+aes = "0.8"
+aes-gcm = "0.10"
+# Object-safe async traits (utopia-storage's `Device`, which decorators and
+# cross-device copies hold as `dyn Device`); already in the tree.
+async-trait = "0.1"
 argon2 = { version = "0.5", features = ["std"] }
+# NATS client with JetStream (utopia-queue's NATS broker); the official
+# pure-Rust client from the NATS maintainers, on tokio.
+async-nats = { version = "0.50", default-features = false, features = ["ring", "server_2_10", "jetstream"] }
+base64 = "0.22"
 # BLAKE2b for php-std's Argon2, which fills lanes on scoped threads (the `argon2` crate, a test
 # reference, fills them one after the other).
 blake2 = "0.10"
+# EksBlowfish (php-std crypt()); RustCrypto, pure Rust.
 blowfish = { version = "0.9", features = ["bcrypt"] }
+# Brotli for utopia-http and utopia-client; Dropbox's pure-Rust port of Google's C
+# library. utopia-compression uses brotlic-sys below, the C library itself.
+brotli = { version = "9", default-features = false, features = ["std"] }
 # C brotli 1.2.1, built from source and linked statically: the library PHP's ext-brotli links.
 brotlic-sys = "0.2.5"
 bytes = "1"
-# The Sentry transport (utopia-span): HTTP/1.1 client over rustls with the WebPKI roots.
-http-body-util = "0.1"
-hyper = "1"
-hyper-rustls = { version = "0.27", default-features = false, features = ["http1", "ring", "tls12", "webpki-roots"] }
-hyper-util = "0.1"
+# Compiles the PCRE2 10.44 sources php-std vendors (crates/utopia/php-std/pcre2).
 cc = "1"
+chrono = { version = "0.4", default-features = false, features = ["clock", "std", "serde"] }
+crc32fast = "1"
+ctr = "0.9"
+# The WHATWG encodings, for a document whose <meta> declares one (utopia-messaging,
+# decoding it as lexbor does for PHP's Dom\HTMLDocument).
+encoding_rs = "0.8"
+fancy-regex = "0.14"
+# The PostgreSQL wire protocol and SCRAM (utopia-database's Postgres adapter,
+# which speaks libpq's simple query protocol itself to send statements as the
+# bytes PHP's PDO sends and read the transaction status); already in the tree
+# through tokio-postgres, as is fallible-iterator, which its parsers return.
+postgres-protocol = "0.6"
+fallible-iterator = "0.2"
+# SIMD resampling (utopia-image: thumbnails with Lanczos3, scales with the box
+# filter ImageMagick's scaleImage uses); pure Rust.
+fast_image_resize = { version = "6", default-features = false, features = ["std"] }
+flate2 = "1"
+# Fast hashing for php-std's array tables (IndexMap's default SipHash dominates
+# small-key lookups); pure Rust, maintained, randomly seeded per map.
 foldhash = "0.2"
+form_urlencoded = "1"
+futures-util = { version = "0.3", default-features = false, features = ["std", "async-await-macro"] }
 getrandom = "0.3"
+# GIF frames with their delays, disposal and transparency (utopia-image);
+# pure Rust, the decoder and encoder the image crate uses.
+gif = "0.14"
+# GOST R 34.11-94, MD2, RIPEMD and Whirlpool for php-std hash(); RustCrypto, pure Rust.
 gost94 = "0.10"
 hex = "0.4"
-hashbrown = { version = "0.17", default-features = false }
-indexmap = "2"
-md-5 = "0.10"
-md2 = "0.10"
-# Byte search (utopia-user-agent: case-insensitive token scans); pure Rust.
-memchr = "2"
-ripemd = "0.1"
-rustix = { version = "1", default-features = false, features = ["std", "fs", "system"] }
-ryu = "1"
-serde = "1"
-serde_json = { version = "1", features = ["raw_value", "preserve_order", "float_roundtrip"] }
-sha1 = "0.10"
-sha2 = "0.10"
-# Firebase's modified scrypt (utopia-auth): AES-256 in CTR mode, and wiping derived keys.
-aes = "0.8"
-zeroize = "1"
-sha3 = "0.10"
-# A stack sized for the work (the extension's Utopia\\Query AST: a tree as deep as PHP takes).
-stacker = "0.1"
-# A kept stack for the same work (crates/extension/src/classes/stack.rs): psm switches to it,
-# libc maps it with a guard page. Both are what stacker itself uses.
-psm = "0.1"
-libc = "0.2"
-unsafe-libyaml = "0.2"
-whirlpool = "0.10"
-xxhash-rust = { version = "0.8", features = ["xxh3"] }
-fast_image_resize = { version = "6", default-features = false, features = ["std"] }
-gif = "0.14"
-# No `rayon`: it gives the AVIF encoder a process-wide thread pool, and a
+hmac = "0.12"
+# The HTML5 parsing algorithm (Servo's), for the tree PHP's Dom\HTMLDocument
+# (lexbor) builds: utopia-messaging reads the plain-text part of an email off it.
+html5ever = "0.40"
+http = "1"
+http-body-util = "0.1"
+# HTTP/1 request parsing (hyper's parser), for the compat http benchmarks.
+httparse = "1"
+hyper = { version = "1", features = ["server", "http1"] }
+hyper-util = "0.1"
+hyper-rustls = { version = "0.27", default-features = false, features = ["http1", "ring", "tls12", "webpki-roots"] }
+# Image codecs for utopia-image, pure Rust only: JPEG (zune-jpeg), PNG, GIF and
+# WebP. No `rayon`: it gives the AVIF encoder a process-wide thread pool, and a
 # process that forks after using it (Swoole workers do fork) leaves the child
 # waiting forever on threads it does not have. `avif` (the pure-Rust encoder)
 # is utopia-image's `ravif` feature.
 image = { version = "0.25.10", default-features = false, features = ["jpeg", "png", "gif", "webp"] }
+# WebP frames and the lossless encoder (utopia-image writes animated WebP
+# containers around it); pure Rust, the WebP codec of the image crate.
 image-webp = "0.2"
 # JPEG output as ImageMagick (libjpeg) writes it: 4:2:0 chroma and optimized Huffman
 # tables, neither of which the `image` crate's encoder has. Pure Rust.
 jpeg-encoder = "0.7"
+hashbrown = { version = "0.17", default-features = false }
+indexmap = "2"
+# EXIF orientation of JPEG, PNG and WebP images (utopia-image, as Imagick's
+# exif:Orientation property); pure Rust.
 kamadak-exif = "0.6"
 # The system zlib (no `static`): the library PHP itself links, so Deflate and GZIP write its bytes.
 libz-sys = { version = "1", default-features = false, features = ["libc"] }
@@ -108,23 +190,131 @@ libz-sys = { version = "1", default-features = false, features = ["libc"] }
 libheif-rs = { version = "3", default-features = false, features = ["v1_17"] }
 # LZ4 1.10.0, built from source and linked statically, as PHP's ext-lz4 links it.
 lz4-sys = "1.11.1"
+# XZ (LZMA2 in an .xz container with CRC64) for utopia-compression's optional
+# XZ algorithm; pure Rust, maintained.
 lzma-rust2 = { version = "0.22", default-features = false, features = ["std", "encoder", "xz"] }
-# The extension's allocator: musl's, on the Alpine image, is slow. `local_dynamic_tls` is what a
-# library PHP loads with dlopen needs there.
-mimalloc = { version = "0.1.52", default-features = false, features = ["local_dynamic_tls"] }
+md-5 = "0.10"
+# The official MongoDB driver (utopia-mongo, and utopia-database's Mongo
+# adapter through it) and its BSON library; pure Rust, maintained by MongoDB,
+# TLS on the workspace's rustls (ring). No SRV resolver: hosts are dialled
+# directly, as utopia-php/mongo dials them.
+mongodb = { version = "3.9", default-features = false, features = ["compat-3-3-0", "bson-3", "rustls-tls"] }
+bson = { version = "3.1", features = ["serde_json-1"] }
+md2 = "0.10"
+# Byte search (utopia-user-agent: case-insensitive token scans); pure Rust,
+# already a dependency of regex.
+memchr = "2"
+# RSA keys and PKCS#1 v1.5 signatures (RS256 JWTs and passkeys, utopia-auth) on
+# the system OpenSSL, the library PHP's openssl_* functions call: same key limits,
+# constant-time private key operations (the `rsa` crate is open to RUSTSEC-2023-0071).
+openssl = "0.10"
+# NIST P-256 ECDSA (ES256 passkeys, utopia-auth); RustCrypto, pure Rust.
+p256 = { version = "0.14", default-features = false, features = ["ecdsa", "pkcs8", "std"] }
+# Arbitrary-precision integers (utopia-auth: CBOR rational numbers reduced like
+# brick/math); pure Rust, rust-num project.
+num-bigint = { version = "0.4", default-features = false, features = ["std"] }
+num-integer = { version = "0.1", default-features = false, features = ["std"] }
+mimalloc = { version = "0.1.52", default-features = false }
+# The MariaDB/MySQL client protocol (utopia-database's MariaDB and MySQL
+# adapters: text queries as PDO sends them with emulated prepares, multi
+# results, server status and errors); pure Rust (no TLS, flate2's Rust backend).
+mysql_async = { version = "0.37", default-features = false, features = ["minimal-rust"] }
+# The process umask for compat-driver (crates/tools/compat), so files it creates
+# get the permissions PHP's driver container gives them; already in the tree.
+libc = "0.2"
+# Compact serde binary format for cache entries only Rust reads (utopia-cache's
+# Native codec); pure Rust, maintained, with a stable documented wire format.
+# Chosen on numbers over bitcode (slower through serde, and its derive cannot
+# encode recursive types such as JSON trees) and rkyv (as fast to decode once
+# entries are copied into an aligned buffer, but larger and needs its own derives).
+postcard = { version = "1", default-features = false, features = ["use-std"] }
+# PNG encoding with an explicit zlib level and filter (utopia-image maps
+# Imagick's PNG quality onto them); pure Rust, the PNG codec of the image crate.
 # Metrics through the OpenTelemetry API only: a library records into the global meter, and the
 # application that installs an SDK decides where they go. Without one, every instrument is a no-op.
 opentelemetry = { version = "0.33", default-features = false, features = ["metrics"] }
 opentelemetry_sdk = { version = "0.33", default-features = false, features = ["metrics"] }
 png = "0.18"
+# Safe pin projection for utopia-async's futures (its sleep, timeout and
+# interval wrap the engine's own); already in the tree through tokio.
+pin-project-lite = "0.2"
+proc-macro2 = { version = "1", default-features = false, features = ["span-locations"] }
+quote = { version = "1", default-features = false }
+# Streaming XML reader (utopia-storage: S3 responses, decoded as SimpleXML
+# does); pure Rust, maintained.
+quick-xml = "0.41"
+# Ed25519 signatures for NKey authentication (utopia-nats signs the server
+# nonce with the seed); the crypto library rustls uses, already in the tree.
+ring = "0.17"
+# Thread-local CSPRNG (ChaCha12 keyed from the OS, rekeyed every 64 KiB) for
+# utopia-auth tokens and salts; pure Rust, already in the tree.
+rand = { version = "0.10", default-features = false, features = ["thread_rng"] }
+redis = { version = "0.32", default-features = false, features = ["tokio-comp", "aio", "connection-manager", "script"] }
+regex = "1"
+ripemd = "0.1"
+# SQLite (utopia-database's SQLite adapter), with the SQLite library built in:
+# 3.54, one release past the 3.53 PHP's pdo_sqlite links, for the fix in
+# RUSTSEC-2026-0459. `.cargo/config.toml` builds it with the compile options
+# of the dev image's SQLite.
+rusqlite = { version = "0.41", features = ["bundled", "functions"] }
 rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
+rustix = { version = "1", default-features = false, features = ["std", "fs", "system"] }
+ryu = "1"
+scrypt = { version = "0.11", default-features = false }
+serde = { version = "1", features = ["derive"] }
+# Socket options std and tokio do not expose (TCP keepalive times, for
+# utopia-async's hyper connector); already in the tree through tokio.
+socket2 = { version = "0.6", features = ["all"] }
+serde_json = { version = "1", features = ["raw_value", "preserve_order", "float_roundtrip"] }
+sha1 = "0.10"
+sha2 = "0.10"
+sha3 = "0.10"
+# A stack sized for the work (the extension's Utopia\\Query AST: a tree as deep as PHP takes).
+stacker = "0.1"
+# A kept stack for the same work (crates/extension/src/classes/stack.rs): psm switches to it,
+# libc maps it with a guard page. Both are what stacker itself uses.
+psm = "0.1"
+# Rust source parsing for `compat report` (crates/tools/compat): doc comments
+# and line numbers of each crate's public items.
+syn = { version = "2", default-features = false, features = ["full", "parsing", "printing"] }
 thiserror = "2"
-tokio = { version = "1", features = ["time"] }
+# The Tokio engine behind utopia-async (crates/utopia/async), the only crate
+# that depends on it directly: every other crate reaches tasks, timers, sockets,
+# files and processes through utopia-async, so the engine can be switched there.
+# Each feature is enabled by utopia-async, for the engine or for the
+# engine-independent building blocks it re-exports (I/O traits, sync primitives).
+tokio = { version = "1", default-features = false }
+# The WebSocket protocol on tokio (utopia-websocket: the Tokio server adapter
+# and the client); pure Rust, TLS for wss through the workspace's rustls (ring).
+tokio-tungstenite = { version = "0.30", default-features = false, features = ["connect", "handshake", "rustls-tls-webpki-roots"] }
+tokio-postgres = { version = "0.7.12", features = ["with-chrono-0_4", "with-serde_json-1"] }
+# TLS streams on tokio for utopia-client's HTTP/1.1 and utopia-smtp's SMTP
+# transports (STARTTLS upgrades a plain stream in place); already in
+# the tree through hyper-rustls.
+tokio-rustls = { version = "0.26", default-features = false, features = ["ring", "tls12"] }
+# The connector trait hyper-rustls implements, to open single connections
+# (utopia-telemetry's OTLP transport keeps its own pool); already in the tree.
+tower-service = "0.3"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt", "env-filter", "ansi"] }
+# Mozilla's root certificates (the default trust store of utopia-client and
+# utopia-smtp, as the CA bundle PHP's cURL and OpenSSL use); already in the
+# tree through hyper-rustls.
+webpki-roots = "1"
+whirlpool = "0.10"
+# XXH3 and XXH128 for php-std hash(); pure Rust.
+xxhash-rust = { version = "0.8", features = ["xxh3"] }
 # libzstd 1.5.7, built from source and linked statically, as PHP's ext-zstd links it. No
 # `zstdmt`: multithreaded compression would start threads in a process that forks.
 zstd-safe = { version = "8", default-features = false, features = ["std"] }
 # libwebp, built from source and linked statically: lossy WebP. utopia-image's `libwebp` feature.
 webp = { version = "0.3", default-features = false }
+# Wiping derived keys and scrypt's working memory (utopia-auth); RustCrypto, pure Rust.
+zeroize = "1"
+zstd = { version = "0.14", default-features = false }
+# libyaml 0.2.5 translated to Rust (php-std yaml_parse(), which must accept and
+# refuse documents as the libyaml of PHP's ext-yaml does); no C toolchain needed.
+unsafe-libyaml = "0.2"
 
 # No `panic = "abort"`: ext-php-rs catches a panic in a method and throws it
 # as a PHP `Error`; aborting would take the Swoole worker down instead.
@@ -133,7 +323,10 @@ lto = "fat"
 codegen-units = 1
 strip = "symbols"
 
+[profile.dev.package."*"]
+opt-level = 2
+
 # Per-pixel loops (rotation, masks, borders) on multi-megapixel images take
-# seconds unoptimised; tests use the dev profile.
+# seconds unoptimised; compat runs and tests use the dev profile.
 [profile.dev.package.utopia-image]
 opt-level = 2

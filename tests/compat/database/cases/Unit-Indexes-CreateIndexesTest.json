@@ -1,0 +1,5331 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Indexes/CreateIndexesTest.php"
+  ],
+  "cases": [
+    {
+      "name": "CreateIndexesTest::testCreatesEveryIndexAndReturnsThemAsStored",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o12776"
+          },
+          "bind": "s66406",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o12776"
+              },
+              "cache": "none"
+            },
+            "as": "o12777"
+          },
+          "bind": "s66407",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o12778"
+          },
+          "bind": "s66408",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12777"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o12778"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12777"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "create_indexes"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12777"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "create_indexes_u000000000124"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12777"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "email",
+              "size": 128
+            },
+            "as": "o12779"
+          },
+          "bind": "s66413",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "email",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "name",
+              "size": 64
+            },
+            "as": "o12780"
+          },
+          "bind": "s66414",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o12781"
+          },
+          "bind": "s66415",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o12781"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o12782"
+          },
+          "bind": "s66417",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o12782"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "users",
+              "attributes": [
+                {
+                  "$obj": "o12779"
+                },
+                {
+                  "$obj": "o12780"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o12783"
+          },
+          "bind": "s66419",
+          "expect": {
+            "$document": {
+              "$id": "users",
+              "name": "users",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "email",
+                    "key": "email",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12777"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o12783"
+              }
+            },
+            "as": "o12784"
+          },
+          "expect": {
+            "$document": {
+              "$id": "users",
+              "name": "users",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "email",
+                    "key": "email",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "unique",
+            "args": {
+              "key": "by_email",
+              "attributes": [
+                "email"
+              ]
+            },
+            "as": "o12785"
+          },
+          "bind": "s66421",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_email",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Unique"
+              },
+              "attributes": [
+                "email"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name",
+              "attributes": [
+                "name"
+              ],
+              "lengths": [
+                64
+              ]
+            },
+            "as": "o12786"
+          },
+          "bind": "s66422",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [
+                64
+              ],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12777"
+            },
+            "method": "createIndexes",
+            "args": {
+              "collection": "users",
+              "indexes": [
+                {
+                  "$obj": "o12785"
+                },
+                {
+                  "$obj": "o12786"
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "$value": "Index",
+              "fields": {
+                "key": "by_email",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Unique"
+                },
+                "attributes": [
+                  "email"
+                ],
+                "lengths": [],
+                "orders": [],
+                "ttl": null
+              }
+            },
+            {
+              "$value": "Index",
+              "fields": {
+                "key": "by_name",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Key"
+                },
+                "attributes": [
+                  "name"
+                ],
+                "lengths": [
+                  null
+                ],
+                "orders": [],
+                "ttl": null
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12785"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o12787"
+          },
+          "bind": "s66424",
+          "expect": {
+            "$document": {
+              "$id": "by_email",
+              "key": "by_email",
+              "type": "unique",
+              "attributes": [
+                "email"
+              ],
+              "lengths": [],
+              "orders": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12787"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "by_email",
+            "key": "by_email",
+            "type": "unique",
+            "attributes": [
+              "email"
+            ],
+            "lengths": [],
+            "orders": []
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$value": "Index",
+              "fields": {
+                "key": "by_name",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Key"
+                },
+                "attributes": [
+                  "name"
+                ],
+                "lengths": [
+                  null
+                ],
+                "orders": [],
+                "ttl": null
+              }
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o12788"
+          },
+          "bind": "s66426",
+          "expect": {
+            "$document": {
+              "$id": "by_name",
+              "key": "by_name",
+              "type": "key",
+              "attributes": [
+                "name"
+              ],
+              "lengths": [
+                null
+              ],
+              "orders": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12788"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "by_name",
+            "key": "by_name",
+            "type": "key",
+            "attributes": [
+              "name"
+            ],
+            "lengths": [
+              null
+            ],
+            "orders": []
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12777"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "users"
+            },
+            "as": "o12789"
+          },
+          "bind": "s66428",
+          "expect": {
+            "$document": {
+              "name": "users",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "email",
+                    "key": "email",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "by_email",
+                    "key": "by_email",
+                    "type": "unique",
+                    "attributes": [
+                      "email"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "by_name",
+                    "key": "by_name",
+                    "type": "key",
+                    "attributes": [
+                      "name"
+                    ],
+                    "lengths": [
+                      null
+                    ],
+                    "orders": []
+                  }
+                }
+              ],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "users",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12789"
+            },
+            "method": "indexes",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$value": "Index",
+              "fields": {
+                "key": "by_email",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Unique"
+                },
+                "attributes": [
+                  "email"
+                ],
+                "lengths": [],
+                "orders": [],
+                "ttl": null
+              }
+            },
+            {
+              "$value": "Index",
+              "fields": {
+                "key": "by_name",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Key"
+                },
+                "attributes": [
+                  "name"
+                ],
+                "lengths": [
+                  null
+                ],
+                "orders": [],
+                "ttl": null
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$value": "Index",
+              "fields": {
+                "key": "by_email",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Unique"
+                },
+                "attributes": [
+                  "email"
+                ],
+                "lengths": [],
+                "orders": [],
+                "ttl": null
+              }
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o12790"
+          },
+          "bind": "s66430",
+          "expect": {
+            "$document": {
+              "$id": "by_email",
+              "key": "by_email",
+              "type": "unique",
+              "attributes": [
+                "email"
+              ],
+              "lengths": [],
+              "orders": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12790"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "by_email",
+            "key": "by_email",
+            "type": "unique",
+            "attributes": [
+              "email"
+            ],
+            "lengths": [],
+            "orders": []
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$value": "Index",
+              "fields": {
+                "key": "by_name",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Key"
+                },
+                "attributes": [
+                  "name"
+                ],
+                "lengths": [
+                  null
+                ],
+                "orders": [],
+                "ttl": null
+              }
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o12791"
+          },
+          "bind": "s66432",
+          "expect": {
+            "$document": {
+              "$id": "by_name",
+              "key": "by_name",
+              "type": "key",
+              "attributes": [
+                "name"
+              ],
+              "lengths": [
+                null
+              ],
+              "orders": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12791"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "by_name",
+            "key": "by_name",
+            "type": "key",
+            "attributes": [
+              "name"
+            ],
+            "lengths": [
+              null
+            ],
+            "orders": []
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "one",
+                "email": "same@example.com",
+                "name": "one"
+              }
+            },
+            "as": "o12792"
+          },
+          "bind": "s66434",
+          "expect": {
+            "$document": {
+              "$id": "one",
+              "email": "same@example.com",
+              "name": "one"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12777"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "users",
+              "document": {
+                "$obj": "o12792"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "one",
+              "email": "same@example.com",
+              "name": "one",
+              "$collection": "users",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "two",
+                "email": "same@example.com",
+                "name": "two"
+              }
+            },
+            "as": "o12793"
+          },
+          "bind": "s66436",
+          "expect": {
+            "$document": {
+              "$id": "two",
+              "email": "same@example.com",
+              "name": "two"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12777"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "users",
+              "document": {
+                "$obj": "o12793"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Unique",
+              "message": "Unique index violation"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "CreateIndexesTest::testAnEmptyListCreatesNothing",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o12794"
+          },
+          "bind": "s66438",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o12794"
+              },
+              "cache": "none"
+            },
+            "as": "o12795"
+          },
+          "bind": "s66439",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o12796"
+          },
+          "bind": "s66440",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12795"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o12796"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12795"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "create_indexes"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12795"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "create_indexes_u000000000125"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12795"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "email",
+              "size": 128
+            },
+            "as": "o12797"
+          },
+          "bind": "s66445",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "email",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "name",
+              "size": 64
+            },
+            "as": "o12798"
+          },
+          "bind": "s66446",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o12799"
+          },
+          "bind": "s66447",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o12799"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o12800"
+          },
+          "bind": "s66449",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o12800"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "users",
+              "attributes": [
+                {
+                  "$obj": "o12797"
+                },
+                {
+                  "$obj": "o12798"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o12801"
+          },
+          "bind": "s66451",
+          "expect": {
+            "$document": {
+              "$id": "users",
+              "name": "users",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "email",
+                    "key": "email",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12795"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o12801"
+              }
+            },
+            "as": "o12802"
+          },
+          "expect": {
+            "$document": {
+              "$id": "users",
+              "name": "users",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "email",
+                    "key": "email",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12795"
+            },
+            "method": "createIndexes",
+            "args": {
+              "collection": "users",
+              "indexes": []
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12795"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "users"
+            },
+            "as": "o12803"
+          },
+          "bind": "s66454",
+          "expect": {
+            "$document": {
+              "name": "users",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "email",
+                    "key": "email",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "users",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12803"
+            },
+            "method": "indexes",
+            "args": {}
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "CreateIndexesTest::testAnInvalidIndexCreatesNone",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o12804"
+          },
+          "bind": "s66456",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o12804"
+              },
+              "cache": "none"
+            },
+            "as": "o12805"
+          },
+          "bind": "s66457",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o12806"
+          },
+          "bind": "s66458",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12805"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o12806"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12805"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "create_indexes"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12805"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "create_indexes_u000000000126"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12805"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "email",
+              "size": 128
+            },
+            "as": "o12807"
+          },
+          "bind": "s66463",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "email",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "name",
+              "size": 64
+            },
+            "as": "o12808"
+          },
+          "bind": "s66464",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o12809"
+          },
+          "bind": "s66465",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o12809"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o12810"
+          },
+          "bind": "s66467",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o12810"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "users",
+              "attributes": [
+                {
+                  "$obj": "o12807"
+                },
+                {
+                  "$obj": "o12808"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o12811"
+          },
+          "bind": "s66469",
+          "expect": {
+            "$document": {
+              "$id": "users",
+              "name": "users",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "email",
+                    "key": "email",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12805"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o12811"
+              }
+            },
+            "as": "o12812"
+          },
+          "expect": {
+            "$document": {
+              "$id": "users",
+              "name": "users",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "email",
+                    "key": "email",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "unique",
+            "args": {
+              "key": "by_email",
+              "attributes": [
+                "email"
+              ]
+            },
+            "as": "o12813"
+          },
+          "bind": "s66471",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_email",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Unique"
+              },
+              "attributes": [
+                "email"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_missing",
+              "attributes": [
+                "missing"
+              ]
+            },
+            "as": "o12814"
+          },
+          "bind": "s66472",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_missing",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "missing"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12805"
+            },
+            "method": "createIndexes",
+            "args": {
+              "collection": "users",
+              "indexes": [
+                {
+                  "$obj": "o12813"
+                },
+                {
+                  "$obj": "o12814"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Index",
+              "message": "Invalid index attribute \"missing\" not found"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12805"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "users"
+            },
+            "as": "o12815"
+          },
+          "bind": "s66474",
+          "expect": {
+            "$document": {
+              "name": "users",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "email",
+                    "key": "email",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "users",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12815"
+            },
+            "method": "indexes",
+            "args": {}
+          },
+          "expect": []
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "one",
+                "email": "same@example.com",
+                "name": "one"
+              }
+            },
+            "as": "o12816"
+          },
+          "bind": "s66476",
+          "expect": {
+            "$document": {
+              "$id": "one",
+              "email": "same@example.com",
+              "name": "one"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12805"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "users",
+              "document": {
+                "$obj": "o12816"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "one",
+              "email": "same@example.com",
+              "name": "one",
+              "$collection": "users",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "two",
+                "email": "same@example.com",
+                "name": "two"
+              }
+            },
+            "as": "o12817"
+          },
+          "bind": "s66478",
+          "expect": {
+            "$document": {
+              "$id": "two",
+              "email": "same@example.com",
+              "name": "two"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12805"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "users",
+              "document": {
+                "$obj": "o12817"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "two",
+              "email": "same@example.com",
+              "name": "two",
+              "$collection": "users",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12805"
+            },
+            "method": "count",
+            "args": {
+              "collection": "users"
+            }
+          },
+          "expect": 2
+        }
+      ]
+    },
+    {
+      "name": "CreateIndexesTest::testKeysRepeatedInTheBatchCreateNone",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o12818"
+          },
+          "bind": "s66481",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o12818"
+              },
+              "cache": "none"
+            },
+            "as": "o12819"
+          },
+          "bind": "s66482",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o12820"
+          },
+          "bind": "s66483",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12819"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o12820"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12819"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "create_indexes"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12819"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "create_indexes_u000000000127"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12819"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "email",
+              "size": 128
+            },
+            "as": "o12821"
+          },
+          "bind": "s66488",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "email",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "name",
+              "size": 64
+            },
+            "as": "o12822"
+          },
+          "bind": "s66489",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o12823"
+          },
+          "bind": "s66490",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o12823"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o12824"
+          },
+          "bind": "s66492",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o12824"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "users",
+              "attributes": [
+                {
+                  "$obj": "o12821"
+                },
+                {
+                  "$obj": "o12822"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o12825"
+          },
+          "bind": "s66494",
+          "expect": {
+            "$document": {
+              "$id": "users",
+              "name": "users",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "email",
+                    "key": "email",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12819"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o12825"
+              }
+            },
+            "as": "o12826"
+          },
+          "expect": {
+            "$document": {
+              "$id": "users",
+              "name": "users",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "email",
+                    "key": "email",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "unique",
+            "args": {
+              "key": "by_email",
+              "attributes": [
+                "email"
+              ]
+            },
+            "as": "o12827"
+          },
+          "bind": "s66496",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_email",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Unique"
+              },
+              "attributes": [
+                "email"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "BY_EMAIL",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12828"
+          },
+          "bind": "s66497",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "BY_EMAIL",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12819"
+            },
+            "method": "createIndexes",
+            "args": {
+              "collection": "users",
+              "indexes": [
+                {
+                  "$obj": "o12827"
+                },
+                {
+                  "$obj": "o12828"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Index already exists"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12819"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "users"
+            },
+            "as": "o12829"
+          },
+          "bind": "s66499",
+          "expect": {
+            "$document": {
+              "name": "users",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "email",
+                    "key": "email",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "users",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12829"
+            },
+            "method": "indexes",
+            "args": {}
+          },
+          "expect": []
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "one",
+                "email": "same@example.com",
+                "name": "one"
+              }
+            },
+            "as": "o12830"
+          },
+          "bind": "s66501",
+          "expect": {
+            "$document": {
+              "$id": "one",
+              "email": "same@example.com",
+              "name": "one"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12819"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "users",
+              "document": {
+                "$obj": "o12830"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "one",
+              "email": "same@example.com",
+              "name": "one",
+              "$collection": "users",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "two",
+                "email": "same@example.com",
+                "name": "two"
+              }
+            },
+            "as": "o12831"
+          },
+          "bind": "s66503",
+          "expect": {
+            "$document": {
+              "$id": "two",
+              "email": "same@example.com",
+              "name": "two"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12819"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "users",
+              "document": {
+                "$obj": "o12831"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "two",
+              "email": "same@example.com",
+              "name": "two",
+              "$collection": "users",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12819"
+            },
+            "method": "count",
+            "args": {
+              "collection": "users"
+            }
+          },
+          "expect": 2
+        }
+      ]
+    },
+    {
+      "name": "CreateIndexesTest::testABatchOverTheIndexLimitCreatesNone",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o12832"
+          },
+          "bind": "s66506",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o12832"
+              },
+              "cache": "none"
+            },
+            "as": "o12833"
+          },
+          "bind": "s66507",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o12834"
+          },
+          "bind": "s66508",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12833"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o12834"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12833"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "create_indexes"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12833"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "create_indexes_u000000000128"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12833"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "email",
+              "size": 128
+            },
+            "as": "o12835"
+          },
+          "bind": "s66513",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "email",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "name",
+              "size": 64
+            },
+            "as": "o12836"
+          },
+          "bind": "s66514",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o12837"
+          },
+          "bind": "s66515",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o12837"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o12838"
+          },
+          "bind": "s66517",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o12838"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "users",
+              "attributes": [
+                {
+                  "$obj": "o12835"
+                },
+                {
+                  "$obj": "o12836"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o12839"
+          },
+          "bind": "s66519",
+          "expect": {
+            "$document": {
+              "$id": "users",
+              "name": "users",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "email",
+                    "key": "email",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12833"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o12839"
+              }
+            },
+            "as": "o12840"
+          },
+          "expect": {
+            "$document": {
+              "$id": "users",
+              "name": "users",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "email",
+                    "key": "email",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_0",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12841"
+          },
+          "bind": "s66521",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_0",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_1",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12842"
+          },
+          "bind": "s66522",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_1",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_2",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12843"
+          },
+          "bind": "s66523",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_2",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_3",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12844"
+          },
+          "bind": "s66524",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_3",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_4",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12845"
+          },
+          "bind": "s66525",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_4",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_5",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12846"
+          },
+          "bind": "s66526",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_5",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_6",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12847"
+          },
+          "bind": "s66527",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_6",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_7",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12848"
+          },
+          "bind": "s66528",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_7",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_8",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12849"
+          },
+          "bind": "s66529",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_8",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_9",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12850"
+          },
+          "bind": "s66530",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_9",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_10",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12851"
+          },
+          "bind": "s66531",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_10",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_11",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12852"
+          },
+          "bind": "s66532",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_11",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_12",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12853"
+          },
+          "bind": "s66533",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_12",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_13",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12854"
+          },
+          "bind": "s66534",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_13",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_14",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12855"
+          },
+          "bind": "s66535",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_14",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_15",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12856"
+          },
+          "bind": "s66536",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_15",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_16",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12857"
+          },
+          "bind": "s66537",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_16",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_17",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12858"
+          },
+          "bind": "s66538",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_17",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_18",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12859"
+          },
+          "bind": "s66539",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_18",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_19",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12860"
+          },
+          "bind": "s66540",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_19",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_20",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12861"
+          },
+          "bind": "s66541",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_20",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_21",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12862"
+          },
+          "bind": "s66542",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_21",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_22",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12863"
+          },
+          "bind": "s66543",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_22",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_23",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12864"
+          },
+          "bind": "s66544",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_23",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_24",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12865"
+          },
+          "bind": "s66545",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_24",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_25",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12866"
+          },
+          "bind": "s66546",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_25",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_26",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12867"
+          },
+          "bind": "s66547",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_26",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_27",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12868"
+          },
+          "bind": "s66548",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_27",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_28",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12869"
+          },
+          "bind": "s66549",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_28",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_29",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12870"
+          },
+          "bind": "s66550",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_29",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_30",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12871"
+          },
+          "bind": "s66551",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_30",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_31",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12872"
+          },
+          "bind": "s66552",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_31",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_32",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12873"
+          },
+          "bind": "s66553",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_32",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_33",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12874"
+          },
+          "bind": "s66554",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_33",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_34",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12875"
+          },
+          "bind": "s66555",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_34",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_35",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12876"
+          },
+          "bind": "s66556",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_35",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_36",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12877"
+          },
+          "bind": "s66557",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_36",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_37",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12878"
+          },
+          "bind": "s66558",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_37",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_38",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12879"
+          },
+          "bind": "s66559",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_38",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_39",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12880"
+          },
+          "bind": "s66560",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_39",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_40",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12881"
+          },
+          "bind": "s66561",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_40",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_41",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12882"
+          },
+          "bind": "s66562",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_41",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_42",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12883"
+          },
+          "bind": "s66563",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_42",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_43",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12884"
+          },
+          "bind": "s66564",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_43",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_44",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12885"
+          },
+          "bind": "s66565",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_44",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_45",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12886"
+          },
+          "bind": "s66566",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_45",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_46",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12887"
+          },
+          "bind": "s66567",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_46",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_47",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12888"
+          },
+          "bind": "s66568",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_47",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_48",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12889"
+          },
+          "bind": "s66569",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_48",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_49",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12890"
+          },
+          "bind": "s66570",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_49",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_50",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12891"
+          },
+          "bind": "s66571",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_50",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_51",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12892"
+          },
+          "bind": "s66572",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_51",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_52",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12893"
+          },
+          "bind": "s66573",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_52",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_53",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12894"
+          },
+          "bind": "s66574",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_53",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_54",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12895"
+          },
+          "bind": "s66575",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_54",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_55",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12896"
+          },
+          "bind": "s66576",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_55",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_56",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12897"
+          },
+          "bind": "s66577",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_56",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_57",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12898"
+          },
+          "bind": "s66578",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_57",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_58",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12899"
+          },
+          "bind": "s66579",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_58",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_59",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12900"
+          },
+          "bind": "s66580",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_59",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_60",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12901"
+          },
+          "bind": "s66581",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_60",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_61",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12902"
+          },
+          "bind": "s66582",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_61",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_62",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12903"
+          },
+          "bind": "s66583",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_62",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_63",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12904"
+          },
+          "bind": "s66584",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_63",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name_64",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o12905"
+          },
+          "bind": "s66585",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name_64",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12833"
+            },
+            "method": "createIndexes",
+            "args": {
+              "collection": "users",
+              "indexes": [
+                {
+                  "$obj": "o12841"
+                },
+                {
+                  "$obj": "o12842"
+                },
+                {
+                  "$obj": "o12843"
+                },
+                {
+                  "$obj": "o12844"
+                },
+                {
+                  "$obj": "o12845"
+                },
+                {
+                  "$obj": "o12846"
+                },
+                {
+                  "$obj": "o12847"
+                },
+                {
+                  "$obj": "o12848"
+                },
+                {
+                  "$obj": "o12849"
+                },
+                {
+                  "$obj": "o12850"
+                },
+                {
+                  "$obj": "o12851"
+                },
+                {
+                  "$obj": "o12852"
+                },
+                {
+                  "$obj": "o12853"
+                },
+                {
+                  "$obj": "o12854"
+                },
+                {
+                  "$obj": "o12855"
+                },
+                {
+                  "$obj": "o12856"
+                },
+                {
+                  "$obj": "o12857"
+                },
+                {
+                  "$obj": "o12858"
+                },
+                {
+                  "$obj": "o12859"
+                },
+                {
+                  "$obj": "o12860"
+                },
+                {
+                  "$obj": "o12861"
+                },
+                {
+                  "$obj": "o12862"
+                },
+                {
+                  "$obj": "o12863"
+                },
+                {
+                  "$obj": "o12864"
+                },
+                {
+                  "$obj": "o12865"
+                },
+                {
+                  "$obj": "o12866"
+                },
+                {
+                  "$obj": "o12867"
+                },
+                {
+                  "$obj": "o12868"
+                },
+                {
+                  "$obj": "o12869"
+                },
+                {
+                  "$obj": "o12870"
+                },
+                {
+                  "$obj": "o12871"
+                },
+                {
+                  "$obj": "o12872"
+                },
+                {
+                  "$obj": "o12873"
+                },
+                {
+                  "$obj": "o12874"
+                },
+                {
+                  "$obj": "o12875"
+                },
+                {
+                  "$obj": "o12876"
+                },
+                {
+                  "$obj": "o12877"
+                },
+                {
+                  "$obj": "o12878"
+                },
+                {
+                  "$obj": "o12879"
+                },
+                {
+                  "$obj": "o12880"
+                },
+                {
+                  "$obj": "o12881"
+                },
+                {
+                  "$obj": "o12882"
+                },
+                {
+                  "$obj": "o12883"
+                },
+                {
+                  "$obj": "o12884"
+                },
+                {
+                  "$obj": "o12885"
+                },
+                {
+                  "$obj": "o12886"
+                },
+                {
+                  "$obj": "o12887"
+                },
+                {
+                  "$obj": "o12888"
+                },
+                {
+                  "$obj": "o12889"
+                },
+                {
+                  "$obj": "o12890"
+                },
+                {
+                  "$obj": "o12891"
+                },
+                {
+                  "$obj": "o12892"
+                },
+                {
+                  "$obj": "o12893"
+                },
+                {
+                  "$obj": "o12894"
+                },
+                {
+                  "$obj": "o12895"
+                },
+                {
+                  "$obj": "o12896"
+                },
+                {
+                  "$obj": "o12897"
+                },
+                {
+                  "$obj": "o12898"
+                },
+                {
+                  "$obj": "o12899"
+                },
+                {
+                  "$obj": "o12900"
+                },
+                {
+                  "$obj": "o12901"
+                },
+                {
+                  "$obj": "o12902"
+                },
+                {
+                  "$obj": "o12903"
+                },
+                {
+                  "$obj": "o12904"
+                },
+                {
+                  "$obj": "o12905"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Limit",
+              "message": "Index limit reached. Cannot create new index."
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12833"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "users"
+            },
+            "as": "o12906"
+          },
+          "bind": "s66587",
+          "expect": {
+            "$document": {
+              "name": "users",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "email",
+                    "key": "email",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "users",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12906"
+            },
+            "method": "indexes",
+            "args": {}
+          },
+          "expect": []
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "one",
+                "email": "same@example.com",
+                "name": "one"
+              }
+            },
+            "as": "o12907"
+          },
+          "bind": "s66589",
+          "expect": {
+            "$document": {
+              "$id": "one",
+              "email": "same@example.com",
+              "name": "one"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12833"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "users",
+              "document": {
+                "$obj": "o12907"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "one",
+              "email": "same@example.com",
+              "name": "one",
+              "$collection": "users",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "two",
+                "email": "same@example.com",
+                "name": "two"
+              }
+            },
+            "as": "o12908"
+          },
+          "bind": "s66591",
+          "expect": {
+            "$document": {
+              "$id": "two",
+              "email": "same@example.com",
+              "name": "two"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12833"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "users",
+              "document": {
+                "$obj": "o12908"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "two",
+              "email": "same@example.com",
+              "name": "two",
+              "$collection": "users",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12833"
+            },
+            "method": "count",
+            "args": {
+              "collection": "users"
+            }
+          },
+          "expect": 2
+        }
+      ]
+    }
+  ]
+}

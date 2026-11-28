@@ -635,17 +635,18 @@ fn blank(s: &[u8]) -> bool {
 }
 
 impl fmt::Debug for Dsn {
-    /// Formats every component except the password, which shows as
-    /// `<hidden>`.
+    /// Formats the scheme, host, port and path. The user, password and query
+    /// show as `<hidden>`: a user is often half a credential (an S3 access
+    /// key id) and a query can carry one (`?password=...`).
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Dsn")
             .field("scheme", &self.scheme())
-            .field("user", &self.user().map(String::from_utf8_lossy))
+            .field("user", &self.user().map(|_| "<hidden>"))
             .field("password", &self.password.as_ref().map(|_| "<hidden>"))
             .field("host", &self.host())
             .field("port", &self.port)
             .field("path", &String::from_utf8_lossy(self.path()))
-            .field("query", &self.query())
+            .field("query", &self.query().map(|_| "<hidden>"))
             .finish()
     }
 }
@@ -681,8 +682,12 @@ mod tests {
             assert!(!printed.contains("AKIAKEY") && !printed.contains("SECRETKEY"), "{printed}");
             assert_eq!(e.php_class(), "InvalidArgumentException");
         }
-        let d = Dsn::parse("redis://user:SECRETKEY@host").unwrap();
-        assert!(!format!("{d:?}").contains("SECRETKEY"));
+        let d = Dsn::parse("s3://AKIAKEY:SECRETKEY@host/bucket?token=QUERYTOKEN").unwrap();
+        let printed = format!("{d:?}");
+        for secret in ["AKIAKEY", "SECRETKEY", "QUERYTOKEN"] {
+            assert!(!printed.contains(secret), "{printed}");
+        }
+        assert!(printed.contains("host") && printed.contains("bucket"), "{printed}");
     }
 
     #[test]

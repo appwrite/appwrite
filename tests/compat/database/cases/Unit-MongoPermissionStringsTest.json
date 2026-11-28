@@ -1,0 +1,594 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/MongoPermissionStringsTest.php"
+  ],
+  "cases": [
+    {
+      "name": "MongoPermissionStringsTest::testPeriodInRoleIsLiteralNotRegexWildcard",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o280"
+          },
+          "bind": "s673",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o280"
+            },
+            "method": "enable",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o280"
+            },
+            "method": "cleanRoles",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o280"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "user:alice."
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Mongo\\Permission",
+            "args": {
+              "authorization": {
+                "$obj": "o280"
+              }
+            },
+            "as": "o281"
+          },
+          "bind": "s677",
+          "expect": {
+            "$hook": "Permission"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o281"
+            },
+            "method": "applyFilters",
+            "args": {
+              "filters": [],
+              "collection": "documents",
+              "forPermission": {
+                "$enum": "PermissionType::Read"
+              }
+            }
+          },
+          "expect": {
+            "_permissions": {
+              "$in": [
+                "read(\"user:alice.\")"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "MongoPermissionStringsTest::testMassReadDotPaddingStaysExact",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o282"
+          },
+          "bind": "s679",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o282"
+            },
+            "method": "enable",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o282"
+            },
+            "method": "cleanRoles",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o282"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "user:a..................."
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Mongo\\Permission",
+            "args": {
+              "authorization": {
+                "$obj": "o282"
+              }
+            },
+            "as": "o283"
+          },
+          "bind": "s683",
+          "expect": {
+            "$hook": "Permission"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o283"
+            },
+            "method": "applyFilters",
+            "args": {
+              "filters": [],
+              "collection": "documents",
+              "forPermission": {
+                "$enum": "PermissionType::Read"
+              }
+            }
+          },
+          "expect": {
+            "_permissions": {
+              "$in": [
+                "read(\"user:a...................\")"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "MongoPermissionStringsTest::testMatchingIsCaseSensitiveAndUsesRequestedType",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o284"
+          },
+          "bind": "s685",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o284"
+            },
+            "method": "enable",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o284"
+            },
+            "method": "cleanRoles",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o284"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "user:alice"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Mongo\\Permission",
+            "args": {
+              "authorization": {
+                "$obj": "o284"
+              }
+            },
+            "as": "o285"
+          },
+          "bind": "s689",
+          "expect": {
+            "$hook": "Permission"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o285"
+            },
+            "method": "applyFilters",
+            "args": {
+              "filters": [],
+              "collection": "documents",
+              "forPermission": {
+                "$enum": "PermissionType::Update"
+              }
+            }
+          },
+          "expect": {
+            "_permissions": {
+              "$in": [
+                "update(\"user:alice\")"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "MongoPermissionStringsTest::testMultipleRolesMapToExactPermissionStrings",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o286"
+          },
+          "bind": "s691",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o286"
+            },
+            "method": "enable",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o286"
+            },
+            "method": "cleanRoles",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o286"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "user:alice"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o286"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "users"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Mongo\\Permission",
+            "args": {
+              "authorization": {
+                "$obj": "o286"
+              }
+            },
+            "as": "o287"
+          },
+          "bind": "s696",
+          "expect": {
+            "$hook": "Permission"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o287"
+            },
+            "method": "applyFilters",
+            "args": {
+              "filters": [],
+              "collection": "documents",
+              "forPermission": {
+                "$enum": "PermissionType::Read"
+              }
+            }
+          },
+          "expect": {
+            "_permissions": {
+              "$in": [
+                "read(\"user:alice\")",
+                "read(\"users\")"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "MongoPermissionStringsTest::testEmptyRolesProduceEmptyList",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o288"
+          },
+          "bind": "s698",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o288"
+            },
+            "method": "enable",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o288"
+            },
+            "method": "cleanRoles",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Mongo\\Permission",
+            "args": {
+              "authorization": {
+                "$obj": "o288"
+              }
+            },
+            "as": "o289"
+          },
+          "bind": "s701",
+          "expect": {
+            "$hook": "Permission"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o289"
+            },
+            "method": "applyFilters",
+            "args": {
+              "filters": [],
+              "collection": "documents",
+              "forPermission": {
+                "$enum": "PermissionType::Read"
+              }
+            }
+          },
+          "expect": {
+            "_permissions": {
+              "$in": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "MongoPermissionStringsTest::testValuesAreStringsNotRegex",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o290"
+          },
+          "bind": "s703",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o290"
+            },
+            "method": "enable",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o290"
+            },
+            "method": "cleanRoles",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o290"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "user:alice."
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Mongo\\Permission",
+            "args": {
+              "authorization": {
+                "$obj": "o290"
+              }
+            },
+            "as": "o291"
+          },
+          "bind": "s707",
+          "expect": {
+            "$hook": "Permission"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o291"
+            },
+            "method": "applyFilters",
+            "args": {
+              "filters": [],
+              "collection": "documents",
+              "forPermission": {
+                "$enum": "PermissionType::Read"
+              }
+            }
+          },
+          "expect": {
+            "_permissions": {
+              "$in": [
+                "read(\"user:alice.\")"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

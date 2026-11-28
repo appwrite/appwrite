@@ -1,0 +1,145 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Model/CollectionUpdateTest.php"
+  ],
+  "cases": [
+    {
+      "name": "CollectionUpdateTest::testDefaultsChangeNothing",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Collection\\Update",
+            "args": {},
+            "as": "o4083"
+          },
+          "expect": {
+            "$value": "Collection\\Update",
+            "fields": {
+              "permissions": null,
+              "documentSecurity": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "CollectionUpdateTest::testCarriesOnlyTheGivenChanges",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o4084"
+          },
+          "bind": "s6172",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o4084"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Collection\\Update",
+            "args": {
+              "permissions": [
+                "read(\"any\")"
+              ]
+            },
+            "as": "o4085"
+          },
+          "expect": {
+            "$value": "Collection\\Update",
+            "fields": {
+              "permissions": [
+                "read(\"any\")"
+              ],
+              "documentSecurity": null
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Collection\\Update",
+            "args": {
+              "documentSecurity": false
+            },
+            "as": "o4086"
+          },
+          "expect": {
+            "$value": "Collection\\Update",
+            "fields": {
+              "permissions": null,
+              "documentSecurity": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "CollectionUpdateTest::testAnEmptyPermissionListIsAChange",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Collection\\Update",
+            "args": {
+              "permissions": []
+            },
+            "as": "o4087"
+          },
+          "expect": {
+            "$value": "Collection\\Update",
+            "fields": {
+              "permissions": [],
+              "documentSecurity": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "CollectionUpdateTest::testPropertiesAreReadonly",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Collection\\Update",
+            "args": {
+              "documentSecurity": true
+            },
+            "as": "o4088"
+          },
+          "expect": {
+            "$value": "Collection\\Update",
+            "fields": {
+              "permissions": null,
+              "documentSecurity": true
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

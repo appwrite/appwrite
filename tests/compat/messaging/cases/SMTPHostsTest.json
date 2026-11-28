@@ -1,0 +1,286 @@
+{
+  "source": "packages/messaging/tests/Adapter/Email/SMTPHostsTest.php",
+  "cases": [
+    {
+      "name": "one host with the default port",
+      "op": "smtp.hosts",
+      "args": {
+        "host": "smtp.example.com"
+      },
+      "expect": [
+        [
+          "smtp.example.com",
+          25,
+          "None"
+        ]
+      ]
+    },
+    {
+      "name": "a port after the host",
+      "op": "smtp.hosts",
+      "args": {
+        "host": "smtp.example.com:587"
+      },
+      "expect": [
+        [
+          "smtp.example.com",
+          587,
+          "None"
+        ]
+      ]
+    },
+    {
+      "name": "each entry carries its own port and encryption",
+      "op": "smtp.hosts",
+      "args": {
+        "host": "tls://smtp1.example.com:587;ssl://smtp2.example.com:465;smtp3.example.com"
+      },
+      "expect": [
+        [
+          "smtp1.example.com",
+          587,
+          "StartTls"
+        ],
+        [
+          "smtp2.example.com",
+          465,
+          "Implicit"
+        ],
+        [
+          "smtp3.example.com",
+          25,
+          "None"
+        ]
+      ]
+    },
+    {
+      "name": "an address literal keeps its colons",
+      "op": "smtp.hosts",
+      "args": {
+        "host": "::1"
+      },
+      "expect": [
+        [
+          "::1",
+          25,
+          "None"
+        ]
+      ]
+    },
+    {
+      "name": "a bracketed address literal may carry a port",
+      "op": "smtp.hosts",
+      "args": {
+        "host": "[::1]:587"
+      },
+      "expect": [
+        [
+          "[::1]",
+          587,
+          "None"
+        ]
+      ]
+    },
+    {
+      "name": "a bracketed address literal without a port",
+      "op": "smtp.hosts",
+      "args": {
+        "host": "[::1]"
+      },
+      "expect": [
+        [
+          "[::1]",
+          25,
+          "None"
+        ]
+      ]
+    },
+    {
+      "name": "empty entries are skipped",
+      "op": "smtp.hosts",
+      "args": {
+        "host": "smtp.example.com;;"
+      },
+      "expect": [
+        [
+          "smtp.example.com",
+          25,
+          "None"
+        ]
+      ]
+    },
+    {
+      "name": "the auto TLS flag decides when no prefix says so",
+      "op": "smtp.hosts",
+      "args": {
+        "host": "smtp.example.com",
+        "auto_tls": true
+      },
+      "expect": [
+        [
+          "smtp.example.com",
+          25,
+          "Opportunistic"
+        ]
+      ]
+    },
+    {
+      "name": "the secure prefix decides for every host without one",
+      "steps": [
+        {
+          "op": "smtp.hosts",
+          "args": {
+            "host": "a.example.com;tls://b.example.com",
+            "secure": "ssl"
+          },
+          "expect": [
+            [
+              "a.example.com",
+              25,
+              "Implicit"
+            ],
+            [
+              "b.example.com",
+              25,
+              "StartTls"
+            ]
+          ]
+        },
+        {
+          "op": "smtp.hosts",
+          "args": {
+            "host": "a.example.com",
+            "secure": "tls",
+            "auto_tls": true
+          },
+          "expect": [
+            [
+              "a.example.com",
+              25,
+              "StartTls"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "an invalid secure prefix is refused",
+      "op": "smtp.hosts",
+      "args": {
+        "host": "a.example.com",
+        "secure": "starttls"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Invalid SMTP secure prefix. Must be \"\", \"ssl\" or \"tls\""
+        }
+      }
+    },
+    {
+      "name": "nothing but separators keeps the whole string",
+      "steps": [
+        {
+          "op": "smtp.hosts",
+          "args": {
+            "host": ";;"
+          },
+          "expect": [
+            [
+              ";;",
+              25,
+              "None"
+            ]
+          ]
+        },
+        {
+          "op": "smtp.hosts",
+          "args": {
+            "host": ""
+          },
+          "expect": [
+            [
+              "",
+              25,
+              "None"
+            ]
+          ]
+        },
+        {
+          "op": "smtp.hosts",
+          "args": {
+            "host": " ; "
+          },
+          "expect": [
+            [
+              " ; ",
+              25,
+              "None"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "prefixes in any case, and ports that do not parse",
+      "steps": [
+        {
+          "op": "smtp.hosts",
+          "args": {
+            "host": "SSL://a.example.com:465; Tls://b:1 ;smtp://c:2;d:;e:x;[]:25;[::1:25"
+          },
+          "expect": [
+            [
+              "a.example.com",
+              465,
+              "Implicit"
+            ],
+            [
+              "b",
+              1,
+              "StartTls"
+            ],
+            [
+              "smtp://c:2",
+              25,
+              "None"
+            ],
+            [
+              "d:",
+              25,
+              "None"
+            ],
+            [
+              "e:x",
+              25,
+              "None"
+            ],
+            [
+              "[]",
+              25,
+              "None"
+            ],
+            [
+              "[::1:25",
+              25,
+              "None"
+            ]
+          ]
+        },
+        {
+          "op": "smtp.hosts",
+          "args": {
+            "host": "a:99999999999999999999"
+          },
+          "expect": [
+            [
+              "a",
+              9223372036854775807,
+              "None"
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

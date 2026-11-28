@@ -1,5 +1,8 @@
 # Utopia Image
 
+> [!IMPORTANT]
+> This repository is a read-only mirror of [`crates/utopia/image`](https://github.com/appwrite/appwrite/tree/main/crates/utopia/image) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there — please open issues and pull requests against appwrite/appwrite.
+
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://discord.gg/GSeTUeA)
 
 Image previews: decode, crop by gravity or focal point, borders, rounded corners, opacity, rotation and background, then encode to JPEG, PNG, GIF, WebP or AVIF.
@@ -10,7 +13,7 @@ This library is maintained by the [Appwrite team](https://appwrite.io).
 
 ```toml
 [dependencies]
-utopia-image = { git = "https://github.com/appwrite/appwrite" }
+utopia-image = { git = "https://github.com/utopia-rs/image" }
 ```
 
 `utopia-image` turns an uploaded image into a preview: decode it, crop it, decorate it, and encode it in the format the client asked for. Everything runs in memory on the calling thread; in async code, run it on the blocking pool.
@@ -85,7 +88,27 @@ cargo fmt --all --check
 
 ### Compare with PHP
 
-The utopia PHP extension serves this crate as `Utopia\Image\Canvas` and `Utopia\Image\Font`, which have no PHP implementation. `crates/extension/tests/canvas.php` and `packages/image/tests` run on it in the development image (`crates/extension/tests/run.sh`).
+Replay the results PHP recorded for every case against Rust, without PHP:
+
+```bash
+COMPAT_LIB=image cargo test -p compat
+```
+
+Run every case on both runtimes, fuzz both with generated inputs, then run the whole conversion check. These need the dev stack (`docker compose up -d`):
+
+```bash
+bin/compat run image
+bin/compat fuzz image
+bin/compat check image
+```
+
+### Benchmark
+
+```bash
+bin/compat bench image
+```
+
+This times every benchmark on PHP and on a release build of Rust, both in containers on the dev stack. It fails if Rust is slower. Add `--write` to record the run in [`tests/compat/image/bench.json`](https://github.com/appwrite/appwrite/blob/main/tests/compat/image/bench.json). Run it on a quiet machine, one library at a time.
 
 ## License
 

@@ -1,0 +1,42 @@
+// A small Public Suffix List in the format of
+// https://publicsuffix.org/list/public_suffix_list.dat, for the import task's cases.
+
+// A rule before any section has no section.
+before.example
+
+// ===BEGIN ICANN DOMAINS===
+
+// ac : https://www.nic.ac/
+// Confirmed by registry <admin@nic.ac>
+ac
+com.ac
+
+// com : https://en.wikipedia.org/wiki/.com
+com
+
+// ck : https://en.wikipedia.org/wiki/.ck
+*.ck
+!www.ck
+
+// uk : https://en.wikipedia.org/wiki/.uk
+uk
+co.uk
+// A rule given twice keeps its first place and its last comments.
+ac
+
+// The line below is "0", which PHP's empty() skips.
+0
+// 公司.cn : a rule in UTF-8
+公司.cn
+
+// ===END ICANN DOMAINS===
+between.example
+// ===BEGIN PRIVATE DOMAINS===
+
+// GitHub, Inc.
+github.io
+//no space after the slashes: a rule, not a comment
+===BEGIN ICANN DOMAINS=== at the start of a line is not a marker
+
+// ===END PRIVATE DOMAINS===
+after.example
