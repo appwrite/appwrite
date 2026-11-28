@@ -15,7 +15,9 @@
 //!
 //! A library that still has one registers its classes only when `_APP_EXTENSION_LIBRARIES` names
 //! its package (`if enabled("<package>")` in [`startup`] or [`get_module`]), so it can be canaried
-//! and switched back to PHP with a restart, not a deploy: `balancer` (`Utopia\Balancer\*`).
+//! and switched back to PHP with a restart, not a deploy: `balancer` (`Utopia\Balancer\*`) and
+//! `database-validators` (`Utopia\Database\Validator\Key`, `Label` and `UID`; apart from
+//! `database`, whose classes are the default, so either goes back to PHP alone).
 //!
 //! The `utopia.libraries` php.ini setting, when set, replaces both: only the libraries it names
 //! register (see [`libraries`]).
@@ -26,6 +28,7 @@ mod canvas;
 mod classes;
 mod compression;
 mod database;
+mod database_validators;
 mod detector;
 mod domains;
 mod dsn;
@@ -149,7 +152,7 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
 
 /// Registers the classes built by hand rather than with `#[php_class]`: `Locale`, `UserAgent`, the
 /// validators, the password hashes, the detector, compression, the four database classes and,
-/// when switched on, balancer.
+/// when switched on, balancer and database's key validators.
 /// Runs in MINIT, before the `#[php_class]` classes are registered. Also registers
 /// `utopia.libraries`.
 fn startup(_kind: i32, module: i32) -> i32 {
@@ -187,6 +190,10 @@ fn startup(_kind: i32, module: i32) -> i32 {
         }
         if stable("database") {
             database::register()?;
+        }
+        // After the validators' base, which they extend (`database-validators` needs `validators`).
+        if enabled("database-validators") && stable("validators") {
+            database_validators::register()?;
         }
         Ok(())
     })

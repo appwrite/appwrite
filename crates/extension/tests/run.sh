@@ -28,7 +28,14 @@ vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php packages/i
 for library in $libraries; do
     echo "== $library" >&2
     [ -f "$tests/$library.php" ] || { echo "missing parity corpus $tests/$library.php" >&2; exit 1; }
-    _APP_EXTENSION_LIBRARIES=$library vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php "packages/$library/tests"
+    # database-validators has no package here: utopia-php/database's tests of the classes (and of
+    # Roles and Permissions, which build them) run from vendor/.
+    case $library in
+        database-validators) suite=$(printf 'vendor/utopia-php/database/tests/unit/Validator/%sTest.php ' Key Label UID Roles Permissions) ;;
+        *) suite="packages/$library/tests" ;;
+    esac
+    # shellcheck disable=SC2086
+    _APP_EXTENSION_LIBRARIES=$library vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php $suite
     _APP_EXTENSION_LIBRARIES= php "$tests/$library.php" > "$output/$library.php.jsonl"
     _APP_EXTENSION_LIBRARIES=$library php "$tests/$library.php" > "$output/$library.rust.jsonl"
     diff "$output/$library.php.jsonl" "$output/$library.rust.jsonl"
@@ -59,7 +66,7 @@ done
 # set, only the libraries it names, whatever _APP_EXTENSION_LIBRARIES says.
 echo "== utopia.libraries" >&2
 gate="$tests/libraries.php"
-every=dsn,domains,emails,image,locale,user-agent,validators,auth,detector,compression,query,balancer,database
+every=dsn,domains,emails,image,locale,user-agent,validators,auth,detector,compression,query,balancer,database-validators,database
 _APP_EXTENSION_LIBRARIES= php "$gate" > "$output/libraries.unset"
 diff "$tests/libraries.expected" "$output/libraries.unset" ||
     { echo "the default classes changed: update tests/libraries.expected" >&2; exit 1; }
@@ -103,6 +110,14 @@ php -d utopia.libraries=emails -r 'new Utopia\Emails\Email("a@example.com");'
 _APP_EXTENSION_LIBRARIES= php -d utopia.libraries=database "$gate" \
     +'Utopia\Database\Id' +'Utopia\Database\Role' +'Utopia\Database\Permission' +'Utopia\Database\DateTime' \
     -'Utopia\Database\PermissionType' -'Utopia\Balancer\Balancer' -'Utopia\Validator\Validator' > /dev/null
+# database-validators is off unless named, apart from database, and brings validators (the base).
+_APP_EXTENSION_LIBRARIES= php -d utopia.libraries=database-validators "$gate" \
+    +'Utopia\Database\Validator\Key' +'Utopia\Database\Validator\Label' +'Utopia\Database\Validator\UID' \
+    +'Utopia\Validator\Validator' +'Utopia\Validator\Text' -'Utopia\Database\Id' -'Utopia\Database\Validator\Roles' > /dev/null
+_APP_EXTENSION_LIBRARIES=database-validators php "$gate" +'Utopia\Database\Validator\Key' +'Utopia\Database\Id' > /dev/null
+_APP_EXTENSION_LIBRARIES=database-validators php -d utopia.libraries=database "$gate" \
+    +'Utopia\Database\Id' -'Utopia\Database\Validator\Key' -'Utopia\Database\Validator\UID' > /dev/null
+_APP_EXTENSION_LIBRARIES= php "$gate" -'Utopia\Database\Validator\Key' -'Utopia\Database\Validator\Label' -'Utopia\Database\Validator\UID' > /dev/null
 _APP_EXTENSION_LIBRARIES= php -d utopia.libraries=query "$gate" \
     +'Utopia\Query\NativeQuery' +'Utopia\Query\Builder\MySQL' -'Utopia\Validator\Validator' > /dev/null
 # An unknown name: a startup warning naming it, and the rest of the list still applies.
@@ -123,7 +138,7 @@ echo "== database (against vendor/)" >&2
 # shellcheck disable=SC2046
 vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php \
     $(printf 'vendor/utopia-php/database/tests/unit/%sTest.php ' Id Role Permission DateTime)
-php -d utopia.libraries="$(echo "$every" | sed 's/,database//')" "$tests/database.php" > "$output/database.php.jsonl"
+php -d utopia.libraries="$(echo "$every" | sed 's/,database$//')" "$tests/database.php" > "$output/database.php.jsonl"
 php "$tests/database.php" > "$output/database.rust.jsonl"
 _APP_EXTENSION_LIBRARIES=$all php "$tests/database.php" > "$output/database.all.jsonl"
 diff "$output/database.php.jsonl" "$output/database.rust.jsonl"

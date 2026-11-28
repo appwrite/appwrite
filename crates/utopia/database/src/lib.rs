@@ -8,9 +8,9 @@
 //! # Port status
 //!
 //! Only the modules without I/O are here so far: identifiers, roles,
-//! permissions, dates and the errors they fail with. The rest of the crate
-//! (the model, the adapters, the validators and the [`Error`] marks they
-//! set) comes from appwrite/appwrite#14308.
+//! permissions, dates, the key validators and the errors they fail with. The
+//! rest of the crate (the model, the adapters, the other validators and the
+//! [`Error`] marks they set) comes from appwrite/appwrite#14308.
 //!
 //! # PHP classes and their Rust items
 //!
@@ -20,6 +20,7 @@
 //! | `Utopia\Database\Role` | [`Role`] |
 //! | `Utopia\Database\Permission`, `PermissionType` | [`Permission`], [`PermissionType`] |
 //! | `Utopia\Database\DateTime` | [`datetime`] |
+//! | `Utopia\Database\Validator\Key`, `Label`, `UID` | [`validator`] |
 //! | `Utopia\Database\Exception` and `Exception\*` | [`Error`], [`Kind`] |
 
 #![warn(missing_docs)]
@@ -31,6 +32,7 @@ pub mod error;
 pub mod id;
 pub mod permission;
 pub mod role;
+pub mod validator;
 
 pub use error::{Error, Kind, Result};
 pub use permission::{Permission, PermissionType};
