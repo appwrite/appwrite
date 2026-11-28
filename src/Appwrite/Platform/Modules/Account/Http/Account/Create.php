@@ -16,6 +16,7 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\SDK\Specification\Validator\PasswordFormat;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
@@ -159,6 +160,10 @@ class Create extends Action
             throw new Exception(Exception::USER_PASSWORD_PWNED);
         }
 
+        // A signed-in caller's attributes must not become part of the new account.
+        if (!$user->isEmpty()) {
+            $user = new User();
+        }
         $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, true]);
 
         $passwordHistory = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
@@ -237,7 +242,6 @@ class Create extends Action
                 'passwordPwned' => $passwordPwned,
             ]);
 
-            $user->removeAttribute('$sequence');
             $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
             try {
                 $target = $authorization->skip(fn () => $dbForProject->createDocument('targets', new Document([
