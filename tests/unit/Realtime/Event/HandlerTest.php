@@ -221,6 +221,13 @@ final class HandlerTest extends TestCase
         $this->handler->handle(null, 'realtime', \json_encode($event));
 
         $this->assertNotContains(101, \array_merge(...\array_column($this->adapter->sent, 0)));
+
+        // A subscribe that resumes before the close completes keeps the socket closing.
+        $this->realtime->subscribe('project1', 101, 'late', [Role::team('team1')->toString()], ['account']);
+        $this->adapter->sent = [];
+        $this->handler->handle(null, 'realtime', \json_encode($event));
+
+        $this->assertNotContains(101, \array_merge(...\array_column($this->adapter->sent, 0)));
     }
 
     /**

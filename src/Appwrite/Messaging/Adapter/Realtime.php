@@ -221,7 +221,7 @@ class Realtime extends MessagingAdapter
 
         // Recorded once by the connection handler or a presence write; every later (re)subscribe
         // keeps it, so a `subscribe` message after a presence message never drops the hold stash.
-        foreach (['authorization', 'sessionId', 'impersonatedUserId', 'impersonator', 'admin', 'expire', 'jwtExpire', 'presence', 'limits'] as $key) {
+        foreach (['authorization', 'sessionId', 'impersonatedUserId', 'impersonator', 'admin', 'expire', 'jwtExpire', 'presence', 'limits', 'closing'] as $key) {
             if (\array_key_exists($key, $existing)) {
                 $entry[$key] = $existing[$key];
             }
@@ -672,6 +672,22 @@ class Realtime extends MessagingAdapter
      *
      * @return array<int|string, array> Map of connection IDs to matched query groups
      */
+    /**
+     * Marks a connection the server is closing. It stays subscribed until the transport reports
+     * the close and unsubscribe() runs, so getSubscribers() skips it until then.
+     */
+    public function markClosing(mixed $connection): void
+    {
+        if (isset($this->connections[$connection])) {
+            $this->connections[$connection]['closing'] = true;
+        }
+    }
+
+    public function isClosing(mixed $connection): bool
+    {
+        return $this->connections[$connection]['closing'] ?? false;
+    }
+
     public function getSubscribers(array $event): array
     {
         $receivers = [];
@@ -692,6 +708,10 @@ class Realtime extends MessagingAdapter
                 }
 
                 foreach ($subscriptionsByChannel[$channel] as $id => $subscriptions) {
+                    if ($this->isClosing($id)) {
+                        continue;
+                    }
+
                     $matched = [];
 
                     foreach ($subscriptions as $subscriptionId => $data) {

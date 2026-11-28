@@ -101,9 +101,7 @@ class Handler
             // After delivery, so revoked connections see the event that ended their access.
             $this->enter('close');
             foreach (\array_keys($closing) as $connection) {
-                if (isset($this->realtime->connections[$connection])) {
-                    $this->realtime->connections[$connection]['closing'] = true;
-                }
+                $this->realtime->markClosing($connection);
                 $this->server->send([$connection], $this->unauthorizedPayload);
                 $this->server->close($connection, $this->unauthorized->getCode());
             }
@@ -655,11 +653,6 @@ class Handler
 
         $now = \time();
         foreach ($receivers as $id => $matched) {
-            // Stays subscribed until the transport reports the close.
-            if ($this->realtime->connections[$id]['closing'] ?? false) {
-                continue;
-            }
-
             // Expiry fires no event, so it is checked on every send.
             if ($this->realtime->isExpired($id, $now)) {
                 $closing[$id] = true;
