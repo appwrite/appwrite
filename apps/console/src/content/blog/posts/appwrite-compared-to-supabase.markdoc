@@ -1,213 +1,215 @@
 ---
 layout: post
 title: "Appwrite vs Supabase: a comparison of Backend-as-a-Service platforms"
-description: Get a comprehensive comparison between Appwrite and Supabase to decide what platform to use for your project's backend.
+description: Compare Appwrite and Supabase across databases, managed PostgreSQL, auth, storage, functions, messaging, and hosting to decide which backend fits your project.
 date: 2024-03-01
+lastUpdated: 2026-11-26
 cover: /images/blog/appwrite-competitor-comparison/cover.avif
-timeToRead: 7
+timeToRead: 8
 author: aditya-oberai
 category: products
 unlisted: true
 callToAction: true
 faqs:
   - question: "What is the main difference between Appwrite and Supabase?"
-    answer: "Both are Backend-as-a-Service platforms, but Supabase is built directly on Postgres and exposes SQL to developers, while Appwrite provides a higher-level abstraction over [Databases](/docs/products/databases), [Auth](/docs/products/auth), [Storage](/docs/products/storage), and [Functions](/docs/products/functions) through unified APIs and SDKs. Appwrite also ships in-house [Functions](/docs/products/functions) runtimes for 10+ languages, where Supabase officially supports only TypeScript."
+    answer: "Supabase is a PostgreSQL platform: every project is one dedicated Postgres instance with auth, storage, and functions around it. Appwrite is an all-in-one platform with five database models in one project, including managed [PostgreSQL](/docs/products/databases/postgresql) on dedicated compute, plus [Auth](/docs/products/auth), [Storage](/docs/products/storage), [Functions](/docs/products/functions) in 13+ runtimes, [Messaging](/docs/products/messaging), and web hosting with [Sites](/docs/products/sites)."
+  - question: "Does Appwrite support PostgreSQL?"
+    answer: "Yes. Appwrite runs managed PostgreSQL 18 (or 17) on dedicated compute with connection pooling, up to five HA replicas, point-in-time recovery, and up to 50 extensions including pgvector and PostGIS. Connect with psql or any Postgres driver. Self-hosted Appwrite 2.0 also runs on Postgres by default."
   - question: "Can I self-host both Appwrite and Supabase?"
-    answer: "Yes, both are open source and can be self-hosted. Appwrite is distributed as a Docker-based stack you can run on your own infrastructure, and Supabase provides a similar self-hosting option. Both also offer managed cloud platforms if you do not want to operate the stack yourself."
+    answer: "Yes, both are open source. Appwrite self-hosts with one Docker install and runs many projects per instance, with the same APIs, SDKs, and Console as Appwrite Cloud. Supabase self-hosting is community supported and runs one project per instance."
   - question: "Which platform is better for mobile apps?"
-    answer: "Appwrite ships official SDKs for Flutter, Apple, Android, and React Native, with built-in support for OAuth, magic links, and push notifications via [Messaging](/docs/products/messaging). Supabase has community and official mobile SDKs but tends to focus more heavily on web. The right choice depends on your target platforms and how much you value first-party SDK coverage."
+    answer: "Appwrite ships official SDKs for Flutter, Apple, Android, and React Native, with built-in OAuth, magic links, and push notifications through [Messaging](/docs/products/messaging). Supabase has mobile SDKs but no built-in push notifications, so you add a separate provider."
   - question: "Do Appwrite and Supabase both support realtime?"
-    answer: "Yes, both support realtime subscriptions. Appwrite exposes realtime over WebSockets for database events, account events, and more across [Databases](/docs/products/databases) and other services. Supabase exposes realtime through Postgres logical replication, which means you subscribe directly to row-level changes in your tables."
+    answer: "Yes. Appwrite realtime covers every service: rows, files, function executions, sessions, and teams. Supabase realtime covers Postgres changes, broadcast, and presence."
   - question: "How do pricing models compare between Appwrite and Supabase?"
-    answer: "Both offer generous free tiers and usage-based paid plans. Appwrite includes image manipulation and previews on the free tier, while Supabase reserves those for paid tiers. Compare the actual usage limits for [Databases](/docs/products/databases), [Storage](/docs/products/storage), and bandwidth against your expected workload before deciding."
+    answer: "Both Pro plans start at $25/mo, and dedicated database compute starts at $10/mo on both. Appwrite Pro includes 200K monthly active users (Supabase includes 100K) and 2TB of bandwidth (Supabase includes 250GB). See [pricing](/pricing) for current limits."
   - question: "Can I migrate from Supabase to Appwrite?"
-    answer: "Yes. Appwrite supports CSV imports and migration APIs that let you move data from another platform into Appwrite [Databases](/docs/products/databases). Auth and storage will require additional scripting because the user models and storage paths differ between the two platforms."
+    answer: "Yes. The [Migrations](/docs/advanced/migrations/supabase) tool in the Console imports users, databases, and files from a Supabase project, and usage during the migration does not count toward your Appwrite Cloud bill. Edge Functions are moved by hand to any Appwrite runtime."
 ---
 
-Updated on October 6, 2025
+Updated on November 26, 2026
 
-If you are looking to build a mobile app, website, tool, or any other application that needs a backend, then you also know the daunting tasks that await. This is probably what brought you to this blog in the first place: looking for a solution to take care of your backend. One of these solutions is a Backend-as-a-Service (BaaS). It provides pre-built backend infrastructure and services to simplify app development, handling server-side tasks like data storage, user management, APIs, server maintenance, security, database management, and more. Two of these solutions are Appwrite and Supabase, and although both are solid options for your BaaS, they’re somewhat different.
+If you are building a mobile app, website, tool, or any other application that needs a backend, you know how much work waits on the server side. A Backend-as-a-Service (BaaS) takes most of it off your plate. It gives you pre-built infrastructure for data storage, user management, APIs, security, and database management, so you can focus on your product. Appwrite and Supabase are two popular open-source options, and while both cover the core of a backend, they approach it differently.
 
-This article will give you a rundown of Appwrite and Supabase to understand the feature sets. Then, we’ll provide a quick Appwrite vs Supabase comparison so you can understand how each provider will fit your specific needs.
+This article gives you a rundown of both platforms, compares them product by product, and ends with a summary table so you can see how each fits your needs.
 
-For a wider **backend infrastructure** comparison that also includes Firebase and AWS Amplify, read [Backend as a service (BaaS)](/blog/post/backend-as-a-service).
+For a wider **backend infrastructure** comparison that also includes Firebase and AWS Amplify, read [Backend as a service (BaaS)](/blog/post/backend-as-a-service). For a side-by-side table of every feature and price, see [Appwrite as a Supabase alternative](/alternative-to/supabase).
 
 # Appwrite
 
-In 2019, [Appwrite](/) started as an open-source project to make software development more accessible and enjoyable. It is a Backend as a Service platform with a vibrant developer community. You can self-host Appwrite on your server or utilize [Appwrite Cloud](https://cloud.appwrite.io/). Appwrite provides a wide range of features, including user authentication, databases, storage, real-time features, and functions. It is known for its flexibility, security, and extensibility, enabling you to implement custom backend logic and build applications tailored to your needs. You can view Appwrite’s source code on [GitHub](https://github.com/appwrite/appwrite).
+[Appwrite](/) started in 2019 as an open-source project to make software development more accessible and enjoyable. It is an all-in-one development platform: authentication, databases, managed PostgreSQL, storage, functions, messaging, realtime, and web hosting, all in one Console. You can use [Appwrite Cloud](https://cloud.appwrite.io/) or self-host the same platform on your own servers. You can view Appwrite's source code on [GitHub](https://github.com/appwrite/appwrite).
 
 # Supabase
 
-Supabase positions itself as an alternative to Firebase, which offers a range of tools and services for developing and deploying web and mobile apps. It was founded in 2020 and aims to be a user-friendly, scalable, and secure platform for creating modern applications. Supabase provides features for user authentication, app analytics, databases, real-time, and functions. It supports various platforms like web, Android, and iOS and can easily integrate with other tools and services. You can use their Cloud platform or self-host. You can view Supabase’s source code on [GitHub](https://github.com/supabase/supabase).
+Supabase was founded in 2020 and positions itself as a Postgres development platform and an alternative to Firebase. Each Supabase project is a dedicated PostgreSQL database with authentication, storage, realtime, and edge functions built around it. You can use the Supabase Cloud platform or self-host. You can view Supabase's source code on [GitHub](https://github.com/supabase/supabase).
 
 # Features compared
 
-When looking into a BaaS solution, it is good to understand how the products and features can serve your project’s needs. We compiled a list of similarities and differences between Appwrite and Supabase for you to understand both offerings better.
+When you evaluate a BaaS, it helps to understand how each product serves your project. Here are the similarities and differences between Appwrite and Supabase.
 
 ## Authentication
 
-Authentication is the process of verifying a user's identity to ensure that only the appropriate individuals have access to their private data. Different authentication methods include email and passwords, passwordless login via emails and phone numbers, or applications that offer single sign-on (SSO) capabilities. It is usually the initial step in application development for developers. BaaS platforms simplify this process by offering SDKs and APIs.
+Authentication verifies a user's identity so that only the right people can reach their private data. Methods include email and password, passwordless login by email or phone, and single sign-on (SSO). It is usually the first thing you build, and BaaS platforms simplify it with SDKs and APIs.
 
 *Similarities:*
 
-- Both offer robust authentication capabilities, including user registration, login, and passwordless login options.
-- They both support various authentication methods, such as email and password, social logins (Google, Facebook, etc.), and device authentication.
-- Role-based access control (RBAC) is available to manage user permissions and restrict access to resources.
+- Both offer user registration, login, and passwordless options.
+- Both support email and password, OAuth providers such as Google and GitHub, and anonymous sessions.
+- Both support multi-factor authentication.
 
 *Differences:*
 
-- Appwrite's authentication system allows developers to integrate with any existing external authentication systems through [custom token login](/docs/products/auth/custom-token).
-- Appwrite provides two user grouping and categorization features: teams and labels, for simpler permissions management.
-- Supabase offers integration with SAML for enterprise SSO.
+- Appwrite integrates with any external authentication system through [custom token login](/docs/products/auth/custom-token).
+- Appwrite has [teams](/docs/products/auth/teams) with memberships and roles built in, plus labels, which makes multi-tenant apps and permissions simpler. In Supabase, you model teams yourself with tables and Row Level Security policies.
+- Supabase offers SAML SSO for your own end users. SAML SSO for end users is coming soon to Appwrite.
 
 ## Databases
 
-A database is an organized collection of information stored in a way that allows for easy access, retrieval, management, and updating. Databases store and manage large volumes of structured data, supporting activities such as data storage, analysis, and management. They are integral to any application.
-
-Both Appwrite and Supbase provide databases that can be used depending on the needs of your project.
+A database stores your application's data so it can be retrieved, queried, and updated efficiently. It is the core of almost every app, and it is where the two platforms differ most.
 
 *Similarities:*
 
-- Both provide a user-friendly database interface for creating and managing tables, indexes, and relationships.
-- They both support relational databases.
-- Schema migrations are available to manage database changes in a structured manner.
+- Both offer managed PostgreSQL that you can query directly with SQL, psql, or any Postgres driver.
+- Both run databases on dedicated compute, starting at $10/mo.
+- Both provide a Console interface to create and manage tables, indexes, and relationships.
 
 *Differences:*
 
-- Appwrite offers an abstraction layer above MariaDB as part of its API, offering a simpler developer experience for data consumption and user permissions management.
-- Appwrite offers offset and cursor pagination out-of-the-box to developers, which will have to be manually developed with Supabase.
-- Supabase's PostgreSQL database provides more flexibility by giving developers direct access to the database but substantially increases the learning curve.
+- Appwrite gives you five database models in one project. [TablesDB](/docs/products/databases) runs on serverless or dedicated compute, and DocumentsDB, VectorsDB, [PostgreSQL](/docs/products/databases/postgresql), and MySQL run on dedicated compute. DocumentsDB, VectorsDB, PostgreSQL, and MySQL are in beta. Supabase gives you one PostgreSQL instance per project.
+- Appwrite's [managed PostgreSQL](/products/postgres) runs PostgreSQL 18 (or 17) with connection pooling, up to five HA replicas, and up to 50 extensions, including pgvector and PostGIS.
+- Point-in-time recovery on Appwrite adds 20% of the compute tier, with a restore window of 1 to 35 days. On Supabase, it costs $100/mo per 7 days and requires Small compute or larger.
+- TablesDB, DocumentsDB, and VectorsDB come with SDKs, offset and cursor pagination, and [permissions](/docs/products/databases/tablesdb/permissions) as readable role strings on tables and rows, with no SQL required. Supabase protects rows with Row Level Security policies written in SQL. With Appwrite's managed PostgreSQL, you can still use Row Level Security when that is the model you want.
+- Self-hosted Appwrite 2.0 runs on [PostgreSQL by default](/blog/post/appwrite-2-0-postgres-by-default), and you can choose MariaDB or MongoDB in the setup wizard instead.
 
 ## Storage
 
-Storage allows you to manage files in your project. It can store images, videos, documents, and other project files. Storage can be a crucial requirement for any application that operates on binary data (e.g., social media platforms), and here's what Appwrite and Supbase have to offer:
+Storage manages the files in your project: images, videos, documents, and other binary data. It is a core requirement for apps such as social platforms or content tools.
 
 *Similarities:*
 
-- Both provide object storage for storing and managing files, images, and other binary data.
-- Access control is available to manage files and restrict access.
+- Both provide object storage for files, images, and other binary data.
+- Both control access to files with permissions.
 
 *Differences:*
 
-- Appwrite offers file previews and thumbnails to enhance user experience.
-- Appwrite offers an image manipulation API, including functionalities such as manipulating resolution, image reformatting, caching, and compression, in the free tier. Supabase offers image manipulation only in their paid tiers.
-- Supabase offers a CDN to serve assets via an edge network in their paid tiers.
+- Appwrite offers file previews and an [image transformation API](/docs/products/storage/images) for resizing, cropping, reformatting, and compression. Both platforms include image transformations on paid plans.
+- Appwrite image transformations can serve each image in the best format the browser supports, automatically.
+- Appwrite [buckets](/docs/products/storage/buckets) can encrypt and compress files with gzip or zstd, enabled per bucket in its settings.
 
 {% call_to_action title="All-in-one development platform" description="Use built-in backend infrastructure and web hosting, all from a single place." point1="Start for free"  point2="Open source" point3="Support for over 13 SDKs" point4="Managed cloud solution" cta="Start building" url="https://cloud.appwrite.io/" /%}
 
 ## Functions
 
-Functions are "self-contained" modules of code that accomplish a specific task. BaaS platforms make it easier for you to extend the services by using functions with code snippets.
+Functions are self-contained pieces of code that run on demand. They let you extend your backend with custom logic without managing servers.
 
 *Similarities:*
 
-- Both Appwrite and Supabase provide serverless functions for executing code on demand.
-- They both offer triggers to execute functions on events, such as file uploads or database changes.
+- Both provide serverless functions that run on demand.
+- Both support cron schedules and event triggers, such as file uploads or database changes.
 
 *Differences:*
 
-- Appwrite supports [functions runtimes across over 10 programming languages](/docs/products/functions/runtimes), including JavaScript, Python, PHP, and Dart, whereas Supabase officially supports only one programming language, TypeScript.
-- Appwrite’s functions runtimes have been developed in-house, enabling a more curated developer experience and the ability to develop runtimes more quickly, whereas Supabase uses a 3rd party offering, limiting the pace of development and control over experience.
-- Appwrite offers a marketplace of function templates that are ready to deploy with a few button clicks, which Supabase does not offer.
+- Appwrite supports [13+ function runtimes](/docs/products/functions/runtimes), including Node.js, Python, Go, Dart, and PHP. Supabase Edge Functions run TypeScript on a Deno-compatible runtime.
+- Appwrite builds its runtimes in-house through [Open Runtimes](https://github.com/open-runtimes/open-runtimes), so it can add languages and versions quickly.
+- Appwrite offers function templates that deploy in a few clicks, such as Discord bots, Stripe payments, and AI integrations.
 
 ## Realtime
 
-Real-time, by definition, means "without significant delay.” You can use it to get constant updates on any activities that occur within the application you are building. This can be applied in various ways, such as a chat application. While real-time features can be complex to build, you can use Appwrite and Supabase to achieve them quickly.
+Realtime delivers updates to your app as soon as they happen, which powers features such as chat, live dashboards, and collaboration. Both platforms make this quick to build.
 
 *Similarities:*
 
-- Appwrite and Supabase provide real-time data synchronization using WebSockets.
-- Both of them support broadcasting changes to large audiences.
-- They both offer client libraries for various programming languages.
+- Both deliver realtime updates over WebSockets.
+- Both support broadcasting changes to large audiences.
+- Both offer client libraries in several languages.
 
 *Differences:*
 
-- Appwrite also supports real-time updates across every product (e.g., function executions, file uploads, account creation) whereas Supabase supports real-time updates for database changes only.
-- Supabase offers state tracking and synchronization across users out of the box.
+- Appwrite realtime covers every service: rows, files, function executions, sessions, and teams. Supabase realtime covers Postgres changes, broadcast, and presence.
+- Supabase offers presence tracking across users out of the box.
 
 ## Messaging
 
-Messaging allows you to implement communications in your application. You can use this to send information and updates directly to users through various methods, such as push notifications, SMS, and email. Currently, Supabase has no direct messaging features, whereas Appwrite does.
+Messaging lets you reach your users directly through push notifications, SMS, and email. Appwrite has it built in. Supabase does not offer messaging, so you integrate external providers yourself.
 
 *Similarities:*
 
-- You can use real-time features along with databases in both Appwrite and Supabase to create a chat application.
-- You can use functions in both Appwrite and Supabase to use external providers for SMS and email.
+- In both, you can combine realtime and databases to build a chat application.
+- In both, you can call external SMS and email providers from functions.
 
 *Differences:*
 
-- Appwrite Messaging features ten different providers to leverage major communications providers for SMS, email, and push notifications. It offers user segregation, message scheduling, and message previews as well. Supabase offers none of these.
+- [Appwrite Messaging](/docs/products/messaging) connects to 12 providers for email, SMS, and push notifications, with topics, scheduling, and message previews. Supabase offers none of these.
 
 ## Self-hosting
 
-Self-hosting support essentially means a developer can deploy the application on their infrastructure rather than use a managed solution. This allows the developer complete control over their data and more flexibility to tweak how the application works and pick their own hosting solution. Being open-source, both Appwrite and Supabase allow developers to self-host them.
+Self-hosting means running the platform on your own infrastructure instead of a managed cloud. It gives you full control over your data and where it lives. Both Appwrite and Supabase are open source, so both can be self-hosted.
 
 *Similarities:*
 
-- Both Appwrite and Supabase are self-hosted using Docker. They both offer Docker Compose files to deploy different components of the platforms and can be built directly from their GitHub repositories.
+- Both self-host with Docker.
 
 *Differences:*
 
-- Appwrite offers a [single installation command](/docs/advanced/self-hosting#install-with-docker) with a pre-built configuration to simplify the self-hosting process, making it more straightforward and cohesive. Supabase, on the other hand, expects the developer to manually configure each component during the setup process.
-- Appwrite offers one-click setups for DigitalOcean, Gitpod, and Akamai Compute. Supabase offers the same for DigitalOcean and AWS.
-- Supabase features community-maintained helm charts to self-host using Kubernetes.
+- Appwrite installs with a [single command](/docs/advanced/self-hosting) and a setup wizard, and runs the same APIs, SDKs, and Console as Appwrite Cloud. Supabase self-hosting uses Docker Compose, and you configure each component yourself.
+- One self-hosted Appwrite instance runs many projects. A self-hosted Supabase instance runs one project.
+- Supabase self-hosting is community supported.
 
 ## Hosting
 
-Appwrite offers native hosting as part of its all-in-one platform. That means you can develop, deploy, and scale your application all from a single platform. Supabase, while it provides backend services, does not include frontend hosting.
+Appwrite includes web hosting, so you can develop, deploy, and scale your whole application from one platform. Supabase focuses on the backend and does not host frontends.
 
 *Differences:*
 
-- Appwrite includes built-in hosting for static and dynamic sites via Appwrite Sites. Supabase does not offer frontend hosting. You must be dependent on third-party tools like Vercel or Netlify to host your application.
-- Appwrite Sites supports server-side rendering out of the box.
-- With Appwrite, developers can manage everything from frontend and backend to environments, deployments, and monitoring from a single control panel, while Supabase requires using multiple services and dashboards, increasing complexity.
+- [Appwrite Sites](/docs/products/sites) hosts static and server-side rendered apps, with Git deployments and preview builds. With Supabase, you pair the backend with a separate frontend host such as Vercel or Netlify.
+- With Appwrite, your frontend, backend, domains, deployments, and monitoring live in one Console. With Supabase, you manage several services and dashboards.
 
 ## Support
 
-Any developer-first product, regardless of how good and simple it may be, will need a system for support in case its consumers face any issues. Both Appwrite and Supabase have developed support offerings to ensure their consumers can share feedback and get the necessary help.
+Every developer product needs a good support system. Both Appwrite and Supabase offer ways to get help and share feedback.
 
 *Similarities*:
 
-- Both Appwrite and Supabase offer comprehensive documentation and community forums for self-help.
-- They both provide paid support plans for priority email assistance.
-- They both have active open-source communities where users can collaborate and share knowledge.
+- Both offer comprehensive documentation and community forums.
+- Both offer paid support plans with priority email assistance.
+- Both have active open-source communities.
 
 *Differences*:
 
-- The Appwrite community is very active and provides fast and comprehensive support.
-- Supabase provides a higher tier of support for a higher price.
+- The Appwrite community on [Discord](https://appwrite.io/discord) is very active and responds quickly.
+- Supabase offers a higher tier of support at a higher price.
 
 # Conclusion
 
-Both Appwrite and Supabase are strong platforms that make it easier for developers to focus on building instead of managing complex backend systems. They share many similarities but differ in how they approach development.
+Both Appwrite and Supabase let you focus on building instead of operating backend systems, and both give you managed PostgreSQL. The difference is how much of your stack each one covers.
 
-Supabase offers a familiar experience for developers who prefer working closely with SQL and PostgreSQL. It’s a good choice if you want more control over your database structure, queries, and configurations at the database level.
+Supabase is a strong choice when your project is centered on Postgres and you need little else from the platform. It also fits if you rely on PostgREST for an auto-generated REST API, offer SAML SSO to your own end users, or use an AI app builder with a one-click Supabase integration.
 
-Appwrite, meanwhile, takes an all-in-one approach. It brings together authentication, databases, storage, functions, real-time features, messaging, and even hosting into a single platform. Whether you use Appwrite Cloud or self-host, you get a consistent and flexible experience that allows you to manage your entire stack in one place.
+Appwrite covers more of your stack in one place. You get managed PostgreSQL when you want raw SQL, and TablesDB, DocumentsDB, and VectorsDB with SDKs and readable permissions when you don't. Auth, storage, functions in 13+ runtimes, messaging, realtime, and web hosting come with it. Whether you use Appwrite Cloud or self-host, you get the same platform and the same APIs.
 
-If you’re looking for a complete, integrated platform to handle everything from your backend to hosting, Appwrite offers a simple and unified solution. But if you prefer the flexibility of direct database control and a more traditional SQL setup, Supabase is a good choice.
-
-Here’s a table that compares both Appwrite and Supabase:
+Here's a table that compares Appwrite and Supabase:
 
 | Feature | Appwrite | Supabase |
 | --- | --- | --- |
-| Database | Relational (MariaDB) | Relational (PostgreSQL) |
-| Serverless functions runtimes | 10+ languages supported | Only 1 language officially supported |
-| Self-hosting / Cloud | Self-hosting and Cloud available | Self-hosting and Cloud available |
-| Supported programming languages | Supports [SDKs](/docs/sdks) in 10 languages JavaScript, Python, PHP, Kotlin, Dart | Supports SDKs in 6 languages |
-| Functions marketplace | Has a marketplace featuring a variety of function templates and integrations such as Discord bots, payments with Stripe, ChatGPT API, etc. | No functions marketplace |
-| Permissions | A simple-to-use permissions system that is consistent across all Appwrite products | Complex permissions system that needs knowledge of SQL to get started |
-| Messaging providers | 10 providers covering SMSes, emails, and push notifications | Zero |
-| Integrated Hosting | Yes | No | 
-| Pricing Model | Tiered pricing | Tiered pricing |
-| Paid Plan | Starts at $25 per month | Starts at $25 per month |
+| Database models | 5: TablesDB, DocumentsDB, VectorsDB, PostgreSQL, MySQL | 1: PostgreSQL |
+| Managed PostgreSQL | Yes, PostgreSQL 18 on dedicated compute, in beta | Yes |
+| Serverless or dedicated databases | Serverless TablesDB, or dedicated compute for any engine | One dedicated instance per project |
+| Permissions | Readable role strings on tables and rows, no SQL required | Row Level Security policies written in SQL |
+| Function runtimes | 13+ languages | TypeScript on a Deno-compatible runtime |
+| Function templates | Yes, deploy in a few clicks | No |
+| Messaging | 12 providers for email, SMS, and push | None |
+| Web hosting | Yes, static and SSR with Appwrite Sites | No |
+| Self-hosting | One Docker install, many projects per instance | Docker Compose, one project per instance |
+| Pro plan | From $25/mo, 200K MAU, 2TB bandwidth | From $25/mo, 100K MAU, 250GB bandwidth |
 
 # Resources
 
-If you’re looking for an independent comparison of performance, scalability, and ease of use between Appwrite and Supabase, take a look at this [in-depth article by Codigee](https://codigee.com/blog/appwrite-vs-supabase-cloud-vs-self-hosted-performance-comparison). To learn more about Appwrite or try it yourself, check out the resources below.
+If you're looking for an independent comparison of performance, scalability, and ease of use between Appwrite and Supabase, take a look at this [in-depth article by Codigee](https://codigee.com/blog/appwrite-vs-supabase-cloud-vs-self-hosted-performance-comparison). To learn more about Appwrite or try it yourself, check out the resources below.
 
-- [Appwrite documentation](/docs) - Visit Appwrite’s docs to learn how to get started and more about Appwrite’s functionality.
-- [Appwrite Migration API](/docs/advanced/migrations/supabase) - Find out how to transfer your applications from Supabase to Appwrite in just a few steps.
-- [Appwrite GitHub repo](https://github.com/appwrite/appwrite) - Explore Appwrite’s code and architecture and see how you can contribute to Appwrite.
-- [Appwrite Discord](https://appwrite.io/discord) - Join Appwrite’s Discord server and be part of a vibrant community.
-- [Appwrite YouTube](https://www.youtube.com/@Appwrite) - Visit Appwrite YouTube for hands-on tutorials to help you learn.
+- [Appwrite as a Supabase alternative](/alternative-to/supabase) - See every feature and price side by side.
+- [Managed PostgreSQL](/products/postgres) - Run PostgreSQL with pooling, replicas, and point-in-time recovery.
+- [Migrate from Supabase](/docs/advanced/migrations/supabase) - Move your users, databases, and files from Supabase to Appwrite.
+- [Appwrite documentation](/docs) - Learn how to get started and explore every Appwrite product.
+- [Appwrite GitHub repo](https://github.com/appwrite/appwrite) - Explore Appwrite's code and see how you can contribute.
+- [Appwrite Discord](https://appwrite.io/discord) - Join Appwrite's Discord server and be part of a vibrant community.
+- [Appwrite YouTube](https://www.youtube.com/@Appwrite) - Watch hands-on tutorials to help you learn.
