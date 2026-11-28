@@ -4,7 +4,7 @@ The `v1-executions` queue's worker in Rust. It writes function and site executio
 
 It reads the queue through `utopia-queue`, which consumes NATS JetStream only, so it serves an installation whose `_APP_CONNECTIONS_QUEUE_EXECUTIONS` is a `nats://` DSN. It shares the queue's `worker` consumer with the PHP worker, so either can take any message and they can run side by side during a switch.
 
-Every message one receive takes (up to 500) is written in one insert and acknowledged once ClickHouse has stored it. An insert ClickHouse refuses is retried on the queue's backoff. A message that holds no execution is dead-lettered at once.
+After the first message of a batch it keeps receiving for 500 ms (or until it holds 5,000 rows), then writes the batch in one insert and acknowledges it once ClickHouse has stored it. A pod so makes at most two inserts a second, a replayed backlog included: the bound ClickHouse's insert buffer (`_APP_EXECUTIONS_INSERT_BUFFER`) gives the PHP worker, which this worker does not use. An insert ClickHouse refuses is retried on the queue's backoff. A message that holds no execution is dead-lettered at once.
 
 ## Configuration
 

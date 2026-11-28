@@ -3,12 +3,14 @@
 //! It takes the place of the PHP `executions` worker on a queue served by NATS JetStream, which is
 //! the only broker utopia-queue's Rust worker reads. Both can consume the queue at once.
 //!
-//! Each message is an execution, a batch of them, or a cancelled execution's delete. Every message
-//! one receive takes is written in a single insert, and acknowledged only once ClickHouse has
-//! stored it: the queue holds every snapshot until then, and one insert per receive instead of one
-//! per snapshot keeps the parts ClickHouse has to merge few without its insert buffer. An insert
-//! ClickHouse refuses is rejected and retried on the queue's backoff. A message that holds no
-//! execution is dead-lettered at once, since a retry cannot give it one.
+//! Each message is an execution, a batch of them, or a cancelled execution's delete. The worker
+//! keeps receiving for WINDOW after the first message of a batch, then writes everything it holds
+//! in one insert and acknowledges it once ClickHouse has stored it. A pod so makes at most two
+//! inserts a second however fast messages come, a replayed backlog included, which is the bound
+//! ClickHouse's insert buffer (`_APP_EXECUTIONS_INSERT_BUFFER`) gave the PHP worker. Nothing is
+//! acknowledged before it is stored, so a killed worker loses nothing. An insert ClickHouse
+//! refuses is rejected and retried on the queue's backoff. A message that holds no execution is
+//! dead-lettered at once, since a retry cannot give it one.
 //!
 //! Configuration, as the PHP worker reads it:
 //! - `_APP_CONNECTIONS_QUEUE_EXECUTIONS`: the queue's `nats://` DSN.
@@ -26,7 +28,7 @@ use std::error::Error;
 use std::process::ExitCode;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use bytes::Bytes;
 use http_body_util::{BodyExt, Full};
@@ -49,11 +51,19 @@ const TABLE: &str = "executions";
 const COLUMNS: &str = "projectId, id, createdAt, updatedAt, sequence, permissions, readRoles, \
     resourceInternalId, resourceId, resourceType, deploymentInternalId, deploymentId, trigger, status, \
     responseStatusCode, duration, requestMethod, requestPath, document, expiresAt, deleted, version";
-/// Most messages written in one insert. The consumer's maxAckPending caps it further.
-const BATCH: usize = 500;
-/// How long a receive waits for a first message. Once it has one it waits only for the queue's
-/// top-up (250 ms), so a new execution is readable about as soon as with the PHP worker.
+/// How long a batch keeps receiving after its first message: the window the PHP worker's
+/// ClickHouse insert buffer held snapshots for. A new execution is readable after about this
+/// long, plus the queue's top-up (250 ms) when it arrives at the window's end. Messages wait
+/// unextended through it, so it must stay well under the queue's ack wait (30 s in production),
+/// or the queue redelivers them into the same batch.
+const WINDOW: Duration = Duration::from_millis(500);
+/// Most rows in one insert: a batch this full is written before its window ends. The consumer's
+/// maxAckPending caps a batch's messages further.
+const MOST: usize = 5_000;
+/// How long a receive waits for the first message of a batch.
 const WAIT: Duration = Duration::from_secs(5);
+/// The shortest a receive waits, so one at the end of a window still asks the server.
+const LEAST_WAIT: Duration = Duration::from_millis(10);
 /// The PHP store's HTTP timeout is 3 s per connection; a batch gets longer.
 const INSERT_TIMEOUT: Duration = Duration::from_secs(30);
 /// How long an idle ClickHouse connection is kept for reuse. Under the server's keep-alive
@@ -74,9 +84,21 @@ fn main() -> ExitCode {
     };
     runtime.block_on(async {
         match connect().await {
-            Ok((clickhouse, worker, terminate)) => {
+            Ok((clickhouse, worker, mut terminate)) => {
                 start.finish();
-                run(&clickhouse, &worker, terminate).await;
+                // A stop is noticed between receives, at most WAIT later, and the batch in hand is
+                // written and settled first. Racing it against a receive would drop messages the
+                // receive had already pulled, which the queue then redelivers after its ack wait.
+                let stopping = Arc::new(AtomicBool::new(false));
+                let stop = stopping.clone();
+                tokio::spawn(async move {
+                    tokio::select! {
+                        _ = terminate.recv() => {}
+                        _ = tokio::signal::ctrl_c() => {}
+                    }
+                    stop.store(true, Ordering::Relaxed);
+                });
+                run(&clickhouse, &worker, &stopping, WINDOW).await;
                 span("process.stop").finish();
                 ExitCode::SUCCESS
             }
@@ -139,29 +161,33 @@ async fn connect() -> Result<(ClickHouse, Worker, Signal), String> {
     Ok((clickhouse, worker, terminate))
 }
 
-/// Works the queue until a stop signal.
-async fn run(clickhouse: &ClickHouse, worker: &Worker, mut terminate: Signal) {
-    // A stop is noticed between receives, at most WAIT later, and the batch in hand is written and
-    // settled first. Racing it against a receive would drop messages the receive had already
-    // pulled, which the queue then redelivers after its ack wait.
-    let stopping = Arc::new(AtomicBool::new(false));
-    let stop = stopping.clone();
-    tokio::spawn(async move {
-        tokio::select! {
-            _ = terminate.recv() => {}
-            _ = tokio::signal::ctrl_c() => {}
-        }
-        stop.store(true, Ordering::Relaxed);
-    });
+/// The messages a batch holds and the rows they write.
+#[derive(Default)]
+struct Batch {
+    held: Vec<Delivery>,
+    rows: Vec<Map<String, Value>>,
+    since: Option<Instant>,
+}
 
+/// Works the queue until `stopping`, writing a batch each `window`.
+async fn run(clickhouse: &ClickHouse, worker: &Worker, stopping: &AtomicBool, window: Duration) {
     let retention =
         env("_APP_MAINTENANCE_RETENTION_EXECUTION").ok().and_then(|value| value.parse().ok()).unwrap_or(1_209_600);
     let mut versions = Versions::default();
-    while !stopping.load(Ordering::Relaxed) {
-        match worker.receive(BATCH, WAIT).await {
-            Ok(deliveries) => {
-                write(worker, clickhouse, deliveries, retention, &mut versions).await;
-            }
+    let mut batch = Batch::default();
+    loop {
+        let stop = stopping.load(Ordering::Relaxed);
+        let left = batch.since.map(|since| window.saturating_sub(since.elapsed()));
+        if !batch.held.is_empty() && (stop || left == Some(Duration::ZERO) || batch.rows.len() >= MOST) {
+            write(worker, clickhouse, std::mem::take(&mut batch)).await;
+            continue;
+        }
+        if stop {
+            return;
+        }
+        let wait = left.map_or(WAIT, |left| left.max(LEAST_WAIT));
+        match worker.receive(MOST.saturating_sub(batch.rows.len()).max(1), wait).await {
+            Ok(deliveries) => take(worker, &mut batch, deliveries, retention, &mut versions).await,
             // The client reconnects by itself; this only keeps a dead server from spinning.
             Err(error) => {
                 span(ACTION).finish_with(None, Some(Failure::new("utopia_queue::Error", cause(&error))));
@@ -171,20 +197,14 @@ async fn run(clickhouse: &ClickHouse, worker: &Worker, mut terminate: Signal) {
     }
 }
 
-async fn write(
-    worker: &Worker,
-    clickhouse: &ClickHouse,
-    deliveries: Vec<Delivery>,
-    retention: i64,
-    versions: &mut Versions,
-) {
-    let mut held = Vec::new();
-    let mut rows = Vec::new();
+/// Adds the rows of `deliveries` to the batch, and dead-letters a message that has none.
+async fn take(worker: &Worker, batch: &mut Batch, deliveries: Vec<Delivery>, retention: i64, versions: &mut Versions) {
     for delivery in deliveries {
         match snapshot::rows(&delivery.envelope.payload, retention, versions) {
-            Ok(snapshots) => {
-                rows.extend(snapshots);
-                held.push(delivery);
+            Ok(rows) => {
+                batch.since.get_or_insert_with(Instant::now);
+                batch.rows.extend(rows);
+                batch.held.push(delivery);
             }
             Err(error) => {
                 let refused = span(ACTION);
@@ -194,18 +214,18 @@ async fn write(
             }
         }
     }
-    if held.is_empty() {
-        return;
-    }
+}
 
+/// Writes the batch in one insert, then acknowledges its messages, or rejects them for a retry.
+async fn write(worker: &Worker, clickhouse: &ClickHouse, batch: Batch) {
     let insert = span(ACTION);
     insert
-        .set("message.count", held.len() as i64)
-        .set("executions.count", rows.len() as i64)
+        .set("message.count", batch.held.len() as i64)
+        .set("executions.count", batch.rows.len() as i64)
         // The batch is a retry if any of it is: the sampler writes retries.
-        .set("message.attempt", held.iter().map(attempt).max().unwrap_or(1));
-    let refs: Vec<&Delivery> = held.iter().collect();
-    let inserted = match worker.hold(&refs, clickhouse.insert(&rows)).await {
+        .set("message.attempt", batch.held.iter().map(attempt).max().unwrap_or(1));
+    let held: Vec<&Delivery> = batch.held.iter().collect();
+    let inserted = match worker.hold(&held, clickhouse.insert(&batch.rows)).await {
         Ok(()) => {
             insert.finish();
             true
@@ -215,7 +235,7 @@ async fn write(
             false
         }
     };
-    for delivery in held {
+    for delivery in batch.held {
         settle(if inserted { worker.commit(delivery).await } else { worker.reject(delivery, false).await });
     }
 }
@@ -314,7 +334,7 @@ impl ClickHouse {
 mod tests {
     use std::sync::Mutex;
 
-    use async_nats::jetstream::{self, consumer, stream};
+    use async_nats::jetstream::{self, Context, consumer, stream};
     use tokio::io::{AsyncReadExt, AsyncWriteExt};
     use tokio::net::TcpListener;
 
@@ -326,57 +346,33 @@ mod tests {
     #[tokio::test]
     #[ignore = "needs a JetStream server at NATS_URL"]
     async fn a_refused_insert_is_retried_not_acknowledged() {
-        let js = jetstream::new(async_nats::connect(std::env::var("NATS_URL").unwrap()).await.unwrap());
-        let queue = format!("test-executions-{}", std::process::id());
-        let name = format!("Q_{}", queue.to_uppercase());
-        let subject = format!("q.{queue}");
-        let stream = js
-            .create_stream(stream::Config {
-                name: name.clone(),
-                subjects: vec![subject.clone(), format!("q.{queue}.dead.>")],
-                ..Default::default()
-            })
-            .await
-            .unwrap();
-        stream
-            .create_consumer(consumer::pull::Config {
-                durable_name: Some("worker".to_string()),
-                filter_subject: subject.clone(),
-                ack_policy: consumer::AckPolicy::Explicit,
-                max_deliver: 3,
-                // Also the first delivery's ack wait, so longer than a receive's top-up.
-                backoff: vec![Duration::from_secs(1)],
-                ..Default::default()
-            })
-            .await
-            .unwrap();
-        for payload in [
+        let (js, queue, stream) = queue("refused", Duration::from_secs(1)).await;
+        publish(
+            &js,
+            &queue,
             serde_json::json!({"project": {"$id": "p1"}, "execution": {"$id": "e1", "status": "completed"}}),
-            serde_json::json!({"project": {"$id": "p1"}}),
-        ] {
-            let message = serde_json::json!({"pid": "1", "queue": queue, "timestamp": 0, "payload": payload});
-            js.publish(subject.clone(), message.to_string().into()).await.unwrap().await.unwrap();
-        }
-
+        )
+        .await;
+        publish(&js, &queue, serde_json::json!({"project": {"$id": "p1"}})).await;
         let (clickhouse, inserts) = clickhouse(&[500, 200]).await;
         let worker = Worker::join(js.clone(), &queue).await.unwrap();
-        let mut versions = Versions::default();
+        let stopping = AtomicBool::new(false);
 
-        let first = worker.receive(BATCH, WAIT).await.unwrap();
-        assert_eq!(first.len(), 2);
-        write(&worker, &clickhouse, first, 60, &mut versions).await;
-
-        let retry = worker.receive(BATCH, WAIT).await.unwrap();
-        assert_eq!(retry.len(), 1, "only the refused execution comes back");
-        assert_eq!(retry[0].attempts, 1);
-        write(&worker, &clickhouse, retry, 60, &mut versions).await;
+        tokio::join!(run(&clickhouse, &worker, &stopping, Duration::from_millis(100)), async {
+            // The retry comes back after the consumer's 1 s backoff.
+            let deadline = Instant::now() + Duration::from_secs(10);
+            while inserts.lock().unwrap().len() < 2 && Instant::now() < deadline {
+                tokio::time::sleep(Duration::from_millis(50)).await;
+            }
+            stopping.store(true, Ordering::Relaxed);
+        });
 
         let mut consumer: consumer::PullConsumer = stream.get_consumer("worker").await.unwrap();
         let info = consumer.info().await.unwrap();
         assert_eq!((info.num_pending, info.num_ack_pending), (0, 0), "the stored execution is acknowledged");
         let inserts = inserts.lock().unwrap().clone();
-        assert_eq!(inserts.len(), 2);
-        for body in inserts.iter() {
+        assert_eq!(inserts.len(), 2, "the refused insert and its retry");
+        for body in &inserts {
             let row: Value = serde_json::from_str(body.trim_end()).unwrap();
             assert_eq!((&row["projectId"], &row["id"]), (&"p1".into(), &"e1".into()));
         }
@@ -388,8 +384,71 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(dead.info().await.unwrap().num_pending, 1, "the message without an execution is dead-lettered");
+        js.delete_stream(stream.cached_info().config.name.as_str()).await.unwrap();
+    }
 
-        js.delete_stream(&name).await.unwrap();
+    /// Messages that arrive apart, in separate receives, are written in one insert when they fall
+    /// in one window: the bound on inserts a second does not depend on how messages arrive.
+    #[tokio::test]
+    #[ignore = "needs a JetStream server at NATS_URL"]
+    async fn messages_received_apart_are_written_together() {
+        // An ack wait longer than the window, as in production.
+        let (js, queue, stream) = queue("window", Duration::from_secs(30)).await;
+        let (clickhouse, inserts) = clickhouse(&[200, 200]).await;
+        let worker = Worker::join(js.clone(), &queue).await.unwrap();
+        let stopping = AtomicBool::new(false);
+        let execution =
+            |id: &str| serde_json::json!({"project": {"$id": "p1"}, "execution": {"$id": id, "status": "waiting"}});
+
+        tokio::join!(run(&clickhouse, &worker, &stopping, Duration::from_secs(2)), async {
+            publish(&js, &queue, execution("e1")).await;
+            // Past the first receive's 250 ms top-up, so this one is a receive of its own.
+            tokio::time::sleep(Duration::from_millis(600)).await;
+            publish(&js, &queue, execution("e2")).await;
+            tokio::time::sleep(Duration::from_secs(3)).await;
+            stopping.store(true, Ordering::Relaxed);
+        });
+
+        let inserts = inserts.lock().unwrap().clone();
+        assert_eq!(inserts.len(), 1, "one insert for the window: {inserts:?}");
+        let ids: Vec<Value> =
+            inserts[0].lines().map(|line| serde_json::from_str::<Value>(line).unwrap()["id"].clone()).collect();
+        assert_eq!(ids, ["e1", "e2"]);
+        js.delete_stream(stream.cached_info().config.name.as_str()).await.unwrap();
+    }
+
+    /// A queue as `Broker\Nats` provisions it, whose retries come back after `ack_wait`.
+    async fn queue(name: &str, ack_wait: Duration) -> (Context, String, stream::Stream) {
+        let js = jetstream::new(async_nats::connect(std::env::var("NATS_URL").unwrap()).await.unwrap());
+        let queue = format!("test-executions-{name}-{}", std::process::id());
+        let subject = format!("q.{queue}");
+        let stream = js
+            .create_stream(stream::Config {
+                name: format!("Q_{}", queue.to_uppercase()),
+                subjects: vec![subject.clone(), format!("q.{queue}.dead.>")],
+                ..Default::default()
+            })
+            .await
+            .unwrap();
+        stream
+            .create_consumer(consumer::pull::Config {
+                durable_name: Some("worker".to_string()),
+                filter_subject: subject,
+                ack_policy: consumer::AckPolicy::Explicit,
+                max_deliver: 3,
+                // Also the first delivery's ack wait.
+                backoff: vec![ack_wait],
+                ..Default::default()
+            })
+            .await
+            .unwrap();
+        (js, queue, stream)
+    }
+
+    /// Publishes `payload` in the envelope `Broker\Nats` writes.
+    async fn publish(js: &Context, queue: &str, payload: Value) {
+        let message = serde_json::json!({"pid": "1", "queue": queue, "timestamp": 0, "payload": payload});
+        js.publish(format!("q.{queue}"), message.to_string().into()).await.unwrap().await.unwrap();
     }
 
     /// A ClickHouse that answers each insert with the next of `statuses`, and the bodies it was sent.
