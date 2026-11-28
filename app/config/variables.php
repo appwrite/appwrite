@@ -2372,6 +2372,33 @@ return [
                 'required' => false,
                 'question' => '',
                 'filter' => ''
+            ],
+            [
+                'name' => '_APP_MIGRATIONS_VERCEL_INTEGRATION',
+                'description' => 'URL slug of the Vercel integration used to import Vercel projects as sites. Create the integration in the Vercel Integration Console with Read access to Projects and Read/Write access to Global Project Environment Variables, and set its Redirect URL to https://<your-domain>/v1/migrations/vercel/oauth2/callback.',
+                'introduction' => '2.8.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_MIGRATIONS_VERCEL_CLIENT_ID',
+                'description' => 'Vercel integration client ID.',
+                'introduction' => '2.8.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_MIGRATIONS_VERCEL_CLIENT_SECRET',
+                'description' => 'Vercel integration client secret.',
+                'introduction' => '2.8.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
             ]
         ]
     ]

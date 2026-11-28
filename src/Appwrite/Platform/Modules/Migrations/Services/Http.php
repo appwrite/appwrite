@@ -17,6 +17,11 @@ use Appwrite\Platform\Modules\Migrations\Http\Migrations\NHost\Report\Get as Get
 use Appwrite\Platform\Modules\Migrations\Http\Migrations\Supabase\Create as CreateSupabaseMigration;
 use Appwrite\Platform\Modules\Migrations\Http\Migrations\Supabase\Report\Get as GetSupabaseReport;
 use Appwrite\Platform\Modules\Migrations\Http\Migrations\Update as UpdateMigration;
+use Appwrite\Platform\Modules\Migrations\Http\Migrations\Vercel\OAuth2\Callback\Get as GetVercelOAuth2Callback;
+use Appwrite\Platform\Modules\Migrations\Http\Migrations\Vercel\OAuth2\Delete as DeleteVercelOAuth2;
+use Appwrite\Platform\Modules\Migrations\Http\Migrations\Vercel\OAuth2\Get as GetVercelOAuth2;
+use Appwrite\Platform\Modules\Migrations\Http\Migrations\Vercel\Projects\Get as GetVercelProject;
+use Appwrite\Platform\Modules\Migrations\Http\Migrations\Vercel\Projects\XList as ListVercelProjects;
 use Appwrite\Platform\Modules\Migrations\Http\Migrations\XList as ListMigrations;
 use Utopia\Platform\Service;
 
@@ -43,6 +48,13 @@ class Http extends Service
         // Supabase source
         $this->addAction('createSupabaseMigration', CreateSupabaseMigration::class);
         $this->addAction('getSupabaseReport', GetSupabaseReport::class);
+
+        // Vercel sites source
+        $this->addAction('getVercelOAuth2', GetVercelOAuth2::class);
+        $this->addAction('getVercelOAuth2Callback', GetVercelOAuth2Callback::class);
+        $this->addAction('deleteVercelOAuth2', DeleteVercelOAuth2::class);
+        $this->addAction('listVercelProjects', ListVercelProjects::class);
+        $this->addAction('getVercelProject', GetVercelProject::class);
 
         // NHost source
         $this->addAction('createNHostMigration', CreateNHostMigration::class);

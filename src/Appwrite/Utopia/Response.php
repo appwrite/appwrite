@@ -265,6 +265,9 @@ class Response extends SwooleResponse
     public const MODEL_MIGRATION_REPORT = 'migrationReport';
     public const MODEL_MIGRATION_FIREBASE_PROJECT = 'firebaseProject';
     public const MODEL_MIGRATION_FIREBASE_PROJECT_LIST = 'firebaseProjectList';
+    public const MODEL_MIGRATION_VERCEL_PROJECT = 'vercelProject';
+    public const MODEL_MIGRATION_VERCEL_PROJECT_LIST = 'vercelProjectList';
+    public const MODEL_MIGRATION_VERCEL_VARIABLE = 'vercelVariable';
 
     // Project
     public const MODEL_PROJECT = 'project';
