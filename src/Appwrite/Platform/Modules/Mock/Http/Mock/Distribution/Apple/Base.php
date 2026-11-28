@@ -236,6 +236,7 @@ abstract class Base extends Action
     protected const string PROFILE_STATE_INVALID = 'INVALID';
     private const int TEAM_LENGTH = 10;
     private const int TEAM_CERTIFICATES = 3;
+    protected const int PROFILE_DAYS = 365;
     private const int CERTIFICATE_AUTHORITY_DAYS = 3650;
     private const array CERTIFICATE_AUTHORITY_SUBJECT = [
         'commonName' => 'Mock Apple Worldwide Developer Relations CA',
@@ -719,25 +720,26 @@ abstract class Base extends Action
     }
 
     /**
-     * @return array{teamId: string, certificates: int, provisioning: bool}
+     * @return array{teamId: string, certificates: int, provisioning: bool, profileDays: int}
      */
     protected function team(Cache $cache, string $issuerId): array
     {
         $team = $cache->load(self::CACHE_TEAM_SEEDS . $issuerId, self::TTL);
 
         if (\is_array($team)) {
-            return $team;
+            return $team + ['profileDays' => self::PROFILE_DAYS];
         }
 
         return [
             'teamId' => \strtoupper(\substr(\sha1($issuerId), 0, self::TEAM_LENGTH)),
             'certificates' => self::TEAM_CERTIFICATES,
             'provisioning' => true,
+            'profileDays' => self::PROFILE_DAYS,
         ];
     }
 
     /**
-     * @return array{teamId: string, certificates: int, provisioning: bool}|null
+     * @return array{teamId: string, certificates: int, provisioning: bool, profileDays: int}|null
      */
     protected function provisioning(Response $response, Cache $cache, string $issuerId): ?array
     {

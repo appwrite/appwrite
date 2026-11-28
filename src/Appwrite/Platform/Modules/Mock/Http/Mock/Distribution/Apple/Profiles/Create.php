@@ -42,7 +42,6 @@ class Create extends Base
     private const string KIND_INHOUSE = '_INHOUSE';
     private const string CAPABILITY_PUSH = 'PUSH_NOTIFICATIONS';
     private const string PLIST_DATE = 'Y-m-d\TH:i:s\Z';
-    private const int DAYS = 365;
 
     public static function getName(): string
     {
@@ -164,7 +163,8 @@ class Create extends Base
                 'profileType' => $attributes['profileType'],
                 'uuid' => $this->uuid(),
                 'created' => $created,
-                'expires' => $created->modify('+' . self::DAYS . ' days'),
+                'expires' => $created->modify('+' . $team['profileDays'] . ' days'),
+                'days' => $team['profileDays'],
             ];
 
             $envelope = $this->envelope(
@@ -229,7 +229,7 @@ class Create extends Base
     }
 
     /**
-     * @param array{name: string, profileType: string, uuid: string, created: \DateTimeImmutable, expires: \DateTimeImmutable} $profile
+     * @param array{name: string, profileType: string, uuid: string, created: \DateTimeImmutable, expires: \DateTimeImmutable, days: int} $profile
      * @param array<string, mixed> $bundle
      * @param list<string> $certificates
      * @param list<string> $deviceIds
@@ -268,7 +268,7 @@ class Create extends Base
             . $devices
             . $this->entry('TeamIdentifier', '<array>' . $this->text($teamId) . '</array>')
             . $this->entry('TeamName', $this->text($teamId))
-            . $this->entry('TimeToLive', '<integer>' . self::DAYS . '</integer>')
+            . $this->entry('TimeToLive', '<integer>' . $profile['days'] . '</integer>')
             . $this->entry('UUID', $this->text($profile['uuid']))
             . $this->entry('Version', '<integer>1</integer>')
             . '</dict></plist>' . "\n";

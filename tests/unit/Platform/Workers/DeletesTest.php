@@ -567,6 +567,43 @@ final class DeletesTest extends TestCase
         $this->assertSame([true], $this->scheduleStates(SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_SUBMISSION, 'reviewing'), 'a running submission keeps its row');
     }
 
+    public function testScheduleSweepRemovesStoppedSigningIdentityRows(): void
+    {
+        $this->addSchedule('project', 'cleanup');
+        $this->addDistributionSchedule(SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_SIGNING_IDENTITY, 'expired', active: false);
+        $this->addDistributionSchedule(SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_SIGNING_IDENTITY, 'expiring');
+
+        (new Deletes())->action(
+            message: (new Message())->setPayload((new DeleteMessage(type: DELETE_TYPE_SCHEDULES, datetime: DateTime::now()))->toArray()),
+            project: new Document(),
+            dbForPlatform: $this->database,
+            getProjectDB: fn () => $this->database,
+            getDatabasesDB: fn () => $this->database,
+            deviceForFiles: $this->createStub(Device::class),
+            deviceForFunctions: $this->createStub(Device::class),
+            deviceForSites: $this->createStub(Device::class),
+            deviceForBuilds: $this->createStub(Device::class),
+            deviceForVideos: $this->createStub(Device::class),
+            deviceForDistribution: $this->createStub(Device::class),
+            telemetry: new NoTelemetry(),
+            mqtt: $this->mqtt(),
+            certificates: $this->createStub(Certificates::class),
+            executor: $this->createStub(Executor::class),
+            executionRetention: '',
+            executionsRetentionCount: 0,
+            deploymentRetention: new Retention(),
+            publisherForDeletes: $this->createStub(DeletePublisher::class),
+            publisherForUsage: $this->createStub(UsagePublisher::class),
+            bus: new Bus(),
+            executionStore: $this->createStub(ExecutionStore::class),
+            queueForRealtime: $this->createStub(Realtime::class),
+            distributionBuilds: new RecordingBuilds($this->canceled),
+        );
+
+        $this->assertSame([], $this->scheduleStates(SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_SIGNING_IDENTITY, 'expired'), 'a stopped identity row goes although its project still exists');
+        $this->assertSame([true], $this->scheduleStates(SCHEDULE_RESOURCE_TYPE_DISTRIBUTION_SIGNING_IDENTITY, 'expiring'), 'an identity still checked keeps its row');
+    }
+
     public function testMaintenanceRemovesExpiredAndAbandonedArtifacts(): void
     {
         $this->createIdleUploads([]);

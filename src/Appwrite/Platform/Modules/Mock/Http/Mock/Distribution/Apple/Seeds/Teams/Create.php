@@ -35,12 +35,13 @@ class Create extends Base
             ->param('teamId', '', new Text(self::LENGTH, self::LENGTH), 'Ten character team ID, returned as the bundle ID `seedId` and profile team identifier.')
             ->param('certificates', 3, new Range(0, 100), 'Maximum number of current certificates of each type.', true)
             ->param('provisioning', true, new Boolean(true), 'Whether the team\'s API keys may manage certificates, bundle IDs and profiles.', true)
+            ->param('profileDays', self::PROFILE_DAYS, new Range(1, self::PROFILE_DAYS), 'Days until a provisioning profile created for the team expires.', true)
             ->inject('response')
             ->inject('cache')
             ->callback($this->action(...));
     }
 
-    public function action(string $issuerId, string $teamId, int $certificates, bool $provisioning, Response $response, Cache $cache): void
+    public function action(string $issuerId, string $teamId, int $certificates, bool $provisioning, int $profileDays, Response $response, Cache $cache): void
     {
         $isDevelopment = System::getEnv('_APP_ENV', 'production') === 'development';
 
@@ -56,6 +57,7 @@ class Create extends Base
             'teamId' => $teamId,
             'certificates' => $certificates,
             'provisioning' => $provisioning,
+            'profileDays' => $profileDays,
         ], '', self::TTL);
 
         $response
@@ -68,6 +70,7 @@ class Create extends Base
                         'issuerId' => $issuerId,
                         'certificates' => $certificates,
                         'provisioning' => $provisioning,
+                        'profileDays' => $profileDays,
                     ],
                 ],
             ]);
