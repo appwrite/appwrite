@@ -12,7 +12,6 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Database\Database;
-use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Transaction as TransactionException;
 use Utopia\Database\Validator\Authorization;
@@ -110,16 +109,12 @@ class Update extends Action
             throw new Exception(Exception::BUILD_ALREADY_COMPLETED);
         }
 
-        $startTime = new \DateTime($deployment->getAttribute('buildStartedAt', 'now'));
-        $endTime = new \DateTime('now');
-        $duration = $endTime->getTimestamp() - $startTime->getTimestamp();
-
         // Write under the Jobs worker's per-deployment lock: its handlers
         // read-modify-write buildLogs, and an unserialized cancel write here
         // loses the closing log line to an in-flight append.
-        $cancel = function () use ($dbForProject, $deployment, $duration) {
+        $cancel = function () use ($dbForProject, $deployment) {
             try {
-                return $dbForProject->updateDocument('deployments', $deployment->getId(), new Document($this->cancel($deployment, $duration)));
+                return $dbForProject->updateDocument('deployments', $deployment->getId(), new Document(Deployments::canceledAttributes($deployment)));
             } catch (TransactionException) {
                 $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
 
@@ -132,7 +127,7 @@ class Update extends Action
                 }
 
                 if ($deployment->getAttribute('status') !== 'canceled') {
-                    $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document($this->cancel($deployment, $duration)));
+                    $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document(Deployments::canceledAttributes($deployment)));
                 }
 
                 return $deployment;
@@ -159,23 +154,5 @@ class Update extends Action
             ->setParam('deploymentId', $deployment->getId());
 
         $response->dynamic($deployment, Response::MODEL_DEPLOYMENT);
-    }
-
-    /**
-     * The sparse update marking a build canceled. No worker writes the closing
-     * log line for a canceled build, so it is appended here.
-     *
-     * @return array<string, mixed>
-     */
-    private function cancel(Document $deployment, int $duration): array
-    {
-        $logs = $deployment->getAttribute('buildLogs', '') . "\033[90m[" . \date('H:i:s') . "] \033[90m[\033[0mappwrite\033[90m]\033[33m Build has been canceled. \033[0m\n";
-
-        return [
-            'buildEndedAt' => DateTime::now(),
-            'buildDuration' => $duration,
-            'status' => 'canceled',
-            'buildLogs' => \substr($logs, -APP_LOG_LENGTH_LIMIT),
-        ];
     }
 }

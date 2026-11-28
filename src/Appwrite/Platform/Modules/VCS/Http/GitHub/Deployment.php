@@ -496,8 +496,9 @@ trait Deployment
 
                 // The Deployments service is built per repository: a webhook fans out to
                 // many tenant projects, each with its own database.
+                $deployments = $deploymentsFactory($dbForProject, $project);
                 try {
-                    $deployment = $authorization->skip(fn () => $deploymentsFactory($dbForProject, $project)
+                    $deployment = $authorization->skip(fn () => $deployments
                         ->createFromVcs(
                             $resource,
                             $deployment,
@@ -522,6 +523,15 @@ trait Deployment
                     }
 
                     throw $error;
+                }
+
+                $superseded = [];
+                if (!empty($providerBranch) && $deployment->getAttribute('status') !== 'canceled') {
+                    try {
+                        $superseded = $authorization->skip(fn () => $deployments->cancelSuperseded($resource, $deployment));
+                    } catch (\Throwable $e) {
+                        Console::warning("Failed to cancel superseded deployments for '{$resourceId}': " . $e->getMessage());
+                    }
                 }
 
                 if ($resource->getCollection() === 'sites') {
@@ -683,7 +693,18 @@ trait Deployment
                         $owner = $vcs->getOwnerName($providerInstallationId, (int) $providerRepositoryId);
 
                         // The comment above already lists this build; the check and the deployed resource are still owed
-                        $authorization->skip(function () use ($vcs, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment, $dbForPlatform, $platform) {
+                        $authorization->skip(function () use ($vcs, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment, $superseded, $dbForPlatform, $platform) {
+                            foreach ($superseded as $previous) {
+                                $previousCommit = (string) $previous->getAttribute('providerCommitHash', '');
+                                if ($previousCommit !== '' && $previousCommit !== $providerCommitHash) {
+                                    try {
+                                        GitAction::check('canceled', $vcs, $previousCommit, $owner, $repositoryName, $project, $resource, $previous, $dbForPlatform, $platform);
+                                    } catch (\Throwable $e) {
+                                        Console::warning("Failed to report superseded deployment '{$previous->getId()}' as canceled: " . $e->getMessage());
+                                    }
+                                }
+                            }
+
                             GitAction::check('waiting', $vcs, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment, $dbForPlatform, $platform);
                             GitAction::deployment('waiting', $vcs, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment, $dbForPlatform, $platform);
                         });
