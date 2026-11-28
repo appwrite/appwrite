@@ -3,7 +3,8 @@ import { useNavigate } from '@tanstack/react-router'
 import {
   useProjectDomains,
   useProject,
-  useOrganizationDomains} from '@/lib/react-query/hooks'
+  useOrganizationDomains,
+} from '@/lib/react-query/hooks'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -11,23 +12,24 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow} from '@/components/ui/table'
+  TableRow,
+} from '@/components/ui/table'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger} from '@/components/ui/dropdown-menu'
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import {
-  getRuleStatusBadgeConfig,
   isWaitingForDns,
 } from '@/lib/utils/status-badge'
 import {
   ExternalLink,
   Loader2,
   FileText,
-  RefreshCw,
   Trash2,
-  Globe} from 'lucide-react'
+  Globe,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
@@ -93,7 +95,7 @@ export function Domains({
     setCurrentPage(0)
   }
 
-  const { rules, total, isLoading, isFetching, isPlaceholderData, refetch } =
+  const { rules, total, isLoading, isFetching, isPlaceholderData } =
     useProjectDomains(projectId, region, currentPage, pageSize, search)
 
   // Deleting the last rule on the last page leaves an empty page; step back to the new last page.
@@ -123,6 +125,8 @@ export function Domains({
   }
 
   const handleRecords = (rule: Models.ProxyRule) => {
+    // While DNS is pending, the records dialog is where the domain is verified
+    if (isWaitingForDns(rule)) return handleRetry(rule)
     openDialogAfterOverlayCloses(() => {
       setSelectedRule(rule)
       setRecordsOpen(true)
@@ -199,11 +203,18 @@ export function Domains({
                     projectId={projectId}
                     rule={rule}
                     onViewLogs={handleViewLogs}
-                    onRetry={handleRetry}
                     onRecords={handleRecords}
                     onDelete={handleDelete}
                   >
-                    <TableRow>
+                    <TableRow
+                      className="cursor-pointer"
+                      // The row opens its DNS records; its links and buttons keep their own action.
+                      onClick={(event) => {
+                        if ((event.target as HTMLElement).closest('a, button'))
+                          return
+                        handleRecords(rule)
+                      }}
+                    >
                       <TableCell className="px-4 py-3">
                         <a
                           href={visitUrl(rule.domain)}
@@ -218,18 +229,6 @@ export function Domains({
                       <TableCell className="px-4 py-3">
                         <div className="flex items-center gap-2">
                           <RuleStatusBadge rule={rule} />
-                          {getRuleStatusBadgeConfig(rule).variant !==
-                            'success' &&
-                            canViewRuleLogs(rule) && (
-                              <Button
-                                variant="link"
-                                size="sm"
-                                className="h-auto p-0 text-[13px]"
-                                onClick={() => handleViewLogs(rule)}
-                              >
-                                {t('View logs')}
-                              </Button>
-                            )}
                           <CheckDomain
                             projectId={projectId}
                             region={region}
@@ -252,38 +251,42 @@ export function Domains({
                         <DateTooltip
                           date={rule.$createdAt}
                           className="text-[12px] text-muted-foreground"
+                          live
                         />
                       </TableCell>
-                      <TableCell className="px-4 py-3 text-end">
+                      <TableCell
+                        className="px-4 py-3 text-end"
+                        // Its menu renders in a portal, whose clicks still bubble to the row.
+                        onClick={(event) => event.stopPropagation()}
+                      >
                         <div className="flex justify-end">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <RowActionsMenuTrigger />
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={() => handleRecords(rule)}
+                              >
+                                <MenuItemContent icon={Globe}>
+                                  {t('Records')}
+                                </MenuItemContent>
+                              </DropdownMenuItem>
                               {canViewRuleLogs(rule) && (
                                 <DropdownMenuItem
                                   onClick={() => handleViewLogs(rule)}
                                 >
-                                  <MenuItemContent icon={FileText}>{t('Logs')}</MenuItemContent>
+                                  <MenuItemContent icon={FileText}>
+                                    {t('Logs')}
+                                  </MenuItemContent>
                                 </DropdownMenuItem>
                               )}
-                              {canRetryRule(rule) && (
-                                <DropdownMenuItem
-                                  onClick={() => handleRetry(rule)}
-                                >
-                                  <MenuItemContent icon={RefreshCw}>{t('Retry')}</MenuItemContent>
-                                </DropdownMenuItem>
-                              )}
-                              <DropdownMenuItem
-                                onClick={() => handleRecords(rule)}
-                              >
-                                <MenuItemContent icon={Globe}>{t('Records')}</MenuItemContent>
-                              </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() => handleDelete(rule)}
                               >
-                                <MenuItemContent icon={Trash2}>{t('Delete')}</MenuItemContent>
+                                <MenuItemContent icon={Trash2}>
+                                  {t('Delete')}
+                                </MenuItemContent>
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -338,8 +341,6 @@ export function Domains({
             open={viewLogsOpen}
             onOpenChange={setViewLogsOpen}
             rule={rules.find((r) => r.$id === selectedRule.$id) ?? selectedRule}
-            onRefresh={() => void refetch()}
-            isRefreshing={isFetching}
           />
 
           <DeleteDomainDialog

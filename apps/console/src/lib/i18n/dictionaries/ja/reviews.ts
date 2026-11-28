@@ -16,8 +16,13 @@ export const jaReviewsDictionary: Record<string, string> = {
 
   // Empty states
   'Review pull requests with AI': 'AI でプルリクエストをレビュー',
-  'Add a GitHub repository and every pull request gets a review with findings, a verdict, and a merge confidence grade. Mention the app in a comment to ask it anything.':
-    'GitHub リポジトリを追加すると、すべてのプルリクエストに指摘事項、判定、マージの信頼度を含むレビューが付きます。コメントでアプリにメンションすると、何でも質問できます。',
+  'Get a review on every pull request': 'すべてのプルリクエストをレビュー',
+  'Each new pull request and commit gets a summary, findings on the lines they concern, a verdict, and a merge confidence grade.':
+    '新しいプルリクエストとコミットごとに、概要、該当する行への指摘事項、判定、マージの信頼度が付きます。',
+  'Talk to the reviewer': 'レビュアーと話す',
+  'Mention the app in a comment to ask a question, request a new review, or have it remember a preference for later reviews.':
+    'コメントでアプリにメンションすると、質問したり、新しいレビューを依頼したり、今後のレビューで守ってほしい方針を覚えさせたりできます。',
+  'No reviews match your filters': 'フィルターに一致するレビューはありません',
   'No reviews yet': 'まだレビューはありません',
   'Reviews show up here when a pull request is opened or gets new commits in one of your repositories.':
     'リポジトリでプルリクエストが作成されるか、新しいコミットが追加されると、ここにレビューが表示されます。',
@@ -33,7 +38,7 @@ export const jaReviewsDictionary: Record<string, string> = {
   'The review found nothing to flag.':
     'レビューで指摘事項は見つかりませんでした。',
   'View comment': 'コメントを表示',
-  'Open on GitHub': 'GitHub で開く',
+  'Filter findings by severity': '重要度で指摘事項を絞り込む',
 
   // Statuses and verdicts
   Reviewing: 'レビュー中',
@@ -59,8 +64,6 @@ export const jaReviewsDictionary: Record<string, string> = {
     'リポジトリのプルリクエストは、作成時と新しいコミットの追加時にレビューされます。',
   'Pull requests in this repository will no longer be reviewed. Past reviews stay in the project.':
     'このリポジトリのプルリクエストはレビューされなくなります。過去のレビューはプロジェクトに残ります。',
-  'Connect a GitHub installation to the project to review its repositories.':
-    'リポジトリをレビューするには、GitHub のインストールをプロジェクトに接続してください。',
   'Code review turned on': 'コードレビューを有効にしました',
   'Code review turned off': 'コードレビューを無効にしました',
   'Failed to turn on code review': 'コードレビューを有効にできませんでした',
@@ -180,14 +183,11 @@ export const jaReviewsDictionary: Record<string, string> = {
   'Review all repositories': 'すべてのリポジトリをレビュー',
   'Choose repositories': 'リポジトリを選択',
   'Browse repositories': 'リポジトリを参照',
-  'Search GitHub repositories...': 'GitHub リポジトリを検索...',
   'No repositories match your search': '検索に一致するリポジトリはありません',
   'No repositories reviewed yet': 'レビュー対象のリポジトリはまだありません',
-  'No GitHub installation': 'GitHub のインストールがありません',
-  'Connect GitHub to review pull requests':
-    'GitHub を接続してプルリクエストをレビュー',
-  'Install the GitHub app on your account or organization, then pick the repositories to review.':
-    'アカウントまたは組織に GitHub アプリをインストールし、レビューするリポジトリを選択してください。',
+  'No installation': 'インストールがありません',
+  'Connect a Git provider to review pull requests':
+    'Git プロバイダーを接続してプルリクエストをレビュー',
   'Turn on code review for a repository and its pull requests are reviewed when they are opened or get new commits.':
     'リポジトリのコードレビューを有効にすると、プルリクエストの作成時と新しいコミットの追加時にレビューされます。',
   'Turn on code review for every repository in {organization} ({count}).':
@@ -227,7 +227,6 @@ export const jaReviewsDictionary: Record<string, string> = {
   Learning: '学習内容',
   'Asked by': '依頼者',
   'Learning actions': '学習の操作',
-  'Open conversation on GitHub': 'GitHub で会話を開く',
   'Learning has been deleted': '学習を削除しました',
   'Failed to delete learning': '学習を削除できませんでした',
   'No learnings yet': '学習はまだありません',
@@ -240,6 +239,15 @@ export const jaReviewsDictionary: Record<string, string> = {
   // Performance
   Performance: 'パフォーマンス',
   'Unknown author': '作成者不明',
+  Outcome: '結果',
+  'Still open': '未対応',
+  'Reviews queued before authors were recorded':
+    '作成者の記録開始前にキューに入ったレビュー',
+  Bot: 'ボット',
+  '{rate} first try': '初回で{rate}',
+  '{count} critical': '重大 {count} 件',
+  '{count} fixed': '{count} 件修正',
+  '{count} reviews': '{count} 件のレビュー',
   'Date range': '期間',
   Author: '作成者',
   'Pull requests': 'プルリクエスト',
@@ -250,24 +258,51 @@ export const jaReviewsDictionary: Record<string, string> = {
   'Last review': '最新のレビュー',
   'Pull requests reviewed': 'レビューしたプルリクエスト',
   '{count} authors': '{count} 人の作成者',
-  'Approval rate': '承認率',
+  authors: '作成者',
+  'Search authors...': '作成者を検索...',
+  'No authors match your search': '検索に一致する作成者はいません',
+  '{count} pull request': '{count} 件のプルリクエスト',
+  '{count} pull requests': '{count} 件のプルリクエスト',
   '{rate} approved by the first review': '{rate} が初回のレビューで承認',
   'Findings per pull request': 'プルリクエストあたりの指摘',
   '{critical} critical, {major} major': '重大 {critical} 件、重要 {major} 件',
-  'Fix rate': '修正率',
   '{count} findings fixed by a later commit':
     '{count} 件の指摘が後のコミットで修正',
   'No completed reviews in this range':
     'この期間に完了したレビューはありません',
   'Performance shows how the authors of your pull requests fare in review once reviews complete. Try a longer range or another repository.':
     'レビューが完了すると、プルリクエストの作成者ごとのレビュー結果がここに表示されます。より長い期間か別のリポジトリをお試しください。',
-  'Counts completed reviews in the range. Approval and confidence go by each pull request’s latest review; fixed counts findings resolved by a later commit.':
-    '期間内に完了したレビューを集計します。承認と信頼度は各プルリクエストの最新のレビューに基づき、修正済みは後のコミットで解決された指摘を数えます。',
+
+  // Performance: trends, comparison and charts
+  'Compared with the {count} days before': '直前の {count} 日間との比較',
+  'Review time': 'レビュー時間',
+  median: '中央値',
+  Authors: '作成者',
+  'How each author’s pull requests fared in review. Select an author to see their reviews.':
+    '作成者ごとのプルリクエストのレビュー結果です。作成者を選択すると、その作成者のレビューを表示します。',
+  'Author actions': '作成者の操作',
+  'Ranges are whole days in UTC, today included, and changes compare each figure with the same number of days before.':
+    '期間は今日を含む UTC の日単位で、増減は各数値を直前の同じ日数と比較したものです。',
+  'Approval and confidence go by each pull request’s latest review; fixed counts findings resolved by a later commit.':
+    '承認と信頼度は各プルリクエストの最新のレビューに基づき、修正済みは後のコミットで解決された指摘を数えます。',
+  'Review time is the median from a review being queued to it completing.':
+    'レビュー時間は、レビューがキューに入ってから完了するまでの時間の中央値です。',
+  '{resolved} fixed, {open} open, {dismissed} dismissed':
+    '修正 {resolved} 件、未対応 {open} 件、却下 {dismissed} 件',
+  Noisy: '却下が多い',
+  'Most settled findings in this category were dismissed. A learning can tell the reviewer to flag fewer of them.':
+    'このカテゴリで決着した指摘の大半が却下されました。学習で、この種の指摘を控えるようレビュアーに伝えられます。',
+  'Completed reviews per week, by verdict': '週ごとの完了したレビュー (判定別)',
+  'Completed reviews per day, by verdict': '日ごとの完了したレビュー (判定別)',
+  'Findings posted per week, by severity': '週ごとの投稿された指摘 (重要度別)',
+  'Findings posted per day, by severity': '日ごとの投稿された指摘 (重要度別)',
+  Chart: 'グラフ',
+  'No findings in this range': 'この期間に指摘はありません',
+  'Critical and major': '重大・高',
+  'Minor and info': '低・情報',
 
   // Finding outcomes
   'Useful findings': '有用な指摘',
-  '{resolved} fixed, {dismissed} dismissed':
-    '修正 {resolved} 件、却下 {dismissed} 件',
   Useful: '有用',
   Dismissed: '却下',
   'Findings by category': 'カテゴリ別の指摘',
@@ -275,4 +310,92 @@ export const jaReviewsDictionary: Record<string, string> = {
     'よく却下されるカテゴリは、レビュアーに指摘を控えさせる学習の候補です。',
   'Useful findings is the share of settled findings that were fixed rather than dismissed; findings still open count for neither.':
     '有用な指摘は、決着した指摘のうち却下されずに修正されたものの割合です。未解決の指摘はどちらにも数えません。',
+  // Functions and sites: code review of the connected repository
+  'Code review': 'コードレビュー',
+  'Review pull requests': 'プルリクエストをレビュー',
+  'Code review was not turned on': 'コードレビューを有効にできませんでした',
+  'Turn it on later from Settings > Git.':
+    '後から 設定 > Git で有効にできます。',
+  'Code review is already on for this repository.':
+    'このリポジトリではコードレビューがすでに有効です。',
+  'Appwrite reviews each pull request when it is opened or gets new commits, and comments on it.':
+    'Appwrite はプルリクエストが作成されたときや新しいコミットが追加されたときにレビューし、コメントします。',
+  "Reviews use your organization's review credits.":
+    'レビューには組織のレビュークレジットが使われます。',
+  'Review pull requests to the connected repository and comment on them. The setting applies to the whole repository.':
+    '接続したリポジトリへのプルリクエストをレビューし、コメントします。この設定はリポジトリ全体に適用されます。',
+  'Each pull request is reviewed when it is opened or gets new commits.':
+    'プルリクエストは作成時と新しいコミットの追加時にレビューされます。',
+  'Review strength': 'レビュー強度',
+  'How hard pull requests are reviewed, and what each review costs.':
+    'プルリクエストをどこまで深くレビューするか、またレビューごとのコストです。',
+  'View reviews': 'レビューを表示',
+  'Connect a repository to this function to review its pull requests.':
+    'この関数にリポジトリを接続すると、プルリクエストをレビューできます。',
+  'Connect a repository to this site to review its pull requests.':
+    'このサイトにリポジトリを接続すると、プルリクエストをレビューできます。',
+  'Code review does not run on this provider':
+    'このプロバイダーではコードレビューを利用できません',
+  'Code review runs on GitHub, GitLab, Gitea, Bitbucket and Origin repositories.':
+    'コードレビューは GitHub、GitLab、Gitea、Bitbucket、Origin のリポジトリで利用できます。',
+  'Code review is off': 'コードレビューは無効です',
+  'Turn on code review to have each pull request reviewed when it is opened or gets new commits.':
+    'コードレビューを有効にすると、プルリクエストの作成時と新しいコミットの追加時にレビューされます。',
+  'Pull requests that change files in':
+    '次のディレクトリのファイルを変更するプルリクエスト:',
+  'Reviews show up here when a pull request that changes this directory is opened or gets new commits.':
+    'このディレクトリを変更するプルリクエストが作成されるか、新しいコミットが追加されると、ここにレビューが表示されます。',
+  'Reviews show up here when a pull request is opened or gets new commits.':
+    'プルリクエストが作成されるか、新しいコミットが追加されると、ここにレビューが表示されます。',
+  'No reviews of this directory among the latest ones.':
+    '最新のレビューの中に、このディレクトリのレビューはありません。',
+
+  // Tabs: repositories, learnings, findings and credits
+  'How each repository’s pull requests fared in review. Select a repository to narrow the tab to it.':
+    'リポジトリごとのプルリクエストのレビュー結果です。リポジトリを選択すると、このタブをそのリポジトリに絞り込みます。',
+  '{count} repositories': '{count} 件のリポジトリ',
+  'Repository actions': 'リポジトリの操作',
+  'Reviewed repositories': 'レビュー対象のリポジトリ',
+  'Pull requests reviewed in the last 30 days. Select a repository to see its reviews.':
+    '過去 30 日間にレビューしたプルリクエストです。リポジトリを選択するとそのレビューを表示します。',
+  'Turn on code review for a repository right where you find it. Reviewed ones show their last 30 days.':
+    '見つけたリポジトリでそのままコードレビューを有効にできます。レビュー対象のリポジトリには過去 30 日間の結果を表示します。',
+  'Connect GitHub, GitLab, Gitea, Bitbucket or Origin to the project, then pick the repositories to review.':
+    'GitHub、GitLab、Gitea、Bitbucket、Origin のいずれかをプロジェクトに接続し、レビューするリポジトリを選択してください。',
+  'Connect a Git provider to the project to review its repositories.':
+    'リポジトリをレビューするには、Git プロバイダーをプロジェクトに接続してください。',
+  'No learnings for this repository': 'このリポジトリの学習はありません',
+  'Ask the reviewer to remember a preference in one of its pull requests, and it shows up here.':
+    'このリポジトリのプルリクエストでレビュアーに好みを覚えるよう依頼すると、ここに表示されます。',
+  'Show all repositories': 'すべてのリポジトリを表示',
+  'What the reviewer was asked to remember in pull request conversations. Later reviews and answers of the repository follow them.':
+    'プルリクエストの会話でレビュアーに覚えるよう依頼した内容です。以降のリポジトリのレビューと回答はこれに従います。',
+  'Show this repository only': 'このリポジトリのみ表示',
+  'Open conversation': '会話を開く',
+  'Open on {provider}': '{provider} で開く',
+  'Most severe: {severity}': '最も重大: {severity}',
+  'Review credits this cycle (this project)':
+    '今期のレビュークレジット (このプロジェクト)',
+  'Review credits this cycle': '今期のレビュークレジット',
+  'All included credits are used. New pull requests are not reviewed until the next billing cycle.':
+    '含まれるクレジットをすべて使用しました。次の請求サイクルまで新しいプルリクエストはレビューされません。',
+  'All included credits are used. New pull requests are not reviewed until the next billing cycle or an upgrade.':
+    '含まれるクレジットをすべて使用しました。次の請求サイクルまたはアップグレードまで、新しいプルリクエストはレビューされません。',
+  '{extra} extra credits so far, about ${cost} on your next invoice.':
+    'これまでの追加クレジットは {extra}、次回の請求書で約 ${cost} です。',
+  'Extra credits past the allowance are billed with your usage, up to your budget cap.':
+    '上限を超えた追加クレジットは、予算の上限まで使用量とともに請求されます。',
+  'Reviews stop when the included credits are used, so you are never billed for extra credits.':
+    '含まれるクレジットを使い切るとレビューが停止するため、追加クレジットが請求されることはありません。',
+  'A normal review costs 50 credits. Answers to comments are free.':
+    '通常のレビューは 50 クレジットです。コメントへの回答は無料です。',
+  'Manage budget': '予算を管理',
+  'Upgrade for more credits': 'アップグレードしてクレジットを追加',
+
+  // Row menus
+  'Copy text': 'テキストをコピー',
+  'Copy title': 'タイトルをコピー',
+  'Open profile on GitHub': 'GitHub でプロフィールを開く',
+  'Open file': 'ファイルを開く',
+  'Open comment': 'コメントを開く',
 }

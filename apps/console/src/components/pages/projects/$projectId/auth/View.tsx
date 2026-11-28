@@ -40,7 +40,6 @@ import {
   useCreateProjectUser,
   useCreateProjectTeam,
   useProject,
-  useProjectSmtpEnabled,
   useOrganizationScopes,
 } from '@/lib/react-query/hooks'
 import {
@@ -72,7 +71,7 @@ import { TeamsEmptyState } from './_components/TeamsEmptyState'
 import { UsersEmptyState } from './_components/UsersEmptyState'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { CopyableId } from '@/components/global/shared/CopyableId'
-import { InitialsAvatar, PhotoAvatar } from '@/components/global/shared/Avatar'
+import { PhotoAvatar, TeamAvatar } from '@/components/global/shared/Avatar'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -274,8 +273,8 @@ export function View({
     return 'sessions'
   }, [location.pathname])
 
-  const { project } = useProject(projectId)
-  const { isSmtpEnabled } = useProjectSmtpEnabled(projectId)
+  const { project, projectData } = useProject(projectId)
+  const isSmtpEnabled = Boolean(projectData?.smtpEnabled)
   const { features } = useConsoleProfile()
   const { access } = useOrganizationScopes(project?.teamId)
   const showAuthSecuritySettings = canShowAuthSecuritySettings(access, features)
@@ -2110,7 +2109,9 @@ export function View({
                                   className="block group"
                                 >
                                   <div className="flex items-center gap-3 min-w-0">
-                                    <InitialsAvatar
+                                    <TeamAvatar
+                                      teamId={team.id}
+                                      projectId={projectId}
                                       name={team.name || ''}
                                       size="sm"
                                       className="shrink-0"
@@ -2319,7 +2320,7 @@ export function View({
         )}
 
         {activeTab === 'templates' && projectId && (
-          <Templates projectId={projectId} />
+          <Templates projectId={projectId} isSmtpEnabled={isSmtpEnabled} />
         )}
 
         {activeTab === 'settings' && projectId && (

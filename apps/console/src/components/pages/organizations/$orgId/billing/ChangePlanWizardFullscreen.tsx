@@ -93,6 +93,7 @@ import {
   type DowngradeDeletionStep,
 } from '@/lib/billing/downgrade-deletion-steps'
 import {
+  getAlertingViolations,
   getComplianceErrors,
   getNonCompliantProjectIds,
   getOrganizationViolations,
@@ -1101,9 +1102,14 @@ export function ChangePlanWizardFullscreen() {
     () => getComplianceErrors(planChangeLimits),
     [planChangeLimits],
   )
+  const alertingViolations = useMemo(
+    () => getAlertingViolations(planChangeLimits),
+    [planChangeLimits],
+  )
   const hasPlanChangeBlockers =
     unresolvableAddons.length > 0 ||
     unresolvableResources.length > 0 ||
+    alertingViolations.length > 0 ||
     complianceErrors.length > 0
 
   useEffect(() => {
@@ -1959,6 +1965,17 @@ export function ChangePlanWizardFullscreen() {
                 </li>
               ),
             )}
+            {alertingViolations.map(({ label, resource }) => (
+              <li key={`alerting-${resource.type}`}>
+                <span className="font-medium">{t(label)}</span>:{' '}
+                {t(
+                  '{current} in use, the selected plan allows {limit}. Delete {excess} to continue.',
+                )
+                  .replace('{current}', String(resource.currentUsage))
+                  .replace('{limit}', String(resource.limit))
+                  .replace('{excess}', String(resource.excess))}
+              </li>
+            ))}
             {complianceErrors.map(({ projectId, projectName, error }) => (
               <li key={`error-${projectId}`}>
                 <span className="font-medium">{projectName}</span>:{' '}

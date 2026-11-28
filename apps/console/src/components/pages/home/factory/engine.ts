@@ -28,22 +28,30 @@ import {
   WebGLRenderer,
   type Texture,
 } from 'three'
+import { ASSEMBLED, POWER_ON, SETTLED } from './assembly'
 import { GlowLayer, ShadowLayer } from './effects'
 import { createFrameworkAtlas, loadFrameworkIcons } from './frameworks'
 import { releaseShapes } from './geometry'
 import type { FrameState } from './frame'
-import { applyKitPalette, createKit, disposeKit, type FactoryKit } from './kit'
+import {
+  applyKitPalette,
+  createKit,
+  createArrivingDepthMaterial,
+  disposeKit,
+  type FactoryKit,
+} from './kit'
 import {
   BED_BACK,
   BED_FRONT,
   CYCLE,
-  EXTENSION,
+  HOLOGRAM,
   MOVE,
   STATION_COUNT,
   TOWER_TOP,
   easeInOutCubic,
   easeOutCubic,
   getLineState,
+  hologramBottom,
   range,
   stationX,
 } from './layout'
@@ -54,6 +62,7 @@ import {
 } from './palette'
 import { ProductLine } from './products'
 import { DroneFleet } from './drones'
+import { ExtensionLine } from './extensions'
 import { StationLine } from './stations'
 import { createStudioEnvironment } from './studio'
 import {
@@ -64,7 +73,7 @@ import {
   createShadowTexture,
   createTrackTexture,
 } from './textures'
-import { FactoryWorld, getStaticShadowShapes } from './world'
+import { FactoryWorld, HOLOGRAM_LAYER, getStaticShadowShapes } from './world'
 
 export type FactoryEngineOptions = {
   canvas: HTMLCanvasElement
@@ -72,7 +81,7 @@ export type FactoryEngineOptions = {
   icons: string[]
   /** Translated product names, printed on each column, then the gate's sign. */
   names: string[]
-  /** Translated product taglines, shown when a station unfolds. */
+  /** Translated product taglines, shown in a station's hologram. */
   descriptions: string[]
   /** Translated label of the shipped counter. */
   counterLabel: string
@@ -150,11 +159,11 @@ const FRAMINGS: Record<'overlay' | 'band' | 'narrow', Framing> = {
   },
 }
 
-/** Factory clock when the scene boots: a line already full of products. */
+/** Factory clock when the line starts: full of products. */
 const START_TIME = 30 * CYCLE + MOVE + 0.02
 /** Still frame for reduced motion: several machines mid-action. */
 const STILL_TIME = 30 * CYCLE + MOVE + 0.5
-/** The line's power-up, in its own seconds: lights come on, then it starts moving. */
+/** The line's power-up once it has assembled, in its own seconds: lights come on, then it starts moving. */
 const INTRO_END = 2.4
 /** The power-up plays this many times faster than it is written, so the line is up and moving within a second. */
 const INTRO_SPEED = 3
@@ -214,6 +223,7 @@ export class FactoryEngine {
   private kit: FactoryKit | null = null
   private world: FactoryWorld | null = null
   private stations: StationLine | null = null
+  private extensions: ExtensionLine | null = null
   private products: ProductLine | null = null
   private drones: DroneFleet | null = null
   private glows: GlowLayer | null = null
@@ -239,7 +249,7 @@ export class FactoryEngine {
   private frameState: FrameState | null = null
   /** Lines of page copy laid over the stage (see `setCopyLines`). */
   private copyLines: CopyArea[] = []
-  /** How far every display's mast rises (see `fitDisplays`). */
+  /** How high every hologram's screen floats, 0 → 1 (see `fitDisplays`). */
   private lift = 1
   private reflection: WebGLRenderTarget | null = null
   /** Whether the floor still mirrors the machine; off for good once frames run slow. */
@@ -270,6 +280,8 @@ export class FactoryEngine {
   private lastNow = 0
   private lastRender = 0
   private time = START_TIME
+  /** Real seconds of the factory assembling itself (see `assembly.ts`). */
+  private assembly = 0
   private introTime = 0
   private slowWindows = 0
   private fastWindows = 0
@@ -280,7 +292,13 @@ export class FactoryEngine {
   private pointerTarget = new Vector2(0, 0)
   private readonly hoverPointer = new Vector2()
   private pointerInside = false
+  /** Whether the pointer may turn a hologram on, or (over the page copy) only keep one on. */
+  private pointerOpens = true
   private hovered = -1
+  /** The layer over the page copy that holograms are drawn on (see `setFront`). */
+  private front: CanvasRenderingContext2D | null = null
+  /** The front layer shows a hologram, so it needs clearing once none is on. */
+  private frontShown = false
   private needsHoverTest = false
   private mobile = false
   private composition: FactoryComposition = 'band'
@@ -321,6 +339,7 @@ export class FactoryEngine {
     )
     options.canvas.addEventListener('webglcontextlost', this.handleContextLost)
     if (options.reducedMotion) {
+      this.assembly = SETTLED
       this.introTime = INTRO_END + 2
       this.time = STILL_TIME
     }
@@ -367,6 +386,8 @@ export class FactoryEngine {
 
     this.stations = new StationLine(kit)
     this.scene.add(this.stations.group)
+    this.extensions = new ExtensionLine(kit)
+    this.scene.add(this.extensions.group)
     if (!(await this.step())) return
 
     this.products = new ProductLine(kit)
@@ -378,6 +399,7 @@ export class FactoryEngine {
       kit,
       this.options.promptLabel,
       this.options.rtl,
+      this.options.reducedMotion ? Number.NEGATIVE_INFINITY : START_TIME,
     )
     this.scene.add(this.drones.group)
     // The machine is built; the shapes it was built from can go.
@@ -418,20 +440,20 @@ export class FactoryEngine {
           new Vector3(x + 0.74, TOWER_TOP + 0.1, BED_FRONT),
         ),
       )
-      const reach = EXTENSION.leaf
-      const screenBottom = TOWER_TOP + EXTENSION.lift
+      const reach = HOLOGRAM.width / 2
+      const screenBottom = hologramBottom(1)
       this.displayBoxes.push([
-        // The mast, as wide as the column, then the screen, wings and all.
+        // The light fan, about as wide as the column, then the screen.
         new Box3(
-          new Vector3(x - 0.6, TOWER_TOP, EXTENSION.z - 0.3),
-          new Vector3(x + 0.6, screenBottom, EXTENSION.z + 0.3),
+          new Vector3(x - 0.6, TOWER_TOP, HOLOGRAM.z - 0.3),
+          new Vector3(x + 0.6, screenBottom, HOLOGRAM.z + 0.3),
         ),
         new Box3(
-          new Vector3(x - reach, screenBottom, EXTENSION.z - 0.3),
+          new Vector3(x - reach, screenBottom, HOLOGRAM.z - 0.3),
           new Vector3(
             x + reach,
-            screenBottom + EXTENSION.height + 0.1,
-            EXTENSION.z + 0.3,
+            screenBottom + HOLOGRAM.height + 0.1,
+            HOLOGRAM.z + 0.3,
           ),
         ),
       ])
@@ -594,12 +616,19 @@ export class FactoryEngine {
       object.castShadow = !object.userData.castsNoShadow
       object.receiveShadow = !object.userData.receivesNoShadow
       if (!object.castShadow) return
+      // Hardware in the shared finish comes into place, and its shadow with it.
+      const arrives = material === this.kit?.finish
       const key = (object as InstancedMesh).isInstancedMesh
         ? object.uuid
-        : `${!!material.map}|${material.side}|${material.shadowSide}`
+        : arrives
+          ? 'finish'
+          : `${!!material.map}|${material.side}|${material.shadowSide}`
       let depth = depths.get(key)
       if (!depth) {
-        depth = new MeshDepthMaterial()
+        depth =
+          arrives && this.kit
+            ? createArrivingDepthMaterial(this.kit)
+            : new MeshDepthMaterial()
         depths.set(key, depth)
         this.depthMaterials.push(depth)
       }
@@ -617,6 +646,8 @@ export class FactoryEngine {
 
   /** A half-resolution target the floor samples to mirror the machine. */
   private setupReflection() {
+    // The floor mirrors the holograms too.
+    this.mirror.layers.enable(HOLOGRAM_LAYER)
     this.reflection = new WebGLRenderTarget(2, 2, {
       colorSpace: SRGBColorSpace,
       generateMipmaps: true,
@@ -821,8 +852,8 @@ export class FactoryEngine {
 
   /**
    * The lines of page copy laid over the stage (CSS pixels), which the
-   * unfolded displays keep clear of; empty when nothing is laid over it.
-   * Lines, not the copy's box, so a display may rise beside a short line.
+   * holograms keep clear of; empty when nothing is laid over it. Lines, not
+   * the copy's box, so a hologram may float beside a short line.
    */
   setCopyLines(lines: CopyArea[]) {
     this.copyLines = lines
@@ -830,9 +861,9 @@ export class FactoryEngine {
   }
 
   /**
-   * Every display opens at the same size on the same mast height: as high
-   * as keeps every station's open display clear of the copy laid over the
-   * scene, down to resting on its column.
+   * Every hologram's screen floats at the same height: as high as keeps
+   * every station's clear of the copy laid over the scene, down to just
+   * over its column.
    */
   private fitDisplays() {
     const lines = this.copyLines
@@ -851,21 +882,21 @@ export class FactoryEngine {
       }
     }
     this.lift = lift
-    // Hovering keeps answering for the display where it actually opens.
-    const screenBottom = TOWER_TOP + lift * EXTENSION.lift
-    for (const [mast, screen] of this.displayBoxes) {
-      mast.max.y = screenBottom
+    // Hovering keeps answering for the screen where it actually shows.
+    const screenBottom = hologramBottom(lift)
+    for (const [light, screen] of this.displayBoxes) {
+      light.max.y = screenBottom
       screen.min.y = screenBottom
-      screen.max.y = screenBottom + EXTENSION.height + 0.1
+      screen.max.y = screenBottom + HOLOGRAM.height + 0.1
     }
   }
 
-  /** Whether station `index`'s open display, its mast raised by `lift`, stays off every one of `areas`. */
+  /** Whether station `index`'s hologram, floating at `lift`, stays off every one of `areas`. */
   private isClear(index: number, lift: number, areas: CopyArea[]) {
     const x = stationX(index)
-    const base = TOWER_TOP - 0.01 + lift * EXTENSION.lift
-    const top = base + EXTENSION.height
-    const reach = EXTENSION.leaf
+    const base = hologramBottom(lift)
+    const top = base + HOLOGRAM.height
+    const reach = HOLOGRAM.width / 2
     let left = Number.POSITIVE_INFINITY
     let right = Number.NEGATIVE_INFINITY
     let highest = Number.POSITIVE_INFINITY
@@ -875,7 +906,7 @@ export class FactoryEngine {
       [x - reach, base],
       [x + reach, base],
     ] as const) {
-      this.scratch.set(cornerX, cornerY, EXTENSION.z).project(this.camera)
+      this.scratch.set(cornerX, cornerY, HOLOGRAM.z).project(this.camera)
       const screenX = ((this.scratch.x + 1) / 2) * this.width
       left = Math.min(left, screenX)
       right = Math.max(right, screenX)
@@ -948,8 +979,8 @@ export class FactoryEngine {
     const ease = Math.min(1, dt * 2.6)
     this.pointer.x += (this.pointerTarget.x - this.pointer.x) * ease
     this.pointer.y += (this.pointerTarget.y - this.pointer.y) * ease
-    // A slow push-in while the line powers up, then a barely moving camera.
-    const settle = 1 - easeOutCubic(range(this.introTime, 0, INTRO_END + 0.6))
+    // A slow push-in while the factory assembles, then a barely moving camera.
+    const settle = 1 - easeOutCubic(range(this.assembly, 0, ASSEMBLED + 0.6))
     const framing = this.framing
     const drift = this.options.reducedMotion
       ? 0
@@ -958,12 +989,12 @@ export class FactoryEngine {
       framing.azimuth +
       this.pointer.x * MathUtils.degToRad(2.4) +
       drift +
-      settle * MathUtils.degToRad(-4)
+      settle * MathUtils.degToRad(-5)
     const elevation =
       framing.elevation +
       this.pointer.y * MathUtils.degToRad(1.4) +
-      settle * MathUtils.degToRad(2)
-    const distance = this.distance * (1 + settle * 0.07)
+      settle * MathUtils.degToRad(3)
+    const distance = this.distance * (1 + settle * 0.09)
 
     const [targetX, targetY, targetZ] = framing.target
     this.target.set(targetX, targetY, targetZ)
@@ -1006,7 +1037,8 @@ export class FactoryEngine {
     this.rafId = requestAnimationFrame(this.tick)
     // Cap at 60 fps: high refresh screens get the same scene for half the work.
     if (this.lastRender && now - this.lastRender < FRAME_INTERVAL - 2.5) return
-    const dt = Math.min((now - this.lastNow) / 1000, 0.05)
+    // The first tick's timestamp can fall just before `start` read the clock.
+    const dt = MathUtils.clamp((now - this.lastNow) / 1000, 0, 0.05)
     this.trackPerformance(now - (this.lastRender || now))
     this.lastNow = now
     this.lastRender = now
@@ -1068,16 +1100,20 @@ export class FactoryEngine {
     if (!kit || !world || !stations || !products || !glows || !shadows) return
 
     if (!this.options.reducedMotion) {
-      this.introTime += dt * INTRO_SPEED
-      // The line holds still while it powers up, then eases into its rhythm.
+      this.assembly += dt
+      // Assembled, the line powers up; it holds still until it has, then
+      // eases into its rhythm.
+      this.introTime = Math.max(0, this.assembly - POWER_ON) * INTRO_SPEED
       const speed = easeInOutCubic(range(this.introTime, 1.5, INTRO_END))
       this.time += dt * speed
     }
+    kit.assembly.value = this.assembly
 
     const frame: FrameState = this.frameState ?? {
       time: this.time,
       dt,
       introTime: this.introTime,
+      assembly: this.assembly,
       line: getLineState(this.time),
       palette: this.palette,
       glows,
@@ -1091,15 +1127,18 @@ export class FactoryEngine {
     frame.time = this.time
     frame.dt = dt
     frame.introTime = this.introTime
+    frame.assembly = this.assembly
     frame.line = getLineState(this.time)
     frame.palette = this.palette
-    frame.highlight = this.hovered
+    // Holograms come on only from machines standing in place.
+    frame.highlight = this.assembly >= ASSEMBLED ? this.hovered : -1
     this.fitDisplays()
     frame.lift = this.lift
 
     glows.begin()
     shadows.begin()
     stations.update(frame)
+    this.extensions?.update(frame)
     world.update(frame)
     products.update(frame)
     this.drones?.update(frame)
@@ -1111,7 +1150,8 @@ export class FactoryEngine {
     // Once per frame, not once per pass: the reflection and the view share it.
     this.scene.updateMatrixWorld()
     if (this.reflection) {
-      // Eases in over half a second once warm, and out when the GPU cannot keep up (see `trackPerformance`).
+      // Eases in over half a second once warm, as the factory assembles on
+      // it, and out when the GPU cannot keep up (see `trackPerformance`).
       const target = this.reflectionOn && this.reflectionWarm ? 1 : 0
       this.reflectionFade = MathUtils.clamp(
         this.reflectionFade + Math.sign(target - this.reflectionFade) * dt * 2,
@@ -1122,13 +1162,100 @@ export class FactoryEngine {
         this.palette.reflectivity * this.reflectionFade
       if (this.reflectionFade > 0) this.renderReflection()
     }
+    // Where the front layer takes the holograms, they are drawn on their
+    // own first and left out of the scene's canvas (see `drawFront`).
+    const apart = this.drawFront()
+    this.camera.layers.set(0)
+    if (!apart) this.camera.layers.enable(HOLOGRAM_LAYER)
     this.renderer.render(this.scene, this.camera)
     this.rendered = true
     if (this.needsHoverTest) this.testHover()
   }
 
-  /** Pointer in CSS pixels relative to the canvas, or null when it leaves. */
-  setPointer(x: number | null, y: number | null) {
+  /**
+   * A transparent canvas laid over the page copy, covering the stage:
+   * holograms are drawn on it, so they stand in front of the copy instead
+   * of behind it. Null to stop.
+   */
+  setFront(canvas: HTMLCanvasElement | null) {
+    if (this.front && this.frontShown) {
+      const { width, height } = this.front.canvas
+      this.front.clearRect(0, 0, width, height)
+    }
+    this.front = canvas?.getContext('2d') ?? null
+    this.frontShown = false
+    if (this.ready && !this.isLooping()) this.renderFrame(0)
+  }
+
+  /**
+   * Where the copy is laid over the scene: draws the holograms that are on
+   * by themselves (their layer alone, onto the cleared canvas) and copies
+   * them onto the front layer, where they stand in front of the copy, which
+   * shows through their glass. True when the front layer takes them, so the
+   * scene's own pass leaves them out.
+   */
+  private drawFront(): boolean {
+    const front = this.front
+    const world = this.world
+    const active =
+      !!front && !!world && this.composition === 'overlay' && !this.mobile
+    const boxes = active ? world!.getDisplayBoxes() : []
+    if (!boxes.length) {
+      if (front && this.frontShown) {
+        front.clearRect(0, 0, front.canvas.width, front.canvas.height)
+        this.frontShown = false
+      }
+      return active
+    }
+    const source = this.options.canvas
+    const layer = front!.canvas
+    if (layer.width !== source.width || layer.height !== source.height) {
+      layer.width = source.width
+      layer.height = source.height
+    } else {
+      front!.clearRect(0, 0, layer.width, layer.height)
+    }
+
+    // Everything outside the holograms is clear, so one rectangle around
+    // them all is copied.
+    let left = layer.width
+    let top = layer.height
+    let right = 0
+    let bottom = 0
+    for (const corners of boxes) {
+      for (const corner of corners) {
+        corner.project(this.camera)
+        const x = ((corner.x + 1) / 2) * layer.width
+        const y = ((1 - corner.y) / 2) * layer.height
+        left = Math.min(left, x)
+        top = Math.min(top, y)
+        right = Math.max(right, x)
+        bottom = Math.max(bottom, y)
+      }
+    }
+    const x = Math.max(0, Math.floor(left))
+    const y = Math.max(0, Math.floor(top))
+    const width = Math.min(layer.width, Math.ceil(right)) - x
+    const height = Math.min(layer.height, Math.ceil(bottom)) - y
+    this.frontShown = width > 0 && height > 0
+    if (!this.frontShown) return true
+
+    const { renderer } = this
+    this.camera.layers.set(HOLOGRAM_LAYER)
+    // The scene's pass right after draws this frame's shadows.
+    renderer.shadowMap.autoUpdate = false
+    renderer.render(this.scene, this.camera)
+    renderer.shadowMap.autoUpdate = true
+    front!.drawImage(source, x, y, width, height, x, y, width, height)
+    return true
+  }
+
+  /**
+   * Pointer in CSS pixels relative to the canvas, or null when it leaves.
+   * Over the page copy (`opens` false) it only keeps on the hologram it is
+   * on, so the copy stays readable to point at everywhere else.
+   */
+  setPointer(x: number | null, y: number | null, opens = true) {
     if (x === null || y === null || this.options.reducedMotion) {
       this.pointerInside = false
       this.pointerTarget.set(0, 0)
@@ -1136,6 +1263,7 @@ export class FactoryEngine {
       return
     }
     this.pointerInside = true
+    this.pointerOpens = opens
     const nx = (x / this.width) * 2 - 1
     const ny = -(y / this.height) * 2 + 1
     this.pointerTarget.set(nx, ny)
@@ -1148,6 +1276,14 @@ export class FactoryEngine {
     this.needsHoverTest = false
     if (!this.pointerInside) return
     this.raycaster.setFromCamera(this.hoverPointer, this.camera)
+    if (!this.pointerOpens) {
+      const held = this.hovered
+      this.hovered = -1
+      if (held < 0) return
+      for (const box of [this.stationBoxes[held]!, ...this.displayBoxes[held]!])
+        if (this.raycaster.ray.intersectsBox(box)) this.hovered = held
+      return
+    }
     let best = -1
     let bestDistance = Number.POSITIVE_INFINITY
     const test = (box: Box3, index: number) => {
@@ -1160,7 +1296,7 @@ export class FactoryEngine {
       }
     }
     this.stationBoxes.forEach(test)
-    // An open station also answers for its unfolded display (only the display,
+    // A station that is on also answers for its hologram (only the hologram,
     // so the machines beside it stay reachable).
     if (this.hovered >= 0) {
       for (const box of this.displayBoxes[this.hovered]!)
@@ -1199,6 +1335,7 @@ export class FactoryEngine {
     )
     this.world?.dispose()
     this.stations?.dispose()
+    this.extensions?.dispose()
     this.products?.dispose()
     this.drones?.dispose()
     this.glows?.points.geometry.dispose()

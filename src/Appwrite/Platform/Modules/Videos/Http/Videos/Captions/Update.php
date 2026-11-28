@@ -8,6 +8,7 @@ use Appwrite\Event\Message\VideoAction;
 use Appwrite\Event\Publisher\Video as VideoPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Videos\Base;
+use Appwrite\Platform\Modules\Videos\SegmentCache;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -54,8 +55,6 @@ class Update extends Base
                 namespace: 'videos',
                 group: 'captions',
                 name: 'updateCaption',
-                // Hidden until videos is generally available; preview SDK builds show it.
-                hide: System::getEnv('_APP_SDK_PREVIEW', 'disabled') !== 'enabled',
                 description: '/docs/references/videos/update-caption.md',
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [
@@ -67,12 +66,12 @@ class Update extends Base
             ))
             ->param('videoId', '', new UID(), 'Video unique ID.')
             ->param('captionId', '', new UID(), 'Caption unique ID.')
-            ->param('bucketId', '', new UID(), 'Storage bucket unique ID holding the caption file. Omit together with fileId to only update name, code, or default.', true)
-            ->param('fileId', '', new UID(), 'Caption file unique ID. Omit together with bucketId to only update name, code, or default.', true)
+            ->param('bucketId', '', new UID(), 'Storage bucket unique ID holding the caption file. Omit together with fileId to only update name, language, or default.', true)
+            ->param('fileId', '', new UID(), 'Caption file unique ID. Omit together with bucketId to only update name, language, or default.', true)
             // The name is rendered into HLS/DASH manifests, which are quote- and
             // line-delimited; the allowlist keeps structural characters out at the door.
             ->param('name', '', new Text(128, allowList: [...Text::ALPHABET_UPPER, ...Text::ALPHABET_LOWER, ...Text::NUMBERS, ' ', '-', '.', ',', '(', ')', '_', '\'']), 'Caption display name. Allowed characters: a-z, A-Z, 0-9, space, and - . , ( ) _ \'', true)
-            ->param('code', '', new WhiteList(\array_column(Config::getParam('locale-languages'), 'code2')), 'Caption ISO 639-2 three-letter language code (for example `heb` for Hebrew).', true)
+            ->param('language', '', new WhiteList(\array_column(Config::getParam('locale-languages'), 'code2')), 'Caption ISO 639-2 three-letter language code (for example `heb` for Hebrew).', true)
             ->param('default', null, new Nullable(new Boolean()), 'Make this the default caption track for the video. Omit to leave unchanged.', true)
             ->inject('response')
             ->inject('dbForProject')
@@ -82,6 +81,7 @@ class Update extends Base
             ->inject('timelimit')
             ->inject('queueForEvents')
             ->inject('publisherForVideos')
+            ->inject('purgeVideoSegmentCache')
             ->callback($this->action(...));
     }
 
@@ -91,7 +91,7 @@ class Update extends Base
         string $bucketId,
         string $fileId,
         string $name,
-        string $code,
+        string $language,
         ?bool $default,
         Response $response,
         Database $dbForProject,
@@ -100,7 +100,8 @@ class Update extends Base
         Authorization $authorization,
         callable $timelimit,
         Event $queueForEvents,
-        VideoPublisher $publisherForVideos
+        VideoPublisher $publisherForVideos,
+        SegmentCache $segmentCache
     ): void {
         $video = $this->getAuthorizedVideo($dbForProject, $authorization, $user, $videoId);
         $this->assertCanUpdateVideo($authorization, $user, $video);
@@ -162,7 +163,7 @@ class Update extends Base
             }
         }
 
-        $nextCode = $code !== '' ? $code : (string) $caption->getAttribute('code', '');
+        $nextCode = $language !== '' ? $language : (string) $caption->getAttribute('code', '');
 
         $updates = [
             'name' => $name !== '' ? $name : $caption->getAttribute('name'),
@@ -198,6 +199,14 @@ class Update extends Base
         }
 
         if ($sourceChanged) {
+            // The old segment row still serves the previous VTT, and this write
+            // does not change its URL. Drop the row before the job and the purge:
+            // a refetch would store those bytes again, and the worker replaces
+            // this row, so a later delete would remove the new segment.
+            $authorization->skip(fn () => $dbForProject->deleteDocuments('videosCaptionsSegments', [
+                Query::equal('captionInternalId', [$caption->getSequence()]),
+            ]));
+
             $publisherForVideos->enqueue(new VideoMessage(
                 project: $project,
                 action: VideoAction::Caption,
@@ -205,6 +214,10 @@ class Update extends Base
                 caption: $caption,
             ));
         }
+
+        // Public caption segments share the video Surrogate-Key and the video's
+        // updatedAt, so this write does not change their URL.
+        $segmentCache->purge($project->getId(), $video->getId());
 
         $queueForEvents
             ->setParam('videoId', $video->getId())

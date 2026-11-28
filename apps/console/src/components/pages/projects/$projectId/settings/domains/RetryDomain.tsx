@@ -9,8 +9,10 @@ import {
 import { Button } from '@/components/ui/button'
 import { useVerifyDomain } from '@/lib/react-query/hooks'
 import { toast } from 'sonner'
+import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
 import type { Models } from '@appwrite.io/console'
+import { canRetryRule } from '@/lib/utils/proxy-domains'
 import {
   VerifyDomainContent,
   dnsPendingVerificationError,
@@ -58,6 +60,7 @@ export function RetryDomainDialog({
         updatedRule.status === 'unverified'
       ) {
         setVerificationError(dnsPendingVerificationError(t))
+        toast.info(t('Not verified yet. Appwrite keeps checking.'))
       } else if (updatedRule.status === 'verified') {
         toast.success(
           rule.status === 'verified'
@@ -70,18 +73,39 @@ export function RetryDomainDialog({
         onRetrySuccess()
       }
     } catch (err) {
-      setVerificationError(domainVerificationError(t, err))
+      const error = domainVerificationError(t, err)
+      setVerificationError(error)
+      // The DNS banners hide a pending error, so say what the check found
+      if (error.pending) {
+        toast.info(t('Not verified yet. Appwrite keeps checking.'), {
+          description: getErrorMessage(err),
+        })
+      }
     }
   }
+
+  // The rule updates live: once DNS passes, there is nothing to retry.
+  const retryable = canRetryRule(rule)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-4xl p-0">
         <DialogHeader className="px-6 pt-6 text-start">
-          <DialogTitle>{t('Retry verification')}</DialogTitle>
-          <DialogDescription className="text-[13px] mt-2">
-            {t('Retry domain verification for')} {rule.domain}
-          </DialogDescription>
+          {retryable ? (
+            <>
+              <DialogTitle>{t('Retry verification')}</DialogTitle>
+              <DialogDescription className="text-[13px] mt-2">
+                {t('Retry domain verification for')} {rule.domain}
+              </DialogDescription>
+            </>
+          ) : (
+            <>
+              <DialogTitle>{t('DNS Records')}</DialogTitle>
+              <DialogDescription className="text-[13px] mt-2 font-mono">
+                {rule.domain}
+              </DialogDescription>
+            </>
+          )}
         </DialogHeader>
         <div className="border-t border-border" />
 
@@ -95,21 +119,33 @@ export function RetryDomainDialog({
         </div>
 
         <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={verifyDomainMutation.isPending}
-          >
-            {t('Cancel')}
-          </Button>
-          <Button
-            type="button"
-            onClick={handleRetry}
-            disabled={verifyDomainMutation.isPending}
-          >
-            {t('Retry')}
-          </Button>
+          {retryable ? (
+            <>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={verifyDomainMutation.isPending}
+              >
+                {t('Cancel')}
+              </Button>
+              <Button
+                type="button"
+                onClick={handleRetry}
+                disabled={verifyDomainMutation.isPending}
+              >
+                {t('Retry')}
+              </Button>
+            </>
+          ) : (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+            >
+              {t('Close')}
+            </Button>
+          )}
         </div>
       </DialogContent>
     </Dialog>

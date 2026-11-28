@@ -37,7 +37,13 @@ export function OnboardingCard({
     ? onboardingCopy.getStarted
     : `${onboardingCopy.getStarted} · ${completedSteps} ${onboardingCopy.of} ${totalSteps} ${onboardingCopy.completed}`
 
-  if (!projectId) {
+  // Hidden once every tracked step is done. The project layout loader warms
+  // the snapshot, so a finished project never paints the card first.
+  // Compare counts, not `progress`: it is rounded and can read 100 early.
+  const isComplete =
+    !isPending && totalSteps > 0 && completedSteps >= totalSteps
+
+  if (!projectId || isComplete) {
     return null
   }
 

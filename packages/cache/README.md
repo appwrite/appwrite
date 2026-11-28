@@ -59,7 +59,7 @@ A miss loads as `false`. `save()` refuses `''` and `'0'` and returns `false`. It
 | `Hazelcast` | Hazelcast over its Memcached protocol. |
 | `Sharding` | Spreads keys across several adapters. |
 | `Pool` | Checks an adapter out of a `utopia-php/pools` pool per call. |
-| `CircuitBreaker` | Wraps an adapter so a failing cache stops being called. Reads and saves fall back to a miss; a purge it cannot confirm throws `Exception\Unavailable`. |
+| `CircuitBreaker` | Wraps an adapter so a failing cache stops being called. Reads and saves fall back to a miss; a purge it cannot confirm throws `Exception\Unavailable`. In front of `Redis\Multiplexing`, give the breaker `slow: [Redis\TimeoutException::class]` with a `slowRatio` such as `0.9` and a `slowMinimumThroughput` such as `20`, so timeouts are judged apart from failures and a slow server opens it only when most of a busy window times out or fails. The default `slowRatio` of `1.0` opens it only when no call in the window succeeds. |
 
 ## Codecs
 

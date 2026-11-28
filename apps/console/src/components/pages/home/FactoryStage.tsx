@@ -2,20 +2,18 @@
 
 import { createClientOnlyFn } from '@tanstack/react-start'
 import { Share2 } from 'lucide-react'
-import {
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-  type PointerEvent as ReactPointerEvent,
-} from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useT } from '@/lib/i18n/translate'
 import { PRODUCT_REGISTRY } from '@/lib/products/registry'
 import { cn } from '@/lib/utils'
 import type { FactoryLabels, FactoryMount } from './factory/boot'
 import { factoryBoot, holdFactory, takeFactory } from './factory/early'
 import type { FactoryEngine } from './factory/engine'
-import { STATION_IDS, type FactoryStationId } from './factory/layout'
+import {
+  EXTENSION_IDS,
+  STATION_IDS,
+  type FactoryStationId,
+} from './factory/layout'
 
 const importFactory = createClientOnlyFn(() => import('./factory/boot'))
 let factory: ReturnType<typeof importFactory> | null = null
@@ -52,8 +50,8 @@ const isRtl = () =>
  * The hero's 3D software factory. It starts before the page hydrates, from
  * the labels and icons this renders (`data-factory-labels`,
  * `data-factory-icons`), renders only while on screen and never above
- * 60 fps. Product names are shown on the machines; hovering one unfolds a
- * display that explains the product, clear of the hero's title and
+ * 60 fps. Product names are shown on the machines; hovering one projects a
+ * hologram that explains the product, clear of the hero's title and
  * description laid over the scene (`data-factory-copy`).
  */
 export function FactoryStage({ className }: { className?: string }) {
@@ -65,15 +63,19 @@ export function FactoryStage({ className }: { className?: string }) {
   const [fallback, setFallback] = useState(false)
 
   const names = STATION_IDS.map((id) => t(PRODUCT_REGISTRY[id].name))
-  /** What the machine prints: every station's name, then the gate's sign. */
-  const plates = [...names, NETWORK_NAME]
-  /** What each unfolded display says: up to three lines, ending in the brand underscore. */
+  /** What the machine prints: every station's name, the gate's sign, then each extension's name. */
+  const plates = [
+    ...names,
+    NETWORK_NAME,
+    ...EXTENSION_IDS.map((id) => t(PRODUCT_REGISTRY[id].name)),
+  ]
+  /** What each hologram says: up to three lines, ending in the brand underscore. */
   const copy: Record<FactoryStationId, string> = {
     auth: t(
       'Sign users in with email, OAuth, or passkeys, plus MFA, teams, and roles',
     ),
     databases: t(
-      'Run managed Postgres and MySQL, or store tables, documents, and vectors in one project',
+      'Five databases in one project: Postgres, MySQL, TablesDB, DocumentsDB, and VectorsDB',
     ),
     storage: t(
       'Upload files, resize images on the fly, and deliver them over a global CDN',
@@ -169,25 +171,12 @@ export function FactoryStage({ className }: { className?: string }) {
     engineRef.current?.setPromptLabel(promptLabelRef.current)
   }, [labelsKey])
 
-  const handlePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (event.pointerType === 'touch') return
-    const rect = event.currentTarget.getBoundingClientRect()
-    engineRef.current?.setPointer(
-      event.clientX - rect.left,
-      event.clientY - rect.top,
-    )
-  }
-
-  const handlePointerLeave = () => engineRef.current?.setPointer(null, null)
-
   return (
     <div
       ref={containerRef}
       data-factory-stage
       data-factory-labels={JSON.stringify(labels)}
       className={cn('factory-stage relative w-full select-none', className)}
-      onPointerMove={handlePointerMove}
-      onPointerLeave={handlePointerLeave}
     >
       <canvas
         role="img"
@@ -223,9 +212,13 @@ export function FactoryStage({ className }: { className?: string }) {
         })}
         {/* Appwrite Network's mark, as in the Docs navigation. */}
         <Share2 strokeWidth={2} />
+        {EXTENSION_IDS.map((id) => {
+          const Icon = PRODUCT_REGISTRY[id].icon
+          return <Icon key={id} strokeWidth={2} />
+        })}
       </div>
 
-      {/* What the displays say, for screen readers. */}
+      {/* What the holograms say, for screen readers. */}
       <ul className="sr-only">
         {STATION_IDS.map((id, index) => (
           <li key={id}>{`${names[index]}: ${descriptions[index]}`}</li>

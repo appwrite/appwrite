@@ -49,8 +49,8 @@ this branch, a new deployment is automatically created and deployed.
 
 The root directory specifies the folder holding your function template's code.
 
-When a PR is made to the branch, a new deployment is built, but not activated.
-A comment is made to your PR about the build, unless you enable **Silent mode**.
+When you push to another branch, a new deployment is built, but not activated.
+When you open a PR, Appwrite comments on it with the build status. You can turn off comments, commit statuses, or deploying on push later in the function's [Git automation](/docs/products/functions/deploy-from-git#git-automation) settings.
 
 # Available templates {% #available-templates %}
 {% table %}

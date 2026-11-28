@@ -1,0 +1,701 @@
+---
+layout: article
+title: Captions
+description: Add WebVTT or SubRip captions to an Appwrite video, use subtitle tracks embedded in the source, and set a default language for players.
+---
+
+**Captions** are text tracks attached to a [video](/docs/products/videos/videos). Players pick them up from the master manifest and let viewers switch languages. A caption comes from a file in Storage, from the caption editor in the Console, or from the source file itself. Appwrite does not transcribe speech, so to caption a video that has no track yet, upload the output of a transcription service or write the track in the caption editor.
+
+Captions make a video usable with the sound off, accessible to deaf and hard-of-hearing viewers, and watchable in more languages. Each language is its own track, so one video can carry English, Spanish, and Japanese captions side by side.
+
+# Caption files {% #caption-files %}
+
+A caption file is a list of **cues**: a start time, an end time, and the text to show in between. Appwrite accepts the two most common formats.
+
+**WebVTT** (`.vtt`) is the web standard:
+
+```text
+WEBVTT
+
+00:00:01.000 --> 00:00:04.000
+Welcome to the launch.
+
+00:00:04.500 --> 00:00:08.000
+Today we are shipping three things.
+```
+
+**SubRip** (`.srt`) numbers each cue and uses a comma before milliseconds:
+
+```text
+1
+00:00:01,000 --> 00:00:04,000
+Welcome to the launch.
+
+2
+00:00:04,500 --> 00:00:08,000
+Today we are shipping three things.
+```
+
+Most editing tools and transcription services export one of these. Save files as UTF-8 so accents and non-Latin scripts display correctly.
+
+# Uploaded captions {% #uploaded-captions %}
+
+Upload a **WebVTT** (`.vtt`) or **SubRip** (`.srt`) file to a Storage bucket, then attach it to the video. Appwrite converts it to WebVTT and segments it for streaming in the background. The bucket must allow these extensions. Any other file returns the `video_caption_not_valid` error.
+
+1. Open the video and select **Captions**.
+2. Click **Upload caption**.
+3. Select a **Subtitle file** from Storage.
+4. Choose a **Language**. The **Name** fills in from it, for example `English`, and you can change it.
+5. Turn on **Default caption** to have players show it automatically.
+6. Click **Create**.
+
+{% only_dark %}
+![Captions tab with an English caption marked as the default track](/images/docs/videos/dark/captions.avif)
+{% /only_dark %}
+{% only_light %}
+![Captions tab with an English caption marked as the default track](/images/docs/videos/captions.avif)
+{% /only_light %}
+
+With a server SDK:
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const videos = new sdk.Videos(client);
+
+const caption = await videos.createCaption({
+    videoId: '<VIDEO_ID>',
+    bucketId: '<BUCKET_ID>',
+    fileId: '<CAPTION_FILE_ID>',
+    name: 'English',
+    language: 'eng',
+    xdefault: true // optional
+});
+```
+
+```server-python
+from appwrite.client import Client
+from appwrite.services.videos import Videos
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<API_KEY>')
+
+videos = Videos(client)
+
+caption = videos.create_caption(
+    video_id = '<VIDEO_ID>',
+    bucket_id = '<BUCKET_ID>',
+    file_id = '<CAPTION_FILE_ID>',
+    name = 'English',
+    language = 'eng',
+    default = True # optional
+)
+```
+
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+Videos videos = Videos(client);
+
+final caption = await videos.createCaption(
+    videoId: '<VIDEO_ID>',
+    bucketId: '<BUCKET_ID>',
+    fileId: '<CAPTION_FILE_ID>',
+    name: 'English',
+    language: 'eng',
+    xdefault: true, // (optional)
+);
+```
+
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Videos;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<API_KEY>');
+
+$videos = new Videos($client);
+
+$caption = $videos->createCaption(
+    videoId: '<VIDEO_ID>',
+    bucketId: '<BUCKET_ID>',
+    fileId: '<CAPTION_FILE_ID>',
+    name: 'English',
+    language: 'eng',
+    default: true // optional
+);
+```
+
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<API_KEY>')
+
+videos = Videos.new(client)
+
+caption = videos.create_caption(
+    video_id: '<VIDEO_ID>',
+    bucket_id: '<BUCKET_ID>',
+    file_id: '<CAPTION_FILE_ID>',
+    name: 'English',
+    language: 'eng',
+    default: true # optional
+)
+```
+
+```server-dotnet
+using Appwrite;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<API_KEY>");
+
+Videos videos = new Videos(client);
+
+VideoCaption caption = await videos.CreateCaption(
+    videoId: "<VIDEO_ID>",
+    bucketId: "<BUCKET_ID>",
+    fileId: "<CAPTION_FILE_ID>",
+    name: "English",
+    language: "eng",
+    @default: true // optional
+);
+```
+
+```server-deno
+import { Client, Videos } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const videos = new Videos(client);
+
+const caption = await videos.createCaption({
+    videoId: '<VIDEO_ID>',
+    bucketId: '<BUCKET_ID>',
+    fileId: '<CAPTION_FILE_ID>',
+    name: 'English',
+    language: 'eng',
+    xdefault: true // optional
+});
+```
+
+```server-go
+package main
+
+import (
+	"fmt"
+
+	"github.com/appwrite/sdk-for-go/v7/appwrite"
+	"github.com/appwrite/sdk-for-go/v7/videos"
+)
+
+func main() {
+	client := appwrite.NewClient(
+		appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+		appwrite.WithProject("<PROJECT_ID>"),
+		appwrite.WithKey("<API_KEY>"),
+	)
+
+	service := videos.New(client)
+
+	caption, err := service.CreateCaption(
+		"<VIDEO_ID>",
+		"<BUCKET_ID>",
+		"<CAPTION_FILE_ID>",
+		"English",
+		"eng",
+		service.WithCreateCaptionDefault(true),
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(caption)
+}
+```
+
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>")
+
+let videos = Videos(client)
+
+let caption = try await videos.createCaption(
+    videoId: "<VIDEO_ID>",
+    bucketId: "<BUCKET_ID>",
+    fileId: "<CAPTION_FILE_ID>",
+    name: "English",
+    language: "eng",
+    default: true // optional
+)
+```
+
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Videos
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>")
+
+val videos = Videos(client)
+
+val caption = videos.createCaption(
+    videoId = "<VIDEO_ID>",
+    bucketId = "<BUCKET_ID>",
+    fileId = "<CAPTION_FILE_ID>",
+    name = "English",
+    language = "eng",
+    default = true // optional
+)
+```
+
+```server-java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.exceptions.AppwriteException;
+import io.appwrite.services.Videos;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>");
+
+Videos videos = new Videos(client);
+
+try {
+    videos.createCaption(
+        "<VIDEO_ID>", // videoId
+        "<BUCKET_ID>", // bucketId
+        "<CAPTION_FILE_ID>", // fileId
+        "English", // name
+        "eng", // language
+        true, // default (optional)
+        new CoroutineCallback<>((result, error) -> {
+            if (error != null) {
+                error.printStackTrace();
+                return;
+            }
+
+            System.out.println(result);
+        })
+    );
+} catch (AppwriteException e) {
+    e.printStackTrace();
+}
+```
+
+```server-rust
+use appwrite::Client;
+use appwrite::services::Videos;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1");
+    client.set_project("<PROJECT_ID>");
+    client.set_key("<API_KEY>");
+
+    let videos = Videos::new(&client);
+
+    let caption = videos.create_caption(
+        "<VIDEO_ID>",
+        "<BUCKET_ID>",
+        "<CAPTION_FILE_ID>",
+        "English",
+        "eng",
+        Some(true) // default
+    ).await?;
+
+    println!("{:?}", caption);
+
+    Ok(())
+}
+```
+{% /multicode %}
+
+The `name` is what viewers see in the player's captions menu, so make it clear, such as `Spanish` or `English (SDH)`. Names are up to 128 characters and allow the letters `A-Z` and `a-z`, numbers, spaces, and `- . , ( ) _ '`. Accented and non-Latin characters are not allowed in names, but are fine inside the caption text.
+
+The REST API calls the default flag `default`. Because `default` is a reserved word in JavaScript and Dart, the Node.js, Deno, Dart, and web SDKs call it `xdefault`, and the .NET SDK calls it `@default`.
+
+You can add up to 30 captions per video per hour. Past that, `videos.createCaption()` returns a `general_rate_limit_exceeded` error until the hour is up.
+
+# Embedded captions {% #embedded-captions %}
+
+Subtitle tracks embedded in the source container are extracted automatically during the first rendition or timeline job, usually within seconds of creating the video. They appear in the captions list marked as embedded (`embedded: true`), with no backing file in Storage. Each track is named after its title in the source, or its language tag if it has no title.
+
+If the source marks a track as its default, that track becomes the video's default caption, unless the video already has one.
+
+Only text tracks are extracted, such as SubRip, WebVTT, MP4 `mov_text`, and ASS/SSA. Image-based subtitles, such as PGS or VobSub tracks from Blu-ray and DVD rips, are skipped. To use those, convert them to WebVTT or SubRip and upload the result.
+
+Extraction runs once per video. If you delete an embedded caption, it is not extracted again.
+
+# Language codes {% #language-codes %}
+
+Each caption has an **ISO 639-2** three-letter language code, such as `eng`, `spa`, or `heb`. Where a language has two codes, use the terminology code, such as `deu` for German, `fra` for French, and `zho` for Chinese. Two-letter codes such as `en` are rejected.
+
+Embedded tracks without a language tag show as `und` (undetermined).
+
+To fix a track's language in the Console, open the caption and change **Language** in the editor's **Settings** panel. Retagging updates the name, language, or default flag without re-processing the file. Changing the file itself re-packages the track.
+
+With a server SDK, pass only the fields you want to change. For example, to tag an embedded track that came in as `und`:
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const videos = new sdk.Videos(client);
+
+const caption = await videos.updateCaption({
+    videoId: '<VIDEO_ID>',
+    captionId: '<CAPTION_ID>',
+    name: 'Hebrew', // optional
+    language: 'heb' // optional
+});
+```
+
+```server-python
+from appwrite.client import Client
+from appwrite.services.videos import Videos
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<API_KEY>')
+
+videos = Videos(client)
+
+caption = videos.update_caption(
+    video_id = '<VIDEO_ID>',
+    caption_id = '<CAPTION_ID>',
+    name = 'Hebrew', # optional
+    language = 'heb' # optional
+)
+```
+
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+Videos videos = Videos(client);
+
+final caption = await videos.updateCaption(
+    videoId: '<VIDEO_ID>',
+    captionId: '<CAPTION_ID>',
+    name: 'Hebrew', // (optional)
+    language: 'heb', // (optional)
+);
+```
+
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Videos;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<API_KEY>');
+
+$videos = new Videos($client);
+
+$caption = $videos->updateCaption(
+    videoId: '<VIDEO_ID>',
+    captionId: '<CAPTION_ID>',
+    name: 'Hebrew', // optional
+    language: 'heb' // optional
+);
+```
+
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<API_KEY>')
+
+videos = Videos.new(client)
+
+caption = videos.update_caption(
+    video_id: '<VIDEO_ID>',
+    caption_id: '<CAPTION_ID>',
+    name: 'Hebrew', # optional
+    language: 'heb' # optional
+)
+```
+
+```server-dotnet
+using Appwrite;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<API_KEY>");
+
+Videos videos = new Videos(client);
+
+VideoCaption caption = await videos.UpdateCaption(
+    videoId: "<VIDEO_ID>",
+    captionId: "<CAPTION_ID>",
+    name: "Hebrew", // optional
+    language: "heb" // optional
+);
+```
+
+```server-deno
+import { Client, Videos } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const videos = new Videos(client);
+
+const caption = await videos.updateCaption({
+    videoId: '<VIDEO_ID>',
+    captionId: '<CAPTION_ID>',
+    name: 'Hebrew', // optional
+    language: 'heb' // optional
+});
+```
+
+```server-go
+package main
+
+import (
+	"fmt"
+
+	"github.com/appwrite/sdk-for-go/v7/appwrite"
+	"github.com/appwrite/sdk-for-go/v7/videos"
+)
+
+func main() {
+	client := appwrite.NewClient(
+		appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+		appwrite.WithProject("<PROJECT_ID>"),
+		appwrite.WithKey("<API_KEY>"),
+	)
+
+	service := videos.New(client)
+
+	caption, err := service.UpdateCaption(
+		"<VIDEO_ID>",
+		"<CAPTION_ID>",
+		service.WithUpdateCaptionName("Hebrew"),
+		service.WithUpdateCaptionCode("heb"),
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(caption)
+}
+```
+
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>")
+
+let videos = Videos(client)
+
+let caption = try await videos.updateCaption(
+    videoId: "<VIDEO_ID>",
+    captionId: "<CAPTION_ID>",
+    name: "Hebrew", // optional
+    language: "heb" // optional
+)
+```
+
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Videos
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>")
+
+val videos = Videos(client)
+
+val caption = videos.updateCaption(
+    videoId = "<VIDEO_ID>",
+    captionId = "<CAPTION_ID>",
+    name = "Hebrew", // optional
+    language = "heb" // optional
+)
+```
+
+```server-java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.exceptions.AppwriteException;
+import io.appwrite.services.Videos;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>");
+
+Videos videos = new Videos(client);
+
+try {
+    videos.updateCaption(
+        "<VIDEO_ID>", // videoId
+        "<CAPTION_ID>", // captionId
+        null, // bucketId (optional)
+        null, // fileId (optional)
+        "Hebrew", // name (optional)
+        "heb", // language (optional)
+        new CoroutineCallback<>((result, error) -> {
+            if (error != null) {
+                error.printStackTrace();
+                return;
+            }
+
+            System.out.println(result);
+        })
+    );
+} catch (AppwriteException e) {
+    e.printStackTrace();
+}
+```
+
+```server-rust
+use appwrite::Client;
+use appwrite::services::Videos;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1");
+    client.set_project("<PROJECT_ID>");
+    client.set_key("<API_KEY>");
+
+    let videos = Videos::new(&client);
+
+    let caption = videos.update_caption(
+        "<VIDEO_ID>",
+        "<CAPTION_ID>",
+        None, // bucketId
+        None, // fileId
+        Some("Hebrew"), // name
+        Some("heb") // language
+    ).await?;
+
+    println!("{:?}", caption);
+
+    Ok(())
+}
+```
+{% /multicode %}
+
+To replace the text of a track, pass a new `bucketId` and `fileId` together. List a video's tracks with `videos.listCaptions({ videoId })`.
+
+# Default caption {% #default-caption %}
+
+Players turn on the **default** caption automatically. A video has at most one default caption, so making a caption the default removes the flag from the previous one. When you upload a caption in the same language as an embedded default track, the upload takes over the default flag.
+
+Set a default when most viewers watch with the sound off, as on social feeds, or when the spoken language differs from your audience's. Leave it off when captions are optional, so viewers who do not need them get a clean picture. Viewers can always turn captions on or off from the player.
+
+# Status {% #status %}
+
+| Status | Console label | Meaning |
+|--------|---------------|---------|
+| `pending` | Queued | Waiting to be processed |
+| `started` | Processing | Converting to WebVTT and segmenting |
+| `ready` | Ready | Listed in the master manifest |
+| `error` | Failed | The file could not be processed. `error` says why |
+| `aborted` | Aborted | Processing made no progress for 12 hours and was stopped |
+
+To retry a failed caption, update it with a corrected file by passing a new `bucketId` and `fileId`, or delete it and upload again.
+
+# Caption editor {% #caption-editor %}
+
+Click **Create caption** to write a track from scratch, or open an existing caption to change it. The editor shows the player, a list of cues, and a timeline under the picture.
+
+{% only_dark %}
+![Caption editor with a cue selected, the player, the cue list, and the timeline of cues](/images/docs/videos/dark/caption-editor.avif)
+{% /only_dark %}
+{% only_light %}
+![Caption editor with a cue selected, the player, the cue list, and the timeline of cues](/images/docs/videos/caption-editor.avif)
+{% /only_light %}
+
+- Add a cue at the playhead, split a cue, or drag cues and their edges on the timeline to retime them.
+- From the **Tools** menu, use **Shift timings** to move all cues, or only the selected ones, when a track is out of sync.
+- Use **Fix overlaps** and **Remove empty cues** in the same menu to clean up a track, and filter the list to **Only cues with issues**.
+- Use **Import** to load cues **From your computer** or **From Storage**, and **Export** to download the track.
+
+When you **Save**, the editor writes the track as a WebVTT file to the Storage bucket you choose in its settings, and the caption is re-packaged in the background. The bucket must accept `.vtt` files.
+
+The editor checks every cue against common captioning guidelines. **Errors** block saving, and **warnings** are advice you can ignore:
+
+| Check | Severity |
+|-------|----------|
+| End time is not after the start time | Error |
+| Cue has no text | Error |
+| Overlaps the previous cue | Warning |
+| Ends after the video does | Warning |
+| Reading speed above 20 characters per second | Warning |
+| A line longer than 42 characters | Warning |
+| More than 2 lines | Warning |
+
+You can also download any track from its actions menu with **Download WebVTT** or **Download SRT**, for example to send it to a translator.
+
+# Delete a caption {% #delete-a-caption %}
+
+Deleting a caption removes its segments and drops it from the manifest. For uploaded captions, the file stays in Storage.
+
+You cannot delete a caption while it is processing. The request returns `video_caption_in_progress`, so wait for it to finish.

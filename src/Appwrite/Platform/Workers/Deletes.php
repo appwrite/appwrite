@@ -20,6 +20,7 @@ use Appwrite\Logs\Logs;
 use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Platform\Modules\Videos\Base as VideosBase;
 use Appwrite\Presences\State as PresenceState;
+use Appwrite\Storage\Uploads;
 use Appwrite\Usage\Connection as UsageConnection;
 use Appwrite\Usage\Context as UsageContext;
 use Executor\Executor;
@@ -100,7 +101,8 @@ class Deletes extends Action
             ->inject('executionStore')
             ->inject('queueForRealtime')
             ->inject('locks')
-            ->inject('logs');
+            ->inject('logs')
+            ->inject('uploads');
 
         if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
             $this
@@ -137,6 +139,7 @@ class Deletes extends Action
         Realtime $queueForRealtime,
         callable $locks,
         Logs $logs,
+        Uploads $uploads,
         UsageConnection $usageConnection,
     ): void {
         $payload = $message->getPayload();
@@ -176,6 +179,7 @@ class Deletes extends Action
             $queueForRealtime,
             $locks,
             $logs,
+            $uploads,
         );
 
         // Sweep rows that landed between the purge and the delete. The
@@ -275,6 +279,7 @@ class Deletes extends Action
         Realtime $queueForRealtime,
         ?callable $locks = null,
         ?Logs $logs = null,
+        ?Uploads $uploads = null,
     ): void {
         $payload = $message->getPayload();
 
@@ -416,7 +421,7 @@ class Deletes extends Action
                 $this->deleteExpiredTransactions($project, $getProjectDB);
                 $this->deleteExpiredPresences($project, $getProjectDB, $publisherForUsage);
                 $this->deleteExpiredPushLedger($project, $getProjectDB);
-                $this->deleteExpiredUploads($project, $getProjectDB, $deviceForFiles, $locks);
+                $this->deleteExpiredUploads($project, $getProjectDB, $deviceForFiles, $locks, $uploads);
                 $this->deleteOldDeployments($dbForPlatform, $publisherForDeletes, $project, $getProjectDB, $deploymentRetention);
                 $this->updateProcessingMigrations($project, $getProjectDB);
                 $this->abortStaleRenditions($project, $getProjectDB, $telemetry);
@@ -562,6 +567,13 @@ class Deletes extends Action
 
                 // Monitors live in the platform database, and a monitor need not
                 // belong to a project, so their rows go once the monitor is gone.
+                // An alert's escalation timer is stopped once it has nothing left to fire.
+                if ($resourceType === SCHEDULE_RESOURCE_TYPE_ESCALATION) {
+                    $dbForPlatform->deleteDocument('schedules', $document->getId());
+                    Console::success('Deleting escalation schedule for alert ' . $resourceId);
+                    return;
+                }
+
                 if ($resourceType === SCHEDULE_RESOURCE_TYPE_MONITOR) {
                     if ($dbForPlatform->getDocument('monitors', $resourceId)->isEmpty()) {
                         $dbForPlatform->deleteDocument('schedules', $document->getId());
@@ -1236,6 +1248,16 @@ class Deletes extends Action
             $this->deleteProject($dbForPlatform, $getProjectDB, $getDatabasesDB, $telemetry, $certificates, $project, $bus, $executionStore, $logs);
             $dbForPlatform->deleteDocument('projects', $project->getId());
         }
+
+        // The organization's escalations go with it.
+        try {
+            $this->deleteByGroup('escalations', [
+                Query::equal('teamInternalId', [$document->getSequence()]),
+                Query::orderAsc(),
+            ], $dbForPlatform);
+        } catch (Throwable $th) {
+            Console::error('Failed to delete escalations: ' . $th->getMessage());
+        }
     }
 
     protected function deleteProject(Database $dbForPlatform, callable $getProjectDB, callable $getDatabasesDB, Telemetry $telemetry, Provider $certificates, Document $document, Bus $bus, ?Store $executionStore = null, ?Logs $logs = null): void
@@ -1283,6 +1305,16 @@ class Deletes extends Action
             });
         } catch (Throwable $th) {
             Console::error('Failed to delete rules: ' . $th->getMessage());
+        }
+
+        // Delete rule records
+        try {
+            $this->deleteByGroup('ruleRecords', [
+                Query::equal('projectInternalId', [$projectInternalId]),
+                Query::orderAsc()
+            ], $dbForPlatform);
+        } catch (Throwable $th) {
+            Console::error('Failed to delete rule records: ' . $th->getMessage());
         }
 
         // Delete Keys
@@ -2421,6 +2453,11 @@ class Deletes extends Action
         if (isset($document['certificateId'])) {
             $dbForPlatform->deleteDocument('certificates', $document['certificateId']);
         }
+
+        // Record checks belong to this rule alone, even when its domain was recreated
+        $dbForPlatform->deleteDocuments('ruleRecords', [
+            Query::equal('ruleInternalId', [$document->getSequence()]),
+        ]);
     }
 
     /**
@@ -2760,16 +2797,12 @@ class Deletes extends Action
         ]);
     }
 
-    private function deleteExpiredUploads(Document $project, callable $getProjectDB, Device $deviceForFiles, ?callable $locks): void
+    private function deleteExpiredUploads(Document $project, callable $getProjectDB, Device $deviceForFiles, ?callable $locks, ?Uploads $uploads): void
     {
-        Console::info('Delete expired uploads');
-
         $dbForProject = $getProjectDB($project);
         $expired = DateTime::addSeconds(new \DateTime(), -APP_STORAGE_UPLOAD_RETENTION);
 
-        $this->listByGroup('buckets', [
-            Query::select(['$id', '$sequence']),
-        ], $dbForProject, function (Document $bucket) use ($project, $dbForProject, $deviceForFiles, $locks, $expired) {
+        $deleteExpired = function (Document $bucket) use ($project, $dbForProject, $deviceForFiles, $locks, $expired): bool {
             $collection = 'bucket_' . $bucket->getSequence();
 
             // Every chunk updates the document, and its signature stays empty until the upload completes.
@@ -2852,8 +2885,60 @@ class Deletes extends Action
                 });
             } catch (Throwable $th) {
                 Console::error('Failed to delete expired uploads in bucket ' . $bucket->getId() . ': ' . $th->getMessage());
+                return false;
             }
-        });
+
+            return true;
+        };
+
+        // Without a hint, or once per retention period, every bucket is scanned: hints can be lost.
+        $pending = null;
+        if ($uploads !== null) {
+            try {
+                $pending = $uploads->claimScan($project->getId()) ? null : $uploads->buckets($project->getId());
+            } catch (Throwable $th) {
+                Console::warning('Failed to read pending uploads: ' . $th->getMessage());
+            }
+        }
+
+        if ($uploads === null || $pending === null) {
+            Console::info('Delete expired uploads in every bucket');
+            $this->listByGroup('buckets', [
+                Query::select(['$id', '$sequence']),
+            ], $dbForProject, function (Document $bucket) use ($deleteExpired, $project, $uploads): void {
+                if ($deleteExpired($bucket)) {
+                    return;
+                }
+
+                // The next full scan is days away, so the hourly runs retry this bucket.
+                try {
+                    $uploads?->track($project->getId(), $bucket->getId());
+                } catch (Throwable $th) {
+                    Console::warning('Failed to track bucket ' . $bucket->getId() . ' for retry: ' . $th->getMessage());
+                }
+            });
+            return;
+        }
+
+        Console::info('Delete expired uploads in ' . \count($pending) . ' buckets');
+        foreach ($pending as $bucketId) {
+            try {
+                $bucket = $dbForProject->getDocument('buckets', $bucketId, [Query::select(['$id', '$sequence'])]);
+                if (!$bucket->isEmpty()) {
+                    $deleteExpired($bucket);
+                }
+
+                // The next chunked upload to this bucket tracks it again.
+                if ($bucket->isEmpty() || $dbForProject->findOne('bucket_' . $bucket->getSequence(), [
+                    Query::select(['$id']),
+                    Query::equal('signature', ['']),
+                ])->isEmpty()) {
+                    $uploads->forget($project->getId(), $bucketId);
+                }
+            } catch (Throwable $th) {
+                Console::error('Failed to check pending uploads in bucket ' . $bucketId . ': ' . $th->getMessage());
+            }
+        }
     }
 
     private function deleteExpiredPresences(Document $project, callable $getProjectDB, UsagePublisher $publisherForUsage): void

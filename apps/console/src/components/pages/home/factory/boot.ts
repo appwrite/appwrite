@@ -107,7 +107,8 @@ export function startFactory(container: HTMLElement): FactoryMount | null {
 
 /**
  * Keeps the engine in step with the page around `container`: its size,
- * layout and the copy laid over it, the theme, and whether it is on screen.
+ * layout and the copy laid over it, the pointer, the theme, and whether it
+ * is on screen.
  * Returns what undoes it.
  */
 function wire(engine: FactoryEngine, container: HTMLElement): () => void {
@@ -115,8 +116,8 @@ function wire(engine: FactoryEngine, container: HTMLElement): () => void {
   const cleanups: (() => void)[] = []
   const overlay = window.matchMedia(OVERLAY_QUERY)
   // Where each line of the hero's title and description sits over the
-  // scene (`data-factory-copy`), so unfolding displays can keep clear of
-  // the words while rising beside a short line.
+  // scene (`data-factory-copy`), so the holograms can keep clear of the
+  // words while floating beside a short line.
   const syncCopyArea = () => {
     if (!overlay.matches) return engine.setCopyLines([])
     const stage = container.getBoundingClientRect()
@@ -160,6 +161,31 @@ function wire(engine: FactoryEngine, container: HTMLElement): () => void {
   void document.fonts?.ready.then(() => {
     if (live) syncCopyArea()
   })
+
+  // The pointer, anywhere over the hero: over the scene it hovers the
+  // machines; over the copy laid on it, it only keeps on a hologram it is
+  // still over, which stands in front of the copy (`data-factory-front`).
+  const hero = container.closest('section') ?? container
+  const onPointerMove = (event: PointerEvent) => {
+    if (event.pointerType === 'touch') return
+    const stage = container.getBoundingClientRect()
+    const x = event.clientX - stage.left
+    const y = event.clientY - stage.top
+    if (x < 0 || y < 0 || x > stage.width || y > stage.height)
+      return engine.setPointer(null, null)
+    engine.setPointer(x, y, container.contains(event.target as Node))
+  }
+  const onPointerLeave = () => engine.setPointer(null, null)
+  hero.addEventListener('pointermove', onPointerMove)
+  hero.addEventListener('pointerleave', onPointerLeave)
+  cleanups.push(() => {
+    hero.removeEventListener('pointermove', onPointerMove)
+    hero.removeEventListener('pointerleave', onPointerLeave)
+  })
+  engine.setFront(
+    hero.querySelector<HTMLCanvasElement>('canvas[data-factory-front]'),
+  )
+  cleanups.push(() => engine.setFront(null))
 
   // Render only while on screen and the tab is in front.
   let visible = false

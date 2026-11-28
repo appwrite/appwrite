@@ -1258,6 +1258,256 @@ class ClickHouse extends SQL
     }
 
     /**
+     * Read-only counterpart of migrate(): what it would add or realign, the
+     * parts a projection has not been built for, and mutations still running.
+     * Retention and a projection's definition are not compared.
+     *
+     * Kinds: table.missing, column.missing, column.drifted, index.missing,
+     * index.drifted, index.duplicate, projection.missing,
+     * projection.unmaterialized, mutation.unfinished, mutation.failing.
+     *
+     * @return list<array{table: string, kind: string, name: string, detail: string}>
+     * @throws Exception
+     */
+    public function inspect(): array
+    {
+        $this->setOperationContext('inspect()');
+
+        $events = $this->getEventsTableName();
+        $gauges = $this->getGaugesTableName();
+        $daily = $this->getEventsDailyTableName();
+        $dailyMv = $this->getTableName() . '_events_daily_mv';
+        $samples = $this->getSamplesTableName();
+
+        $live = $this->getLiveTables([$events, $gauges, $daily, $dailyMv, $samples]);
+
+        $findings = [];
+        foreach ([$events, $gauges, $daily, $dailyMv, $samples] as $table) {
+            if (!in_array($table, $live, true)) {
+                $findings[] = ['table' => $table, 'kind' => 'table.missing', 'name' => $table, 'detail' => 'migrate() creates it'];
+            }
+        }
+
+        $eventProjections = array_column(self::EVENT_PROJECTIONS, 'name');
+        $gaugeProjections = array_column([...self::GAUGE_PROJECTIONS, ...self::GAUGE_LATEST_PROJECTIONS], 'name');
+        if (in_array($events, $live, true)) {
+            array_push(
+                $findings,
+                ...$this->inspectDimColumns($events, Metric::EVENT_COLUMNS, 'event'),
+                ...$this->inspectIndexes($events, $this->getEventIndexes()),
+                ...$this->inspectProjections($events, $eventProjections),
+            );
+        }
+        if (in_array($gauges, $live, true)) {
+            array_push(
+                $findings,
+                ...$this->inspectDimColumns($gauges, Metric::GAUGE_COLUMNS, 'gauge'),
+                ...$this->inspectIndexes($gauges, $this->getGaugeIndexes()),
+                ...$this->inspectProjections($gauges, $gaugeProjections),
+            );
+        }
+        if (in_array($samples, $live, true) && !isset($this->getColumnShapes($samples)['ingestId'])) {
+            $findings[] = ['table' => $samples, 'kind' => 'column.missing', 'name' => 'ingestId', 'detail' => "expected String DEFAULT '' CODEC(ZSTD(3))"];
+        }
+
+        foreach (array_intersect([$events, $gauges, $daily, $samples], $live) as $table) {
+            array_push($findings, ...$this->inspectMutations($table));
+        }
+
+        return $findings;
+    }
+
+    /**
+     * @param list<string> $tables
+     * @return list<string>
+     */
+    private function getLiveTables(array $tables): array
+    {
+        $params = ['database' => $this->database];
+        $placeholders = [];
+        foreach ($tables as $position => $table) {
+            $params["table{$position}"] = $table;
+            $placeholders[] = "{table{$position}:String}";
+        }
+
+        $rows = $this->decodeRows($this->query(
+            'SELECT name FROM system.tables WHERE database = {database:String} '
+            . 'AND name IN (' . implode(', ', $placeholders) . ') FORMAT JSON',
+            $params,
+        ));
+
+        return array_values(array_filter(array_column($rows, 'name'), is_string(...)));
+    }
+
+    /**
+     * @param array<int, string> $columns
+     * @return list<array{table: string, kind: string, name: string, detail: string}>
+     */
+    private function inspectDimColumns(string $tableName, array $columns, string $type): array
+    {
+        $existing = $this->getColumnShapes($tableName);
+
+        $findings = [];
+        foreach ($columns as $column) {
+            if (in_array($column, self::BASE_KEY_COLUMNS, true)) {
+                continue;
+            }
+
+            $expected = trim($this->getColumnType($column, $type) . ' ' . $this->getColumnCodec($column));
+            if (!isset($existing[$column])) {
+                $findings[] = ['table' => $tableName, 'kind' => 'column.missing', 'name' => $column, 'detail' => "expected {$expected}"];
+            } elseif (!$this->hasColumnShape($existing[$column], $column, $type)) {
+                $found = trim($existing[$column]['type'] . ' ' . $existing[$column]['codec']);
+                $findings[] = ['table' => $tableName, 'kind' => 'column.drifted', 'name' => $column, 'detail' => "is {$found}, expected {$expected}"];
+            }
+        }
+
+        return $findings;
+    }
+
+    /**
+     * @param array<array<string, mixed>> $indexes
+     * @return list<array{table: string, kind: string, name: string, detail: string}>
+     */
+    private function inspectIndexes(string $tableName, array $indexes): array
+    {
+        $live = $this->getSkipIndexes($tableName);
+
+        $findings = [];
+        $defined = [];
+        foreach ($indexes as $index) {
+            /** @var string $indexName */
+            $indexName = $index['$id'];
+            /** @var list<string> $attributes */
+            $attributes = $index['attributes'];
+            $indexType = is_string($index['indexType'] ?? null) ? $index['indexType'] : 'bloom_filter';
+            $defined[$indexName] = ['attributes' => $attributes, 'type' => $indexType];
+            $expected = '(' . implode(', ', $attributes) . ") TYPE {$indexType}";
+
+            if (!isset($live[$indexName])) {
+                $findings[] = ['table' => $tableName, 'kind' => 'index.missing', 'name' => $indexName, 'detail' => "expected {$expected}"];
+            } elseif (!$this->hasIndexShape($live[$indexName], $attributes, $indexType)) {
+                $found = '(' . implode(', ', $this->getIdentifiers($live[$indexName]['expression'])) . ") TYPE {$live[$indexName]['type']}";
+                $findings[] = ['table' => $tableName, 'kind' => 'index.drifted', 'name' => $indexName, 'detail' => "is {$found}, expected {$expected}"];
+            }
+        }
+
+        foreach ($live as $liveName => $liveIndex) {
+            if (isset($defined[$liveName])) {
+                continue;
+            }
+            foreach ($defined as $definedName => $definition) {
+                if ($this->hasIndexShape($liveIndex, $definition['attributes'], $definition['type'])) {
+                    $findings[] = ['table' => $tableName, 'kind' => 'index.duplicate', 'name' => $liveName, 'detail' => "duplicates {$definedName}"];
+                    break;
+                }
+            }
+        }
+
+        return $findings;
+    }
+
+    /**
+     * A projection added to a table exists only in parts written afterwards
+     * until it is materialized, and reads fall back to the base table for the
+     * rest. Parts are listed before their projections, and merged-away
+     * projection parts are kept, so a merge between the two reads is not
+     * reported.
+     *
+     * @param list<string> $projections
+     * @return list<array{table: string, kind: string, name: string, detail: string}>
+     */
+    private function inspectProjections(string $tableName, array $projections): array
+    {
+        $params = ['database' => $this->database, 'table' => $tableName];
+
+        $defined = array_column($this->decodeRows($this->query(
+            'SELECT name FROM system.projections WHERE database = {database:String} AND table = {table:String} FORMAT JSON',
+            $params,
+        )), 'name');
+
+        $parts = $this->decodeRows($this->query(
+            'SELECT name, partition FROM system.parts WHERE database = {database:String} AND table = {table:String} '
+            . 'AND active AND rows > 0 FORMAT JSON',
+            $params,
+        ));
+
+        $built = [];
+        foreach ($this->decodeRows($this->query(
+            'SELECT parent_name, name FROM system.projection_parts WHERE database = {database:String} AND table = {table:String} FORMAT JSON',
+            $params,
+        )) as $row) {
+            if (is_string($row['parent_name'] ?? null) && is_string($row['name'] ?? null)) {
+                $built[$row['name']][$row['parent_name']] = true;
+            }
+        }
+
+        $findings = [];
+        foreach ($projections as $projection) {
+            if (!in_array($projection, $defined, true)) {
+                $findings[] = ['table' => $tableName, 'kind' => 'projection.missing', 'name' => $projection, 'detail' => 'migrate() adds it; existing parts then need MATERIALIZE PROJECTION'];
+                continue;
+            }
+
+            $lacking = [];
+            foreach ($parts as $part) {
+                if (!is_string($part['name'] ?? null) || !is_string($part['partition'] ?? null)) {
+                    continue;
+                }
+                if (!isset($built[$projection][$part['name']])) {
+                    $lacking[$part['partition']] = ($lacking[$part['partition']] ?? 0) + 1;
+                }
+            }
+            if ($lacking === []) {
+                continue;
+            }
+
+            ksort($lacking);
+            $partitions = [];
+            foreach ($lacking as $partition => $count) {
+                $partitions[] = "{$partition} ({$count})";
+            }
+            $findings[] = [
+                'table' => $tableName,
+                'kind' => 'projection.unmaterialized',
+                'name' => $projection,
+                'detail' => 'parts without it, by partition: ' . implode(', ', $partitions),
+            ];
+        }
+
+        return $findings;
+    }
+
+    /**
+     * @return list<array{table: string, kind: string, name: string, detail: string}>
+     */
+    private function inspectMutations(string $tableName): array
+    {
+        $rows = $this->decodeRows($this->query(
+            'SELECT mutation_id, command, toString(create_time) AS created, parts_to_do, latest_fail_reason '
+            . 'FROM system.mutations WHERE database = {database:String} AND table = {table:String} AND NOT is_done '
+            . 'ORDER BY create_time FORMAT JSON',
+            ['database' => $this->database, 'table' => $tableName],
+        ));
+
+        $findings = [];
+        foreach ($rows as $row) {
+            $id = is_string($row['mutation_id'] ?? null) ? $row['mutation_id'] : '';
+            $command = is_string($row['command'] ?? null) ? $row['command'] : '';
+            $created = is_string($row['created'] ?? null) ? $row['created'] : '';
+            $reason = is_string($row['latest_fail_reason'] ?? null) ? $row['latest_fail_reason'] : '';
+            $partsToDo = self::toInt($row['parts_to_do'] ?? 0);
+
+            $detail = "{$command}, created {$created}, {$partsToDo} parts to do";
+            $findings[] = $reason === ''
+                ? ['table' => $tableName, 'kind' => 'mutation.unfinished', 'name' => $id, 'detail' => $detail]
+                : ['table' => $tableName, 'kind' => 'mutation.failing', 'name' => $id, 'detail' => "{$detail}: {$reason}"];
+        }
+
+        return $findings;
+    }
+
+    /**
      * Create the immutable canonical-sample ledger. Retries remain as raw
      * physical rows; findSamples() groups by the canonical identity and
      * exposes conflicting payloads instead of allowing them to affect totals.

@@ -1,6 +1,7 @@
 import type { LucideIcon } from 'lucide-react'
 import type { CSSProperties, ReactNode } from 'react'
 import { syntax } from '@/components/pages/home/product-bento/MockSyntax'
+import { productFeaturePublicIconMaskStyle } from '@/components/pages/products/features/_components/ProductFeaturePublicIcon'
 import { cn } from '@/lib/utils'
 
 /**
@@ -216,5 +217,16 @@ export function ArtLiveDot({ className }: { className?: string }) {
       <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-500/60 motion-reduce:animate-none" />
       <span className="relative inline-flex size-full rounded-full bg-emerald-500" />
     </span>
+  )
+}
+
+/** The Appwrite logomark in brand pink, masked from the public icon other visuals use. */
+export function ArtAppwriteMark({ className }: { className?: string }) {
+  return (
+    <span
+      className={cn('shrink-0 bg-[var(--brand-cta)]', className)}
+      style={productFeaturePublicIconMaskStyle('/icons/appwrite.svg')}
+      aria-hidden
+    />
   )
 }

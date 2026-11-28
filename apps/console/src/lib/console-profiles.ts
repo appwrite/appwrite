@@ -41,11 +41,6 @@ export type ConsoleProfileFeatures = {
   accountPasskeys: boolean
   /** Console account Applications page (OAuth2 consents granted on the account). */
   accountApplications: boolean
-  /**
-   * Origin (Cursor) on Git connect. An experiment, off by default; existing
-   * installations still render, only new connect actions are gated.
-   */
-  vcsOrigin: boolean
   /** Organization compliance (DPA, BAA, SOC 2) */
   compliance: boolean
   /** Organization API keys */
@@ -64,8 +59,12 @@ export type ConsoleProfileFeatures = {
   databaseSpecifications: boolean
   /** Native MongoDB databases via the `mongo` SDK service. */
   nativeDbsMongo: boolean
-  /** Videos product (transcoding, renditions, subtitles, HLS/DASH playback) via the `videos` SDK service. */
+  /** An experiment, off by default; the quality team turns it on from the header Previews menu. Videos product (transcoding, renditions, subtitles, HLS/DASH playback) via the `videos` SDK service. */
   videos: boolean
+  /** Internal only, switched on from the debug menu. A project without a Git installation reuses the GitHub organization installations of the organization's other projects. */
+  gitInstallationReuse: boolean
+  /** Internal only, switched on from the debug menu. Link buttons on notification rows that open the Console page an alert acts on. */
+  alertCtas: boolean
   /**
    * Internal only, switched on from the debug menu. Review product (AI code
    * review of GitHub pull requests) via the `reviews` service. Even when on, it
@@ -73,9 +72,16 @@ export type ConsoleProfileFeatures = {
    * self-hosted instances run the review service only when they opt in.
    */
   reviews: boolean
-  /** Project environments switcher in the project sidebar (`/project/environments`, Cloud only). */
-  projectEnvironments: boolean
-  /** Internal only, switched on from the debug menu. Usage monitors and the alerts they raise: the Usage sidebar's Monitors and Alerts pages, their quick actions, budget monitors in billing, and the alert events in the webhook event picker. */
+  /**
+   * Organization settings → Single sign-on (Cloud only, owners). Owners verify
+   * domains with a DNS record and connect identity providers, so people on
+   * those domains sign in with single sign-on. Also single sign-on for the
+   * teams of a project: the Single sign-on tab of a team and the project's
+   * add-on. Generally available on Cloud; never on self-hosted, which has no
+   * API for it.
+   */
+  sso: boolean
+  /** An experiment, off by default; the quality team turns it on from the header Previews menu. Usage monitors and the alerts they raise: the Usage sidebar's Monitors and Alerts pages, their quick actions, budget monitors in billing, and the alert events in the webhook event picker. */
   alerts: boolean
   /** Multi-region support (region picker/labels in project UX). */
   multiRegion: boolean
@@ -102,15 +108,23 @@ export type ConsoleProfileFeatures = {
   blogDrafts: boolean
   /** Product analytics: tracked properties, visitor stats, and per-event metrics */
   analytics: boolean
-  /**
-   * Clicking Humans / Bots in analytics filters the page. `trafficType` isn't
-   * a query attribute, so this filters on an empty vs non-empty
-   * `botCategory`, which depends on how the backend stores human events.
-   * Off until that's confirmed.
-   */
-  analyticsTrafficFilter: boolean
   /** Appwrite push messaging provider (create wizard and its QoS/expiry settings). */
   appwritePush: boolean
+  /** Runtime logs: the project Logs page, the Runtime logs tabs on functions and sites, and the deployment page Build / Runtime switch. Cloud only: served by `/v1/logs`. */
+  runtimeLogs: boolean
+  /**
+   * Appwrite Zero marketing page (`/zero`, `/zero.md`), its Products menu and
+   * footer links, and the Zero docs (`/docs/zero` and the CLI `zero` page).
+   * Off until launch: the page returns 404 while this is off.
+   * Enable from Debug → Feature flags; at launch, default it on.
+   */
+  zero: boolean
+  /**
+   * Appwrite Beep marketing page (`/products/beep`), the Beep mobile app's
+   * Products menu and footer links. Off until launch: the page returns 404
+   * while this is off. Enable from Debug → Feature flags; at launch, default it on.
+   */
+  beep: boolean
 }
 
 /** Short labels for debug UI (profile comparison, etc.). */
@@ -132,7 +146,6 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   accountOAuth: 'Account OAuth sign-in',
   accountPasskeys: 'Account passkeys',
   accountApplications: 'Account applications',
-  vcsOrigin: 'Origin Git provider',
   compliance: 'Compliance',
   orgApiKeys: 'Partners keys',
   agent: 'Agent',
@@ -143,8 +156,10 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   databaseSpecifications: 'Database specifications',
   nativeDbsMongo: 'Native DBs: MongoDB',
   videos: 'Videos',
+  gitInstallationReuse: 'Git installation reuse',
+  alertCtas: 'Alert CTAs',
   reviews: 'Review',
-  projectEnvironments: 'Project environments',
+  sso: 'Single sign-on',
   alerts: 'Alerts',
   multiRegion: 'Multi-region',
   edgeNetwork: 'Edge network',
@@ -153,8 +168,10 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   cookieBanner: 'Cookie banner',
   blogDrafts: 'Blog drafts',
   analytics: 'Analytics',
-  analyticsTrafficFilter: 'Analytics humans/bots filter',
   appwritePush: 'Appwrite push',
+  runtimeLogs: 'Runtime logs',
+  zero: 'Zero',
+  beep: 'Beep',
 }
 
 export type ConsoleProfile = {
@@ -188,7 +205,6 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       accountOAuth: true,
       accountPasskeys: true,
       accountApplications: true,
-      vcsOrigin: false,
       compliance: true,
       orgApiKeys: false,
       agent: false,
@@ -199,8 +215,10 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       databaseSpecifications: true,
       nativeDbsMongo: false,
       videos: false,
+      gitInstallationReuse: false,
+      alertCtas: false,
       reviews: false,
-      projectEnvironments: false,
+      sso: true,
       alerts: false,
       multiRegion: true,
       edgeNetwork: true,
@@ -210,8 +228,11 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       blogDrafts: false,
       // Off until launch; enable from Debug → Feature flags.
       analytics: false,
-      analyticsTrafficFilter: false,
       appwritePush: true,
+      // Off until launch; enable from Debug → Feature flags.
+      runtimeLogs: false,
+      zero: false,
+      beep: false,
     },
   },
   'self-hosted': {
@@ -233,7 +254,6 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       accountOAuth: false,
       accountPasskeys: false,
       accountApplications: false,
-      vcsOrigin: false,
       compliance: false,
       orgApiKeys: false,
       agent: false,
@@ -244,8 +264,10 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       databaseSpecifications: false,
       nativeDbsMongo: false,
       videos: false,
+      gitInstallationReuse: false,
+      alertCtas: false,
       reviews: false,
-      projectEnvironments: false,
+      sso: false,
       alerts: false,
       multiRegion: false,
       edgeNetwork: false,
@@ -254,8 +276,10 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       cookieBanner: false,
       blogDrafts: false,
       analytics: false,
-      analyticsTrafficFilter: false,
       appwritePush: true,
+      runtimeLogs: false,
+      zero: false,
+      beep: false,
     },
   },
 }
@@ -364,6 +388,8 @@ const REMOVED_PROFILE_FEATURE_KEYS = [
   'extraOAuthLogin',
   'projectTransfers',
   'extraVcsOAuth',
+  'vcsOrigin',
+  'projectEnvironments',
 ] as const
 
 function migrateStoredProfileFeatures(
@@ -373,9 +399,6 @@ function migrateStoredProfileFeatures(
     Record<string, unknown>
   if (!('agent' in next) && typeof next.aiAssistant === 'boolean') {
     next.agent = next.aiAssistant
-  }
-  if (!('vcsOrigin' in next) && typeof next.extraVcsOAuth === 'boolean') {
-    next.vcsOrigin = next.extraVcsOAuth
   }
   for (const key of REMOVED_PROFILE_FEATURE_KEYS) {
     delete next[key]
@@ -536,7 +559,9 @@ function applyCloudOnlyFeatureGates(
       init: false,
       marketing: false,
       multiTenancy: false,
-      projectEnvironments: false,
+      sso: false,
+      zero: false,
+      beep: false,
     }
   }
   return features
@@ -555,9 +580,8 @@ function parseEnvFeatureOverride(value: string): boolean | null {
 /**
  * Per-feature overrides from runtime env vars (e.g.
  * VITE_CONSOLE_USER_VERIFICATION, VITE_CONSOLE_COOKIE_BANNER,
- * VITE_CONSOLE_BLOG_DRAFTS, VITE_CONSOLE_VCS_ORIGIN,
- * VITE_CONSOLE_DATABASE_PITR_RESTORE,
- * VITE_CONSOLE_PROJECT_ENVIRONMENTS, VITE_CONSOLE_BROWSER_ALERTS), applied on top
+ * VITE_CONSOLE_BLOG_DRAFTS, VITE_CONSOLE_DATABASE_PITR_RESTORE,
+ * VITE_CONSOLE_BROWSER_ALERTS), applied on top
  * of the canonical profile. A stored debug override still wins.
  */
 function applyEnvFeatureOverrides(
@@ -578,22 +602,11 @@ function applyEnvFeatureOverrides(
   if (blogDrafts !== null) {
     next = { ...next, blogDrafts }
   }
-  const vcsOrigin = parseEnvFeatureOverride(config.vcsOrigin)
-  if (vcsOrigin !== null) {
-    next = { ...next, vcsOrigin }
-  }
   const databasePitrRestore = parseEnvFeatureOverride(
     config.databasePitrRestore,
   )
   if (databasePitrRestore !== null) {
     next = { ...next, databasePitrRestore }
-  }
-  // Self-hosted has no `/project/environments` and rejects `parentId` in project list queries.
-  const projectEnvironments = parseEnvFeatureOverride(
-    config.projectEnvironments,
-  )
-  if (projectEnvironments !== null && profileId === 'cloud') {
-    next = { ...next, projectEnvironments }
   }
   const browserAlerts = parseEnvFeatureOverride(config.browserAlerts)
   if (browserAlerts !== null) {

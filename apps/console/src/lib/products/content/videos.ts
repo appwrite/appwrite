@@ -11,7 +11,7 @@ export const videosProductContent: ProductPageContent = {
     stats: [
       { value: '< 100 ms', label: 'To first frame' },
       { value: '3 outputs', label: 'HLS, DASH, and CMAF' },
-      { value: 'Adaptive', label: 'Default bitrate ladder' },
+      { value: 'Adaptive', label: 'Bitrate ladder' },
       { value: 'Any player', label: 'Web, mobile, and native' },
       { value: 'Inspector', label: 'Live experience score' },
     ],
@@ -40,7 +40,7 @@ export const videosProductContent: ProductPageContent = {
     {
       question: 'What happens when I delete a video?',
       answer:
-        'Deleting a video removes its renditions, subtitles, previews, and transcoded segments. Deleting a profile keeps the renditions that were already encoded with it.',
+        'Deleting a video removes its renditions, captions, timeline thumbnails, and transcoded segments. Deleting a profile keeps the renditions that were already encoded with it.',
     },
     {
       question: 'How do you reach a first frame under 100 ms?',
@@ -50,7 +50,7 @@ export const videosProductContent: ProductPageContent = {
     {
       question: 'Who can manage videos in my organization?',
       answer:
-        'Videos follows your organization roles. The videos.read and videos.write scopes control who can view and manage videos, profiles, renditions, and subtitles.',
+        'Videos follows your organization roles. The videos.read and videos.write scopes control who can view and manage videos, renditions, and captions. The project.videos.profiles.read and project.videos.profiles.write scopes cover encoding profiles.',
       links: [{ label: 'Pricing', href: '/pricing' }],
     },
   ],

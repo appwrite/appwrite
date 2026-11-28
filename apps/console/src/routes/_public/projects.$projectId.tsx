@@ -24,9 +24,8 @@ import { OrganizationFailedInvoiceHeaderBanner } from '@/components/global/share
 import { OrganizationInvoiceAuthorizeHeaderBanner } from '@/components/global/shared/OrganizationInvoiceAuthorizeHeaderBanner'
 import { OrganizationPlanLimitHeaderBanner } from '@/components/global/shared/OrganizationPlanLimitHeaderBanner'
 import {
-  fetchProject,
   productionProjectQueryOptions,
-  fetchOrganizationById,
+  projectQueryOptions,
   organizationPlanQueryOptions,
   organizationQueryOptions,
   organizationScopesQueryOptions,
@@ -43,7 +42,7 @@ import {
   resolveProjectTeamIdFromConsole,
   useOrganizationById,
 } from '@/lib/react-query/hooks'
-import { apiExplorerSpecQueryOptions } from '@/lib/react-query/hooks/api-explorer'
+import { onboardingSnapshotQueryOptions } from '@/lib/react-query/hooks/onboarding'
 import {
   getActiveProfileFeatures,
   getActiveProfileId,
@@ -261,13 +260,8 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
     // rest of the match (child beforeLoad + loaders) so nested pages cannot
     // re-fetch project.get and hang the fullscreen loader.
     const ensureProject = () =>
-      context.queryClient.ensureQueryData({
-        queryKey: ['project', projectId],
-        queryFn: () => fetchProject(projectId),
-        staleTime: 5 * 60 * 1000,
-        retry: false,
-      })
-    let projectData: Awaited<ReturnType<typeof fetchProject>>
+      context.queryClient.ensureQueryData(projectQueryOptions(projectId))
+    let projectData: Awaited<ReturnType<typeof ensureProject>>
     try {
       // The restored environment may have been deleted while this tab was
       // elsewhere, which fails the fetch with the header set. Leave it, which
@@ -353,12 +347,14 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
     }
 
     try {
-      // Fresh fetch so we do not reuse a cached org payload that omitted billingLimits
+      // beforeLoad runs on every navigation inside the project, so a cached
+      // organization answers at once and refreshes in the background once it
+      // is 30 seconds old; only a cold cache waits on the request.
       const organization = await context.queryClient
-        .fetchQuery({
-          queryKey: ['organization', teamId],
-          queryFn: () => fetchOrganizationById(teamId),
+        .ensureQueryData({
+          ...organizationQueryOptions(teamId),
           staleTime: 30 * 1000,
+          revalidateIfStale: true,
         })
         .catch(() => null)
 
@@ -425,12 +421,7 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
     if (projectBlocked) {
       const blockedFeatures = getActiveProfileFeatures()
       const projectData = await queryClient
-        .ensureQueryData({
-          queryKey: ['project', projectId],
-          queryFn: () => fetchProject(projectId),
-          staleTime: 5 * 60 * 1000,
-          retry: false,
-        })
+        .ensureQueryData(projectQueryOptions(projectId))
         .catch(() => null)
 
       registerProjectRegionFromProject(projectData)
@@ -461,13 +452,16 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
     // Fetch project data (needed for header/sidebar and curtains) - CRITICAL
     try {
       const features = getActiveProfileFeatures()
-      const [projectData] = await Promise.all([
-        queryClient.ensureQueryData({
-          queryKey: ['project', projectId],
-          queryFn: () => fetchProject(projectId),
-          staleTime: 5 * 60 * 1000, // 5 minutes
-          retry: false,
-        }),
+      // beforeLoad resolved the project, so this reads the cache, and every
+      // input to the project shell below loads together in one round trip.
+      const projectData = await queryClient.ensureQueryData(
+        projectQueryOptions(projectId),
+      )
+
+      registerProjectRegionFromProject(projectData)
+
+      const teamId = projectData?.teamId
+      const shellQueries: Promise<unknown>[] = [
         // Header ProjectSelector uses useOrganizations; prefetch so navigation does not flash skeleton
         queryClient
           .ensureQueryData(organizationsQueryOptions())
@@ -475,49 +469,43 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
         queryClient
           .ensureQueryData(consoleAccountQueryOptions())
           .catch(() => {}),
-      ])
-
-      registerProjectRegionFromProject(projectData)
-
-      // Fetch organization plan if we have a teamId (critical for header/limit checking)
-      if (projectData?.teamId) {
-        if (features.billing) {
-          await queryClient
-            .ensureQueryData(organizationPlanQueryOptions(projectData.teamId))
-            .catch(() => {})
-          // Keep org billingLimits warm for plan-usage curtain first paint
-          await queryClient
-            .ensureQueryData(organizationQueryOptions(projectData.teamId))
-            .catch(() => {})
-          await prefetchOrganizationInvoiceDataIfAllowed(
-            queryClient,
-            projectData.teamId,
-          )
-        }
-        if (features.orgRoles) {
-          await queryClient
-            .ensureQueryData(
-              organizationScopesQueryOptions(projectData.teamId, projectId),
-            )
-            .catch(() => {})
-        }
+        // Sidebar Get started card hides at 100%; knowing that before first
+        // paint keeps it from showing a skeleton and then collapsing.
+        queryClient
+          .ensureQueryData(onboardingSnapshotQueryOptions(projectId))
+          .catch(() => {}),
+      ]
+      if (teamId && features.billing) {
+        shellQueries.push(
+          queryClient
+            .ensureQueryData(organizationPlanQueryOptions(teamId))
+            .catch(() => {}),
+          queryClient
+            .ensureQueryData(organizationQueryOptions(teamId))
+            .catch(() => {}),
+        )
+        // Only the unpaid-invoice banners read this, and it takes two requests
+        // in a row: load it alongside the page rather than ahead of it.
+        void prefetchOrganizationInvoiceDataIfAllowed(
+          queryClient,
+          teamId,
+        ).catch(() => {})
       }
-
-      // Prefetch console variables (CNAME, A, AAAA, nameservers, CAA) for domain verification.
-      // Skip heavy background work when the project is plan-locked.
+      if (teamId && features.orgRoles) {
+        shellQueries.push(
+          queryClient
+            .ensureQueryData(organizationScopesQueryOptions(teamId, projectId))
+            .catch(() => {}),
+        )
+      }
       if (!planUsageLimitReached) {
-        await queryClient
-          .ensureQueryData(consoleVariablesQueryOptions(projectData?.region))
-          .catch(() => {})
-
-        // Warm API explorer specs in the background so Explorer opens without a loading state.
-        void queryClient
-          .prefetchQuery(apiExplorerSpecQueryOptions('server'))
-          .catch(() => {})
-        void queryClient
-          .prefetchQuery(apiExplorerSpecQueryOptions('client'))
-          .catch(() => {})
+        shellQueries.push(
+          queryClient
+            .ensureQueryData(consoleVariablesQueryOptions(projectData?.region))
+            .catch(() => {}),
+        )
       }
+      await Promise.all(shellQueries)
 
       // Return project for first paint so paused/plan curtains can show immediately
       return projectData

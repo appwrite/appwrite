@@ -392,6 +392,8 @@ abstract class Base extends Action
             'strava' => Strava\Update::class,
             'vk' => VK\Update::class,
             'netlify' => Netlify\Update::class,
+            'clerk' => Clerk\Update::class,
+            'supabase' => Supabase\Update::class,
             'railway' => Railway\Update::class,
             'reddit' => Reddit\Update::class,
             'vercel' => Vercel\Update::class,
@@ -424,6 +426,7 @@ abstract class Base extends Action
             'apple' => Apple\Update::class,
             'microsoft' => Microsoft\Update::class,
             'resend' => Resend\Update::class,
+            'bird' => Bird\Update::class,
             'vipps' => Vipps\Update::class,
             'vippsSandbox' => VippsSandbox\Update::class,
         ];

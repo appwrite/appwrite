@@ -6,10 +6,22 @@ import {
   useRef,
   useState,
   type CSSProperties,
+  type MouseEvent as ReactMouseEvent,
 } from 'react'
 import { createPortal } from 'react-dom'
 import { DockedPlayerControls } from './DockedPlayerControls'
-import { Lock, Pause, Play, SquareArrowOutUpRight } from 'lucide-react'
+import {
+  FastForward,
+  Film,
+  Lock,
+  Pause,
+  Play,
+  Rewind,
+  RotateCcw,
+  SquareArrowOutUpRight,
+  TriangleAlert,
+  VolumeX,
+} from 'lucide-react'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
   isConsolePlaybackMessage,
@@ -33,15 +45,18 @@ import {
 } from '@/lib/react-query/hooks/videos'
 import {
   getVideoPlayerViewportStyle,
-  resolveVideoViewportAspect,
+  renditionFrame,
+  resolvePlayerAspect,
 } from '@/lib/utils/video-format'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
+import { useLongWait } from '@/hooks/use-long-wait'
 import { useVideoPlayerPrefs } from '@/hooks/use-video-player-prefs'
 import { StreamDebugPanel, type StreamManifest } from './StreamDebugPanel'
 import {
   VideoStreamPlayerControls,
   type PlaybackOutput,
+  type PlayerFlash,
 } from './VideoStreamPlayerControls'
 import { useStreamPlayer, type PlayerSource } from './useStreamPlayer'
 import {
@@ -49,17 +64,27 @@ import {
   useVideoInspector,
 } from './VideoInspectorContext'
 import { useQoeTracker } from './useQoeTracker'
+import { useMediaSession } from './useMediaSession'
 import { AudioOnlyPlayerBackdrop } from './AudioOnlyPlayerBackdrop'
 import {
   resolveVideoSubtitleSize,
   VIDEO_SUBTITLE_INSET_CONSOLE_PX,
   VIDEO_SUBTITLE_INSET_OVERLAY_GAP_PX,
-  VIDEO_SUBTITLE_OVERLAY_GRADIENT_PAD_PX,
   videoSubtitleSizeCss,
   type VideoSubtitleSize,
 } from '@/lib/videos/player-subtitle-display'
 
-const FULLSCREEN_CONTROLS_IDLE_MS = 2500
+/** While playing, the controls fade after this long without a pointer or key. */
+const CONTROLS_IDLE_MS = 2500
+/** Leaving the player with the mouse hides the controls this much sooner. */
+const CONTROLS_LEAVE_MS = 600
+/** Cue offset from the bottom of the picture while the controls are hidden. */
+const SUBTITLE_INSET_IDLE_PX = 20
+/** Stalls shorter than this pass without a spinner. */
+const BUFFERING_SPINNER_DELAY_MS = 400
+/** Two taps on a side of the picture within this window seek. */
+const DOUBLE_TAP_MS = 300
+const DOUBLE_TAP_SEEK_SECONDS = 10
 
 export interface VideoStreamPlayerProps {
   projectId: string
@@ -71,6 +96,21 @@ export interface VideoStreamPlayerProps {
   layout?: 'console' | 'embed'
   /** Seek once when the stream is ready (`?start=` on the embed URL). */
   initialStartSeconds?: number
+  /** Start playing once the stream can play, for a viewer who asked to watch. */
+  autoPlay?: boolean
+  /** Start with the sound off (`?muted=1` on the embed URL). */
+  muted?: boolean
+  /** Play again from the start at the end (`?loop=1`). */
+  loop?: boolean
+  /** `false` hides the control bar (`?controls=0`). */
+  controls?: boolean
+  /** Progress and volume color (`?color=`), a CSS color. */
+  accentColor?: string
+  /**
+   * Timeline frames over the seek bar. On by default in the Console; the
+   * player page turns them on only when the viewer can read the video.
+   */
+  seekPreviews?: boolean
 }
 
 /** Height of the docked player strip. */
@@ -92,6 +132,33 @@ function findScrollParent(node: HTMLElement | null): HTMLElement | null {
   return null
 }
 
+/** Thin ring spinner for the picture. */
+function PlayerSpinner({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 48 48"
+      fill="none"
+      aria-hidden
+      className={cn('animate-spin-smooth', className)}
+    >
+      <circle
+        cx="24"
+        cy="24"
+        r="20"
+        stroke="currentColor"
+        strokeOpacity={0.18}
+        strokeWidth={3.5}
+      />
+      <path
+        d="M44 24A20 20 0 0 0 24 4"
+        stroke="currentColor"
+        strokeWidth={3.5}
+        strokeLinecap="round"
+      />
+    </svg>
+  )
+}
+
 export function VideoStreamPlayer({
   projectId,
   video,
@@ -99,6 +166,12 @@ export function VideoStreamPlayer({
   variant = 'default',
   layout = 'console',
   initialStartSeconds,
+  autoPlay = false,
+  muted,
+  loop = false,
+  controls = true,
+  accentColor,
+  seekPreviews,
 }: VideoStreamPlayerProps) {
   const t = useT()
   const videoRef = useRef<HTMLVideoElement | null>(null)
@@ -131,6 +204,13 @@ export function VideoStreamPlayer({
     },
   )
   const output = chosenOutput ?? preferredOutput
+  // Keep the first output that became playable. Another output finishing
+  // later would otherwise swap the manifest under a playing video.
+  useEffect(() => {
+    if (chosenOutput == null && preferredOutput !== 'source') {
+      setChosenOutput(preferredOutput)
+    }
+  }, [chosenOutput, preferredOutput])
   const changeOutput = (next: PlaybackOutput) => {
     setChosenOutput(next)
     if (!embed) playerPrefs.update({ output: next })
@@ -168,15 +248,18 @@ export function VideoStreamPlayer({
     [projectId, video.$id, readyIds],
   )
 
+  // A visitor's playback from the public playlist has no source file.
   const sourceFileUrl = useMemo(
     () =>
-      applyVideoStreamAccess(
-        sdk.forProject(projectId).storage.getFileView({
-          bucketId: video.bucketId,
-          fileId: video.fileId,
-        }),
-        streamAccess,
-      ),
+      video.bucketId && video.fileId
+        ? applyVideoStreamAccess(
+            sdk.forProject(projectId).storage.getFileView({
+              bucketId: video.bucketId,
+              fileId: video.fileId,
+            }),
+            streamAccess,
+          )
+        : '',
     [projectId, video.bucketId, video.fileId, streamAccess],
   )
 
@@ -289,22 +372,32 @@ export function VideoStreamPlayer({
   reloadRef.current = reload
 
   // The quality list comes from the master manifest, which players only read
-  // once. Renditions often finish seconds apart, so batch them.
+  // once. Renditions often finish seconds apart, so batch them. Reloading
+  // tears the stream down, so never do it under a playing video: wait for a
+  // pause or the end, and meanwhile the menu offers a manual reload.
   useEffect(() => {
     if (!hasNewRenditions) return
-    const timer = window.setTimeout(
-      () => reloadRef.current({ silent: true }),
-      1500,
-    )
-    return () => window.clearTimeout(timer)
+    const el = videoRef.current
+    let timer: number | undefined
+    const schedule = () => {
+      window.clearTimeout(timer)
+      timer = window.setTimeout(() => {
+        if (el && !el.paused && !el.ended) return
+        reloadRef.current({ silent: true })
+      }, 1500)
+    }
+    if (!el || el.paused || el.ended) schedule()
+    el?.addEventListener('pause', schedule)
+    el?.addEventListener('ended', schedule)
+    return () => {
+      window.clearTimeout(timer)
+      el?.removeEventListener('pause', schedule)
+      el?.removeEventListener('ended', schedule)
+    }
   }, [hasNewRenditions, outputReadyKey])
 
-  const { state, setLevel, setSubtitleTrack, clearEvents } = useStreamPlayer(
-    videoRef,
-    playerSource,
-    reloadToken,
-    streamAccess,
-  )
+  const { state, setLevel, setSubtitleTrack, setAudioTrack, clearEvents } =
+    useStreamPlayer(videoRef, playerSource, reloadToken, streamAccess)
 
   // While the visitor stream is refused and the Console retry is about to
   // start, keep the video mounted and show no error.
@@ -342,12 +435,15 @@ export function VideoStreamPlayer({
     if (!el) return
     const saved = readPlayerPrefs()
     el.volume = saved.volume
-    el.muted = saved.muted
+    el.muted = muted ?? saved.muted
+    // The player page leaves Console preferences alone: `?muted=1` must not
+    // mute a member's Console player.
+    if (embed) return
     const onVolumeChange = () =>
       updatePlayerPrefs({ volume: el.volume, muted: el.muted })
     el.addEventListener('volumechange', onVolumeChange)
     return () => el.removeEventListener('volumechange', onVolumeChange)
-  }, [readPlayerPrefs, updatePlayerPrefs])
+  }, [readPlayerPrefs, updatePlayerPrefs, muted, embed])
 
   const appliedEmbedStartRef = useRef(false)
   useEffect(() => {
@@ -503,16 +599,30 @@ export function VideoStreamPlayer({
     : featured
       ? 'max(240px, min(800px, calc(100cqh - 32px)))'
       : 'max(240px, min(800px, calc(100cqh - 24px)))'
-  const viewportAspect = useMemo(() => {
-    if (mediaPixelSize) {
-      return mediaPixelSize
-    }
-    return resolveVideoViewportAspect(
+  // Size the frame from the renditions before the stream loads: their padded
+  // box, not the source, is the shape that decodes.
+  const expectedFrame = useMemo(
+    () => renditionFrame(renditions, output),
+    [renditions, output],
+  )
+  const viewportAspect = useMemo(
+    () =>
+      resolvePlayerAspect(
+        {
+          width: video.width,
+          height: video.height,
+          aspectRatio: video.aspectRatio,
+        },
+        mediaPixelSize ?? expectedFrame,
+      ),
+    [
+      mediaPixelSize,
+      expectedFrame,
       video.width,
       video.height,
       video.aspectRatio,
-    )
-  }, [mediaPixelSize, video.width, video.height, video.aspectRatio])
+    ],
+  )
   const viewportStyle = useMemo(
     () =>
       embed
@@ -577,61 +687,294 @@ export function VideoStreamPlayer({
         playerContainerRef.current != null &&
           document.fullscreenElement === playerContainerRef.current,
       )
+      if (!document.fullscreenElement) {
+        const orientation = screen.orientation as
+          | (ScreenOrientation & { unlock?: () => void })
+          | undefined
+        try {
+          orientation?.unlock?.()
+        } catch {
+          // Nothing was locked.
+        }
+      }
     }
     document.addEventListener('fullscreenchange', onChange)
     return () => document.removeEventListener('fullscreenchange', onChange)
   }, [])
 
-  const [toggleFlash, setToggleFlash] = useState<{
-    action: 'play' | 'pause'
+  const [flash, setFlash] = useState<{
+    kind: PlayerFlash
     key: number
   } | null>(null)
+  const showFlash = useCallback((kind: PlayerFlash) => {
+    setFlash((current) => ({ kind, key: (current?.key ?? 0) + 1 }))
+  }, [])
+
+  // Playback status for what sits over the picture: the start and replay
+  // buttons, and a spinner while a playing stream waits for data.
+  const [started, setStarted] = useState(false)
+  const [ended, setEnded] = useState(false)
+  const [waiting, setWaiting] = useState(false)
+  const buffering = useLongWait(waiting, BUFFERING_SPINNER_DELAY_MS)
+
+  useEffect(() => {
+    const el = videoRef.current
+    if (!el) return
+    const onPlay = () => {
+      setStarted(true)
+      setEnded(false)
+    }
+    const onEnded = () => setEnded(true)
+    // A slow seek waits too, playing or paused.
+    const onWaiting = () => setWaiting(true)
+    const onResume = () => {
+      setWaiting(false)
+      setEnded(el.ended)
+    }
+    const resumeEvents = [
+      'playing',
+      'pause',
+      'seeked',
+      'canplay',
+      'emptied',
+    ] as const
+    if (!el.paused) setStarted(true)
+    el.addEventListener('play', onPlay)
+    el.addEventListener('ended', onEnded)
+    el.addEventListener('waiting', onWaiting)
+    el.addEventListener('seeking', onWaiting)
+    for (const name of resumeEvents) el.addEventListener(name, onResume)
+    return () => {
+      el.removeEventListener('play', onPlay)
+      el.removeEventListener('ended', onEnded)
+      el.removeEventListener('waiting', onWaiting)
+      el.removeEventListener('seeking', onWaiting)
+      for (const name of resumeEvents) el.removeEventListener(name, onResume)
+    }
+  }, [])
+
+  // Browsers often refuse autoplay with sound until the viewer interacts.
+  // Then play muted, as video sites do, and offer the sound back.
+  const [autoplayMuted, setAutoplayMuted] = useState(false)
+  const [autoplayRefused, setAutoplayRefused] = useState(false)
+  const autoplayTriedRef = useRef(false)
+
+  useEffect(() => {
+    const el = videoRef.current
+    if (!el || !autoPlay) return
+    let cancelled = false
+    const start = () => {
+      if (cancelled || autoplayTriedRef.current || !el.paused) return
+      autoplayTriedRef.current = true
+      el.play().catch((error: unknown) => {
+        if (cancelled) return
+        const refused =
+          error instanceof DOMException && error.name === 'NotAllowedError'
+        if (!refused) return
+        if (el.muted) {
+          setAutoplayRefused(true)
+          return
+        }
+        el.muted = true
+        el.play().then(
+          () => {
+            if (!cancelled) setAutoplayMuted(true)
+          },
+          () => {
+            if (!cancelled) setAutoplayRefused(true)
+          },
+        )
+      })
+    }
+    el.addEventListener('canplay', start)
+    if (el.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) start()
+    return () => {
+      cancelled = true
+      el.removeEventListener('canplay', start)
+    }
+  }, [autoPlay])
+
+  useEffect(() => {
+    const el = videoRef.current
+    if (!el || !autoplayMuted) return
+    const onVolumeChange = () => {
+      if (!el.muted) setAutoplayMuted(false)
+    }
+    el.addEventListener('volumechange', onVolumeChange)
+    return () => el.removeEventListener('volumechange', onVolumeChange)
+  }, [autoplayMuted])
+
+  const unmute = () => {
+    const el = videoRef.current
+    if (!el) return
+    el.muted = false
+    if (el.volume === 0) el.volume = 1
+    setAutoplayMuted(false)
+  }
+
+  useMediaSession(videoRef, video.name)
+
   const [controlsVisible, setControlsVisible] = useState(true)
+  // Read by pointer handlers before React re-renders.
+  const controlsVisibleRef = useRef(true)
   const controlsRef = useRef<HTMLDivElement | null>(null)
   const pointerOnControlsRef = useRef(false)
+  const menuOpenRef = useRef(false)
+  // A tap on hidden controls only brings them back; the next tap plays or pauses.
+  const tapRevealsRef = useRef(false)
+  const lastPointerTypeRef = useRef('mouse')
+  const lastTapRef = useRef<{
+    time: number
+    zone: 'back' | 'center' | 'forward'
+  } | null>(null)
+  const tapTimerRef = useRef<number | undefined>(undefined)
   const hideControlsTimerRef = useRef<number | undefined>(undefined)
 
+  const showControls = useCallback((shown: boolean) => {
+    controlsVisibleRef.current = shown
+    setControlsVisible(shown)
+  }, [])
+
   const revealControls = useCallback(() => {
-    setControlsVisible(true)
+    showControls(true)
     window.clearTimeout(hideControlsTimerRef.current)
     hideControlsTimerRef.current = window.setTimeout(() => {
+      const el = videoRef.current
+      // Paused or finished, the controls stay up.
+      if (!el || el.paused || el.ended) return
       if (
+        menuOpenRef.current ||
         pointerOnControlsRef.current ||
         controlsRef.current?.querySelector(':focus-visible')
       ) {
         return
       }
-      setControlsVisible(false)
-    }, FULLSCREEN_CONTROLS_IDLE_MS)
-  }, [])
+      showControls(false)
+    }, CONTROLS_IDLE_MS)
+  }, [showControls])
 
   useEffect(() => {
     const container = playerContainerRef.current
     const video = videoRef.current
     if (!container || !video) {
-      setControlsVisible(true)
+      showControls(true)
       return
     }
     const onPointer = (event: PointerEvent) => {
+      if (event.type === 'pointerdown') {
+        lastPointerTypeRef.current = event.pointerType
+        tapRevealsRef.current =
+          event.pointerType !== 'mouse' &&
+          event.target === video &&
+          !controlsVisibleRef.current
+      }
       // Menus portal into the container, so anything but the video holds the controls open.
       pointerOnControlsRef.current = event.target !== video
       revealControls()
     }
+    const onLeave = (event: PointerEvent) => {
+      if (event.pointerType !== 'mouse') return
+      pointerOnControlsRef.current = false
+      if (video.paused || video.ended || menuOpenRef.current) return
+      window.clearTimeout(hideControlsTimerRef.current)
+      hideControlsTimerRef.current = window.setTimeout(
+        () => showControls(false),
+        CONTROLS_LEAVE_MS,
+      )
+    }
     container.addEventListener('pointermove', onPointer)
     container.addEventListener('pointerdown', onPointer)
+    container.addEventListener('pointerleave', onLeave)
     container.addEventListener('keydown', revealControls)
     video.addEventListener('play', revealControls)
     video.addEventListener('pause', revealControls)
     revealControls()
     return () => {
       window.clearTimeout(hideControlsTimerRef.current)
+      window.clearTimeout(tapTimerRef.current)
       container.removeEventListener('pointermove', onPointer)
       container.removeEventListener('pointerdown', onPointer)
+      container.removeEventListener('pointerleave', onLeave)
       container.removeEventListener('keydown', revealControls)
       video.removeEventListener('play', revealControls)
       video.removeEventListener('pause', revealControls)
     }
-  }, [revealControls])
+  }, [revealControls, showControls])
+
+  const togglePlayback = () => {
+    const el = videoRef.current
+    if (!el) return
+    const play = el.paused || el.ended
+    if (play) void el.play().catch(() => {})
+    else el.pause()
+    showFlash(play ? 'play' : 'pause')
+  }
+
+  const seekBy = (seconds: number) => {
+    const el = videoRef.current
+    if (!el || !Number.isFinite(el.duration)) return
+    el.currentTime = Math.min(
+      el.duration,
+      Math.max(0, el.currentTime + seconds),
+    )
+  }
+
+  const onVideoClick = (event: ReactMouseEvent<HTMLVideoElement>) => {
+    // Keyboard shortcuts follow focus in the Console, so take it with the click.
+    if (!embed) playerContainerRef.current?.focus({ preventScroll: true })
+    const revealOnly = tapRevealsRef.current
+    tapRevealsRef.current = false
+    if (lastPointerTypeRef.current !== 'touch') {
+      if (!revealOnly) togglePlayback()
+      return
+    }
+    // Touch: a double tap on either side seeks, as in video apps, and every
+    // further tap seeks again. A single tap waits to rule that out.
+    const rect = event.currentTarget.getBoundingClientRect()
+    const fraction =
+      rect.width > 0 ? (event.clientX - rect.left) / rect.width : 0.5
+    const zone =
+      fraction < 1 / 3 ? 'back' : fraction > 2 / 3 ? 'forward' : 'center'
+    const last = lastTapRef.current
+    lastTapRef.current = { time: event.timeStamp, zone }
+    window.clearTimeout(tapTimerRef.current)
+    if (
+      zone !== 'center' &&
+      last?.zone === zone &&
+      event.timeStamp - last.time < DOUBLE_TAP_MS
+    ) {
+      seekBy(
+        zone === 'back' ? -DOUBLE_TAP_SEEK_SECONDS : DOUBLE_TAP_SEEK_SECONDS,
+      )
+      showFlash(zone)
+      revealControls()
+      return
+    }
+    if (revealOnly) return
+    if (zone === 'center') {
+      togglePlayback()
+      return
+    }
+    tapTimerRef.current = window.setTimeout(togglePlayback, DOUBLE_TAP_MS)
+  }
+
+  const onVideoDoubleClick = () => {
+    // On touch, double taps seek instead.
+    if (lastPointerTypeRef.current === 'touch') return
+    toggleFullscreen()
+  }
+
+  /** Phones turn to landscape for a landscape video in full screen, as video apps do. */
+  const lockLandscape = () => {
+    const el = videoRef.current
+    const orientation = screen.orientation as
+      | (ScreenOrientation & { lock?: (orientation: string) => Promise<void> })
+      | undefined
+    if (!el || !orientation?.lock) return
+    if (!window.matchMedia('(pointer: coarse)').matches) return
+    if (el.videoWidth <= el.videoHeight) return
+    void orientation.lock('landscape').catch(() => {})
+  }
 
   const toggleFullscreen = () => {
     if (document.fullscreenElement) {
@@ -640,7 +983,7 @@ export function VideoStreamPlayer({
     }
     const container = playerContainerRef.current
     if (container?.requestFullscreen) {
-      void container.requestFullscreen()
+      void container.requestFullscreen().then(lockLandscape, () => {})
       return
     }
     // iPhone Safari only supports fullscreen on the video element itself.
@@ -650,17 +993,19 @@ export function VideoStreamPlayer({
     el?.webkitEnterFullscreen?.()
   }
 
+  const showSeekPreviews = seekPreviews ?? !embed
   const timelineQuery = useVideoTimeline(
-    embed ? null : projectId,
-    embed ? null : video.$id,
+    showSeekPreviews ? projectId : null,
+    showSeekPreviews ? video.$id : null,
   )
   const timelineCues = timelineQuery.data?.cues
 
   let emptyPlaybackMessage: string | null = null
+  const encodingPending =
+    !playerSource &&
+    renditions.some((rendition) => isVideoRenditionActive(rendition.status))
   if (!playerSource) {
-    if (
-      renditions.some((rendition) => isVideoRenditionActive(rendition.status))
-    ) {
+    if (encodingPending) {
       emptyPlaybackMessage = t(
         'Renditions are still encoding. Playback starts when one is ready.',
       )
@@ -702,9 +1047,8 @@ export function VideoStreamPlayer({
     !state.fatalError &&
     state.firstFrameAt == null &&
     state.loadStartedAt != null
-
-  /** Overlay-style controls, same chrome as the embed player page. */
-  const menuOnlyAdvanced = true
+  // A spinner shows only on a slow start.
+  const streamLoadingLong = useLongWait(streamLoading)
 
   useEffect(() => {
     // Docked, the controls sit beside the picture: captions keep to the edge.
@@ -714,20 +1058,17 @@ export function VideoStreamPlayer({
     }
     const node = controlsRef.current
     if (!node) {
-      setSubtitleInsetPx(72)
+      setSubtitleInsetPx(64)
       return
     }
+    // The scrim reaches above the controls without adding to their box, so
+    // cues sit just over the seek bar.
     const measure = () => {
       const height = node.getBoundingClientRect().height
       setSubtitleInsetPx(
         height > 0
-          ? Math.max(
-              48,
-              height -
-                VIDEO_SUBTITLE_OVERLAY_GRADIENT_PAD_PX +
-                VIDEO_SUBTITLE_INSET_OVERLAY_GAP_PX,
-            )
-          : 72,
+          ? Math.max(40, height + VIDEO_SUBTITLE_INSET_OVERLAY_GAP_PX)
+          : 64,
       )
     }
     measure()
@@ -736,17 +1077,24 @@ export function VideoStreamPlayer({
     return () => ro.disconnect()
   }, [embed, fullscreen, state.fatalError, compact])
 
+  // Cues drop toward the edge while the controls are hidden, or when the
+  // player has no control bar at all.
+  const subtitleBottomPx =
+    compact || (controls && controlsVisible)
+      ? subtitleInsetPx
+      : SUBTITLE_INSET_IDLE_PX
+
   const videoSubtitleStyle = useMemo(
     (): CSSProperties =>
       ({
-        '--video-subtitle-bottom-offset': `${subtitleInsetPx}px`,
+        '--video-subtitle-bottom-offset': `${subtitleBottomPx}px`,
         '--video-subtitle-font-size': videoSubtitleSizeCss(subtitleSize),
       }) as CSSProperties,
-    [subtitleInsetPx, subtitleSize],
+    [subtitleBottomPx, subtitleSize],
   )
 
   const playerControls =
-    !state.fatalError && !locked ? (
+    controls && !state.fatalError && !locked ? (
       <VideoStreamPlayerControls
         videoRef={videoRef}
         output={output}
@@ -755,16 +1103,26 @@ export function VideoStreamPlayer({
         playerState={state}
         onSelectLevel={selectLevel}
         onSelectSubtitleTrack={selectSubtitleTrack}
+        onSelectAudioTrack={setAudioTrack}
         subtitleSize={subtitleSize}
         onSelectSubtitleSize={selectSubtitleSize}
         onReload={() => reload()}
         hasNewRenditions={hasNewRenditions}
-        isLoading={streamLoading}
         scrubCues={timelineCues}
         fullscreen={fullscreen}
         onToggleFullscreen={toggleFullscreen}
         onOpenInspector={openInspector}
-        menuOnlyAdvanced={menuOnlyAdvanced}
+        shortcuts={embed ? 'page' : 'player'}
+        pictureInPicture={!audioOnly}
+        accentColor={accentColor}
+        onMenuOpenChange={(open) => {
+          menuOpenRef.current = open
+          if (!open) revealControls()
+        }}
+        onShortcut={(kind) => {
+          revealControls()
+          if (kind) showFlash(kind)
+        }}
         portalContainer={
           embed || fullscreen
             ? (playerContainerRef.current ?? undefined)
@@ -821,24 +1179,128 @@ export function VideoStreamPlayer({
     <div
       role="status"
       data-player-state="locked"
-      className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black px-6 text-center"
+      className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-[radial-gradient(ellipse_at_center,rgb(255_255_255/0.06),transparent_65%)] px-6 text-center"
     >
-      <span className="flex size-11 items-center justify-center rounded-full border border-white/15 bg-white/5 text-white/80">
-        <Lock className="size-5" aria-hidden />
+      <span className="flex size-12 items-center justify-center rounded-full bg-white/[0.06] text-white/75 ring-1 ring-white/10">
+        {encodingPending ? (
+          <PlayerSpinner className="size-6" />
+        ) : (
+          <Film className="size-5" aria-hidden />
+        )}
       </span>
-      <p className="max-w-sm text-[13px] leading-relaxed text-white/75">
+      <p className="max-w-sm text-[13px] leading-relaxed text-white/70">
         {emptyPlaybackMessage}
       </p>
     </div>
   ) : state.fatalError && !refusalShowing ? (
-    <div className="absolute inset-0 flex items-center justify-center bg-black/70 px-6 text-center">
-      <p className="max-w-md text-[13px] text-white/80">
-        {isConsolePlaybackMessage(state.fatalError)
-          ? t(state.fatalError)
-          : state.fatalError}
-      </p>
+    <div
+      role="alert"
+      className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-black/80 px-6 text-center backdrop-blur-sm"
+    >
+      <span className="flex size-12 items-center justify-center rounded-full bg-white/[0.06] text-white/80 ring-1 ring-white/10">
+        <TriangleAlert className="size-5" aria-hidden />
+      </span>
+      <div className="max-w-md space-y-1">
+        <p className="text-[14px] font-medium text-white">
+          {t('Playback failed')}
+        </p>
+        <p className="text-[13px] leading-relaxed text-white/65">
+          {isConsolePlaybackMessage(state.fatalError)
+            ? t(state.fatalError)
+            : state.fatalError}
+        </p>
+      </div>
+      <button
+        type="button"
+        onClick={() => reload()}
+        className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-full bg-white px-3.5 text-[13px] font-medium text-neutral-950 outline-none transition-colors hover:bg-white/90 focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+      >
+        <RotateCcw className="size-3.5" aria-hidden />
+        {t('Try again')}
+      </button>
     </div>
   ) : null
+
+  const pictureOverlaysAllowed =
+    !compact && !locked && !state.fatalError && Boolean(playerSource)
+  const showSpinner = pictureOverlaysAllowed && (streamLoadingLong || buffering)
+  const showStartButton =
+    pictureOverlaysAllowed &&
+    (!autoPlay || autoplayRefused) &&
+    !started &&
+    !showSpinner &&
+    !refusalShowing
+  const showReplayButton = pictureOverlaysAllowed && ended
+
+  // What sits over the picture, the same in the Console and on the player page.
+  const pictureOverlays = (
+    <>
+      {flash ? (
+        <div
+          key={flash.key}
+          aria-hidden
+          className={cn(
+            'pointer-events-none absolute inset-y-0 z-[5] flex items-center justify-center',
+            flash.kind === 'back'
+              ? 'left-0 w-1/3'
+              : flash.kind === 'forward'
+                ? 'right-0 w-1/3'
+                : 'inset-x-0',
+          )}
+        >
+          <div
+            className="animate-video-toggle-flash flex size-14 items-center justify-center rounded-full bg-black/45 text-white shadow-[0_8px_32px_rgb(0_0_0/0.35)] ring-1 ring-white/15 backdrop-blur-md @md:size-16 @3xl:size-[76px] [&_svg]:size-6 [&_svg]:fill-current @3xl:[&_svg]:size-8"
+            onAnimationEnd={() => setFlash(null)}
+          >
+            {flash.kind === 'play' ? (
+              <Play className="translate-x-0.5" />
+            ) : flash.kind === 'pause' ? (
+              <Pause />
+            ) : flash.kind === 'back' ? (
+              <Rewind className="-translate-x-0.5" />
+            ) : (
+              <FastForward className="translate-x-0.5" />
+            )}
+          </div>
+        </div>
+      ) : null}
+      {showStartButton || showReplayButton ? (
+        // The control bar holds the accessible button; this is the big target.
+        <button
+          type="button"
+          tabIndex={-1}
+          aria-hidden
+          onClick={togglePlayback}
+          className="absolute left-1/2 top-1/2 z-[5] flex size-14 -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-black/40 text-white shadow-[0_8px_32px_rgb(0_0_0/0.35)] ring-1 ring-white/20 backdrop-blur-xl transition-[transform,background-color] duration-200 ease-out hover:scale-105 hover:bg-black/55 active:scale-95 @md:size-16 @3xl:size-[76px] [&_svg]:size-6 @3xl:[&_svg]:size-8"
+        >
+          {showReplayButton ? (
+            <RotateCcw aria-hidden />
+          ) : (
+            <Play className="translate-x-0.5 fill-current" aria-hidden />
+          )}
+        </button>
+      ) : null}
+      {showSpinner ? (
+        <div
+          role="status"
+          aria-label={t('Loading video')}
+          className="pointer-events-none absolute inset-0 z-[5] flex items-center justify-center"
+        >
+          <PlayerSpinner className="size-10 text-white @3xl:size-12" />
+        </div>
+      ) : null}
+      {autoplayMuted && !compact ? (
+        <button
+          type="button"
+          onClick={unmute}
+          className="absolute end-3 top-3 z-[11] inline-flex h-9 cursor-pointer items-center gap-2 rounded-full bg-white/95 pe-3.5 ps-3 text-[13px] font-medium text-neutral-950 shadow-[0_8px_24px_rgb(0_0_0/0.35)] outline-none transition-[background-color,transform] duration-150 hover:bg-white active:scale-95 focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black/40 @3xl:end-4 @3xl:top-4"
+        >
+          <VolumeX className="size-4" aria-hidden />
+          {t('Unmute')}
+        </button>
+      ) : null}
+    </>
+  )
 
   if (
     embed &&
@@ -854,6 +1316,80 @@ export function VideoStreamPlayer({
     frameVisible ? 'opacity-100' : 'opacity-0',
   )
 
+  // The picture and everything over it; the Console card and the player page
+  // only differ in the box around it.
+  const stage = (
+    <>
+      {audioOnly ? <AudioOnlyPlayerBackdrop title={video.name} /> : null}
+      <video
+        ref={videoRef}
+        className={cn(
+          'video-stream-player size-full object-contain outline-none',
+          videoFrameClass,
+          !controlsVisible ? 'cursor-none' : 'cursor-pointer',
+        )}
+        style={videoSubtitleStyle}
+        playsInline
+        loop={loop}
+        aria-label={video.name}
+        onClick={onVideoClick}
+        onDoubleClick={onVideoDoubleClick}
+      />
+      {pictureOverlays}
+      {frameMessage}
+      {memberPreview && !state.fatalError && !fullscreen ? (
+        <div
+          role="status"
+          data-video-private
+          className="pointer-events-none absolute inset-x-3 top-3 z-10 flex items-start gap-3 rounded-xl border border-white/10 bg-neutral-950/75 px-3.5 py-3 text-white shadow-[0_12px_32px_-12px_rgb(0_0_0/0.6)] backdrop-blur-xl sm:inset-x-auto sm:start-3 sm:max-w-md"
+        >
+          <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-amber-400/15 text-amber-300 ring-1 ring-amber-300/25">
+            <Lock className="size-3.5" aria-hidden />
+          </span>
+          <div className="min-w-0 text-[13px] leading-snug">
+            <p className="font-medium text-white">
+              {t('This video is private')}
+            </p>
+            <p className="mt-0.5 text-white/65">
+              {t(
+                'Visitors get an error here. You can watch because you are a project member.',
+              )}
+            </p>
+          </div>
+        </div>
+      ) : null}
+      {fullscreen ? (
+        <div
+          aria-hidden
+          className={cn(
+            'pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center gap-3 bg-[linear-gradient(to_bottom,rgb(0_0_0/0.62),rgb(0_0_0/0.24)_55%,transparent)] px-5 pb-16 pt-[max(1.25rem,env(safe-area-inset-top))] transition duration-300 ease-out sm:px-7 sm:pt-[max(1.5rem,env(safe-area-inset-top))]',
+            !controlsVisible && '-translate-y-1 opacity-0',
+          )}
+        >
+          {!embed ? (
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-white/10 text-white ring-1 ring-white/15 backdrop-blur-md">
+              <AppwriteMarkIcon className="size-[18px]" />
+            </span>
+          ) : null}
+          <p className="min-w-0 truncate text-[15px] font-medium text-white [text-shadow:0_1px_2px_rgb(0_0_0/0.4)] sm:text-[17px]">
+            {video.name}
+          </p>
+        </div>
+      ) : null}
+      {playerControls && !compact ? (
+        <div
+          ref={controlsRef}
+          className={cn(
+            'pointer-events-none absolute inset-x-0 bottom-0 z-10 transition duration-300 ease-out',
+            !controlsVisible && 'translate-y-1 opacity-0',
+          )}
+        >
+          {playerControls}
+        </div>
+      ) : null}
+    </>
+  )
+
   return (
     <div
       className={cn(
@@ -866,11 +1402,13 @@ export function VideoStreamPlayer({
     >
       <div
         ref={playerContainerRef}
+        data-video-player
         data-player-docked={compact || undefined}
+        tabIndex={-1}
         className={cn(
-          'min-w-0',
+          'min-w-0 outline-none',
           compact &&
-            'animate-in fade-in-0 slide-in-from-top-1 sticky top-0 z-20 -mx-4 border-b border-border bg-background px-4 py-2 shadow-sm duration-200 sm:-mx-6 sm:px-6',
+            'animate-in fade-in-0 slide-in-from-top-1 sticky top-0 z-20 -mx-4 border-b border-border bg-background/90 px-4 py-2 shadow-sm backdrop-blur-xl duration-200 supports-[backdrop-filter]:bg-background/75 sm:-mx-6 sm:px-6',
           embed && 'relative flex min-h-0 flex-1 flex-col dark bg-black',
           (fullscreen || overlayControls) && 'dark relative bg-black',
           (fullscreen || overlayControls) && !controlsVisible && 'cursor-none',
@@ -886,74 +1424,8 @@ export function VideoStreamPlayer({
           )}
         >
           {embed ? (
-            <div className="relative size-full shrink-0 overflow-hidden bg-black">
-              {audioOnly ? (
-                <AudioOnlyPlayerBackdrop title={video.name} />
-              ) : null}
-              <video
-                ref={videoRef}
-                className={cn(
-                  'video-stream-player size-full object-contain outline-none',
-                  videoFrameClass,
-                  !controlsVisible ? 'cursor-none' : 'cursor-pointer',
-                )}
-                style={videoSubtitleStyle}
-                playsInline
-                aria-label={video.name}
-                onClick={() => {
-                  const el = videoRef.current
-                  if (!el) return
-                  const play = el.paused
-                  if (play) void el.play()
-                  else el.pause()
-                  setToggleFlash((current) => ({
-                    action: play ? 'play' : 'pause',
-                    key: (current?.key ?? 0) + 1,
-                  }))
-                }}
-                onDoubleClick={toggleFullscreen}
-              />
-              {toggleFlash ? (
-                <div
-                  key={toggleFlash.key}
-                  aria-hidden
-                  className="pointer-events-none absolute inset-0 flex items-center justify-center"
-                >
-                  <div
-                    className="animate-video-toggle-flash flex size-20 items-center justify-center rounded-full border border-white/20 bg-black/35 text-white shadow-2xl backdrop-blur-md sm:size-28"
-                    onAnimationEnd={() => setToggleFlash(null)}
-                  >
-                    {toggleFlash.action === 'play' ? (
-                      <Play className="size-9 translate-x-0.5 fill-current sm:size-12" />
-                    ) : (
-                      <Pause className="size-9 fill-current sm:size-12" />
-                    )}
-                  </div>
-                </div>
-              ) : null}
-              {frameMessage}
-              {memberPreview && !state.fatalError ? (
-                <div
-                  className={cn(
-                    'pointer-events-none absolute start-3 top-3 z-10 flex items-center gap-1.5 rounded-md border border-white/15 bg-black/60 px-2.5 py-1.5 text-[12px] text-white/85 backdrop-blur-md transition duration-300',
-                    !controlsVisible && '-translate-y-1 opacity-0',
-                  )}
-                >
-                  <Lock className="size-3.5" aria-hidden />
-                  {t('Private video. Only project members can watch it here.')}
-                </div>
-              ) : null}
-              {playerControls ? (
-                <div
-                  ref={controlsRef}
-                  className={cn(
-                    'pointer-events-none absolute inset-x-0 bottom-0 z-10 transition duration-300',
-                    !controlsVisible && 'translate-y-2 opacity-0',
-                  )}
-                >
-                  {playerControls}
-                </div>
-              ) : null}
+            <div className="@container relative size-full shrink-0 overflow-hidden bg-black">
+              {stage}
             </div>
           ) : (
             <div
@@ -970,7 +1442,7 @@ export function VideoStreamPlayer({
             >
               <div
                 className={cn(
-                  'relative w-full overflow-hidden bg-black',
+                  '@container relative w-full overflow-hidden bg-black',
                   fullscreen ? 'min-h-0 flex-1' : 'shrink-0',
                 )}
                 style={
@@ -985,62 +1457,7 @@ export function VideoStreamPlayer({
                       }
                 }
               >
-                {audioOnly ? (
-                  <AudioOnlyPlayerBackdrop title={video.name} />
-                ) : null}
-                <video
-                  ref={videoRef}
-                  className={cn(
-                    'video-stream-player size-full object-contain outline-none',
-                    videoFrameClass,
-                    !controlsVisible ? 'cursor-none' : 'cursor-pointer',
-                  )}
-                  style={videoSubtitleStyle}
-                  playsInline
-                  aria-label={video.name}
-                  onClick={() => {
-                    const el = videoRef.current
-                    if (!el) return
-                    const play = el.paused
-                    if (play) void el.play()
-                    else el.pause()
-                    setToggleFlash((current) => ({
-                      action: play ? 'play' : 'pause',
-                      key: (current?.key ?? 0) + 1,
-                    }))
-                  }}
-                  onDoubleClick={toggleFullscreen}
-                />
-                {toggleFlash ? (
-                  <div
-                    key={toggleFlash.key}
-                    aria-hidden
-                    className="pointer-events-none absolute inset-0 flex items-center justify-center"
-                  >
-                    <div
-                      className="animate-video-toggle-flash flex size-20 items-center justify-center rounded-full border border-white/20 bg-black/35 text-white shadow-2xl backdrop-blur-md sm:size-28"
-                      onAnimationEnd={() => setToggleFlash(null)}
-                    >
-                      {toggleFlash.action === 'play' ? (
-                        <Play className="size-9 translate-x-0.5 fill-current sm:size-12" />
-                      ) : (
-                        <Pause className="size-9 fill-current sm:size-12" />
-                      )}
-                    </div>
-                  </div>
-                ) : null}
-                {frameMessage}
-                {playerControls && !compact ? (
-                  <div
-                    ref={controlsRef}
-                    className={cn(
-                      'pointer-events-none absolute inset-x-0 bottom-0 z-10 transition duration-300',
-                      !controlsVisible && 'translate-y-2 opacity-0',
-                    )}
-                  >
-                    {playerControls}
-                  </div>
-                ) : null}
+                {stage}
               </div>
             </div>
           )}
@@ -1048,17 +1465,6 @@ export function VideoStreamPlayer({
             <DockedPlayerControls videoRef={videoRef} title={video.name} />
           ) : null}
         </div>
-        {fullscreen && !embed ? (
-          <div
-            aria-hidden
-            className={cn(
-              'pointer-events-none absolute start-4 top-4 flex size-11 items-center justify-center rounded-xl border border-white/15 bg-black/30 text-white shadow-sm backdrop-blur-md transition duration-300 sm:start-6 sm:top-6',
-              !controlsVisible && '-translate-y-2 opacity-0',
-            )}
-          >
-            <AppwriteMarkIcon className="size-5" />
-          </div>
-        ) : null}
       </div>
       {dockSpacer > 0 ? (
         <div aria-hidden style={{ height: dockSpacer }} className="!mt-0" />

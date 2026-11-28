@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
 import shaka from 'shaka-player'
 import { playbackFatalMessage } from '@/lib/videos/embed-player-errors'
+import { watchFirstFrame } from '@/lib/videos/first-frame'
 import {
   applyVideoStreamAccess,
   type VideoStreamAccess,
@@ -114,7 +115,14 @@ export type StreamPlayerState = {
   /** HTTP status of the request that failed playback, when known. */
   fatalStatus: number | null
   loadStartedAt: number | null
+  /** When the stream itself was first requested, after the player library loaded. */
+  requestedAt: number | null
+  /**
+   * When the manifest's last byte arrived. Native playback cannot see the
+   * manifest, so `loadedmetadata` stands in for it there.
+   */
   manifestLoadedAt: number | null
+  /** When the first frame was ready to show (see `watchFirstFrame`). */
   firstFrameAt: number | null
 }
 
@@ -133,6 +141,7 @@ const INITIAL_STATE: StreamPlayerState = {
   fatalError: null,
   fatalStatus: null,
   loadStartedAt: null,
+  requestedAt: null,
   manifestLoadedAt: null,
   firstFrameAt: null,
 }
@@ -267,20 +276,19 @@ export function useDashPlayer(
     let cancelled = false
     let player: shaka.Player | null = null
     segmentCounterRef.current = 0
-    setState({ ...INITIAL_STATE, loadStartedAt: Date.now() })
+    // Startup is timed on the monotonic clock the browser stamps its events
+    // with, and kept as wall-clock times counted from `loadStartedAt`, so the
+    // gaps between milestones stay exact.
+    const loadStartedAt = Date.now()
+    const startedAt = performance.now()
+    const wallClock = (at: number) => loadStartedAt + (at - startedAt)
+    setState({ ...INITIAL_STATE, loadStartedAt })
 
-    const onFirstFrame = () => {
-      setState((prev) =>
-        prev.firstFrameAt ? prev : { ...prev, firstFrameAt: Date.now() },
-      )
-    }
-    video.addEventListener('loadeddata', onFirstFrame)
+    if (sourceType !== 'dash') return
 
-    if (sourceType !== 'dash') {
-      return () => {
-        video.removeEventListener('loadeddata', onFirstFrame)
-      }
-    }
+    const stopWatchingFrame = watchFirstFrame(video, (at) => {
+      setState((prev) => ({ ...prev, firstFrameAt: wallClock(at) }))
+    })
 
     shaka.polyfill.installAll()
 
@@ -289,9 +297,7 @@ export function useDashPlayer(
         ...prev,
         fatalError: 'Adaptive streaming is not supported in this browser.',
       }))
-      return () => {
-        video.removeEventListener('loadeddata', onFirstFrame)
-      }
+      return stopWatchingFrame
     }
 
     player = new shaka.Player(video)
@@ -313,6 +319,18 @@ export function useDashPlayer(
     })
 
     net?.registerResponseFilter((type, response, context) => {
+      // Shaka filters a response once all of it has arrived. A `HEAD` request
+      // only sniffs the manifest's type.
+      if (
+        type === RequestType.MANIFEST &&
+        response.originalRequest.method !== 'HEAD'
+      ) {
+        const manifestLoadedAt = wallClock(performance.now())
+        setState((prev) =>
+          prev.manifestLoadedAt == null ? { ...prev, manifestLoadedAt } : prev,
+        )
+        return
+      }
       if (type !== RequestType.SEGMENT) return
       const bytes =
         response.data instanceof ArrayBuffer
@@ -387,11 +405,11 @@ export function useDashPlayer(
     const manifestUrl = applyVideoStreamAccess(src, access)
     pushEvent({ kind: 'info', name: 'LOAD_SOURCE', detail: manifestUrl })
 
+    setState((prev) => ({ ...prev, requestedAt: wallClock(performance.now()) }))
     void player
       .load(manifestUrl)
       .then(() => {
         if (cancelled) return
-        setState((prev) => ({ ...prev, manifestLoadedAt: Date.now() }))
         syncTracks(player!)
         const variants = variantTracks(player!)
         pushEvent({
@@ -416,7 +434,7 @@ export function useDashPlayer(
 
     return () => {
       cancelled = true
-      video.removeEventListener('loadeddata', onFirstFrame)
+      stopWatchingFrame()
       void player?.destroy()
       playerRef.current = null
       levelsRef.current = []

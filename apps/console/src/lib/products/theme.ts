@@ -87,6 +87,27 @@ export const PRODUCT_THEMES: Record<ProductId, ProductTheme> = {
     heroLayout: 'centered',
     featureStyle: 'aligned',
   },
+  monitors: {
+    tone: 'orange',
+    secondaryTone: 'pink',
+    // Wide usage chart with the threshold line, like Analytics and Firewall.
+    heroLayout: 'centered',
+    featureStyle: 'alternate',
+  },
+  beep: {
+    tone: 'pink',
+    secondaryTone: 'mint',
+    // A phone beside the copy.
+    heroLayout: 'split',
+    featureStyle: 'alternate',
+  },
+  reviews: {
+    tone: 'mint',
+    secondaryTone: 'purple',
+    heroLayout: 'split',
+    // The life of a pull request, one stop per section.
+    featureStyle: 'rail',
+  },
 }
 
 export function getProductTheme(productId: ProductId): ProductTheme {

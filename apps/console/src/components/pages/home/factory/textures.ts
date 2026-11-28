@@ -7,7 +7,7 @@ import {
   SRGBColorSpace,
 } from 'three'
 import type { FactoryPalette } from './palette'
-import { EXTENSION, FASCIA, PRODUCT_KINDS, type ProductKind } from './layout'
+import { FASCIA, HOLOGRAM, PRODUCT_KINDS, type ProductKind } from './layout'
 
 type Context = CanvasRenderingContext2D
 
@@ -161,6 +161,11 @@ export type ShadowShape = {
   depth: number
   blur: number
   strength: number
+  /**
+   * Whose shadow it is: the bed's, there from the start (red), or the
+   * racks', which arrives with them (green; see the floor's `uRacks`).
+   */
+  layer: 'bed' | 'racks'
 }
 
 export const SHADOW_BOUNDS = {
@@ -187,7 +192,10 @@ export function createShadowTexture(shapes: ShadowShape[]): CanvasTexture {
   const toX = (x: number) => (x - SHADOW_BOUNDS.minX) * SHADOW_PX_PER_UNIT
   const toY = (z: number) => (z - SHADOW_BOUNDS.minZ) * SHADOW_PX_PER_UNIT
   for (const shape of shapes) {
-    context.shadowColor = `rgba(255,255,255,${shape.strength})`
+    context.shadowColor =
+      shape.layer === 'bed'
+        ? `rgba(255,0,0,${shape.strength})`
+        : `rgba(0,255,0,${shape.strength})`
     context.shadowBlur = shape.blur * SHADOW_PX_PER_UNIT
     context.shadowOffsetX = offset
     context.fillStyle = '#fff'
@@ -250,8 +258,8 @@ export function brandFontStack(): string {
 /**
  * The station displays: one backlit LCD per row with the product icon and
  * the (translated) product name centered together, in the neutral ink of
- * the framework installer's display. Rows follow `names`; the last is the
- * network gate.
+ * the framework installer's display. Rows follow `names`: the stations,
+ * the network gate, then the extensions.
  */
 export function createNameplateAtlas(
   icons: readonly string[],
@@ -336,20 +344,10 @@ export const APPWRITE_MARK = [
   'M24.4429 9.46094V14.9383H14.4492C15.4906 13.94 16.1401 12.5248 16.1401 10.9548C16.1401 10.4369 16.0696 9.93598 15.9373 9.46094H24.4429Z',
 ]
 
-/** The unfolded screen: one half on each side of the hinge. */
-export const DESCRIPTION_SCREEN = {
-  /** Screen width on each half. */
-  leaf: EXTENSION.leaf - EXTENSION.border - 0.002,
-  /** Half the crease at the hinge: a hairline, so text runs across it. */
-  crease: 0.002,
-  height: EXTENSION.height - 2 * EXTENSION.border,
-} as const
-/** Edge to edge, unfolded: both halves' screens and the crease between them. */
-export const DESCRIPTION_WIDTH =
-  2 * (DESCRIPTION_SCREEN.crease + DESCRIPTION_SCREEN.leaf)
+/** One station's hologram, edge to edge, in pixels. */
 const DESCRIPTION_CELL = {
   width: 1024,
-  height: Math.round((1024 * DESCRIPTION_SCREEN.height) / DESCRIPTION_WIDTH),
+  height: Math.round((1024 * HOLOGRAM.height) / HOLOGRAM.width),
 }
 /** Two columns of cells keep the atlas within every GPU's size limit. */
 const DESCRIPTION_COLUMNS = 2
@@ -447,8 +445,9 @@ function wrap(context: Context, text: string, width: number): string[] {
 }
 
 /**
- * What each station's unfolded screen says: the product icon and name, then
- * what the product does, centered on a backlit LCD like the nameplates.
+ * What each station's hologram says: the product icon and name, then what
+ * the product does. The hologram shows it as light, so the dark base reads
+ * as clear glass and the brand lights in its corners as coloured haze.
  */
 export function createDescriptionAtlas(
   icons: readonly string[],

@@ -1,8 +1,11 @@
 import { describe, expect, test } from 'bun:test'
+import type { ProxyRuleRecordRegion } from '@/lib/appwrite/proxy-rules'
 import { canRetryRule, canViewRuleLogs } from '@/lib/utils/proxy-domains'
 import {
   getDomainStatusBadgeConfig,
+  getLaggingRegions,
   getRuleStatusBadgeConfig,
+  hasWrongDnsRecord,
 } from '@/lib/utils/status-badge'
 
 const ISSUED = 'SSL certificate successfully issued.'
@@ -16,27 +19,34 @@ function expiresIn(ms: number): string {
   return new Date(NOW.getTime() + ms).toISOString()
 }
 
+function region(
+  id: string,
+  status: ProxyRuleRecordRegion['status'],
+): ProxyRuleRecordRegion {
+  return { id, name: id, status, current: [] }
+}
+
 describe('getRuleStatusBadgeConfig', () => {
-  test('keeps Verified when the server reports no certificate state', () => {
+  test('keeps Active when the server reports no certificate state', () => {
     expect(getRuleStatusBadgeConfig({ status: 'verified' }, NOW)).toEqual({
       variant: 'success',
-      label: 'Verified',
+      label: 'Active',
     })
     expect(
       getRuleStatusBadgeConfig(
         { status: 'verified', expireAt: '', certificateStatus: '' },
         NOW,
       ),
-    ).toEqual({ variant: 'success', label: 'Verified' })
+    ).toEqual({ variant: 'success', label: 'Active' })
     expect(
       getRuleStatusBadgeConfig(
         { status: 'verified', expireAt: 'not a date', certificateStatus: '' },
         NOW,
       ),
-    ).toEqual({ variant: 'success', label: 'Verified' })
+    ).toEqual({ variant: 'success', label: 'Active' })
   })
 
-  test('keeps a plain Verified badge for a healthy certificate, even close to expiry', () => {
+  test('keeps a plain Active badge for a healthy certificate, even close to expiry', () => {
     // Renewal is Appwrite's job: nothing to act on, so no warning and no date.
     for (const certificateStatus of [
       'issued',
@@ -55,7 +65,7 @@ describe('getRuleStatusBadgeConfig', () => {
             },
             NOW,
           ),
-        ).toEqual({ variant: 'success', label: 'Verified' })
+        ).toEqual({ variant: 'success', label: 'Active' })
       }
     }
   })
@@ -189,6 +199,126 @@ describe('getRuleStatusBadgeConfig', () => {
         ),
       ).toEqual(getDomainStatusBadgeConfig(status))
     }
+  })
+})
+
+describe('getLaggingRegions', () => {
+  test('returns the regions that do not see a record others already see', () => {
+    const missing = region('nyc', 'missing')
+    const mismatch = region('sfo', 'mismatch')
+    expect(
+      getLaggingRegions({
+        regions: [region('fra', 'verified'), missing, mismatch],
+      }),
+    ).toEqual([missing, mismatch])
+  })
+
+  test('returns no regions when the only ones without the record failed their lookup', () => {
+    expect(
+      getLaggingRegions({
+        regions: [region('fra', 'verified'), region('nyc', 'failed')],
+      }),
+    ).toEqual([])
+  })
+
+  test('returns no regions when no region sees the record', () => {
+    expect(
+      getLaggingRegions({
+        regions: [region('fra', 'missing'), region('nyc', 'mismatch')],
+      }),
+    ).toEqual([])
+  })
+
+  test('returns no regions on a server that reports none', () => {
+    expect(getLaggingRegions({})).toEqual([])
+    expect(getLaggingRegions({ regions: [] })).toEqual([])
+  })
+})
+
+describe('regional DNS checks', () => {
+  const domain = 'app.example.com'
+  const waiting = {
+    status: 'unverified',
+    certificateStatus: '',
+    domain,
+    $createdAt: expiresIn(-DAY_MS),
+  }
+
+  test('shows a record some regions already see as propagating', () => {
+    const records = [
+      {
+        type: 'CNAME',
+        status: 'missing',
+        regions: [region('fra', 'verified'), region('nyc', 'missing')],
+      },
+    ]
+    expect(getRuleStatusBadgeConfig({ ...waiting, records }, NOW)).toEqual({
+      variant: 'warning',
+      label: 'Propagating',
+      hint: "Some regions don't see your new record yet. Appwrite keeps checking, and you don't need to change anything.",
+    })
+    expect(hasWrongDnsRecord(domain, records)).toBe(false)
+  })
+
+  test('does not show a wrong value some regions already see as wrong', () => {
+    const records = [
+      {
+        type: 'CNAME',
+        status: 'mismatch',
+        regions: [region('fra', 'verified'), region('nyc', 'mismatch')],
+      },
+    ]
+    expect(hasWrongDnsRecord(domain, records)).toBe(false)
+    expect(
+      getRuleStatusBadgeConfig({ ...waiting, records }, NOW),
+    ).toMatchObject({ variant: 'warning', label: 'Propagating' })
+  })
+
+  test('waits for DNS when the only regions without the record failed their lookup', () => {
+    const record = {
+      type: 'CNAME',
+      regions: [region('fra', 'verified'), region('nyc', 'failed')],
+    }
+    expect(
+      getRuleStatusBadgeConfig(
+        { ...waiting, records: [{ ...record, status: 'missing' }] },
+        NOW,
+      ),
+    ).toMatchObject({ variant: 'warning', label: 'Waiting for DNS' })
+    expect(hasWrongDnsRecord(domain, [{ ...record, status: 'mismatch' }])).toBe(
+      true,
+    )
+  })
+
+  test('fails a propagating record once Appwrite stops checking', () => {
+    const records = [
+      {
+        type: 'CNAME',
+        status: 'missing',
+        regions: [region('fra', 'verified'), region('nyc', 'missing')],
+      },
+    ]
+    expect(
+      getRuleStatusBadgeConfig(
+        { ...waiting, $createdAt: expiresIn(-4 * DAY_MS), records },
+        NOW,
+      ),
+    ).toMatchObject({ variant: 'error', label: 'Verification failed' })
+  })
+
+  test('treats a CAA record as wrong only when no region sees the right value', () => {
+    expect(
+      hasWrongDnsRecord(domain, [
+        {
+          type: 'CAA',
+          status: 'mismatch',
+          regions: [region('fra', 'verified'), region('nyc', 'mismatch')],
+        },
+      ]),
+    ).toBe(false)
+    expect(
+      hasWrongDnsRecord(domain, [{ type: 'CAA', status: 'mismatch' }]),
+    ).toBe(true)
   })
 })
 

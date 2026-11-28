@@ -16,13 +16,16 @@ export type ProductId =
   | 'realtime'
   | 'sites'
   | 'analytics'
+  | 'monitors'
+  | 'beep'
   | 'firewall'
+  | 'reviews'
 
 export type ProductGroup = 'build' | 'deploy' | 'protect'
 
 export type ProductNavGroup = ProductGroup
 
-export type ProductNavItemId = ProductId | 'domains' | 'advisor' | 'agent'
+export type ProductNavItemId = ProductId | 'domains' | 'advisor' | 'agent' | 'zero'
 
 export type ProductNavItem = {
   id: ProductNavItemId
@@ -59,5 +62,13 @@ export type ProductPageContent = {
   cta: {
     title: string
     description: string
+  }
+  /**
+   * Store listings for a product that ships as a mobile app. The hero and the
+   * closing section lead with them instead of Start building.
+   */
+  apps?: {
+    appStore: string
+    googlePlay: string
   }
 }

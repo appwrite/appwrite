@@ -26,12 +26,17 @@ export function useInitScrollSpyBaselineZone(event: InitDisplayEvent) {
     const update = () => {
       cancelAnimationFrame(frame)
       frame = requestAnimationFrame(() => {
-        setZone(
-          resolveInitPresenceBaselineZone(main, {
-            dayNumbers,
-            hasPrizes,
-            hasGlobe,
-          }),
+        const next = resolveInitPresenceBaselineZone(main, {
+          dayNumbers,
+          hasPrizes,
+          hasGlobe,
+        })
+        // Keep the same object while the zone holds, so scrolling does not re-render.
+        setZone((previous) =>
+          previous.kind === next.kind &&
+          (previous.kind !== 'day' || next.kind !== 'day' || previous.day === next.day)
+            ? previous
+            : next,
         )
       })
     }

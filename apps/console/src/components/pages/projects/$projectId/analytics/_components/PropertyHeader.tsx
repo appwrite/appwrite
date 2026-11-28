@@ -1,9 +1,13 @@
 import { useMemo } from 'react'
-import type { Models } from '@appwrite.io/console'
+import { AnalyticsPropertyType, type Models } from '@appwrite.io/console'
 import { Badge } from '@/components/ui/badge'
 import { DetailResourceHeaderTitle } from '@/components/global/shared/ResourceTitleSwitcher'
 import type { Tab } from '@/components/pages/projects/$projectId/shared/ServiceHeader'
 import { useT } from '@/lib/i18n/translate'
+import {
+  ANALYTICS_PROPERTY_TYPE_META,
+  propertyType,
+} from '@/lib/analytics-wizard/property-types'
 import { LiveVisitors } from './LiveVisitors'
 
 export type PropertyTabId = 'analytics' | 'settings'
@@ -63,6 +67,11 @@ export function PropertyHeaderTitle({
             : undefined
         }
       />
+      {property && (
+        <Badge variant="outline" className="shrink-0 text-[10px]">
+          {t(ANALYTICS_PROPERTY_TYPE_META[propertyType(property)].label)}
+        </Badge>
+      )}
       {property && !property.enabled && (
         <Badge variant="warning" className="shrink-0 text-[10px]">
           {t('Disabled')}
@@ -87,6 +96,7 @@ export function PropertyHeaderLive({
       projectId={projectId}
       propertyId={propertyId}
       enabled={property?.enabled !== false}
+      mobile={propertyType(property) === AnalyticsPropertyType.Mobile}
     />
   )
 }

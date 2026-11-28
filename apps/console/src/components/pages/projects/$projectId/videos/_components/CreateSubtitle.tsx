@@ -66,7 +66,7 @@ export function CreateSubtitle({
     if (!open) return
     setSource(null)
     setName(subtitle?.name ?? '')
-    setCode(subtitle?.code ?? '')
+    setCode(subtitle?.language ?? '')
     setIsDefault(subtitle?.default ?? false)
   }, [open, subtitle])
 

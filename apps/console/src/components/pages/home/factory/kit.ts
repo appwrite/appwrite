@@ -1,11 +1,13 @@
 import {
   Color,
   MeshBasicMaterial,
+  MeshDepthMaterial,
   MeshStandardMaterial,
   Vector2,
   type ShaderMaterial,
   type Texture,
 } from 'three'
+import { ARRIVE_GLSL } from './assembly'
 import {
   createBeamMaterial,
   createBlobShadowMaterial,
@@ -13,6 +15,7 @@ import {
   createGlowMaterial,
   createNameplateMaterial,
   createPowerLineMaterial,
+  createProjectionMaterial,
   createScreenMaterial,
   glowBlending,
   type ScreenUniforms,
@@ -33,6 +36,8 @@ export const FINISHES = [
 export type Finish = (typeof FINISHES)[number]
 
 export type FactoryKit = {
+  /** Seconds since the scene first showed, which places the parts still on their way into place (see `assembly.ts`). */
+  assembly: { value: number }
   /**
    * Every finish in one material: each vertex picks its color, roughness and
    * metalness by `aFinish`, so assemblies merge across finishes.
@@ -59,6 +64,8 @@ export type FactoryKit = {
   glass: MeshStandardMaterial
   /** Glossy pink power cables. */
   cable: MeshStandardMaterial
+  /** How far the power cables have run out from the rack, 0 → 1 along each (`uv.x`). */
+  cableUniforms: { uReveal: { value: number } }
   /** The network's cables: the same cable, with light pulses running out along it. */
   networkCable: MeshStandardMaterial
   networkUniforms: NetworkUniforms
@@ -95,9 +102,12 @@ export function createKit(
     new MeshStandardMaterial({ roughness, metalness })
 
   const screen = createScreenMaterial()
+  const assembly = { value: 0 }
+  const cableUniforms = { uReveal: { value: 1 } }
 
   const kit: FactoryKit = {
-    finish: createFinishMaterial(),
+    assembly,
+    finish: createFinishMaterial(assembly),
     // Housings are bead-blasted anodized aluminium, like a phone's frame: fully
     // metallic, satin, so the rounded edges pick up the studio's softboxes.
     // Enclosure and bed carry baked occlusion in vertex colors (see `ground`).
@@ -117,7 +127,8 @@ export function createKit(
     matte: standard(0.9, 0),
     pad: standard(0.9, 0),
     glass: standard(0.06, 1),
-    cable: new MeshStandardMaterial({ roughness: 0.55, metalness: 0.05 }),
+    cable: createPowerCable(cableUniforms),
+    cableUniforms,
     ...createNetworkCable(),
     displays: [],
     carrier: standard(0.5, 1),
@@ -154,9 +165,10 @@ export function createKit(
 /**
  * A standard material whose base color, roughness and metalness come from
  * the finish each vertex names (`aFinish`), and whose vertex colors carry the
- * baked occlusion of the parts that have it (white elsewhere).
+ * baked occlusion of the parts that have it (white elsewhere). Parts of a
+ * machine still on its way into place (`aArrive`) are drawn where it is.
  */
-function createFinishMaterial() {
+function createFinishMaterial(assembly: { value: number }) {
   const colors = FINISHES.map(() => new Color())
   const surfaces = FINISHES.map(() => new Vector2())
   const material = new MeshStandardMaterial({ vertexColors: true })
@@ -165,16 +177,19 @@ function createFinishMaterial() {
   material.onBeforeCompile = (shader) => {
     shader.uniforms.uFinishColor = { value: colors }
     shader.uniforms.uFinishSurface = { value: surfaces }
+    shader.uniforms.uAssembly = assembly
     shader.vertexShader = shader.vertexShader
       .replace(
         '#include <common>',
         `#include <common>
+        ${ARRIVE_GLSL.pars}
         attribute float aFinish;
         flat varying int vFinish;`,
       )
       .replace(
         '#include <begin_vertex>',
         `#include <begin_vertex>
+        ${ARRIVE_GLSL.vertex}
         vFinish = int(aFinish + 0.5);`,
       )
     shader.fragmentShader = shader.fragmentShader
@@ -205,6 +220,58 @@ function createFinishMaterial() {
   return material
 }
 
+/**
+ * The shadow-map depth material of everything drawn in `kit.finish`: the
+ * shadows of machines on their way into place go with them.
+ */
+export function createArrivingDepthMaterial(kit: FactoryKit) {
+  const material = new MeshDepthMaterial()
+  material.onBeforeCompile = (shader) => {
+    shader.uniforms.uAssembly = kit.assembly
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>', `#include <common>${ARRIVE_GLSL.pars}`)
+      .replace(
+        '#include <begin_vertex>',
+        `#include <begin_vertex>${ARRIVE_GLSL.vertex}`,
+      )
+  }
+  material.customProgramCacheKey = () => 'factory-arriving-depth'
+  return material
+}
+
+/** Pink power cables, drawn only as far as they have run out from the rack (`uv.x`, 0 at the rack). */
+function createPowerCable(uniforms: FactoryKit['cableUniforms']) {
+  const cable = new MeshStandardMaterial({ roughness: 0.55, metalness: 0.05 })
+  cable.onBeforeCompile = (shader) => {
+    Object.assign(shader.uniforms, uniforms)
+    shader.vertexShader = shader.vertexShader
+      .replace(
+        '#include <common>',
+        `#include <common>
+        varying float vAlong;`,
+      )
+      .replace(
+        '#include <begin_vertex>',
+        `#include <begin_vertex>
+        vAlong = uv.x;`,
+      )
+    shader.fragmentShader = shader.fragmentShader
+      .replace(
+        '#include <common>',
+        `#include <common>
+        uniform float uReveal;
+        varying float vAlong;`,
+      )
+      .replace(
+        '#include <clipping_planes_fragment>',
+        `if (vAlong > uReveal) discard;
+        #include <clipping_planes_fragment>`,
+      )
+  }
+  cable.customProgramCacheKey = () => 'factory-power-cable'
+  return cable
+}
+
 /** Copies every finish's color and surface into the shared finish material. */
 function syncFinishes(kit: FactoryKit) {
   const colors = kit.finish.userData.colors as Color[]
@@ -223,6 +290,8 @@ export type NetworkUniforms = {
   uSpeed: { value: number }
   uPulse: { value: Color }
   uPower: { value: number }
+  /** How far the cables have run out of the gate (see `assembly.ts`). */
+  uReach: { value: number }
 }
 
 /**
@@ -235,6 +304,7 @@ function createNetworkCable() {
     uSpeed: { value: 10 },
     uPulse: { value: new Color() },
     uPower: { value: 1 },
+    uReach: { value: Number.POSITIVE_INFINITY },
   }
   const networkCable = new MeshStandardMaterial({
     roughness: 0.55,
@@ -265,8 +335,14 @@ function createNetworkCable() {
         uniform float uSpeed;
         uniform vec3 uPulse;
         uniform float uPower;
+        uniform float uReach;
         varying float vT;
         varying float vLine;`,
+      )
+      .replace(
+        '#include <clipping_planes_fragment>',
+        `if (vT > uReach) discard;
+        #include <clipping_planes_fragment>`,
       )
       .replace(
         '#include <emissivemap_fragment>',
@@ -286,6 +362,13 @@ function createNetworkCable() {
 /** A light curtain material that follows the theme. */
 export function createKitBeam(kit: FactoryKit) {
   const material = createBeamMaterial(kit.palette.dark)
+  kit.beams.push(material)
+  return material
+}
+
+/** A hologram's light fan, which switches blending with the theme like the beams. */
+export function createKitProjection(kit: FactoryKit) {
+  const material = createProjectionMaterial(kit.palette.dark)
   kit.beams.push(material)
   return material
 }

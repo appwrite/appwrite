@@ -42,6 +42,7 @@ import {
   slotX,
   type ProductKind,
 } from './layout'
+import { away, onLine } from './assembly'
 import { introStep, type FrameState } from './frame'
 
 /** The stage whose tool sweeps the screen instead of touching it (Databases). */
@@ -180,7 +181,8 @@ export class ProductLine {
       if (slot < -QUEUE_SLOTS - 1.5 || slot > GONE_SLOT) continue
       const kind = getProductKind(index)
       const size = DEVICE_SIZES[kind]
-      const x = slotX(slot)
+      // As the factory assembles, each carrier rolls in with its bay (see `assembly.ts`).
+      const x = slotX(slot) + away(frame.assembly, onLine(slot))
 
       this.carriers.setMatrixAt(
         count,

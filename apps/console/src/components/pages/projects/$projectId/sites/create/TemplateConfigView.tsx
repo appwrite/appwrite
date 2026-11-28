@@ -6,6 +6,7 @@
  */
 
 import { useState, useEffect, useMemo, useRef } from 'react'
+import { useActiveEnvironmentId } from '@/lib/active-environment'
 import { useParams, useNavigate, Link } from '@tanstack/react-router'
 import { useTheme } from 'next-themes'
 import { cn } from '@/lib/utils'
@@ -55,9 +56,15 @@ import {
 import { VCSDetectionType, ID } from '@appwrite.io/console'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useT } from '@/lib/i18n/translate'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { AnalyticsToggle } from './AnalyticsToggle'
 import { buildVcsAuthUrl, type VcsProviderId } from '@/lib/vcs/providers'
 import { getSiteTemplateScreenshotUrl } from '@/lib/sites/site-template-wizard'
 import { validateVariables } from '@/lib/variables'
+import {
+  CreateReviewSwitch,
+  useCreateReview,
+} from '../../reviews/_components/CreateReviewSwitch'
 
 // Fade-in image component
 function FadeImage({
@@ -107,7 +114,10 @@ interface TemplateConfigViewProps {
 
 export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
   const t = useT()
+  const { features } = useConsoleProfile()
+  const [analytics, setAnalytics] = useState(true)
   const { projectId } = useParams({ strict: false })
+  const environmentId = useActiveEnvironmentId(projectId)
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { theme, resolvedTheme } = useTheme()
@@ -134,6 +144,11 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
   const [siteId, setSiteId] = useState<string | undefined>(formData.siteId)
   const [framework, setFramework] = useState(formData.framework || '')
   const [gitConnection, setGitConnection] = useState<'now' | 'later'>('later')
+  const review = useCreateReview(
+    projectId,
+    formData.installationId,
+    formData.providerRepositoryId,
+  )
   const [variables, setVariables] = useState(formData.variables || [])
   const [domain, setDomain] = useState(formData.domain || '')
   // Domain follows the site name until the user edits it
@@ -317,8 +332,13 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
           providerRootDirectory: connectRootDir || undefined,
           providerSilentMode: false,
         }),
+        analytics: features.analytics && analytics,
       })
       createdSiteId = site.$id
+
+      if (connectNow) {
+        await review.apply()
+      }
 
       // 2. Create domain rule
       if (domain) {
@@ -674,6 +694,13 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
             />
           </div>
 
+          {features.analytics && (
+            <AnalyticsToggle
+              checked={analytics}
+              onCheckedChange={setAnalytics}
+            />
+          )}
+
           {/* Framework (if template supports multiple) */}
           {template.frameworks && template.frameworks.length > 1 && (
             <div className="space-y-2">
@@ -741,58 +768,65 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
       </div>
 
       {/* Git connection section */}
-      <RadioGroup
-        value={gitConnection}
-        onValueChange={(value) => setGitConnection(value as 'now' | 'later')}
-        className="grid grid-cols-1 sm:grid-cols-2 gap-4"
-      >
-        <Label
-          htmlFor="git-now"
-          className={cn(
-            'relative flex items-start cursor-pointer rounded-xl border p-5 transition-all',
-            gitConnection === 'now'
-              ? 'border-foreground bg-card/80'
-              : 'border-border bg-card/50 hover:border-border/80 hover:bg-card/60',
-          )}
+      {/* Git installations cannot be connected from inside an environment */}
+      {!environmentId && (
+        <RadioGroup
+          value={gitConnection}
+          onValueChange={(value) => setGitConnection(value as 'now' | 'later')}
+          className="grid grid-cols-1 sm:grid-cols-2 gap-4"
         >
-          <RadioGroupItem value="now" id="git-now" className="mt-1 shrink-0" />
-          <div className="ms-3 flex-1">
-            <span className="text-[14px] font-medium text-foreground">
-              {t('Connect your repository')}
-            </span>
-            <p className="mt-1.5 text-[12px] text-muted-foreground leading-relaxed">
-              {t(
-                'Clone this template into a new Git repository or link it to an existing one.',
-              )}
-            </p>
-          </div>
-        </Label>
-        <Label
-          htmlFor="git-later"
-          className={cn(
-            'relative flex items-start cursor-pointer rounded-xl border p-5 transition-all',
-            gitConnection === 'later'
-              ? 'border-foreground bg-card/80'
-              : 'border-border bg-card/50 hover:border-border/80 hover:bg-card/60',
-          )}
-        >
-          <RadioGroupItem
-            value="later"
-            id="git-later"
-            className="mt-1 shrink-0"
-          />
-          <div className="ms-3 flex-1">
-            <span className="text-[14px] font-medium text-foreground">
-              {t('Connect later')}
-            </span>
-            <p className="mt-1.5 text-[12px] text-muted-foreground leading-relaxed">
-              {t(
-                'Deploy now and connect your version control later via CLI or Git integration in your settings.',
-              )}
-            </p>
-          </div>
-        </Label>
-      </RadioGroup>
+          <Label
+            htmlFor="git-now"
+            className={cn(
+              'relative flex items-start cursor-pointer rounded-xl border p-5 transition-all',
+              gitConnection === 'now'
+                ? 'border-foreground bg-card/80'
+                : 'border-border bg-card/50 hover:border-border/80 hover:bg-card/60',
+            )}
+          >
+            <RadioGroupItem
+              value="now"
+              id="git-now"
+              className="mt-1 shrink-0"
+            />
+            <div className="ms-3 flex-1">
+              <span className="text-[14px] font-medium text-foreground">
+                {t('Connect your repository')}
+              </span>
+              <p className="mt-1.5 text-[12px] text-muted-foreground leading-relaxed">
+                {t(
+                  'Clone this template into a new Git repository or link it to an existing one.',
+                )}
+              </p>
+            </div>
+          </Label>
+          <Label
+            htmlFor="git-later"
+            className={cn(
+              'relative flex items-start cursor-pointer rounded-xl border p-5 transition-all',
+              gitConnection === 'later'
+                ? 'border-foreground bg-card/80'
+                : 'border-border bg-card/50 hover:border-border/80 hover:bg-card/60',
+            )}
+          >
+            <RadioGroupItem
+              value="later"
+              id="git-later"
+              className="mt-1 shrink-0"
+            />
+            <div className="ms-3 flex-1">
+              <span className="text-[14px] font-medium text-foreground">
+                {t('Connect later')}
+              </span>
+              <p className="mt-1.5 text-[12px] text-muted-foreground leading-relaxed">
+                {t(
+                  'Deploy now and connect your version control later via CLI or Git integration in your settings.',
+                )}
+              </p>
+            </div>
+          </Label>
+        </RadioGroup>
+      )}
 
       {/* Git repository section (only when Connect your repository is selected) */}
       {gitConnection === 'now' && (
@@ -822,7 +856,9 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
           emptyStateDescription={t(
             'Create and deploy a Site with a connected git repository.',
           )}
-        />
+        >
+          <CreateReviewSwitch review={review} />
+        </ConnectRepositorySection>
       )}
 
       {/* Template variables section */}

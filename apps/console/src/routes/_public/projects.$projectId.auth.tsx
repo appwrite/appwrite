@@ -9,10 +9,6 @@ import {
   View,
   type UsersListSearch,
 } from '@/components/pages/projects/$projectId/auth/View'
-import {
-  projectQueryOptions,
-  projectSmtpStatusQueryOptions,
-} from '@/lib/react-query/hooks'
 import type { AuthOAuth2SettingsInitialData } from '@/lib/react-query/hooks/oauth2-providers'
 import {
   isAuthTeamDetailPath,
@@ -23,19 +19,6 @@ import { pageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute('/_public/projects/$projectId/auth')({
   head: () => ({ meta: [{ title: pageTitle('Auth') }] }),
-  loader: async ({ params, context }) => {
-    if (typeof window === 'undefined') return
-
-    const { projectId } = params
-    const { queryClient } = context
-
-    if (projectId) {
-      await Promise.all([
-        queryClient.ensureQueryData(projectQueryOptions(projectId)),
-        queryClient.ensureQueryData(projectSmtpStatusQueryOptions(projectId)),
-      ])
-    }
-  },
   component: AuthPage,
 })
 

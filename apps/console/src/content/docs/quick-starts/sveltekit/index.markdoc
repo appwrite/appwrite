@@ -19,6 +19,8 @@ Head to the [Appwrite Console](https://cloud.appwrite.io/console).
 
 If this is your first time using Appwrite, create an account and create your first project.
 
+{% partial file="zero-no-account.md" /%}
+
 Then, under **Add a platform**, add a **Web app**. The **Hostname** should be `localhost`.
 
 {% partial file="note-on-cors.md" /%}

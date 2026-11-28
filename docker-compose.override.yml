@@ -525,6 +525,13 @@ services:
       - LDAP_SEED_INTERNAL_LDAP_TLS_CRT_FILE=/certs/ldap.crt
       - LDAP_SEED_INTERNAL_LDAP_TLS_KEY_FILE=/certs/ldap.key
       - LDAP_SEED_INTERNAL_LDAP_TLS_CA_CRT_FILE=/certs/ca.crt
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - test -e /container/run/state/slapd-first-start-done && ldapwhoami -x -H ldapi:/// -D cn=admin,dc=appwrite,dc=test -w "$$LDAP_ADMIN_PASSWORD"
+      interval: 1s
+      timeout: 5s
+      retries: 120
 
   # One-shot loader of dev/openldap/seed.ldif, on its own profile so that
   # `up --wait` never waits on it: run it with `run --rm openldap-seed`.
@@ -541,10 +548,11 @@ services:
       - sh
       - -c
       - |
-        until ldapsearch -x -H ldap://openldap -b dc=appwrite,dc=test \
-          -D cn=admin,dc=appwrite,dc=test -w $${LDAP_ADMIN_PASSWORD} >/dev/null 2>&1; do sleep 2; done
         ldapadd -c -x -H ldap://openldap -D cn=admin,dc=appwrite,dc=test \
-          -w $${LDAP_ADMIN_PASSWORD} -f /seed.ldif || true
+          -w $${LDAP_ADMIN_PASSWORD} -f /seed.ldif >/dev/null
+        ldapsearch -x -H ldap://openldap -s base -b cn=appwrite-posix,ou=groups,dc=appwrite,dc=test \
+          -D cn=admin,dc=appwrite,dc=test -w $${LDAP_ADMIN_PASSWORD} >/dev/null \
+          || { echo "LDAP fixtures did not load." >&2; exit 1; }
         echo "LDAP fixtures loaded."
     environment:
       - LDAP_ADMIN_PASSWORD=${LDAP_ADMIN_PASSWORD:-adminpassword}

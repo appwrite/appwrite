@@ -51,6 +51,10 @@ const DOCS_TOOLING_SECTION_NAV: DocsNavTree = [
             href: '/docs/products/agent',
           },
           {
+            label: 'Appwrite Beep',
+            href: '/docs/tooling/beep',
+          },
+          {
             label: 'The Appwriter',
             href: '/docs/tooling/appwriter',
           },
@@ -280,6 +284,10 @@ export const DOCS_LOCAL_SECTION_NAVS: DocsSectionNavConfig[] = [
             href: '/docs/products/auth/presences',
           },
           {
+            label: 'Analytics',
+            href: '/docs/products/auth/analytics',
+          },
+          {
             label: 'OAuth2 server',
             href: '/docs/products/auth/oauth-server',
           },
@@ -315,6 +323,10 @@ export const DOCS_LOCAL_SECTION_NAVS: DocsSectionNavConfig[] = [
           {
             label: 'Passkeys',
             href: '/docs/products/auth/passkeys',
+          },
+          {
+            label: 'LDAP login',
+            href: '/docs/products/auth/ldap',
           },
           {
             label: 'Sign in with Appwrite',
@@ -690,8 +702,8 @@ export const DOCS_LOCAL_SECTION_NAVS: DocsSectionNavConfig[] = [
             href: '/docs/products/analytics/web',
           },
           {
-            label: 'Track a Flutter app',
-            href: '/docs/products/analytics/flutter',
+            label: 'Track a mobile app',
+            href: '/docs/products/analytics/mobile',
           },
           {
             label: 'Send events over REST',
@@ -720,6 +732,74 @@ export const DOCS_LOCAL_SECTION_NAVS: DocsSectionNavConfig[] = [
           {
             label: 'Block traffic with Firewall',
             href: '/docs/products/analytics/firewall',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    prefix: 'products/videos',
+    parent: {
+      href: '/docs',
+      label: 'Videos',
+    },
+    navigation: [
+      {
+        label: 'Getting started',
+        items: [
+          {
+            label: 'Overview',
+            href: '/docs/products/videos',
+          },
+          {
+            label: 'Quick start',
+            href: '/docs/products/videos/quick-start',
+          },
+        ],
+      },
+      {
+        label: 'Concepts',
+        items: [
+          {
+            label: 'Videos',
+            href: '/docs/products/videos/videos',
+          },
+          {
+            label: 'Encoding profiles',
+            href: '/docs/products/videos/profiles',
+          },
+          {
+            label: 'Renditions',
+            href: '/docs/products/videos/renditions',
+          },
+          {
+            label: 'Outputs',
+            href: '/docs/products/videos/outputs',
+          },
+          {
+            label: 'Captions',
+            href: '/docs/products/videos/captions',
+          },
+          {
+            label: 'Timeline',
+            href: '/docs/products/videos/timeline',
+          },
+          {
+            label: 'Permissions',
+            href: '/docs/products/videos/permissions',
+          },
+        ],
+      },
+      {
+        label: 'Guides',
+        items: [
+          {
+            label: 'Play a video in your app',
+            href: '/docs/products/videos/play',
+          },
+          {
+            label: 'Inspect playback',
+            href: '/docs/products/videos/inspector',
           },
         ],
       },

@@ -132,14 +132,15 @@ export function View() {
         <Info className="mt-0.5 h-4 w-4 shrink-0" />
         <p>
           {t(
-            'Manifest, segment, and subtitle requests use the read permissions of the source file in Storage. Grant read access to Any for public playback, or to signed-in users for private videos.',
+            'Manifest, segment, and subtitle requests use the read permissions of the video. Turn on public playback in Settings to let anyone watch, or grant read access to signed-in users for private videos.',
           )}{' '}
           <Link
-            to="/projects/$projectId/storage/$bucketId"
-            params={{ projectId, bucketId: video.bucketId }}
+            to="/projects/$projectId/videos/$videoId/settings"
+            params={{ projectId, videoId: video.$id }}
+            hash="access"
             className="text-foreground underline-offset-4 hover:underline"
           >
-            {t('Open bucket')}
+            {t('Open access settings')}
           </Link>
         </p>
       </div>
@@ -214,7 +215,7 @@ function SubtitleUrlsCard({
             <VideoUrlRow
               key={subtitle.$id}
               label={subtitle.name}
-              meta={subtitle.code}
+              meta={subtitle.language}
               url={getVideoCaptionManifestUrl(
                 projectId,
                 videoId,
@@ -248,7 +249,7 @@ function AdvancedUrlsCard({
 }) {
   const t = useT()
   const [renditionId, setRenditionId] = useState('')
-  const [streamId, setStreamId] = useState('0')
+  const [streamIndex, setStreamIndex] = useState('0')
   const [segmentId, setSegmentId] = useState('')
   const [subtitleId, setSubtitleId] = useState('')
   const [subtitleSegmentId, setSubtitleSegmentId] = useState('')
@@ -265,7 +266,7 @@ function AdvancedUrlsCard({
         videoId,
         rendition.$id,
         rendition.output,
-        Math.max(0, Number(streamId) || 0),
+        Math.max(0, Number(streamIndex) || 0),
       )
     : null
   const segmentUrl =
@@ -341,8 +342,8 @@ function AdvancedUrlsCard({
                 id="stream-index"
                 type="number"
                 min={0}
-                value={streamId}
-                onChange={(event) => setStreamId(event.target.value)}
+                value={streamIndex}
+                onChange={(event) => setStreamIndex(event.target.value)}
                 className="h-9 font-mono text-[13px]"
               />
             </div>
@@ -404,7 +405,7 @@ function AdvancedUrlsCard({
                           value={s.$id}
                           className="text-[13px]"
                         >
-                          {s.name} ({s.code})
+                          {s.name} ({s.language})
                         </SelectItem>
                       ))}
                     </SelectContent>

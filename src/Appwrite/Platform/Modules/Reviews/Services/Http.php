@@ -25,6 +25,7 @@ use Appwrite\Platform\Modules\Reviews\Http\Reviews\Status\Update as UpdateReview
 use Appwrite\Platform\Modules\Reviews\Http\Reviews\Tier\Update as UpdateReviewTier;
 use Appwrite\Platform\Modules\Reviews\Http\Reviews\Usage\Create as CreateReviewUsage;
 use Appwrite\Platform\Modules\Reviews\Http\Reviews\XList as ListReviews;
+use Appwrite\Platform\Modules\Reviews\Http\Summary\Get as GetSummary;
 use Utopia\Platform\Service;
 
 class Http extends Service
@@ -45,6 +46,7 @@ class Http extends Service
 
         $this->addAction(ListAuthors::getName(), new ListAuthors());
         $this->addAction(ListCategories::getName(), new ListCategories());
+        $this->addAction(GetSummary::getName(), new GetSummary());
         $this->addAction(ListLearnings::getName(), new ListLearnings());
         $this->addAction(DeleteLearning::getName(), new DeleteLearning());
 

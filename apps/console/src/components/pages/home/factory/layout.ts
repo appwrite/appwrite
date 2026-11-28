@@ -82,25 +82,69 @@ export const FASCIA = {
 } as const
 
 /**
- * On hover a station unfolds a display like a foldable phone. Folded shut it
- * is stored upright inside the column, reaching down into the bed, so each
- * half is as wide as a slot in the column's top: it rises out of the slot, a
- * mast lifts it, and its front half swings open about the hinge while the
- * mast slides along the slot to bring the open screen to the column's centre.
+ * On hover a station projects a hologram: a fan of light rises from a lens
+ * in the column's top and draws a translucent screen in the air above it,
+ * wider than the column.
  */
-export const EXTENSION = {
-  /** Width of each half. */
-  leaf: 1.1,
-  /** Thickness of each half. */
-  thickness: 0.032,
+export const HOLOGRAM = {
+  width: 2.2,
   height: 1.4,
-  /** The hinge line. */
+  /** The plane the light fan and the screen stand in, through the lens. */
   z: TOWER.z + 0.04,
-  /** Border around the screen. */
-  border: 0.05,
-  /** How far a mast lifts the display above the column once it has risen. */
+  /** How high above the column the screen floats. */
   lift: 0.9,
+  /** The lens the light comes out of, set into the column's top. */
+  lens: { width: 0.62, depth: 0.05 },
 } as const
+
+/** Where a hologram's screen starts, its float above the column scaled by `lift` (0 → 1). */
+export function hologramBottom(lift: number) {
+  return TOWER_TOP + 0.03 + lift * HOLOGRAM.lift
+}
+
+/**
+ * Extensions: units on the floor in front of the bed, one at a station's bay,
+ * for products built on that station's service. Each works on the app right
+ * after its station does: Videos films it once Storage has placed its files,
+ * Analytics scans it once Sites has put it live.
+ */
+export const EXTENSION_IDS = ['videos', 'analytics'] as const
+
+export type FactoryExtensionId = (typeof EXTENSION_IDS)[number]
+
+export const EXTENSION_COUNT = EXTENSION_IDS.length
+
+/** The station whose bay each extension stands at. */
+export const EXTENSION_STATION: Record<FactoryExtensionId, number> = {
+  videos: STATION_IDS.indexOf('storage'),
+  analytics: STATION_IDS.indexOf('sites'),
+}
+
+/**
+ * An extension's cabinet: as wide as its station's column and centered on
+ * the app stopped there, in the bed's paint and a little lower than the bed,
+ * with `gap` of floor between the two that its cable duct crosses.
+ */
+export const UNIT = {
+  width: TOWER.width,
+  depth: 0.4,
+  height: BED_TOP - 0.02,
+  gap: 0.3,
+} as const
+export const UNIT_BACK = BED_FRONT + UNIT.gap
+export const UNIT_Z = UNIT_BACK + UNIT.depth / 2
+export const UNIT_FRONT = UNIT_Z + UNIT.depth / 2
+/**
+ * Where an extension's head turns, on a post at the back of the cabinet's
+ * top; `scale` sizes the head and the fork it turns in.
+ */
+export const UNIT_HEAD = {
+  y: 0.62,
+  z: UNIT_BACK + 0.11,
+  scale: 2,
+} as const
+/** Top of an extension's post, where the head's fork sits. */
+export const UNIT_POST_TOP = UNIT_HEAD.y - 0.06 * UNIT_HEAD.scale
 
 /**
  * The arm rides the column's vertical rails and reaches over the track. It
@@ -217,6 +261,11 @@ export function slotX(slot: number): number {
 
 export function stationX(index: number): number {
   return slotX(index)
+}
+
+/** Where an extension stands along the line: centered on its station's bay. */
+export function extensionX(id: FactoryExtensionId): number {
+  return stationX(EXTENSION_STATION[id])
 }
 
 const nearest = Math.abs(stationX(STATION_COUNT - 1) - CORE.x)

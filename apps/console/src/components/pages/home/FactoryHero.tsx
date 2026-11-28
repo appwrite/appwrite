@@ -3,7 +3,6 @@ import { ArrowRight, Megaphone } from 'lucide-react'
 import { FactoryStage } from '@/components/pages/home/FactoryStage'
 import { HomeSoftLights } from '@/components/pages/home/HomeSoftLights'
 import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
-import { McpIcon } from '@/components/global/shared/McpIcon'
 import { Button } from '@/components/ui/button'
 import { analyticsAttrs } from '@/lib/analytics-actions'
 import { useI18n } from '@/lib/i18n'
@@ -24,7 +23,7 @@ export function FactoryHero() {
       <HomeSoftLights />
 
       <div className="relative z-[1] mx-auto w-full max-w-7xl px-4 pt-12 sm:px-6 sm:pt-16 lg:pointer-events-none lg:px-8 lg:pt-[clamp(3.5rem,7dvh,6rem)]">
-        {/* On large screens the scene runs under the copy: only the copy itself takes the pointer, and the machines' displays keep clear of the title and description (`data-factory-copy`). */}
+        {/* On large screens the scene runs under the copy: only the copy itself takes the pointer, and the machines' holograms keep clear of the title and description (`data-factory-copy`), standing in front of whatever else they meet. */}
         <div className="max-w-xl xl:max-w-2xl">
           <Button
             variant="outline"
@@ -88,15 +87,17 @@ export function FactoryHero() {
                 {homeCopy.viewDocs}
               </MarketingSiteLink>
             </Button>
-            <span className="ms-1 inline-flex items-center lg:pointer-events-auto gap-1.5 rounded-full border border-border bg-background/80 px-3 py-1 text-[12px] text-muted-foreground backdrop-blur-sm">
-              <McpIcon className="size-3.5" />
-              {homeCopy.mcpIncluded}
-            </span>
           </div>
         </div>
       </div>
 
       <FactoryStage className="mt-4 h-[clamp(400px,70vw,560px)] sm:mt-6 lg:absolute lg:inset-0 lg:z-0 lg:mt-0 lg:h-auto" />
+      {/* Over the copy: a hologram that is on is drawn here, so it stands in front of the copy (see the engine's `setFront`). */}
+      <canvas
+        data-factory-front
+        aria-hidden
+        className="factory-stage pointer-events-none absolute inset-0 z-[2] hidden h-full w-full lg:block"
+      />
     </section>
   )
 }

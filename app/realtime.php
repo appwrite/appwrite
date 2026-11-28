@@ -602,6 +602,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
         foreach ($eventTailRegistry->getConnections() as $connection) {
             if ($realtime->isExpired($connection, $now)) {
                 $eventTailRegistry->removeConnection($connection);
+                $realtime->markClosing($connection);
                 $server->send([$connection], $unauthorizedPayloadJson);
                 $server->close($connection, $unauthorized->getCode());
             }
@@ -664,6 +665,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                     $receivers = [];
                     foreach (\array_keys($realtime->getSubscribers($event)) as $id) {
                         if ($realtime->isExpired($id, $now)) {
+                            $realtime->markClosing($id);
                             $server->send([$id], $unauthorizedPayloadJson);
                             $server->close($id, $unauthorized->getCode());
                             continue;
@@ -1209,6 +1211,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $responsePayloadJson = json_encode($response);
         $server->send([$connection], $responsePayloadJson);
         $outboundBytes += \strlen($responsePayloadJson);
+        $realtime->markClosing($connection);
         $server->close($connection, $code);
 
         if (System::getEnv('_APP_ENV', 'production') === 'development') {
@@ -1250,6 +1253,26 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
 
     $error = null;
     try {
+        if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
+            $isRateLimited = $container->get('timelimit')(
+                'project:{project},container:{container},connection:{connection}',
+                APP_LIMIT_REALTIME_MESSAGES,
+                60,
+                fn (TimeLimit $timeLimit): bool => $timeLimit
+                    ->withParams([
+                        '{project}' => (string) $projectId,
+                        '{container}' => (string) $containerId,
+                        '{connection}' => (string) $connection,
+                    ])
+                    ->check()
+                    ->limited,
+            );
+
+            if ($isRateLimited) {
+                throw new Exception(Exception::REALTIME_TOO_MANY_MESSAGES);
+            }
+        }
+
         $response = new Response(new SwooleResponse());
 
         // Build a fresh Authorization per message. The connection-scoped instance is shared
@@ -1309,20 +1332,6 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
             checkForProjectUsage($project);
         }
 
-        /*
-         * Abuse Check
-         *
-         * Abuse limits are sending 32 times per minute and connection.
-         */
-        // Connection ids are only unique within a container, so the key carries the container too.
-        $isRateLimited = $container->get('timelimit')('project:{project},container:{container},connection:{connection}', 32, 60, function (TimeLimit $timeLimit) use ($connection, $containerId, $projectId): bool {
-            return $timeLimit->withParams(['{project}' => (string) $projectId, '{connection}' => (string) $connection, '{container}' => (string) $containerId])->check()->limited && System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled';
-        });
-
-        if ($isRateLimited) {
-            throw new Exception(Exception::REALTIME_TOO_MANY_MESSAGES, 'Too many messages.');
-        }
-
         // Record realtime inbound bytes for this project
         // not making this a part of the dispatcher as we need to get the inbound bytes as well even if we dont enter the dispatcher
         if ($project !== null && !$project->isEmpty()) {
@@ -1348,6 +1357,7 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
         // expired credentials with a session's.
         if ($messageType !== 'authentication' && $realtime->isExpired($connection, \time())) {
             $responseCode = $unauthorized->getCode();
+            $realtime->markClosing($connection);
             $server->send([$connection], $unauthorizedPayloadJson);
             $server->close($connection, $unauthorized->getCode());
             $outboundBytes += \strlen($unauthorizedPayloadJson);
@@ -1435,7 +1445,8 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
         $server->send([$connection], $responsePayloadJson);
         $outboundBytes += \strlen($responsePayloadJson);
 
-        if ($th->getCode() === 1008) {
+        if (\in_array($th->getCode(), [1008, 1013], true)) {
+            $realtime->markClosing($connection);
             $server->close($connection, $th->getCode());
         }
     } finally {

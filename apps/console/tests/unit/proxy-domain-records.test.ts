@@ -2,9 +2,11 @@ import { describe, expect, test } from 'bun:test'
 import { AppwriteException } from '@appwrite.io/console'
 import {
   getClaimRecord,
+  getOrganizationDomainClaimRecord,
   getRecordName,
   getVerificationMethods,
   isDomainClaimError,
+  isOrganizationDomainClaimError,
 } from '@/lib/utils/proxy-domains'
 
 describe('getRecordName', () => {
@@ -29,14 +31,14 @@ describe('getVerificationMethods', () => {
     nameservers: ['ns1.appwrite.zone', 'ns2.appwrite.zone'],
   }
 
-  test('leads an apex on Cloud with the nameservers, then A and AAAA, not a CNAME on @', () => {
+  test('offers an apex on Cloud an ALIAS, then the nameservers, never A or AAAA', () => {
     expect(
       getVerificationMethods({
         domain: 'example.com',
         cloud: true,
         ...targets,
       }),
-    ).toEqual(['nameservers', 'a', 'aaaa', 'cname'])
+    ).toEqual(['alias', 'nameservers'])
   })
 
   test('leads a subdomain on Cloud with the CNAME and keeps A, AAAA and nameservers hidden', () => {
@@ -49,14 +51,14 @@ describe('getVerificationMethods', () => {
     ).toEqual(['cname'])
   })
 
-  test('leads an apex on self-hosted with A and AAAA', () => {
+  test('offers an apex on self-hosted an ALIAS, not A and AAAA', () => {
     expect(
       getVerificationMethods({
         domain: 'example.com',
         cloud: false,
         ...targets,
       }),
-    ).toEqual(['a', 'aaaa', 'cname'])
+    ).toEqual(['alias'])
   })
 
   test('leaves out what the server does not report', () => {
@@ -67,7 +69,16 @@ describe('getVerificationMethods', () => {
         cname: 'cloud.appwrite.io',
         nameservers: [],
       }),
-    ).toEqual(['cname'])
+    ).toEqual(['alias'])
+    expect(
+      getVerificationMethods({
+        domain: 'app.example.com',
+        cloud: false,
+        a: '1.2.3.4',
+        aaaa: '::1',
+        nameservers: [],
+      }),
+    ).toEqual(['a', 'aaaa'])
   })
 })
 
@@ -85,6 +96,44 @@ describe('getClaimRecord', () => {
     expect(getClaimRecord('in.mail.example.co.uk', 'project1').name).toBe(
       '_appwrite.in.mail',
     )
+  })
+})
+
+describe('getOrganizationDomainClaimRecord', () => {
+  test('puts domain:<organizationId> at _appwrite, not the team:<id> of a sign-on domain', () => {
+    expect(getOrganizationDomainClaimRecord('example.com', 'org1')).toEqual({
+      type: 'TXT',
+      name: '_appwrite',
+      value: 'domain:org1',
+      ttl: 3600,
+    })
+    expect(
+      getOrganizationDomainClaimRecord('shop.example.co.uk', 'org1').name,
+    ).toBe('_appwrite.shop')
+  })
+})
+
+describe('isOrganizationDomainClaimError', () => {
+  test('asks for a claim only when another organization holds the domain', () => {
+    expect(
+      isOrganizationDomainClaimError(
+        new AppwriteException(
+          'This domain belongs to another organization.',
+          409,
+          'domain_claim_required',
+        ),
+      ),
+    ).toBe(true)
+    expect(
+      isOrganizationDomainClaimError(
+        new AppwriteException(
+          'Domain with provided name already exists.',
+          409,
+          'domain_already_exists',
+        ),
+      ),
+    ).toBe(false)
+    expect(isOrganizationDomainClaimError(new Error('network'))).toBe(false)
   })
 })
 

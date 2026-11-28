@@ -1,5 +1,6 @@
 import type { LucideIcon } from 'lucide-react'
 import {
+  BellRing,
   BotMessageSquare,
   Code2,
   Command,
@@ -71,6 +72,7 @@ const MARKDOC_ICON_FILE_OVERRIDES: Record<string, string> = {
   'web-icon-resend': 'resend.svg',
   'web-icon-ses': 'amazon.svg',
   'web-icon-amazon': 'amazon.svg',
+  bird: 'bird.svg',
   'icon-twilio': 'twilio.svg',
   'icon-msg91': 'msg91.svg',
   'icon-vonage': 'vonage.svg',
@@ -94,6 +96,7 @@ const MARKDOC_LUCIDE_ICONS: Record<string, LucideIcon> = {
   text: Type,
   sparkles: Sparkles,
   trophy: Trophy,
+  bell: BellRing,
 }
 
 function stripMarkdocIconPrefix(icon: string): string {

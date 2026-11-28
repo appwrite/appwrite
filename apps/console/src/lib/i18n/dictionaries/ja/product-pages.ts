@@ -506,8 +506,8 @@ export const jaProductPagesDictionary: Record<string, string> = {
     '標準クライアントとコンソール内 SQL エディタで使えるホスト型 PostgreSQL と MySQL。pgvector、PostGIS、移植可能なスキーマ、既存の ORM をそのまま使えます。',
   'Run managed PostgreSQL next to tables, documents, and vectors. Connect with Prisma or psql, install pgvector, and scale dedicated compute with backups, replicas, and PITR.':
     'テーブル、ドキュメント、ベクトルと並べてマネージド PostgreSQL を実行します。Prisma または psql で接続し、pgvector をインストールし、バックアップ、レプリカ、PITR 付きの専用コンピュートをスケールできます。',
-  'Yes. Native PostgreSQL databases are dedicated, managed PostgreSQL instances in your project region. You connect with psql, Prisma, Drizzle, or any PostgreSQL driver over TLS. Appwrite provisions compute, backups, replicas, a connection pooler, and point-in-time recovery. PostgreSQL 18 is the default, with 17 also supported.':
-    'はい。ネイティブ PostgreSQL データベースは、プロジェクトのリージョンにプロビジョニングされる専用のマネージド PostgreSQL インスタンスです。psql、Prisma、Drizzle、または任意の PostgreSQL ドライバーで TLS 経由で接続します。Appwrite がコンピュート、バックアップ、レプリカ、コネクションプーラー、ポイントインタイムリカバリを用意します。既定は PostgreSQL 18 で、17 もサポートされます。',
+  'Yes. Native PostgreSQL databases are dedicated, managed PostgreSQL instances in your project region. You connect with psql, Prisma, Drizzle, or any PostgreSQL driver over TLS. Appwrite provisions compute, backups, replicas, a connection pooler, and point-in-time recovery. PostgreSQL 19 is the default, with 17 and 18 also supported.':
+    'はい。ネイティブ PostgreSQL データベースは、プロジェクトのリージョンにプロビジョニングされる専用のマネージド PostgreSQL インスタンスです。psql、Prisma、Drizzle、または任意の PostgreSQL ドライバーで TLS 経由で接続します。Appwrite がコンピュート、バックアップ、レプリカ、コネクションプーラー、ポイントインタイムリカバリを用意します。既定は PostgreSQL 19 で、17 と 18 もサポートされます。',
   'Databases for every data model': 'あらゆるデータモデル向けのデータベース',
   'Do Appwrite DBs integrate with Auth permissions?':
     'Appwrite DBs は認証の権限と連携しますか?',
@@ -852,8 +852,8 @@ export const jaProductPagesDictionary: Record<string, string> = {
     'どの PostgreSQL バージョンを実行できますか。後からアップグレードできますか?',
   'New databases run PostgreSQL 18 by default, and you can create one on PostgreSQL 17 by passing a version at create time. The version can be upgraded later and upgrades run online: a second instance is provisioned on the new version, data streams over with logical replication, and traffic cuts over once replication catches up. Reads continue throughout, but the old instance is fenced read-only at the cutover and client connections are closed, so your application has to reconnect. Check that your installed extensions support the target version first.':
     '新しいデータベースは既定で PostgreSQL 18 で動作し、作成時にバージョンを指定すれば PostgreSQL 17 でも作成できます。バージョンは後からアップグレードでき、アップグレードはオンラインで実行されます。新しいバージョンで 2 台目のインスタンスがプロビジョニングされ、論理レプリケーションでデータが流れ込み、レプリケーションが追いついた時点でトラフィックが切り替わります。その間も読み取りは継続しますが、切り替え時に旧インスタンスは読み取り専用に固定され、クライアント接続は閉じられるため、アプリケーション側で再接続が必要です。まず、インストール済みの拡張機能が対象バージョンに対応しているか確認してください。',
-  'New databases run PostgreSQL 18 by default, and you can pick PostgreSQL 17 at create time. Upgrades run online: a second instance is provisioned on the new version, data streams over with logical replication, and traffic cuts over once it catches up. Connections are closed at the cutover, so your application has to reconnect.':
-    '新しいデータベースは既定で PostgreSQL 18 で動作し、作成時に PostgreSQL 17 を選ぶこともできます。アップグレードはオンラインで実行されます。新しいバージョンで 2 台目のインスタンスがプロビジョニングされ、論理レプリケーションでデータが流れ込み、追いついた時点でトラフィックが切り替わります。切り替え時に接続は閉じられるため、アプリケーション側で再接続が必要です。',
+  'New databases run PostgreSQL 19 by default, and you can pick PostgreSQL 17 or 18 at create time. Upgrades run online: a second instance is provisioned on the new version, data streams over with logical replication, and traffic cuts over once it catches up. Connections are closed at the cutover, so your application has to reconnect.':
+    '新しいデータベースは既定で PostgreSQL 19 で動作し、作成時に PostgreSQL 17 または 18 を選ぶこともできます。アップグレードはオンラインで実行されます。新しいバージョンで 2 台目のインスタンスがプロビジョニングされ、論理レプリケーションでデータが流れ込み、追いついた時点でトラフィックが切り替わります。切り替え時に接続は閉じられるため、アプリケーション側で再接続が必要です。',
   'Which regions can I run a database in?':
     'どのリージョンでデータベースを実行できますか?',
   'Managed PostgreSQL is available in every Appwrite Cloud region: Frankfurt, New York, San Francisco, Singapore, Sydney, and Toronto. A database takes the region of the project that owns it, so there is no per-database region selector. Create your project close to your users first, then create the database. Each database gets a hostname in the form db-<hash>.<region>.appwrite.center and the data does not leave the region.':
@@ -1260,7 +1260,6 @@ export const jaProductPagesDictionary: Record<string, string> = {
     'カタログの一部です。データベースには、hstore や uuid-ossp を含む、インストール可能な拡張機能がすべて表示されます。',
   'Compute credits on every Pro plan':
     'すべての Pro プランに含まれるコンピュートクレジット',
-  Clients: 'クライアント',
   'Specifications and pricing': '仕様と料金',
   'Specifications docs': '仕様のドキュメント',
   'Use the same hostname and credentials with Prisma, Drizzle, Sequelize, TypeORM, SQLAlchemy, psql, and the rest of your PostgreSQL toolchain. Copy DSN, .env, and ORM snippets from the Console Credentials tab, or follow integration guides in the docs.':
@@ -1290,20 +1289,20 @@ export const jaProductPagesDictionary: Record<string, string> = {
   'Upload a WebVTT or SubRip file to Storage and attach it to a video with a name and an ISO 639-2 language code. Uploads are converted to WebVTT and segmented for streaming. Subtitle tracks embedded in the source are extracted automatically during the first encoding job, and you can retag their language at any time.':
     'WebVTT または SubRip ファイルをストレージにアップロードし、名前と ISO 639-2 の言語コードを付けて動画に追加します。アップロードしたファイルは WebVTT に変換され、ストリーミング用にセグメント化されます。ソースに埋め込まれた字幕トラックは最初のエンコードジョブで自動的に抽出され、言語はいつでも付け直せます。',
   'What happens when I delete a video?': '動画を削除するとどうなりますか？',
-  'Deleting a video removes its renditions, subtitles, previews, and transcoded segments. Deleting a profile keeps the renditions that were already encoded with it.':
-    '動画を削除すると、そのレンディション、字幕、プレビュー、トランスコード済みセグメントが削除されます。プロファイルを削除しても、そのプロファイルでエンコード済みのレンディションは残ります。',
+  'Deleting a video removes its renditions, captions, timeline thumbnails, and transcoded segments. Deleting a profile keeps the renditions that were already encoded with it.':
+    '動画を削除すると、そのレンディション、字幕、タイムラインのサムネイル、トランスコード済みセグメントが削除されます。プロファイルを削除しても、そのプロファイルでエンコード済みのレンディションは残ります。',
   'How do you reach a first frame under 100 ms?': '最初のフレームを 100 ms 未満にするには？',
   'The pipeline is designed for that startup budget. Players load a small master manifest, pick a rendition from the ladder that the connection can fetch immediately, and request a short first segment instead of the source file. Use the inspector to watch time to first frame on a real session.':
     'パイプラインはその起動予算向けに設計されています。プレーヤーは小さなマスターマニフェストを読み込み、回線がすぐ取れるレンディションをラダーから選び、ソースファイルではなく短い最初のセグメントを要求します。実際のセッションの最初のフレームまでの時間はインスペクターで確認できます。',
   'Who can manage videos in my organization?': '組織内で誰が動画を管理できますか？',
-  'Videos follows your organization roles. The videos.read and videos.write scopes control who can view and manage videos, profiles, renditions, and subtitles.':
-    '動画は組織のロールに従います。videos.read と videos.write のスコープで、動画、プロファイル、レンディション、字幕を閲覧・管理できるユーザーを制御します。',
+  'Videos follows your organization roles. The videos.read and videos.write scopes control who can view and manage videos, renditions, and captions. The project.videos.profiles.read and project.videos.profiles.write scopes cover encoding profiles.':
+    '動画は組織のロールに従います。videos.read と videos.write のスコープで、動画、レンディション、字幕を閲覧・管理できるユーザーを制御します。エンコードプロファイルは project.videos.profiles.read と project.videos.profiles.write のスコープで制御します。',
   'Start from any file in Storage': 'ストレージ内の任意のファイルから開始',
   'Create a video from a file that is already in a Storage bucket. The first encoding job probes codecs, resolution, frame rate, duration, and bitrate, so you never parse media metadata yourself.':
     'ストレージのバケットにあるファイルから動画を作成します。最初のエンコードジョブがコーデック、解像度、フレームレート、再生時間、ビットレートを解析するので、メディアのメタデータを自分でパースする必要はありません。',
   'Encode an adaptive bitrate ladder': 'アダプティブビットレートラダーをエンコード',
-  'Every new project starts with a default ladder of encoding profiles. Renditions encode in the background and report status and progress until they are ready to stream. Add your own profiles when you need a different resolution or bitrate.':
-    '新しいプロジェクトには、デフォルトのエンコードプロファイルのラダーが用意されています。レンディションはバックグラウンドでエンコードされ、ストリーミングの準備ができるまでステータスと進捗を報告します。別の解像度やビットレートが必要なときは独自のプロファイルを追加できます。',
+  'Start from resolution presets or define your own encoding profiles. Renditions encode in the background and report status and progress until they are ready to stream.':
+    '解像度のプリセットから始めるか、独自のエンコードプロファイルを定義します。レンディションはバックグラウンドでエンコードされ、ストリーミングの準備ができるまでステータスと進捗を報告します。',
   'HLS, DASH, and CMAF from one source': '1 つのソースから HLS、DASH、CMAF',
   'Package each rendition for the players you support. Every output has a master manifest that players follow to the right rendition for each viewer and connection.':
     'サポートするプレーヤーに合わせて各レンディションをパッケージします。各出力にはマスターマニフェストがあり、プレーヤーは視聴者と回線に合ったレンディションを選びます。',
@@ -1311,8 +1310,8 @@ export const jaProductPagesDictionary: Record<string, string> = {
   'Upload WebVTT or SubRip files from Storage, or use the tracks already embedded in the source. Tag each track with a language, choose a default, and players pick it up from the manifest.':
     'ストレージから WebVTT や SubRip ファイルをアップロードするか、ソースに埋め込まれたトラックをそのまま使えます。各トラックに言語を設定してデフォルトを選べば、プレーヤーはマニフェストから読み込みます。',
   'Scrubbing thumbnails on the timeline': 'タイムラインのシークサムネイル',
-  'Generate sprite sheets with a WebVTT index so viewers see a preview frame while they scrub. The same sprites give every video a poster image.':
-    'WebVTT インデックス付きのスプライトシートを生成し、視聴者がシーク中にプレビューフレームを見られるようにします。同じスプライトがすべての動画のポスター画像にもなります。',
+  'Generate sprite sheets with a WebVTT index so viewers see a preview frame while they scrub.':
+    'WebVTT インデックス付きのスプライトシートを生成し、視聴者がシーク中にプレビューフレームを見られるようにします。',
   'Play anywhere': 'どこでも再生',
   'Hand the master manifest URL to hls.js, dash.js, Shaka Player, AVPlayer, or ExoPlayer. Or copy an embed snippet from the Console and drop it into any page.':
     'マスターマニフェストの URL を hls.js、dash.js、Shaka Player、AVPlayer、ExoPlayer に渡すだけです。コンソールから埋め込みスニペットをコピーして、任意のページに貼り付けることもできます。',
@@ -1336,7 +1335,6 @@ export const jaProductPagesDictionary: Record<string, string> = {
   '3 outputs': '3 つの出力',
   'HLS, DASH, and CMAF': 'HLS、DASH、CMAF',
   Adaptive: 'アダプティブ',
-  'Default bitrate ladder': 'デフォルトのビットレートラダー',
   'Uploaded or extracted': 'アップロードまたは抽出',
   Timeline: 'タイムライン',
   'Scrubbing thumbnails': 'シークサムネイル',
@@ -1396,4 +1394,575 @@ export const jaProductPagesDictionary: Record<string, string> = {
   'Segment to paint a frame': 'フレーム描画までのセグメント',
   'Picture on screen': '映像を表示中',
   'Climbs the ladder': 'ラダーを上がる',
+
+  // Monitors, Beep, and Reviews product pages
+  // Beep product page
+  'Beep: the Appwrite Cloud app for your phone':
+    'Beep: スマートフォン向けの Appwrite Cloud アプリ',
+  'Appwrite Beep is the free Appwrite Cloud app for iPhone, iPad, and Android. Get a push when a monitor fires, acknowledge it for your team, page the next person in line, and check usage across every project.':
+    'Appwrite Beep は、iPhone、iPad、Android 向けの無料の Appwrite Cloud アプリです。モニターでアラートが発生するとプッシュ通知を受け取り、確認済みにしてチームに知らせたり、次の担当者を呼び出したり、すべてのプロジェクトの使用量を確認したりできます。',
+  'Your projects, in your pocket': 'プロジェクトを、ポケットに',
+  'Appwrite Beep is the Appwrite Cloud app for iPhone, iPad, and Android. Get a push the moment a monitor fires, acknowledge it for your team, and check usage across every project. You choose what reaches you.':
+    'Appwrite Beep は、iPhone、iPad、Android 向けの Appwrite Cloud アプリです。モニターでアラートが発生した瞬間にプッシュ通知を受け取り、確認済みにしてチームに知らせたり、すべてのプロジェクトの使用量を確認したりできます。受け取る通知は自分で選べます。',
+  'On the App Store and Google Play': 'App Store と Google Play で配信中',
+  'All your organizations and projects': 'すべての組織とプロジェクト',
+  'Acknowledge, snooze, or mute': '確認済みにする、スヌーズ、ミュート',
+  '30 minutes to 24 hours': '30 分から 24 時間まで',
+  'Rings through silent mode on Android':
+    'Android ではサイレントモードでも鳴動',
+  'What is Appwrite Beep?': 'Appwrite Beep とは何ですか?',
+  'Beep is the Appwrite Cloud app for your phone. It pushes alerts from your monitors as they fire and resolve, lets you acknowledge, snooze, and escalate them, and shows usage, Appwrite Cloud status, and the changelog for every organization and project you belong to.':
+    'Beep は、スマートフォン向けの Appwrite Cloud アプリです。モニターのアラートを発生時と解決時にプッシュ通知で届け、アラートを確認済みにしたり、スヌーズしたり、エスカレーションしたりできます。また、所属するすべての組織とプロジェクトの使用量、Appwrite Cloud のステータス、変更履歴も確認できます。',
+  'Is Beep free?': 'Beep は無料ですか?',
+  'Yes. Beep is free on the App Store and Google Play, with no ads or in-app purchases. Sign in with your Appwrite Cloud account. The monitors that send alerts follow your organization’s plan.':
+    'はい。Beep は App Store と Google Play で無料で提供されており、広告やアプリ内課金はありません。Appwrite Cloud のアカウントでサインインしてください。アラートを送信するモニターの利用範囲は、組織のプランによって決まります。',
+  'Which notifications reach my phone?':
+    'どの通知がスマートフォンに届きますか?',
+  'Alerts from usage monitors, budget thresholds, and HTTP, DNS, TCP, and SMTP endpoint checks when they fire, and when they resolve if you want, plus a push when Appwrite publishes a changelog entry. Appwrite Cloud incidents show in the Updates tab.':
+    '使用量モニター、予算のしきい値、HTTP、DNS、TCP、SMTP のエンドポイントチェックのアラートが、発生したとき (希望すれば解決したときも) に届きます。Appwrite が変更履歴を公開したときにもプッシュ通知が届きます。Appwrite Cloud の障害情報は「アップデート」タブに表示されます。',
+  'Appwrite Monitors': 'Appwrite Monitors',
+  'Who gets a push when a monitor fires?':
+    'モニターでアラートが発生したとき、誰にプッシュ通知が届きますか?',
+  'The organization roles the monitor notifies, Owners by default, on every phone where they are signed in to Beep. With an escalation, each step notifies its roles and people in turn until someone acknowledges the alert or it resolves. The same people also get an email and a Console notification.':
+    'モニターが通知する組織のロール (デフォルトはオーナー) のメンバーに、Beep にサインインしているすべてのスマートフォンで届きます。エスカレーションを設定している場合は、誰かがアラートを確認済みにするか、アラートが解決するまで、各ステップのロールとメンバーに順番に通知します。同じメンバーには、メールとコンソール通知も届きます。',
+  'Can I stop notifications without missing alerts?':
+    'アラートを見逃さずに通知を止められますか?',
+  'Yes. Snooze one organization or all of them for 30 minutes, 1 hour, 4 hours, or 24 hours, turn off organizations and projects you don’t watch, or mute a single monitor. Snoozed alerts still fire and still show in Beep, the Console, and email. Muting a monitor also stops its emails to you.':
+    'はい。1 つの組織またはすべての組織を 30 分、1 時間、4 時間、24 時間スヌーズしたり、見ていない組織やプロジェクトをオフにしたり、特定のモニターだけをミュートしたりできます。スヌーズ中もアラートは発生し、Beep、コンソール、メールに表示されます。モニターをミュートすると、そのモニターからあなた宛てのメールも止まります。',
+  'Do critical alerts ring through silent mode?':
+    '重大なアラートはサイレントモードでも鳴りますか?',
+  'On Android, yes. Monitors your team sets to Critical ring at alarm volume, even on silent, and in Do Not Disturb once you let Beep’s critical alerts override it. On iPhone, critical monitors arrive as normal notifications that follow your silent switch and Focus for now.':
+    'Android では鳴ります。チームが「重大」に設定したモニターは、サイレントモードでもアラームの音量で鳴ります。Beep の重大なアラートがおやすみモードより優先されるよう許可すれば、おやすみモード中も鳴ります。iPhone では現在、重大なモニターも通常の通知として届き、サイレントスイッチと集中モードの設定に従います。',
+  'Can I create monitors in Beep?': 'Beep でモニターを作成できますか?',
+  'Monitors are created in the Console. In Beep you can acknowledge alerts, adjust a usage monitor’s threshold, pause or resume a monitor, and create and assign escalations.':
+    'モニターはコンソールで作成します。Beep では、アラートを確認済みにしたり、使用量モニターのしきい値を調整したり、モニターを一時停止・再開したり、エスカレーションを作成して割り当てたりできます。',
+  'Does Beep work with self-hosted Appwrite?':
+    'Beep はセルフホストの Appwrite でも使えますか?',
+  'No. Beep signs in to Appwrite Cloud only.':
+    'いいえ。Beep がサインインできるのは Appwrite Cloud のみです。',
+  'Put your projects in your pocket': 'プロジェクトを、いつでも手元に',
+  'Download Beep, sign in with your Appwrite account, and choose what reaches you.':
+    'Beep をダウンロードして Appwrite アカウントでサインインし、受け取る通知を選びましょう。',
+  'Know the moment a monitor fires': 'アラートの発生をその瞬間に把握',
+  'Usage monitors, budget thresholds, and endpoint checks push to every phone you are signed in on, with the severity in the title and the reading in the body. Acknowledge, snooze for an hour, or mute the monitor right from the notification.':
+    '使用量モニター、予算のしきい値、エンドポイントチェックのアラートが、サインインしているすべてのスマートフォンにプッシュ通知で届きます。タイトルには重大度、本文には測定値が表示されます。通知から直接、確認済みにしたり、1 時間スヌーズしたり、モニターをミュートしたりできます。',
+  'Know how bad it really is': 'どれほど深刻かを正確に把握',
+  'Open an alert for the reading against its threshold, its peak, and the hours around it. Endpoint checks show the result, the response time, and when the certificate expires. Acknowledge it so your team sees you have it, adjust the threshold, or jump to the project.':
+    'アラートを開くと、しきい値に対する測定値、ピーク、前後数時間の推移を確認できます。エンドポイントチェックでは、結果、応答時間、証明書の有効期限が表示されます。確認済みにして対応中であることをチームに知らせたり、しきい値を調整したり、プロジェクトに移動したりできます。',
+  'Page the next person in line': '次の担当者を呼び出す',
+  'Give a monitor an escalation and Beep notifies each step’s roles and people in turn, right away or after a wait you choose, until someone acknowledges the alert or it resolves. Create, edit, and assign escalations from your phone.':
+    'モニターにエスカレーションを設定すると、誰かがアラートを確認済みにするか、アラートが解決するまで、Beep が各ステップのロールとメンバーに順番に通知します。通知は、すぐに、または指定した待機時間の後に送られます。エスカレーションの作成、編集、割り当てはスマートフォンからも行えます。',
+  'Appwrite Cloud, at a glance': 'Appwrite Cloud をひと目で',
+  'Home shows what is firing, how Appwrite Cloud is doing, and two weeks of alerts by severity, with your projects one tap away. Switch organizations from the menu and everything follows.':
+    'ホームには、発生中のアラート、Appwrite Cloud の稼働状況、重大度別の 2 週間分のアラートが表示され、プロジェクトにもワンタップでアクセスできます。メニューから組織を切り替えると、すべての表示がその組織に切り替わります。',
+  'Usage for every project': 'すべてのプロジェクトの使用量',
+  'Search and filter every project in the organization, with firing ones first. Open one for bandwidth, requests, storage, executions, and compute over the last day, week, or month, next to the databases, functions, sites, and users it holds.':
+    '組織内のすべてのプロジェクトを検索、絞り込みでき、アラートが発生中のプロジェクトが先頭に表示されます。プロジェクトを開くと、過去 1 日、1 週間、1 か月の帯域幅、リクエスト、ストレージ、実行、コンピュートを、そのプロジェクトにあるデータベース、関数、サイト、ユーザーとあわせて確認できます。',
+  'You choose what reaches you': '受け取る通知を自分で選べる',
+  'Turn organizations and projects on or off, decide whether resolved alerts and Appwrite updates reach you, and mute a single noisy monitor. Your choices belong to your account, so they apply on every device and in the Console.':
+    '組織やプロジェクトごとに通知をオン・オフしたり、解決済みのアラートや Appwrite のアップデートを受け取るかどうかを決めたり、通知の多いモニターを個別にミュートしたりできます。設定はアカウントに保存されるため、すべてのデバイスとコンソールに適用されます。',
+  'Quiet the noise while you fix it': '対応中は通知を静かに',
+  'When one incident sends a burst of pushes, Home offers to snooze. Pause one organization or all of them for up to 24 hours. Alerts keep firing and showing in Beep, the Console, and email, and Beep tells you when notifications are back on.':
+    '1 つの障害でプッシュ通知が集中して届くと、ホームにスヌーズの提案が表示されます。1 つの組織またはすべての組織の通知を最大 24 時間停止できます。その間もアラートは発生し、Beep、コンソール、メールに表示され、通知が再開すると Beep がお知らせします。',
+  'Ring through silent mode': 'サイレントモードでも鳴らす',
+  'On Android, monitors your team sets to Critical ring like an alarm, at alarm volume, even on silent, and in Do Not Disturb once you allow it. Everything else stays a normal notification.':
+    'Android では、チームが「重大」に設定したモニターが、サイレントモードでもアラームと同じ音量でアラームのように鳴り、許可すればおやすみモード中も鳴ります。それ以外は通常の通知のままです。',
+  'Keep up with every release': 'すべてのリリースを見逃さない',
+  'The Updates tab shows Appwrite Cloud incidents as they happen and every changelog entry, with a push when something new ships. Read it in the app, or turn product updates off in settings.':
+    '「アップデート」タブには、Appwrite Cloud の障害情報が発生と同時に表示されるほか、すべての変更履歴も表示され、新機能のリリース時にはプッシュ通知が届きます。アプリ内で読むことも、設定でプロダクトアップデートをオフにすることもできます。',
+  'On every device you carry': '持ち歩くすべてのデバイスで',
+  'Beep runs on iPhone, iPad, Android phones and foldables, and Macs with Apple silicon. Sign in once with your Appwrite account and every device gets your alerts.':
+    'Beep は、iPhone、iPad、Android のスマートフォンと折りたたみ端末、Apple シリコン搭載の Mac で動作します。Appwrite アカウントでサインインするだけで、すべてのデバイスにアラートが届きます。',
+  'Now · Outbound bandwidth': '現在 · 送信帯域幅',
+  '> 5 GB threshold · peak 6.9 GB': 'しきい値 > 5 GB · ピーク 6.9 GB',
+  Adjust: '調整',
+  'Around this alert, per hour': 'アラート前後の推移 (1 時間ごと)',
+  Announced: '通知回数',
+  'Open in console': 'コンソールで開く',
+  'Mute this monitor': 'このモニターをミュート',
+  Budget: '予算',
+  Home: 'ホーム',
+  'Outbound bandwidth · storefront-prod': '送信帯域幅 · storefront-prod',
+  'Checkout API health': 'チェックアウト API のヘルスチェック',
+  'Budget at 100%': '予算の 100% に到達',
+  'Budget used · Organization budget': '予算使用率 · 組織の予算',
+  'Do Not Disturb': 'おやすみモード',
+  'Critical alerts': '重大なアラート',
+  'Open alert': 'アラートを開く',
+  'Ring for what matters': '大事なアラートだけを鳴らす',
+  'Monitors your team sets to Critical ring this phone like an alarm, even on silent and in Do Not Disturb. Everything else stays a normal notification.':
+    'チームが「重大」に設定したモニターは、サイレントモードやおやすみモードでも、このスマートフォンをアラームのように鳴らします。それ以外は通常の通知のままです。',
+  'Set monitors to Critical': 'モニターを「重大」に設定',
+  'In the console, as a usage monitor’s severity or on a budget threshold.':
+    'コンソールで、使用量モニターの重大度として、または予算のしきい値で設定します。',
+  'Let them override Do Not Disturb': 'おやすみモードより優先させる',
+  'Android asks you to switch it on for the channel.':
+    'Android から、通知チャンネルでオンにするよう求められます。',
+  'Set the volume': '音量を設定',
+  'They ring at your alarm volume.': 'アラームの音量で鳴ります。',
+  'iOS 16.4 or later, in light or dark mode with your system.':
+    'iOS 16.4 以降。システムの設定に合わせて、ライトモードとダークモードで表示されます。',
+  'A dashboard layout with what is firing, usage, and projects side by side.':
+    '発生中のアラート、使用量、プロジェクトを並べて表示するダッシュボードレイアウト。',
+  'Phones and foldables, with critical alerts that ring through silent mode.':
+    'スマートフォンと折りたたみ端末に対応し、重大なアラートはサイレントモードでも鳴ります。',
+  Mac: 'Mac',
+  'Runs on Macs with Apple silicon, with a sidebar instead of tabs.':
+    'Apple シリコン搭載の Mac で動作し、タブの代わりにサイドバーで操作します。',
+  'Your Appwrite account': 'Appwrite アカウント',
+  'Sign in with GitHub, Google, or email, with the same MFA as the Console.':
+    'GitHub、Google、メールでサインインでき、コンソールと同じ MFA が適用されます。',
+  'Works offline': 'オフラインでも利用可能',
+  'Lose signal and Beep shows the last data it loaded, for up to 24 hours.':
+    '電波が届かなくなっても、Beep は最後に読み込んだデータを最大 24 時間表示します。',
+  Shortcuts: 'ショートカット',
+  'Long-press the app icon for firing alerts, or to snooze for an hour.':
+    'アプリアイコンを長押しすると、発生中のアラートを確認したり、1 時間スヌーズしたりできます。',
+  'Free on the App Store and Google Play, with no ads or in-app purchases.':
+    'App Store と Google Play で無料。広告やアプリ内課金はありません。',
+  'Who an alert notifies, step by step, until someone acknowledges it or it resolves.':
+    '確認済みになるか解決するまで、アラートを順に通知する相手。',
+  'Then repeats 2 more times': 'その後、さらに 2 回繰り返し',
+  'Your team sees that you have it, and the escalation stops.':
+    '対応中であることがチームに伝わり、エスカレーションが止まります。',
+  'Create and edit escalations on the phone':
+    'スマートフォンでエスカレーションを作成・編集',
+  '3 firing': '3 件が発生中',
+  '2 critical · 1 error · 2 acknowledged':
+    '重大 2 件 · エラー 1 件 · 確認済み 2 件',
+  'Appwrite Cloud · Delayed Realtime events':
+    'Appwrite Cloud · Realtime イベントの遅延',
+  'Alerts fired · last 14 days': '発生したアラート · 過去 14 日間',
+  '4 critical · busiest day Nov 19, 8 alerts':
+    '重大 4 件 · 最多は 11月19日の 8 件',
+  'See all': 'すべて表示',
+  'Frankfurt · 379K requests in 24h':
+    'フランクフルト · 24 時間で 379K リクエスト',
+  'New York · 432K requests in 24h': 'ニューヨーク · 24 時間で 432K リクエスト',
+  'Sydney · 58K requests in 24h': 'シドニー · 24 時間で 58K リクエスト',
+  'Requests · 24h': 'リクエスト · 24 時間',
+  '375K previous 24h': '直前の 24 時間は 375K',
+  'In this project': 'このプロジェクトのリソース',
+  'Thursday, December 3': '12月3日 木曜日',
+  'Your team sees you have it': '対応中であることがチームに伝わります',
+  'Snooze 1 hour': '1 時間スヌーズ',
+  Snooze: 'スヌーズ',
+  'Resolved alerts': '解決済みのアラート',
+  'When an alert stops firing': 'アラートが解決したとき',
+  'When Appwrite publishes a changelog entry':
+    'Appwrite が変更履歴を公開したとき',
+  'Acme Inc': 'Acme Inc',
+  'Side projects': 'サイドプロジェクト',
+  '7 notifications in 30 minutes': '30 分間に 7 件の通知',
+  'Snooze notifications while you look into it. Alerts keep showing here and in the console.':
+    '調査中は通知をスヌーズできます。アラートは引き続きここやコンソールに表示されます。',
+  'Snooze notifications': '通知をスヌーズ',
+  'All organizations': 'すべての組織',
+  'No notifications from Acme Inc until then, critical alerts included, on all your devices. Alerts still fire and show here, in the console and in email.':
+    'それまでは、重大なアラートも含め、Acme Inc からの通知はどのデバイスにも届きません。アラートは引き続き発生し、ここ、コンソール、メールに表示されます。',
+  'Cloud status': 'Cloud のステータス',
+  'Ongoing · Nov 19 at 4:14 PM': '継続中 · 11月19日 午後4:14',
+  'Delayed Realtime events': 'Realtime イベントの遅延',
+  Changelog: '変更履歴',
+  'One-click APNs setup with the Appwrite CLI':
+    'Appwrite CLI で APNs をワンクリック設定',
+  'Set up APNs for an iOS app with one CLI command':
+    'CLI コマンド 1 つで iOS アプリの APNs を設定',
+  'Run appwrite init apns in your iOS project and the CLI sets up push notifications in one command.':
+    'iOS プロジェクトで appwrite init apns を実行すると、CLI がコマンド 1 つでプッシュ通知を設定します。',
+  'Usage monitors for every project':
+    'すべてのプロジェクトで使用量モニターが利用可能に',
+  'Get notified when a project crosses a usage threshold, by email or on your phone.':
+    'プロジェクトの使用量がしきい値を超えると、メールまたはスマートフォンで通知を受け取れます。',
+  '[Critical] Egress spike on storefront-prod':
+    '[重大] 送信トラフィックの急増 (storefront-prod)',
+  '6.2 GB > 5 GB · storefront-prod · Acme Inc · Frankfurt':
+    '6.2 GB > 5 GB · storefront-prod · Acme Inc · フランクフルト',
+  '[Error] Checkout API health on checkout-api':
+    '[エラー] チェックアウト API のヘルスチェック (checkout-api)',
+  'The HTTP check of api.checkout.example.com/v1/health failed: unexpected status code (503).':
+    'api.checkout.example.com/v1/health の HTTP チェックが失敗しました: 想定外のステータスコード (503)。',
+  '[Critical] Budget at 100% on Acme Inc':
+    '[重大] 予算の 100% に到達 (Acme Inc)',
+  '102% > 100% · Organization budget': '102% > 100% · 組織の予算',
+  // Reviews product page
+  'Reviews: AI code review for every pull request':
+    'コードレビュー: すべてのプルリクエストを AI がレビュー',
+  'Appwrite Reviews reviews every pull request on your Sites, Functions, and repositories on GitHub, GitLab, and Bitbucket. A summary, findings on the lines they concern, a verdict, and a merge confidence grade, on the same Git connection, Console, and bill as your deploys.':
+    'Appwrite Reviews は、GitHub、GitLab、Bitbucket 上のサイト、Functions、リポジトリのすべてのプルリクエストをレビューします。概要、該当する行への指摘事項、判定、マージの信頼度を、デプロイと同じ Git 接続、コンソール、請求のまま利用できます。',
+  'Every pull request, reviewed': 'すべてのプルリクエストに、レビューを',
+  'Appwrite Reviews reads each pull request on your Sites, Functions, and repositories, and posts a summary, findings on the lines they concern, a verdict, and a merge confidence grade. It runs on the same Git connection, Console, and bill as your deploys.':
+    'Appwrite Reviews は、サイト、Functions、リポジトリの各プルリクエストを読み込み、概要、該当する行への指摘事項、判定、マージの信頼度を投稿します。デプロイと同じ Git 接続、コンソール、請求で動作します。',
+  'On GitHub, GitLab, and Bitbucket':
+    'GitHub、GitLab、Bitbucket に対応',
+  'Merge confidence on every review': 'すべてのレビューにマージの信頼度',
+  'Each finding checked before it posts': 'すべての指摘を投稿前に検証',
+  'Credits from your Appwrite plan': 'Appwrite プランのクレジットを使用',
+  'For new Sites and Functions': '新しいサイトと Functions で',
+  'What is Appwrite Reviews?': 'Appwrite Reviews とは何ですか?',
+  'Appwrite Reviews is AI code review built into Appwrite. It reviews every pull request on the repositories you turn it on for, and posts a summary, findings on the lines they concern, a verdict, and a merge confidence grade from S to F on the pull request, with the full review and its trace in the Console.':
+    'Appwrite Reviews は、Appwrite に組み込まれた AI コードレビューです。有効にしたリポジトリのすべてのプルリクエストをレビューし、概要、該当する行への指摘事項、判定、S から F までのマージの信頼度をプルリクエストに投稿します。レビューの全文とトレースはコンソールで確認できます。',
+  'Which Git providers are supported?':
+    'どの Git プロバイダーに対応していますか?',
+  'GitHub, GitLab, including self-managed GitLab, and Bitbucket. On GitHub the reviewer is the same Appwrite app that deploys your Sites and Functions. On GitLab and Bitbucket it comments as the account that connected the installation.':
+    'GitHub、GitLab (セルフマネージドの GitLab を含む)、Bitbucket に対応しています。GitHub では、サイトと Functions をデプロイするのと同じ Appwrite アプリがレビュアーになります。GitLab と Bitbucket では、インストールを接続したアカウントとしてコメントします。',
+  'When does a review run?': 'レビューはいつ実行されますか?',
+  'When a pull request is opened, reopened, or marked ready for review, and again when it gets new commits, which are reviewed incrementally. Mention the app with “review” to run it again. Drafts and closed pull requests are skipped.':
+    'プルリクエストが作成、再オープン、またはレビュー準備完了になったときに実行され、新しいコミットが追加されると、その差分を再びレビューします。アプリにメンションして「review」とコメントすると、再実行できます。ドラフトとクローズ済みのプルリクエストはスキップされます。',
+  'What does the reviewer read?': 'レビュアーは何を読み込みますか?',
+  'The pull request and the repository: the diff, the code at the pull request’s head, the title and description, linked issues, failed checks from your other CI apps, dependency changes, and guideline files such as AGENTS.md, CLAUDE.md, and CONTRIBUTING.md. It doesn’t read your Appwrite project’s databases, files, logs, or secrets.':
+    'プルリクエストとリポジトリです。差分、プルリクエストのヘッド時点のコード、タイトルと説明、リンクされた Issue、ほかの CI アプリで失敗したチェック、依存関係の変更、そして AGENTS.md、CLAUDE.md、CONTRIBUTING.md などのガイドラインファイルを読み込みます。Appwrite プロジェクトのデータベース、ファイル、ログ、シークレットは読み込みません。',
+  'Does it approve pull requests?': 'プルリクエストを承認しますか?',
+  'It posts a verdict with every review: approve, request changes, or comment. The verdict and the grade cap are decided by code from the findings, not by the model, and a pull request from someone without write access is not approved by default. Each review also posts a status check, so your branch rules can require it.':
+    'レビューごとに、承認、変更をリクエスト、コメントのいずれかの判定を投稿します。判定とグレードの上限は、モデルではなく指摘事項をもとにコードで決まり、書き込み権限のないユーザーからのプルリクエストはデフォルトでは承認されません。各レビューはステータスチェックも投稿するため、ブランチ保護ルールで必須にできます。',
+  'Can I talk to the reviewer?': 'レビュアーと会話できますか?',
+  'Yes. Reply to any of its findings or mention the app with a question. It reads the code to answer, can resolve or dismiss a finding when the conversation settles it, and can save a learning for later reviews. Answers use no credits.':
+    'はい。指摘に返信するか、アプリにメンションして質問できます。レビュアーはコードを読んで回答し、会話で結論が出れば指摘を解決済みにしたり却下したりできます。また、以降のレビューのために学習を保存することもできます。回答ではクレジットを消費しません。',
+  'How is Reviews priced?': 'コードレビューの料金はどのように決まりますか?',
+  'Reviews use credits from your Appwrite plan, with no per-seat fees. A Basic review uses 10 credits, Normal 50, and Expert 500. Free includes 100 credits a month for your organization, Pro includes 2,000 a month per project, and Scale 20,000. On paid plans, extra credits cost $1 per 100. Answers in conversations, failed reviews, and skipped reviews are free.':
+    'レビューには Appwrite プランのクレジットを使用し、シート単位の料金はかかりません。1 回のレビューで使うクレジットは、ベーシックが 10、ノーマルが 50、エキスパートが 500 です。Free には組織あたり月 100 クレジット、Pro にはプロジェクトあたり月 2,000 クレジット、Scale には 20,000 クレジットが含まれます。有料プランでは、追加クレジットは 100 クレジットあたり $1 です。会話での回答、失敗したレビュー、スキップされたレビューは無料です。',
+  'Does Reviews work with self-hosted Appwrite?':
+    'コードレビューはセルフホストの Appwrite でも使えますか?',
+  'Self-hosted instances can opt in by running the review service with their own model provider. Reviews there read the code without running commands in a sandbox.':
+    'セルフホストのインスタンスでは、独自のモデルプロバイダーでレビューサービスを実行することで利用できます。その場合、レビューはサンドボックスでコマンドを実行せずにコードを読み込みます。',
+  'Review your next pull request': '次のプルリクエストをレビュー',
+  'Turn on Reviews for a repository, open a pull request, and get a summary, findings, and a merge confidence grade where you already work.':
+    'リポジトリでコードレビューを有効にしてプルリクエストを作成すれば、いつもの作業場所で概要、指摘事項、マージの信頼度を受け取れます。',
+  'On where your code already ships':
+    'コードをデプロイする場所で、最初から有効',
+  'Create a site or function from a repository and Review pull requests is already on. Turn it on for any other repository on GitHub, GitLab, or Bitbucket from the Repositories tab, one switch at a time or all at once.':
+    'リポジトリからサイトや関数を作成すると、「プルリクエストをレビュー」が最初から有効になっています。GitHub、GitLab、Bitbucket のほかのリポジトリも、「リポジトリ」タブから 1 つずつ、またはまとめて有効にできます。',
+  'A review on every pull request': 'プルリクエストごとにレビュー',
+  'When a pull request opens or gets new commits, the reviewer posts one summary that it edits in place: what changed, a verdict, and a merge confidence grade from S to F, with the findings, a walkthrough, and what was fixed since the last review. New commits get an incremental review of just what changed.':
+    'プルリクエストが作成されたときや新しいコミットが追加されたとき、レビュアーは概要を 1 つ投稿し、その場で更新していきます。概要には、変更内容、判定、S から F までのマージの信頼度に加え、指摘事項、ウォークスルー、前回のレビュー以降に修正された内容が含まれます。新しいコミットは、変更された部分だけを差分レビューします。',
+  'Findings on the lines they concern': '指摘は該当する行に直接',
+  'Each finding lands on the changed line with its severity, its category, and a plain explanation. When the fix is small, local, and certain, it comes as a suggested change, and every finding carries a prompt to fix it with AI.':
+    '各指摘は、重要度、カテゴリ、わかりやすい説明とともに、変更された行に投稿されます。修正が小さく、局所的で、確実な場合は変更の提案として届き、すべての指摘に AI で修正するためのプロンプトが付きます。',
+  'Grounded in your code, checked before it posts':
+    'コードに基づき、投稿前に検証',
+  'The reviewer reads the whole repository at the pull request’s head, your team’s guideline files, linked issues, and failed checks from your other CI apps. On Normal and Expert it can run commands in an isolated sandbox to confirm a suspected bug, and a second model checks every finding before anything is posted.':
+    'レビュアーは、プルリクエストのヘッド時点のリポジトリ全体、チームのガイドラインファイル、リンクされた Issue、ほかの CI アプリで失敗したチェックを読み込みます。ノーマルとエキスパートでは、隔離されたサンドボックスでコマンドを実行してバグの疑いを確かめられ、投稿前には 2 つめのモデルがすべての指摘を検証します。',
+  'Reply to a finding or mention the app with a question. It reads the code to answer, settles the thread when you are right, and holds its ground on bugs and security issues until the facts say otherwise. Answers use no credits.':
+    '指摘に返信するか、アプリにメンションして質問できます。レビュアーはコードを読んで回答し、あなたが正しければスレッドを解決します。バグやセキュリティの問題については、事実が異なると示されるまで見解を変えません。回答ではクレジットを消費しません。',
+  'It remembers how your team works': 'チームのやり方を記憶',
+  'Ask it to remember a preference in any pull request and it becomes a learning that later reviews and answers in that repository follow. See every learning in the Console, who asked for it, and remove the ones you no longer want.':
+    'どのプルリクエストでも、好みを覚えるよう依頼すると学習として保存され、そのリポジトリでの以降のレビューと回答はそれに従います。コンソールではすべての学習と依頼者を確認でき、不要になった学習は削除できます。',
+  'Choose how hard it looks': 'レビューの深さを選択',
+  'Set a strength per repository. Basic reads the code with cheaper models, Normal runs commands in a sandbox, and Expert splits the work across subagents with stronger models. Each review costs credits from your plan, with no per-seat fees.':
+    'リポジトリごとに強度を設定できます。ベーシックは低コストのモデルでコードを読み、ノーマルはサンドボックスでコマンドを実行し、エキスパートは高性能なモデルで作業をサブエージェントに分担します。各レビューではプランのクレジットを消費し、シート単位の料金はかかりません。',
+  'Ready for your coding agents': 'コーディングエージェントにも対応',
+  'Pull requests from coding agents get reviewed like anyone else’s. The summary and every finding include a prompt to hand to your agent, and Appwrite agent skills read the review, push fixes, and ask again until the pull request reaches Tier S.':
+    'コーディングエージェントが作成したプルリクエストも、ほかの人のプルリクエストと同じようにレビューされます。概要とすべての指摘には、エージェントに渡すためのプロンプトが含まれます。Appwrite の Agent Skills を使えば、エージェントがレビューを読んで修正をプッシュし、プルリクエストがティア S に達するまで再レビューを依頼します。',
+  'See what it catches': 'どんな問題を見つけたかを確認',
+  'The Performance tab shows pull requests reviewed, how many were approved and how many on the first try, findings per pull request, how often findings were fixed rather than dismissed, and the median review time, by author, repository, and category.':
+    '「パフォーマンス」タブには、レビューしたプルリクエスト、承認された数と初回で承認された数、プルリクエストあたりの指摘数、指摘が却下されずに修正された割合、レビュー時間の中央値が、作成者、リポジトリ、カテゴリ別に表示されます。',
+  'From pull request to production, on one platform':
+    'プルリクエストから本番まで、1 つのプラットフォームで',
+  'Reviews is part of the project that builds, hosts, and watches your app. The pull request it reviews deploys to Sites and Functions, Monitors watch what you merged, and Beep pages your phone when something needs you, all in one Console and on one bill.':
+    'コードレビューは、アプリをビルド、ホスティング、監視するプロジェクトの一部です。レビューしたプルリクエストはサイトと Functions にデプロイされ、マージした内容は Monitors が監視し、対応が必要なときは Beep がスマートフォンに知らせます。すべてが 1 つのコンソールと 1 つの請求にまとまっています。',
+  'Every finding includes a prompt to fix it with AI':
+    'すべての指摘に AI で修正するためのプロンプト付き',
+  'Get acme/storefront#482 to Tier S':
+    'acme/storefront#482 をティア S にしてください',
+  'Fix: a wrong password retries forever':
+    '修正: パスワードを間違えると無限にリトライする問題',
+  'Edit src/auth/retry.ts: stop on 401, cap at 5 attempts':
+    'src/auth/retry.ts を編集: 401 で停止し、試行を 5 回までに制限',
+  'git push, then comment @appwrite review':
+    'git push してから @appwrite review とコメント',
+  Gitea: 'Gitea',
+  'on src/mail/send.ts': 'src/mail/send.ts にコメント',
+  'Errors from sendEmail are swallowed':
+    'sendEmail のエラーが握りつぶされています',
+  'just now': 'たった今',
+  'this is fine, the queue retries failed sends.':
+    'これは問題ありません。失敗した送信はキューがリトライします。',
+  'Confirmed in the mail queue: failed sends retry three times, then land in the dead-letter queue. Dismissing this finding.':
+    'メールキューで確認しました。失敗した送信は 3 回リトライされ、その後デッドレターキューに入ります。この指摘は却下します。',
+  'Answers use no credits': '回答ではクレジットを消費しません',
+  'Reviews use your organization’s review credits.':
+    'レビューには組織のレビュークレジットが使われます。',
+  'Suggested change': '変更の提案',
+  'Prompt to fix with AI': 'AI で修正するためのプロンプト',
+  'Reply if this doesn’t apply.': '当てはまらない場合は返信してください。',
+  'Up to 15 inline findings per review':
+    'レビューごとに最大 15 件のインライン指摘',
+  'on #491': '#491 にコメント',
+  'remember: we use early returns instead of nested ifs.':
+    '覚えておいてください: ネストした if ではなく早期リターンを使います。',
+  'Saved. Later reviews and answers in this repository will follow it.':
+    '保存しました。このリポジトリでの以降のレビューと回答はこれに従います。',
+  'Use early returns instead of nested ifs.':
+    'ネストした if ではなく早期リターンを使う。',
+  'Never log tokens, even hashed ones.':
+    'トークンはハッシュ化したものでもログに出力しない。',
+  'Read rows with Query.select, not whole documents.':
+    'ドキュメント全体ではなく、Query.select で行を読み取る。',
+  'A learning can tell the reviewer to flag fewer of them.':
+    '学習で、この種の指摘を控えるようレビュアーに伝えられます。',
+  'One Git connection': '1 つの Git 接続',
+  'The Appwrite Git app that deploys your Sites and Functions reviews their pull requests too.':
+    'サイトと Functions をデプロイする Appwrite の Git アプリが、それらのプルリクエストのレビューも行います。',
+  'Appwrite Reviews': 'Appwrite Reviews',
+  'A summary, findings on the lines they concern, a verdict, and a grade on every pull request.':
+    'すべてのプルリクエストに、概要、該当する行への指摘事項、判定、グレード。',
+  'Sites and Functions': 'サイトと Functions',
+  'A preview for the pull request, then production on merge, with rollbacks one click away.':
+    'プルリクエストごとにプレビューを作成し、マージすると本番に反映されます。ロールバックもワンクリックです。',
+  'Usage thresholds and endpoint checks tell you when what you merged misbehaves.':
+    'マージした変更が問題を起こすと、使用量のしきい値とエンドポイントチェックが知らせます。',
+  'Appwrite Beep': 'Appwrite Beep',
+  'The alert reaches your phone, and the next person in line if nobody acknowledges it.':
+    'アラートがスマートフォンに届き、誰も確認済みにしなければ次の担当者にも届きます。',
+  edited: '編集済み',
+  'Mergeable after minor fixes': '軽微な修正後にマージ可能',
+  'Sign-in now stops on a wrong password and caps retries at five. One minor finding is left: the backoff ignores the Retry-After header.':
+    'サインインは、パスワードが間違っている場合に停止し、リトライを 5 回までに制限するようになりました。重要度が低い指摘が 1 件残っています。バックオフが Retry-After ヘッダーを無視しています。',
+  'Latest changes': '最新の変更',
+  'Stops retrying on 401 responses and adds a limit of five attempts.':
+    '401 レスポンスでリトライを停止し、試行回数を 5 回までに制限します。',
+  'To re-run it, comment:': '再実行するには、次のようにコメントしてください:',
+  'Merge confidence': 'マージの信頼度',
+  'Fix with agent prompt': 'エージェント向けの修正プロンプト',
+  Walkthrough: 'ウォークスルー',
+  'Fixed since the last review': '前回のレビュー以降に修正済み',
+  'Incremental review': '差分レビュー',
+  'A second model checks every finding against the code before anything is posted.':
+    '投稿する前に、2 つめのモデルがすべての指摘をコードと照合して検証します。',
+  'The diff and the repository': '差分とリポジトリ',
+  'Read at the pull request’s head': 'プルリクエストのヘッド時点で読み込み',
+  'Your team’s guidelines': 'チームのガイドライン',
+  'AGENTS.md, CLAUDE.md, CONTRIBUTING.md':
+    'AGENTS.md、CLAUDE.md、CONTRIBUTING.md',
+  'Linked issues': 'リンクされた Issue',
+  'What the change is for': '変更の目的',
+  'Failed checks': '失敗したチェック',
+  'From your other CI apps': 'ほかの CI アプリから',
+  'Dependency changes': '依存関係の変更',
+  'Versions bumped in the lockfile': 'ロックファイルで更新されたバージョン',
+  'Rules your team asked it to keep': 'チームが守るよう依頼したルール',
+  'Kept 3 of 5 findings': '指摘 5 件中 3 件を保持',
+  Posted: '投稿済み',
+  '3 comments and a summary': 'コメント 3 件と概要',
+  '2 min ago': '2 分前',
+  '1 min ago': '1 分前',
+  'Needs changes': '変更が必要',
+  'Adds exponential backoff to sign-in retries. One finding: a wrong password retries forever.':
+    'サインインのリトライに指数バックオフを追加します。指摘が 1 件あります。パスワードを間違えると無限にリトライします。',
+  'One Git app deploys and reviews': '1 つの Git アプリでデプロイもレビューも',
+  // Monitors product page
+  'Monitors: usage alerts and endpoint checks for your Appwrite project':
+    'Monitors: Appwrite プロジェクトの使用量アラートとエンドポイントチェック',
+  'Appwrite Monitors watch your project usage and your endpoints and alert you by email, in the Console, and on your phone when a metric crosses your threshold or a check fails. Escalate, acknowledge, and act on alerts with webhooks, functions, and MCP.':
+    'Appwrite Monitors は、プロジェクトの使用量とエンドポイントを監視し、メトリクスがしきい値を超えたときやチェックが失敗したときに、メール、コンソール、スマートフォンでアラートを届けます。アラートをエスカレーションしたり確認済みにしたりできるほか、Webhook、関数、MCP からアラートに対処することもできます。',
+  'Know when your project needs you':
+    'プロジェクトに対応が必要なとき、すぐにわかる',
+  'Appwrite Monitors watch your project usage and your endpoints, and tell you the moment a metric crosses your threshold or a check fails, by email, in the Console, and on your phone with Appwrite Beep.':
+    'Appwrite Monitors は、プロジェクトの使用量とエンドポイントを監視し、メトリクスがしきい値を超えた瞬間やチェックが失敗した瞬間に、メール、コンソール、そして Appwrite Beep でスマートフォンにお知らせします。',
+  'Usage metrics across every service': 'すべてのサービスの使用量メトリクス',
+  'HTTP, DNS, TCP, and SMTP endpoints': 'HTTP、DNS、TCP、SMTP のエンドポイント',
+  'Between usage checks on Pro': 'Pro での使用量チェックの間隔',
+  'Until someone acknowledges': '誰かが確認済みにするまで',
+  'Ask your agent what is firing': 'エージェントに発生中のアラートを聞く',
+  'What can Appwrite Monitors watch?':
+    'Appwrite Monitors では何を監視できますか?',
+  'Usage monitors compare one project metric with a threshold you set, such as outbound bandwidth, executions, database reads, storage, realtime connections, or webhook failures, for the whole project or a single resource. On Appwrite Cloud, endpoint checks also test an HTTP URL, a DNS record, a TCP port, or a mail server, and budget alerts watch your organization’s spend.':
+    '使用量モニターは、送信帯域幅、実行、データベース読み取り、ストレージ、Realtime の接続数、Webhook の失敗など、プロジェクトのメトリクス 1 つを設定したしきい値と比較します。対象はプロジェクト全体でも、1 つのリソースでもかまいません。Appwrite Cloud では、エンドポイントチェックで HTTP URL、DNS レコード、TCP ポート、メールサーバーもテストでき、予算アラートで組織の支出も監視できます。',
+  'How are thresholds set?': 'しきい値はどのように設定しますか?',
+  'A threshold is a value in the metric’s own unit, like 5 GB of outbound bandwidth or a million database reads, counted over a window from 5 minutes to 30 days or compared with the latest reading. The Console suggests one from your recent peak and shows how often it would have fired before you save.':
+    'しきい値は、送信帯域幅 5 GB やデータベース読み取り 100 万回のように、メトリクス自体の単位で表した値です。5 分から 30 日までの期間で集計するか、最新の値と比較します。コンソールは最近のピークからしきい値を提案し、保存する前に、そのしきい値でどれくらいアラートが発生していたかを表示します。',
+  'Who gets notified when a monitor fires?':
+    'モニターでアラートが発生したとき、誰に通知されますか?',
+  'The organization roles a monitor notifies, Owners by default, by email, in the Console, and with a push on every phone signed in to Appwrite Beep. With an escalation, each step notifies its roles and people in turn until someone acknowledges the alert or it resolves. Members hear about an alert once when it fires and once when it resolves.':
+    'モニターが通知する組織のロール (デフォルトはオーナー) のメンバーに、メール、コンソール、そして Appwrite Beep にサインインしているすべてのスマートフォンへのプッシュ通知で届きます。エスカレーションを設定している場合は、誰かがアラートを確認済みにするか、アラートが解決するまで、各ステップのロールとメンバーに順番に通知します。メンバーへの通知は、アラートの発生時と解決時に 1 回ずつです。',
+  'What happens when usage recovers?': '使用量が回復するとどうなりますか?',
+  'The alert resolves on its own when the condition stops holding or the next check passes, and everyone who was told it fired gets a resolved notice. Resolved alerts stay in the Alerts tab with how long they fired and how far past the threshold they went.':
+    '条件が成立しなくなるか、次のチェックが成功すると、アラートは自動的に解決し、発生の通知を受けた全員に解決の通知が届きます。解決済みのアラートは、発生していた時間と、しきい値をどれだけ超えたかとともに「アラート」タブに残ります。',
+  'Can my code react to alerts?': 'コードでアラートに反応できますか?',
+  'Yes. Every alert fires monitors.[monitorId].alerts.[alertId].create when it opens and an update event when it is acknowledged or resolves. Deliver them to webhooks and function triggers, or start from the Alerts to chat or Pause on usage spike function templates.':
+    'はい。すべてのアラートは、発生時に monitors.[monitorId].alerts.[alertId].create を、確認済みになったときや解決したときに更新イベントを発生させます。これらを Webhook や関数のトリガーに配信することも、Alerts to chat や Pause on usage spike の関数テンプレートから始めることもできます。',
+  'Which plans include Monitors?': 'Monitors はどのプランに含まれますか?',
+  'Free includes 3 usage monitors per project, checked every 15 minutes. Pro includes 25 usage monitors per project checked every minute, budget alerts, and 10 endpoint checks for your organization, with more at $2 a month each. Scale raises that to 100 usage monitors per project, 50 endpoint checks, and checks as often as every 30 seconds.':
+    'Free には、15 分ごとにチェックされる使用量モニターがプロジェクトあたり 3 件含まれます。Pro には、1 分ごとにチェックされる使用量モニターがプロジェクトあたり 25 件、予算アラート、組織あたり 10 件のエンドポイントチェックが含まれ、追加のチェックは 1 件あたり月額 $2 です。Scale では、使用量モニターがプロジェクトあたり 100 件、エンドポイントチェックが 50 件に増え、最短 30 秒ごとにチェックできます。',
+  'Do Monitors work on self-hosted Appwrite?':
+    'Monitors はセルフホストの Appwrite でも使えますか?',
+  'Yes, for usage monitors, which self-hosted Appwrite evaluates every minute with the same API, SDKs, and project events. Endpoint checks, budget alerts, and pushes to Appwrite Beep run on Appwrite Cloud.':
+    'はい、使用量モニターは使えます。セルフホストの Appwrite は、同じ API、SDK、プロジェクトのイベントで使用量モニターを 1 分ごとに評価します。エンドポイントチェック、予算アラート、Appwrite Beep へのプッシュ通知は Appwrite Cloud で動作します。',
+  'Know before your users do': 'ユーザーより先に気づく',
+  'Start from a monitor suggested by your own usage, and get the alert by email, in the Console, and on your phone.':
+    '実際の使用量から提案されたモニターから始めて、メール、コンソール、スマートフォンでアラートを受け取りましょう。',
+  'Start from your own usage': '実際の使用量から始める',
+  'Monitors suggests its first monitors from your last 7 days of usage: an egress spike, a surge in database reads, storage growth, and failing webhooks, each with a threshold set from what your project really does. Pick one and the form opens filled in.':
+    'Monitors は、過去 7 日間の使用量から最初のモニターを提案します。送信トラフィックの急増、データベース読み取りの急増、ストレージの増加、失敗する Webhook の 4 つで、それぞれプロジェクトの実際の使用状況に基づいたしきい値が設定されています。1 つを選ぶと、入力済みのフォームが開きます。',
+  'Drag the line, see what would have fired':
+    'ラインをドラッグして、発生していたはずのアラートを確認',
+  'Pick a metric and the Console charts its real history behind a dashed threshold. Drag the line, and before you save it tells you how often the monitor would have fired over the last 12 hours to 30 days, with every breach shaded red.':
+    'メトリクスを選ぶと、コンソールが実際の履歴を破線のしきい値と重ねてグラフ表示します。ラインをドラッグすれば、保存する前に、過去 12 時間から 30 日間でモニターのアラートが何回発生していたかがわかり、しきい値を超えた箇所はすべて赤く表示されます。',
+  'Watch any number your project produces': 'プロジェクトのあらゆる数値を監視',
+  'Requests, bandwidth, executions, realtime connections, active users, database reads and writes, storage, messages, webhooks, and more. Watch the whole project or a single database, bucket, function, or site, counted over 5 minutes to 30 days.':
+    'リクエスト、帯域幅、実行、Realtime の接続数、アクティブユーザー、データベースの読み取りと書き込み、ストレージ、メッセージ、Webhook など。プロジェクト全体、または 1 つのデータベース、バケット、関数、サイトを対象に、5 分から 30 日までの期間で集計して監視できます。',
+  'Know when an endpoint stops answering':
+    'エンドポイントが応答しなくなったらすぐにわかる',
+  'On Appwrite Cloud, check an HTTP URL, a DNS record, a TCP port, or a mail server on the interval you choose. An HTTP check fails on any status outside 2xx, or when its certificate is about to expire, and you set the codes and the warning window.':
+    'Appwrite Cloud では、HTTP URL、DNS レコード、TCP ポート、メールサーバーを、選んだ間隔でチェックできます。HTTP チェックは、ステータスが 2xx 以外のときや証明書の有効期限が近づいたときに失敗します。想定するステータスコードと警告期間は自分で設定できます。',
+  'Every alert says how bad it is': 'すべてのアラートで深刻度がわかる',
+  'An alert keeps the latest reading, its peak, and how far past the threshold it went. Open it for the timeline from the first firing to recovery, and acknowledge it so your team knows you have it. It resolves on its own when usage recovers or the next check passes.':
+    'アラートには、最新の値、ピーク、しきい値をどれだけ超えたかが記録されます。開くと最初の発生から回復までのタイムラインを確認でき、確認済みにすれば対応中であることがチームに伝わります。使用量が回復するか、次のチェックが成功すると、自動的に解決します。',
+  'Escalate until someone answers': '誰かが応答するまでエスカレーション',
+  'Build an escalation once for your organization and pick it on any monitor. Each step notifies roles or named people, right away or after a wait, and repeats if nobody responds. It stops as soon as someone acknowledges the alert or it resolves.':
+    '組織でエスカレーションを一度作成すれば、どのモニターでも選択できます。各ステップでは、ロールまたは指定したメンバーに、すぐに、または待機時間の後に通知し、誰も応答しなければ繰り返します。誰かがアラートを確認済みにするか、アラートが解決した時点で停止します。',
+  'Email, the Console, and your phone': 'メール、コンソール、スマートフォン',
+  'The people a monitor notifies get an email with a button to pause it, a notification in the Console, and a push in Appwrite Beep with Acknowledge, Snooze, and Mute. Monitors set to Critical ring Android phones through silent mode.':
+    'モニターの通知先のメンバーには、モニターを一時停止するボタン付きのメール、コンソールの通知、そして「確認済みにする」「スヌーズ」「ミュート」を操作できる Appwrite Beep のプッシュ通知が届きます。「重大」に設定したモニターは、サイレントモードの Android スマートフォンでも鳴ります。',
+  'Alerts your code can act on': 'コードで対応できるアラート',
+  'Every alert fires a project event when it opens and again when it is acknowledged or resolves. Send it to a webhook, trigger a function, or start from a template that posts to Slack, Discord, Microsoft Teams, or Google Chat, or pauses a function or site on a usage spike.':
+    'すべてのアラートは、発生時と、確認済みになったときや解決したときに、プロジェクトのイベントを発生させます。イベントを Webhook に送信したり、関数をトリガーしたりできるほか、Slack、Discord、Microsoft Teams、Google Chat に投稿するテンプレートや、使用量が急増したときに関数やサイトを一時停止するテンプレートから始めることもできます。',
+  'Connect the Appwrite MCP server to Claude, Cursor, VS Code, or any MCP client. Your agent can create usage monitors and endpoint checks, list the alerts that are firing, and acknowledge them, and the same works from the server SDKs and the CLI.':
+    'Appwrite MCP サーバーを Claude、Cursor、VS Code、または任意の MCP クライアントに接続しましょう。エージェントが使用量モニターやエンドポイントチェックを作成し、発生中のアラートを一覧表示して確認済みにできます。同じ操作はサーバー SDK や CLI からも行えます。',
+  'Budget alerts before the bill': '請求の前に届く予算アラート',
+  'Set budget alerts in your organization’s billing settings and Monitors watches how much of your budget cap this cycle has used, with up to four thresholds and the cap itself at 100%. They reach you by email and on your phone.':
+    '組織の請求設定で予算アラートを設定すると、今期に予算上限のどれだけを使ったかを Monitors が監視します。しきい値は最大 4 つまで設定でき、100% は上限そのものです。アラートはメールとスマートフォンに届きます。',
+  'Appwrite MCP · OAuth, no API keys':
+    'Appwrite MCP · OAuth で接続、API キー不要',
+  'Is anything firing on storefront-prod? If it is bandwidth, acknowledge it for me.':
+    'storefront-prod で発生中のアラートはありますか? 帯域幅のアラートなら確認済みにしてください。',
+  'One alert is firing: outbound bandwidth reached 6.2 GB in the last hour, 1.2× its 5 GB threshold, for 18 minutes.':
+    '発生中のアラートが 1 件あります。直近 1 時間の送信帯域幅が 6.2 GB に達し、しきい値 5 GB の 1.2× の状態が 18 分間続いています。',
+  'Acknowledged by Ana Silva': 'Ana Silva が確認済み',
+  'within 1 hour': '(1 時間以内)',
+  '1.2× the threshold': 'しきい値の 1.2×',
+  '1.4× the threshold': 'しきい値の 1.4×',
+  'Email, push, and Console': 'メール、プッシュ通知、コンソール',
+  'Budget used this cycle': '今期の予算使用率',
+  Cap: '上限',
+  'Over 75% of budget used · Acme Inc':
+    '予算の使用率が 75% を超えました · Acme Inc',
+  'Email to Owners': 'オーナー宛てのメール',
+  'Update budget cap': '予算上限を更新',
+  'HTTP check': 'HTTP チェック',
+  '14 days': '14 日',
+  '1 min': '1 分',
+  '10 s': '10 秒',
+  'Appwrite Cloud, Pro and Scale': 'Appwrite Cloud の Pro と Scale',
+  Storefront: 'ストアフロント',
+  'Storefront DNS': 'ストアフロントの DNS',
+  Queue: 'キュー',
+  'Mail server': 'メールサーバー',
+  'On call': 'オンコール',
+  '2 times': '2 回',
+  'Starts again from the first step, a monitor’s cooldown after the last one.':
+    '最後のステップからモニターのクールダウン後に、最初のステップから再開します。',
+  'Developers now → Ana, Ben after 10 m · repeats 2×':
+    '開発者 (今すぐ) → Ana、Ben (10 分後) · 2 回繰り返し',
+  'Owners now': 'オーナー (今すぐ)',
+  'Ana Silva': 'Ana Silva',
+  'Ben Okafor': 'Ben Okafor',
+  'Project events': 'プロジェクトのイベント',
+  'Function template': '関数テンプレート',
+  'Alerts to chat': 'Alerts to chat',
+  'Post alerts to Slack, Discord, Microsoft Teams, or Google Chat.':
+    'アラートを Slack、Discord、Microsoft Teams、Google Chat に投稿します。',
+  'Pause on usage spike': 'Pause on usage spike',
+  'Turn off a function or site when its monitor fires.':
+    'モニターでアラートが発生したときに、関数やサイトを無効にします。',
+  Cloud: 'Cloud',
+  'Requests and bandwidth': 'リクエストと帯域幅',
+  'Outbound bandwidth is above 5 GB': '送信帯域幅が 5 GB を超えています',
+  'Outbound bandwidth reached 6.2 GB in the last hour, 1.2× the threshold.':
+    '直近 1 時間の送信帯域幅が 6.2 GB に達しました。しきい値の 1.2× です。',
+  'Summed over 1 hour': '1 時間の合計',
+  'View alert': 'アラートを表示',
+  'Pause this monitor': 'このモニターを一時停止',
+  'Console notification': 'コンソール通知',
+  'Twice your peak, rounded up': 'ピークの 2 倍を切り上げた値',
+  'HTTP monitor': 'HTTP モニター',
+  'DNS monitor': 'DNS モニター',
+  'TCP monitor': 'TCP モニター',
+  'SMTP monitor': 'SMTP モニター',
+  'Would have fired 2× in the last 24 hours':
+    '過去 24 時間に 2 回発生していました',
+  'Fires when': '発生条件',
+  'Resolves on its own when usage recovers': '使用量が回復すると自動的に解決',
+  '[Firing] Egress spike · storefront-prod':
+    '[発生中] 送信トラフィックの急増 · storefront-prod',
+  'Egress spike is firing': '送信トラフィックの急増が発生中',
+  // Monitors, Beep, and Reviews art: strings passed to t() from fields the coverage check does not scan
+  '4 min ago': '4 分前',
+  '12 min ago': '12 分前',
+  '18 min ago': '18 分前',
+  '12m ago': '12 分前',
+  '18m ago': '18 分前',
+  '2h ago': '2 時間前',
+  Frankfurt: 'フランクフルト',
+  'Unexpected status code · HTTP 503': '想定外のステータスコード · HTTP 503',
+  'Right away': '今すぐ',
+  'After 10 min': '10 分後',
+  'After 30 min': '30 分後',
+  'Notified at 9:37': '9:37 に通知済み',
+  'Next, in 6 min': '次は 6 分後',
+  '3 firing · 2 acknowledged': '発生中 3 件 · 確認済み 2 件',
+  'Projects in Acme Inc': 'Acme Inc のプロジェクト',
+  'These settings belong to your console account and apply on all your devices. Emails are unaffected.':
+    'これらの設定はコンソールのアカウントに保存され、すべてのデバイスに適用されます。メールには影響しません。',
+  '4 hours': '4 時間',
+  'Nov 19, 2026': '2026年11月19日',
+  'Nov 17, 2026': '2026年11月17日',
+  'The project, a function, or a site': 'プロジェクト、関数、またはサイト',
+  'The project or one database': 'プロジェクトまたは 1 つのデータベース',
+  'The project, a bucket, a database, a function, or a site':
+    'プロジェクト、バケット、データベース、関数、またはサイト',
+  'Read and write IOPS': '読み取り・書き込み IOPS',
+  'One dedicated database': '1 つの専用データベース',
+  'Analytics events': 'アナリティクスのイベント',
+  'Analytics pageviews': 'アナリティクスのページビュー',
+  'The whole project, bot traffic excluded':
+    'プロジェクト全体 (ボットのトラフィックを除く)',
+  'Budget used': '予算使用率',
+  'Your organization, from billing settings': '組織 (請求設定で設定)',
+  '5 min': '5 分',
+  '15 min': '15 分',
+  'After 10 minutes': '10 分後',
+  'Used by 4 monitors': '4 件のモニターで使用中',
+  'Used by 1 monitor': '1 件のモニターで使用中',
+  'Peak hour 2.4 GB': '1 時間あたりの最大 2.4 GB',
+  'Peak hour 380K': '1 時間あたりの最大 380K',
+  'Now 18 GB': '現在 18 GB',
+  'Peak hour 3': '1 時間あたりの最大 3',
+  'Ready to merge': 'マージ準備完了',
+  'Needs changes before merging': 'マージ前に変更が必要',
+  'Significant problems': '大きな問題あり',
+  'Serious problems': '深刻な問題あり',
+  'Do not merge': 'マージ不可',
+  '4 files': '4 ファイル',
+  '412 reviews': '412 件のレビュー',
+  '48% first try': '初回で48%',
+  '6 critical': '重大 6 件',
+  'Fixed, not dismissed': '却下されずに修正',
+  Respond: '対応',
+  'One organization bill': '組織の請求は 1 つ',
+  'Same team and roles': 'チームとロールも同じ',
+  'No per-seat fees': 'シート単位の料金なし',
+  'Retry sign-in with backoff': 'バックオフ付きでサインインをリトライ',
+  'A wrong password retries forever':
+    'パスワードを間違えると無限にリトライする',
+  'The loop has no exit when signIn rejects with invalid credentials. Stop on a 401 and cap the attempts.':
+    'signIn が無効な認証情報で拒否されたとき、ループを抜ける条件がありません。401 で停止し、試行回数に上限を設けてください。',
+  'Token is logged before it is hashed':
+    'トークンがハッシュ化される前にログに出力されています',
+  'The raw session token reaches your logs on every sign-in. Log the session ID instead.':
+    'サインインのたびに、生のセッショントークンがログに残ります。代わりにセッション ID をログに出力してください。',
+  '10 credits per review': 'レビューごとに 10 クレジット',
+  '50 credits per review': 'レビューごとに 50 クレジット',
+  '500 credits per review': 'レビューごとに 500 クレジット',
+  // Monitors, Beep, and Reviews: hero stat values and the Observe stage label
+  Observe: '監視',
+  'Every org': 'すべての組織',
+  'From the push': 'プッシュ通知から',
+  'Every PR': 'すべての PR',
+  'S to F': 'S〜F',
+  'No seats': 'シート課金なし',
+  'On by default': 'デフォルトで有効',
+  '4 checks': '4 種類のチェック',
+  'Free of charge': '無料',
+  'Stop on a 401 and cap the attempts.': '401 が返ったら停止し、試行回数に上限を設けてください。',
 }

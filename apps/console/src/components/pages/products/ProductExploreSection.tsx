@@ -37,8 +37,11 @@ type ProductNavigationItemsCopy = {
   domainsName: string
   domainsTagline: string
   analyticsTagline: string
+  monitorsTagline: string
+  beepTagline: string
   firewallName: string
   firewallTagline: string
+  reviewsTagline: string
 }
 
 function getExploreNavItemName(
@@ -70,7 +73,10 @@ function getExploreNavItemTagline(
     sites: navigationItemsCopy.sitesTagline,
     domains: navigationItemsCopy.domainsTagline,
     analytics: navigationItemsCopy.analyticsTagline,
+    monitors: navigationItemsCopy.monitorsTagline,
+    beep: navigationItemsCopy.beepTagline,
     firewall: navigationItemsCopy.firewallTagline,
+    reviews: navigationItemsCopy.reviewsTagline,
   }
   return taglineById[navItemId] ?? PRODUCT_NAV_REGISTRY[navItemId].tagline
 }

@@ -64,7 +64,7 @@ return [
             ],
             [
                 'name' => '_APP_OPTIONS_FORCE_HTTPS',
-                'description' => 'Controls whether Appwrite generates HTTPS API URLs and enforces HTTPS for incoming API requests. Set to \'enabled\' whenever the public API is served over HTTPS, including when TLS is terminated by a reverse proxy. When enabled, HTTP GET requests are redirected to HTTPS and other HTTP requests are rejected. The default value is \'disabled\' to support local and plain HTTP installations.',
+                'description' => 'Controls whether Appwrite generates HTTPS API URLs and enforces HTTPS for incoming API requests. Set to \'enabled\' whenever the public API is served over HTTPS, including when TLS is terminated by a reverse proxy. When enabled, HTTP GET requests are redirected to HTTPS and other HTTP requests are rejected. Client origins and redirect URLs, such as OAuth2 success URLs and email links, must also use HTTPS, except for localhost. The default value is \'disabled\' to support local and plain HTTP installations.',
                 'introduction' => '',
                 'default' => 'disabled',
                 'required' => false,
@@ -492,6 +492,15 @@ return [
                 'default' => '',
                 'required' => true,
                 'question' => 'Enter an email that will be used when registering for SSL certificates',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_CERTIFICATES_PROVIDER',
+                'description' => 'Who issues TLS certificates for the main domain, custom domains, and function and site domains. By default, set to \'letsencrypt\', which issues them with Let\'s Encrypt over an HTTP-01 challenge. Set to \'external\' when a reverse proxy in front of Appwrite, such as Traefik, Caddy, Nginx Proxy Manager or Cloudflare, terminates TLS: a domain is then verified by its DNS records alone, and Appwrite never runs Certbot or sends certificate failure emails.',
+                'introduction' => '2.8.0',
+                'default' => 'letsencrypt',
+                'required' => false,
+                'question' => '',
                 'filter' => ''
             ],
             [
@@ -1014,7 +1023,7 @@ return [
     ],
     [
         'category' => 'SMTP',
-        'description' => "Appwrite is using an SMTP server for emailing your projects users and server admins. The SMTP env vars are used to allow Appwrite server to connect to the SMTP container.\n\nIf running in production, it might be easier to use a 3rd party SMTP server as it might be a little more difficult to set up a production SMTP server that will not send all your emails into your user\'s SPAM folder.",
+        'description' => "Appwrite is using an SMTP server for emailing your projects users and server admins. The SMTP env vars are used to allow Appwrite server to connect to the SMTP container.\n\nIf running in production, it might be easier to use a 3rd party SMTP server as it might be a little more difficult to set up a production SMTP server that will not send all your emails into your user's SPAM folder.",
         'variables' => [
             [
                 'name' => '_APP_SMTP_HOST',
@@ -2149,6 +2158,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_VIDEOS_SPECIFICATION',
+                'description' => 'The billed ceiling for each rendition encode as executions.mbSeconds with service videos. Set it to the catalog slug that matches the videos worker CPU and memory limits in this environment, for example s-4vcpu-4gb. Encode size is the smaller of the container cgroup and this row, so unbounded workers do not bill the host. An unknown slug falls back to s-4vcpu-4gb. The default value is s-4vcpu-4gb.',
+                'introduction' => '2.7.0',
+                'default' => 's-4vcpu-4gb',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_MAINTENANCE_RETENTION_ALERTS',
                 'description' => 'How long a resolved alert is kept, in seconds. A firing alert is always kept. The default value is 7776000 seconds (90 days).',
                 'introduction' => '2.7.0',
@@ -2213,6 +2231,15 @@ return [
                 'description' => 'Maximum number of pooled ClickHouse HTTP clients per process for execution CRUD.',
                 'introduction' => '',
                 'default' => '2',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_EXECUTIONS_INSERT_BUFFER',
+                'description' => 'Milliseconds ClickHouse may hold execution snapshots to write them together, using its async insert buffer. With 0, the default, every snapshot is written at once. Set it on installations that write so many executions that ClickHouse merges fall behind. Each write then takes up to this long and holds a pooled connection, so size _APP_POOL_SIZE_EXECUTIONS for the writes per second times this window.',
+                'introduction' => '',
+                'default' => '0',
                 'required' => false,
                 'question' => '',
                 'filter' => ''

@@ -46,6 +46,7 @@ export const ANALYTICS_FILTER_ATTRIBUTES = [
   'hostname',
   'botName',
   'botCategory',
+  'trafficType',
   'eventName',
   'userId',
 ] as const
@@ -96,16 +97,23 @@ const ATTRIBUTE_TITLES: Record<AnalyticsColumnFilterAttribute, string> = {
   hostname: 'Hostname',
   botName: 'Bot',
   botCategory: 'Bot category',
+  trafficType: 'Traffic',
   eventName: 'Event',
-  userId: 'User ID',
+  userId: 'User',
 }
+
+/** `trafficType` takes only its labels (`human` / `bot`), so no pattern operators. */
+const TRAFFIC_TYPE_OPERATORS = ['equal', 'notEqual'] as const
 
 export const ANALYTICS_FILTER_COLUMNS: FilterColumn[] =
   ANALYTICS_FILTER_ATTRIBUTES.map((id) => ({
     id,
     title: ATTRIBUTE_TITLES[id],
     type: 'string',
-    allowedOperators: [...ANALYTICS_FILTER_OPERATORS],
+    allowedOperators:
+      id === 'trafficType'
+        ? [...TRAFFIC_TYPE_OPERATORS]
+        : [...ANALYTICS_FILTER_OPERATORS],
   }))
 
 /**
@@ -136,6 +144,7 @@ export function analyticsFilterColumns(
 
 const ATTRIBUTE_SET = new Set<string>(ANALYTICS_FILTER_ATTRIBUTES)
 const OPERATOR_SET = new Set<string>(ANALYTICS_FILTER_OPERATORS)
+const TRAFFIC_OPERATOR_SET = new Set<string>(TRAFFIC_TYPE_OPERATORS)
 
 export function isAnalyticsFilterAttribute(
   value: string,
@@ -146,16 +155,14 @@ export function isAnalyticsFilterAttribute(
 /**
  * Which attribute a breakdown row filters on when clicked. Most dimensions
  * share their attribute name; the rest have no matching query attribute:
- * - `entryPage` / `exitPage` are session-derived, not event fields.
- * - `trafficType` isn't accepted in `queries[]`.
+ * `entryPage` / `exitPage` are session-derived, not event fields.
  */
 export function analyticsFilterAttributeForDimension(
   dimension: AnalyticsDimension,
 ): AnalyticsFilterAttribute | null {
   if (
     dimension === AnalyticsDimension.EntryPage ||
-    dimension === AnalyticsDimension.ExitPage ||
-    dimension === AnalyticsDimension.TrafficType
+    dimension === AnalyticsDimension.ExitPage
   ) {
     return null
   }
@@ -177,7 +184,9 @@ export function sanitizeAnalyticsFilterMap(filterMap: FilterMap): FilterMap {
   if (filterMap.size === 0) return filterMap
   const sanitized: FilterMap = new Map()
   for (const [key, query] of filterMap) {
-    if (isAnalyticsFilterAttribute(String(key.c)) && OPERATOR_SET.has(key.o)) {
+    const operators =
+      key.c === 'trafficType' ? TRAFFIC_OPERATOR_SET : OPERATOR_SET
+    if (isAnalyticsFilterAttribute(String(key.c)) && operators.has(key.o)) {
       sanitized.set(key, query)
     }
   }
@@ -213,11 +222,8 @@ export function equalFilterEntry(
 
 // ─── Humans / bots ──────────────────────────────────────────────────────────
 //
-// `trafficType` isn't a query attribute, so the humans/bots split filters on
-// `botCategory` instead: human traffic is the events with no bot category,
-// bots are everything with one. This relies on human events storing an empty
-// `botCategory` (not null); if the API ever accepts `trafficType` in
-// `queries[]`, switch these entries to it.
+// The humans/bots split filters on `trafficType`, which the API maps to its
+// stored `is_bot` flag.
 
 export type AnalyticsTrafficKind = 'human' | 'bot'
 
@@ -225,17 +231,26 @@ export function trafficKindFilterEntry(kind: AnalyticsTrafficKind): {
   key: CompactFilterKey
   query: string
 } {
-  const operator = kind === 'human' ? 'equal' : 'notEqual'
   return {
-    key: { c: 'botCategory', o: operator, v: '' },
-    query: buildFilterQueryString(operator, 'botCategory', ''),
+    key: { c: 'trafficType', o: 'equal', v: kind },
+    query: buildFilterQueryString('equal', 'trafficType', kind),
   }
+}
+
+function isTrafficKind(value: unknown): value is AnalyticsTrafficKind {
+  return value === 'human' || value === 'bot'
 }
 
 /** The humans/bots filter a key represents, if it is one. */
 export function trafficKindOfFilterKey(
   key: CompactFilterKey,
 ): AnalyticsTrafficKind | null {
+  if (key.c === 'trafficType' && isTrafficKind(key.v)) {
+    if (key.o === 'equal') return key.v
+    if (key.o === 'notEqual') return key.v === 'human' ? 'bot' : 'human'
+    return null
+  }
+  // Older links filtered on an empty vs non-empty bot category.
   if (key.c !== 'botCategory' || key.v !== '') return null
   if (key.o === 'equal') return 'human'
   if (key.o === 'notEqual') return 'bot'

@@ -26,6 +26,15 @@ export const ANALYTICS_ACTIONS = {
   'feedback-open': 'Feedback Opened',
   'support-open': 'Support Opened',
   'notifications-open': 'Notifications Opened',
+  'notifications-beep-app-store': 'Notifications Beep App Store Clicked',
+  'notifications-beep-google-play': 'Notifications Beep Google Play Clicked',
+  'notifications-beep-dismiss': 'Notifications Beep Promotion Dismissed',
+  'monitors-beep-app-store': 'Monitors Beep App Store Clicked',
+  'monitors-beep-google-play': 'Monitors Beep Google Play Clicked',
+  'monitors-beep-dismiss': 'Monitors Beep Promotion Dismissed',
+  'create-monitor-beep-app-store': 'Create Monitor Beep App Store Clicked',
+  'create-monitor-beep-google-play': 'Create Monitor Beep Google Play Clicked',
+  'create-monitor-beep-dismiss': 'Create Monitor Beep Promotion Dismissed',
   'ai-agent-open': 'AI Agent Opened',
   'upgrade-clicked': 'Upgrade Clicked',
   'auth-sign-in': 'Sign In Clicked',
@@ -87,6 +96,8 @@ export const ANALYTICS_ACTIONS = {
   'product-start-building': 'Product Start Building Clicked',
   'product-view-docs': 'Product View Docs Clicked',
   'product-view-pricing': 'Product View Pricing Clicked',
+  'product-app-store': 'Product App Store Clicked',
+  'product-google-play': 'Product Google Play Clicked',
   'alternative-start-building': 'Alternative Start Building Clicked',
   'alternative-view-pricing': 'Alternative View Pricing Clicked',
   'alternative-migrate': 'Alternative Migrate Clicked',
@@ -122,6 +133,11 @@ export const ANALYTICS_ACTIONS = {
   'for-agents-install-skills': 'For Agents Install Skills Clicked',
   'for-agents-connect-mcp': 'For Agents Connect MCP Clicked',
   'for-agents-view-docs': 'For Agents View Docs Clicked',
+  'zero-copy-command': 'Zero Copy Command Clicked',
+  'zero-copy-entry': 'Zero Copy Entry Clicked',
+  'zero-copy-prompt': 'Zero Copy Prompt Clicked',
+  'zero-open-agent': 'Zero Open Agent Clicked',
+  'zero-sign-up': 'Zero Sign Up Clicked',
 
   // Pricing page CTAs
   'pricing-start-free': 'Pricing Start Free Clicked',
@@ -169,9 +185,12 @@ export const ANALYTICS_ACTIONS = {
   'members-contact-sales': 'Members Contact Sales Clicked',
   'backups-contact-sales': 'Backups Contact Sales Clicked',
   'activity-contact-sales': 'Activity Contact Sales Clicked',
+  'videos-contact-sales': 'Videos Contact Sales Clicked',
+  'videos-gpu-dismiss': 'Videos GPU Upsell Dismissed',
   'specs-contact-sales': 'Specifications Contact Sales Clicked',
   'replicas-contact-sales': 'Replicas Contact Sales Clicked',
   'compliance-contact-sales': 'Compliance Contact Sales Clicked',
+  'preview-domains-contact-sales': 'Preview Domains Contact Sales Clicked',
   'support-contact-sales': 'Support Contact Sales Clicked',
   'support-ticket-contact-sales': 'Support Ticket Contact Sales Clicked',
 
@@ -220,6 +239,7 @@ export const ANALYTICS_ACTIONS = {
   'marketing-nav-customers': 'Marketing Customers Nav Clicked',
   'marketing-nav-blog': 'Marketing Blog Nav Clicked',
   'marketing-nav-changelog': 'Marketing Changelog Nav Clicked',
+  'marketing-nav-init': 'Marketing Init Nav Clicked',
   'marketing-nav-github': 'Marketing GitHub Nav Clicked',
   'marketing-nav-github-hover': 'Marketing GitHub Nav Hovered',
   'marketing-nav-github-star': 'Marketing GitHub Star Clicked',
@@ -234,9 +254,13 @@ export const ANALYTICS_ACTIONS = {
   'marketing-product-sites': 'Marketing Product Sites Clicked',
   'marketing-product-domains': 'Marketing Product Domains Clicked',
   'marketing-product-analytics': 'Marketing Product Analytics Clicked',
+  'marketing-product-monitors': 'Marketing Product Monitors Clicked',
+  'marketing-product-beep': 'Marketing Product Beep Clicked',
   'marketing-product-firewall': 'Marketing Product Firewall Clicked',
+  'marketing-product-reviews': 'Marketing Product Reviews Clicked',
   'marketing-product-advisor': 'Marketing Product Advisor Clicked',
   'marketing-product-agent': 'Marketing Product Agent Clicked',
+  'marketing-product-zero': 'Marketing Product Zero Clicked',
 
   // Docs nav
   'docs-audience-developers': 'Docs Audience Developers Clicked',
@@ -255,11 +279,14 @@ export const ANALYTICS_ACTIONS = {
 
   // Project settings
   'smtp-quick-setup-resend': 'SMTP One-Click Setup Resend Clicked',
+  'smtp-quick-setup-bird': 'SMTP One-Click Setup Bird Clicked',
   'smtp-quick-setup-mailgun': 'SMTP One-Click Setup Mailgun Clicked',
-  'smtp-quick-setup-sendgrid': 'SMTP One-Click Setup SendGrid Clicked',
 
   // Messaging
   'messaging-quick-setup-resend': 'Messaging One-Click Setup Resend Clicked',
+  'messaging-quick-setup-bird': 'Messaging One-Click Setup Bird Clicked',
+  'messaging-quick-setup-bird-sms':
+    'Messaging One-Click Setup Bird SMS Clicked',
 
   // Resource creation
   'create-project': 'Create Project Clicked',
@@ -269,7 +296,6 @@ export const ANALYTICS_ACTIONS = {
   'start-promo-banner-learn-more': 'Start Promo Banner Learn More Clicked',
   'product-hunt-banner-upvote': 'Product Hunt Banner Upvote Clicked',
   'mcp1-launch-banner-try': 'MCP1 Launch Banner Try Clicked',
-  'firewall-moved-banner-open': 'Firewall Moved Banner Open Clicked',
   'init-recap-promo-banner-view-recap':
     'Init Recap Promo Banner View Recap Clicked',
   'native-oauth-promo-banner-open-settings':
@@ -318,6 +344,11 @@ export const ANALYTICS_ACTIONS = {
   'add-subscriber': 'Add Subscriber Clicked',
   'create-api-key': 'Create API Key Clicked',
   'create-org-api-key': 'Create Org API Key Clicked',
+  'create-email-domain': 'Create Email Domain Clicked',
+  'create-sso-provider': 'Create SSO Provider Clicked',
+  'require-sso': 'Require SSO Clicked',
+  'notify-sso-saml': 'Notify SSO SAML Clicked',
+  'open-team-sso-setup': 'Team SSO Setup Link Clicked',
   'create-webhook': 'Create Webhook Clicked',
   'add-project-domain': 'Add Project Domain Clicked',
   'add-platform': 'Add Platform Clicked',
@@ -372,9 +403,13 @@ const MARKETING_PRODUCT_ACTIONS: Record<string, AnalyticsActionId> = {
   sites: 'marketing-product-sites',
   domains: 'marketing-product-domains',
   analytics: 'marketing-product-analytics',
+  monitors: 'marketing-product-monitors',
+  beep: 'marketing-product-beep',
   firewall: 'marketing-product-firewall',
+  reviews: 'marketing-product-reviews',
   advisor: 'marketing-product-advisor',
   agent: 'marketing-product-agent',
+  zero: 'marketing-product-zero',
 }
 
 const ORG_TAB_ACTIONS: Record<string, AnalyticsActionId> = {
@@ -417,9 +452,11 @@ const CONTACT_SALES_ACTIONS: Record<SalesSource, AnalyticsActionId> = {
   specs: 'specs-contact-sales',
   replicas: 'replicas-contact-sales',
   compliance: 'compliance-contact-sales',
+  'preview-domains': 'preview-domains-contact-sales',
   support: 'support-contact-sales',
   'support-ticket': 'support-ticket-contact-sales',
   'plan-picker': 'upgrade-contact-sales',
+  videos: 'videos-contact-sales',
 }
 
 /** Exact docs global-nav hrefs → curated actions (top-level section entries only). */

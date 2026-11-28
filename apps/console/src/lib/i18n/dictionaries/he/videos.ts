@@ -251,11 +251,38 @@ export const heVideosDictionary: Record<string, string> = {
   'Create a rendition to play this video.': 'צרו רינדור כדי לנגן את הסרטון.',
   'This video has no source to play.': 'לסרטון הזה אין מקור לניגון.',
   'Auto quality': 'איכות אוטומטית',
-  'Subtitles off': 'ללא כתוביות',
   'New renditions are ready.': 'גרסאות קידוד חדשות מוכנות.',
   'Reload stream': 'טעינה מחדש של הסטרים',
-  'Go to start': 'חזרה להתחלה',
-  'Go to end': 'מעבר לסוף',
+  Replay: 'הפעלה חוזרת',
+  'Exit picture in picture': 'יציאה מתמונה בתוך תמונה',
+  'Player preview': 'תצוגה מקדימה של הנגן',
+  'Each option is a parameter in the player URL, so a link or embed that carries it plays the same way.':
+    'כל אפשרות היא פרמטר בכתובת ה-URL של הנגן, כך שקישור או הטמעה שכוללים אותה מתנגנים באותו אופן.',
+  'Query string': 'Query string',
+  'Where playback begins, in seconds.': 'הנקודה שבה הניגון מתחיל, בשניות.',
+  'Plays as soon as the player loads. Browsers often allow it only when muted.':
+    'הניגון מתחיל ברגע שהנגן נטען. דפדפנים רבים מאפשרים זאת רק כשהקול מושתק.',
+  'Start muted': 'התחלה במצב מושתק',
+  'Starts with the sound off.': 'הניגון מתחיל ללא קול.',
+  Loop: 'ניגון בלולאה',
+  'Plays again from the start when the video ends.':
+    'הסרטון מתחיל שוב מההתחלה כשהוא מסתיים.',
+  'Player controls': 'פקדי הנגן',
+  'Shows the control bar. Without it, viewers click the picture to play or pause.':
+    'הצגת סרגל הפקדים. בלעדיו, הצופים לוחצים על התמונה כדי להפעיל או להשהות.',
+  'Accent color': 'צבע הדגשה',
+  'Colors the progress bar and the volume.':
+    'הצבע של פס ההתקדמות ושל עוצמת הקול.',
+  'Custom color': 'צבע מותאם אישית',
+  'Seek 5 seconds': 'דילוג של 5 שניות',
+  'Seek 10 seconds': 'דילוג של 10 שניות',
+  'Change volume': 'שינוי עוצמת הקול',
+  'Change playback speed': 'שינוי מהירות הניגון',
+  'Turn subtitles on or off': 'הפעלה או כיבוי של כתוביות',
+  'Jump to 0% to 90%': 'מעבר ל-0% עד 90% מהסרטון',
+  'Go to start or end': 'מעבר להתחלה או לסוף',
+  'Show remaining time': 'הצגת הזמן שנותר',
+  'Show elapsed time': 'הצגת הזמן שחלף',
   Mute: 'השתקה',
   Unmute: 'ביטול השתקה',
   Volume: 'עוצמת קול',
@@ -536,8 +563,8 @@ export const heVideosDictionary: Record<string, string> = {
     'השתמשו ב-HLS למכשירי Apple ולרוב נגני הווב, וב-DASH ל-Android ול-Shaka Player. CMAF מגיש את שניהם מאותה קבוצת קבצים.',
   'No ready renditions for this output yet':
     'אין עדיין גרסאות קידוד מוכנות לפלט הזה',
-  'Manifest, segment, and subtitle requests use the read permissions of the source file in Storage. Grant read access to Any for public playback, or to signed-in users for private videos.':
-    'בקשות למניפסטים, לסגמנטים ולכתוביות משתמשות בהרשאות הקריאה של קובץ המקור באחסון. תנו הרשאת קריאה ל-Any לניגון ציבורי, או למשתמשים מחוברים לסרטונים פרטיים.',
+  'Manifest, segment, and subtitle requests use the read permissions of the video. Turn on public playback in Settings to let anyone watch, or grant read access to signed-in users for private videos.':
+    'בקשות למניפסטים, לסגמנטים ולכתוביות משתמשות בהרשאות הקריאה של הסרטון. הפעילו ניגון ציבורי בהגדרות כדי לאפשר לכולם לצפות, או תנו הרשאת קריאה למשתמשים מחוברים לסרטונים פרטיים.',
   'Open bucket': 'פתיחת הבאקט',
   'Native HTML': 'HTML מובנה',
   'Install a player': 'התקנת נגן',
@@ -698,7 +725,10 @@ export const heVideosDictionary: Record<string, string> = {
   Fair: 'סביר',
   Poor: 'חלש',
   Startup: 'זמן פתיחה',
-  'Time until the first frame': 'הזמן עד לפריים הראשון',
+  'Time from the manifest to the first frame':
+    'הזמן מהמניפסט ועד לפריים הראשון',
+  'Manifest (not counted)': 'מניפסט (לא נספר)',
+  'Metadata (not counted)': 'מטא-נתונים (לא נספרים)',
   Smoothness: 'רציפות',
   'Stalls and time spent rebuffering': 'עצירות וזמן המתנה לטעינה',
   'Picture quality': 'איכות תמונה',
@@ -714,6 +744,8 @@ export const heVideosDictionary: Record<string, string> = {
   'Bandwidth below the lowest rendition': 'רוחב הפס נמוך מהגרסה הנמוכה ביותר',
   'Even the smallest rendition barely fits this connection. Add a lower bitrate rendition for slow networks.':
     'גם גרסת הקידוד הקטנה ביותר בקושי מתאימה לחיבור הזה. הוסיפו גרסה בקצב סיביות נמוך יותר לרשתות איטיות.',
+  'The player is larger than the rendition it receives, so the picture looks soft. Quality is locked; switch to Auto quality to play a larger rendition.':
+    'הנגן גדול מהרזולוציה שהוא מקבל, ולכן התמונה נראית רכה. האיכות נעולה; עברו לאיכות אוטומטית כדי לנגן רזולוציה גדולה יותר.',
   'Video is upscaled': 'הווידאו מוגדל',
   'The player is larger than the rendition it receives, so the picture looks soft. Add a higher resolution rendition.':
     'הנגן גדול מגרסת הקידוד שהוא מקבל, ולכן התמונה נראית רכה מדי. הוסיפו גרסה ברזולוציה גבוהה יותר.',
@@ -1200,4 +1232,24 @@ export const heVideosDictionary: Record<string, string> = {
     'ציר זמן נוצר כשסרטון נוצר. התמונות הממוזערות יופיעו כאן כשהוא יהיה מוכן.',
   'Scroll through the thumbnails and hover one to see its time range and sprite region.':
     'גללו בין התמונות הממוזערות ורחפו מעל אחת כדי לראות את טווח הזמן ואזור הגיליון שלה.',
+  'Public playback': 'ניגון ציבורי',
+  "The video's own permissions decide who can watch it: its stream, captions, thumbnails and timeline. Permissions on the source file don't apply. Project members and API keys always have full access.":
+    'ההרשאות של הסרטון עצמו קובעות מי יכול לצפות בו: בזרם, בכתוביות, בתמונות הממוזערות ובציר הזמן. הרשאות קובץ המקור לא חלות עליו. לחברי הפרויקט ולמפתחות API יש תמיד גישה מלאה.',
+  'Anyone can watch, including visitors on the player page and in embeds. Turning this on adds read access for Any.':
+    'כולם יכולים לצפות, כולל מבקרים בדף הנגן ובהטמעות. ההפעלה מוסיפה הרשאת קריאה ל-Any.',
+  'Visitors get an error on the player page and in embeds. Turning this on adds read access for Any.':
+    'מבקרים יקבלו שגיאה בדף הנגן ובהטמעות. ההפעלה מוסיפה הרשאת קריאה ל-Any.',
+  'Read lets a role watch the video. Users, teams and labels need a session for this project, so they can watch in your app but not on the player page. Update and delete let a role rename or delete the video with a client SDK.':
+    'קריאה מאפשרת לתפקיד לצפות בסרטון. משתמשים, צוותים ותוויות צריכים סשן בפרויקט הזה, ולכן יכולים לצפות באפליקציה שלכם אבל לא בדף הנגן. עדכון ומחיקה מאפשרים לתפקיד לשנות את שם הסרטון או למחוק אותו עם SDK לקוח.',
+  'Permissions updated': 'ההרשאות עודכנו',
+  'Only signed-in users with read access can watch it in your app. Visitors get an error on the player page and in embeds.':
+    'רק משתמשים מחוברים עם הרשאת קריאה יכולים לצפות בו באפליקציה שלכם. מבקרים יקבלו שגיאה בדף הנגן ובהטמעות.',
+  'Only project members and API keys can watch it. Visitors get an error on the player page and in embeds.':
+    'רק חברי הפרויקט ומפתחות API יכולים לצפות בו. מבקרים יקבלו שגיאה בדף הנגן ובהטמעות.',
+  'Video is now public': 'הסרטון ציבורי עכשיו',
+  'Video is now private': 'הסרטון פרטי עכשיו',
+  'Visitors get an error here. You can watch because you are a project member.':
+    'מבקרים יקבלו כאן שגיאה. אתם יכולים לצפות כי אתם חברי הפרויקט.',
+  'Open access settings': 'פתיחת הגדרות הגישה',
+  'Failed to download thumbnails': 'הורדת התמונות הממוזערות נכשלה',
 }

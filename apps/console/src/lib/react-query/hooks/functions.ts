@@ -25,6 +25,7 @@ import {
   fetchLookupBatches,
 } from '@/lib/appwrite-id'
 import { sdk } from '@/lib/appwrite/sdk'
+import { isFeatureEnabled } from '@/lib/console-profiles'
 import { SpecificationType } from '@/lib/specifications'
 import {
   fetchAllVariables,
@@ -255,6 +256,23 @@ function templatesSortKey(arr: string[] | undefined): string {
   return [...arr].sort().join('\u0001')
 }
 
+/** Use case of the alert function templates, listed only while the alerts preview is on. */
+export const ALERT_TEMPLATES_USE_CASE = 'monitoring'
+
+/**
+ * Use cases to ask the API for. Without the alerts preview that is every use case but
+ * monitoring, and `[]` when a filter asked for monitoring alone, so nothing is listed.
+ */
+function visibleTemplateUseCases(
+  useCases: string[] | undefined,
+): string[] | undefined {
+  if (isFeatureEnabled('alerts')) return useCases
+  const requested = useCases?.length
+    ? useCases
+    : Object.values(FunctionTemplateUseCase)
+  return requested.filter((useCase) => useCase !== ALERT_TEMPLATES_USE_CASE)
+}
+
 /** SDK types use enum arrays; API accepts the same string values as the template catalog. */
 function listTemplatesFilterPayload(
   runtimes: string[] | undefined,
@@ -283,9 +301,14 @@ export async function fetchFunctionTemplatesPage(
     return { templates: [], total: 0 }
   }
 
+  const visibleUseCases = visibleTemplateUseCases(useCases)
+  if (visibleUseCases?.length === 0) {
+    return { templates: [], total: 0 }
+  }
+
   const projectSdk = sdk.forProject(projectId)
   const response = await projectSdk.functions.listTemplates({
-    ...listTemplatesFilterPayload(runtimes, useCases),
+    ...listTemplatesFilterPayload(runtimes, visibleUseCases),
     limit,
     offset,
     total: true,
@@ -318,6 +341,7 @@ export function functionTemplatesPageQueryOptions(
       limit,
       templatesSortKey(rt),
       templatesSortKey(uc),
+      isFeatureEnabled('alerts'),
     ],
     queryFn: () =>
       fetchFunctionTemplatesPage(projectId!, offset, limit, rt, uc),
@@ -348,13 +372,18 @@ export async function fetchAllFunctionTemplates(
     return { templates: [], total: 0 }
   }
 
+  const visibleUseCases = visibleTemplateUseCases(filters?.useCases)
+  if (visibleUseCases?.length === 0) {
+    return { templates: [], total: 0 }
+  }
+
   const projectSdk = sdk.forProject(projectId)
   const all: Models.TemplateFunction[] = []
   let offset = 0
   let total = 0
   while (true) {
     const response = await projectSdk.functions.listTemplates({
-      ...listTemplatesFilterPayload(filters?.runtimes, filters?.useCases),
+      ...listTemplatesFilterPayload(filters?.runtimes, visibleUseCases),
       limit: FUNCTION_TEMPLATES_LIST_BATCH,
       offset,
       total: offset === 0,
@@ -405,6 +434,7 @@ export function allFunctionTemplatesQueryOptions(
       projectId,
       templatesSortKey(filters?.runtimes),
       templatesSortKey(filters?.useCases),
+      isFeatureEnabled('alerts'),
     ],
     queryFn: () => fetchAllFunctionTemplates(projectId!, filters),
     enabled: !!projectId,
@@ -1581,26 +1611,11 @@ export async function createSmtpDomainRule(
     throw new Error('Domain and Function ID are required')
   }
 
-  const projectSdk = sdk.forProject(projectId)
-  const uri = new URL(`${projectSdk.client.config.endpoint}/proxy/rules/smtp`)
-  const payload: Record<string, string> = {
+  return (await sdk.forProject(projectId).proxy.createSMTPRule({
     domain,
     functionId,
-  }
-  if (params.branch?.trim()) {
-    payload.branch = params.branch.trim()
-  }
-
-  return (await projectSdk.client.call(
-    'post',
-    uri,
-    {
-      'X-Appwrite-Project': projectSdk.client.config.project,
-      'content-type': 'application/json',
-      accept: 'application/json',
-    },
-    payload,
-  )) as SmtpProxyRule
+    branch: params.branch?.trim() || undefined,
+  })) as SmtpProxyRule
 }
 
 /**

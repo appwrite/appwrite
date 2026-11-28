@@ -6,7 +6,7 @@
  * and after-selection summary with optional branch/root directory.
  */
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, type ReactNode } from 'react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
@@ -42,7 +42,6 @@ import {
 import { useVcsInstallationReconnect } from '@/lib/vcs/use-installation-reconnect'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
-import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { AuthFlowHeaderIcon } from '@/components/global/auth/AuthFlowHeaderIcon'
 import {
   buildVcsOrgOptions,
@@ -98,6 +97,8 @@ export interface ConnectRepositorySectionProps {
   emptyStateTitle?: string
   emptyStateDescription?: string
   className?: string
+  /** More repository options, shown under the branch and root directory */
+  children?: ReactNode
 }
 
 export function ConnectRepositorySection({
@@ -122,15 +123,15 @@ export function ConnectRepositorySection({
   emptyStateTitle = 'Connect Git repository',
   emptyStateDescription = 'Create and deploy with a connected git repository.',
   className,
+  children,
 }: ConnectRepositorySectionProps) {
   const t = useT()
-  const { features } = useConsoleProfile()
   const {
     vcsProviders,
     vcsProvidersWithRepositoryCreation,
     vcsProvidersWithPublicRepositories,
   } = useConsoleVariables()
-  const vcsOAuthProviders = getVisibleVcsOAuthProviders(features, vcsProviders)
+  const vcsOAuthProviders = getVisibleVcsOAuthProviders(vcsProviders)
   const vcsAuthUrl = (
     provider?: VcsProviderId,
     mode: 'create' | 'update' = 'create',
@@ -404,6 +405,7 @@ export function ConnectRepositorySection({
                 description={rootDirectoryDescription}
                 placeholder="./"
               />
+              {children}
             </div>
           </>
         )}

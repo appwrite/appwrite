@@ -21,6 +21,7 @@ export const MARKETING_PAGE_PATHS = [
   '/innovation-teams',
   '/education',
   '/for-agents',
+  '/zero',
   '/partners',
   '/enterprise',
   '/affiliates',
@@ -37,7 +38,10 @@ export const MARKETING_PAGE_PATHS = [
   '/products/realtime',
   '/products/sites',
   '/products/analytics',
+  '/products/monitors',
+  '/products/beep',
   '/products/firewall',
+  '/products/reviews',
   ...ALTERNATIVE_PAGE_PATHS,
   ...SECRET_CAMPAIGN_PATHS,
   '/domains',
@@ -45,6 +49,23 @@ export const MARKETING_PAGE_PATHS = [
   '/llms/txt',
   '/llms-full/txt',
 ] as const
+
+/**
+ * Marketing pages behind a launch feature flag. They render on demand, so the
+ * flag decides per request, and stay out of prerendering and the sitemap until
+ * launch, when they leave this list.
+ */
+export const UNLAUNCHED_MARKETING_PATHS: readonly string[] = [
+  '/zero',
+  '/products/monitors',
+  '/products/beep',
+  '/products/reviews',
+  // Appwrite Reviews comparisons launch with Reviews.
+  '/alternative-to/coderabbit',
+  '/alternative-to/copilot',
+  '/alternative-to/bugbot',
+  '/alternative-to/greptile',
+]
 
 export function normalizeMarketingPath(pathname: string): string {
   return pathname.replace(/\/+$/, '') || '/'

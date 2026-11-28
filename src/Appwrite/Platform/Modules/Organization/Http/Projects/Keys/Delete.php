@@ -33,7 +33,7 @@ class Delete extends Action
             ->setHttpPath('/v1/organization/projects/:projectId/keys/:keyId')
             ->desc('Delete project key')
             ->groups(['api', 'organization'])
-            ->label('scope', ['organization.projects.keys.write', 'keys.write'])
+            ->label('scope', [self::SCOPE_WRITE, 'keys.write'])
             ->label('event', 'keys.[keyId].delete')
             ->label('audits.event', 'project.key.delete')
             ->label('audits.resource', 'project.key/{request.keyId}')
@@ -76,7 +76,7 @@ class Delete extends Action
         ?Key $apiKey,
         AuditContext $auditContext,
     ) {
-        $project = $this->getProject($projectId, $team, $dbForPlatform, $apiKey);
+        $project = $this->getProject($projectId, $team, $dbForPlatform, $apiKey, self::SCOPE_WRITE);
 
         // The request may run through the console project; events and audits belong to the resolved project
         $queueForEvents->setProject($project);

@@ -786,7 +786,7 @@ final class EntireTest extends TestCase
         $this->assertSame('in_progress', $adapter->write('pending', 'check', 'Building...')['check_runs'][0]['status']);
         $this->assertSame('in_progress', $adapter->write('in_progress', 'check', 'Building...')['check_runs'][0]['status']);
 
-        foreach (['success' => 'success', 'failure' => 'failure', 'error' => 'failure', 'cancelled' => 'cancelled'] as $state => $conclusion) {
+        foreach (['success' => 'success', 'failure' => 'failure', 'error' => 'failure', 'cancelled' => 'cancelled', 'neutral' => 'neutral', 'action_required' => 'action_required'] as $state => $conclusion) {
             $body = $adapter->write($state, 'check', 'Done.');
             $run = $body['check_runs'][0];
             $this->assertSame('completed', $run['status'], $state);

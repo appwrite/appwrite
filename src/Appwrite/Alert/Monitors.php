@@ -10,11 +10,30 @@ use Utopia\Database\Query;
 /**
  * Removes monitors: the one a request deletes, and those scoped to a database,
  * bucket, function or site that is itself being deleted. A removed monitor's
- * schedule stops, its open alert is resolved, and its alert history stays.
+ * schedule stops, its open alert is resolved and stops escalating, and its
+ * alert history stays.
  */
 readonly class Monitors
 {
     private const int BATCH = 100;
+
+    /**
+     * The stored `$id` of the monitor with the chosen ID `$monitorId` in `$scope`.
+     */
+    public static function id(string $scope, string $monitorId): string
+    {
+        return \md5($scope . ':' . $monitorId);
+    }
+
+    /**
+     * What a monitor's chosen ID is unique within: its project, or its team when it has none.
+     */
+    public static function scope(Document $monitor): string
+    {
+        $projectInternalId = (string) $monitor->getAttribute('projectInternalId', '');
+
+        return $projectInternalId !== '' ? $projectInternalId : 'team:' . $monitor->getAttribute('teamInternalId', '');
+    }
 
     public function __construct(private Database $dbForPlatform)
     {
@@ -33,10 +52,11 @@ readonly class Monitors
                 Query::equal('status', [State::Firing->value]),
             ]);
             if (!$alert->isEmpty()) {
-                $this->dbForPlatform->updateDocument('monitorAlerts', $alert->getId(), new Document([
+                $alert = $this->dbForPlatform->updateDocument('monitorAlerts', $alert->getId(), new Document([
                     'status' => State::Resolved->value,
                     'resolvedAt' => DateTime::now(),
                 ]));
+                (new Escalations($this->dbForPlatform))->stop($alert);
             }
 
             $this->dbForPlatform->deleteDocument('monitors', $monitor->getId());

@@ -78,6 +78,8 @@ type DomainFormatError =
   | { code: 'wildcard' }
   | { code: 'trailing-dot' }
   | { code: 'spaces' }
+  | { code: 'email'; suggestion: string | null }
+  | { code: 'too-long' }
   | { code: 'invalid' }
 
 function looksLikeUrl(value: string): boolean {
@@ -116,7 +118,18 @@ function hasWhitespace(value: string): boolean {
  */
 function getDomainFormatError(value: string): DomainFormatError | null {
   const trimmed = value.trim()
-  if (!trimmed || isValidDomain(trimmed)) return null
+  if (!trimmed) return null
+  // DNS limits the pattern below does not check: 63 characters per label,
+  // 253 for the whole name. A pasted URL or email is reported as that instead.
+  if (
+    !looksLikeUrl(trimmed) &&
+    !trimmed.includes('@') &&
+    (trimmed.length > 253 ||
+      trimmed.split('.').some((label) => label.length > 63))
+  ) {
+    return { code: 'too-long' }
+  }
+  if (isValidDomain(trimmed)) return null
 
   if (looksLikeUrl(trimmed)) {
     const host = bareHost(trimmed)
@@ -129,6 +142,10 @@ function getDomainFormatError(value: string): DomainFormatError | null {
 
   if (trimmed.includes('*')) return { code: 'wildcard' }
   if (hasWhitespace(trimmed)) return { code: 'spaces' }
+  if (trimmed.includes('@')) {
+    const host = trimmed.slice(trimmed.lastIndexOf('@') + 1)
+    return { code: 'email', suggestion: isValidDomain(host) ? host : null }
+  }
   if (trimmed.endsWith('.')) return { code: 'trailing-dot' }
   return { code: 'invalid' }
 }
@@ -148,6 +165,14 @@ function domainFormatErrorMessage(
       return t('Remove the trailing dot.')
     case 'spaces':
       return t('Remove the spaces.')
+    case 'email':
+      return error.suggestion
+        ? `${t('Enter only the part after @:')} ${error.suggestion}`
+        : t('Enter only the domain, the part after @.')
+    case 'too-long':
+      return t(
+        'A domain can be at most 253 characters, and each part between dots at most 63.',
+      )
     case 'invalid':
       return t('Please enter a valid domain')
   }
@@ -188,18 +213,27 @@ export function getApexDomain(domain: string): string | null {
  */
 export function getRecordName(domain: string): string {
   const normalized = domain.trim().toLowerCase()
-  const apex = getApexDomain(normalized)
+  // The zone a user manages can sit under a private suffix (foo.eu.org), the
+  // same way the server reads the registrable domain.
+  const apex = parse(normalized, { allowPrivateDomains: true }).domain
   if (!apex || apex === normalized) return '@'
   return normalized.slice(0, -(apex.length + 1))
 }
 
-export type VerificationMethod = 'cname' | 'nameservers' | 'a' | 'aaaa'
+export type VerificationMethod =
+  | 'cname'
+  | 'alias'
+  | 'nameservers'
+  | 'a'
+  | 'aaaa'
 
 /**
  * Ways a rule's domain can be pointed at Appwrite, the one to show first
- * leading. Most providers refuse a CNAME on an apex domain, so an apex leads
- * with the nameservers (Cloud only), then the A and AAAA records the server
- * also accepts, and keeps the CNAME last for providers that flatten it.
+ * leading. A subdomain takes a CNAME. An apex takes an ALIAS to the CNAME
+ * target, which providers resolve to addresses when queried, so the server's
+ * A and AAAA checks verify it; on Cloud the nameservers are the alternative.
+ * A and AAAA addresses are offered only when there is no CNAME target at all,
+ * since an address can change under the domain.
  */
 export function getVerificationMethods(input: {
   domain: string
@@ -211,12 +245,11 @@ export function getVerificationMethods(input: {
 }): VerificationMethod[] {
   const apex = getRecordName(input.domain) === '@'
   const methods: VerificationMethod[] = []
-  if (input.cname && !apex) methods.push('cname')
+  if (input.cname) methods.push(apex ? 'alias' : 'cname')
   if (input.cloud && apex && input.nameservers.length > 0)
     methods.push('nameservers')
-  if (input.a && (!input.cloud || apex)) methods.push('a')
-  if (input.aaaa && (!input.cloud || apex)) methods.push('aaaa')
-  if (input.cname && apex) methods.push('cname')
+  if (!input.cname && input.a) methods.push('a')
+  if (!input.cname && input.aaaa) methods.push('aaaa')
   return methods
 }
 
@@ -261,6 +294,30 @@ export function getDomainClaimReason(error: unknown): DomainClaimReason | null {
 /** Whether a rule create was refused until the claim record is added. */
 export function isDomainClaimError(error: unknown): boolean {
   return getDomainClaimReason(error) !== null
+}
+
+/**
+ * Type of Cloud's answer to an organization domain create for a domain another
+ * organization holds. The same create moves the domain once the claim record
+ * is in place.
+ */
+export const ORGANIZATION_DOMAIN_CLAIM_REQUIRED = 'domain_claim_required'
+
+/**
+ * The TXT record that lets an organization claim a domain another organization
+ * holds. Its value is its own, not the `team:<id>` a single sign-on domain keeps
+ * published, so consenting to another organization's sign-on never hands it the zone.
+ */
+export function getOrganizationDomainClaimRecord(
+  domain: string,
+  organizationId: string,
+) {
+  return getClaimRecord(domain, `domain:${organizationId}`)
+}
+
+/** Whether an organization domain create waits for the claim record. */
+export function isOrganizationDomainClaimError(error: unknown): boolean {
+  return getAppwriteErrorInfo(error).type === ORGANIZATION_DOMAIN_CLAIM_REQUIRED
 }
 
 /**

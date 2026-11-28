@@ -1,11 +1,19 @@
 import { readFileSync } from 'node:fs'
+import { gunzipSync } from 'node:zlib'
 import type { Locator, Page, Request, Route } from '@playwright/test'
-import type { Models } from '@appwrite.io/console'
+import {
+  VideoCaptionStatus,
+  VideoCodecId,
+  VideoOutput,
+  VideoRenditionStatus,
+  VideoTimelineStatus,
+  type Models,
+} from '@appwrite.io/console'
 import { expect, test } from './fixtures'
 
 /**
  * The Videos pages against the Videos API as the server returns it: profiles
- * listed one codec at a time, codecs with the outputs they support, captions
+ * listed across codecs, codecs with the outputs they support, captions
  * with a processing status, and a thumbnail timeline whose cues point at
  * `thumbnails/{id}`. The Appwrite API is mocked at the network layer and the
  * real console pages are asserted.
@@ -89,19 +97,32 @@ const VIDEO = {
   videoFormat: 'AVC',
   videoFormatProfile: 'High',
   videoBitRate: 4500,
-  videoFrameRate: '30',
+  videoFrameRate: 30,
   videoFrameRateMode: 'CFR',
   audioCodec: 'aac',
   audioFormat: 'AAC',
   audioBitRate: 128,
-  audioSampleRate: '48000',
-  timelineStatus: 'ready',
+  audioSampleRate: 48000,
+  timelineStatus: VideoTimelineStatus.Ready,
   timelineError: '',
 } satisfies Models.Video
 
+/** Values of a `Query.equal('codec', [...])`; the SDK sends `queries[0]`, `queries[1]`, … */
+function codecFilter(url: URL): string[] | undefined {
+  return [...url.searchParams]
+    .filter(([key]) => key.startsWith('queries['))
+    .map(([, query]) => JSON.parse(query))
+    .find((query) => query.method === 'equal' && query.attribute === 'codec')
+    ?.values
+}
+
 const CODECS = [
-  { $id: 'h264', name: 'H.264', outputs: ['hls', 'dash', 'cmaf'] },
-  { $id: 'vp9', name: 'VP9', outputs: ['dash'] },
+  {
+    $id: 'h264',
+    name: 'H.264',
+    outputs: [VideoOutput.Hls, VideoOutput.Dash, VideoOutput.Cmaf],
+  },
+  { $id: 'vp9', name: 'VP9', outputs: [VideoOutput.Dash] },
 ] satisfies Models.VideoCodec[]
 
 const PROFILES = [
@@ -110,22 +131,22 @@ const PROFILES = [
     $createdAt: NOW,
     $updatedAt: NOW,
     name: '720p',
-    codec: 'h264',
+    codec: VideoCodecId.H264,
     width: 1280,
     height: 720,
-    videoBitRate: 2500,
-    audioBitRate: 128,
+    videoBitRate: 2500000,
+    audioBitRate: 128000,
   },
   {
     $id: 'profile00000000000000002',
     $createdAt: NOW,
     $updatedAt: NOW,
     name: 'Archive VP9',
-    codec: 'vp9',
+    codec: VideoCodecId.Vp9,
     width: 1920,
     height: 1080,
-    videoBitRate: 4000,
-    audioBitRate: 128,
+    videoBitRate: 4000000,
+    audioBitRate: 128000,
   },
 ] satisfies Models.VideoProfile[]
 
@@ -141,14 +162,15 @@ const RENDITIONS = [
     endedAt: NOW,
     width: 1280,
     height: 720,
-    videoBitRate: 2500,
-    audioBitRate: 128,
-    targetDuration: '6',
-    status: 'ready',
+    videoBitRate: 2500000,
+    audioBitRate: 128000,
+    targetDuration: 6,
+    status: VideoRenditionStatus.Ready,
     error: '',
-    progress: '100',
-    output: 'cmaf',
-    codec: 'h264',
+    progress: 100,
+    output: VideoOutput.Cmaf,
+    codec: VideoCodecId.H264,
+    size: 0,
   },
 ] satisfies Models.VideoRendition[]
 
@@ -163,12 +185,13 @@ const CAPTIONS = [
     bucketId: 'media',
     fileId: 'file000000000000000002',
     name: 'English',
-    code: 'eng',
+    language: 'eng',
     default: true,
     embedded: false,
-    targetDuration: '6',
-    status: 'ready',
+    targetDuration: 6,
+    status: VideoCaptionStatus.Ready,
     error: '',
+    size: 0,
   },
   {
     $id: 'caption00000000000000002',
@@ -178,12 +201,13 @@ const CAPTIONS = [
     bucketId: 'media',
     fileId: 'file000000000000000003',
     name: 'Hebrew',
-    code: 'heb',
+    language: 'heb',
     default: false,
     embedded: false,
-    targetDuration: '6',
-    status: 'error',
+    targetDuration: 6,
+    status: VideoCaptionStatus.Error,
     error: CAPTION_ERROR,
+    size: 0,
   },
 ] satisfies Models.VideoCaption[]
 
@@ -235,6 +259,7 @@ type Calls = {
   bucketLists: URL[]
   sourceViews: URL[]
   manifests: URL[]
+  videoUpdates: Record<string, unknown>[]
 }
 
 /** A preset the mocked server refuses, to cover a partly failed batch. */
@@ -258,6 +283,7 @@ async function mockAppwriteApi(
     bucketLists: [],
     sourceViews: [],
     manifests: [],
+    videoUpdates: [],
   }
 
   await page.route('**/*', async (route) => {
@@ -283,9 +309,11 @@ async function mockAppwriteApi(
     }
     if (apiPath === '/project/videos/profiles' && method === 'GET') {
       calls.profileLists.push(url)
-      // The API lists one codec per request and defaults to h264.
-      const codec = url.searchParams.get('codec') || 'h264'
-      const listed = profileStore.filter((profile) => profile.codec === codec)
+      // The API lists every codec; the Console filters with `Query.equal('codec', [...])`.
+      const codecs = codecFilter(url)
+      const listed = codecs
+        ? profileStore.filter((profile) => codecs.includes(profile.codec))
+        : profileStore
       return json(200, { total: listed.length, profiles: listed })
     }
     if (apiPath === '/project/videos/profiles' && method === 'POST') {
@@ -310,6 +338,17 @@ async function mockAppwriteApi(
     if (apiPath === '/videos') {
       return json(200, { total: 1, videos: [video] })
     }
+    if (apiPath === `/videos/${VIDEO_ID}` && method !== 'GET') {
+      const body = request.postDataJSON() as Record<string, unknown>
+      calls.videoUpdates.push(body)
+      video = {
+        ...video,
+        // PATCH: only the passed fields change.
+        name: body.name === undefined ? video.name : String(body.name),
+        $permissions: (body.permissions as string[]) ?? video.$permissions,
+      }
+      return json(200, video)
+    }
     if (apiPath === `/videos/${VIDEO_ID}`) return json(200, video)
     if (apiPath === `/videos/${VIDEO_ID}/renditions`) {
       return json(200, { total: renditions.length, renditions })
@@ -317,7 +356,7 @@ async function mockAppwriteApi(
     if (apiPath === `/videos/${VIDEO_ID}/captions`) {
       return json(200, { total: CAPTIONS.length, captions: CAPTIONS })
     }
-    if (apiPath === `/videos/${VIDEO_ID}/timelines`) {
+    if (apiPath === `/videos/${VIDEO_ID}/timeline`) {
       if (video.timelineStatus !== 'ready') {
         return json(404, {
           message: 'Video timelines not found.',
@@ -449,6 +488,14 @@ async function screenshot(page: Page, name: string) {
   })
 }
 
+/** A duration as the inspector writes it, `412 ms` or `1.52 s`, in ms. */
+function duration(text: string | null | undefined): number {
+  const value = text?.trim() ?? ''
+  if (value.endsWith(' ms')) return Number(value.slice(0, -3))
+  if (value.endsWith(' s')) return Number(value.slice(0, -2)) * 1000
+  throw new Error(`Not a duration: "${value}"`)
+}
+
 const profileRow = (page: Page, name: string) =>
   page.getByRole('row', { name: new RegExp(`Select profile ${name}`) })
 
@@ -468,11 +515,15 @@ test.describe('videos (mocked API)', () => {
     await expect(
       profileRow(page, '720p').getByRole('cell', { name: 'h264', exact: true }),
     ).toBeVisible()
+    // Every enabled codec is filtered through queries, not the removed `codec` param.
     await expect
       .poll(() =>
-        calls.profileLists.map((url) => url.searchParams.get('codec')).sort(),
+        calls.profileLists.map((url) => ({
+          codec: url.searchParams.get('codec'),
+          codecs: codecFilter(url),
+        })),
       )
-      .toEqual(expect.arrayContaining(['h264', 'vp9']))
+      .toContainEqual({ codec: null, codecs: ['h264', 'vp9'] })
 
     await screenshot(page, 'videos-profiles.png')
   })
@@ -543,7 +594,12 @@ test.describe('videos (mocked API)', () => {
   test('locks the player until a rendition is ready', async ({ page }) => {
     await enableVideos(page)
     const calls = await mockAppwriteApi(page, VIDEO, [
-      { ...RENDITIONS[0], status: 'started', progress: '40', endedAt: '' },
+      {
+        ...RENDITIONS[0],
+        status: VideoRenditionStatus.Started,
+        progress: 40,
+        endedAt: '',
+      },
     ])
     await open(page, `/${VIDEO_ID}`, (page) =>
       page.locator('[data-player-state="locked"]'),
@@ -558,6 +614,117 @@ test.describe('videos (mocked API)', () => {
     expect(calls.sourceViews).toHaveLength(0)
 
     await screenshot(page, 'videos-player-locked.png')
+  })
+
+  test('keeps the overview player size for a letterboxed video', async ({
+    page,
+  }) => {
+    await enableVideos(page)
+    // A 2.39:1 source in 16:9 renditions decodes as a padded 16:9 frame.
+    await mockAppwriteApi(
+      page,
+      { ...VIDEO, width: 1920, height: 804, aspectRatio: '2.39:1' },
+      RENDITIONS,
+      PROFILES,
+      true,
+    )
+    await open(page, `/${VIDEO_ID}/settings`, (page) =>
+      page.getByRole('switch', { name: 'Public playback' }),
+    )
+    await page.evaluate(() => {
+      const heights: number[] = []
+      ;(window as unknown as { heights: number[] }).heights = heights
+      const sample = () => {
+        const frame = document.querySelector('video')?.parentElement
+        if (frame)
+          heights.push(Math.round(frame.getBoundingClientRect().height))
+        requestAnimationFrame(sample)
+      }
+      sample()
+    })
+
+    await page
+      .locator(`a[href$="/videos/${VIDEO_ID}"][data-status]`)
+      .first()
+      .click()
+    const video = page.locator('video')
+    await expect
+      .poll(() => video.evaluate((node: HTMLVideoElement) => node.videoHeight))
+      .toBeGreaterThan(0)
+    await page.waitForTimeout(500)
+
+    const heights = await page.evaluate(
+      () => (window as unknown as { heights: number[] }).heights,
+    )
+    expect(heights.length).toBeGreaterThan(0)
+    expect(new Set(heights).size).toBe(1)
+  })
+
+  test('keeps the player size when the stream loads', async ({ page }) => {
+    await enableVideos(page)
+    // Rendition sizes round, so the 16:9 stream is a hair off the source
+    // ratio. The frame keeps the source ratio it rendered with first.
+    await mockAppwriteApi(
+      page,
+      { ...VIDEO, width: 1000, height: 560 },
+      RENDITIONS,
+      PROFILES,
+      true,
+    )
+    await open(page, `/${VIDEO_ID}`, (page) => page.locator('video'))
+    const video = page.locator('video')
+    await expect
+      .poll(() => video.evaluate((node: HTMLVideoElement) => node.readyState))
+      .toBeGreaterThanOrEqual(1)
+
+    const frame = (await video.boundingBox())!
+    expect(Math.abs(frame.height - (frame.width * 560) / 1000)).toBeLessThan(1)
+  })
+
+  test('shows encoding progress on every video tab', async ({ page }) => {
+    await enableVideos(page)
+    await mockAppwriteApi(page, VIDEO, [
+      {
+        ...RENDITIONS[0],
+        status: VideoRenditionStatus.Started,
+        progress: 40,
+        endedAt: '',
+      },
+      {
+        ...RENDITIONS[0],
+        $id: 'rendition000000000000002',
+        name: '1080p',
+        width: 1920,
+        height: 1080,
+      },
+    ])
+    const progress = page.getByText('Processing renditions')
+    const link = page.getByRole('link', { name: 'View renditions' })
+
+    await open(page, `/${VIDEO_ID}`, () => progress)
+    await expect(link).toBeVisible()
+    await screenshot(page, 'videos-progress-overview.png')
+
+    await open(page, `/${VIDEO_ID}/timeline`, () => progress)
+    await expect(link).toBeVisible()
+
+    await open(page, `/${VIDEO_ID}/renditions`, () => progress)
+    await expect(link).toHaveCount(0)
+  })
+
+  test('shows rendition status right after the ID', async ({ page }) => {
+    await enableVideos(page)
+    await mockAppwriteApi(page)
+    const headers = page.getByRole('columnheader')
+
+    await open(page, `/${VIDEO_ID}/renditions`, () =>
+      headers.filter({ hasText: 'Status' }),
+    )
+
+    const names = (await headers.allInnerTexts()).map((text) => text.trim())
+    const id = names.indexOf('ID')
+    expect(id).toBeGreaterThanOrEqual(0)
+    expect(names[id + 1]).toBe('Status')
   })
 
   test('docks a small player while scrolling the overview', async ({
@@ -594,7 +761,11 @@ test.describe('videos (mocked API)', () => {
     await expect
       .poll(async () => (await video.boundingBox())!.height)
       .toBeLessThan(fullHeight / 2)
-    // Stays pinned to the top of the scroll area.
+    // Stays pinned to the top of the scroll area. Measure once the docking
+    // slide-in has finished, or the 4px slide reads as the player moving.
+    await player.evaluate((node) =>
+      Promise.all(node.getAnimations().map((animation) => animation.finished)),
+    )
     const docked = (await player.boundingBox())!
     await scrollBy(300)
     await expect
@@ -610,6 +781,38 @@ test.describe('videos (mocked API)', () => {
 
     await scrollBy(-5000)
     await expect(player).toHaveCount(0)
+  })
+
+  test('times the first frame from the loaded manifest', async ({ page }) => {
+    await enableVideos(page)
+    await mockAppwriteApi(page, VIDEO, RENDITIONS, PROFILES, true)
+    // A slow manifest is not counted; a slow first segment is.
+    const delays: Record<string, number> = {
+      'master.m3u8': 1500,
+      'segment0.m4s': 400,
+    }
+    await page.route(`**/v1/videos/${VIDEO_ID}/outputs/**`, async (route) => {
+      const name = new URL(route.request().url()).pathname.split('/').pop()
+      await new Promise((resolve) => setTimeout(resolve, delays[name!] ?? 0))
+      await route.fallback()
+    })
+    await open(page, `/${VIDEO_ID}`, (page) =>
+      page.getByText('Time to first frame', { exact: true }),
+    )
+
+    const tile = page
+      .locator('dl > div')
+      .filter({ hasText: 'Time to first frame' })
+    await expect(tile.locator('dd')).toHaveText(/\d/, { timeout: 30_000 })
+    const startupMs = duration(await tile.locator('dd').textContent())
+    expect(startupMs).toBeGreaterThanOrEqual(400)
+    expect(startupMs).toBeLessThan(1500)
+    const hint = (await tile.locator('p').textContent()) ?? ''
+    expect(hint.startsWith('Manifest (not counted): ')).toBe(true)
+    expect(duration(hint.split(': ')[1])).toBeGreaterThanOrEqual(1500)
+    await tile.screenshot({
+      path: test.info().outputPath('videos-inspector-first-frame.png'),
+    })
   })
 
   for (const status of [404, 401] as const) {
@@ -631,7 +834,7 @@ test.describe('videos (mocked API)', () => {
 
       await expect(
         page.getByText(
-          'Private video. Only project members can watch it here.',
+          'Visitors get an error here. You can watch because you are a project member.',
         ),
       ).toBeVisible({ timeout: 60_000 })
       expect(
@@ -654,6 +857,140 @@ test.describe('videos (mocked API)', () => {
       })
     })
   }
+
+  test('plays the player page with the options in its query string', async ({
+    page,
+  }) => {
+    await enableVideos(page)
+    await mockAppwriteApi(page, VIDEO, RENDITIONS, PROFILES, true)
+    await page.goto(
+      `/player/${VIDEO_ID}?project=${PROJECT_ID}&muted=1&loop=1&controls=0`,
+      { waitUntil: 'domcontentloaded' },
+    )
+
+    const video = page.locator('video')
+    await expect
+      .poll(
+        () => video.evaluate((element: HTMLVideoElement) => element.readyState),
+        { timeout: 60_000 },
+      )
+      .toBeGreaterThanOrEqual(2)
+    expect(
+      await video.evaluate((element: HTMLVideoElement) => ({
+        muted: element.muted,
+        loop: element.loop,
+      })),
+    ).toEqual({ muted: true, loop: true })
+    // `controls=0` leaves no control bar.
+    await expect(page.getByRole('slider', { name: 'Seek' })).toHaveCount(0)
+    await expect(page.getByRole('button', { name: 'Settings' })).toHaveCount(0)
+  })
+
+  test('edits the player through its query string from Preview', async ({
+    page,
+  }) => {
+    await enableVideos(page)
+    await mockAppwriteApi(page)
+    // The page header's Preview, after the one under the sidebar thumbnail.
+    const preview = page
+      .getByRole('button', { name: 'Preview', exact: true })
+      .last()
+    await open(page, `/${VIDEO_ID}`, () => preview)
+
+    await preview.click()
+    const panel = page.getByRole('dialog').filter({ hasText: 'Player preview' })
+    await expect(panel).toBeVisible()
+    const frame = panel.locator('iframe')
+    const query = panel.getByLabel('Query string')
+    await expect(query).toHaveValue(`?project=${PROJECT_ID}`)
+
+    // An option writes its parameter...
+    await panel.getByRole('switch', { name: 'Loop' }).click()
+    await expect(query).toHaveValue(`?project=${PROJECT_ID}&loop=1`)
+    await expect
+      .poll(() => frame.getAttribute('src'))
+      .toContain(`/player/${VIDEO_ID}?project=${PROJECT_ID}&loop=1`)
+
+    // ...and a typed parameter sets the option.
+    await query.fill(`?project=${PROJECT_ID}&loop=1&start=5&controls=0`)
+    await query.press('Enter')
+    await expect(
+      panel.getByRole('switch', { name: 'Player controls' }),
+    ).not.toBeChecked()
+    await expect(panel.getByText('0:05', { exact: true })).toBeVisible()
+    await expect(query).toHaveValue(
+      `?project=${PROJECT_ID}&start=5&loop=1&controls=0`,
+    )
+    await expect
+      .poll(() => frame.getAttribute('src'))
+      .toContain('start=5&loop=1&controls=0')
+    await screenshot(page, 'videos-player-preview.png')
+  })
+
+  test('warns that a video is private', async ({ page }) => {
+    await enableVideos(page)
+    await mockAppwriteApi(page)
+    const warning = page.getByText('This video is private', { exact: true })
+
+    await open(page, `/${VIDEO_ID}`, () => warning)
+    await expect(
+      page.getByText('Only project members and API keys can watch it.', {
+        exact: false,
+      }),
+    ).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Make public' })).toHaveCount(
+      0,
+    )
+    await screenshot(page, 'videos-private-warning.png')
+  })
+
+  test('opens the video permissions from the private warning', async ({
+    page,
+  }) => {
+    await enableVideos(page)
+    const calls = await mockAppwriteApi(page, {
+      ...VIDEO,
+      $permissions: ['read("users")', 'update("users")'],
+    })
+    const warning = page.getByText('This video is private', { exact: true })
+
+    await open(page, `/${VIDEO_ID}`, () => warning)
+    await expect(
+      page.getByText(
+        'Only signed-in users with read access can watch it in your app.',
+        { exact: false },
+      ),
+    ).toBeVisible()
+    await page.getByRole('link', { name: 'Permissions' }).click()
+
+    const toggle = page.getByRole('switch', { name: 'Public playback' })
+    await expect(toggle).not.toBeChecked()
+    await screenshot(page, 'videos-settings-access.png')
+    await toggle.click()
+
+    await expect(toggle).toBeChecked()
+    await expect(warning).toHaveCount(0)
+    // A sparse PATCH: the name is not resent.
+    expect(calls.videoUpdates).toEqual([
+      {
+        permissions: ['read("users")', 'update("users")', 'read("any")'],
+      },
+    ])
+  })
+
+  test('shows no private warning for a public video', async ({ page }) => {
+    await enableVideos(page)
+    await mockAppwriteApi(page, { ...VIDEO, $permissions: ['read("any")'] })
+
+    await open(page, `/${VIDEO_ID}/settings`, (page) =>
+      page.getByRole('switch', { name: 'Public playback' }),
+    )
+
+    await expect(
+      page.getByRole('switch', { name: 'Public playback' }),
+    ).toBeChecked()
+    await expect(page.getByText('This video is private')).toHaveCount(0)
+  })
 
   test('asks for a rendition when a video has none', async ({ page }) => {
     await enableVideos(page)
@@ -769,11 +1106,80 @@ test.describe('videos (mocked API)', () => {
     await screenshot(page, 'videos-timeline.png')
   })
 
+  test('downloads the timeline file and thumbnails', async ({ page }) => {
+    await enableVideos(page)
+    await mockAppwriteApi(page)
+    await open(page, `/${VIDEO_ID}/timeline`, (page) =>
+      page.getByText('Timeline file', { exact: true }),
+    )
+    const download = (card: string) =>
+      page
+        .locator('section')
+        .filter({ has: page.getByRole('heading', { name: card }) })
+        .getByRole('button', { name: 'Download' })
+
+    const [vtt] = await Promise.all([
+      page.waitForEvent('download'),
+      download('Timeline file').click(),
+    ])
+    expect(vtt.suggestedFilename()).toBe('launch-keynote-timeline.vtt')
+    expect(readFileSync(await vtt.path(), 'utf8')).toBe(TIMELINE)
+
+    const [archive] = await Promise.all([
+      page.waitForEvent('download'),
+      download('Thumbnails').click(),
+    ])
+    expect(archive.suggestedFilename()).toBe('launch-keynote-thumbnails.tar.gz')
+    const tar = gunzipSync(readFileSync(await archive.path()))
+    const listing = tar.toString('latin1')
+    expect(listing).toContain('timeline.vtt')
+    expect(listing).toContain('sprite-1.png#xywh=160,0,160,90')
+    // The sheet is stored byte for byte.
+    expect(tar.includes(THUMBNAIL)).toBe(true)
+  })
+
+  test('skips a black opening frame for the poster', async ({ page }) => {
+    await enableVideos(page)
+    await mockAppwriteApi(page)
+    // Later routes win: the first sheet frame is black, the second detailed.
+    await page.route(`**/v1/videos/${VIDEO_ID}/thumbnails/**`, (route) =>
+      route.fulfill({
+        status: 200,
+        headers: { ...corsHeaders(route), 'content-type': 'image/png' },
+        body: fixture('sprite-poster.png'),
+      }),
+    )
+    await open(page, `/${VIDEO_ID}/settings`, (page) =>
+      page.locator('aside [style*="background-position"]').first(),
+    )
+
+    await expect(
+      page.locator('aside [style*="background-position"]').first(),
+    ).toHaveCSS('background-position', '-160px 0px')
+  })
+
+  test('letterboxes list thumbnails in black', async ({ page }) => {
+    await enableVideos(page)
+    await mockAppwriteApi(page)
+    const frame = page
+      .locator(
+        `main a[href$="/videos/${VIDEO_ID}"] [style*="background-position"]`,
+      )
+      .first()
+
+    await open(page, '', () => frame)
+
+    await expect(frame.locator('..')).toHaveCSS(
+      'background-color',
+      'rgb(0, 0, 0)',
+    )
+  })
+
   test('reports a timeline that failed', async ({ page }) => {
     await enableVideos(page)
     await mockAppwriteApi(page, {
       ...VIDEO,
-      timelineStatus: 'error',
+      timelineStatus: VideoTimelineStatus.Error,
       timelineError: 'ffmpeg exited with code 1',
     })
     await open(page, `/${VIDEO_ID}/timeline`, (page) =>
@@ -792,7 +1198,7 @@ test.describe('videos (mocked API)', () => {
       width: 0,
       height: 0,
       videoCodec: '',
-      timelineStatus: 'skipped',
+      timelineStatus: VideoTimelineStatus.Skipped,
     })
     await open(page, `/${VIDEO_ID}/timeline`, (page) =>
       page.getByText('No timeline for this video', { exact: true }),

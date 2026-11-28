@@ -523,6 +523,8 @@ return [
             Attribute::string(key: 'duration'),
             Attribute::integer(key: 'streamId', signed: false, default: 0),
             Attribute::integer(key: 'isInit', signed: false, default: 0),
+            // Bytes of this segment on the videos device.
+            Attribute::integer(key: 'size', width: IntegerWidth::Bits64, signed: false, default: 0),
         ],
         'indexes' => [
             Index::key(key: '_key_renditionId', attributes: ['renditionId']),
@@ -639,6 +641,8 @@ return [
             // Public filters go by the repository's public id, not its internal one.
             Index::key(key: '_key_repositoryId_pullRequest', attributes: ['repositoryId', 'providerPullRequestId']),
             Index::key(key: '_key_status', attributes: ['status']),
+            // Completed reviews of a range, newest first: what review performance is computed from.
+            Index::key(key: '_key_status_createdAt', attributes: ['status', '$createdAt']),
         ],
     ],
 
@@ -669,6 +673,8 @@ return [
         ],
         'indexes' => [
             Index::key(key: '_key_reviewInternalId', attributes: ['reviewInternalId']),
+            // The findings of many reviews but the dropped ones, for review performance.
+            Index::key(key: '_key_reviewInternalId_status', attributes: ['reviewInternalId', 'status']),
         ],
     ],
 

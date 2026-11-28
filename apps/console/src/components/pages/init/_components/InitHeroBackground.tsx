@@ -166,6 +166,97 @@ function applyParticleTheme(
   return { opacityStagger, accent }
 }
 
+/** anime.js `'inOut'`: power-in easing (p = 1.68) mirrored around the midpoint. */
+function easeInOut(t: number) {
+  return t < 0.5 ? (2 * t) ** 1.68 / 2 : 1 - (2 - 2 * t) ** 1.68 / 2
+}
+
+/**
+ * The particle trail: each particle eases toward the latest cursor sample with its
+ * own staggered delay and duration, and overlapping moves add up.
+ *
+ * Same math as one `animate(particles, { x, y, composition: 'blend' })` per sample,
+ * which renders `latest + Σ (previous − sample) × (1 − ease(progress))` per
+ * particle, without allocating ~30 live animations and ~10k tweens each frame.
+ * Translation goes through the CSS `translate` property, which composes before
+ * anime's `transform: scale()` exactly like anime's own `translate() scale()`.
+ */
+function createParticleFollower(
+  particles: HTMLElement[],
+  stagger: { delay: StaggerFunction<number>; duration: StaggerFunction<number> },
+) {
+  const count = particles.length
+  const delays = new Float64Array(count)
+  const durations = new Float64Array(count)
+  const lastX = new Float64Array(count)
+  const lastY = new Float64Array(count)
+  let lifetime = 0
+
+  for (let i = 0; i < count; i++) {
+    delays[i] = Number(stagger.delay(particles[i], i, particles))
+    durations[i] = Number(stagger.duration(particles[i], i, particles))
+    lifetime = Math.max(lifetime, delays[i] + durations[i])
+  }
+
+  const times: number[] = []
+  const deltasX: number[] = []
+  const deltasY: number[] = []
+  let targetX = 0
+  let targetY = 0
+
+  const render = () => {
+    const now = clock.currentTime
+
+    let expired = 0
+    while (expired < times.length && now - times[expired] >= lifetime) expired++
+    if (expired) {
+      times.splice(0, expired)
+      deltasX.splice(0, expired)
+      deltasY.splice(0, expired)
+    }
+
+    for (let i = 0; i < count; i++) {
+      const delay = delays[i]
+      const duration = durations[i]
+      let x = targetX
+      let y = targetY
+
+      for (let k = 0; k < times.length; k++) {
+        const progress = (now - times[k] - delay) / duration
+        if (progress >= 1) continue
+        const remaining = progress <= 0 ? 1 : 1 - easeInOut(progress)
+        x += deltasX[k] * remaining
+        y += deltasY[k] * remaining
+      }
+
+      x = Math.round(x * 100) / 100
+      y = Math.round(y * 100) / 100
+      if (x === lastX[i] && y === lastY[i]) continue
+      lastX[i] = x
+      lastY[i] = y
+      particles[i].style.translate = `${x}px ${y}px`
+    }
+
+    // Settled: stop ticking until the next move.
+    if (!times.length) clock.pause()
+  }
+
+  // Runs on anime's engine clock, so it pauses with hidden tabs like the pulse does.
+  const clock = createTimer({ autoplay: false, onUpdate: render })
+
+  return {
+    moveTo(x: number, y: number) {
+      if (x === targetX && y === targetY) return
+      times.push(clock.currentTime)
+      deltasX.push(targetX - x)
+      deltasY.push(targetY - y)
+      targetX = x
+      targetY = y
+      if (clock.paused) clock.play()
+    },
+  }
+}
+
 export function InitHeroBackground({
   containerRef,
   compact = false,
@@ -275,8 +366,6 @@ export function InitHeroBackground({
       }
 
       utils.set(particleEls, {
-        x: 0,
-        y: 0,
         zIndex: stagger([rows * rows, 1], {
           grid,
           from,
@@ -321,24 +410,24 @@ export function InitHeroBackground({
         })
       }
 
+      const follower = createParticleFollower(
+        Array.from(particleEls) as HTMLElement[],
+        {
+          delay: stagger(lowPower ? dur(70) : dur(40), { grid, from }),
+          duration: stagger(lowPower ? dur(180) : dur(120), {
+            start: lowPower ? dur(950) : dur(750),
+            ease: 'inQuad',
+            grid,
+            from,
+          }),
+        },
+      )
+
       const mainLoop = createTimer({
         frameRate: lowPower ? 8 : 15,
         onUpdate: () => {
           if (!canRunRef.current || !activeRef.current) return
-
-          animate(particleEls, {
-            x: cursor.x,
-            y: cursor.y,
-            delay: stagger(lowPower ? dur(70) : dur(40), { grid, from }),
-            duration: stagger(lowPower ? dur(180) : dur(120), {
-              start: lowPower ? dur(950) : dur(750),
-              ease: 'inQuad',
-              grid,
-              from,
-            }),
-            ease: 'inOut',
-            composition: 'blend',
-          })
+          follower.moveTo(cursor.x, cursor.y)
         },
       })
 

@@ -133,6 +133,7 @@ $messaging->send($message);
 - [x] [SendGrid](https://sendgrid.com/)
 - [x] [Mailgun](https://www.mailgun.com/)
 - [x] [Resend](https://resend.com/)
+- [x] [Bird](https://bird.com/) (formerly MessageBird and SparkPost)
 - [ ] [Mailjet](https://www.mailjet.com/)
 - [ ] [Mailchimp](https://www.mailchimp.com/)
 - [ ] [Postmark](https://postmarkapp.com/)

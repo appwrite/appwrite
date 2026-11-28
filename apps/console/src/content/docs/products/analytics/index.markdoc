@@ -11,20 +11,20 @@ description: See who visits your websites and apps with Appwrite Analytics. Trac
 ![Appwrite Analytics dashboard](/images/docs/analytics/cover.avif)
 {% /only_light %}
 
-Appwrite **Analytics** shows how people find and use your websites and apps. Add tracking with the Web or Flutter SDK, or send events over REST. Each property's dashboard then shows your visitors, where they came from, the pages they viewed, where they are, and the devices they use, next to the events you define, such as signups and purchases.
+Appwrite **Analytics** shows how people find and use your websites, mobile apps, and AI agents: who visits, where they came from, the pages or screens they viewed, where they are, and the devices they use, next to your own events, such as signups and purchases. A site on Appwrite Sites needs no code, a website needs one script tag, and apps use the Android, Apple, Flutter, React Native, or Web SDK. Anything else can send events over REST.
 
-Analytics works without cookies or identifiers stored on the visitor's device, and labels traffic from search crawlers, AI crawlers, AI assistants, and other bots, so you can see how much of your traffic comes from people.
+Analytics works without cookies or identifiers stored on the visitor's device, and labels traffic from search crawlers, AI crawlers, AI assistants, and other bots. A property can also record the Appwrite user IDs of signed-in users.
 
-{% info title="Appwrite Cloud" %}
-Analytics is available on Appwrite Cloud. Your organization plan sets how many events you can send each month and how far back you can see your data. See [Limits and retention](/docs/products/analytics/limits).
+{% info title="Plan limits" %}
+Your organization's plan sets the monthly events limit, the number of properties in each project, and how long data stays available. See [Limits and retention](/docs/products/analytics/limits).
 {% /info %}
 
 # How it works {% #how-it-works %}
 
-1. **Property**: A property is one website or app you track, with its own property ID, settings, and dashboard. See [Properties](/docs/products/analytics/properties).
-2. **Events**: Your site or app sends an event for each pageview and action. The tracking helpers in the Web and Flutter SDKs send common events for you, and you add your own. See [Events](/docs/products/analytics/events).
-3. **Enrichment**: For each event, Appwrite works out the page, the traffic source, the location, the browser and device, whether a bot sent it, and which visitor and visit it belongs to.
-4. **Reports**: The dashboard turns events into metrics and breakdowns for any date range, with filters and comparisons. You can also export them, and read them from your code with the Analytics API.
+1. **Property**: A property is one website, mobile app, or agent you track, with its own property ID, settings, and dashboard. Its type, **Web**, **Mobile**, or **Agent**, sets which metrics and cards the dashboard shows. See [Properties](/docs/products/analytics/properties).
+2. **Events**: Your site or app sends an event for each pageview and action. The `Tracking` class in each Appwrite SDK sends common events automatically, and your code adds its own. See [Events](/docs/products/analytics/events).
+3. **Event details**: For each event, Appwrite adds the page, the traffic source, the location, the browser and device, and any bot label, then groups events by visitor and visit.
+4. **Reports**: The dashboard turns events into metrics and breakdowns for any date range, with filters and comparisons. Export them as a PDF report or CSV files, or read them from your code with the Analytics API.
 
 # Get started {% #getting-started %}
 
@@ -40,13 +40,13 @@ How Analytics collects events and turns them into metrics.
 
 {% cards %}
 {% cards_item href="/docs/products/analytics/properties" title="Properties" %}
-Create properties, choose the origins that can send events, and link a property to a site.
+Create properties, choose their type and the origins that can send events, identify signed-in users, and link a property to a site.
 {% /cards_item %}
 {% cards_item href="/docs/products/analytics/events" title="Events" %}
-The events the tracking helpers send, custom events, and what Appwrite adds to each one.
+The events the `Tracking` class sends, custom events, and what Appwrite adds to each one.
 {% /cards_item %}
 {% cards_item href="/docs/products/analytics/dashboard" title="Dashboard" %}
-The metrics, chart, date ranges, live visitors, and the cards that break down traffic.
+The metrics, chart, notes, date ranges, live visitors, and the cards that break down traffic.
 {% /cards_item %}
 {% cards_item href="/docs/products/analytics/metrics" title="Metrics" %}
 How each metric is calculated, the breakdowns, and how to read metrics from your code.
@@ -74,10 +74,10 @@ Step-by-step guides for tracking and working with your analytics.
 
 {% cards %}
 {% cards_item href="/docs/products/analytics/web" title="Track a website" %}
-Track pageviews, outbound links, scroll depth, engagement time, and downloads with the Web SDK.
+Track pageviews, outbound links, scroll depth, engagement time, and downloads with one script tag or the Web SDK.
 {% /cards_item %}
-{% cards_item href="/docs/products/analytics/flutter" title="Track a Flutter app" %}
-Track screens and app lifecycle events with the Flutter SDK.
+{% cards_item href="/docs/products/analytics/mobile" title="Track a mobile app" %}
+Track installs, screens, push notifications, and app lifecycle events with the Android, Apple, Flutter, or React Native SDK.
 {% /cards_item %}
 {% cards_item href="/docs/products/analytics/rest" title="Send events over REST" %}
 Send events from any client with one HTTP request each.

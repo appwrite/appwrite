@@ -49,16 +49,8 @@ import { analyticsAttrs } from '@/lib/analytics-actions'
 import { marketingProductToolkit } from '@/lib/marketing/product-toolkit'
 import { PRODUCT_NAV_REGISTRY } from '@/lib/products/registry'
 import type { ProductNavItemId } from '@/lib/products/types'
-import {
-  getMarketingHomeOgImage,
-  getMarketingPageMetaTags,
-  MARKETING_HOMEPAGE_TITLE,
-} from '@/lib/marketing/route-meta'
 import { getEnglishCatalog, useI18n } from '@/lib/i18n'
-import { NOINDEX_FOLLOW_ROBOTS_META } from '@/lib/seo/indexing'
-import { getDefaultSiteOrigin } from '@/lib/marketing/site-origin'
-import { stringifyJsonLd } from '@/lib/seo/json-ld'
-import { getOrganizationSchema, getWebSiteSchema } from '@/lib/seo/organization'
+import { HOME_HERO_DARK_SRC, HOME_HERO_LIGHT_SRC } from './head'
 
 const HOME_COPY = getEnglishCatalog().website.home
 
@@ -240,64 +232,6 @@ function getSecurityItems(homeCopy: HomeCopy) {
       icon: Scale,
     },
   ] as const
-}
-
-/** Bump when replacing homepage hero dashboard screenshots so caches refetch. */
-const HOME_HERO_IMAGE_CACHE_BUST = '20260729'
-const HOME_HERO_LIGHT_SRC = `/images/heroes/console-app-light.avif?v=${HOME_HERO_IMAGE_CACHE_BUST}`
-const HOME_HERO_DARK_SRC = `/images/heroes/console-app-dark.avif?v=${HOME_HERO_IMAGE_CACHE_BUST}`
-
-/** `/` and `/home` render the same page; both point search engines at `/`. */
-export function getHomePageHead() {
-  const canonical = `${getDefaultSiteOrigin()}/`
-  return {
-    meta: [
-      ...getMarketingPageMetaTags({
-        pageName: 'Home',
-        title: MARKETING_HOMEPAGE_TITLE,
-        description: HOME_COPY.seoDescription,
-        ogImage: getMarketingHomeOgImage(),
-      }),
-      { property: 'og:url', content: canonical },
-    ],
-    links: [
-      { rel: 'canonical', href: canonical },
-      {
-        rel: 'preload',
-        as: 'image',
-        href: HOME_HERO_LIGHT_SRC,
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        rel: 'preload',
-        as: 'image',
-        href: HOME_HERO_DARK_SRC,
-        media: '(prefers-color-scheme: dark)',
-      },
-    ],
-    scripts: [
-      {
-        type: 'application/ld+json',
-        children: stringifyJsonLd({
-          '@context': 'https://schema.org',
-          '@graph': [getOrganizationSchema(), getWebSiteSchema()],
-        }),
-      },
-    ],
-  }
-}
-
-/**
- * `/home1`: the factory hero. Same canonical as `/`, kept out of search, and
- * no hero screenshot preload because the Console sits lower on the page.
- */
-export function getFactoryHomePageHead() {
-  const head = getHomePageHead()
-  return {
-    ...head,
-    meta: [...head.meta, NOINDEX_FOLLOW_ROBOTS_META],
-    links: head.links.filter((link) => link.rel !== 'preload'),
-  }
 }
 
 /** `factory` swaps the dashboard hero for the 3D software factory. */
@@ -566,9 +500,9 @@ export function View({ variant = 'default' }: { variant?: HomeVariant }) {
           </div>
         </section>
 
-        {factory ? <ConsoleSection /> : null}
-
         <AiSection />
+
+        {factory ? <ConsoleSection /> : null}
 
         <TestimonialsSection />
 

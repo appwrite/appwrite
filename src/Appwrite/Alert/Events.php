@@ -7,13 +7,15 @@ use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
+use Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response\Model\Alert as AlertModel;
 use Utopia\Database\Document;
 
 /**
- * Fires an alert's project event, `monitors.[monitorId].alerts.[alertId].<change>`,
- * with the alert as its payload: to the project's webhooks, the functions that
- * listen to it, and realtime. For callers outside the project's own request,
+ * Fires an alert's project event, `monitors.[monitorId].alerts.[alertId].create`
+ * when it opens and `.update` when it resolves or is acknowledged, with the alert
+ * as its payload: to the project's webhooks, the functions that listen to it, and
+ * realtime. For callers outside the project's own request,
  * such as the evaluator or an organization route; a project route fires it
  * through the request's event instead.
  */
@@ -24,6 +26,8 @@ readonly class Events
         private Webhook $queueForWebhooks,
         private FunctionPublisher $publisherForFunctions,
         private Realtime $queueForRealtime,
+        // An edition whose alerts carry more attributes passes the model that keeps them.
+        private Model $model = new AlertModel(),
     ) {
     }
 
@@ -40,10 +44,10 @@ readonly class Events
 
         $this->queueForEvents
             ->setProject($project)
-            ->setEvent('monitors.[monitorId].alerts.[alertId].' . $change->value)
+            ->setEvent('monitors.[monitorId].alerts.[alertId].' . $change->event())
             ->setParam('monitorId', (string) $alert->getAttribute('monitorId'))
             ->setParam('alertId', $alert->getId())
-            ->setPayload((new AlertModel())->payload($alert));
+            ->setPayload($this->model->payload($alert));
 
         if ($this->queueForWebhooks->from($this->queueForEvents)->trigger() === false) {
             throw new \RuntimeException('The alert event for webhooks was not accepted by the queue.');

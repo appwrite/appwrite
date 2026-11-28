@@ -66,6 +66,8 @@ class Server
         $this->packetsReceived = $telemetry->createCounter('mqtt.packets.received');
         $this->connectionsOpened = $telemetry->createCounter('mqtt.connections.opened');
         $this->connectionsActive = $telemetry->createUpDownCounter('mqtt.connections.active');
+        // Reported as 0 from the start, so a broker that never accepts a connection still has the series.
+        $this->connectionsActive->add(0);
         $this->subscriptions = $telemetry->createCounter('mqtt.subscriptions');
 
         return $this;
@@ -189,7 +191,12 @@ class Server
                 $connection->keepAlive = $this->keepAlive($connect->keepAlive, $connection->protocol);
                 $connection->setClientId($connect->clientId);
 
-                $result = $this->handler->onConnect($connect, $connection);
+                try {
+                    $result = $this->handler->onConnect($connect, $connection);
+                } catch (Throwable $error) {
+                    $this->connectionsOpened?->add(1, ['result' => 'error']);
+                    throw $error;
+                }
                 if ($connection->closed) {
                     break;
                 }

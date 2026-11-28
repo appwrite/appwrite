@@ -21,6 +21,19 @@ type InitPresenceContextValue = InitOnlinePresenceState &
 
 const InitPresenceContext = createContext<InitPresenceContextValue | null>(null)
 
+const NOOP_ACTIVITY_CONTROLS: InitPresenceActivityControls = {
+  setBaselineActivity: () => undefined,
+  setTransientActivity: () => undefined,
+  setPriorityActivity: () => undefined,
+}
+
+/**
+ * The setters never change, so components that only report activity (schedule
+ * rows, cards, the hero) read them here and skip re-rendering on every presence update.
+ */
+const InitPresenceActivityContext =
+  createContext<InitPresenceActivityControls>(NOOP_ACTIVITY_CONTROLS)
+
 export function InitPresenceProvider({
   event,
   enabled,
@@ -60,8 +73,20 @@ export function InitPresenceProvider({
     [presence],
   )
 
+  const { setBaselineActivity, setTransientActivity, setPriorityActivity } = presence
+  const activity = useMemo(
+    (): InitPresenceActivityControls => ({
+      setBaselineActivity,
+      setTransientActivity,
+      setPriorityActivity,
+    }),
+    [setBaselineActivity, setTransientActivity, setPriorityActivity],
+  )
+
   return (
-    <InitPresenceContext.Provider value={value}>{children}</InitPresenceContext.Provider>
+    <InitPresenceActivityContext.Provider value={activity}>
+      <InitPresenceContext.Provider value={value}>{children}</InitPresenceContext.Provider>
+    </InitPresenceActivityContext.Provider>
   )
 }
 
@@ -97,7 +122,5 @@ export function useInitPresence(): InitPresenceContextValue {
 }
 
 export function useInitPresenceActivity(): InitPresenceActivityControls {
-  const { setBaselineActivity, setTransientActivity, setPriorityActivity } =
-    useInitPresence()
-  return { setBaselineActivity, setTransientActivity, setPriorityActivity }
+  return useContext(InitPresenceActivityContext)
 }

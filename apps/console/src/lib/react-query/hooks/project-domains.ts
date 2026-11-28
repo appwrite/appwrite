@@ -270,11 +270,15 @@ export function useVerifyDomain(
       const projectSdk = sdk.forProject(projectId, region)
       return await projectSdk.proxy.updateRuleStatus({ ruleId })
     },
-    // A failed check saves its logs too.
+    // A failed check saves its logs and records too.
     onSettled: async () => {
       // Every proxy rule list of this project. Function deployment keys hold projectId fourth, the others third.
       await queryClient.refetchQueries({
         queryKey: ['proxy-rules'],
+        predicate: (query) => query.queryKey.includes(projectId),
+      })
+      await queryClient.refetchQueries({
+        queryKey: ['proxy-rule'],
         predicate: (query) => query.queryKey.includes(projectId),
       })
     },

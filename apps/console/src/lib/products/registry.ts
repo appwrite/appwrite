@@ -3,6 +3,8 @@ import {
   BotMessageSquare,
   Database,
   Folder,
+  Gauge,
+  GitPullRequest,
   Globe,
   MessageSquare,
   Radio,
@@ -10,8 +12,10 @@ import {
   Search,
   Shield,
   Users,
+  Vibrate,
   Zap,
 } from 'lucide-react'
+import { ZERO_PRODUCT_ICON } from '@/lib/zero/product-icon'
 import { PostgresElephantIcon } from '@/components/pages/projects/$projectId/databases/_components/database-mascot-icons'
 import type {
   ProductId,
@@ -32,7 +36,10 @@ export const PRODUCT_IDS = [
   'realtime',
   'sites',
   'analytics',
+  'monitors',
+  'beep',
   'firewall',
+  'reviews',
 ] as const satisfies readonly ProductId[]
 
 export const PRODUCT_REGISTRY: Record<ProductId, ProductRegistryItem> = {
@@ -124,7 +131,7 @@ export const PRODUCT_REGISTRY: Record<ProductId, ProductRegistryItem> = {
     group: 'deploy',
     path: '/products/analytics',
     icon: ANALYTICS_PRODUCT_ICON,
-    tagline: 'Cookieless web and app analytics, bots and AI included.',
+    tagline: 'Cookieless analytics built into your Sites and Auth.',
     docsPath: '/docs/products/analytics',
   },
   firewall: {
@@ -135,6 +142,32 @@ export const PRODUCT_REGISTRY: Record<ProductId, ProductRegistryItem> = {
     icon: Shield,
     tagline: 'Project rules to deny, rate limit, and redirect traffic.',
     docsPath: '/docs/products/firewall',
+  },
+  // Monitors, Beep, and Reviews launch at Init 5 without published docs yet,
+  // so their pages offer pricing instead of a docs link.
+  monitors: {
+    id: 'monitors',
+    name: 'Monitors',
+    group: 'protect',
+    path: '/products/monitors',
+    icon: Gauge,
+    tagline: 'Alerts on usage thresholds and failing endpoints.',
+  },
+  beep: {
+    id: 'beep',
+    name: 'Beep',
+    group: 'protect',
+    path: '/products/beep',
+    icon: Vibrate,
+    tagline: 'Alerts and usage from every project, on your phone.',
+  },
+  reviews: {
+    id: 'reviews',
+    name: 'Reviews',
+    group: 'protect',
+    path: '/products/reviews',
+    icon: GitPullRequest,
+    tagline: 'AI code review on every pull request, next to your deploys.',
   },
 }
 
@@ -156,10 +189,14 @@ export const PRODUCT_NAV_ITEM_IDS = [
   'videos',
   'realtime',
   'agent',
+  'zero',
   'sites',
   'domains',
   'analytics',
+  'monitors',
+  'beep',
   'firewall',
+  'reviews',
   'advisor',
 ] as const satisfies readonly ProductNavItemId[]
 
@@ -236,6 +273,14 @@ export const PRODUCT_NAV_REGISTRY: Record<ProductNavItemId, ProductNavItem> = {
     icon: BotMessageSquare,
     tagline: 'Chat to inspect your project and take approved actions.',
   },
+  zero: {
+    id: 'zero',
+    name: 'Zero',
+    group: 'build',
+    href: '/zero',
+    icon: ZERO_PRODUCT_ICON,
+    tagline: 'A real project for you or your agent, no signup.',
+  },
   sites: {
     id: 'sites',
     name: PRODUCT_REGISTRY.sites.name,
@@ -268,6 +313,31 @@ export const PRODUCT_NAV_REGISTRY: Record<ProductNavItemId, ProductNavItem> = {
     href: PRODUCT_REGISTRY.firewall.path,
     icon: PRODUCT_REGISTRY.firewall.icon,
     tagline: PRODUCT_REGISTRY.firewall.tagline,
+  },
+  monitors: {
+    id: 'monitors',
+    name: PRODUCT_REGISTRY.monitors.name,
+    // Observe & protect, after Analytics: watch the project, then get told.
+    group: 'protect',
+    href: PRODUCT_REGISTRY.monitors.path,
+    icon: PRODUCT_REGISTRY.monitors.icon,
+    tagline: PRODUCT_REGISTRY.monitors.tagline,
+  },
+  beep: {
+    id: 'beep',
+    name: PRODUCT_REGISTRY.beep.name,
+    group: 'protect',
+    href: PRODUCT_REGISTRY.beep.path,
+    icon: PRODUCT_REGISTRY.beep.icon,
+    tagline: PRODUCT_REGISTRY.beep.tagline,
+  },
+  reviews: {
+    id: 'reviews',
+    name: PRODUCT_REGISTRY.reviews.name,
+    group: 'protect',
+    href: PRODUCT_REGISTRY.reviews.path,
+    icon: PRODUCT_REGISTRY.reviews.icon,
+    tagline: PRODUCT_REGISTRY.reviews.tagline,
   },
   advisor: {
     id: 'advisor',
@@ -375,7 +445,10 @@ export const PRODUCT_PAGE_EXPLORE_NAV_ITEM_IDS = [
   'sites',
   'domains',
   'analytics',
+  'monitors',
+  'beep',
   'firewall',
+  'reviews',
 ] as const satisfies readonly ProductNavItemId[]
 
 export function isProductNavItemId(value: string): value is ProductNavItemId {

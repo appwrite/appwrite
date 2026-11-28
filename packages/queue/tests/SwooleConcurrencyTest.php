@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Utopia\Queue\Tests;
 
+use PHPUnit\Framework\Attributes\PreserveGlobalState;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use PHPUnit\Framework\TestCase;
 use Utopia\Queue\Adapter\Swoole;
 use Utopia\Queue\Queue;
 
+#[RunTestsInSeparateProcesses]
+#[PreserveGlobalState(false)]
 final class SwooleConcurrencyTest extends TestCase
 {
     private const string QUEUE = 'concurrency';
@@ -29,8 +33,8 @@ final class SwooleConcurrencyTest extends TestCase
         $this->assertSame(1, $maxActive);
     }
 
-    /** Default prefetch leaves excess work available to other workers. */
-    public function testDefaultPrefetchLeavesExcessWorkInBroker(): void
+    /** An explicit in-flight limit can leave excess work available to other workers. */
+    public function testInFlightLimitLeavesExcessWorkInBroker(): void
     {
         $broker = new MemoryConsumer();
         $queue = new Queue(self::QUEUE, self::NAMESPACE);
@@ -58,7 +62,7 @@ final class SwooleConcurrencyTest extends TestCase
                 fn (): null => null,
                 fn (): null => null,
                 [
-                    ['queue' => $queue, 'coroutines' => 1],
+                    ['queue' => $queue, 'coroutines' => 1, 'maxInFlight' => 1],
                 ],
             );
         });

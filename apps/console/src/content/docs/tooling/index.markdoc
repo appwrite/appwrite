@@ -38,6 +38,11 @@ Open-source benchmark evaluating how well AI models understand Appwrite's APIs a
 {% cards_item href="/docs/products/agent" title="Appwrite Agent" icon="bot" %}
 Chat in the Console to inspect your project, explain issues, and run approved actions.
 {% /cards_item %}
+{% feature_gate anyOf="alerts" %}
+{% cards_item href="/docs/tooling/beep" title="Appwrite Beep" icon="bell" %}
+Get pushes on your phone when a monitor fires, and triage alerts on the go.
+{% /cards_item %}
+{% /feature_gate %}
 {% cards_item href="/docs/tooling/appwriter" title="The Appwriter" icon="text" %}
 A mechanical keyboard designed for the Appwrite Console and its shortcuts.
 {% /cards_item %}

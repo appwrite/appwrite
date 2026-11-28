@@ -261,11 +261,37 @@ export const jaVideosDictionary: Record<string, string> = {
   'This video has no source to play.':
     'この動画には再生できるソースがありません。',
   'Auto quality': '自動画質',
-  'Subtitles off': '字幕オフ',
   'New renditions are ready.': '新しいレンディションの準備ができました。',
   'Reload stream': 'ストリームを再読み込み',
-  'Go to start': '先頭に戻る',
-  'Go to end': '末尾に移動',
+  Replay: 'もう一度再生',
+  'Exit picture in picture': 'ピクチャーインピクチャーを終了',
+  'Player preview': 'プレーヤーのプレビュー',
+  'Each option is a parameter in the player URL, so a link or embed that carries it plays the same way.':
+    '各オプションはプレーヤー URL のパラメーターです。同じパラメーターを含むリンクや埋め込みは同じように再生されます。',
+  'Query string': 'クエリ文字列',
+  'Where playback begins, in seconds.': '再生を開始する位置を秒で指定します。',
+  'Plays as soon as the player loads. Browsers often allow it only when muted.':
+    'プレーヤーの読み込み後すぐに再生します。多くのブラウザーではミュート時のみ許可されます。',
+  'Start muted': 'ミュートで開始',
+  'Starts with the sound off.': '音声をオフにして再生を開始します。',
+  Loop: 'ループ再生',
+  'Plays again from the start when the video ends.':
+    '動画の終了後、最初から再生し直します。',
+  'Player controls': 'プレーヤーのコントロール',
+  'Shows the control bar. Without it, viewers click the picture to play or pause.':
+    'コントロールバーを表示します。非表示の場合、視聴者は映像をクリックして再生や一時停止を行います。',
+  'Accent color': 'アクセントカラー',
+  'Colors the progress bar and the volume.': 'プログレスバーと音量の色です。',
+  'Custom color': 'カスタムカラー',
+  'Seek 5 seconds': '5 秒移動',
+  'Seek 10 seconds': '10 秒移動',
+  'Change volume': '音量を変更',
+  'Change playback speed': '再生速度を変更',
+  'Turn subtitles on or off': '字幕のオンとオフを切り替え',
+  'Jump to 0% to 90%': '0% から 90% の位置へ移動',
+  'Go to start or end': '先頭または末尾に移動',
+  'Show remaining time': '残り時間を表示',
+  'Show elapsed time': '経過時間を表示',
   Mute: 'ミュート',
   Unmute: 'ミュート解除',
   Volume: '音量',
@@ -551,8 +577,8 @@ export const jaVideosDictionary: Record<string, string> = {
     'Apple デバイスや多くの Web プレーヤーには HLS、Android や Shaka Player には DASH を使います。CMAF は 1 組のファイルで両方を配信します。',
   'No ready renditions for this output yet':
     'この出力の準備済みレンディションはまだありません',
-  'Manifest, segment, and subtitle requests use the read permissions of the source file in Storage. Grant read access to Any for public playback, or to signed-in users for private videos.':
-    'マニフェスト、セグメント、字幕のリクエストには、ストレージ上のソースファイルの読み取り権限が使われます。公開再生には Any に、非公開の動画にはログイン済みユーザーに読み取り権限を付与してください。',
+  'Manifest, segment, and subtitle requests use the read permissions of the video. Turn on public playback in Settings to let anyone watch, or grant read access to signed-in users for private videos.':
+    'マニフェスト、セグメント、字幕のリクエストには動画の読み取り権限が使われます。誰でも視聴できるようにするには設定で公開再生をオンにし、非公開の動画にはログイン済みユーザーに読み取り権限を付与してください。',
   'Open bucket': 'バケットを開く',
   'Native HTML': 'ネイティブ HTML',
   'Install a player': 'プレーヤーをインストール',
@@ -713,7 +739,10 @@ export const jaVideosDictionary: Record<string, string> = {
   Fair: '普通',
   Poor: '悪い',
   Startup: '起動',
-  'Time until the first frame': '最初のフレームまでの時間',
+  'Time from the manifest to the first frame':
+    'マニフェストから最初のフレームまでの時間',
+  'Manifest (not counted)': 'マニフェスト（計測外）',
+  'Metadata (not counted)': 'メタデータ（計測外）',
   Smoothness: 'スムーズさ',
   'Stalls and time spent rebuffering': '停止回数とリバッファリング時間',
   'Picture quality': '画質',
@@ -730,6 +759,8 @@ export const jaVideosDictionary: Record<string, string> = {
     '帯域幅が最低レンディションを下回っています',
   'Even the smallest rendition barely fits this connection. Add a lower bitrate rendition for slow networks.':
     '最小のレンディションでもこの接続にはぎりぎりです。低速ネットワーク向けに、より低いビットレートのレンディションを追加してください。',
+  'The player is larger than the rendition it receives, so the picture looks soft. Quality is locked; switch to Auto quality to play a larger rendition.':
+    'プレーヤーが受信するレンディションより大きいため、映像がぼやけて見えます。画質が固定されています。自動画質に切り替えると、より大きいレンディションを再生できます。',
   'Video is upscaled': '動画がアップスケールされています',
   'The player is larger than the rendition it receives, so the picture looks soft. Add a higher resolution rendition.':
     'プレーヤーが受信しているレンディションより大きいため、映像がぼやけて見えます。より高解像度のレンディションを追加してください。',
@@ -1231,4 +1262,24 @@ export const jaVideosDictionary: Record<string, string> = {
     'タイムラインは動画の作成時に生成されます。準備ができるとここにサムネイルが表示されます。',
   'Scroll through the thumbnails and hover one to see its time range and sprite region.':
     'サムネイルをスクロールし、カーソルを合わせると時間範囲とスプライト領域を確認できます。',
+  'Public playback': '公開再生',
+  "The video's own permissions decide who can watch it: its stream, captions, thumbnails and timeline. Permissions on the source file don't apply. Project members and API keys always have full access.":
+    '動画を視聴できるユーザー(ストリーム、字幕、サムネイル、タイムライン)は、動画自体の権限で決まります。ソースファイルの権限は適用されません。プロジェクトメンバーと API キーは常にフルアクセスできます。',
+  'Anyone can watch, including visitors on the player page and in embeds. Turning this on adds read access for Any.':
+    'プレーヤーページや埋め込みの訪問者を含め、誰でも視聴できます。オンにすると Any に読み取り権限が追加されます。',
+  'Visitors get an error on the player page and in embeds. Turning this on adds read access for Any.':
+    '訪問者にはプレーヤーページと埋め込みでエラーが表示されます。オンにすると Any に読み取り権限が追加されます。',
+  'Read lets a role watch the video. Users, teams and labels need a session for this project, so they can watch in your app but not on the player page. Update and delete let a role rename or delete the video with a client SDK.':
+    '読み取り権限があるロールは動画を視聴できます。ユーザー、チーム、ラベルにはこのプロジェクトのセッションが必要なため、アプリでは視聴できますが、プレーヤーページでは視聴できません。更新と削除の権限があるロールは、クライアント SDK で動画の名前変更や削除ができます。',
+  'Permissions updated': '権限を更新しました',
+  'Only signed-in users with read access can watch it in your app. Visitors get an error on the player page and in embeds.':
+    '読み取り権限のあるサインイン済みユーザーだけがアプリで視聴できます。訪問者にはプレーヤーページと埋め込みでエラーが表示されます。',
+  'Only project members and API keys can watch it. Visitors get an error on the player page and in embeds.':
+    'プロジェクトメンバーと API キーだけが視聴できます。訪問者にはプレーヤーページと埋め込みでエラーが表示されます。',
+  'Video is now public': '動画を公開しました',
+  'Video is now private': '動画を非公開にしました',
+  'Visitors get an error here. You can watch because you are a project member.':
+    '訪問者にはここでエラーが表示されます。あなたはプロジェクトメンバーなので視聴できます。',
+  'Open access settings': 'アクセス設定を開く',
+  'Failed to download thumbnails': 'サムネイルをダウンロードできませんでした',
 }

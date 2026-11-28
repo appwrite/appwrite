@@ -1,11 +1,14 @@
 import { analyticsProductContent } from '@/lib/products/content/analytics'
 import { authProductContent } from '@/lib/products/content/auth'
+import { beepProductContent } from '@/lib/products/content/beep'
 import { databasesProductContent } from '@/lib/products/content/databases'
 import { firewallProductContent } from '@/lib/products/content/firewall'
 import { functionsProductContent } from '@/lib/products/content/functions'
 import { messagingProductContent } from '@/lib/products/content/messaging'
+import { monitorsProductContent } from '@/lib/products/content/monitors'
 import { postgresProductContent } from '@/lib/products/content/postgres'
 import { realtimeProductContent } from '@/lib/products/content/realtime'
+import { reviewsProductContent } from '@/lib/products/content/reviews'
 import { sitesProductContent } from '@/lib/products/content/sites'
 import { storageProductContent } from '@/lib/products/content/storage'
 import { videosProductContent } from '@/lib/products/content/videos'
@@ -22,7 +25,10 @@ const PRODUCT_CONTENT: Record<ProductId, ProductPageContent> = {
   realtime: realtimeProductContent,
   sites: sitesProductContent,
   analytics: analyticsProductContent,
+  monitors: monitorsProductContent,
+  beep: beepProductContent,
   firewall: firewallProductContent,
+  reviews: reviewsProductContent,
 }
 
 export function getProductContent(id: ProductId): ProductPageContent {

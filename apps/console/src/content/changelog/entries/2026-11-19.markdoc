@@ -1,0 +1,21 @@
+---
+layout: changelog
+title: "Sign users in with their Active Directory or OpenLDAP credentials"
+date: 2026-11-19
+cover: /images/blog/announcing-ldap-login/cover.avif
+tags: auth, security
+---
+
+Users can now sign in to your app with the username and password from your LDAP directory, such as Active Directory or OpenLDAP. Connect your directory under **Settings** > **Identity servers** > **LDAP**, test the connection, and call `createLDAPSession()` from your app. The directory checks the password, so Appwrite never stores it.
+
+Limit sign-in to the members of one group, map the attributes that hold each user's ID, email, name, and phone number, and keep accounts in sync with the directory on every sign-in.
+
+[LDAP login](/docs/products/auth/ldap) is available on Appwrite Cloud, and is coming to self-hosted Appwrite soon.
+
+{% arrow_link href="/blog/post/announcing-ldap-login" %}
+Read the announcement
+{% /arrow_link %}
+
+{% arrow_link href="/docs/products/auth/ldap" %}
+Set up LDAP login
+{% /arrow_link %}

@@ -11,18 +11,30 @@ use Utopia\VCS\Adapter\Git\GitHub;
 
 final class GitHubTest extends Base
 {
+    #[\Override]
     protected static string $owner = '';
+    #[\Override]
     protected static string $defaultBranch = 'main';
 
+    #[\Override]
     protected static string $avatarDomain = 'githubusercontent.com';
+    #[\Override]
     protected static bool $supportsPullRequestCreation = false;
+    #[\Override]
     protected static bool $supportsNamespaceListing = false;
+    #[\Override]
     protected static bool $supportsCommitStatusLookup = false;
+    #[\Override]
     protected static bool $supportsTags = false;
+    #[\Override]
     protected static bool $supportsUserLookup = false;
+    #[\Override]
     protected static bool $computesLanguagesAsynchronously = true;
+    #[\Override]
     protected static bool $supportsWebhookDelivery = false;
+    #[\Override]
     protected static bool $resolvesOwnerFromRepositoryId = false;
+    #[\Override]
     protected static bool $rejectsInvalidRepositoryNames = false;
 
     protected function anonymousCloneUrl(string $repositoryName): string

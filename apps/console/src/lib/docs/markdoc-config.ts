@@ -37,7 +37,11 @@ export const docsMarkdocConfig: Config = {
     },
     video: {
       render: 'Video',
-      attributes: { src: { type: String }, title: { type: String } },
+      attributes: {
+        src: { type: String },
+        title: { type: String },
+        autoplay: { type: Boolean },
+      },
     },
     youtube: {
       render: 'Youtube',

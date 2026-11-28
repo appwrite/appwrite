@@ -44,6 +44,7 @@ import {
   AlertTriangle,
   Download,
   ShieldAlert,
+  KeyRound,
 } from 'lucide-react'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
@@ -646,6 +647,7 @@ export function IdentitiesSection({
       gitlab: 'gitlab.svg',
       bitbucket: 'bitbucket.svg',
       resend: 'resend.svg',
+      bird: 'bird.svg',
     }
     return providerMap[provider.toLowerCase()] || 'empty.svg'
   }
@@ -660,6 +662,8 @@ export function IdentitiesSection({
       gitlab: 'GitLab',
       bitbucket: 'Bitbucket',
       resend: 'Resend',
+      bird: 'Bird',
+      sso: t('Single sign-on'),
     }
     return nameMap[provider.toLowerCase()] || provider
   }
@@ -728,14 +732,18 @@ export function IdentitiesSection({
                   variant="info"
                   className="text-[10px] shrink-0 gap-1.5 font-medium"
                 >
-                  <img
-                    src={`/icons/${getProviderIcon(identity.provider)}`}
-                    alt={identity.provider}
-                    className={`h-3.5 w-3.5 ${PUBLIC_ICON_MUTED_CLASSES}`}
-                    onError={(e) => {
-                      e.currentTarget.src = '/icons/empty.svg'
-                    }}
-                  />
+                  {identity.provider === 'sso' ? (
+                    <KeyRound className="h-3.5 w-3.5 opacity-70" />
+                  ) : (
+                    <img
+                      src={`/icons/${getProviderIcon(identity.provider)}`}
+                      alt={identity.provider}
+                      className={`h-3.5 w-3.5 ${PUBLIC_ICON_MUTED_CLASSES}`}
+                      onError={(e) => {
+                        e.currentTarget.src = '/icons/empty.svg'
+                      }}
+                    />
+                  )}
                   {getProviderName(identity.provider)}
                 </Badge>
               </TableCell>
@@ -786,14 +794,18 @@ export function IdentitiesSection({
             {t('This action cannot be undone.')}
             {identityToDelete ? (
               <span className="mt-3 flex items-center gap-2 text-foreground">
-                <img
-                  src={`/icons/${getProviderIcon(identityToDelete.provider)}`}
-                  alt=""
-                  className={`h-4 w-4 ${PUBLIC_ICON_MUTED_CLASSES}`}
-                  onError={(e) => {
-                    e.currentTarget.src = '/icons/empty.svg'
-                  }}
-                />
+                {identityToDelete.provider === 'sso' ? (
+                  <KeyRound className="h-4 w-4 opacity-70" />
+                ) : (
+                  <img
+                    src={`/icons/${getProviderIcon(identityToDelete.provider)}`}
+                    alt=""
+                    className={`h-4 w-4 ${PUBLIC_ICON_MUTED_CLASSES}`}
+                    onError={(e) => {
+                      e.currentTarget.src = '/icons/empty.svg'
+                    }}
+                  />
+                )}
                 <span className="font-medium">
                   {getProviderName(identityToDelete.provider)}
                 </span>
