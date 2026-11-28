@@ -560,6 +560,9 @@ jobs:
       && format('gcrunner={0}-extension/runner=build', github.run_id)
       || 'ubuntu-24.04' }}
     timeout-minutes: 45
+    permissions:
+      contents: read
+      actions: write # deletes the kache store a main push replaces
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -591,9 +594,10 @@ jobs:
 
       # kache (https://github.com/kunobi-ninja/kache) caches each crate's compiled output, so
       # clippy and the tests rebuild only the crates a change touches instead of all 340. Its
-      # store is restored from main's and saved only by pushes to main, under a new key each week
-      # (a saved key cannot be updated), so pull requests read it and never write it. Line tables instead of full
-      # debug info keep the store small enough for the repository's Actions cache. The path is ~ rather
+      # store is restored from main's latest and saved only by pushes to main. A saved key cannot be
+      # updated, so each push saves under its run id and deletes the entry it restored: the repository
+      # keeps one store, and pull requests read it and never write it. kache's own GC (5% of the disk)
+      # bounds its size, and line tables instead of full debug info keep it small. The path is ~ rather
       # than the runner's temp directory because actions/cache versions an entry by the path as written,
       # and gcrunner's temp directory is not GitHub's.
       - name: Install kache
@@ -606,17 +610,14 @@ jobs:
           echo "${KACHE_SHA256}  $RUNNER_TEMP/kache.tar.gz" | sha256sum -c -
           mkdir -p "$RUNNER_TEMP/kache-bin" ~/.kache
           tar -xzf "$RUNNER_TEMP/kache.tar.gz" -C "$RUNNER_TEMP/kache-bin" kache kache-engine
-          echo "week=$(date -u +%G-%V)" >> "$GITHUB_OUTPUT"
-        id: kache
 
       - name: Restore the kache store
+        id: kache
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.kache
-          key: kache-extension-${{ hashFiles('Cargo.lock', 'rust-toolchain.toml') }}-${{ steps.kache.outputs.week }}
-          restore-keys: |
-            kache-extension-${{ hashFiles('Cargo.lock', 'rust-toolchain.toml') }}-
-            kache-extension-
+          key: kache-extension-${{ github.run_id }}
+          restore-keys: kache-extension-
 
       # The extension is built here, under kache, rather than by the Dockerfile: the release profile's
       # fat LTO and single codegen unit cost ~5 minutes on one core and change nothing the tests see.
@@ -651,7 +652,18 @@ jobs:
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.kache
-          key: kache-extension-${{ hashFiles('Cargo.lock', 'rust-toolchain.toml') }}-${{ steps.kache.outputs.week }}
+          key: kache-extension-${{ github.run_id }}
+
+      # A concurrent push may have deleted it already.
+      - name: Delete the replaced kache store
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.kache.outputs.cache-matched-key != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          KEY: ${{ steps.kache.outputs.cache-matched-key }}
+        run: |
+          curl -fsS -X DELETE -G -H "Authorization: Bearer ${GH_TOKEN}" \
+            --data-urlencode "key=${KEY}" --data-urlencode "ref=${GITHUB_REF}" \
+            "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/actions/caches" || true
 
       - name: Build the image
         uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
