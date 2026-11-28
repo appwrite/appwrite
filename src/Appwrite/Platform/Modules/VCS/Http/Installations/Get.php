@@ -62,11 +62,7 @@ class Get extends Action
     ) {
         $installation = $dbForPlatform->getDocument('installations', $installationId);
 
-        if ($installation->isEmpty()) {
-            throw new Exception(Exception::INSTALLATION_NOT_FOUND);
-        }
-
-        if ($installation->getAttribute('projectInternalId') !== $project->getSequence()) {
+        if ($installation->isEmpty() || $installation->getAttribute('projectInternalId') !== $project->getSequence()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 

@@ -128,14 +128,13 @@ abstract class Base extends Action
             return;
         }
 
-        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-        $hostname = $platform['consoleHostname'] ?? '';
-
         if (empty($code)) {
             $this->failure($response, $redirectFailure, 'OAuth2 authorization code is missing.');
             return;
         }
 
+        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+        $hostname = $platform['consoleHostname'] ?? '';
         $callback = $protocol . '://' . $hostname . '/v1/vcs/' . $key . '/callback';
         // The VCS endpoints are the operator's own (_APP_VCS_*), which may be on a private network
         $oauth2 = $this->createOAuth2(new Client(new CurlAdapter()), $callback);
@@ -168,7 +167,7 @@ abstract class Base extends Action
         if ($installation->isEmpty()) {
             $teamId = $project->getAttribute('teamId', '');
 
-            $installation = $dbForPlatform->createDocument('installations', new Document([
+            $dbForPlatform->createDocument('installations', new Document([
                 '$id' => Id::unique(),
                 '$permissions' => $this->getPermissions($teamId, $projectId),
                 'providerInstallationId' => $providerInstallationId,
@@ -182,7 +181,7 @@ abstract class Base extends Action
                 'personalAccessTokenExpiry' => $accessTokenExpiry,
             ]));
         } else {
-            $installation = $dbForPlatform->updateDocument('installations', $installation->getId(), new Document([
+            $dbForPlatform->updateDocument('installations', $installation->getId(), new Document([
                 'organization' => $owner,
                 'personal' => true,
                 'personalRefreshToken' => $refreshToken,

@@ -68,11 +68,7 @@ class Get extends Action
     ) {
         $installation = $dbForPlatform->getDocument('installations', $installationId);
 
-        if ($installation->isEmpty()) {
-            throw new Exception(Exception::INSTALLATION_NOT_FOUND);
-        }
-
-        if ($installation->getAttribute('projectInternalId') !== $project->getSequence()) {
+        if ($installation->isEmpty() || $installation->getAttribute('projectInternalId') !== $project->getSequence()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 
@@ -83,10 +79,11 @@ class Get extends Action
         $owner = $vcs->getOwnerName($providerInstallationId, (int) $providerRepositoryId);
         try {
             $repositoryName = $vcs->getRepositoryName($providerRepositoryId);
-            if (empty($repositoryName)) {
-                throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
-            }
-        } catch (RepositoryNotFound $e) {
+        } catch (RepositoryNotFound) {
+            $repositoryName = '';
+        }
+
+        if (empty($repositoryName)) {
             throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
         }
 
