@@ -132,7 +132,15 @@ function check(string $case, callable $run): void
 /** $dump with each object handle ("#12 ") dropped: handles differ between runs. */
 function withoutHandles(string $dump): string
 {
-    return preg_replace('/#\d+ /', '# ', $dump);
+    $parts = explode('#', $dump);
+    foreach ($parts as $i => $part) {
+        $digits = strspn($part, '0123456789');
+        if ($i > 0 && $digits > 0 && ($part[$digits] ?? '') === ' ') {
+            $parts[$i] = substr($part, $digits);
+        }
+    }
+
+    return implode('#', $parts);
 }
 
 /** What `php -r $code` prints and exits with, in a child process loading the same autoloader. */
@@ -146,7 +154,15 @@ function child(string $code, bool $strict = false): array
     fclose($pipes[2]);
 
     // Exceptions name the file and line, which differ: only the first line is compared.
-    return ['stdout' => $stdout, 'stderr' => preg_replace('/ in (\/|Command line code).*$/s', '', trim($stderr)), 'exit' => proc_close($process)];
+    $stderr = trim($stderr);
+    foreach ([' in /', ' in Command line code'] as $marker) {
+        $at = strpos($stderr, $marker);
+        if ($at !== false) {
+            $stderr = substr($stderr, 0, $at);
+        }
+    }
+
+    return ['stdout' => $stdout, 'stderr' => $stderr, 'exit' => proc_close($process)];
 }
 
 /** A parameter as reflection shows it. */
