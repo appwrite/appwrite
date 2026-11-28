@@ -13,7 +13,8 @@ const CLIENT_TYPE_OPTIONS: Array<{
   {
     value: 'confidential',
     title: 'Confidential',
-    description: 'Backend or SSR apps that can keep a client secret (Node, Next.js, Nuxt).',
+    description:
+      'Backend or SSR apps that can keep a client secret (Node, Next.js, Nuxt).',
   },
   {
     value: 'public',
@@ -27,12 +28,15 @@ type OAuth2ClientTypePickerProps = {
   value: string
   onChange: (value: OAuth2ClientType) => void
   disabled?: boolean
+  /** Options that cannot be picked right now, with the reason shown under them. */
+  unavailable?: Partial<Record<OAuth2ClientType, string>>
 }
 
 export function OAuth2ClientTypePicker({
   value,
   onChange,
   disabled = false,
+  unavailable,
 }: OAuth2ClientTypePickerProps) {
   const t = useT()
   const selected = value === 'public' ? 'public' : 'confidential'
@@ -49,6 +53,8 @@ export function OAuth2ClientTypePicker({
         {CLIENT_TYPE_OPTIONS.map((option) => {
           const id = `oauth2-client-type-${option.value}`
           const isSelected = selected === option.value
+          const reason = isSelected ? undefined : unavailable?.[option.value]
+          const optionDisabled = disabled || !!reason
           return (
             <Label
               key={option.value}
@@ -58,14 +64,14 @@ export function OAuth2ClientTypePicker({
                 isSelected
                   ? 'border-primary bg-primary/5'
                   : 'border-border bg-card/50 hover:bg-muted/20',
-                disabled && 'cursor-not-allowed opacity-60',
+                optionDisabled && 'cursor-not-allowed opacity-60',
               )}
             >
               <RadioGroupItem
                 value={option.value}
                 id={id}
                 className="mt-0.5 shrink-0"
-                disabled={disabled}
+                disabled={optionDisabled}
               />
               <div className="min-w-0">
                 <span className="block text-[13px] font-medium text-foreground">
@@ -74,6 +80,11 @@ export function OAuth2ClientTypePicker({
                 <p className="mt-0.5 text-[12px] leading-snug text-muted-foreground">
                   {t(option.description)}
                 </p>
+                {reason ? (
+                  <p className="mt-1 text-[12px] leading-snug text-amber-600 dark:text-amber-400">
+                    {reason}
+                  </p>
+                ) : null}
               </div>
             </Label>
           )

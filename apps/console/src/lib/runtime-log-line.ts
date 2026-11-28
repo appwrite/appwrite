@@ -1,13 +1,14 @@
 /**
  * Reads one runtime log line for display: a JSON object (pino, winston,
  * bunyan, structlog, slog, zap, Serilog compact, OpenTelemetry), a logfmt line
- * (`level=info msg="..."`), or plain text with a leading level word
- * (`ERROR ...`, `[warn] ...`, `TypeError: ...`).
+ * (`level=info msg="..."`), or plain text with a level near its start
+ * (`ERROR ...`, `[warn] ...`, `TypeError: ...`, or after a timestamp, as
+ * PostgreSQL and MySQL write: `2026-11-27 10:00:00 UTC [42] LOG:  ...`).
  */
 
 export type RuntimeLogLevel = 'error' | 'warn' | 'info' | 'debug'
 
-/** Lowest first, so a minimum level keeps every entry at or after it. */
+/** Every level a runtime log line can carry, lowest first. */
 export const RUNTIME_LOG_LEVELS: RuntimeLogLevel[] = [
   'debug',
   'info',
@@ -27,7 +28,10 @@ export interface RuntimeLogLine {
   format: 'json' | 'logfmt' | 'text'
   /** The level the line names, or `null` when it names none. */
   level: RuntimeLogLevel | null
-  /** What to show first: the message field, or the whole text line. */
+  /**
+   * What to show first: the message field, or the text line without the
+   * timestamp and level it opens with, which the viewer shows on their own.
+   */
   message: string
   /** Every other field, in the order written. */
   fields: RuntimeLogField[]
@@ -152,16 +156,6 @@ function otelSeverity(value: unknown): RuntimeLogLevel | null {
 export function parseRuntimeLogLine(raw: string): RuntimeLogLine {
   const text = stripAnsi(raw)
   return parseJson(text) ?? parseLogfmt(text) ?? parseText(text)
-}
-
-/** True when `level` is at or above `minimum`. */
-export function isAtLeast(
-  level: RuntimeLogLevel,
-  minimum: RuntimeLogLevel,
-): boolean {
-  return (
-    RUNTIME_LOG_LEVELS.indexOf(level) >= RUNTIME_LOG_LEVELS.indexOf(minimum)
-  )
 }
 
 function parseJson(text: string): RuntimeLogLine | null {
@@ -314,6 +308,25 @@ export function logfmtFields(text: string): RuntimeLogField[] | null {
   return pairs.map(([key, value]) => ({ key, value }))
 }
 
+const TRACEBACK = 'Traceback (most recent call last)'
+
+/**
+ * One line that stands for a message on a list row: its first line, marked
+ * as cut when more follow. A Python traceback ends with the exception, so it
+ * is named by its last line instead.
+ */
+export function summarizeRuntimeLogMessage(message: string): string {
+  const newline = message.indexOf('\n')
+  if (newline === -1) return message
+  if (message.trimStart().startsWith(TRACEBACK)) {
+    const lines = message.split('\n')
+    for (let i = lines.length - 1; i > 0; i--) {
+      if (lines[i].trim() !== '') return lines[i].trim()
+    }
+  }
+  return `${message.slice(0, newline)} …`
+}
+
 /** The whole entry as logged: JSON indented, anything else as it came. */
 export function formatRawLog(text: string): string {
   const trimmed = text.trim()
@@ -328,30 +341,143 @@ export function formatRawLog(text: string): string {
   }
 }
 
-/** Plain text: the level is the first word, when it is a level name or an `...Error:`. */
+/** Tokens read past at the start of a text line while looking for its level. */
+const MAX_PREFIX_TOKENS = 6
+
+/** Marks some runtimes print instead of a level word (Next.js). */
+const LEVEL_MARKS: Record<string, RuntimeLogLevel> = {
+  '⚠': 'warn',
+  '⨯': 'error',
+}
+
+/**
+ * Plain text: a level word at the start, or right after a timestamp, or an
+ * uncaught `...Error:`. The timestamp and the level word leave the message,
+ * since the viewer shows both on their own.
+ */
 function parseText(text: string): RuntimeLogLine {
+  const newline = text.indexOf('\n')
+  const first = newline === -1 ? text : text.slice(0, newline)
+  const after = newline === -1 ? '' : text.slice(newline)
+
+  let i = 0
+  let sawTime = false
+  // Where the message starts once the timestamp, and any pid after it, are left out
+  let start = -1
+  for (let n = 0; n < MAX_PREFIX_TOKENS; n++) {
+    while (i < first.length && isSpace(first[i])) i++
+    if (i >= first.length) break
+    let end = i
+    while (end < first.length && !isSpace(first[end])) end++
+    const token = first.slice(i, end)
+
+    const level = levelWord(token, n === 0 || sawTime)
+    if (level) {
+      // Python's `INFO:root:message` keeps its logger next to the message
+      let rest = isLoggerPrefixed(token) ? i : end
+      while (rest < first.length && isSpace(first[rest])) rest++
+      const message = first.slice(rest) + after
+      return {
+        format: 'text',
+        level,
+        message: message.trim() === '' ? text : message,
+        fields: [],
+      }
+    }
+    if (isTimeToken(token)) {
+      sawTime = true
+      start = end
+    } else if (sawTime && (isBracketedNumber(token) || isDigits(token))) {
+      // `[42]` after a PostgreSQL timestamp, `0` after a MySQL one
+      start = end
+    } else {
+      break
+    }
+    i = end
+  }
+
+  let message = text
+  if (sawTime && start > 0) {
+    let rest = start
+    while (rest < first.length && isSpace(first[rest])) rest++
+    if (rest < first.length) message = first.slice(rest) + after
+  }
+  // Runtimes indent some lines (` GET /pricing 200`); the column aligns them
+  message = message.trimStart() || text
   return {
     format: 'text',
-    level: textLevel(text),
-    message: text,
+    level: exceptionLevel(message) ?? markLevel(message),
+    message,
     fields: [],
   }
 }
 
-function textLevel(text: string): RuntimeLogLevel | null {
-  const first = text.trimStart()
-  let end = 0
-  while (end < first.length && first[end].trim() !== '') end++
-  let word = first.slice(0, end)
-  // [WARN], <info>, (error), ERROR:, WARN|
-  while (word !== '' && '[(<'.includes(word[0])) word = word.slice(1)
+function isSpace(char: string | undefined): boolean {
+  return char === ' ' || char === '\t'
+}
+
+function isDigits(token: string): boolean {
+  return token !== '' && [...token].every(isDigit)
+}
+
+function isBracketedNumber(token: string): boolean {
+  return (
+    token.length > 2 &&
+    token[0] === '[' &&
+    token[token.length - 1] === ']' &&
+    isDigits(token.slice(1, -1))
+  )
+}
+
+/**
+ * A level as a text line names it: `ERROR`, `[warn]`, `<info>`, `ERROR:`,
+ * `DEBUG|`, `LOG:` (PostgreSQL), or `INFO:root:...` (Python's default format).
+ * A bare word only counts in capitals, so prose ("Alert sent") is not read as
+ * one. `leading` is false for tokens past the start that no timestamp led to.
+ */
+function levelWord(token: string, leading: boolean): RuntimeLogLevel | null {
+  if (!leading) return null
+  if (token === 'LOG:') return 'info'
+  let word = token
+  let delimited = false
+  while (word !== '' && '[(<'.includes(word[0])) {
+    word = word.slice(1)
+    delimited = true
+  }
   while (word !== '' && '])>:|,'.includes(word[word.length - 1])) {
     word = word.slice(0, -1)
+    delimited = true
+  }
+  // Python's default `LEVEL:logger:message` keeps the logger in the message
+  const colon = word.indexOf(':')
+  if (colon > 0) {
+    const head = word.slice(0, colon)
+    return isUpper(head) && TEXT_LEVEL_WORDS.has(head.toLowerCase())
+      ? LEVEL_NAMES[head.toLowerCase()]
+      : null
   }
   if (word === '') return null
   const name = word.toLowerCase()
-  if (TEXT_LEVEL_WORDS.has(name)) return LEVEL_NAMES[name]
-  // Uncaught exceptions: "TypeError: ...", "SomeException: ..."
+  if (!TEXT_LEVEL_WORDS.has(name)) return null
+  return delimited || isUpper(word) ? LEVEL_NAMES[name] : null
+}
+
+/** `INFO:root:...`: a colon inside the token, not only at its end. */
+function isLoggerPrefixed(token: string): boolean {
+  const colon = token.indexOf(':')
+  return colon > 0 && colon < token.length - 1
+}
+
+function isUpper(word: string): boolean {
+  return (
+    word !== '' && word === word.toUpperCase() && word !== word.toLowerCase()
+  )
+}
+
+/** Uncaught exceptions: "TypeError: ...", "SomeException: ...", a Python traceback. */
+function exceptionLevel(text: string): RuntimeLogLevel | null {
+  const first = text.trimStart()
+  if (first.startsWith(TRACEBACK)) return 'error'
   const colon = first.indexOf(':')
   if (colon > 0) {
     const head = first.slice(0, colon)
@@ -363,4 +489,54 @@ function textLevel(text: string): RuntimeLogLevel | null {
     }
   }
   return null
+}
+
+function markLevel(text: string): RuntimeLogLevel | null {
+  const first = text.trimStart()
+  return LEVEL_MARKS[first[0] ?? ''] ?? null
+}
+
+/**
+ * A date, a time of day or a whole timestamp, as log prefixes write them:
+ * `2026-11-27`, `10:00:00.123`, `2026-11-27T10:00:00.123Z`, `UTC`, `+00:00`,
+ * optionally in brackets.
+ */
+function isTimeToken(raw: string): boolean {
+  let token = raw
+  if (token.startsWith('[')) token = token.slice(1)
+  if (token.endsWith(']') || token.endsWith(',')) token = token.slice(0, -1)
+  if (token === 'UTC' || token === 'GMT' || token === 'Z') return true
+  if ((token[0] === '+' || token[0] === '-') && token.length >= 5) {
+    return [...token.slice(1)].every((char) => isDigit(char) || char === ':')
+  }
+  if (isDate(token.slice(0, 10))) {
+    const rest = token.slice(10)
+    return (
+      rest === '' ||
+      ((rest[0] === 'T' || rest[0] === '_') && isClock(rest.slice(1)))
+    )
+  }
+  return isClock(token)
+}
+
+function isDate(token: string): boolean {
+  if (token.length !== 10) return false
+  const separator = token[4]
+  if (separator !== '-' && separator !== '/') return false
+  if (token[7] !== separator) return false
+  return [...token].every(
+    (char, index) => index === 4 || index === 7 || isDigit(char),
+  )
+}
+
+/** `HH:MM:SS` with optional fractions and a trailing zone: `10:00:00.123456Z`. */
+function isClock(token: string): boolean {
+  if (token.length < 8) return false
+  if (token[2] !== ':' || token[5] !== ':') return false
+  for (const index of [0, 1, 3, 4, 6, 7]) {
+    if (!isDigit(token[index])) return false
+  }
+  return [...token.slice(8)].every(
+    (char) => isDigit(char) || '.,:+-Z'.includes(char),
+  )
 }

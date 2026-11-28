@@ -1858,20 +1858,62 @@ export const jaAuthStorageDictionary: Record<string, string> = {
   "Members on the team's verified domains who signed in another way keep their account but lose the team's roles until they sign in through one of its identity providers. Their other teams are not affected. Team owners keep their roles, so a broken identity provider never locks the team out.":
     '別の方法でサインインしたチームの検証済みドメインのメンバーは、アカウントはそのままですが、チームの ID プロバイダーのいずれかでサインインするまでチームのロールを失います。他のチームには影響しません。チームのオーナーはロールを保持するため、ID プロバイダーに問題が起きてもチームから締め出されることはありません。',
   'Add sign-in to your app': 'アプリにサインインを追加',
-  'There is no SDK method for it yet: your app sends these two requests.':
-    'まだ SDK のメソッドはありません。アプリから次の 2 つのリクエストを送信します。',
-  '1. Find the identity providers for an email':
-    '1. メールアドレスの ID プロバイダーを調べる',
-  'It answers with the identity providers that can sign that email in, each with its $id and name.':
-    'そのメールアドレスでサインインできる ID プロバイダーが、それぞれの $id と name とともに返されます。',
-  '2. Send the browser to the chosen one':
-    '2. 選んだプロバイダーへブラウザーを送る',
-  "On success, the browser returns to the success URL with the user's session cookie for this project set.":
-    '成功すると、このプロジェクトのユーザーのセッション Cookie が設定された状態で、ブラウザーは success URL に戻ります。',
+  'Declare the API key':
+    'API キーを宣言する',
+  'SvelteKit reads it from the environment when the app starts. Put it in .env locally.':
+    'SvelteKit はアプリの起動時に環境変数から読み込みます。ローカルでは .env に記述してください。',
+  'Turn on desugaring':
+    'desugaring を有効にする',
+  'Android only: the Appwrite SDK needs core library desugaring, or the build fails.':
+    'Android のみ: Appwrite SDK には core library desugaring が必要です。有効にしないとビルドが失敗します。',
+  'Build settings':
+    'ビルド設定',
+  'People type their work email, sign in at their identity provider and come back signed in, as members of this team. Hand the setup to your AI tool, or follow the steps.':
+    'ユーザーは仕事用のメールアドレスを入力し、ID プロバイダーでサインインして、このチームのメンバーとしてサインインした状態で戻ってきます。セットアップを AI ツールに任せるか、手順に沿って進めてください。',
+  'Find the identity providers for an email':
+    'メールアドレスの ID プロバイダーを調べる',
+  'People type their work email. None found: offer your other sign-in methods. Several: let them choose by name.':
+    'ユーザーが仕事用のメールアドレスを入力します。見つからない場合は他のサインイン方法を案内し、複数ある場合は名前で選んでもらいます。',
+  'Send the browser to the chosen one':
+    '選んだプロバイダーへブラウザーを送る',
+  'With a fresh random state, so your app only accepts sign-ins it started.':
+    '毎回新しいランダムな state を付けて、アプリが自分で開始したサインインだけを受け付けるようにします。',
+  'Create the session when it comes back':
+    '戻ってきたらセッションを作成する',
+  'The success URL gets userId, secret and state. Check the state, then trade the rest for the session.':
+    'success URL には userId、secret、state が付きます。state を確認してから、残りをセッションに交換します。',
+  'Handle the callback scheme':
+    'コールバックスキームを処理する',
+  'Android only: let flutter_web_auth_2 receive the callback. iOS needs nothing.':
+    'Android のみ: flutter_web_auth_2 がコールバックを受け取れるようにします。iOS では不要です。',
+  'Register the scheme so the system hands the callback back to the app.':
+    'システムがコールバックをアプリに返せるように、スキームを登録します。',
+  'The Custom Tab hands the callback to this activity.':
+    'Custom Tab はコールバックをこのアクティビティに渡します。',
+  'Find providers':
+    'プロバイダーを調べる',
+  'Create session':
+    'セッションを作成',
+  'Callback scheme':
+    'コールバックスキーム',
+  "Add your site as a Web platform of this project first: Appwrite only sends people back to its platforms' hostnames, and localhost.":
+    'まずサイトをこのプロジェクトの Web プラットフォームとして追加してください。Appwrite が戻り先にするのは、プラットフォームのホスト名と localhost だけです。',
+  'The server trades the token for the session with an API key that has the sessions.write scope, then keeps the session in its own cookie.':
+    'サーバーは sessions.write スコープを持つ API キーでトークンをセッションに交換し、そのセッションを自身の Cookie に保存します。',
+  'The sign-in opens in a system browser sheet and comes back to the appwrite-callback scheme, which every app of this project may use.':
+    'サインインはシステムのブラウザーシートで開き、このプロジェクトのすべてのアプリが使える appwrite-callback スキームに戻ります。',
+  'ASWebAuthenticationSession catches the appwrite-callback scheme itself, so there is nothing to register in Info.plist.':
+    'ASWebAuthenticationSession が appwrite-callback スキームを自分で受け取るため、Info.plist に登録するものはありません。',
+  'The sign-in opens in a Custom Tab and comes back to an activity that handles the appwrite-callback scheme.':
+    'サインインは Custom Tab で開き、appwrite-callback スキームを処理するアクティビティに戻ります。',
+  'Any language works: two requests and one browser redirect. With an API key, the session response includes its secret for your own cookie.':
+    'どの言語でも使えます。リクエスト 2 つとブラウザーのリダイレクト 1 つだけです。API キーを使うと、セッションのレスポンスに自分の Cookie 用の secret が含まれます。',
+  'Installation':
+    'インストール',
+  'Add to your app':
+    'アプリに追加',
+  'Select step':
+    'ステップを選択',
   'Users can sign in through this identity provider.':
     'ユーザーはこの ID プロバイダーでサインインできます。',
-  'Both URLs must be on the hostname of a web platform added to this project.':
-    'どちらの URL も、このプロジェクトに追加した Web プラットフォームのホスト名上にある必要があります。',
-  'On failure, it returns to the failure URL with an error query parameter that holds JSON with message, type and code.':
-    '失敗すると、message、type、code を含む JSON を持つ error クエリパラメーターとともに、failure URL に戻ります。',
 }

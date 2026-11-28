@@ -248,7 +248,9 @@
             "userId",
             "secret"
         ],
-        "avatars.deletePhoto": [],
+        "avatars.deletePhoto": [
+            "userId"
+        ],
         "avatars.getTeamPhoto": [
             "teamId",
             "width",
@@ -334,7 +336,8 @@
             "output"
         ],
         "avatars.updatePhoto": [
-            "file"
+            "file",
+            "userId"
         ],
         "databases.createDocument": [
             "databaseId",
@@ -899,6 +902,7 @@
             "transactionId"
         ],
         "videos.create": [
+            "videoId",
             "bucketId",
             "fileId",
             "name",
@@ -909,13 +913,8 @@
             "bucketId",
             "fileId",
             "name",
-            "code",
+            "language",
             "default"
-        ],
-        "videos.createRendition": [
-            "videoId",
-            "profileId",
-            "output"
         ],
         "videos.delete": [
             "videoId"
@@ -951,7 +950,7 @@
         "videos.getCmafStreamManifest": [
             "videoId",
             "renditionId",
-            "streamId"
+            "streamIndex"
         ],
         "videos.getDashManifest": [
             "videoId"
@@ -972,7 +971,7 @@
         "videos.getStreamManifest": [
             "videoId",
             "renditionId",
-            "streamId"
+            "streamIndex"
         ],
         "videos.getThumbnail": [
             "videoId",
@@ -981,7 +980,7 @@
             "height",
             "output"
         ],
-        "videos.getTimelines": [
+        "videos.getTimeline": [
             "videoId"
         ],
         "videos.list": [
@@ -1010,7 +1009,7 @@
             "bucketId",
             "fileId",
             "name",
-            "code",
+            "language",
             "default"
         ],
         "account.createDevice": [],
@@ -1301,7 +1300,9 @@
             "alertId",
             "acknowledged"
         ],
-        "avatars.deletePhoto": [],
+        "avatars.deletePhoto": [
+            "userId"
+        ],
         "avatars.getTeamPhoto": [
             "teamId",
             "width",
@@ -1387,7 +1388,8 @@
             "output"
         ],
         "avatars.updatePhoto": [
-            "file"
+            "file",
+            "userId"
         ],
         "console.getEmailTemplate": [
             "templateId",
@@ -3249,6 +3251,7 @@
             "description"
         ],
         "project.createVideoProfile": [
+            "profileId",
             "name",
             "videoBitRate",
             "audioBitRate",
@@ -3341,7 +3344,6 @@
         ],
         "project.listVideoProfiles": [
             "queries",
-            "codec",
             "total"
         ],
         "project.updateAndroidPlatform": [
@@ -3992,6 +3994,10 @@
         ],
         "reviews.get": [
             "reviewId"
+        ],
+        "reviews.getSummary": [
+            "range",
+            "repositoryId"
         ],
         "reviews.list": [
             "queries",
@@ -5486,6 +5492,7 @@
             "transactionId"
         ],
         "videos.create": [
+            "videoId",
             "bucketId",
             "fileId",
             "name",
@@ -5496,7 +5503,7 @@
             "bucketId",
             "fileId",
             "name",
-            "code",
+            "language",
             "default"
         ],
         "videos.createRendition": [
@@ -5538,7 +5545,7 @@
         "videos.getCmafStreamManifest": [
             "videoId",
             "renditionId",
-            "streamId"
+            "streamIndex"
         ],
         "videos.getDashManifest": [
             "videoId"
@@ -5559,7 +5566,7 @@
         "videos.getStreamManifest": [
             "videoId",
             "renditionId",
-            "streamId"
+            "streamIndex"
         ],
         "videos.getThumbnail": [
             "videoId",
@@ -5568,7 +5575,7 @@
             "height",
             "output"
         ],
-        "videos.getTimelines": [
+        "videos.getTimeline": [
             "videoId"
         ],
         "videos.list": [
@@ -5597,7 +5604,7 @@
             "bucketId",
             "fileId",
             "name",
-            "code",
+            "language",
             "default"
         ],
         "webhooks.create": [
@@ -5912,7 +5919,9 @@
             "alertId",
             "acknowledged"
         ],
-        "avatars.deletePhoto": [],
+        "avatars.deletePhoto": [
+            "userId"
+        ],
         "avatars.getTeamPhoto": [
             "teamId",
             "width",
@@ -5998,7 +6007,8 @@
             "output"
         ],
         "avatars.updatePhoto": [
-            "file"
+            "file",
+            "userId"
         ],
         "databases.create": [
             "databaseId",
@@ -7794,6 +7804,7 @@
             "description"
         ],
         "project.createVideoProfile": [
+            "profileId",
             "name",
             "videoBitRate",
             "audioBitRate",
@@ -7886,7 +7897,6 @@
         ],
         "project.listVideoProfiles": [
             "queries",
-            "codec",
             "total"
         ],
         "project.updateAndroidPlatform": [
@@ -8507,6 +8517,10 @@
         ],
         "reviews.get": [
             "reviewId"
+        ],
+        "reviews.getSummary": [
+            "range",
+            "repositoryId"
         ],
         "reviews.list": [
             "queries",
@@ -9905,6 +9919,7 @@
             "transactionId"
         ],
         "videos.create": [
+            "videoId",
             "bucketId",
             "fileId",
             "name",
@@ -9915,7 +9930,7 @@
             "bucketId",
             "fileId",
             "name",
-            "code",
+            "language",
             "default"
         ],
         "videos.createRendition": [
@@ -9957,7 +9972,7 @@
         "videos.getCmafStreamManifest": [
             "videoId",
             "renditionId",
-            "streamId"
+            "streamIndex"
         ],
         "videos.getDashManifest": [
             "videoId"
@@ -9978,7 +9993,7 @@
         "videos.getStreamManifest": [
             "videoId",
             "renditionId",
-            "streamId"
+            "streamIndex"
         ],
         "videos.getThumbnail": [
             "videoId",
@@ -9987,7 +10002,7 @@
             "height",
             "output"
         ],
-        "videos.getTimelines": [
+        "videos.getTimeline": [
             "videoId"
         ],
         "videos.list": [
@@ -10016,7 +10031,7 @@
             "bucketId",
             "fileId",
             "name",
-            "code",
+            "language",
             "default"
         ],
         "webhooks.create": [

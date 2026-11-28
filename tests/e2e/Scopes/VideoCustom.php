@@ -3,6 +3,7 @@
 namespace Tests\E2E\Scopes;
 
 use Tests\E2E\Client;
+use Utopia\Database\Id;
 use Utopia\Database\Permission;
 use Utopia\Database\Role;
 
@@ -31,48 +32,48 @@ trait VideoCustom
         [
             'name' => '360p',
             'codec' => 'h264',
-            'videoBitRate' => 890,
-            'audioBitRate' => 64,
+            'videoBitRate' => 890000,
+            'audioBitRate' => 64000,
             'width' => 640,
             'height' => 360,
         ],
         [
             'name' => '480p',
             'codec' => 'h264',
-            'videoBitRate' => 2100,
-            'audioBitRate' => 64,
+            'videoBitRate' => 2100000,
+            'audioBitRate' => 64000,
             'width' => 854,
             'height' => 480,
         ],
         [
             'name' => '576p',
             'codec' => 'h264',
-            'videoBitRate' => 2538,
-            'audioBitRate' => 128,
+            'videoBitRate' => 2538000,
+            'audioBitRate' => 128000,
             'width' => 1024,
             'height' => 576,
         ],
         [
             'name' => '720p',
             'codec' => 'h264',
-            'videoBitRate' => 3551,
-            'audioBitRate' => 128,
+            'videoBitRate' => 3551000,
+            'audioBitRate' => 128000,
             'width' => 1280,
             'height' => 720,
         ],
         [
             'name' => '1080p',
             'codec' => 'h264',
-            'videoBitRate' => 4800,
-            'audioBitRate' => 128,
+            'videoBitRate' => 4800000,
+            'audioBitRate' => 128000,
             'width' => 1920,
             'height' => 1080,
         ],
         [
             'name' => '2160p',
             'codec' => 'h264',
-            'videoBitRate' => 16000,
-            'audioBitRate' => 128,
+            'videoBitRate' => 16000000,
+            'audioBitRate' => 128000,
             'width' => 3840,
             'height' => 2160,
         ],
@@ -107,7 +108,7 @@ trait VideoCustom
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $project['$id'],
                 'x-appwrite-key' => $project['apiKey'],
-            ], $profile);
+            ], ['profileId' => Id::unique(), ...$profile]);
             $this->assertEquals(201, $response['headers']['status-code'], 'Failed to create profile ' . $profile['name']);
         }
 
@@ -671,6 +672,7 @@ trait VideoCustom
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
+            'videoId' => Id::unique(),
             'bucketId' => $this->getVideoBucket()['$id'],
             'fileId' => ($file ?? $this->getVideoFile())['$id'],
         ]);
@@ -731,6 +733,7 @@ trait VideoCustom
     {
         $file ??= $this->getVideoFile();
         $payload = [
+            'videoId' => Id::unique(),
             // A file uploaded to another bucket names it; the default fixtures do not.
             'bucketId' => $file['bucketId'] ?? $this->getVideoBucket()['$id'],
             'fileId' => $file['$id'],
@@ -963,7 +966,7 @@ trait VideoCustom
         $response = [];
 
         while (\time() < $deadline) {
-            $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/timelines', \array_merge([
+            $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/timeline', \array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()));
@@ -1022,7 +1025,7 @@ trait VideoCustom
         $response = [];
 
         while (\time() < $deadline) {
-            $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/timelines', \array_merge([
+            $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/timeline', \array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()));

@@ -623,6 +623,19 @@ class V25 extends Migration
                                 }
                             }
                         }
+                        // Indexes added since for review performance. An existing index is skipped.
+                        $index = match ($id) {
+                            'reviews' => '_key_status_createdAt',
+                            'reviewFindings' => '_key_reviewInternalId_status',
+                            default => null,
+                        };
+                        if ($existed && $index !== null) {
+                            try {
+                                $this->createIndexFromCollection($this->dbForProject, $id, $index);
+                            } catch (Duplicate) {
+                            }
+                            $this->dbForProject->purgeCachedCollection($id);
+                        }
                         // Segments created before each row stored its bytes. An existing
                         // attribute is skipped; a second migrate hits that path.
                         if ($existed && $id === 'videosRenditionsSegments') {
@@ -681,6 +694,13 @@ class V25 extends Migration
                 case 'ruleRecords':
                     // New with the DNS record checks. A platform collection, so only the console project visits it.
                     $this->createCollection($id);
+                    // What each region saw, added after the collection. An existing attribute is skipped;
+                    // any other failure propagates, since without it no check can be stored.
+                    try {
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'regions');
+                    } catch (Duplicate) {
+                    }
+                    $this->dbForProject->purgeCachedCollection($id);
                     break;
 
                 case 'pushLedger':

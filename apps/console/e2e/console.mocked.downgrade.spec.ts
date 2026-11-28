@@ -214,6 +214,8 @@ const PLAN_CHANGE_LIMITS: Models.PlanChangeLimits = {
   projects: compliance('projects', PROJECTS.length, FREE_PLAN.projects),
   members: compliance('members', MEMBERSHIPS.length, FREE_PLAN.members),
   domains: compliance('domains', 0, FREE_PLAN.domains),
+  probes: compliance('probes', 0, 0),
+  escalations: compliance('escalations', 0, 0),
   nonCompliantProjects: 1,
   projectCompliance: [
     projectCompliance(ALPHA, PROJECT_RESOURCES[ALPHA.$id].buckets.length),

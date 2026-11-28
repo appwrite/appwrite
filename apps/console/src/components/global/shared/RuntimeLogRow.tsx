@@ -1,347 +1,434 @@
 import { memo } from 'react'
-import type { ReactNode } from 'react'
-import { Link } from '@tanstack/react-router'
-import type { Models } from '@appwrite.io/console'
-import { ChevronRight } from 'lucide-react'
-import { CodeSnippetCopyButton } from '@/components/global/shared/CodeSnippetCopyButton'
+import type { ComponentType } from 'react'
+import {
+  Copy,
+  Database,
+  ExternalLink,
+  FileJson,
+  FileText,
+  Filter,
+  Globe,
+  Hash,
+  TextQuote,
+  Zap,
+} from 'lucide-react'
+import { toast } from 'sonner'
+import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
+import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
+import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
+import { DatabaseTypeIcon } from '@/components/pages/projects/$projectId/databases/_components/DatabaseTypeIcon'
+import { Badge } from '@/components/ui/badge'
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuSub,
+  ContextMenuSubContent,
+  ContextMenuSubTrigger,
+  ContextMenuTrigger,
+} from '@/components/ui/context-menu'
 import { useT } from '@/lib/i18n/translate'
+import {
+  rowRuntimeLogFields,
+  type RuntimeLogEntry,
+} from '@/lib/runtime-log-entry'
+import {
+  summarizeRuntimeLogMessage,
+  type RuntimeLogLevel,
+} from '@/lib/runtime-log-line'
+import type { RuntimeLogSource } from '@/lib/react-query/hooks/runtime-logs'
 import { cn } from '@/lib/utils'
-import { formatRawLog, logfmtFields } from '@/lib/runtime-log-line'
-import type { RuntimeLogLevel, RuntimeLogLine } from '@/lib/runtime-log-line'
 
-/** Fields shown inline after the message on a collapsed row. */
-const INLINE_FIELDS = 6
+/** Fields shown after the message on an unwrapped row. */
+const ROW_FIELDS = 8
 
-/** The row already shows its own time, so these only appear when expanded. */
-const TIME_KEYS = new Set(['time', 'timestamp', 'ts', '@t', '@timestamp'])
-
-const LEVEL_LABELS: Record<RuntimeLogLevel, string> = {
+export const RUNTIME_LOG_LEVEL_LABELS: Record<RuntimeLogLevel, string> = {
   error: 'ERROR',
   warn: 'WARN',
   info: 'INFO',
   debug: 'DEBUG',
 }
 
-const LEVEL_BORDERS: Record<RuntimeLogLevel, string> = {
-  error: 'border-s-red-500/80',
-  warn: 'border-s-amber-500/80',
-  info: 'border-s-transparent',
-  debug: 'border-s-transparent',
+const LEVEL_VARIANTS = {
+  error: 'error',
+  warn: 'warning',
+  info: 'info',
+  debug: 'inactive',
+} as const satisfies Record<RuntimeLogLevel, string>
+
+/**
+ * Column widths, shared by the header and every row so they line up. The list
+ * is a `@container/logs`; below 640px a row stacks its message under the rest.
+ */
+export const RUNTIME_LOG_COLUMNS = {
+  time: 'w-[92px]',
+  timeWithDate: 'w-[148px]',
+  level: 'w-[52px]',
+  source: 'min-w-0 flex-1 @[640px]/logs:w-[176px] @[640px]/logs:flex-none',
+} as const
+
+export const RUNTIME_LOG_SOURCE_ICONS: Record<
+  string,
+  ComponentType<{ className?: string }>
+> = {
+  functions: Zap,
+  sites: Globe,
+  databases: Database,
 }
 
-const LEVEL_BADGES: Record<RuntimeLogLevel, string> = {
-  error: 'bg-red-500/10 text-red-700 dark:text-red-300',
-  warn: 'bg-amber-500/10 text-amber-700 dark:text-amber-300',
-  info: 'bg-sky-500/10 text-sky-700 dark:text-sky-300',
-  debug: 'bg-muted text-muted-foreground',
-}
-
-const LEVEL_TEXT: Record<RuntimeLogLevel, string> = {
-  error: 'text-red-700 dark:text-red-300',
-  warn: 'text-amber-700 dark:text-amber-300',
-  info: '',
-  debug: 'text-muted-foreground',
-}
-
-export interface RuntimeLogRowProps {
-  log: Models.RuntimeLog
-  line: RuntimeLogLine
-  /** The line's own level, or one taken from its stream. */
+export function RuntimeLogLevelBadge({
+  level,
+  className,
+}: {
   level: RuntimeLogLevel
-  /** Message with color codes removed, as copied and downloaded. */
-  plain: string
-  /** Set on the project's Logs page, which names each row's resource. */
-  projectId?: string
-  expanded: boolean
-  onToggle: (id: string) => void
-  /** Time, stream and region as columns, instead of on hover and expand. */
-  showMetadata: boolean
-  formatTime: (timestamp: string) => string
-  formatDateTime: (timestamp: string) => string
+  className?: string
+}) {
+  return (
+    <Badge
+      variant={LEVEL_VARIANTS[level]}
+      className={cn(
+        'h-[18px] min-w-[44px] rounded px-1.5 font-mono text-[10px] font-semibold tracking-wide',
+        className,
+      )}
+    >
+      {RUNTIME_LOG_LEVEL_LABELS[level]}
+    </Badge>
+  )
 }
 
 /**
- * One runtime log line: message first, with the level and any structured
- * fields beside it. Time, stream, region and deployment show on hover, when
- * expanded, or as columns when the viewer turns metadata on.
+ * What wrote the line, by its own mark: the runtime's logo for a function,
+ * the framework's for a site, the engine's for a database. Until the resource
+ * loads, or when it names none, the kind's icon from the sidebar stands in.
+ */
+export function RuntimeLogSourceLogo({
+  type,
+  source,
+  className,
+}: {
+  type: string
+  source: RuntimeLogSource | undefined
+  className?: string
+}) {
+  if (type === 'functions' && source?.runtime) {
+    return (
+      <RuntimeIcon runtime={source.runtime} size="sm" className={className} />
+    )
+  }
+  if (type === 'sites' && source?.framework) {
+    return (
+      <FrameworkIcon
+        framework={source.framework}
+        size="sm"
+        className={className}
+      />
+    )
+  }
+  if (type === 'databases' && source) {
+    return (
+      <DatabaseTypeIcon
+        engine={source.engine}
+        apiType={source.api}
+        className={className}
+      />
+    )
+  }
+  const Icon = RUNTIME_LOG_SOURCE_ICONS[type] ?? FileText
+  return <Icon className={cn('text-muted-foreground', className)} />
+}
+
+/** The source's logo on a neutral tile, as service avatars are across the Console. */
+export function RuntimeLogSourceIcon({
+  type,
+  source,
+  className,
+  logoClassName = 'h-3.5 w-3.5',
+}: {
+  type: string
+  source: RuntimeLogSource | undefined
+  className?: string
+  logoClassName?: string
+}) {
+  return (
+    <span
+      aria-hidden
+      className={cn(
+        'flex h-5 w-5 shrink-0 items-center justify-center rounded-[5px] bg-muted',
+        className,
+      )}
+    >
+      <RuntimeLogSourceLogo
+        type={type}
+        source={source}
+        className={cn('shrink-0', logoClassName)}
+      />
+    </span>
+  )
+}
+
+export interface RuntimeLogRowProps {
+  entry: RuntimeLogEntry
+  /** Project-wide lists name the resource behind each line. */
+  showSource: boolean
+  source: RuntimeLogSource | undefined
+  /** Set while the details drawer shows this line. */
+  selected: boolean
+  /** Arrived while live; fades in once. */
+  arrived: boolean
+  wrap: boolean
+  withDate: boolean
+  formatTime: (timestamp: string) => string
+  insetClassName?: string
+  onOpen: (id: string) => void
+  /** Narrows a project-wide list to this line's resource. */
+  onShowSource?: (entry: RuntimeLogEntry) => void
+  /** Opens the line's resource, when the Console has a page for it. */
+  onOpenSource?: (entry: RuntimeLogEntry) => void
+}
+
+const OPEN_SOURCE_LABELS: Record<string, string> = {
+  functions: 'Open function',
+  sites: 'Open site',
+  databases: 'Open database',
+}
+
+/**
+ * Whether the list can narrow to the line's resource: every function and
+ * site, and a database whose lines carry its own ID, as a native engine's do.
+ * A TablesDB, DocumentsDB or VectorsDB logs under its compute's ID instead.
+ */
+export function canFilterRuntimeLogSource(
+  resourceType: string,
+  source: RuntimeLogSource | undefined,
+): boolean {
+  if (resourceType === 'functions' || resourceType === 'sites') return true
+  return resourceType === 'databases' && !!source?.engine && !source.api
+}
+
+/**
+ * Whether the Console has a page for the line's resource: every function and
+ * site, and databases on a native PostgreSQL or MySQL engine. A TablesDB,
+ * DocumentsDB or VectorsDB database logs under its compute, which has no page
+ * of its own.
+ */
+export function canOpenRuntimeLogSource(
+  resourceType: string,
+  source: RuntimeLogSource | undefined,
+): boolean {
+  if (resourceType === 'functions' || resourceType === 'sites') return true
+  return (
+    resourceType === 'databases' &&
+    (source?.engine === 'postgresql' || source?.engine === 'mysql') &&
+    !source.api
+  )
+}
+
+/**
+ * One runtime log line in the list: time, level, the resource on
+ * project-wide lists, then the message with its fields. The row opens the
+ * line's details; right-click offers copy and filter actions.
  */
 export const RuntimeLogRow = memo(function RuntimeLogRow({
-  log,
-  line,
-  level,
-  plain,
-  projectId,
-  expanded,
-  onToggle,
-  showMetadata,
+  entry,
+  showSource,
+  source,
+  selected,
+  arrived,
+  wrap,
+  withDate,
   formatTime,
-  formatDateTime,
+  insetClassName,
+  onOpen,
+  onShowSource,
+  onOpenSource,
 }: RuntimeLogRowProps) {
   const t = useT()
-  const structured = line.format !== 'text'
-  const stderr = log.stream === 'stderr'
-  const shown = line.fields.filter((field) => !TIME_KEYS.has(field.key))
-  const inline = shown.slice(0, INLINE_FIELDS)
-  const hidden = shown.length - inline.length
+  const { log, line, level } = entry
+  const fields = rowRuntimeLogFields(line)
+  const shown = wrap ? fields : fields.slice(0, ROW_FIELDS)
+  const hidden = fields.length - shown.length
+  const openLabel =
+    onOpenSource && canOpenRuntimeLogSource(log.resourceType, source)
+      ? OPEN_SOURCE_LABELS[log.resourceType]
+      : null
+  const canFilter =
+    !!onShowSource && canFilterRuntimeLogSource(log.resourceType, source)
 
   const toggle = () => {
-    // Selecting text to copy shouldn't open the row
+    // Selecting text to copy shouldn't open the details
     if (window.getSelection()?.toString()) return
-    onToggle(log.$id)
+    onOpen(log.$id)
+  }
+
+  const copy = (text: string, label: string) => {
+    void navigator.clipboard
+      .writeText(text)
+      .then(() => toast.success(label))
+      .catch(() => toast.error(t('Could not copy to the clipboard')))
   }
 
   return (
-    <div
-      className={cn(
-        'border-s-2 font-mono text-[12px] leading-5',
-        LEVEL_BORDERS[level],
-        expanded && 'bg-muted/40',
-      )}
-    >
-      <div className="group flex min-w-0 items-start gap-2 rounded-e px-2 py-0.5 hover:bg-muted/50">
+    <ContextMenu>
+      <ContextMenuTrigger asChild>
         <button
           type="button"
           onClick={toggle}
-          aria-expanded={expanded}
-          className="flex min-w-0 flex-1 cursor-pointer items-baseline gap-2 text-start outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+          aria-haspopup="dialog"
+          data-log-id={log.$id}
+          data-level={level}
+          data-selected={selected || undefined}
+          className={cn(
+            'group flex w-full min-w-0 cursor-pointer flex-wrap gap-x-3 gap-y-0.5 border-b border-border/50 py-1.5 text-start outline-none transition-colors @[640px]/logs:flex-nowrap',
+            'focus-visible:bg-muted/60 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring/50',
+            wrap
+              ? 'items-start @[640px]/logs:py-[5px]'
+              : 'items-center @[640px]/logs:h-8 @[640px]/logs:py-0',
+            selected
+              ? 'bg-muted'
+              : level === 'error'
+                ? 'bg-red-500/[0.035] hover:bg-red-500/[0.07] dark:bg-red-500/[0.05] dark:hover:bg-red-500/[0.09]'
+                : level === 'warn'
+                  ? 'bg-amber-500/[0.03] hover:bg-amber-500/[0.07] dark:bg-amber-500/[0.04] dark:hover:bg-amber-500/[0.08]'
+                  : 'hover:bg-muted/50',
+            arrived && 'animate-in fade-in duration-700',
+            insetClassName,
+          )}
+          // Long lists stay fast: the browser skips rows far off screen
+          style={
+            wrap
+              ? undefined
+              : { contentVisibility: 'auto', containIntrinsicSize: 'auto 32px' }
+          }
         >
-          <ChevronRight
-            aria-hidden
-            className={cn(
-              'h-3 w-3 shrink-0 self-center text-muted-foreground/60 transition-transform',
-              expanded && 'rotate-90',
-            )}
-          />
-          {showMetadata && (
-            <>
-              <time
-                dateTime={log.timestamp}
-                title={log.timestamp}
-                className="shrink-0 whitespace-nowrap text-muted-foreground tabular-nums"
-              >
-                {formatTime(log.timestamp)}
-              </time>
-              <span
-                className={cn(
-                  'w-12 shrink-0 uppercase',
-                  stderr
-                    ? 'text-red-600 dark:text-red-400'
-                    : 'text-muted-foreground',
-                )}
-              >
-                {log.stream}
-              </span>
-              <span className="w-8 shrink-0 uppercase text-muted-foreground">
-                {log.region}
-              </span>
-            </>
-          )}
-          {structured && line.level && (
-            <span
-              className={cn(
-                'shrink-0 rounded px-1 text-[10px] font-semibold leading-4 tracking-wide',
-                LEVEL_BADGES[line.level],
-              )}
-            >
-              {LEVEL_LABELS[line.level]}
-            </span>
-          )}
-          <span className="min-w-0 flex-1">
-            {line.message !== '' && (
-              <span
-                className={cn(
-                  'whitespace-pre-wrap break-words',
-                  structured && line.level
-                    ? LEVEL_TEXT[line.level]
-                    : stderr || level === 'error'
-                      ? LEVEL_TEXT.error
-                      : level === 'warn'
-                        ? LEVEL_TEXT.warn
-                        : undefined,
-                )}
-              >
-                {structured ? line.message : plain}
-              </span>
-            )}
-            {inline.length > 0 && (
-              <span
-                className={cn(
-                  'text-muted-foreground',
-                  line.message !== '' && 'ms-2',
-                  !expanded && 'break-all',
-                )}
-              >
-                {line.message !== '' && ' '}
-                {inline.map((field, i) => (
-                  <span key={`${field.key}-${i}`} className="me-2">
-                    <span className="text-muted-foreground/70">
-                      {field.key}=
-                    </span>
-                    <span className="text-foreground/80">
-                      {truncate(field.value)}
-                    </span>{' '}
-                  </span>
-                ))}
-                {hidden > 0 && (
-                  <span className="text-muted-foreground/70">+{hidden}</span>
-                )}
-              </span>
-            )}
-          </span>
-        </button>
-        {projectId && <ResourceCell projectId={projectId} log={log} />}
-        {!showMetadata && (
           <time
             dateTime={log.timestamp}
-            title={formatDateTime(log.timestamp)}
             className={cn(
-              'shrink-0 whitespace-nowrap text-[11px] text-muted-foreground tabular-nums transition-opacity',
-              expanded ? 'opacity-100' : 'opacity-0 group-hover:opacity-100',
+              'shrink-0 whitespace-nowrap font-mono text-[12px] leading-5 text-muted-foreground tabular-nums',
+              withDate
+                ? RUNTIME_LOG_COLUMNS.timeWithDate
+                : RUNTIME_LOG_COLUMNS.time,
             )}
           >
             {formatTime(log.timestamp)}
           </time>
+          <span className={cn('flex shrink-0', RUNTIME_LOG_COLUMNS.level)}>
+            <RuntimeLogLevelBadge level={level} />
+          </span>
+          {showSource && (
+            <span
+              className={cn(
+                'flex items-center gap-2',
+                RUNTIME_LOG_COLUMNS.source,
+              )}
+              title={`${log.resourceType}/${log.resourceId}`}
+            >
+              <RuntimeLogSourceIcon type={log.resourceType} source={source} />
+              <span
+                className={cn(
+                  'min-w-0 truncate text-[12.5px] leading-5',
+                  source
+                    ? 'text-foreground'
+                    : 'font-mono text-[12px] text-muted-foreground',
+                )}
+              >
+                {source?.name ?? log.resourceId}
+              </span>
+            </span>
+          )}
+          <span
+            className={cn(
+              'min-w-0 flex-1 basis-full font-mono text-[12px] leading-5 @[640px]/logs:basis-auto',
+              wrap
+                ? 'whitespace-pre-wrap [overflow-wrap:anywhere]'
+                : 'truncate',
+            )}
+          >
+            {line.message !== '' && (
+              <span className="text-foreground">
+                {wrap ? line.message : summarizeRuntimeLogMessage(line.message)}
+              </span>
+            )}
+            {shown.map((field, i) => (
+              <span
+                key={`${field.key}-${i}`}
+                className={cn(
+                  (line.message !== '' || i > 0) && 'ms-3',
+                  'text-muted-foreground',
+                )}
+              >
+                {field.key}=
+                <span className="text-foreground/75">
+                  {wrap ? field.value : firstLine(field.value)}
+                </span>
+              </span>
+            ))}
+            {hidden > 0 && (
+              <span className="ms-3 text-muted-foreground/70">+{hidden}</span>
+            )}
+          </span>
+        </button>
+      </ContextMenuTrigger>
+      <ContextMenuContent className="w-56">
+        <ContextMenuItem onSelect={() => onOpen(log.$id)}>
+          <ContextMenuIcon icon={FileText} />
+          {t('View details')}
+        </ContextMenuItem>
+        {(canFilter || openLabel) && <ContextMenuSeparator />}
+        {canFilter && (
+          <ContextMenuItem onSelect={() => onShowSource?.(entry)}>
+            <ContextMenuIcon icon={Filter} />
+            <span className="min-w-0 truncate">{t('Only this resource')}</span>
+          </ContextMenuItem>
         )}
-      </div>
-      {expanded && (
-        <div className="mb-1 ms-7 me-2 rounded border border-border bg-background px-3 py-2">
-          <dl className="grid grid-cols-[minmax(80px,max-content)_1fr] gap-x-4 gap-y-0.5">
-            <Detail label={t('Time')}>
-              {formatDateTime(log.timestamp)}{' '}
-              <span className="text-muted-foreground">{log.timestamp}</span>
-            </Detail>
-            {line.level && (
-              <Detail label={t('Level')}>{LEVEL_LABELS[line.level]}</Detail>
-            )}
-            <Detail label={t('Stream')}>{log.stream}</Detail>
-            <Detail label={t('Region')}>{log.region}</Detail>
-            {log.deploymentId && (
-              <Detail label={t('Deployment')}>{log.deploymentId}</Detail>
-            )}
-            {projectId && (
-              <Detail label={t('Resource')}>
-                {log.resourceType}/{log.resourceId}
-              </Detail>
-            )}
-          </dl>
-          <RuntimeLogEntry line={line} plain={plain} />
-        </div>
-      )}
-    </div>
+        {openLabel && (
+          <ContextMenuItem onSelect={() => onOpenSource?.(entry)}>
+            <ContextMenuIcon icon={ExternalLink} />
+            {t(openLabel)}
+          </ContextMenuItem>
+        )}
+        <ContextMenuSeparator />
+        <ContextMenuSub>
+          <ContextMenuSubTrigger>
+            <ContextMenuIcon icon={Copy} />
+            {t('Copy')}
+          </ContextMenuSubTrigger>
+          <ContextMenuSubContent className="w-48">
+            <ContextMenuItem
+              onSelect={() =>
+                copy(line.message || entry.plain, t('Message copied'))
+              }
+            >
+              <ContextMenuIcon icon={TextQuote} />
+              {t('Copy message')}
+            </ContextMenuItem>
+            <ContextMenuItem
+              onSelect={() => copy(entry.plain, t('Line copied'))}
+            >
+              <ContextMenuIcon icon={FileText} />
+              {t('Copy line')}
+            </ContextMenuItem>
+            <ContextMenuItem
+              onSelect={() =>
+                copy(JSON.stringify(log, null, 2), t('JSON copied'))
+              }
+            >
+              <ContextMenuIcon icon={FileJson} />
+              {t('Copy as JSON')}
+            </ContextMenuItem>
+            <ContextMenuItem onSelect={() => copy(log.$id, t('ID copied'))}>
+              <ContextMenuIcon icon={Hash} />
+              {t('Copy ID')}
+            </ContextMenuItem>
+          </ContextMenuSubContent>
+        </ContextMenuSub>
+      </ContextMenuContent>
+    </ContextMenu>
   )
 })
 
-/**
- * The entry itself under the metadata: its fields, then the whole line as it
- * was logged, so nothing is hidden behind the parsed view.
- */
-function RuntimeLogEntry({
-  line,
-  plain,
-}: {
-  line: RuntimeLogLine
-  plain: string
-}) {
-  const t = useT()
-  const fields =
-    line.fields.length > 0
-      ? line.fields
-      : line.format === 'text'
-        ? (logfmtFields(plain) ?? [])
-        : []
-
-  return (
-    <>
-      {fields.length > 0 && (
-        <>
-          <div className="my-2 border-t border-border" />
-          <dl className="grid grid-cols-[minmax(80px,max-content)_1fr] gap-x-4 gap-y-0.5">
-            {fields.map((field, i) => (
-              <Detail key={`${field.key}-${i}`} label={field.key}>
-                {field.value}
-              </Detail>
-            ))}
-          </dl>
-        </>
-      )}
-      <div className="my-2 border-t border-border" />
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-muted-foreground">{t('Raw')}</span>
-        <CodeSnippetCopyButton content={plain} />
-      </div>
-      <pre className="mt-1 max-h-80 overflow-auto whitespace-pre-wrap break-all rounded bg-muted/50 px-2 py-1.5">
-        {formatRawLog(plain)}
-      </pre>
-    </>
-  )
-}
-
-function Detail({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <>
-      <dt className="truncate text-muted-foreground" title={label}>
-        {label}
-      </dt>
-      <dd className="min-w-0 whitespace-pre-wrap break-all">{children}</dd>
-    </>
-  )
-}
-
-function truncate(value: string): string {
-  const single = value.includes('\n') ? `${value.split('\n')[0]} …` : value
-  return single.length > 120 ? `${single.slice(0, 120)}…` : single
-}
-
-const RESOURCE_LABELS: Record<string, string> = {
-  functions: 'function',
-  sites: 'site',
-  databases: 'database',
-}
-
-/** Names the resource behind a project-wide row, linking to its own logs. */
-function ResourceCell({
-  projectId,
-  log,
-}: {
-  projectId: string
-  log: Models.RuntimeLog
-}) {
-  const label = `${RESOURCE_LABELS[log.resourceType] ?? log.resourceType}/${log.resourceId}`
-  const className =
-    'max-w-[200px] shrink-0 truncate text-[11px] text-muted-foreground hover:text-foreground hover:underline'
-  const search = log.deploymentId ? { deploymentId: log.deploymentId } : {}
-  if (log.resourceType === 'functions') {
-    return (
-      <Link
-        to="/projects/$projectId/functions/$functionId/runtime-logs"
-        params={{ projectId, functionId: log.resourceId }}
-        search={search}
-        title={label}
-        className={className}
-      >
-        {label}
-      </Link>
-    )
-  }
-  if (log.resourceType === 'sites') {
-    return (
-      <Link
-        to="/projects/$projectId/sites/$siteId/runtime-logs"
-        params={{ projectId, siteId: log.resourceId }}
-        search={search}
-        title={label}
-        className={className}
-      >
-        {label}
-      </Link>
-    )
-  }
-  return (
-    <span
-      title={label}
-      className="max-w-[200px] shrink-0 truncate text-[11px] text-muted-foreground"
-    >
-      {label}
-    </span>
-  )
+/** The first line of a multi-line value, marked as cut. */
+function firstLine(value: string): string {
+  const newline = value.indexOf('\n')
+  return newline === -1 ? value : `${value.slice(0, newline)} …`
 }

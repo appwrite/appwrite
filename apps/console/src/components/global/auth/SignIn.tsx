@@ -124,7 +124,7 @@ export type SignInSubmitOptions = {
   skipAccountCreate?: boolean
 }
 
-/** Accordion row. Google sits on its own full-width row below it. */
+/** Accordion row. Google sits on its own full-width row above it. */
 const VCS_OAUTH_PROVIDERS: {
   id: OAuthLoginMethod
   Icon: (props: { className?: string }) => ReactNode
@@ -507,7 +507,23 @@ export function SignIn({
           {onOAuthLogin && (
             <>
               <style>{OAUTH_ACCORDION_STYLES}</style>
-              <div className="space-y-2">
+              <div className="space-y-4">
+                <div className="relative">
+                  {mode === 'sign-in' && lastLoginMethod === 'google' && (
+                    <LastUsedBadge>{t('Last used')}</LastUsedBadge>
+                  )}
+                  <Button
+                    variant="outline"
+                    type="button"
+                    data-provider="google"
+                    className="h-9 w-full"
+                    onClick={() => onOAuthLogin('google')}
+                    disabled={!!oauthLoading || formBusy}
+                  >
+                    <GoogleIcon className="size-4" />
+                    {oauthProviderLabel('google', mode, t)}
+                  </Button>
+                </div>
                 <div className="oauth-login-row">
                   {VCS_OAUTH_PROVIDERS.map(({ id, Icon }) => {
                     const label = oauthProviderLabel(id, mode, t)
@@ -563,30 +579,15 @@ export function SignIn({
                     )
                   })}
                 </div>
-                <div className="relative">
-                  {mode === 'sign-in' && lastLoginMethod === 'google' && (
-                    <LastUsedBadge>{t('Last used')}</LastUsedBadge>
-                  )}
-                  <Button
-                    variant="outline"
-                    type="button"
-                    data-provider="google"
-                    className="h-9 w-full"
-                    onClick={() => onOAuthLogin('google')}
-                    disabled={!!oauthLoading || formBusy}
-                  >
-                    <GoogleIcon className="size-4" />
-                    {oauthProviderLabel('google', mode, t)}
-                  </Button>
-                </div>
-                {otherMethods}
               </div>
 
-              <Divider>{t('Or continue with')}</Divider>
+              <Divider>
+                {otherMethods ? t('Or') : t('Or continue with')}
+              </Divider>
             </>
           )}
 
-          {!onOAuthLogin && otherMethods && (
+          {otherMethods && (
             <>
               {otherMethods}
 

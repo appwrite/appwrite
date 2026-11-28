@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Videos\Http\Videos;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Videos\Base;
+use Appwrite\Platform\Modules\Videos\SegmentCache;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -20,7 +21,6 @@ use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\System\System;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 
@@ -36,7 +36,7 @@ class Update extends Base
     public function __construct()
     {
         $this
-            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PUT)
+            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
             ->setHttpPath('/v1/videos/:videoId')
             ->desc('Update video')
             ->groups(['api', 'videos'])
@@ -50,8 +50,6 @@ class Update extends Base
                 namespace: 'videos',
                 group: 'videos',
                 name: 'update',
-                // Hidden until videos is generally available; preview SDK builds show it.
-                hide: System::getEnv('_APP_SDK_PREVIEW', 'disabled') !== 'enabled',
                 description: '/docs/references/videos/update-video.md',
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [
@@ -62,25 +60,29 @@ class Update extends Base
                 ]
             ))
             ->param('videoId', '', new UID(), 'Video unique ID.')
-            ->param('name', '', new Text(2048), 'Video name. Max length: 2048 chars.')
+            ->param('name', null, new Nullable(new Text(2048)), 'Video name. Max length: 2048 chars.', true)
             ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [PermissionType::Read, PermissionType::Update, PermissionType::Delete, PermissionType::Write])), 'An array of permission strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('user')
             ->inject('authorization')
+            ->inject('project')
             ->inject('queueForEvents')
+            ->inject('purgeVideoSegmentCache')
             ->callback($this->action(...));
     }
 
     public function action(
         string $videoId,
-        string $name,
+        ?string $name,
         ?array $permissions,
         Response $response,
         Database $dbForProject,
         User $user,
         Authorization $authorization,
-        Event $queueForEvents
+        Document $project,
+        Event $queueForEvents,
+        SegmentCache $segmentCache
     ): void {
         $video = $this->getAuthorizedVideo($dbForProject, $authorization, $user, $videoId);
 
@@ -113,21 +115,26 @@ class Update extends Base
             }
         }
 
-        if (\is_null($permissions)) {
-            $permissions = $video->getPermissions();
+        $updates = [];
+        if ($name !== null) {
+            $updates['name'] = $name;
+            $updates['search'] = \implode(' ', [$video->getAttribute('fileId', ''), $name]);
+        }
+        if ($permissions !== null) {
+            $updates['$permissions'] = $permissions;
         }
 
-        $data = new Document([
-            'name' => $name,
-            'search' => \implode(' ', [$video->getAttribute('fileId', ''), $name]),
-            '$permissions' => $permissions,
-        ]);
+        $data = new Document($updates);
 
         if ($isAPIKey || $isPrivilegedUser) {
             $video = $authorization->skip(fn () => $dbForProject->updateDocument('videos', $video->getId(), $data));
         } else {
             $video = $dbForProject->updateDocument('videos', $video->getId(), $data);
         }
+
+        // Drop Fastly's public segment copies for this video (old updatedAt URLs
+        // share the Surrogate-Key). Rename and permission changes both land here.
+        $segmentCache->purge($project->getId(), $video->getId());
 
         $queueForEvents->setParam('videoId', $video->getId());
 

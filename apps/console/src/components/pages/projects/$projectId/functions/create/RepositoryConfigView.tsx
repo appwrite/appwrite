@@ -5,7 +5,7 @@
  * Runtime detection, branch/root, domain, variables, then create + VCS deployment.
  */
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useParams, useNavigate, Link } from '@tanstack/react-router'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -70,6 +70,8 @@ import {
 } from '@/lib/specifications'
 import { useFunctionWizard } from './WizardContext'
 import { useT } from '@/lib/i18n/translate'
+import { useActiveEnvironmentId } from '@/lib/active-environment'
+import { EnvironmentGitNotice } from '@/components/global/shared/EnvironmentGitNotice'
 import { getVcsProvider } from '@/lib/vcs/providers'
 import { validateVariables } from '@/lib/variables'
 import {
@@ -96,6 +98,7 @@ export function RepositoryConfigView({
 }: RepositoryConfigViewProps) {
   const t = useT()
   const { projectId } = useParams({ strict: false })
+  const environmentId = useActiveEnvironmentId(projectId)
   const { project } = useProject(projectId)
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -145,6 +148,8 @@ export function RepositoryConfigView({
   const [variables, setVariables] = useState<FunctionWizardVariable[]>([])
   const [domain, setDomain] = useState('')
   const [domainValid, setDomainValid] = useState(false)
+  // Domain follows the function name until the user edits it
+  const domainEditedRef = useRef(false)
   const [isPublic, setIsPublic] = useState(true)
   const [specification, setSpecification] = useState('')
   const [isDeploying, setIsDeploying] = useState(false)
@@ -245,7 +250,7 @@ export function RepositoryConfigView({
   }
 
   useEffect(() => {
-    if (functionName && !domain) {
+    if (functionName && !domainEditedRef.current) {
       setDomain(generateDomain(functionName))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -472,6 +477,19 @@ export function RepositoryConfigView({
     </div>
   )
 
+  // Git installations cannot be connected from inside an environment
+  if (environmentId) {
+    return (
+      <WizardLayout
+        title={t('Create function')}
+        fallbackPath={`/projects/${projectId}/functions`}
+        fullscreen
+      >
+        <EnvironmentGitNotice />
+      </WizardLayout>
+    )
+  }
+
   return (
     <WizardLayout
       title={t('Create function')}
@@ -697,6 +715,9 @@ export function RepositoryConfigView({
         setDomain={setDomain}
         domainValid={domainValid}
         setDomainValid={setDomainValid}
+        onEdit={() => {
+          domainEditedRef.current = true
+        }}
       />
 
       {/* Production branch – when Git is used */}

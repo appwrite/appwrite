@@ -11,6 +11,7 @@ import { FeatureGate } from './markdoc/FeatureGate'
 import { Fence } from './markdoc/Fence'
 import { MarkdocIcon, MarkdocIconImage } from './markdoc/Icon'
 import { Info } from './markdoc/Info'
+import { Video } from './markdoc/Video'
 import { MultiCode } from './markdoc/MultiCode'
 import { DocsImage } from './markdoc/DocsImage'
 import { IndexLookupAnimation } from './markdoc/IndexLookupAnimation'
@@ -90,11 +91,7 @@ const baseMarkdocComponents = {
   PromptContent: PromptContentMarkdoc,
   IndexLookupAnimation,
   RateLimitStrategyAnimation,
-  Video: ({ src, title }: { src?: string; title?: string }) => (
-    <div className="not-prose my-6 overflow-hidden rounded-xl border border-border">
-      <video src={src} controls className="w-full" title={title} />
-    </div>
-  ),
+  Video,
   Youtube: MarkdocYoutube,
 }
 

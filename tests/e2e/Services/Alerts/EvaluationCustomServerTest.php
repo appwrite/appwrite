@@ -156,8 +156,8 @@ final class EvaluationCustomServerTest extends Scope
             \base64_encode(\hash_hmac('sha1', $webhook['url'] . $delivery['body'], $webhook['secret'], true)),
             $delivery['headers']['X-Appwrite-Webhook-Signature'],
         );
-        $this->assertContains('monitors.' . $monitorId . '.alerts.' . $firing['alertId'] . '.firing', \explode(',', $delivery['headers']['X-Appwrite-Webhook-Events']));
-        $this->assertContains('monitors.*.alerts.*.firing', \explode(',', $delivery['headers']['X-Appwrite-Webhook-Events']));
+        $this->assertContains('monitors.' . $monitorId . '.alerts.' . $firing['alertId'] . '.create', \explode(',', $delivery['headers']['X-Appwrite-Webhook-Events']));
+        $this->assertContains('monitors.*.alerts.*.create', \explode(',', $delivery['headers']['X-Appwrite-Webhook-Events']));
         $this->assertSame($firing['alertId'], $delivery['data']['$id']);
         $this->assertSame($name, $delivery['data']['name']);
         $this->assertSame('usage', $delivery['data']['type']);
@@ -213,7 +213,7 @@ final class EvaluationCustomServerTest extends Scope
         $this->assertNotSame('', $push['data']['unsubscribeToken']);
 
         // A member acknowledges the alert for everyone who can read it; it keeps firing.
-        $acknowledgements = $this->createAlertWebhook(['monitors.*.alerts.*.acknowledged', 'monitors.*.alerts.*.unacknowledged']);
+        $acknowledgements = $this->createAlertWebhook(['monitors.*.alerts.*.update']);
         $member = \array_merge($this->consoleHeaders(), ['x-appwrite-project' => $this->getProject()['$id'], 'x-appwrite-mode' => 'admin']);
         $acknowledged = $this->updateAlert($firing['alertId'], true, $member);
         $this->assertSame('firing', $acknowledged['status']);
@@ -221,7 +221,7 @@ final class EvaluationCustomServerTest extends Scope
         $this->assertSame($this->getRoot()['$id'], $acknowledged['acknowledgedBy']);
         $this->assertSame($this->getRoot()['name'], $acknowledged['acknowledgedByName']);
         $this->assertSame($acknowledged['acknowledgedAt'], $this->getAlert($firing['alertId'])['acknowledgedAt']);
-        $delivery = $this->waitForAcknowledgement($acknowledgements['path'], $firing['alertId'], 'acknowledged');
+        $delivery = $this->waitForAcknowledgement($acknowledgements['path'], $firing['alertId'], true);
         $this->assertSame($this->getRoot()['$id'], $delivery['data']['acknowledgedBy']);
         $this->assertSame('firing', $delivery['data']['status']);
         // Every member's bell shows it, so none offers acknowledging it again.
@@ -237,7 +237,7 @@ final class EvaluationCustomServerTest extends Scope
         $this->assertNull($undone['acknowledgedAt']);
         $this->assertSame('', $undone['acknowledgedBy']);
         $this->assertSame('', $undone['acknowledgedByName']);
-        $this->waitForAcknowledgement($acknowledgements['path'], $firing['alertId'], 'unacknowledged');
+        $this->waitForAcknowledgement($acknowledgements['path'], $firing['alertId'], false);
         $this->assertSame([], $this->listAlerts([
             Query::equal('monitorId', [$monitorId])->toString(),
             Query::isNotNull('acknowledgedAt')->toString(),
@@ -254,10 +254,11 @@ final class EvaluationCustomServerTest extends Scope
             Query::isNotNull('acknowledgedAt')->toString(),
         ])['alerts'], '$id'));
         // Two acknowledgements reached the webhook: the member's and the key's, not the repeat in between.
-        $event = 'monitors.' . $monitorId . '.alerts.' . $firing['alertId'] . '.acknowledged';
+        $event = 'monitors.' . $monitorId . '.alerts.' . $firing['alertId'] . '.update';
         $deliveries = fn (): int => \count(\array_filter(
             \json_decode((string) \file_get_contents('http://request-catcher-webhook:5000/__find_request__?url=' . \urlencode($acknowledgements['path'])), true) ?: [],
-            fn (array $request): bool => \in_array($event, \explode(',', (string) ($request['headers']['X-Appwrite-Webhook-Events'] ?? '')), true),
+            fn (array $request): bool => \in_array($event, \explode(',', (string) ($request['headers']['X-Appwrite-Webhook-Events'] ?? '')), true)
+                && (\json_decode($request['data'] ?? '{}', true)['acknowledgedAt'] ?? null) !== null,
         ));
         $this->assertEventually(fn () => $this->assertGreaterThanOrEqual(2, $deliveries()), 60_000, 1_000);
         $this->assertSame(2, $deliveries());
@@ -285,7 +286,8 @@ final class EvaluationCustomServerTest extends Scope
         ])['alerts']);
 
         $delivery = $this->waitForEvent($webhook['path'], $monitorId, 'resolved');
-        $this->assertContains('monitors.' . $monitorId . '.alerts.' . $firing['alertId'] . '.resolved', \explode(',', $delivery['headers']['X-Appwrite-Webhook-Events']));
+        $this->assertContains('monitors.' . $monitorId . '.alerts.' . $firing['alertId'] . '.update', \explode(',', $delivery['headers']['X-Appwrite-Webhook-Events']));
+        $this->assertSame('resolved', $delivery['data']['status']);
         $this->assertSame($firing['alertId'], $delivery['data']['$id']);
         $this->assertNotNull($delivery['data']['resolvedAt']);
         // The payload is the alert as it stands once resolved, its update time included.
@@ -781,6 +783,91 @@ final class EvaluationCustomServerTest extends Scope
         $this->assertSame(401, $this->client->call(Client::METHOD_GET, '/organization/escalations', $this->headers())['headers']['status-code']);
     }
 
+    public function testMovedProjectMonitorsFollowTheOrganization(): void
+    {
+        $name = 'Moved ' . \uniqid();
+        $project = $this->getProject(true);
+        $projectInternalId = $this->projectInternalId($project['$id']);
+        $from = $this->client->call(Client::METHOD_GET, '/projects/' . $project['$id'], $this->consoleHeaders())['body']['teamId'];
+
+        $created = $this->client->call(Client::METHOD_POST, '/monitors/usage', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $project['$id'],
+            'x-appwrite-key' => $project['apiKey'],
+        ], [
+            'monitorId' => 'unique()',
+            'name' => $name,
+            'rules' => [Query::greaterThan('network.outbound', 10)->toString()],
+            'enabled' => false,
+        ]);
+        $this->assertSame(201, $created['headers']['status-code']);
+        $monitorId = $created['body']['$id'];
+
+        $to = $this->createTeamFixture($this->consoleHeaders(), [
+            'teamId' => 'unique()',
+            'name' => 'Moved To ' . \uniqid(),
+        ]);
+        $this->assertSame(200, $to['headers']['status-code']);
+        $to = $to['body']['$id'];
+
+        $former = $this->createMember($from);
+        $member = $this->createMember($to);
+
+        // Fired, so the move has an alert to carry along too.
+        $this->inCoroutine(function () use ($monitorId, $project, $projectInternalId): void {
+            $platform = $this->platform();
+            $this->evaluateMonitor($platform, $monitorId, 100, projectId: $project['$id']);
+            $this->assertNotEmpty($platform->find('monitorAlerts', [Query::equal('projectInternalId', [$projectInternalId])]));
+        });
+
+        $moved = $this->client->call(Client::METHOD_PATCH, '/projects/' . $project['$id'] . '/team', $this->consoleHeaders(), [
+            'teamId' => $to,
+        ]);
+        $this->assertSame(200, $moved['headers']['status-code'], \json_encode($moved['body']));
+
+        /**
+         * Test for SUCCESS
+         */
+        // The monitor and its alerts name the organization the project moved to.
+        $this->inCoroutine(function () use ($to, $monitorId, $projectInternalId): void {
+            $platform = $this->platform();
+            $team = $platform->getDocument('teams', $to);
+            $monitor = $platform->getDocument('monitors', Monitors::id($projectInternalId, $monitorId));
+            $this->assertFalse($monitor->isEmpty());
+            $this->assertSame($to, $monitor->getAttribute('teamId'));
+            $this->assertSame((string) $team->getSequence(), $monitor->getAttribute('teamInternalId'));
+            $alerts = $platform->find('monitorAlerts', [Query::equal('projectInternalId', [$projectInternalId])]);
+            $this->assertNotEmpty($alerts);
+            foreach ($alerts as $alert) {
+                $this->assertSame($to, $alert->getAttribute('teamId'));
+                $this->assertSame((string) $team->getSequence(), $alert->getAttribute('teamInternalId'));
+            }
+        });
+
+        // A member of the new organization unsubscribes from the monitor with their link.
+        $unsubscribe = new Unsubscribe([System::getEnv('_APP_OPENSSL_KEY_V1')]);
+        $token = $unsubscribe->token($member['$id'], $monitorId, 'usage', $projectInternalId);
+        $page = $this->unsubscribe(Client::METHOD_GET, $token);
+        $this->assertSame(200, $page['headers']['status-code']);
+        $this->assertSame($name, $page['body']['monitorName']);
+        $this->assertSame($project['name'], $page['body']['projectName']);
+        $this->assertSame(204, $this->unsubscribe(Client::METHOD_POST, $token)['headers']['status-code']);
+        $this->assertTrue($this->unsubscribe(Client::METHOD_GET, $token)['body']['monitor']);
+
+        /**
+         * Test for FAILURE
+         */
+        // A member of the organization the project left reads neither the monitor's nor the project's name, and changes nothing.
+        $formerToken = $unsubscribe->token($former['$id'], $monitorId, 'usage', $projectInternalId);
+        $page = $this->unsubscribe(Client::METHOD_GET, $formerToken);
+        $this->assertSame(200, $page['headers']['status-code']);
+        $this->assertSame('', $page['body']['monitorName']);
+        $this->assertSame('', $page['body']['projectName']);
+        $this->assertSame(204, $this->unsubscribe(Client::METHOD_POST, $formerToken)['headers']['status-code']);
+        $this->assertFalse($this->unsubscribe(Client::METHOD_GET, $formerToken)['body']['monitor']);
+        $this->inCoroutine(fn () => $this->assertNotContains(Monitors::id($projectInternalId, $monitorId), $this->platform()->getDocument('users', $former['$id'])->getAttribute('alertsUnsubscribed', [])));
+    }
+
     public function testAlertEmailsCanBeUnsubscribed(): void
     {
         $name = 'Unsubscribe ' . \uniqid();
@@ -974,7 +1061,7 @@ final class EvaluationCustomServerTest extends Scope
         $this->assertSame(201, $created['headers']['status-code']);
         $monitorId = $created['body']['$id'];
         $firing = $this->waitForStatus($monitorId, 'firing');
-        $event = 'monitors.' . $monitorId . '.alerts.' . $firing['alertId'] . '.firing';
+        $event = 'monitors.' . $monitorId . '.alerts.' . $firing['alertId'] . '.create';
 
         /**
          * Test for SUCCESS
@@ -2284,8 +2371,9 @@ final class EvaluationCustomServerTest extends Scope
      */
     /**
      * @param list<NotificationMessage> $messages receives what the evaluation published
+     * @param string|null $projectId the monitor's project, the test project when null
      */
-    private function evaluateMonitor(Database $dbForPlatform, string $monitorId, float $value, bool $accepted = true, array &$messages = [], ?\DateTimeImmutable $now = null, ?Database $dbForProject = null): void
+    private function evaluateMonitor(Database $dbForPlatform, string $monitorId, float $value, bool $accepted = true, array &$messages = [], ?\DateTimeImmutable $now = null, ?Database $dbForProject = null, ?string $projectId = null): void
     {
         $publisher = $this->createStub(NotificationPublisher::class);
         $publisher->method('enqueue')->willReturnCallback(function (NotificationMessage $message) use ($accepted, &$messages): bool {
@@ -2309,7 +2397,7 @@ final class EvaluationCustomServerTest extends Scope
             }
         };
 
-        $project = $dbForPlatform->getDocument('projects', $this->getProject()['$id']);
+        $project = $dbForPlatform->getDocument('projects', $projectId ?? $this->getProject()['$id']);
         $evaluator->evaluateNow(
             $dbForPlatform->getDocument('monitors', Monitors::id((string) $project->getSequence(), $monitorId)),
             $project,
@@ -2744,7 +2832,7 @@ final class EvaluationCustomServerTest extends Scope
      * @param list<string> $events
      * @return array{path: string, url: string, secret: string}
      */
-    private function createAlertWebhook(array $events = ['monitors.*.alerts.*.firing', 'monitors.*.alerts.*.resolved']): array
+    private function createAlertWebhook(array $events = ['monitors.*.alerts.*.create', 'monitors.*.alerts.*.update']): array
     {
         $path = '/alerts/' . \uniqid();
         $url = 'http://request-catcher-webhook:5000' . $path;
@@ -2799,7 +2887,7 @@ final class EvaluationCustomServerTest extends Scope
      *
      * @return array<string, mixed>
      */
-    private function waitForAcknowledgement(string $path, string $alertId, string $change): array
+    private function waitForAcknowledgement(string $path, string $alertId, bool $acknowledged): array
     {
         $delivery = $this->getLastRequestForProject(
             $this->getProject()['$id'],
@@ -2807,12 +2895,13 @@ final class EvaluationCustomServerTest extends Scope
             ['url' => $path],
             60,
             1_000,
-            function (array $request) use ($alertId, $change) {
+            function (array $request) use ($alertId, $acknowledged) {
                 $this->assertSame($alertId, $request['data']['$id'] ?? null);
-                $this->assertContains('monitors.*.alerts.*.' . $change, \explode(',', (string) ($request['headers']['X-Appwrite-Webhook-Events'] ?? '')));
+                $this->assertContains('monitors.*.alerts.*.update', \explode(',', (string) ($request['headers']['X-Appwrite-Webhook-Events'] ?? '')));
+                $this->assertSame($acknowledged, ($request['data']['acknowledgedAt'] ?? null) !== null);
             },
         );
-        $this->assertNotSame([], $delivery, "No '{$change}' event of alert {$alertId} reached {$path}");
+        $this->assertNotSame([], $delivery, 'No ' . ($acknowledged ? 'acknowledgement' : 'undo') . " of alert {$alertId} reached {$path}");
 
         return $delivery;
     }

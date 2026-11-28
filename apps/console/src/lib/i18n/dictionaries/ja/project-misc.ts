@@ -94,6 +94,63 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Manage sites': 'サイトの管理',
   'Run a production deploy': '本番デプロイを実行',
   'View site': 'サイトを表示',
+  // Onboarding: Init 5 products (Videos, Analytics, Monitors, Code review)
+  'Upload video once and stream it everywhere, with adaptive renditions and captions.':
+    '動画を一度アップロードするだけで、アダプティブなレンディションと字幕付きでどこにでも配信できます。',
+  'Upload a video':
+    '動画をアップロード',
+  'Add a video file; Appwrite transcodes it into streaming renditions.':
+    '動画ファイルを追加すると、Appwrite がストリーミング用のレンディションにトランスコードします。',
+  'Upload video':
+    '動画のアップロード',
+  'Manage videos':
+    '動画の管理',
+  'Attach captions in any language so every viewer can follow along.':
+    'どの言語の字幕も追加でき、すべての視聴者が内容を理解できます。',
+  'Open videos':
+    '動画を開く',
+  'Play it in your app':
+    'アプリで再生',
+  'Point your player at the HLS or DASH manifest to start streaming.':
+    'プレーヤーに HLS または DASH のマニフェストを指定して、ストリーミングを開始します。',
+  'Set up playback':
+    '再生を設定',
+  'See who visits your sites and apps, where they come from, and what they do.':
+    'サイトやアプリの訪問者、流入元、行動を把握できます。',
+  'Add a property':
+    'プロパティを追加',
+  'Track a website, mobile app, or AI agent as its own property.':
+    'Web サイト、モバイルアプリ、AI エージェントをそれぞれのプロパティとして計測します。',
+  'Add property':
+    'プロパティの追加',
+  'Manage properties':
+    'プロパティの管理',
+  'Record your first visit':
+    '最初の訪問を記録',
+  'Turn on analytics for a site, or send page views and events from your app.':
+    'サイトでアナリティクスを有効にするか、アプリからページビューとイベントを送信します。',
+  'Start tracking':
+    '計測を開始',
+  'View traffic':
+    'トラフィックを表示',
+  'Watch your endpoints and usage, and get alerted the moment something needs you.':
+    'エンドポイントと使用量を監視し、対応が必要になった瞬間にアラートを受け取れます。',
+  'Create a monitor':
+    'モニターを作成',
+  'Check an endpoint, a domain, or a usage limit on a schedule.':
+    'エンドポイント、ドメイン、使用量の上限をスケジュールに沿ってチェックします。',
+  'Manage monitors':
+    'モニターの管理',
+  'Get an AI review on every pull request, with findings that learn from your team.':
+    'すべてのプルリクエストに AI レビューが付き、指摘はチームから学習します。',
+  'Turn on code review':
+    'コードレビューを有効化',
+  'Add a repository, and its next pull request gets a review.':
+    'リポジトリを追加すると、次のプルリクエストからレビューされます。',
+  'Manage repositories':
+    'リポジトリの管理',
+  'Observe':
+    '監視',
   'Nice - you\\u2019re already moving.': '順調です。すでに進んでいます。',
   'You\\u2019re gaining steam - keep going.':
     '勢いが出てきました。このまま続けましょう。',
@@ -236,6 +293,22 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'ウィンドウは人間の行動に揃えられます。蓄積された短いバーストを許可し、持続的なペースに向けて補充されます。',
   'Redirect location': 'リダイレクト先',
   'Status code': 'ステータスコード',
+  'Wrong guesses allowed': '許可する誤入力回数',
+  '1 to 100 per visitor network.': '訪問者のネットワークごとに 1〜100 回。',
+  'Counted over (seconds)': '集計期間 (秒)',
+  '60 (1 minute) to 86400 (24 hours).': '60 (1 分) 〜 86400 (24 時間)。',
+  '{count} guesses / {window}': '{window} あたり {count} 回',
+  '1 guess / {window}': '{window} あたり 1 回',
+  '{count} min': '{count} 分',
+  '{count} h': '{count} 時間',
+  '{count} sec': '{count} 秒',
+  'Challenge type': 'チャレンジの種類',
+  'Password challenges apply to sites and functions only.':
+    'パスワードチャレンジはサイトと関数にのみ適用されます。',
+  'Use 8 to 256 bytes. Some characters, like emoji or non-Latin letters, take more than one byte.':
+    '8〜256 バイトで入力してください。絵文字や日本語などの文字は 1 文字で複数バイトになります。',
+  'Visitors must enter this password before they can continue.':
+    '訪問者は続行する前にこのパスワードを入力する必要があります。',
   'Match requests when all conditions are true.':
     'すべての条件が真のときにリクエストに一致します。',
   'Add condition': '条件を追加',
@@ -4413,6 +4486,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Server refused the session': 'サーバーがセッションを拒否しました',
   'Target is in a denied network': '対象が拒否されたネットワーク内にあります',
   'Timed out': 'タイムアウトしました',
+  'A rule matched': 'ルールに一致しました',
   '30 seconds': '30 秒',
   '1 minute': '1 分',
   '5 seconds': '5 秒',
@@ -4594,4 +4668,84 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'signed in': '人がサインイン中',
   'Signed in now': '現在サインイン中',
   'and {count} more': 'ほか {count} 人',
+  // Runtime logs
+  '1 line': '1 行',
+  '1 line loaded': '1 行を読み込み済み',
+  'All levels': 'すべてのレベル',
+  'All resources': 'すべてのリソース',
+  'All sites': 'すべてのサイト',
+  'All streams': 'すべてのストリーム',
+  'Copy line': '行をコピー',
+  'Could not copy to the clipboard': 'クリップボードにコピーできませんでした',
+  'Could not load logs': 'ログを読み込めませんでした',
+  Debug: 'デバッグ',
+  'Details for log line': 'ログ行の詳細',
+  'Drag across the bars to zoom in':
+    'バーをドラッグすると、その範囲を拡大できます',
+  'Every line in this time range is loaded':
+    'この時間範囲の行はすべて読み込み済みです',
+  Fields: 'フィールド',
+  'ID copied': 'ID をコピーしました',
+  'JSON copied': 'JSON をコピーしました',
+  'Last 15 minutes': '過去 15 分',
+  'Line copied': '行をコピーしました',
+  'Live tail paused on an error and will retry:':
+    'ライブ表示はエラーで一時停止しました。自動で再試行します:',
+  'Load older': '古い行を読み込む',
+  'Log ID': 'ログ ID',
+  'Log line': 'ログ行',
+  'Log volume': 'ログ量',
+  'Message copied': 'メッセージをコピーしました',
+  'Newer line': '新しい行',
+  'No deployment selected': 'デプロイが選択されていません',
+  'No lines in this time range': 'この時間範囲に行はありません',
+  'No matching lines': '一致する行はありません',
+  'No resources found': 'リソースが見つかりません',
+  'Older line': '古い行',
+  'Only the lines loaded so far are searched and filtered. Load older lines or widen the time range to search further back.':
+    '検索と絞り込みの対象は、読み込み済みの行だけです。さらに過去を検索するには、古い行を読み込むか、時間範囲を広げてください。',
+  'Only this resource': 'このリソースのみ',
+  'Open function': '関数を開く',
+  'Open site': 'サイトを開く',
+  'Pick a deployment to see its logs.':
+    'ログを表示するデプロイを選択してください。',
+  'Reset zoom': 'ズームをリセット',
+  'Search logs': 'ログを検索',
+  'Search resources': 'リソースを検索',
+  'The line names no level, so stderr counts as an error.':
+    'この行にはレベルがないため、stderr はエラーとして扱われます。',
+  'The line names no level, so stdout counts as info.':
+    'この行にはレベルがないため、stdout は情報として扱われます。',
+  'Wrap lines': '行を折り返す',
+  'is any of': 'が次のいずれか',
+  '{count} lines': '{count} 行',
+  '{count} lines loaded': '{count} 行を読み込み済み',
+  '{count} on stderr': 'stderr に {count} 行',
+  '{shown} of {loaded} loaded lines': '読み込み済み {loaded} 行中 {shown} 行',
+  'Older than your plan keeps logs': 'プランのログ保持期間より前の範囲です',
+  'Your plan keeps logs for a limited time. Pick a more recent range, or upgrade your plan for longer retention.':
+    'ご利用のプランでは、ログを一定期間だけ保持します。より新しい範囲を選択するか、プランをアップグレードして保持期間を延ばしてください。',
+  'Show the last 24 hours': '過去 24 時間を表示',
+  "Your project's runtime logs": 'プロジェクトのランタイムログ',
+  'Lines your functions, sites and dedicated databases write show up here within seconds, ready to search, filter and inspect. Nothing has been written in this time range yet.':
+    '関数、サイト、専用データベースが出力した行は数秒でここに表示され、検索、絞り込み、詳細の確認ができます。この時間範囲にはまだ何も出力されていません。',
+  "Logs may not be collected in this project's region yet.":
+    'このプロジェクトのリージョンでは、まだログが収集されていない可能性があります。',
+  'Every line, as it is written': '出力されたすべての行をすぐに',
+  'What your functions, sites and dedicated databases write to stdout and stderr lands here, newest first. Turn on Live to follow along.':
+    '関数、サイト、専用データベースが stdout と stderr に出力した内容が、新しい順にここに届きます。ライブをオンにすると、リアルタイムで追えます。',
+  'Narrow it down': '絞り込む',
+  'Filter by resource, level, stream and time, or search the lines you have loaded.':
+    'リソース、レベル、ストリーム、時間で絞り込むか、読み込み済みの行を検索できます。',
+  'Inspect any line': '行の詳細を確認',
+  'Open a line to read its fields, where it ran, and the line exactly as it was written.':
+    '行を開くと、フィールド、実行場所、出力されたままの行を確認できます。',
+  'No logs in this time range': 'この時間範囲にログはありません',
+  'Lines your functions, sites and databases write to stdout and stderr show up here.':
+    '関数、サイト、データベースが stdout と stderr に出力した行がここに表示されます。',
+  'Lines your function writes to stdout and stderr show up here.':
+    '関数が stdout と stderr に出力した行がここに表示されます。',
+  'Lines your site writes to stdout and stderr show up here.':
+    'サイトが stdout と stderr に出力した行がここに表示されます。',
+  'Lines your database writes show up here.': 'データベースが出力した行がここに表示されます。',
 }

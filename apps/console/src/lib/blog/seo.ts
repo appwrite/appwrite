@@ -18,7 +18,7 @@ import {
 } from '@/lib/seo/discord-embed'
 import { getOrganizationSchema } from '@/lib/seo/organization'
 import { SEO_SITE_NAME } from '@/lib/seo/page-meta'
-import { getBlogCategory, getPostCategoryLabel, getPrimaryPostCategorySlug } from './content'
+import { getBlogCategory, getPostCategoryLabel, getPrimaryPostCategorySlug } from './categories'
 import type { BlogAuthor, BlogCategory, BlogFaq, BlogPost, BlogPostMeta } from './types'
 
 export type BlogSeoOptions = {

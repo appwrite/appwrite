@@ -85,6 +85,52 @@ export function resolveFallbackOrganizationIdFromList(
 }
 
 /**
+ * Prefetch what the org header and tabs need on every org page: the
+ * organization, its plan, members and scopes, and the organizations list.
+ * The org layout awaits only this, so opening Settings, Billing or Domains
+ * does not wait on the projects grid.
+ */
+export async function prefetchOrganizationShellData(
+  queryClient: QueryClient,
+  orgId: string,
+): Promise<void> {
+  if (!orgId || typeof window === 'undefined') return
+
+  const features = getActiveProfileFeatures()
+
+  // Failed-invoice banner data is non-critical: fetch in the background so it
+  // never delays first paint (its query is marked skipInitialLoader).
+  if (features.billing) {
+    void prefetchOrganizationInvoiceDataIfAllowed(queryClient, orgId).catch(
+      () => {},
+    )
+  }
+
+  const shell: Promise<unknown>[] = [
+    queryClient.ensureQueryData(consoleVariablesQueryOptions()).catch(() => {}),
+    queryClient.ensureQueryData(organizationsQueryOptions()),
+    queryClient.ensureQueryData(organizationQueryOptions(orgId)),
+    queryClient.ensureQueryData(
+      organizationMembershipsQueryOptions(orgId, 0, GRID_DEFAULT_PAGE_SIZE, ''),
+    ),
+  ]
+
+  if (features.billing) {
+    shell.push(queryClient.ensureQueryData(organizationPlanQueryOptions(orgId)))
+  }
+
+  if (features.orgRoles) {
+    shell.push(
+      queryClient
+        .ensureQueryData(organizationScopesQueryOptions(orgId))
+        .catch(() => {}),
+    )
+  }
+
+  await Promise.all(shell)
+}
+
+/**
  * Prefetch data the org overview layout and projects tab need before first paint.
  * Route loaders and post-auth navigation should await this so the org header and
  * projects grid do not flash empty skeletons.
@@ -100,14 +146,6 @@ export async function prefetchOrganizationOverviewData(
   const projectsPage = options?.projectsPage ?? 0
   const projectsLimit = options?.projectsLimit ?? GRID_DEFAULT_PAGE_SIZE
   const search = options?.search ?? ''
-
-  // Failed-invoice banner data is non-critical: fetch in the background so it
-  // never delays first paint (its query is marked skipInitialLoader).
-  if (features.billing) {
-    void prefetchOrganizationInvoiceDataIfAllowed(queryClient, orgId).catch(
-      () => {},
-    )
-  }
 
   const teamPromise = queryClient.ensureQueryData(
     consoleTeamQueryOptions(orgId),
@@ -155,28 +193,9 @@ export async function prefetchOrganizationOverviewData(
   })()
 
   const parallel: Promise<unknown>[] = [
-    queryClient.ensureQueryData(consoleVariablesQueryOptions()).catch(() => {}),
-    queryClient.ensureQueryData(organizationsQueryOptions()),
-    queryClient.ensureQueryData(organizationQueryOptions(orgId)),
-    queryClient.ensureQueryData(
-      organizationMembershipsQueryOptions(orgId, 0, GRID_DEFAULT_PAGE_SIZE, ''),
-    ),
+    prefetchOrganizationShellData(queryClient, orgId),
     projectsPromise,
   ]
-
-  if (features.billing) {
-    parallel.push(
-      queryClient.ensureQueryData(organizationPlanQueryOptions(orgId)),
-    )
-  }
-
-  if (features.orgRoles) {
-    parallel.push(
-      queryClient
-        .ensureQueryData(organizationScopesQueryOptions(orgId))
-        .catch(() => {}),
-    )
-  }
 
   try {
     await Promise.all(parallel)

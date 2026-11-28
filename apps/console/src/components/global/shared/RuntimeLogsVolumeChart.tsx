@@ -1,6 +1,13 @@
 import { useMemo } from 'react'
 import type { DateRange } from 'react-day-picker'
-import { Bar, BarChart, ResponsiveContainer, Tooltip } from 'recharts'
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  usePlotArea,
+} from 'recharts'
 import { ZoomOut } from 'lucide-react'
 import {
   SeriesChartXAxis,
@@ -67,6 +74,10 @@ export function RuntimeLogsVolumeChart({
     () => data.reduce((top, point) => Math.max(top, point.total), 0),
     [data],
   )
+  const stderr = useMemo(
+    () => data.reduce((sum, point) => sum + point.stderr, 0),
+    [data],
+  )
   const yTickFormatter = useMemo(
     () => createCompactCountAxisTickFormatter(max),
     [max],
@@ -83,26 +94,34 @@ export function RuntimeLogsVolumeChart({
   return (
     <section
       aria-label={t('Log volume')}
-      className={cn('border-b border-border py-3', insetClassName)}
+      className={cn('border-b border-border pt-3.5 pb-2', insetClassName)}
     >
-      <div className="mb-2 flex min-h-7 items-center justify-between gap-3">
-        <div className="flex min-w-0 items-baseline gap-2">
-          <h3 className="text-[13px] font-medium text-foreground">
-            {t('Log volume')}
-          </h3>
-          {total !== undefined && (
-            <span className="text-[12px] text-muted-foreground tabular-nums">
+      <div className="mb-1.5 flex min-h-7 items-center justify-between gap-3">
+        <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1">
+          {total === undefined ? (
+            <Skeleton className="h-4 w-28" />
+          ) : (
+            <span className="text-[13px] font-medium text-foreground tabular-nums">
               {total === 1
                 ? t('1 line')
                 : t('{count} lines').replace('{count}', total.toLocaleString())}
             </span>
           )}
+          {total !== undefined && stderr > 0 && (
+            <span className="flex items-center gap-1.5 text-[12px] text-muted-foreground tabular-nums">
+              <ChartSeriesDot color={STDERR_COLOR} />
+              {t('{count} on stderr').replace(
+                '{count}',
+                stderr.toLocaleString(),
+              )}
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-3">
-          <span className="hidden items-center gap-1.5 text-[11px] text-muted-foreground sm:flex">
+          <span className="hidden items-center gap-1.5 font-mono text-[11px] text-muted-foreground sm:flex">
             <ChartSeriesDot color={STDOUT_COLOR} /> stdout
           </span>
-          <span className="hidden items-center gap-1.5 text-[11px] text-muted-foreground sm:flex">
+          <span className="hidden items-center gap-1.5 font-mono text-[11px] text-muted-foreground sm:flex">
             <ChartSeriesDot color={STDERR_COLOR} /> stderr
           </span>
           {zoomed && (
@@ -119,12 +138,12 @@ export function RuntimeLogsVolumeChart({
         </div>
       </div>
       {loading && data.length === 0 ? (
-        <Skeleton className="h-28 w-full" />
+        <Skeleton className="h-24 w-full" />
       ) : (
         <div
           // A new window starts a fresh chart, so no tooltip points at an old bar
           key={`${data[0]?.date ?? ''}-${data.length}`}
-          className="relative h-28 w-full text-muted-foreground"
+          className="relative h-24 w-full cursor-crosshair text-muted-foreground"
           title={t('Drag across the bars to zoom in')}
         >
           <ResponsiveContainer width="100%" height="100%">
@@ -135,6 +154,11 @@ export function RuntimeLogsVolumeChart({
               className={surfaceClassName}
               {...chartProps}
             >
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="var(--border)"
+                vertical={false}
+              />
               <SeriesChartXAxis pointCount={data.length} labels={labels} />
               <UsageChartYAxis
                 tickFormatter={yTickFormatter}
@@ -182,16 +206,36 @@ export function RuntimeLogsVolumeChart({
                 left={brushLeft}
                 right={brushRight}
               />
+              {max === 0 && (
+                <PlotMessage>{t('No lines in this time range')}</PlotMessage>
+              )}
             </BarChart>
           </ResponsiveContainer>
-          {max === 0 && (
-            <p className="pointer-events-none absolute inset-0 flex items-center justify-center text-[12px] text-muted-foreground">
-              {t('No lines in this time range')}
-            </p>
-          )}
         </div>
       )}
     </section>
+  )
+}
+
+/**
+ * A note centered on the plot itself, clear of the axes' labels, as the
+ * chart box's own center sits low and to one side.
+ */
+function PlotMessage({ children }: { children: string }) {
+  const plot = usePlotArea()
+  if (!plot) return null
+  return (
+    <text
+      x={plot.x + plot.width / 2}
+      y={plot.y + plot.height / 2}
+      textAnchor="middle"
+      dominantBaseline="central"
+      fill="var(--muted-foreground)"
+      fontSize={12}
+      pointerEvents="none"
+    >
+      {children}
+    </text>
   )
 }
 

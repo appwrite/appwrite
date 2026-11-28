@@ -1,9 +1,11 @@
+import { getEnvProfileFeatures } from '@/lib/console-profiles'
 import { MARKETING_SITE_ORIGIN } from '@/lib/marketing/urls'
 import {
   DATABASE_PRICING_COMPARISON_ROWS,
   DEDICATED_DATABASE_PRICING_TIERS,
 } from './dedicated-databases'
 import { comparisonTables } from './comparison-data'
+import { withFlaggedComparison } from './flags'
 import {
   getPricingPlanColumns,
   getVisiblePricingPlans,
@@ -59,7 +61,8 @@ export function buildPricingMarkdown(
     '',
   ]
 
-  for (const table of withStartComparisonValues(comparisonTables)) {
+  const tables = withFlaggedComparison(comparisonTables, getEnvProfileFeatures())
+  for (const table of withStartComparisonValues(tables)) {
     lines.push(`### ${table.title}`, '', header, divider)
     for (const row of table.rows) {
       const values = columns.map((column) => cell(row[column.id], origin))

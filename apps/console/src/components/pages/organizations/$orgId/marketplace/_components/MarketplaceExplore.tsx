@@ -35,7 +35,9 @@ export function MarketplaceExplore({
         </p>
       </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-        {MARKETPLACE_CATEGORY_ORDER.map((category) => {
+        {MARKETPLACE_CATEGORY_ORDER.filter(
+          (category) => categoryCounts?.[category] !== 0,
+        ).map((category) => {
           const Icon = MARKETPLACE_CATEGORY_ICONS[category]
           const count = categoryCounts?.[category]
           return (

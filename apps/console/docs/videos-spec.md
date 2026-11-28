@@ -104,7 +104,7 @@ Note the unit mismatch: profile and rendition bitrates are in kilobits per secon
 
 | Method | SDK | HTTP | Notes |
 | --- | --- | --- | --- |
-| List | `listProfiles({ search?, codec? })` | `GET /videos/profiles` | Optional `codec` filter (default `h264`). Search only, no query API |
+| List | `listVideoProfiles({ queries?, total? })` | `GET /project/videos/profiles` | Every codec. Filter with `Query.equal('codec', [...])`, or on `name`, `width`, `height`, `videoBitRate`, `audioBitRate`; search with `Query.search('search', ...)` |
 | Create | `createProfile({ name, videoBitRate, audioBitRate, width, height, codec? })` | `POST /videos/profiles` | `codec` defaults to `h264` |
 | Get | `getProfile({ profileId })` | `GET /videos/profiles/{profileId}` | |
 | Update | `updateProfile({ profileId, name, videoBitRate, audioBitRate, width, height })` | `PATCH /videos/profiles/{profileId}` | All fields required. Existing renditions are not re-encoded |

@@ -25,6 +25,7 @@ import { Plus, Trash2 } from 'lucide-react'
 import { useHashScroll } from '@/lib/hooks/useHashScroll'
 import { formatPrefValue, formatPrefsForEditor } from '@/lib/prefs-value'
 import { useT } from '@/lib/i18n/translate'
+import { TeamPhoto } from './_components/TeamPhoto'
 
 export function TeamOverview() {
   const t = useT()
@@ -237,6 +238,12 @@ export function TeamOverview() {
           </div>
         </div>
       </div>
+
+      <TeamPhoto
+        projectId={projectId as string}
+        teamId={team.$id}
+        name={team.name}
+      />
 
       {/* Update Name */}
       <div

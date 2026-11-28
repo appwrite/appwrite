@@ -13,6 +13,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
@@ -81,8 +82,6 @@ class Delete extends Action
 
         $target = $dbForProject->getDocument('targets', $subscriber->getAttribute('targetId'));
 
-        $dbForProject->deleteDocument('subscribers', $subscriberId);
-
         $totalAttribute = match ($target->getAttribute('providerType')) {
             MESSAGE_TYPE_EMAIL => 'emailTotal',
             MESSAGE_TYPE_SMS => 'smsTotal',
@@ -90,15 +89,26 @@ class Delete extends Action
             default => throw new Exception(Exception::TARGET_PROVIDER_INVALID_TYPE),
         };
 
-        $authorization->skip(fn () => $dbForProject->skipFilters(
-            fn () => $dbForProject->decreaseDocumentAttribute(
-                'topics',
-                $topicId,
-                $totalAttribute,
-                min: 0
-            ),
-            APP_TOPICS_SUBQUERIES
-        ));
+        $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $subscriberId, $topicId, $totalAttribute) {
+            // Only the request that removed the row uncounts it, so concurrent deletes count once
+            if (!$dbForProject->deleteDocument('subscribers', $subscriberId)) {
+                return;
+            }
+
+            try {
+                $authorization->skip(fn () => $dbForProject->skipFilters(
+                    fn () => $dbForProject->decreaseDocumentAttribute(
+                        'topics',
+                        $topicId,
+                        $totalAttribute,
+                        min: 0
+                    ),
+                    APP_TOPICS_SUBQUERIES
+                ));
+            } catch (LimitException) {
+                // Already 0 after drift; the unsubscribe must still go through
+            }
+        });
 
         // Drop the user's live MQTT subscription once they hold no other subscriber row for the topic,
         // matching the subscribe gate (membership is per user, not per target).

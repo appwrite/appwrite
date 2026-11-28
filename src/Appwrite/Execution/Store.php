@@ -107,6 +107,9 @@ class Store
 
     private bool $ready = false;
 
+    /** Statuses of the snapshot that makes an execution readable. */
+    private const array FIRST_STATUSES = ['waiting', 'scheduled'];
+
     private float $checkedAt = 0.0;
 
     /** @var array<int, int> */
@@ -244,12 +247,23 @@ class Store
             return;
         }
 
-        $rows = [];
+        $first = [];
+        $later = [];
         foreach ($executions as $execution) {
-            $rows[] = $this->snapshot($projectId, $execution, false);
+            $row = $this->snapshot($projectId, $execution, false);
+            if ($this->insertBuffer > 0 && \in_array($execution->getAttribute('status', ''), self::FIRST_STATUSES, true)) {
+                $first[] = $row;
+            } else {
+                $later[] = $row;
+            }
         }
 
-        $this->insert($rows);
+        if ($first !== []) {
+            $this->insert($first, buffered: false);
+        }
+        if ($later !== []) {
+            $this->insert($later);
+        }
     }
 
     public function delete(string $projectId, Document $execution): void
@@ -433,21 +447,21 @@ class Store
     }
 
     /** @param array<array<string, mixed>> $rows */
-    private function insert(array $rows): void
+    private function insert(array $rows, bool $buffered = true): void
     {
-        $this->insertRows($this->database() . '.' . self::TABLE, self::COLUMNS, $rows);
+        $this->insertRows($this->database() . '.' . self::TABLE, self::COLUMNS, $rows, $buffered);
     }
 
     /**
      * @param list<string> $columns
      * @param list<array<string, mixed>> $rows
      */
-    private function insertRows(string $table, array $columns, array $rows): void
+    private function insertRows(string $table, array $columns, array $rows, bool $buffered = true): void
     {
         $statement = (new ClickHouseBuilder())
             ->from($table)
             ->bulkInsert(Format::JSONEachRow, $rows, $columns);
-        $url = $this->url() . '?' . \http_build_query(['query' => $statement->query] + $this->insertSettings());
+        $url = $this->url() . '?' . \http_build_query(['query' => $statement->query] + $this->insertSettings($buffered));
         $body = $statement->body;
         $request = $this->requestFactory->body(Method::POST, $url, $body, 'application/x-ndjson', $this->headers());
 
@@ -475,11 +489,15 @@ class Store
      * once its rows are stored, so each write takes up to the window and holds
      * a pooled connection for that long.
      *
+     * The first snapshot of an execution bypasses the buffer: the API answers
+     * the create before the snapshot exists, so a buffered first write leaves
+     * the execution unreadable for the whole window.
+     *
      * @return array<string, int>
      */
-    private function insertSettings(): array
+    private function insertSettings(bool $buffered): array
     {
-        if ($this->insertBuffer <= 0) {
+        if (!$buffered || $this->insertBuffer <= 0) {
             return ['async_insert' => 0];
         }
 

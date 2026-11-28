@@ -35,6 +35,8 @@ export interface VcsInstallationErrorProps {
    * full-page redirect to the provider, so this is an anchor, never a fetch.
    */
   reconnectUrl?: string
+  /** The installation's repository access settings on the provider, preferred for a missing repository. */
+  accessUrl?: string
   /** Retry the failed request. Shown as the primary action for transient kinds. */
   onRetry?: () => void
   isRetrying?: boolean
@@ -49,6 +51,11 @@ export interface VcsInstallationErrorProps {
  */
 function isReconnectKind(kind: VcsInstallationErrorKind) {
   return kind === 'reconnect'
+}
+
+/** Kinds fixed on the provider's side, so the provider link leads. */
+function leadsWithProvider(kind: VcsInstallationErrorKind) {
+  return kind === 'reconnect' || kind === 'missing'
 }
 
 function useVcsInstallationErrorCopy(kind: VcsInstallationErrorKind): {
@@ -72,7 +79,7 @@ function useVcsInstallationErrorCopy(kind: VcsInstallationErrorKind): {
     return {
       title: t('Repository not available'),
       description: t(
-        'This Git installation can no longer reach the repository. It may have been deleted, removed from the installation, or moved to another installation. Connect the repository again to keep deploying.',
+        "This Git installation can no longer reach the repository. If it was removed from the installation's repository access, add it back with Update repository access. If it was deleted or moved, connect it again.",
       ),
       icon: AlertTriangle,
     }
@@ -127,19 +134,22 @@ function VcsInstallationIdentity({
 function VcsInstallationErrorActions({
   kind,
   reconnectUrl,
+  accessUrl,
   onRetry,
   isRetrying,
 }: Pick<
   VcsInstallationErrorProps,
-  'kind' | 'reconnectUrl' | 'onRetry' | 'isRetrying'
+  'kind' | 'reconnectUrl' | 'accessUrl' | 'onRetry' | 'isRetrying'
 >) {
   const t = useT()
-  const reconnectIsPrimary = isReconnectKind(kind)
+  const reconnectIsPrimary = leadsWithProvider(kind)
 
   // A locked installation is healthy, it is just mid-refresh. Offering a
   // reconnect there would send the user to re-authorize for no reason.
+  const providerUrl =
+    kind === 'missing' ? (accessUrl ?? reconnectUrl) : reconnectUrl
   const reconnect =
-    reconnectUrl && kind !== 'locked' ? (
+    providerUrl && kind !== 'locked' ? (
       <Button
         key="reconnect"
         asChild
@@ -147,9 +157,11 @@ function VcsInstallationErrorActions({
         variant={reconnectIsPrimary ? 'default' : 'outline'}
         className="text-[13px]"
       >
-        <a href={reconnectUrl}>
+        <a href={providerUrl}>
           <PlugZap className="me-1.5 h-3.5 w-3.5" />
-          {t('Reconnect installation')}
+          {kind === 'missing'
+            ? t('Update repository access')
+            : t('Reconnect installation')}
         </a>
       </Button>
     ) : null
@@ -189,6 +201,7 @@ export function VcsInstallationErrorState({
   provider,
   organization,
   reconnectUrl,
+  accessUrl,
   onRetry,
   isRetrying,
   className,
@@ -211,6 +224,7 @@ export function VcsInstallationErrorState({
             <VcsInstallationErrorActions
               kind={kind}
               reconnectUrl={reconnectUrl}
+              accessUrl={accessUrl}
               onRetry={onRetry}
               isRetrying={isRetrying}
             />
@@ -230,6 +244,7 @@ export function VcsInstallationErrorAlert({
   provider,
   organization,
   reconnectUrl,
+  accessUrl,
   onRetry,
   isRetrying,
   className,
@@ -251,6 +266,7 @@ export function VcsInstallationErrorAlert({
         <VcsInstallationErrorActions
           kind={kind}
           reconnectUrl={reconnectUrl}
+          accessUrl={accessUrl}
           onRetry={onRetry}
           isRetrying={isRetrying}
         />

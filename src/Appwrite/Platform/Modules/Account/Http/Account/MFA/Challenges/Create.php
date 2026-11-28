@@ -132,6 +132,11 @@ class Create extends Action
         ProofsToken $proofForToken,
         ProofsCode $proofForCode
     ): void {
+        // The factor whitelist matches case-insensitively, so store the canonical spelling Update compares against
+        if (\strtolower($factor) === \strtolower(Type::RECOVERY_CODE)) {
+            $factor = Type::RECOVERY_CODE;
+        }
+
         $mfaFactors = $project->getAttribute('auths', [])['mfaFactors'] ?? [];
         $factorEnabled = match ($factor) {
             Type::TOTP => $mfaFactors['totp'] ?? true,

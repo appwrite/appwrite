@@ -11,6 +11,8 @@ Learn how to efficiently back up your databases to ensure data security and smoo
 {% info title="Backups are available on Appwrite Cloud for all Pro and Enterprise customers." %}
 {% /info %}
 
+Backups belong to the project. [Project environments](/docs/advanced/environments) don't have backups of their own, so back up the project instead.
+
 Appwrite Backups allow you to automate database backups using backup policies, supporting pre-defined, custom retention & other options. You can also create manual backups whenever necessary.
 
 # Backup policies {% #backup-policies %}

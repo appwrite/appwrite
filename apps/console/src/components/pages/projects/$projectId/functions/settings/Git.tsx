@@ -10,12 +10,15 @@ import { GitSilentModeCard } from '../GitSilentModeCard'
 import { RepositoryReviewCard } from '../../reviews/_components/RepositoryReviewCard'
 import { useReviewsAccess } from '../../reviews/_components/useReviewsAccess'
 import { useT } from '@/lib/i18n/translate'
+import { useActiveEnvironmentId } from '@/lib/active-environment'
+import { EnvironmentGitNotice } from '@/components/global/shared/EnvironmentGitNotice'
 
 export function View() {
   const t = useT()
   const { projectId, functionId } = useParams({ strict: false })
   const { data: func, isLoading } = useProjectFunction(projectId, functionId)
   const { visible: reviewsVisible } = useReviewsAccess(projectId)
+  const environmentId = useActiveEnvironmentId(projectId)
 
   const hasRepository = Boolean(
     func?.installationId && func?.providerRepositoryId,
@@ -81,6 +84,8 @@ export function View() {
     }
     return items
   }, [func, hasRepository, reviewsVisible, projectId])
+
+  if (environmentId) return <EnvironmentGitNotice />
 
   if (isLoading) {
     return (

@@ -169,7 +169,10 @@ const LIVE_PRODUCTS = new Set([
   'realtime',
   'sites',
   'analytics',
+  'monitors',
+  'beep',
   'firewall',
+  'reviews',
 ])
 
 const CONSOLE_ACCOUNT_SECTIONS = new Set([

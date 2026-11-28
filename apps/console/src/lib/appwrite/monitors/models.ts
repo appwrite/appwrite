@@ -1,21 +1,23 @@
 /**
- * Monitor and alert models: the generated `Api.Monitor` and `Api.Alert`, with the
- * enums the console matches on read as string unions. The enums already carry the
- * edition-only metrics, resource types and `budget` monitors, so the unions are
- * exactly their values.
+ * Monitor, alert and escalation models: the Console SDK's, with the enums the
+ * console matches on read as string unions, so a literal like `'http'` compares
+ * and assigns without importing the enum.
  */
 
-import type * as Api from './api'
 import type {
   AlertComparator as Comparator,
   AlertMetric as Metric,
   AlertStatus as Status,
+  Models,
+  MonitorMethod,
+  MonitorRecord,
   MonitorResourceType,
   MonitorResult as Outcome,
   MonitorSeverity as Level,
   MonitorStatus as State,
+  MonitorTlsMode,
   MonitorType as Kind,
-} from './api'
+} from '@appwrite.io/console'
 
 export type AlertMetric = `${Metric}`
 
@@ -40,22 +42,30 @@ export type MonitorResult = `${Outcome}`
 export type AlertStatus = `${Status}`
 
 export type Monitor = Omit<
-  Api.Monitor,
-  'type' | 'resourceType' | 'status' | 'severity' | 'result'
+  Models.Monitor,
+  | 'type'
+  | 'resourceType'
+  | 'status'
+  | 'severity'
+  | 'result'
+  | 'method'
+  | 'record'
+  | 'tlsMode'
 > & {
   type: MonitorType
   resourceType: AlertResourceType
   status: MonitorStatus
   severity: MonitorSeverity
   result?: MonitorResult | null
+  method?: HttpMethod | null
+  record?: DnsRecord | null
+  tlsMode?: SmtpTlsMode | null
 }
 
-export type MonitorList = Omit<Api.MonitorList, 'monitors'> & {
-  monitors: Monitor[]
-}
+export type MonitorList = { total: number; monitors: Monitor[] }
 
 export type Alert = Omit<
-  Api.Alert,
+  Models.Alert,
   | 'type'
   | 'resourceType'
   | 'status'
@@ -74,9 +84,7 @@ export type Alert = Omit<
   result?: MonitorResult | null
 }
 
-export type AlertList = Omit<Api.AlertList, 'alerts'> & {
-  alerts: Alert[]
-}
+export type AlertList = { total: number; alerts: Alert[] }
 
 /** A usage monitor's writable fields, as `createUsageMonitor` takes them. */
 export type MonitorInput = {
@@ -96,30 +104,10 @@ export type MonitorInput = {
 }
 
 /** Who one escalation step notifies, after waiting `delay` seconds. */
-export type EscalationStep = {
-  /** After the alert fires for the first step, after the previous step for later ones. */
-  delay: number
-  /** Organization roles, such as `owner` or `developer`. */
-  roles: string[]
-  /** Organization members. */
-  userIds: string[]
-}
+export type EscalationStep = Models.EscalationStep
 
 /** An organization's escalation: steps notified in turn until someone acknowledges the alert. */
-export type Escalation = {
-  $id: string
-  $createdAt: string
-  $updatedAt: string
-  name: string
-  steps: EscalationStep[]
-  /** How many more times the steps run from the first, 0 to 9. */
-  repeat: number
-}
-
-export type EscalationList = {
-  total: number
-  escalations: Escalation[]
-}
+export type Escalation = Models.Escalation
 
 /** An escalation's writable fields. */
 export type EscalationInput = {
@@ -128,19 +116,12 @@ export type EscalationInput = {
   repeat: number
 }
 
-export type HttpMethod =
-  | 'GET'
-  | 'HEAD'
-  | 'POST'
-  | 'PUT'
-  | 'PATCH'
-  | 'DELETE'
-  | 'OPTIONS'
+export type HttpMethod = `${MonitorMethod}`
 
-export type DnsRecord = 'A' | 'AAAA' | 'CNAME' | 'MX' | 'TXT' | 'NS'
+export type DnsRecord = `${MonitorRecord}`
 
-/** Empty derives the mode from the port: 465 implicit, 587 STARTTLS, otherwise none. */
-export type SmtpTlsMode = 'none' | 'starttls' | 'implicit' | ''
+/** `auto` derives the mode from the port: 465 implicit, 587 STARTTLS, otherwise none. */
+export type SmtpTlsMode = `${MonitorTlsMode}`
 
 /** Fields every probe monitor takes besides its target. */
 export type ProbeSettings = {
@@ -155,6 +136,8 @@ export type ProbeSettings = {
   escalationId?: string
   severity?: MonitorSeverity
   enabled?: boolean
+  /** Queries over what a check saw that describe the failing state; build them with `buildProbeRules`. */
+  rules?: string[]
 }
 
 export type HttpTarget = {
@@ -162,10 +145,6 @@ export type HttpTarget = {
   method?: HttpMethod
   headers?: Record<string, string>
   body?: string
-  /** Empty accepts any 2xx status. */
-  statusCodes?: number[]
-  /** 0 checks the certificate without warning before it expires. */
-  certificateDays?: number
 }
 
 export type DnsTarget = {
@@ -173,8 +152,6 @@ export type DnsTarget = {
   record?: DnsRecord
   /** An IP address with an optional port; empty for the server's resolver. */
   resolver?: string
-  /** Empty accepts any answer. */
-  answer?: string
 }
 
 export type TcpTarget = { host: string; port: number }

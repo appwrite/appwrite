@@ -82,6 +82,8 @@ export function View() {
     )
   }
 
+  const deleteTarget = secrets.find((secret) => secret.$id === deleteTargetId)
+
   const handleCreateSecret = async () => {
     try {
       const created = await createSecretMutation.mutateAsync()
@@ -219,6 +221,8 @@ export function View() {
                         </span>
                         <CopyableId
                           id={secret.$id}
+                          copyLabel={t('Copy ID')}
+                          showCopyOnHover={false}
                           copyToastLabel="Secret ID"
                           variant="inline"
                           size="xs"
@@ -361,10 +365,10 @@ export function View() {
           <div className="px-6 py-4">
             {deleteTargetId && (
               <div className="rounded-lg border border-border bg-muted/30 px-4 py-3">
-                <p className="text-[12px] font-medium uppercase tracking-wider text-muted-foreground">
-                  {t('Secret ID')}
+                <p className="font-mono text-[13px] font-medium text-foreground break-all">
+                  secret_{deleteTarget?.hint}
                 </p>
-                <p className="mt-1 font-mono text-[13px] text-foreground break-all">
+                <p className="mt-1 font-mono text-[12px] text-muted-foreground break-all">
                   {deleteTargetId}
                 </p>
               </div>

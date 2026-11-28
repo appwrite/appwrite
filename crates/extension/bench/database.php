@@ -12,9 +12,10 @@ use Utopia\Database\Role;
 
 // A run meant for the extension that gets the PHP classes would time PHP against PHP.
 $internal = (new ReflectionClass(Role::class))->isInternal();
-$requested = in_array('database', array_map(trim(...), explode(',', getenv('_APP_EXTENSION_LIBRARIES') ?: '')), true);
+$libraries = array_filter(array_map(trim(...), explode(',', (string) ini_get('utopia.libraries'))), fn (string $name): bool => $name !== '');
+$requested = $libraries === [] || in_array('database', $libraries, true);
 if ($internal !== $requested) {
-    fwrite(STDERR, '_APP_EXTENSION_LIBRARIES ' . ($requested ? 'names' : 'does not name') . ' database, but the other implementation loaded' . PHP_EOL);
+    fwrite(STDERR, 'utopia.libraries ' . ($requested ? 'is unset or names' : 'does not name') . ' database, but the other implementation loaded' . PHP_EOL);
     exit(1);
 }
 

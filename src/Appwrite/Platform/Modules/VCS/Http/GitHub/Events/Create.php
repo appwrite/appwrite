@@ -105,7 +105,7 @@ class Create extends Action
             // Without the secret no review service runs (optional on self-hosted), so nothing would consume the job.
             if (System::getEnv('_APP_REVIEWS_SECRET', '') !== '') {
                 match ($event) {
-                    GitHub::EVENT_PULL_REQUEST => $this->queueReviews('github', $parsedPayload, $dbForPlatform, $authorization, $getProjectDB, $publisherForReviews, $platform),
+                    GitHub::EVENT_PULL_REQUEST => $this->queueReviews('github', $parsedPayload, $vcsFactory, $installationTokens, $dbForPlatform, $authorization, $getProjectDB, $publisherForReviews, $platform),
                     GitHub::EVENT_ISSUE_COMMENT, GitHub::EVENT_PULL_REQUEST_REVIEW_COMMENT => $this->queueComment('github', $parsedPayload, $vcsFactory, $installationTokens, $dbForPlatform, $authorization, $getProjectDB, $publisherForReviews, $platform),
                     GitHub::EVENT_INSTALLATION_REPOSITORIES => $this->createReviewRepositories($parsedPayload, $dbForPlatform, $authorization),
                     default => null,
@@ -502,10 +502,33 @@ class Create extends Action
     }
 
     /**
-     * GitHub sends the author's association with each comment.
+     * GitHub sends the author's association with each comment, but not always the one the author
+     * has: review comments from organization members arrive without MEMBER, while their
+     * conversation comments carry it. A human author the delivery does not trust is looked up
+     * instead, by their permission on the repository: admin counts as an owner, write as a
+     * collaborator. A failed read leaves the author untrusted.
      */
     protected function getCommentAuthorAssociation(array $parsedPayload, Document $installation, VcsFactory $vcsFactory, InstallationTokens $installationTokens, Database $dbForPlatform): string
     {
-        return \strval($parsedPayload['commentAuthorAssociation'] ?? '');
+        $association = \strval($parsedPayload['commentAuthorAssociation'] ?? '');
+        $author = \strval($parsedPayload['commentAuthor'] ?? '');
+        if (\in_array($association, ['OWNER', 'MEMBER', 'COLLABORATOR'], true) || ($parsedPayload['commentAuthorType'] ?? '') !== 'User' || $author === '') {
+            return $association;
+        }
+
+        try {
+            $vcs = $vcsFactory->fromInstallation($installation);
+            if (!$vcs instanceof GitHub) {
+                return $association;
+            }
+
+            $permission = $vcs->getCollaboratorPermission(\strval($parsedPayload['owner'] ?? ''), \strval($parsedPayload['repositoryName'] ?? ''), $author);
+        } catch (\Throwable $error) {
+            Console::warning("Failed to read the permission of comment author '{$author}': " . $error->getMessage());
+
+            return $association;
+        }
+
+        return $this->getAssociationFromPermission($permission) ?: $association;
     }
 }

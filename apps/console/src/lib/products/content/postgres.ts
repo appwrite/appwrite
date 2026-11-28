@@ -41,7 +41,7 @@ export const postgresProductContent: ProductPageContent = {
     {
       question: 'Which PostgreSQL versions can I run, and can I upgrade later?',
       answer:
-        'New databases run PostgreSQL 18 by default, and you can pick PostgreSQL 17 at create time. Upgrades run online: a second instance is provisioned on the new version, data streams over with logical replication, and traffic cuts over once it catches up. Connections are closed at the cutover, so your application has to reconnect.',
+        'New databases run PostgreSQL 19 by default, and you can pick PostgreSQL 17 or 18 at create time. Upgrades run online: a second instance is provisioned on the new version, data streams over with logical replication, and traffic cuts over once it catches up. Connections are closed at the cutover, so your application has to reconnect.',
       links: [
         {
           label: 'PostgreSQL docs',
