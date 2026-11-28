@@ -22,8 +22,12 @@ use Utopia\Distribution\JWT;
 use Utopia\Distribution\Listing;
 use Utopia\Distribution\Progress;
 use Utopia\Distribution\Release;
+use Utopia\Distribution\Signing;
 use Utopia\Distribution\State;
 use Utopia\Distribution\Store;
+use Utopia\Distribution\Store\Apple\Bundle;
+use Utopia\Distribution\Store\Apple\Certificate;
+use Utopia\Distribution\Store\Apple\Profile;
 use Utopia\Distribution\Store\Apple\Webhook;
 use Utopia\Distribution\Upload;
 use Utopia\Psr7\ContentType;
@@ -79,6 +83,32 @@ class Apple extends Store
     private const string CODE_PATH = 'PATH_ERROR';
 
     private const string CODE_STATE = 'STATE_ERROR';
+
+    private const string PATH_CERTIFICATES = '/v1/certificates';
+
+    private const string PATH_BUNDLE_IDS = '/v1/bundleIds';
+
+    private const string PATH_BUNDLE_ID_CAPABILITIES = '/v1/bundleIdCapabilities';
+
+    private const string PATH_PROFILES = '/v1/profiles';
+
+    private const string TYPE_CERTIFICATES = 'certificates';
+
+    private const string TYPE_BUNDLE_IDS = 'bundleIds';
+
+    private const string TYPE_BUNDLE_ID_CAPABILITIES = 'bundleIdCapabilities';
+
+    private const string TYPE_PROFILES = 'profiles';
+
+    private const string RELATIONSHIP_CAPABILITIES = 'bundleIdCapabilities';
+
+    private const string CERTIFICATE_LIMIT = 'You already have a current';
+
+    private const string PEM_BEGIN = "-----BEGIN CERTIFICATE-----\n";
+
+    private const string PEM_END = "-----END CERTIFICATE-----\n";
+
+    private const int PEM_WIDTH = 64;
 
     private const string PATH_BUILD_UPLOADS = '/v1/buildUploads';
 
@@ -548,6 +578,278 @@ class Apple extends Store
                 ],
             ],
         ]);
+    }
+
+    /**
+     * @return list<Certificate>
+     */
+    public function listCertificates(string $type = Certificate::TYPE_DISTRIBUTION): array
+    {
+        $this->required($type, 'Certificate type');
+
+        $body = $this->request(Method::GET, self::PATH_CERTIFICATES, [
+            'filter' => ['certificateType' => $type],
+            'limit' => self::LIMIT,
+        ]);
+
+        return array_map($this->certificate(...), $this->resources($body));
+    }
+
+    public function createCertificate(string $csr, string $type = Certificate::TYPE_DISTRIBUTION): Certificate
+    {
+        $this->required($csr, 'Certificate signing request');
+        $this->required($type, 'Certificate type');
+
+        try {
+            $body = $this->request(Method::POST, self::PATH_CERTIFICATES, body: [
+                'data' => [
+                    'type' => self::TYPE_CERTIFICATES,
+                    'attributes' => [
+                        'certificateType' => $type,
+                        'csrContent' => $csr,
+                    ],
+                ],
+            ]);
+        } catch (Invalid $invalid) {
+            foreach ($invalid->getIssues() as $issue) {
+                if (str_contains($issue->message, self::CERTIFICATE_LIMIT)) {
+                    throw new Conflict($invalid->getMessage(), $invalid->getIssues(), $invalid, $invalid->getBody());
+                }
+            }
+
+            throw $invalid;
+        }
+
+        return $this->certificate($this->resource($body));
+    }
+
+    public function deleteCertificate(string $certificateId): void
+    {
+        $this->required($certificateId, 'Certificate id');
+
+        $this->request(Method::DELETE, self::PATH_CERTIFICATES . '/' . rawurlencode($certificateId));
+    }
+
+    public function getBundle(string $identifier): Bundle
+    {
+        $this->required($identifier, 'Bundle identifier');
+
+        $body = $this->request(Method::GET, self::PATH_BUNDLE_IDS, [
+            'filter' => ['identifier' => $identifier],
+            'include' => self::RELATIONSHIP_CAPABILITIES,
+            'limit' => self::LIMIT,
+        ]);
+
+        foreach ($this->resources($body) as $resource) {
+            if ($this->attribute($resource, 'identifier') === $identifier) {
+                return $this->bundle($resource, $body);
+            }
+        }
+
+        throw new NotFound("App Store Connect has no bundle id \"{$identifier}\"");
+    }
+
+    public function createBundle(string $identifier, string $name, string $platform = Bundle::PLATFORM_IOS): Bundle
+    {
+        $this->required($identifier, 'Bundle identifier');
+        $this->required($name, 'Bundle name');
+        $this->required($platform, 'Bundle platform');
+
+        $body = $this->request(Method::POST, self::PATH_BUNDLE_IDS, body: [
+            'data' => [
+                'type' => self::TYPE_BUNDLE_IDS,
+                'attributes' => [
+                    'identifier' => $identifier,
+                    'name' => $name,
+                    'platform' => $platform,
+                ],
+            ],
+        ]);
+
+        return $this->bundle($this->resource($body), $body);
+    }
+
+    public function createCapability(string $bundleId, string $type): void
+    {
+        $this->required($bundleId, 'Bundle id');
+        $this->required($type, 'Capability type');
+
+        try {
+            $this->request(Method::POST, self::PATH_BUNDLE_ID_CAPABILITIES, body: [
+                'data' => [
+                    'type' => self::TYPE_BUNDLE_ID_CAPABILITIES,
+                    'attributes' => ['capabilityType' => $type],
+                    'relationships' => [
+                        'bundleId' => ['data' => ['type' => self::TYPE_BUNDLE_IDS, 'id' => $bundleId]],
+                    ],
+                ],
+            ]);
+        } catch (Invalid $invalid) {
+            foreach ($invalid->getIssues() as $issue) {
+                if (str_ends_with($issue->code, self::CODE_DUPLICATE)) {
+                    return;
+                }
+            }
+
+            throw $invalid;
+        }
+    }
+
+    /**
+     * @return list<Profile>
+     */
+    public function listProfiles(string $bundleId): array
+    {
+        $this->required($bundleId, 'Bundle id');
+
+        $body = $this->request(Method::GET, self::PATH_BUNDLE_IDS . '/' . rawurlencode($bundleId) . '/' . self::TYPE_PROFILES, [
+            'limit' => self::LIMIT,
+        ]);
+
+        return array_map($this->profile(...), $this->resources($body));
+    }
+
+    /**
+     * @param list<string> $certificateIds
+     */
+    public function createProfile(string $name, string $type, string $bundleId, array $certificateIds): Profile
+    {
+        $this->required($name, 'Profile name');
+        $this->required($type, 'Profile type');
+        $this->required($bundleId, 'Bundle id');
+
+        if ($certificateIds === []) {
+            throw new Invalid('Profile certificates must not be empty');
+        }
+
+        $certificates = [];
+
+        foreach ($certificateIds as $certificateId) {
+            $this->required($certificateId, 'Certificate id');
+            $certificates[] = ['type' => self::TYPE_CERTIFICATES, 'id' => $certificateId];
+        }
+
+        $body = $this->request(Method::POST, self::PATH_PROFILES, body: [
+            'data' => [
+                'type' => self::TYPE_PROFILES,
+                'attributes' => [
+                    'name' => $name,
+                    'profileType' => $type,
+                ],
+                'relationships' => [
+                    'bundleId' => ['data' => ['type' => self::TYPE_BUNDLE_IDS, 'id' => $bundleId]],
+                    'certificates' => ['data' => $certificates],
+                ],
+            ],
+        ]);
+
+        return $this->profile($this->resource($body));
+    }
+
+    public function deleteProfile(string $profileId): void
+    {
+        $this->required($profileId, 'Profile id');
+
+        $this->request(Method::DELETE, self::PATH_PROFILES . '/' . rawurlencode($profileId));
+    }
+
+    /**
+     * @param array<mixed> $resource
+     */
+    private function certificate(array $resource): Certificate
+    {
+        $der = $this->content($resource, 'certificateContent', 'certificate');
+        $pem = self::PEM_BEGIN . chunk_split(base64_encode($der), self::PEM_WIDTH, "\n") . self::PEM_END;
+
+        try {
+            $certificate = new Signing\Certificate($pem);
+        } catch (Invalid $invalid) {
+            throw new Unavailable('App Store Connect returned a certificate that cannot be parsed', previous: $invalid);
+        }
+
+        return new Certificate(
+            $this->identify($resource),
+            $this->attribute($resource, 'certificateType') ?? '',
+            $this->attribute($resource, 'serialNumber') ?? '',
+            $this->date($resource, 'expirationDate') ?? $certificate->expiresAt(),
+            $certificate,
+        );
+    }
+
+    /**
+     * @param array<mixed> $resource
+     * @param array<mixed> $body
+     */
+    private function bundle(array $resource, array $body): Bundle
+    {
+        $capabilities = [];
+
+        foreach ($this->linkages($resource, self::RELATIONSHIP_CAPABILITIES) as $capabilityId) {
+            $capability = $this->included($body, self::TYPE_BUNDLE_ID_CAPABILITIES, $capabilityId);
+            $type = $capability === null ? null : $this->attribute($capability, 'capabilityType');
+
+            if ($type !== null) {
+                $capabilities[] = $type;
+            }
+        }
+
+        return new Bundle(
+            $this->identify($resource),
+            $this->attribute($resource, 'identifier') ?? throw new Unavailable('App Store Connect returned a bundle id without an identifier'),
+            $this->attribute($resource, 'name') ?? '',
+            $this->attribute($resource, 'platform') ?? '',
+            $this->attribute($resource, 'seedId') ?? throw new Unavailable('App Store Connect returned a bundle id without a seed id'),
+            $capabilities,
+        );
+    }
+
+    /**
+     * @param array<mixed> $resource
+     */
+    private function profile(array $resource): Profile
+    {
+        return new Profile(
+            $this->identify($resource),
+            $this->attribute($resource, 'name') ?? '',
+            $this->attribute($resource, 'profileType') ?? '',
+            $this->attribute($resource, 'profileState') ?? '',
+            $this->attribute($resource, 'uuid') ?? throw new Unavailable('App Store Connect returned a profile without a uuid'),
+            $this->date($resource, 'expirationDate') ?? throw new Unavailable('App Store Connect returned a profile without an expiration date'),
+            $this->content($resource, 'profileContent', 'profile'),
+        );
+    }
+
+    /**
+     * @param array<mixed> $resource
+     */
+    private function content(array $resource, string $name, string $kind): string
+    {
+        $content = $this->attribute($resource, $name);
+        $decoded = $content === null ? false : base64_decode($content, true);
+
+        if ($decoded === false || $decoded === '') {
+            throw new Unavailable("App Store Connect returned a {$kind} without valid {$name}");
+        }
+
+        return $decoded;
+    }
+
+    /**
+     * @param array<mixed> $resource
+     */
+    private function date(array $resource, string $name): ?\DateTimeImmutable
+    {
+        $value = $this->attribute($resource, $name);
+
+        if ($value === null) {
+            return null;
+        }
+
+        try {
+            return new \DateTimeImmutable($value);
+        } catch (\DateMalformedStringException $dateMalformedStringException) {
+            throw new Unavailable("App Store Connect returned a malformed {$name}", previous: $dateMalformedStringException);
+        }
     }
 
     /**

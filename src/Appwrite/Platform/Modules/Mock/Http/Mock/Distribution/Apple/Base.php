@@ -8,6 +8,7 @@ use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Cache\Cache;
 use Utopia\Client\Client;
+use Utopia\Distribution\Signing\Certificate;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Psr7\ContentType;
 use Utopia\Psr7\Method;
@@ -57,6 +58,7 @@ abstract class Base extends Action
     protected const int LOCK_TTL = 10;
     protected const float LOCK_WAIT = 10.0;
 
+    protected const int PART_SIZE = 1048576;
     protected const string CACHE_UPLOAD_BUILDS = 'mock:distribution:apple:upload:builds:';
     protected const string CACHE_UPLOAD_NUMBERS = 'mock:distribution:apple:upload:numbers:';
     protected const string CACHE_UPLOAD_FILES = 'mock:distribution:apple:upload:files:';
@@ -219,6 +221,28 @@ abstract class Base extends Action
     protected const string INFO_PREPARE_FOR_SUBMISSION = 'PREPARE_FOR_SUBMISSION';
     protected const array INFO_EDITABLE = [self::INFO_PREPARE_FOR_SUBMISSION, 'DEVELOPER_REJECTED', 'REJECTED'];
     protected const array INFO_LOCALIZATION_ATTRIBUTES = ['name', 'subtitle', 'privacyPolicyUrl', 'privacyChoicesUrl', 'privacyPolicyText'];
+
+    protected const string CACHE_TEAM_SEEDS = 'mock:distribution:apple:team:seeds:';
+    protected const string CACHE_CERTIFICATE_AUTHORITY = 'mock:distribution:apple:certificate:authority';
+    protected const string CACHE_CERTIFICATE_CERTIFICATES = 'mock:distribution:apple:certificate:certificates:';
+    protected const string CACHE_BUNDLE_BUNDLES = 'mock:distribution:apple:bundle:bundles:';
+    protected const string CACHE_PROFILE_PROFILES = 'mock:distribution:apple:profile:profiles:';
+    protected const string LOCK_TEAM = 'mock:distribution:apple:team:';
+    protected const string CERTIFICATE_DIGEST = 'sha256';
+    protected const string CERTIFICATE_DATE = 'Y-m-d\TH:i:s.vO';
+    protected const string BUNDLE_TYPE = 'bundleIds';
+    protected const string BUNDLE_TYPE_CAPABILITY = 'bundleIdCapabilities';
+    protected const string PROFILE_STATE_ACTIVE = 'ACTIVE';
+    protected const string PROFILE_STATE_INVALID = 'INVALID';
+    private const int TEAM_LENGTH = 10;
+    private const int TEAM_CERTIFICATES = 3;
+    private const int CERTIFICATE_AUTHORITY_DAYS = 3650;
+    private const array CERTIFICATE_AUTHORITY_SUBJECT = [
+        'commonName' => 'Mock Apple Worldwide Developer Relations CA',
+        'organizationalUnitName' => 'G3',
+        'organizationName' => 'Apple Inc.',
+        'countryName' => 'US',
+    ];
 
     /**
      * @return array{keyId: string, issuerId: string, publicKey: string, agreements: bool}|null
@@ -694,7 +718,180 @@ abstract class Base extends Action
         return 'user-hour-lim:' . self::RATE_LIMIT . ';user-hour-rem:' . $remaining . ';';
     }
 
-    protected const int PART_SIZE = 1048576;
+    /**
+     * @return array{teamId: string, certificates: int, provisioning: bool}
+     */
+    protected function team(Cache $cache, string $issuerId): array
+    {
+        $team = $cache->load(self::CACHE_TEAM_SEEDS . $issuerId, self::TTL);
+
+        if (\is_array($team)) {
+            return $team;
+        }
+
+        return [
+            'teamId' => \strtoupper(\substr(\sha1($issuerId), 0, self::TEAM_LENGTH)),
+            'certificates' => self::TEAM_CERTIFICATES,
+            'provisioning' => true,
+        ];
+    }
+
+    /**
+     * @return array{teamId: string, certificates: int, provisioning: bool}|null
+     */
+    protected function provisioning(Response $response, Cache $cache, string $issuerId): ?array
+    {
+        $team = $this->team($cache, $issuerId);
+
+        if ($team['provisioning']) {
+            return $team;
+        }
+
+        $this->error(
+            $response,
+            Response::STATUS_CODE_FORBIDDEN,
+            'FORBIDDEN_ERROR',
+            'This request is forbidden for security reasons',
+            'You are not allowed to perform this operation.',
+        );
+
+        return null;
+    }
+
+    /**
+     * @return array{key: string, certificate: string}
+     */
+    protected function authority(Cache $cache, Lock $lock): array
+    {
+        return $this->locked($lock, self::CACHE_CERTIFICATE_AUTHORITY, function () use ($cache): array {
+            $authority = $cache->load(self::CACHE_CERTIFICATE_AUTHORITY, self::TTL);
+
+            if (\is_array($authority)) {
+                return $authority;
+            }
+
+            $key = Certificate::key();
+            $options = ['digest_alg' => self::CERTIFICATE_DIGEST, 'config' => Certificate::CONFIG];
+            $signed = \openssl_csr_sign(Certificate::request($key, self::CERTIFICATE_AUTHORITY_SUBJECT), null, $key, self::CERTIFICATE_AUTHORITY_DAYS, $options, \random_int(1, PHP_INT_MAX));
+            $pem = null;
+
+            if ($signed === false || !\openssl_x509_export($signed, $pem) || !\is_string($pem)) {
+                throw new \RuntimeException('Mock signing authority could not be created');
+            }
+
+            $authority = ['key' => $key, 'certificate' => $pem];
+            $cache->save(self::CACHE_CERTIFICATE_AUTHORITY, $authority, '', self::TTL);
+
+            return $authority;
+        });
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    protected function certificates(Cache $cache, string $teamId): array
+    {
+        return $this->records($cache, self::CACHE_CERTIFICATE_CERTIFICATES . $teamId);
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    protected function bundles(Cache $cache, string $teamId): array
+    {
+        return $this->records($cache, self::CACHE_BUNDLE_BUNDLES . $teamId);
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    protected function bundle(Cache $cache, string $teamId, string $bundleId): ?array
+    {
+        foreach ($this->bundles($cache, $teamId) as $bundle) {
+            if ($bundle['id'] === $bundleId) {
+                return $bundle;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    protected function profiles(Cache $cache, string $teamId): array
+    {
+        return $this->records($cache, self::CACHE_PROFILE_PROFILES . $teamId);
+    }
+
+    /**
+     * @param array<string, mixed> $bundle
+     * @return array<string, mixed>
+     */
+    protected function bundleResource(array $bundle): array
+    {
+        $capabilities = [];
+
+        foreach ($bundle[self::INTERNAL]['capabilities'] as $capability) {
+            $capabilities[] = ['type' => self::BUNDLE_TYPE_CAPABILITY, 'id' => $capability['id']];
+        }
+
+        unset($bundle[self::INTERNAL]);
+        $bundle['relationships'] = [self::BUNDLE_TYPE_CAPABILITY => ['data' => $capabilities]];
+
+        return $bundle;
+    }
+
+    /**
+     * @param array{id: string, capabilityType: string} $capability
+     * @return array<string, mixed>
+     */
+    protected function capabilityResource(array $capability): array
+    {
+        return [
+            'type' => self::BUNDLE_TYPE_CAPABILITY,
+            'id' => $capability['id'],
+            'attributes' => [
+                'capabilityType' => $capability['capabilityType'],
+                'settings' => [],
+            ],
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $profile
+     * @return array<string, mixed>
+     */
+    protected function profileResource(array $profile): array
+    {
+        $internal = $profile[self::INTERNAL];
+        unset($profile[self::INTERNAL]);
+
+        $profile['relationships'] = [
+            'bundleId' => ['data' => ['type' => self::BUNDLE_TYPE, 'id' => $internal['bundleId']]],
+            'certificates' => ['data' => \array_map(
+                fn (string $certificateId): array => ['type' => 'certificates', 'id' => $certificateId],
+                $internal['certificateIds'],
+            )],
+        ];
+
+        return $profile;
+    }
+
+    protected function resourceId(): string
+    {
+        return \strtoupper(\bin2hex(\random_bytes(self::TEAM_LENGTH / 2)));
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function records(Cache $cache, string $key): array
+    {
+        $records = $cache->load($key, self::TTL);
+
+        return \is_array($records) ? \array_values($records) : [];
+    }
 
     /**
      * @return list<array{method: string, url: string, offset: int, length: int, partNumber: int, expiration: string, requestHeaders: list<array{name: string, value: string}>}>
