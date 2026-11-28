@@ -6784,7 +6784,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "tooling/ai/vibe-coding/claude-desktop",
     "title": "Claude Desktop",
     "description": "Learn how to use Claude Desktop with Appwrite through quick start prompts and the Appwrite MCP server for AI-assisted development.",
-    "excerpt": "Get started quickly with these pre-built prompts for common Appwrite integrations: Browse all quick start prompts Connect the Appwrite MCP server to Claude Desktop for deeper integration with the Appwrite API and documentation. Before you begin, ensure you have Node.js and npm installed on your system. Unlike other IDEs, Claude Desktop only supports local (stdio) MCP servers and not remote servers. The package acts as a proxy to connect to the remote Appwrite MCP server. In the Claude Desktop app,…",
+    "excerpt": "Get started quickly with these pre-built prompts for common Appwrite integrations: Browse all quick start prompts Connect the Appwrite MCP server to Claude Desktop for deeper integration with the Appwrite API and documentation. Use a custom connector to connect Claude Desktop directly to the hosted Appwrite MCP server. This setup does not require Node.js or a local configuration file. 1. Open **Customize > Connectors** in Claude Desktop. 2. Choose **Add custom connector** and name it **Appwrite**. 3. Enter the remote…",
     "breadcrumbs": [
       "Tooling",
       "Vibe coding",

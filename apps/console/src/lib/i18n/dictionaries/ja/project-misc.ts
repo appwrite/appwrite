@@ -4748,4 +4748,11 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Lines your site writes to stdout and stderr show up here.':
     'サイトが stdout と stderr に出力した行がここに表示されます。',
   'Lines your database writes show up here.': 'データベースが出力した行がここに表示されます。',
+  // Claude Desktop remote connector and local fallback
+  'In Claude Desktop, open Customize > Connectors, add a custom connector with this URL, and sign in to Appwrite.':
+    'Claude Desktop で Customize > Connectors を開き、この URL を使ってカスタムコネクタを追加し、Appwrite にログインしてください。',
+  'Local server fallback': 'ローカルサーバーを使う代替手順',
+  'Requires Node.js. Add this configuration under Settings > Developer > Local MCP servers > Edit Config, then restart Claude Desktop.':
+    'Node.js が必要です。Settings > Developer > Local MCP servers > Edit Config からこの設定を追加し、Claude Desktop を再起動してください。',
+
 }

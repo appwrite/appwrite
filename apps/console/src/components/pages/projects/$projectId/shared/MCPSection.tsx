@@ -2,20 +2,11 @@ import { useMemo, useState } from 'react'
 import { Check, Copy, Download, ExternalLink } from 'lucide-react'
 import { toast } from 'sonner'
 import {
-  MCP_CLAUDE_DESKTOP_CONFIG_SNIPPET,
-  MCP_CODEX_INSTALL_COMMAND,
-  MCP_EDITOR_CONFIG_SNIPPET,
-  MCP_OPENCODE_CONFIG_SNIPPET,
   MCP_SELF_HOSTED_DOCS_URL,
-  MCP_SERVER_URL,
-  getCursorMcpInstallUrl,
-  getMcpClaudeCodeInstallCommand,
-  getSelfHostedClaudeCodeInstallCommand,
-  getSelfHostedCodexConfig,
-  getSelfHostedMcpEditorConfig,
-  getSelfHostedOpencodeConfig,
-  getVscodeMcpInstallUrl,
+  getCloudMcpTools,
+  getSelfHostedMcpTools,
   openMcpInstallUrl,
+  type McpToolId,
 } from '@/lib/config/mcp'
 import {
   MCP_TRY_IT_PROMPT_TEMPLATES,
@@ -24,10 +15,9 @@ import {
 import { getApiEndpoint } from '@/lib/appwrite/sdk'
 import { useProject } from '@/lib/react-query/hooks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { useT, type Translator } from '@/lib/i18n/translate'
+import { useT } from '@/lib/i18n/translate'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { Button } from '@/components/ui/button'
-import type { CodeBlockLanguage } from '@/components/global/shared/CodeBlock'
 import { ConnectCodeExample } from '@/components/global/shared/ConnectCodeExample'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { McpIcon } from '@/components/global/shared/McpIcon'
@@ -44,140 +34,7 @@ export interface MCPSectionProps {
   parts?: 'all' | 'install' | 'try'
 }
 
-type McpToolId =
-  | 'claude-code'
-  | 'chatgpt'
-  | 'codex'
-  | 'cursor'
-  | 'claude-desktop'
-  | 'vscode'
-  | 'opencode'
-
-type McpToolConfig = {
-  id: McpToolId
-  name: string
-  iconPath: string
-  language: CodeBlockLanguage
-  code: string
-  installUrl?: string
-}
-
-function jsonSnippet(value: unknown): string {
-  return JSON.stringify(value, null, 2)
-}
-
 const MCP_MORE_TOOLS_DOCS_HREF = '/docs/tooling/ai/mcp-servers'
-
-function getCloudMcpTools(t: Translator): McpToolConfig[] {
-  return [
-    {
-      id: 'claude-code',
-      name: 'Claude Code',
-      iconPath: '/icons/claude.svg',
-      language: 'bash',
-      code: getMcpClaudeCodeInstallCommand(
-        t('select "appwrite", then "Authenticate"'),
-      ),
-    },
-    {
-      id: 'chatgpt',
-      name: 'ChatGPT',
-      iconPath: '/icons/chatgpt.svg',
-      language: 'bash',
-      code: MCP_SERVER_URL,
-    },
-    {
-      id: 'codex',
-      name: 'Codex',
-      iconPath: '/icons/codex.svg',
-      language: 'bash',
-      code: MCP_CODEX_INSTALL_COMMAND,
-    },
-    {
-      id: 'cursor',
-      name: 'Cursor',
-      iconPath: '/icons/cursor-ai.svg',
-      language: 'json',
-      code: jsonSnippet(MCP_EDITOR_CONFIG_SNIPPET),
-      installUrl: getCursorMcpInstallUrl(),
-    },
-    {
-      id: 'claude-desktop',
-      name: 'Claude Desktop',
-      iconPath: '/icons/claude.svg',
-      language: 'json',
-      code: jsonSnippet(MCP_CLAUDE_DESKTOP_CONFIG_SNIPPET),
-    },
-    {
-      id: 'vscode',
-      name: 'VS Code',
-      iconPath: '/icons/vscode.svg',
-      language: 'json',
-      code: jsonSnippet(MCP_EDITOR_CONFIG_SNIPPET),
-      installUrl: getVscodeMcpInstallUrl(),
-    },
-    {
-      id: 'opencode',
-      name: 'OpenCode',
-      iconPath: '/icons/opencode.svg',
-      language: 'json',
-      code: jsonSnippet(MCP_OPENCODE_CONFIG_SNIPPET),
-    },
-  ]
-}
-
-function getSelfHostedMcpTools(
-  projectId: string,
-  endpoint: string,
-): McpToolConfig[] {
-  const editorConfig = jsonSnippet(
-    getSelfHostedMcpEditorConfig(projectId, endpoint),
-  )
-  return [
-    {
-      id: 'claude-code',
-      name: 'Claude Code',
-      iconPath: '/icons/claude.svg',
-      language: 'bash',
-      code: getSelfHostedClaudeCodeInstallCommand(projectId, endpoint),
-    },
-    {
-      id: 'codex',
-      name: 'Codex',
-      iconPath: '/icons/codex.svg',
-      language: 'toml',
-      code: getSelfHostedCodexConfig(projectId, endpoint),
-    },
-    {
-      id: 'cursor',
-      name: 'Cursor',
-      iconPath: '/icons/cursor-ai.svg',
-      language: 'json',
-      code: editorConfig,
-    },
-    {
-      id: 'claude-desktop',
-      name: 'Claude Desktop',
-      iconPath: '/icons/claude.svg',
-      language: 'json',
-      code: editorConfig,
-    },
-    {
-      id: 'vscode',
-      name: 'VS Code',
-      iconPath: '/icons/vscode.svg',
-      language: 'json',
-      code: editorConfig,
-    },
-    {
-      id: 'opencode',
-      name: 'OpenCode',
-      iconPath: '/icons/opencode.svg',
-      language: 'json',
-      code: jsonSnippet(getSelfHostedOpencodeConfig(projectId, endpoint)),
-    },
-  ]
-}
 
 /**
  * MCP server section: Cloud uses the remote Appwrite MCP server with per-tool
@@ -283,6 +140,11 @@ export function MCPSection({
           {t('1. Install')}
         </h4>
       ) : null}
+      {selectedTool.instructions ? (
+        <p className="text-[13px] text-muted-foreground">
+          {selectedTool.instructions}
+        </p>
+      ) : null}
       <ConnectCodeExample
         code={selectedTool.code}
         language={selectedTool.language}
@@ -291,6 +153,23 @@ export function MCPSection({
         onTabChange={(id) => setSelectedToolId(id as McpToolId)}
         selectorAriaLabel={t('Select tool')}
       />
+
+      {selectedTool.fallbackCode ? (
+        <details className="space-y-2 text-[13px]">
+          <summary className="cursor-pointer text-muted-foreground">
+            {t('Local server fallback')}
+          </summary>
+          <p className="text-muted-foreground">
+            {t(
+              'Requires Node.js. Add this configuration under Settings > Developer > Local MCP servers > Edit Config, then restart Claude Desktop.',
+            )}
+          </p>
+          <ConnectCodeExample
+            code={selectedTool.fallbackCode}
+            language="json"
+          />
+        </details>
+      ) : null}
 
       <div className="flex flex-wrap items-center gap-3">
         {selectedTool.installUrl ? (
@@ -318,11 +197,7 @@ export function MCPSection({
   )
 
   const tryItContent = (
-    <div
-      className={
-        parts === 'try' ? 'space-y-4 text-center' : 'space-y-4'
-      }
-    >
+    <div className={parts === 'try' ? 'space-y-4 text-center' : 'space-y-4'}>
       <h4
         className={
           parts === 'try'
@@ -383,7 +258,9 @@ export function MCPSection({
   const mainContent = (
     <div className="space-y-6">
       {showInstall ? installContent : null}
-      {showInstall && showTry ? <div className="border-t border-border" /> : null}
+      {showInstall && showTry ? (
+        <div className="border-t border-border" />
+      ) : null}
       {showTry ? tryItContent : null}
     </div>
   )

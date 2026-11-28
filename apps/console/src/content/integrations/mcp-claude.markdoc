@@ -47,31 +47,21 @@ The hosted MCP server authenticates against Appwrite Cloud. If you run a [self-h
 
 ## Step 2: Configure the MCP server on Claude Desktop
 
-{% info title="Pre-requisite: Install Node.js" %}
+Use a custom connector to connect Claude Desktop directly to the hosted Appwrite MCP server. This setup does not require Node.js or a local configuration file.
 
-Claude Desktop only supports local (stdio) MCP servers, so the configuration uses the `mcp-remote` package as a proxy to connect to the remote MCP server. You must install [Node.js](https://nodejs.org/en/download) and npm on your system.
+1. Open **Customize > Connectors** in Claude Desktop.
+2. Choose **Add custom connector** and name it **Appwrite**.
+3. Enter the remote MCP server URL:
 
-{% /info %}
-
-To configure the MCP server on Claude Desktop, head to the app's **Settings** page (press `CTRL + ,` on Windows or `CMD + ,` on MacOS), navigate to the **Developer** tab, and click on **Edit Config**. This will open the `claude_desktop_config.json` file, where you must add the following:
-
-```json
-{
-    "mcpServers": {
-        "appwrite": {
-            "command": "npx",
-            "args": [
-                "mcp-remote",
-                "https://mcp.appwrite.io/"
-            ]
-        }
-    }
-}
+```text
+https://mcp.appwrite.io/
 ```
 
-Once you have updated and saved the `claude_desktop_config.json` file, restart Claude Desktop. When the app first connects to the server, your browser opens so you can sign in to your Appwrite account and authorize access. You can then click on the MCP tools button (at the bottom right section of the prompt input) to view the available MCP tools.
+4. Follow the connector setup, then click **Connect** to sign in to your Appwrite account and authorize access when prompted.
 
-![Claude MCP Tools](/images/docs/mcp/claude-desktop/claude-mcp-tools.avif)
+For Team and Enterprise organizations, someone with permission to manage connectors must add it before members can connect. See [Claude's custom connector guide](https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp) for current availability and setup options.
+
+In a conversation, open **Connectors** from the **+** menu and enable **Appwrite** to make its tools available.
 
 {% info title="Claude Code" %}
 If you are using the Claude Code CLI, you can use the following command in your terminal to configure the MCP server:
@@ -88,6 +78,31 @@ Then, run `/mcp` in Claude Code, select **appwrite**, and choose **Authenticate*
 Finally, you can test the integration by asking Claude Desktop to list all the users in your Appwrite project.
 
 ![Claude Desktop](/images/docs/mcp/claude-desktop/claude-list-users.avif)
+
+## Alternative: local stdio bridge
+
+If custom connectors are unavailable in your environment, you can connect through a local stdio bridge instead. This alternative requires [Node.js](https://nodejs.org/en/download) and npm.
+
+Open **Settings > Developer > Local MCP servers**, choose **Edit Config**, and add this entry to `claude_desktop_config.json`:
+
+```json
+{
+    "mcpServers": {
+        "appwrite": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "mcp-remote@0.16.0",
+                "https://mcp.appwrite.io/"
+            ]
+        }
+    }
+}
+```
+
+Restart Claude Desktop, then complete the Appwrite sign-in in your browser. The server appears under **Local MCP servers**.
+
+If you see an `npx ENOENT` error, add `npx` to your `PATH` or use its full path in the configuration.
 
 # Read more about MCP with Claude Desktop
 

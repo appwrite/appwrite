@@ -4655,4 +4655,11 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'השורות שהאתר שלכם כותב ל-stdout ול-stderr יופיעו כאן.',
   'Lines your database writes show up here.':
     'השורות שמסד הנתונים שלכם כותב יופיעו כאן.',
+  // Claude Desktop remote connector and local fallback
+  'In Claude Desktop, open Customize > Connectors, add a custom connector with this URL, and sign in to Appwrite.':
+    'ב-Claude Desktop, פתחו את Customize > Connectors, הוסיפו מחבר מותאם אישית עם הכתובת הזו והתחברו ל-Appwrite.',
+  'Local server fallback': 'חלופה באמצעות שרת מקומי',
+  'Requires Node.js. Add this configuration under Settings > Developer > Local MCP servers > Edit Config, then restart Claude Desktop.':
+    'נדרש Node.js. הוסיפו את ההגדרות האלה דרך Settings > Developer > Local MCP servers > Edit Config, ואז הפעילו מחדש את Claude Desktop.',
+
 }
