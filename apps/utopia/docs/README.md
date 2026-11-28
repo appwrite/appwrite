@@ -19,13 +19,17 @@ bun run generate
 bun run dev
 ```
 
-The app serves on <http://localhost:3200>. `bun run generate` (`scripts/generate.ts`) writes `data/` (not committed); `bun run build` runs it first, then `bun run start` serves the production build. It needs `cargo` for `cargo metadata` and network access to docs.rs; rustdoc JSON is cached in `node_modules/.cache/rustdoc`.
+The app serves on <http://localhost:3200>. `bun run generate` (`scripts/generate.ts`) writes `data/` (not committed); `bun run build` runs it first, then `bun run start` serves the production build. It needs the whole repository and network access to docs.rs, not Rust; rustdoc JSON is cached in `node_modules/.cache/rustdoc`. A crate not yet on crates.io is left off the site until its release.
+
+## Deploy
+
+<https://utopia-docs.appwrite.network> is Appwrite Sites: project `utopia`, site `docs`, connected to this repository's `main`. Sites builds from the repository root, because the generator reads the whole repository: install `bun install --frozen-lockfile --cwd apps/utopia/docs`, build `bun run --cwd apps/utopia/docs build` (one shell runs both, so neither can `cd`), output `./apps/utopia/docs/dist/client`. A push to `main` that touches a source of the site deploys it.
 
 ## Where the content comes from
 
 | Content | Source |
 |---|---|
-| Libraries | the crates in `crates/utopia/*` (`cargo metadata`), `packages/*`, and the `utopia-php/*` packages in `composer.lock` |
+| Libraries | the crates in `crates/utopia/*` (their `Cargo.toml`), `packages/*`, and the `utopia-php/*` packages in `composer.lock` |
 | Category | `[package.metadata.utopia]` in the crate's `Cargo.toml`, else `content/categories.json`, which also holds the category titles |
 | Status | the library's `stable` or `enabled` gate in `crates/extension/src/lib.rs`, and whether its PHP package still declares classes |
 | PHP classes served from Rust | `crates/extension/tests/libraries.expected`, matched to packages by their PSR-4 namespaces |

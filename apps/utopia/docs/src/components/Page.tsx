@@ -134,9 +134,9 @@ export function LibraryRow({ lib }: { lib: LibrarySummary }) {
         <ClassesBadge lib={lib} short />
         <LinesBadge lib={lib} />
         <StatusBadge status={lib.status} />
-        {lib.updated ? (
+        {lib.released ? (
           <span className="min-w-[7.5rem] sm:text-right">
-            Updated <Time date={lib.updated} />
+            Released <Time date={lib.released} />
           </span>
         ) : null}
       </span>

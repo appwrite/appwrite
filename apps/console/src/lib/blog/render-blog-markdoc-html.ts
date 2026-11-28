@@ -316,7 +316,14 @@ function renderTag(tag: MarkdocTag): string {
     case 'Video': {
       const src = String(tag.attributes.src ?? '')
       if (!src) return ''
-      return `<div class="not-prose my-6 overflow-hidden rounded-xl border border-border"><video src="${escapeHtml(src)}" controls class="w-full"${attr('title', tag.attributes.title as string | undefined)}></video></div>`
+      const title = tag.attributes.title as string | undefined
+      // With `autoplay`, the clip plays muted on a loop like an animated image.
+      // BlogMarkdownBody plays it only while it is visible, so the hidden copy
+      // inside `only_dark` or `only_light` never plays.
+      const playback = tag.attributes.autoplay
+        ? ` data-blog-autoplay preload="metadata" loop muted playsinline${attr('aria-label', title)}`
+        : ' controls'
+      return `<div class="not-prose my-6 overflow-hidden rounded-xl border border-border"><video src="${escapeHtml(src)}"${playback} class="w-full"${attr('title', title)}></video></div>`
     }
     case 'Blockquote':
       return `<blockquote class="my-5 border-s-2 border-[var(--brand-cta)] ps-4 italic">${children}</blockquote>`

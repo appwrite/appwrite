@@ -1,7 +1,7 @@
 [package]
 name = "utopia-queue"
 description = "Queue consumers that share queues with utopia-php/queue: a JetStream worker that reads, settles and dead-letters the way Broker\\Nats does."
-version.workspace = true
+version = "0.1.1"
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
@@ -18,8 +18,10 @@ tokio = { workspace = true, features = ["macros"] }
 utopia-dsn.workspace = true
 xxhash-rust.workspace = true
 futures-util.workspace = true
+opentelemetry.workspace = true
 
 [dev-dependencies]
+opentelemetry_sdk = { workspace = true, features = ["testing"] }
 tokio = { workspace = true, features = ["rt-multi-thread"] }
 
 [package.metadata.utopia]

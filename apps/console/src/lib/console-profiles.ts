@@ -114,8 +114,9 @@ export type ConsoleProfileFeatures = {
   /** Runtime logs: the project Logs page, the Runtime logs tabs on functions and sites, and the deployment page Build / Runtime switch. Cloud only: served by `/v1/logs`. */
   runtimeLogs: boolean
   /**
-   * Appwrite Zero marketing page (`/zero`, `/zero.md`) and its Products menu and
-   * footer links. Off until launch: the page returns 404 while this is off.
+   * Appwrite Zero marketing page (`/zero`, `/zero.md`), its Products menu and
+   * footer links, and the Zero docs (`/docs/zero` and the CLI `zero` page).
+   * Off until launch: the page returns 404 while this is off.
    * Enable from Debug → Feature flags; at launch, default it on.
    */
   zero: boolean

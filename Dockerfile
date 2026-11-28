@@ -48,11 +48,17 @@ RUN apk add --no-cache \
 
 # The utopia extension, built against the base image's own PHP headers and
 # libheif so the ABI matches. The recipe is crates/extension/build.sh.
-FROM appwrite/base:2.6.0@sha256:baf37ca0213eb6fabbaef181ca568d2e0de0c6d79f56f971a6ccb0efba3c9d05 AS extension-build
+FROM appwrite/base:2.6.0@sha256:baf37ca0213eb6fabbaef181ca568d2e0de0c6d79f56f971a6ccb0efba3c9d05 AS extension-toolchain
 
 WORKDIR /usr/local/src
 
-COPY Cargo.toml Cargo.lock rustfmt.toml rust-toolchain.toml ./
+COPY rust-toolchain.toml ./
+COPY crates/extension/build.sh /tmp/
+RUN /tmp/build.sh toolchain
+
+FROM extension-toolchain AS extension-build
+
+COPY Cargo.toml Cargo.lock rustfmt.toml ./
 COPY .cargo ./.cargo
 COPY crates ./crates
 
@@ -198,8 +204,9 @@ RUN chmod +x /usr/local/bin/doctor && \
 
 RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/
 
-# Registers Utopia\Image\Canvas; see crates/extension/README.md.
-COPY --from=extension-build /usr/local/src/target/release/libutopia.so /usr/local/lib/php/utopia.so
+# Registers Utopia\Image\Canvas; see crates/extension/README.md. CI's Extension job swaps in the
+# build it tested with --build-context extension=<dir holding utopia.so>.
+COPY --from=extension /utopia.so /usr/local/lib/php/utopia.so
 RUN echo 'extension=/usr/local/lib/php/utopia.so' > /usr/local/etc/php/conf.d/utopia.ini
 
 FROM base AS production

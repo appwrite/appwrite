@@ -75,7 +75,9 @@ import { isAnalyticsDocsPathname } from '@/lib/docs/analytics-docs-feature'
 import { isPartnersDocsPathname } from '@/lib/docs/partners-docs-feature'
 import { isReviewsDocsPathname } from '@/lib/docs/reviews-docs-feature'
 import { isVideosDocsPathname } from '@/lib/docs/videos-docs-feature'
+import { isZeroDocsPathname } from '@/lib/docs/zero-docs-feature'
 import { isDocsProductNavNew } from '@/lib/products/new-badge'
+import { ZERO_PRODUCT_ICON } from '@/lib/zero/product-icon'
 import { ProductNewBadge } from '@/components/global/shared/ProductNewBadge'
 import {
   getDocsAudienceFromPathname,
@@ -200,11 +202,17 @@ function DocsMcpNavIcon({ className, isActive }: DocsCustomNavIconProps) {
   return <McpNavIconWithStatus className={className} isActive={isActive} />
 }
 
+function DocsZeroNavIcon({ className }: DocsCustomNavIconProps) {
+  const ZeroIcon = ZERO_PRODUCT_ICON
+  return <ZeroIcon className={className} strokeWidth={DOCS_MENU_ICON_STROKE} />
+}
+
 const CUSTOM_ICON_MAP: Record<string, ComponentType<DocsCustomNavIconProps>> = {
   terraform: DocsTerraformNavIcon,
   graphql: DocsGraphqlNavIcon,
   oauth: DocsOAuthNavIcon,
   mcp: DocsMcpNavIcon,
+  zero: DocsZeroNavIcon,
 }
 
 function isDocsNavActive(
@@ -577,6 +585,10 @@ export function DocsGlobalSidebar({
     }
     if (!features.reviews && isReviewsDocsPathname(pathname)) {
       navigate({ to: '/docs', replace: true })
+      return
+    }
+    if (!features.zero && isZeroDocsPathname(pathname)) {
+      navigate({ to: '/docs', replace: true })
     }
   }, [
     features.agent,
@@ -584,6 +596,7 @@ export function DocsGlobalSidebar({
     features.partnersDocs,
     features.reviews,
     features.videos,
+    features.zero,
     hasMounted,
     navigate,
     pathname,

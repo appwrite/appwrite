@@ -19,7 +19,9 @@
 //!
 //! [utopia-php/queue]: https://github.com/utopia-php/queue
 
-use std::time::Duration;
+mod metrics;
+
+use std::time::{Duration, Instant};
 
 use async_nats::HeaderMap;
 use async_nats::jetstream::consumer::PullConsumer;
@@ -30,6 +32,8 @@ use bytes::Bytes;
 use futures_util::StreamExt;
 use serde::Deserialize;
 use utopia_dsn::Dsn;
+
+use crate::metrics::Metrics;
 
 /// The durable consumer every worker on a queue shares (`Broker\Nats::CONSUMER_WORK`).
 const CONSUMER: &str = "worker";
@@ -75,6 +79,7 @@ pub struct Delivery {
     /// Deliveries before this one, as `Utopia\Queue\Message::getAttempts()` counts them.
     pub attempts: u64,
     message: jetstream::Message,
+    received: Instant,
 }
 
 pub struct Worker {
@@ -88,6 +93,7 @@ pub struct Worker {
     spare: Option<u64>,
     backoff: Vec<Duration>,
     ack_wait: Duration,
+    metrics: Metrics,
 }
 
 impl Worker {
@@ -137,7 +143,10 @@ impl Worker {
         let ack_wait = config.ack_wait.max(Duration::from_secs(1));
         let dead_subject = format!("q.{}.dead", token(queue).to_lowercase());
 
-        Ok(Self { js, consumer, dead_subject, max_deliver, spare, backoff, ack_wait })
+        // The global provider as it is now: one installed after a worker joins is not picked up.
+        let metrics = Metrics::new(&opentelemetry::global::meter("utopia-queue"), queue);
+
+        Ok(Self { js, consumer, dead_subject, max_deliver, spare, backoff, ack_wait, metrics })
     }
 
     /// Up to `max` messages, waiting at most `expires` for the first.
@@ -154,6 +163,13 @@ impl Worker {
         if max > 1 && !deliveries.is_empty() {
             self.fetch(max - 1, TOP_UP, &mut deliveries).await?;
         }
+        // The work starts when the caller has the batch, as PHP's starts when its job callback
+        // runs: the top-up wait counts as waiting, not as processing.
+        let now = Instant::now();
+        for delivery in &mut deliveries {
+            delivery.received = now;
+            self.metrics.received(delivery.envelope.timestamp, delivery.message.payload.len());
+        }
         Ok(deliveries)
     }
 
@@ -169,7 +185,9 @@ impl Worker {
             }
 
             match serde_json::from_slice::<Envelope>(&message.payload) {
-                Ok(envelope) => deliveries.push(Delivery { envelope, attempts: delivered - 1, message }),
+                Ok(envelope) => {
+                    deliveries.push(Delivery { envelope, attempts: delivered - 1, message, received: Instant::now() })
+                }
                 Err(_) => self.park(&message).await?,
             }
         }
@@ -178,12 +196,14 @@ impl Worker {
 
     /// The message is done with.
     pub async fn commit(&self, delivery: Delivery) -> Result<()> {
+        self.metrics.settled(delivery.received);
         delivery.message.double_ack().await.map_err(nats)
     }
 
     /// The message failed. It comes back after the queue's backoff or, on its last attempt or
     /// when `terminal`, goes to the dead stream, where PHP's `retry()` can requeue it.
     pub async fn reject(&self, delivery: Delivery, terminal: bool) -> Result<()> {
+        self.metrics.settled(delivery.received);
         let message = &delivery.message;
         let delivered = delivered(message)?;
 
