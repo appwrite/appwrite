@@ -23,7 +23,7 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
     day: 1,
     dateLabel: 'NOVEMBER 30',
     weekdayLabel: 'MONDAY, NOVEMBER 30',
-    films: [film('6b06b807746b9f1ac5e4', 'Appwrite Analytics')],
+    films: [film('6b0aab0d22ef06964aaa', 'Appwrite Analytics')],
     title: 'Introducing Appwrite Analytics',
     description: 'Privacy-friendly analytics for your websites and apps.',
     longDescription:
@@ -69,7 +69,7 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
     day: 2,
     dateLabel: 'DECEMBER 1',
     weekdayLabel: 'TUESDAY, DECEMBER 1',
-    films: [film('6b06b8ea2b4ba42f96fc', 'Appwrite Videos')],
+    films: [film('6b0ab42d477095ae3bf9', 'Appwrite Videos')],
     launchesFilmPlayer: true,
     title: 'Introducing Appwrite Videos',
     description: 'Transcode, stream, and caption video in your project.',
@@ -108,7 +108,7 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
     day: 3,
     dateLabel: 'DECEMBER 2',
     weekdayLabel: 'WEDNESDAY, DECEMBER 2',
-    films: [film('6b06b92633329b5d1258', 'Appwrite Zero')],
+    films: [film('6b0aac9c50f56469a118', 'Appwrite Zero')],
     title: 'Introducing Appwrite Zero',
     description: 'A working Appwrite project, no signup needed.',
     longDescription:
@@ -155,7 +155,7 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
           imageAlt:
             'A bandwidth monitor triggered as usage crosses its 80% threshold',
         },
-        films: [film('6b08b6fdd3e2bf05152a', 'Appwrite Monitors')],
+        films: [film('6b0aafc05f68481a3a83', 'Appwrite Monitors')],
         resources: [
           {
             id: 'init5-day4-monitors-announce',
@@ -183,7 +183,7 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
           imageAlt:
             'Project updates arriving on a phone as pushes from Appwrite Beep: a triggered monitor, a failed SSL certificate and an Appwrite launch',
         },
-        films: [film('6b0823090857b823a173', 'Appwrite Beep')],
+        films: [film('6b0aadf05c41fa7c2c99', 'Appwrite Beep')],
         resources: [
           {
             id: 'init5-day4-beep-announce',
@@ -214,7 +214,7 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
     day: 5,
     dateLabel: 'DECEMBER 4',
     weekdayLabel: 'FRIDAY, DECEMBER 4',
-    films: [film('6b08baf395df68853cc6', 'Appwrite Reviews')],
+    films: [film('6b0ab1165d71ef4b60cf', 'Appwrite Reviews')],
     title: 'Introducing Appwrite Reviews',
     description: 'Code review for your Sites, Functions and repositories.',
     longDescription:
