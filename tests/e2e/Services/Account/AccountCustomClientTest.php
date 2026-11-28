@@ -5624,6 +5624,79 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(204, $response['headers']['status-code']);
     }
 
+    public function testOAuthVerifiedEmailDoesNotAdoptMfaAccount(): void
+    {
+        $provider = 'mock';
+        $email = 'useroauth@localhost.test';
+
+        $this->deleteUserByEmail($email);
+
+        $serverHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $response = $this->client->call(Client::METHOD_POST, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'userId' => Id::unique(),
+            'email' => $email,
+            'password' => 'password',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $existingUserId = $response['body']['$id'];
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $existingUserId . '/verification', $serverHeaders, [
+            'emailVerification' => true,
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $existingUserId . '/mfa', $serverHeaders, [
+            'mfa' => true,
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $this->getProject()['$id'] . '/oauth2', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ], [
+            'provider' => $provider,
+            'appId' => '1',
+            'secret' => '123456',
+            'enabled' => true,
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        // The provider vouching for the address does not stand in for the account's second factor
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
+            'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('failure', $response['body']['result']);
+
+        // Nothing was linked, so the provider identity cannot sign in on its own later
+        $identities = $this->client->call(Client::METHOD_GET, '/users/identities', $serverHeaders, [
+            'queries' => [Query::equal('userId', [$existingUserId])->toString()],
+        ]);
+        $this->assertEquals(200, $identities['headers']['status-code']);
+        $this->assertSame(0, $identities['body']['total']);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/users/' . $existingUserId, $serverHeaders);
+        $this->assertEquals(204, $response['headers']['status-code']);
+    }
+
     public function testOAuthVerifiedEmailRevokesUnverifiedAccountCredentials(): void
     {
         // A fresh project keeps the fixed mock OAuth email away from parallel tests.
@@ -9841,6 +9914,71 @@ final class AccountCustomClientTest extends Scope
 
         $this->assertEquals(400, $response['headers']['status-code']);
         $this->assertEquals('general_bad_request', $response['body']['type']);
+    }
+
+    public function testCreateIdTokenSessionDoesNotAdoptMfaAccountByEmail(): void
+    {
+        $this->updateMockProvider(true);
+
+        $victim = $this->createFreshAccountWithSession();
+        $serverHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $verification = $this->client->call(Client::METHOD_PATCH, '/users/' . $victim['id'] . '/verification', $serverHeaders, [
+            'emailVerification' => true,
+        ]);
+        $this->assertEquals(200, $verification['headers']['status-code']);
+
+        $mfa = $this->client->call(Client::METHOD_PATCH, '/users/' . $victim['id'] . '/mfa', $serverHeaders, [
+            'mfa' => true,
+        ]);
+        $this->assertEquals(200, $mfa['headers']['status-code']);
+
+        /**
+         * Test for FAILURE - a provider vouching for the address does not stand in for the account's second factor
+         */
+        $sub = 'idtoken-' . \uniqid('', true);
+        $response = $this->createIdTokenSession([
+            'provider' => 'mock',
+            'idToken' => $this->mintIdToken([
+                'sub' => $sub,
+                'email' => $victim['email'],
+                'email_verified' => true,
+            ]),
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals('user_more_factors_required', $response['body']['type']);
+
+        // Nothing was linked, so the provider identity cannot sign in on its own later
+        $identities = $this->client->call(Client::METHOD_GET, '/users/identities', $serverHeaders, [
+            'queries' => [Query::equal('userId', [$victim['id']])->toString()],
+        ]);
+        $this->assertEquals(200, $identities['headers']['status-code']);
+        $this->assertSame(0, $identities['body']['total']);
+
+        /**
+         * Test for SUCCESS - without MFA the verified address still adopts the account
+         */
+        $mfa = $this->client->call(Client::METHOD_PATCH, '/users/' . $victim['id'] . '/mfa', $serverHeaders, [
+            'mfa' => false,
+        ]);
+        $this->assertEquals(200, $mfa['headers']['status-code']);
+
+        $response = $this->createIdTokenSession([
+            'provider' => 'mock',
+            'idToken' => $this->mintIdToken([
+                'sub' => $sub,
+                'email' => $victim['email'],
+                'email_verified' => true,
+            ]),
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals($victim['id'], $response['body']['userId']);
     }
 
     public function testCreateIdTokenSessionRevokesUnverifiedAccountCredentials(): void

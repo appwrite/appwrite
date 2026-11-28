@@ -407,7 +407,8 @@ class User extends Document
             }
         }
 
-        foreach (['emailVerification', 'phoneVerification'] as $verification) {
+        // mfa too: a sign-in that adopted the account by email checked it before taking the lock.
+        foreach (['emailVerification', 'phoneVerification', 'mfa'] as $verification) {
             if ((bool) $locked->getAttribute($verification, false) !== (bool) $snapshot->getAttribute($verification, false)) {
                 return false;
             }

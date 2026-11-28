@@ -462,6 +462,37 @@ final class LDAPSessionIntegrationTest extends Scope
         $this->assertSame('Carol White', $account['body']['name']);
     }
 
+    public function testExistingMfaAccountIsAdoptedWithItsChallenge(): void
+    {
+        $this->configureDirectory();
+
+        // OAuth2 sign-ins may not adopt an MFA account by email, because their session
+        // counts as a second factor. A directory session carries only the password
+        // factor and still has to pass the account's MFA challenge, so it may.
+        $user = $this->client->call(Client::METHOD_POST, '/users', $this->serverHeaders(), [
+            'userId' => Id::unique(),
+            'email' => 'carol@appwrite.test',
+            'password' => 'localpassword',
+            'name' => 'Carol',
+        ]);
+
+        $this->assertSame(201, $user['headers']['status-code']);
+
+        $users = '/users/' . $user['body']['$id'];
+        $verified = $this->client->call(Client::METHOD_PATCH, $users . '/verification', $this->serverHeaders(), [
+            'emailVerification' => true,
+        ]);
+        $this->assertSame(200, $verified['headers']['status-code']);
+        $mfa = $this->client->call(Client::METHOD_PATCH, $users . '/mfa', $this->serverHeaders(), ['mfa' => true]);
+        $this->assertSame(200, $mfa['headers']['status-code']);
+
+        $response = $this->signIn('carol', 'carolpass');
+
+        $this->assertSame(201, $response['headers']['status-code']);
+        $this->assertSame($user['body']['$id'], $response['body']['userId']);
+        $this->assertSame(['password'], $response['body']['factors']);
+    }
+
     public function testBlockedUserIsRejected(): void
     {
         $this->configureDirectory();
