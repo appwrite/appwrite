@@ -280,6 +280,10 @@ export const DOCS_LOCAL_SECTION_NAVS: DocsSectionNavConfig[] = [
             href: '/docs/products/auth/presences',
           },
           {
+            label: 'Analytics',
+            href: '/docs/products/auth/analytics',
+          },
+          {
             label: 'OAuth2 server',
             href: '/docs/products/auth/oauth-server',
           },

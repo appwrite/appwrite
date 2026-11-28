@@ -8,6 +8,13 @@ Some events happen on your server: an order that completes, a subscription that 
 
 # Create an API key {% #create-an-api-key %}
 
+{% only_dark %}
+![Create API key panel with the analytics.write scope selected](/images/docs/analytics/dark/api-key.avif)
+{% /only_dark %}
+{% only_light %}
+![Create API key panel with the analytics.write scope selected](/images/docs/analytics/api-key.avif)
+{% /only_light %}
+
 Server-side events use an API key with the `analytics.write` scope.
 
 1. In your project, open **API Keys** and click **Create API key**.

@@ -10,6 +10,13 @@ On a site without a build step, such as a static site or a CMS theme, the tracke
 
 # Before you start {% #before-you-start %}
 
+{% only_dark %}
+![Connect your app wizard with the Web platform, the name Storefront, and the hostname example.com](/images/docs/analytics/dark/add-web-app.avif)
+{% /only_dark %}
+{% only_light %}
+![Connect your app wizard with the Web platform, the name Storefront, and the hostname example.com](/images/docs/analytics/add-web-app.avif)
+{% /only_light %}
+
 [Create a **Web** property](/docs/products/analytics/properties#create) and copy its property ID, which the Console shows next to the property name.
 
 Register the site as a Web app in the same project. Appwrite accepts a browser event only when the hostname in its `Origin` header belongs to one of the project's apps, and rejects other events with a `403` `general_unknown_origin` error.
@@ -43,7 +50,7 @@ The script reads its settings from the `data-` attributes of its own tag.
 
 If your site sets a Content Security Policy, allow `https://sdk.appwrite.io` in `script-src` and your Appwrite endpoint in `connect-src`.
 
-Open your site, then open the property in the Console. The visit appears on the dashboard within a few seconds.
+Open your site. Within a few seconds, the install page shows **Event received**, and the visit appears on the property's dashboard.
 
 ## Use the tracker from your code {% #script-tag-code %}
 
@@ -98,6 +105,13 @@ npm install appwrite
 
 # Start tracking {% #start-tracking %}
 
+{% only_dark %}
+![Install tracking screen confirming that a pageview event was received](/images/docs/analytics/dark/install-tracking.avif)
+{% /only_dark %}
+{% only_light %}
+![Install tracking screen confirming that a pageview event was received](/images/docs/analytics/install-tracking.avif)
+{% /only_light %}
+
 Create a `Tracking` instance with the `Analytics` service and your property ID, then call `start()`.
 
 ```client-web
@@ -114,7 +128,7 @@ tracking.start();
 
 Create one `Tracking` instance per page load and start it once. In a framework that renders on the server, run this code in the browser only, for example in a component that mounts once at the root of your app.
 
-Open your site, then open the property in the Console. The visit appears on the dashboard within a few seconds.
+Open your site. Within a few seconds, the install page shows **Event received**, and the visit appears on the property's dashboard.
 
 # Automatic events {% #automatic-events %}
 

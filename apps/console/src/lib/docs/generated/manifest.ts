@@ -1162,7 +1162,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Bots and AI traffic",
     "description": "How Appwrite Analytics recognizes bots, AI crawlers, and AI assistants from their user agent and network, where they appear on the dashboard, and how they count toward your plan.",
     "layout": "article",
-    "readingTimeMinutes": 4
+    "readingTimeMinutes": 5
   },
   {
     "slug": "products/analytics/custom-events",
@@ -1281,7 +1281,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Visitors and sessions",
     "description": "How Appwrite Analytics identifies visitors without cookies, groups their events into visits, and works out bounces, entry and exit pages, visit duration, and live visitors.",
     "layout": "article",
-    "readingTimeMinutes": 4
+    "readingTimeMinutes": 5
   },
   {
     "slug": "products/analytics/web",
@@ -1310,6 +1310,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Unlock advanced user management - Appwrite's Account API for seamless signups, authentication, and dynamic permissions.",
     "layout": "article",
     "readingTimeMinutes": 1
+  },
+  {
+    "slug": "products/auth/analytics",
+    "title": "Analytics",
+    "description": "See what each signed-in user does in your sites, apps, and AI agents with Appwrite Analytics, from the Analytics tab of a user in Auth.",
+    "layout": "article",
+    "readingTimeMinutes": 3
   },
   {
     "slug": "products/auth/anonymous",

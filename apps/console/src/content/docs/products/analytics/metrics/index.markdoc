@@ -8,6 +8,13 @@ Every figure on an analytics dashboard comes from the events a property receives
 
 # Dashboard metrics {% #dashboard-metrics %}
 
+{% only_dark %}
+![Dashboard with the Bounce rate tab selected and the bounce rate plotted on the chart](/images/docs/analytics/dark/metrics.avif)
+{% /only_dark %}
+{% only_light %}
+![Dashboard with the Bounce rate tab selected and the bounce rate plotted on the chart](/images/docs/analytics/metrics.avif)
+{% /only_light %}
+
 The row of metrics at the top of the dashboard covers the selected date range.
 
 - **Unique visitors**: distinct visitors in the range. Visitor IDs change every day, so someone who returns on three days counts three times. See [Visitors and sessions](/docs/products/analytics/visitors).
@@ -20,8 +27,6 @@ The row of metrics at the top of the dashboard covers the selected date range.
 - **Visit duration**: the average time from a visit's first event to its last. A visit with a single event counts as 0 seconds.
 - **Engagement time**: the average active time per visit, counting only visits that reported any. On the web, a page is active while it's visible. In a mobile app, the app is active while it's in the foreground.
 
-The metrics depend on the property's type. **Mobile** properties use app terms: **Active users** for **Unique visitors**, **Sessions** for **Visits**, **Screen views** for **Pageviews**, **Signed-in users** for **Users**, **Screens/session** for **Views per visit**, and **Session length** for **Visit duration**. They have no bounce rate. **Agent** properties show **Events**, **Visits**, **Users**, and **Visit duration**.
-
 **Bounce rate** and **Visit duration** cover the same visits as **Visits**: the ones that started in the range. The **Visits** chart is different: each point counts the visits with an event in that hour or day, so a visit that crosses midnight appears on both days, and the points can add up to more than the total.
 
 With a **Page**, **Event**, **User**, or prop filter (a value from **Event properties**), the dashboard can't calculate totals for the whole range, so **Unique visitors** and **Visits** add up the chart's points. With **1h**, a visitor active in several hours then counts once for each hour, and a visit that spans two points counts in both.
@@ -30,9 +35,27 @@ Exports and the API also include **Scroll depth**, the average of the deepest sc
 
 Without a filter, these metrics include bot traffic. The **Humans vs bots** card shows how much of it comes from bots, and **Mobile** properties open with a **Humans only** filter. For how Appwrite identifies visitors and splits their events into visits, see [Visitors and sessions](/docs/products/analytics/visitors).
 
+## Mobile and Agent properties {% #property-types %}
+
+{% only_dark %}
+![Dashboard of a Mobile property with Active users, Sessions, Screen views, Signed-in users, Screens/session, and Session length](/images/docs/analytics/dark/metrics-mobile.avif)
+{% /only_dark %}
+{% only_light %}
+![Dashboard of a Mobile property with Active users, Sessions, Screen views, Signed-in users, Screens/session, and Session length](/images/docs/analytics/metrics-mobile.avif)
+{% /only_light %}
+
+**Mobile** properties use app terms: **Active users** for **Unique visitors**, **Sessions** for **Visits**, **Screen views** for **Pageviews**, **Signed-in users** for **Users**, **Screens/session** for **Views per visit**, and **Session length** for **Visit duration**. They have no bounce rate. **Agent** properties show **Events**, **Visits**, **Users**, and **Visit duration**.
+
 # Breakdowns {% #breakdowns %}
 
-The cards below the chart break traffic down by one dimension at a time and rank the values by visitors. **Custom events** and **Event properties** rank by how many times each event or value was sent, and **Users** ranks users by visits. The API uses the same dimensions, by the names in this table, and ranks rows by visitors, except `eventName`, which it ranks by event count. Unlike the card, `eventName` also includes the automatic events.
+{% only_dark %}
+![Technology card on the Operating systems tab, next to the AI agents and crawlers card](/images/docs/analytics/dark/breakdowns.avif)
+{% /only_dark %}
+{% only_light %}
+![Technology card on the Operating systems tab, next to the AI agents and crawlers card](/images/docs/analytics/breakdowns.avif)
+{% /only_light %}
+
+The cards below the chart break traffic down by one dimension at a time and rank the values by visitors. **Custom events** and **Models and tools** rank by how many times each event or call was sent, and **Users** ranks users by visits. The API uses the same dimensions, by the names in this table, and ranks rows by visitors, except `eventName`, which it ranks by event count. Unlike the card, `eventName` also includes the automatic events.
 
 | Dimension | Dashboard card | Values |
 | --- | --- | --- |
@@ -55,7 +78,7 @@ The cards below the chart break traffic down by one dimension at a time and rank
 | `userId` | Users | The user ID of signed-in traffic. Anonymous events are left out. |
 | `props` | Event properties | The prop keys, or with `propKey`, the values of one key |
 
-Each row has the number of visitors, visits, events, and signed-in users with that value. In the API, a breakdown's visits are the `sessions` field: the visits that started in the range on **Entry pages** and **Exit pages**, and the visits with an event in the range on every other breakdown. For how sources and channels are worked out, see [Traffic sources](/docs/products/analytics/sources). For bot categories, see [Bots and AI traffic](/docs/products/analytics/bots).
+Each row has the number of visitors, visits, events, and signed-in users with that value. On **Entry pages** and **Exit pages**, the API returns `users` as `null`. In the API, a breakdown's visits are the `sessions` field: the visits that started in the range on **Entry pages** and **Exit pages**, and the visits with an event in the range on every other breakdown. For how sources and channels are worked out, see [Traffic sources](/docs/products/analytics/sources). For bot categories, see [Bots and AI traffic](/docs/products/analytics/bots).
 
 Screen sizes come from the viewport width: `mobile` below 576 pixels, `tablet` from 576 to 991, `laptop` from 992 to 1439, and `desktop` from 1440 up.
 
@@ -373,8 +396,8 @@ curl -G 'https://<REGION>.cloud.appwrite.io/v1/analytics/properties/<PROPERTY_ID
 | Request | Rows returned | Fields |
 | --- | --- | --- |
 | Neither | One row with totals for the whole range | Every metric on this page |
-| `dimensions` | One row per value, ranked by visitors (`eventName` by events), with `value` set | `visitors`, `sessions`, `events`, and `users` |
-| `interval` | One row per time bucket, oldest first, with `date` set | `visitors`, `sessions`, `pageviews`, `events`, and `users` |
+| `dimensions` | One row per value, ranked by visitors (`eventName` by events), with `value` set | `visitors`, `sessions`, `events`, and `users`, which is `null` on `entryPage` and `exitPage` |
+| `interval` | One row per time bucket that has events, oldest first, with `date` set. Buckets without events are left out. | `visitors`, `sessions`, `pageviews`, `events`, and `users` |
 
 Without `dimensions` or `interval`, the single row looks like this:
 
@@ -411,7 +434,7 @@ The response has two visit counts. `visits` counts the visits that started in th
 | --- | --- |
 | `dimensions` | One dimension to break down by, from the [breakdowns](#breakdowns) table. |
 | `propKey` | With `dimensions` set to `props`, the prop key whose values to rank. Without it, the breakdown ranks the prop keys. |
-| `interval` | The bucket size for a time series: `1h`, `1d`, `1w`, or `1m`. Buckets start in UTC. |
+| `interval` | The bucket size for a time series: `1h`, `1d`, `1w`, or `1m`. Buckets start in UTC, and `1w` buckets start on Sunday. |
 | `dateRange` | The length of the range in days, such as `7d`. Defaults to `30d`. Any other format, such as `2w`, also falls back to `30d`. |
 | `startAt`, `endAt` | Exact bounds in ISO 8601. Times without an offset are UTC. With both, they override `dateRange`. With only `startAt`, the range ends now. With only `endAt`, the range is `dateRange` long and ends at `endAt`. |
 | `queries` | Up to 10 filters. See [Filter metrics](#filters). |

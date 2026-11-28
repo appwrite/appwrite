@@ -1837,7 +1837,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/analytics/dashboard",
     "title": "Dashboard",
     "description": "A tour of the Appwrite Analytics dashboard, from the metrics, chart, and notes to date ranges, live visitors, and the cards that break traffic down by source, page, location, technology, bots, and custom events.",
-    "excerpt": "Each property has a dashboard on its **Analytics** tab. It shows the property's traffic for the selected date range: the headline metrics, a chart over time, and cards that break visits down by where they came from, what they viewed, and who sent them. Metrics and chart The top of the dashboard has a tab for each metric: **Unique visitors**, **Visits**, **Pageviews**, **Events**, **Users**, **Views per visit**, **Bounce rate**, **Visit duration**, and **Engagement time**. Each tab shows the total for…",
+    "excerpt": "Each property has a dashboard on its **Analytics** tab. It shows the property's traffic for the selected date range: the headline metrics, a chart over time, and cards that break visits down by where they came from, what they viewed, and who sent them. Metrics and chart The top of the dashboard has a tab for each metric: **Unique visitors**, **Visits**, **Pageviews**, **Events**, **Users**, **Views per visit**, **Bounce rate**, **Visit duration**, and **Engagement time**. **Users** appears when the property identifies…",
     "breadcrumbs": [
       "products",
       "Analytics",
@@ -1925,7 +1925,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/analytics/own-domain",
     "title": "Serve tracking from your domain",
     "description": "Send Appwrite Analytics events through a domain you own, with a custom API domain or a small proxy on your site, so tracking requests stay first-party.",
-    "excerpt": "The class sends events to your project's Appwrite endpoint, such as . Ad blockers and privacy extensions block requests that match their filter lists, which name known tracking hosts and URL patterns. Sending events to a domain you own keeps them clear of entries written for third-party hosts. A site on Appwrite Sites with analytics turned on needs no setup here: Appwrite already sends its events through the site's own domain. See Properties. For any other site, the **Ad blockers**…",
+    "excerpt": "The class sends events to your project's Appwrite endpoint, such as . Ad blockers and privacy extensions block requests that match their filter lists, which name known tracking hosts and URL patterns. Sending events to a domain you own keeps them clear of entries written for third-party hosts. A site on Appwrite Sites with analytics turned on needs no setup here: Appwrite already sends its events through the site's own domain. See Properties. Choose a method For any other site,…",
     "breadcrumbs": [
       "products",
       "Analytics",
@@ -1958,7 +1958,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/analytics/quick-start",
     "title": "Start with Analytics",
     "description": "Track your first website visit with Appwrite Analytics. Create a property, add one script tag to your site, and see the visit on the dashboard.",
-    "excerpt": "Create an analytics property, add tracking to a website with one script tag, and see your first visit on the dashboard. A site hosted on Appwrite Sites needs no code: turn on **Web analytics** in the site's **Settings** instead. See Properties. Add your site to the project Appwrite accepts events from a browser only when the site's hostname belongs to one of the project's apps. If the hostname isn't registered, add it as a Web app. 1. Sign in to…",
+    "excerpt": "Create an analytics property, add tracking to a website with one script tag, and see your first visit on the dashboard. A site hosted on Appwrite Sites needs no code: turn on **Web analytics** in the site's **Settings** and click **Update** instead. See Properties. Add your site to the project Appwrite accepts events from a browser only when the site's hostname belongs to one of the project's apps. If the hostname isn't registered, add it as a Web app. 1.…",
     "breadcrumbs": [
       "products",
       "Analytics",
@@ -1991,7 +1991,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/analytics/sources",
     "title": "Traffic sources",
     "description": "How Appwrite Analytics works out where visitors come from, with channels, referring sources, and UTM campaign parameters.",
-    "excerpt": "The **Traffic sources** card on the dashboard shows where visitors came from in three ways: the type of source as a **channel**, the referring site as a **source**, and the UTM tags on the link they followed as a **campaign**. Appwrite works these out from two fields of each event: the referrer, which is the page a visitor came from, and the event URL. In a single-page app, the browser keeps the original referrer while the visitor moves between routes,…",
+    "excerpt": "On a **Web** property, the **Traffic sources** card on the dashboard shows where visitors came from in three ways: the type of source as a **channel**, the referring site as a **source**, and the UTM tags on the link they followed as a **campaign**. Appwrite works these out from two fields of each event: the referrer, which is the page a visitor came from, and the event URL. In a single-page app, the browser keeps the original referrer while the…",
     "breadcrumbs": [
       "products",
       "Analytics",
@@ -2051,6 +2051,16 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       "Auth",
       "Concepts",
       "Accounts"
+    ]
+  },
+  {
+    "slug": "products/auth/analytics",
+    "title": "Analytics",
+    "description": "See what each signed-in user does in your sites, apps, and AI agents with Appwrite Analytics, from the Analytics tab of a user in Auth.",
+    "excerpt": "Appwrite Analytics can link the events your sites, apps, and AI agents send to the users in **Auth**. Each user then gets an **Analytics** tab with their activity across every property in the project: how often they come back, which pages or screens they open, and which events they send. Events record the user ID only, never an email address or a name. Anonymous visitors aren't affected. Identify signed-in users 1. In your project, open **Analytics** and select a property.…",
+    "breadcrumbs": [
+      "Auth",
+      "Analytics"
     ]
   },
   {

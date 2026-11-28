@@ -52,7 +52,7 @@ curl -X POST 'https://<REGION>.cloud.appwrite.io/v1/analytics/properties/<PROPER
 | `sessionHash` | string | An ID for the visit, up to 128 characters. Events from the same visitor with different values count as separate visits. It doesn't change the visitor ID. |
 | `props` | string[] | Custom props as alternating keys and values. Up to 32 items, so 16 key and value pairs, each up to 255 characters. |
 | `interactive` | boolean | Whether the event is an interaction that ends a [bounce](/docs/products/analytics/visitors#visit-metrics). Defaults to `true` for custom events. Set `false` for background events, such as heartbeats or syncs. Views ignore it. |
-| `userId`, `ip`, `userAgent` | string | Server-side only. They need an API key. See [Track events from your server](/docs/products/analytics/server-side). To record the user ID of a signed-in session from a client, turn on [Identify signed-in users](/docs/products/analytics/properties#user-identification) instead. |
+| `userId`, `ip`, `userAgent` | string | Server-side only. They need an API key with the `analytics.write` scope. See [Track events from your server](/docs/products/analytics/server-side). To record the user ID of a signed-in session from a client, turn on [Identify signed-in users](/docs/products/analytics/properties#user-identification) instead. |
 
 Appwrite records the path of `url` without its query string and fragment. It reads UTM parameters and ad click IDs from the query string first, so `https://example.com/?utm_source=newsletter` is recorded as the page `/` with `newsletter` as its UTM source. See [Traffic sources](/docs/products/analytics/sources).
 
@@ -66,6 +66,13 @@ Appwrite reads the browser, operating system, and device from the `User-Agent` h
 
 # Origins {% #origins %}
 
+{% only_dark %}
+![Allowed origins card in a property's Settings tab, allowing every origin with *](/images/docs/analytics/dark/allowed-origins.avif)
+{% /only_dark %}
+{% only_light %}
+![Allowed origins card in a property's Settings tab, allowing every origin with *](/images/docs/analytics/allowed-origins.avif)
+{% /only_light %}
+
 Browsers add an `Origin` header to these requests, and so do the Appwrite Android, Apple, Flutter, and React Native SDKs. When a request has an `Origin` header, Appwrite checks it against the apps under **Apps** in your project. A browser origin must match a Web app's hostname. An app origin, such as `appwrite-android://com.example.shop`, needs an app for that platform under **Apps**. To accept only your own package, add its origin to the property's [allowed origins](/docs/products/analytics/properties#allowed-origins).
 
 Native HTTP clients usually send no `Origin` header. Appwrite accepts those requests while the property allows every origin with `*`, the default. When a property's allowed origins are limited, requests without a matching `Origin` header are rejected unless they use an API key with the `analytics.write` scope.
@@ -75,7 +82,7 @@ Native HTTP clients usually send no `Origin` header. Appwrite accepts those requ
 | Status | Type | Cause |
 | --- | --- | --- |
 | `400` | `general_argument_invalid` | A parameter is missing or invalid, such as a URL without a scheme or a name over 64 characters. |
-| `401` | `general_access_forbidden` | The origin isn't in the property's allowed origins, or the request sets `userId`, `ip`, or `userAgent` without an API key. |
+| `401` | `general_access_forbidden` | The origin isn't in the property's allowed origins, or the request sets `userId`, `ip`, or `userAgent` without an API key that has the `analytics.write` scope. |
 | `402` | `limit_analytics_events_exceeded` | The organization reached its plan's monthly events limit. See [Limits and retention](/docs/products/analytics/limits#at-the-limit). |
 | `403` | `general_unknown_origin` | The `Origin` header doesn't belong to an app in the project. |
 | `404` | `analytics_property_not_found` | The property ID is wrong, or **Tracking** is off in the property's settings. |

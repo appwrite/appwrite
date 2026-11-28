@@ -47,9 +47,16 @@ Under **Filtered by**, click a filter's operator or value to change it, or click
 
 ## Filters that match single events {% #page-and-event-filters %}
 
-**Page**, **Event**, **User**, and prop filters (values from **Event properties**) match single events rather than whole visits. With one active, **Views per visit**, **Bounce rate**, **Visit duration**, and **Engagement time** show `-`, because they describe whole visits, and the **Entry pages** and **Exit pages** tabs aren't available. **Unique visitors** and **Visits** add up the chart's points instead of counting the whole range. See [Metrics](/docs/products/analytics/metrics#dashboard-metrics).
+**Page**, **Event**, **User**, and prop filters (values from **Event properties**) match single events rather than whole visits. With one active, **Views per visit**, **Bounce rate**, **Visit duration**, and **Engagement time** show `-`, because they describe whole visits. **Users** shows `-` too, because signed-in users per hour or day don't add up to a total. The **Entry pages** and **Exit pages** tabs aren't available. **Unique visitors** and **Visits** add up the chart's points instead of counting the whole range. See [Metrics](/docs/products/analytics/metrics#dashboard-metrics).
 
 # Save a filter {% #save %}
+
+{% only_dark %}
+![Filters popover with an active Channel filter, For team selected, and the name Search traffic under Save for later](/images/docs/analytics/dark/save-filter.avif)
+{% /only_dark %}
+{% only_light %}
+![Filters popover with an active Channel filter, For team selected, and the name Search traffic under Save for later](/images/docs/analytics/save-filter.avif)
+{% /only_light %}
 
 Save filters you use often to apply them again later.
 

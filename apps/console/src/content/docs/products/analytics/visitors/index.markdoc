@@ -23,7 +23,7 @@ Because the ID comes from the request, a few cases count differently from a pers
 - People who share an IP address and the same browser version, such as in an office, can count as one visitor.
 - Each hostname counts on its own, so a person who reads `example.com` and `docs.example.com` is a visitor of each.
 
-Appwrite doesn't store the IP address, and visitor IDs don't appear on the dashboard, in exports, or in API responses. Each day's salt is deleted two days later, so old visitor IDs can't be recomputed. For what Appwrite stores, see [Privacy](/docs/products/analytics/privacy).
+Appwrite doesn't store the IP address with events, and visitor IDs don't appear on the dashboard, in exports, or in API responses. Each day's salt is deleted two days later, so old visitor IDs can't be recomputed. For what Appwrite stores, see [Privacy](/docs/products/analytics/privacy).
 
 # Signed-in users {% #signed-in-users %}
 
@@ -34,9 +34,9 @@ Appwrite doesn't store the IP address, and visitor IDs don't appear on the dashb
 ![Analytics tab of a user in Auth with their events, visits, and views, events per day, and the properties they used](/images/docs/analytics/user-analytics.avif)
 {% /only_light %}
 
-An event can carry an Appwrite Auth user ID: from a signed-in Auth session when the property's **Identify signed-in users** setting is on, or from your server with an API key. The user ID then takes the place of the IP address and user agent in the visitor ID, so one user on a phone and a laptop counts as one visitor that day. Signed-in users also appear on the **Users** card.
+An event can carry an Appwrite Auth user ID: from a signed-in Auth session when the property's **Identify signed-in users** setting is on, or from your server with an API key. The user ID then takes the place of the IP address and user agent in the visitor ID, so one user on a phone and a laptop counts as one visitor that day. A visit that started before the user signed in keeps its anonymous visitor ID until it ends. Signed-in users also appear on the **Users** card.
 
-Each user in **Auth** has an **Analytics** tab with their events per day over the last 30 days, their active days, and the properties they used, with their top screens or pages, events, and locations in each. See [User identification](/docs/products/analytics/properties#user-identification).
+Each user in **Auth** has an **Analytics** tab with their activity in every property over the last 30 days. See [Analytics in Auth](/docs/products/auth/analytics).
 
 # Visits {% #visits %}
 
@@ -56,12 +56,19 @@ Appwrite keeps a running summary of each visit as its events arrive.
 - **Duration**: the time from the visit's first event to its last.
 - **Pageviews** and **events**: how many of each the visit had.
 
-A visit that starts with a custom event takes its entry page from its first view. A custom event counts as an interaction, so the visit is no longer a bounce, unless the event is sent with `interactive: false`. The automatic `scroll_depth`, `engagement_time`, and app lifecycle events never end a bounce. For how the dashboard averages these, see [Metrics](/docs/products/analytics/metrics).
+A visit that starts with a custom event takes its entry page from its first view. Custom events, `outbound_link`, `file_download`, and `push_opened` count as interactions, so the visit is no longer a bounce. An event sent with `interactive: false` doesn't count as one, and an event sent with `interactive: true` always does. The automatic `scroll_depth`, `engagement_time`, and app lifecycle events aren't interactions, but they extend the visit's duration like any event, so a visit they keep going for 10 seconds or more isn't a bounce. For how the dashboard averages these, see [Metrics](/docs/products/analytics/metrics).
 
 # Events from your server {% #server-events %}
 
 An event sent from your server with the visitor's IP address and user agent, and a URL on the same hostname, gets the same visitor ID as their browser events. If their visit is still active, the server event joins it. An event sent with a user ID counts toward that user instead, in a visit of its own. See [Track events from your server](/docs/products/analytics/server-side#visitor).
 
 # Live visitors {% #live %}
+
+{% only_dark %}
+![Live visitors popover listing the pages visitors are on](/images/docs/analytics/dark/live-visitors.avif)
+{% /only_dark %}
+{% only_light %}
+![Live visitors popover listing the pages visitors are on](/images/docs/analytics/live-visitors.avif)
+{% /only_light %}
 
 A visitor counts as online while they have any event in the last five minutes. The **online** count in a property's header shows how many visitors are online and which pages they're on. See [Live visitors](/docs/products/analytics/dashboard#live).

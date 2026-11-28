@@ -15,7 +15,7 @@ Each property has a dashboard on its **Analytics** tab. It shows the property's 
 ![Dashboard of a property with the metric tabs and the Unique visitors chart compared with the previous period](/images/docs/analytics/dashboard.avif)
 {% /only_light %}
 
-The top of the dashboard has a tab for each metric: **Unique visitors**, **Visits**, **Pageviews**, **Events**, **Users**, **Views per visit**, **Bounce rate**, **Visit duration**, and **Engagement time**. Each tab shows the total for the date range and the change from the comparison period. Select a tab to plot that metric on the chart.
+The top of the dashboard has a tab for each metric: **Unique visitors**, **Visits**, **Pageviews**, **Events**, **Users**, **Views per visit**, **Bounce rate**, **Visit duration**, and **Engagement time**. **Users** appears when the property identifies signed-in users or receives user IDs from your server. Each tab shows the total for the date range and the change from the comparison period. Select a tab to plot that metric on the chart.
 
 **Mobile** properties label the metrics in app terms, such as **Active users** for **Unique visitors**, **Sessions** for **Visits**, and **Screen views** for **Pageviews**, and have no bounce rate. **Agent** properties show **Events**, **Visits**, **Users**, and **Visit duration**. See [Metrics](/docs/products/analytics/metrics#dashboard-metrics).
 
@@ -29,33 +29,36 @@ Notes mark what happened on a date, such as a release, a campaign, or an inciden
 
 ## Add a note {% #add-note %}
 
+{% only_dark %}
+![Add note dialog with a date and the note text](/images/docs/analytics/dark/add-note.avif)
+{% /only_dark %}
+{% only_light %}
+![Add note dialog with a date and the note text](/images/docs/analytics/add-note.avif)
+{% /only_light %}
+
 Hover over the chart and click **Add note**, which follows the pointer along the top, to add a note to that hour or day. To pick any date and time, click **Add note** above the chart. A note holds up to 512 characters.
 
 ## Read and edit notes {% #read-notes %}
 
-Each note shows as a badge at the top of the chart, with a dashed line down to its point. A badge with a number holds several notes from the same hour or day, and **Notes** appears next to the chart's legend while any are in the range. Hover over the point to read its notes in the tooltip. Click the badge to see each note with who added it and when. Edit or delete a note from that list.
+{% only_dark %}
+![Note badges on the chart with one badge open, showing its note, date, and edit and delete buttons](/images/docs/analytics/dark/notes.avif)
+{% /only_dark %}
+{% only_light %}
+![Note badges on the chart with one badge open, showing its note, date, and edit and delete buttons](/images/docs/analytics/notes.avif)
+{% /only_light %}
+
+Each note shows as a badge at the top of the chart, with a dashed line down to its point. A badge with a number holds several notes from the same hour or day, and **Notes** appears next to the chart's legend while any are in the range. Hover over the point to read its notes in the tooltip. Click the badge to see its notes, with who added each one and when. Edit or delete a note from there.
 
 Members who can create properties can add, edit, and delete notes. Everyone else in the project can read them.
 
-## Add notes from your code {% #notes-api %}
-
-To mark every deploy, add notes from your pipeline with an API key that has the `analytics.write` scope. To create one, follow the steps in [Track events from your server](/docs/products/analytics/server-side#create-an-api-key). Notes added with an API key show no author.
-
-```curl
-curl -X POST 'https://<REGION>.cloud.appwrite.io/v1/analytics/properties/<PROPERTY_ID>/annotations' \
-    -H 'Content-Type: application/json' \
-    -H 'X-Appwrite-Project: <PROJECT_ID>' \
-    -H 'X-Appwrite-Key: <API_KEY>' \
-    -d '{
-        "annotationId": "unique()",
-        "date": "2026-11-21T09:30:00.000Z",
-        "content": "Deployed v2.4"
-    }'
-```
-
-The same endpoint lists notes with `GET`, and each note at `/annotations/<ANNOTATION_ID>` can be read with `GET`, changed with `PATCH`, and removed with `DELETE`. Reading notes needs the `analytics.read` scope.
-
 # Date range {% #date-range %}
+
+{% only_dark %}
+![Date picker with presets and a calendar](/images/docs/analytics/dark/date-range.avif)
+{% /only_dark %}
+{% only_light %}
+![Date picker with presets and a calendar](/images/docs/analytics/date-range.avif)
+{% /only_light %}
 
 The date picker sets the range for the whole dashboard. Pick a preset, such as **Last 24 hours**, **Last 7 days**, **Month to date**, or **Last 12 months**, or select start and end dates on the calendar and click **Apply**.
 
@@ -65,7 +68,14 @@ Ranges that start before your plan's retention period start at the oldest readab
 
 # Filters and comparisons {% #filters %}
 
-**Filters** narrows every metric, chart, and card to traffic that matches, such as visitors from one country or one campaign. **Compare** draws a second period on the chart, such as the previous period or the same period last year. See [Filter and compare traffic](/docs/products/analytics/filters).
+{% only_dark %}
+![Dashboard filtered to the search channel, with the comparison menu open](/images/docs/analytics/dark/filter-compare.avif)
+{% /only_dark %}
+{% only_light %}
+![Dashboard filtered to the search channel, with the comparison menu open](/images/docs/analytics/filter-compare.avif)
+{% /only_light %}
+
+**Filters** narrows every metric, chart, and card to traffic that matches, such as visitors from one country or one campaign. The comparison menu next to the date picker, **vs Previous period** by default, draws a second period on the chart, such as the previous period or the same period last year. See [Filter and compare traffic](/docs/products/analytics/filters).
 
 To download what the dashboard shows, use **Export**. See [Export a report](/docs/products/analytics/export).
 
@@ -78,24 +88,24 @@ To download what the dashboard shows, use **Export**. See [Export a report](/doc
 ![Pages card with the top pages, and Locations card with a world map of visitors](/images/docs/analytics/pages-locations.avif)
 {% /only_light %}
 
-Below the chart, cards break traffic down by one dimension at a time. Each card has tabs for related views. Which cards appear depends on the property's type.
+Below the chart, cards break traffic down by one dimension at a time. Each card has tabs for related views. Which cards appear depends on the property's type. An **Agent** property shows **Models and tools**, **Users**, **Event properties**, and **Custom events**.
 
-- **Traffic sources**: **Channels**, **Sources**, and **Campaigns**. See [Traffic sources](/docs/products/analytics/sources).
-- **Humans vs bots**: the split between people and bots by **Visitors** or **Events**, with **By type** and **Top agents** below it. See [Bots and AI traffic](/docs/products/analytics/bots).
-- **Pages**: **Top pages**, **Entry pages**, **Exit pages**, and **Hostnames**. On a **Mobile** property, the **Screens** card has **Top screens**, **Entry screens**, and **Exit screens**.
-- **Locations**: **Map**, **Countries**, **Regions**, and **Cities**.
-- **Technology**: **Browsers**, **Operating systems**, **Devices**, **Screen sizes**, and, under **Versions**, **Browser versions** and **OS versions**. On a **Mobile** property, **Platforms** splits traffic by platform, such as Android and iOS, in place of **Browsers**.
-- **AI agents and crawlers**: **Agents** and **Categories**. See [Bots and AI traffic](/docs/products/analytics/bots).
-- **Users**: signed-in users, ranked by visits. Click a user to open their **Analytics** tab in **Auth**. See [User identification](/docs/products/analytics/properties#user-identification).
+- **Traffic sources**, on a **Web** property: **Channels**, **Sources**, and **Campaigns**. See [Traffic sources](/docs/products/analytics/sources).
+- **Humans vs bots**, on **Web** and **Mobile** properties: the split between people and bots by **Visitors** or **Events**, with **By type** and **Top agents** below it. See [Bots and AI traffic](/docs/products/analytics/bots).
+- **Pages**, on **Web** and **Mobile** properties: **Top pages**, **Entry pages**, **Exit pages**, and **Hostnames**. On a **Mobile** property, the **Screens** card has **Top screens**, **Entry screens**, and **Exit screens**.
+- **Locations**, on **Web** and **Mobile** properties: **Map**, **Countries**, **Regions**, and **Cities**.
+- **Technology**, on **Web** and **Mobile** properties: **Browsers**, **Operating systems**, **Devices**, **Screen sizes**, and, under **Versions**, **Browser versions** and **OS versions**. On a **Mobile** property, **Platforms** splits traffic by platform, such as Android and iOS, in place of **Browsers**, and **App versions** takes the place of **Browser versions**.
+- **AI agents and crawlers**, on a **Web** property: **Agents** and **Categories**. See [Bots and AI traffic](/docs/products/analytics/bots).
+- **Users**, when the property identifies signed-in users or receives user IDs: signed-in users, ranked by visits. Click a user to see their visits, pages, and events in this property. See [Analytics in Auth](/docs/products/auth/analytics).
 - **Event properties**: the values of each prop key your events carry, such as each `plan`.
 - **Custom events**: the events your code sends, by name. See [Track custom events](/docs/products/analytics/custom-events).
 - **Installs**, on a **Mobile** property: new installs and updates of your app over time, from `first_open` and `app_updated`.
 - **Push notifications**, on a **Mobile** property: pushes received and opened, with the open rate for each message. See [Track a mobile app](/docs/products/analytics/mobile#push).
-- **Models and tools**, on an **Agent** property: calls by model and by tool. See [Track an AI agent](/docs/products/analytics/custom-events#agents).
+- **Models and tools**, on an **Agent** property, once events carry a model or tool: calls by model and by tool. See [Track an AI agent](/docs/products/analytics/custom-events#agents).
 
 For what each value means, see [Breakdowns](/docs/products/analytics/metrics#breakdowns).
 
-Rows are ranked by visitors, except on **Custom events** and **Event properties**, which rank by how many times each event or value was sent, and **Users**, which ranks by visits. Click **Show more** under a card to see more rows, up to 500. The dashboard remembers the tab you select on each card.
+Rows are ranked by visitors, except on **Custom events** and **Models and tools**, which rank by how many times each event or call was sent, and **Users**, which ranks by visits. Click **Show more** under a card to see more rows, up to 500. The dashboard remembers the tab you select on each card.
 
 Click a row to filter the dashboard to that value. Rows on **Entry pages** and **Exit pages** can't be used as filters. Right-click a row for more actions, such as excluding the value, copying it, or [blocking it with Firewall](/docs/products/analytics/firewall).
 

@@ -10,6 +10,13 @@ Each event has a name and the URL it happened on. It can also carry a referrer, 
 
 # Events the `Tracking` class sends {% #automatic %}
 
+{% only_dark %}
+![Dashboard with the Events tab selected and events per day plotted on the chart](/images/docs/analytics/dark/events-metric.avif)
+{% /only_dark %}
+{% only_light %}
+![Dashboard with the Events tab selected and events per day plotted on the chart](/images/docs/analytics/events-metric.avif)
+{% /only_light %}
+
 The `Tracking` class in each Appwrite SDK uses these event names. The **When** column shows which ones need a call from your app. "Mobile" means the Android, Apple, Flutter, and React Native SDKs.
 
 | Event | Sent by | When |
@@ -27,15 +34,22 @@ The `Tracking` class in each Appwrite SDK uses these event names. The **When** c
 | `push_received` | Mobile | Your code calls `pushReceived()` when a push notification arrives |
 | `push_opened` | Mobile | Your code calls `pushOpened()` when someone taps a push notification |
 
-`push_received` is billed like any event, but it never counts toward visitors or visits, because a push can arrive while the app is closed.
+`push_received` is billed like any event, but it doesn't start a visit or count toward the **Active users** and **Sessions** totals, because a push can arrive while the app is closed. Rows on the breakdown cards can still count visitors who only received a push.
 
 For the options, see [Track a website](/docs/products/analytics/web) and [Track a mobile app](/docs/products/analytics/mobile).
 
 # Custom events {% #custom %}
 
+{% only_dark %}
+![Custom events card listing add_to_cart, checkout_started, purchase_completed, and newsletter_signup](/images/docs/analytics/dark/custom-events.avif)
+{% /only_dark %}
+{% only_light %}
+![Custom events card listing add_to_cart, checkout_started, purchase_completed, and newsletter_signup](/images/docs/analytics/custom-events.avif)
+{% /only_light %}
+
 Any event with a name of your own is a custom event, such as `signup_completed` or `invite_sent`. The **Custom events** card on the dashboard lists them, separate from the automatic events. See [Track custom events](/docs/products/analytics/custom-events).
 
-Appwrite treats two names as views: `pageview` and `screen_view`. They count toward **Pageviews** and **Views per visit**, and set each visit's entry and exit pages. Other events count toward **Events** without adding views, and toward visitors and visits, except `push_received`. A custom event also counts as an interaction that ends a bounce, unless it's sent with `interactive: false`. See [What a visit records](/docs/products/analytics/visitors#visit-metrics).
+Appwrite treats two names as views: `pageview` and `screen_view`. They count toward **Pageviews** and **Views per visit**, and set each visit's entry and exit pages. Other events count toward **Events** without adding views, and toward visitors and visits, except `push_received`. Custom events, `outbound_link`, `file_download`, and `push_opened` also count as interactions that end a bounce, unless they're sent with `interactive: false`. See [What a visit records](/docs/products/analytics/visitors#visit-metrics).
 
 # Where events come from {% #sources %}
 

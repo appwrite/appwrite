@@ -182,9 +182,16 @@ The `Tracking` class uses these names for its own events, so don't reuse them fo
 
 An event named `pageview` counts as a real pageview, toward pageviews, bounce rate, and entry and exit pages, so use it only for [virtual pageviews](#virtual-pageviews).
 
-A custom event counts as an interaction, so a visit with one isn't a [bounce](/docs/products/analytics/visitors#visit-metrics). For an event the visitor didn't cause, such as a heartbeat or a background sync, pass `interactive: false` so the event leaves the bounce check unchanged.
+A custom event counts as an interaction, so a visit with one isn't a [bounce](/docs/products/analytics/visitors#visit-metrics). For an event the visitor didn't cause, such as a heartbeat or a background sync, pass `interactive: false` so the event doesn't count as an interaction. It still extends the visit's duration, so a visit it keeps going for 10 seconds or more isn't a bounce.
 
 # Add props {% #props %}
+
+{% only_dark %}
+![Event properties card with a tab for each prop key and the values of category](/images/docs/analytics/dark/event-props.avif)
+{% /only_dark %}
+{% only_light %}
+![Event properties card with a tab for each prop key and the values of category](/images/docs/analytics/event-props.avif)
+{% /only_light %}
 
 Props add detail to an event, such as the plan someone chose or the button they clicked. Each event takes up to 16 props. Keys and values are text up to 255 characters each.
 
@@ -193,6 +200,13 @@ The `Tracking` class takes props as a map and turns each value into text. `creat
 Appwrite stores props with the event. Don't put personal data such as email addresses or names in props.
 
 # Track an AI agent {% #agents %}
+
+{% only_dark %}
+![Models and tools card on an Agent property, listing calls by tool](/images/docs/analytics/dark/agent-models-tools.avif)
+{% /only_dark %}
+{% only_light %}
+![Models and tools card on an Agent property, listing calls by tool](/images/docs/analytics/agent-models-tools.avif)
+{% /only_light %}
 
 On an **Agent** property, send one event per model call and one per tool call. The **Models and tools** card counts them by the `model` and `tool` props:
 
@@ -234,4 +248,4 @@ Pass a full URL, including the scheme.
 
 The **Custom events** card lists every event name your app sends, except the automatic events above. Click an event to filter the whole dashboard to it: each point on the chart then counts the people and visits that triggered the event, and the **Pages**, **Locations**, and **Technology** cards break those events down by page, location, and device. The **Event properties** card ranks the values of each prop key, such as each `plan`, and clicking a value filters the dashboard the same way.
 
-**Views per visit**, **Bounce rate**, **Visit duration**, and **Engagement time** describe whole visits, so they show `-` while an event filter is on. For more on filters, see [Filter and compare traffic](/docs/products/analytics/filters).
+**Views per visit**, **Bounce rate**, **Visit duration**, and **Engagement time** describe whole visits, so they show `-` while an event filter is on, and so does **Users**. For more on filters, see [Filter and compare traffic](/docs/products/analytics/filters).

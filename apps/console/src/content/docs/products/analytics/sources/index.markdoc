@@ -4,7 +4,7 @@ title: Traffic sources
 description: How Appwrite Analytics works out where visitors come from, with channels, referring sources, and UTM campaign parameters.
 ---
 
-The **Traffic sources** card on the dashboard shows where visitors came from in three ways: the type of source as a **channel**, the referring site as a **source**, and the UTM tags on the link they followed as a **campaign**.
+On a **Web** property, the **Traffic sources** card on the dashboard shows where visitors came from in three ways: the type of source as a **channel**, the referring site as a **source**, and the UTM tags on the link they followed as a **campaign**.
 
 Appwrite works these out from two fields of each event: the referrer, which is the page a visitor came from, and the event URL. In a single-page app, the browser keeps the original referrer while the visitor moves between routes, so every pageview in the visit keeps its source. See [Channels within a visit](#within-a-visit).
 
@@ -52,6 +52,13 @@ Appwrite labels an event from a known spam referrer as [referrer spam](/docs/pro
 
 # Campaigns {% #campaigns %}
 
+{% only_dark %}
+![Traffic sources card on the UTM campaigns tab, listing each campaign by visitors](/images/docs/analytics/dark/campaigns.avif)
+{% /only_dark %}
+{% only_light %}
+![Traffic sources card on the UTM campaigns tab, listing each campaign by visitors](/images/docs/analytics/campaigns.avif)
+{% /only_light %}
+
 UTM parameters are tags you add to links in newsletters, ads, and posts. Appwrite reads five of them from the event URL:
 
 - `utm_source`: where the link was placed, such as `newsletter` or `twitter`.
@@ -69,5 +76,12 @@ https://example.com/pricing?utm_source=newsletter&utm_medium=email&utm_campaign=
 Appwrite stores the page as `/pricing`, without the query string. In the **Traffic sources** card, the **Campaigns** tab has a menu to switch between **UTM campaigns**, **UTM sources**, **UTM mediums**, **UTM contents**, and **UTM terms**.
 
 # AI assistants and AI bots {% #ai %}
+
+{% only_dark %}
+![Traffic sources card listing chatgpt.com among the sources, next to the Humans vs bots card with AI crawler and AI assistant traffic](/images/docs/analytics/dark/ai-sources.avif)
+{% /only_dark %}
+{% only_light %}
+![Traffic sources card listing chatgpt.com among the sources, next to the Humans vs bots card with AI crawler and AI assistant traffic](/images/docs/analytics/ai-sources.avif)
+{% /only_light %}
 
 The `ai` channel counts people who followed a link from an AI assistant to your site. When an assistant fetches your pages itself, to answer someone's question, the request comes from a bot instead. Events from those fetches appear in the **Humans vs bots** and **AI agents and crawlers** cards. See [Bots and AI traffic](/docs/products/analytics/bots).

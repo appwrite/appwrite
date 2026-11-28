@@ -6,9 +6,16 @@ difficulty: beginner
 readtime: 5
 ---
 
-Create an analytics property, add tracking to a website with one script tag, and see your first visit on the dashboard. A site hosted on Appwrite Sites needs no code: turn on **Web analytics** in the site's **Settings** instead. See [Properties](/docs/products/analytics/properties#sites).
+Create an analytics property, add tracking to a website with one script tag, and see your first visit on the dashboard. A site hosted on Appwrite Sites needs no code: turn on **Web analytics** in the site's **Settings** and click **Update** instead. See [Properties](/docs/products/analytics/properties#sites).
 
 # Add your site to the project {% #add-web-app %}
+
+{% only_dark %}
+![Connect your app wizard with the Web platform, the name Storefront, and the hostname example.com](/images/docs/analytics/dark/add-web-app.avif)
+{% /only_dark %}
+{% only_light %}
+![Connect your app wizard with the Web platform, the name Storefront, and the hostname example.com](/images/docs/analytics/add-web-app.avif)
+{% /only_light %}
 
 Appwrite accepts events from a browser only when the site's hostname belongs to one of the project's apps. If the hostname isn't registered, add it as a Web app.
 

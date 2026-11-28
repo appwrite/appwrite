@@ -420,7 +420,7 @@ By default, the Web SDK sends no events for visitors who turn on Do Not Track in
 | --- | --- | --- | --- | --- |
 | Events | 50K per month per organization | 50K per month per project | 100K per month per project | Custom |
 | Additional events | Not available | $3 per 100K events | $3 per 100K events | Custom |
-| Properties | 1 per project | 5 per project | 5 per project | Unlimited |
+| Properties | 1 per project | Unlimited | Unlimited | Unlimited |
 | Data retention | 30 days | 90 days | 90 days | Custom |
 
 On the Free plan, the events limit covers every property in the organization. On Start and Pro, each project has its own limit. Every limit includes the automatic events that `Tracking` sends, and traffic from datacenter networks and Firebase Test Lab devices doesn't count toward it. For the full details, see [Limits and retention](/docs/products/analytics/limits).

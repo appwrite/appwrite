@@ -30,7 +30,7 @@ Each value becomes a condition on the new rule.
 - **Region** or **city**: **Create firewall rule** adds a condition that the region or city equals the selected value.
 - **Hostname**: **Create firewall rule** adds a condition that the hostname equals the selected value.
 - **Page**, **entry page**, or **exit page**: **Create firewall rule** adds a condition that the path equals the page.
-- **Bot**: **Create firewall rule** adds a condition that the user agent contains the bot's name, such as `GPTBot`.
+- **Bot**: **Create firewall rule** adds a condition that the user agent contains the bot's name, such as `GPTBot`. Bots named after their network or referrer, such as a datacenter provider, a referrer spam domain, or Firebase Test Lab, don't have that name in their user agent, so this rule doesn't match them.
 
 **Allow only this country** also adds a condition that the country is known, so requests whose location Appwrite can't resolve still reach your site.
 

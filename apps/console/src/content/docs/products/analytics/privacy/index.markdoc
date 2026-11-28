@@ -25,7 +25,7 @@ For each event, Appwrite stores:
 - **Identifiers**: a visitor ID and a session ID, which are hashes, and a user ID, when the event has one.
 - **Bot details**: whether the client is a bot, and its name and category.
 
-Appwrite uses the IP address to look up the location and to compute the visitor ID, then discards it. The IP address isn't stored with the event.
+Appwrite uses the IP address to look up the location, to check whether it belongs to a datacenter network, and to compute the visitor ID. It's also part of the per-IP rate limit, which keeps it for one minute. The IP address isn't stored with the event.
 
 # Visitor IDs {% #visitor-ids %}
 

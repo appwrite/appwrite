@@ -8,6 +8,15 @@ The `Tracking` class sends events to your project's Appwrite endpoint, such as `
 
 A site on Appwrite Sites with analytics turned on needs no setup here: Appwrite already sends its events through the site's own domain. See [Properties](/docs/products/analytics/properties#sites).
 
+# Choose a method {% #methods %}
+
+{% only_dark %}
+![Ad blockers card in a property's Settings tab with the Custom domain and Proxy options](/images/docs/analytics/dark/ad-blockers.avif)
+{% /only_dark %}
+{% only_light %}
+![Ad blockers card in a property's Settings tab with the Custom domain and Proxy options](/images/docs/analytics/ad-blockers.avif)
+{% /only_light %}
+
 For any other site, the **Ad blockers** card in a property's **Settings** tab offers two ways to send events through your own domain.
 
 | | Custom domain | Proxy |
@@ -64,6 +73,13 @@ tracking.start();
 With the [script tag](/docs/products/analytics/web#script-tag), set `data-endpoint` to the full URL of the route, such as `https://example.com/relay`. The attribute takes a full URL, not a path.
 
 ## Create an API key {% #api-key %}
+
+{% only_dark %}
+![Create API key panel with the analytics.write scope selected](/images/docs/analytics/dark/api-key.avif)
+{% /only_dark %}
+{% only_light %}
+![Create API key panel with the analytics.write scope selected](/images/docs/analytics/api-key.avif)
+{% /only_light %}
 
 The proxy calls Appwrite with an API key, so it can pass on each visitor's IP address and user agent.
 

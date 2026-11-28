@@ -8,9 +8,16 @@ The Android, Apple, Flutter, and React Native SDKs each include a `Tracking` cla
 
 # Before you start {% #before-you-start %}
 
+{% only_dark %}
+![Create property page with the Mobile type and the Flutter SDK selected](/images/docs/analytics/dark/mobile-create.avif)
+{% /only_dark %}
+{% only_light %}
+![Create property page with the Mobile type and the Flutter SDK selected](/images/docs/analytics/mobile-create.avif)
+{% /only_light %}
+
 [Create a **Mobile** property](/docs/products/analytics/properties#create) and copy its property ID, which the Console shows next to the property name.
 
-Register the app in the same project. The SDK sends your app's package name or bundle ID with every request, and Appwrite rejects events from an app the project doesn't know with a `403` `general_unknown_origin` error.
+Register the app in the same project. The SDK sends your app's platform and package name or bundle ID with every request, and Appwrite rejects events from a platform with no app in the project with a `403` `general_unknown_origin` error.
 
 1. In your project, open **Apps** and click **Add app**.
 2. Choose your platform, such as **Android**, **Apple**, **Flutter**, or **React Native**.
@@ -63,6 +70,13 @@ Import `react-native-url-polyfill/auto` once, before any other SDK code runs.
 {% /tabs %}
 
 # Start tracking {% #start-tracking %}
+
+{% only_dark %}
+![Install tracking screen confirming that a screen_view event was received from the app](/images/docs/analytics/dark/mobile-first-event.avif)
+{% /only_dark %}
+{% only_light %}
+![Install tracking screen confirming that a screen_view event was received from the app](/images/docs/analytics/mobile-first-event.avif)
+{% /only_light %}
 
 Create one `Tracking` instance for the whole app with your endpoint, project ID, and property ID, and call `start()` when the app launches. On Android, create it in your `Application` class and register that class in `AndroidManifest.xml` with `android:name=".MyApp"` on the `<application>` element. In React Native, pass the package name or bundle ID registered under **Apps** to `setPlatform()`.
 
@@ -142,9 +156,16 @@ tracking.start();
 ```
 {% /multicode %}
 
-`start()` sends `first_open` after an install and `app_updated` after an update, and turns on the lifecycle events that measure time in the app. See [Install, lifecycle, and screen events](#automatic-events). Run the app, then open the property in the Console to see the first events arrive.
+`start()` sends `first_open` after an install and `app_updated` after an update, and turns on the lifecycle events that measure time in the app. See [Install, lifecycle, and screen events](#automatic-events). Run the app. Within a few seconds, the install page shows **Event received**, and the events appear on the property's dashboard.
 
 # Track screen views {% #screen-views %}
+
+{% only_dark %}
+![Screens card on a Mobile property with the top screens, next to the Humans vs bots card](/images/docs/analytics/dark/mobile-screens.avif)
+{% /only_dark %}
+{% only_light %}
+![Screens card on a Mobile property with the top screens, next to the Humans vs bots card](/images/docs/analytics/mobile-screens.avif)
+{% /only_light %}
 
 Send a `screen_view` each time a screen opens. Connect `Tracking` to your navigation, as shown below, so new screens are tracked with no extra code.
 
@@ -214,6 +235,13 @@ Navigator.push(
 To name screens another way, pass a `nameExtractor` to `TrackingObserver`. Return `null` from it to skip a route.
 
 # Track push notifications {% #push %}
+
+{% only_dark %}
+![Push notifications card with pushes received and opened for each message, next to the Installs card](/images/docs/analytics/dark/mobile-installs.avif)
+{% /only_dark %}
+{% only_light %}
+![Push notifications card with pushes received and opened for each message, next to the Installs card](/images/docs/analytics/mobile-installs.avif)
+{% /only_light %}
 
 Call `pushReceived()` when a notification arrives and `pushOpened()` when someone taps it. Pass the Appwrite Messaging message ID, and the **Push notifications** card lists each message with how many were received and opened.
 
@@ -286,9 +314,16 @@ To spot installs and updates, each SDK keeps a small marker with the app's versi
 
 # Event URLs {% #event-urls %}
 
+{% only_dark %}
+![Technology card on the Platforms tab, splitting traffic between iOS and Android](/images/docs/analytics/dark/mobile-platforms.avif)
+{% /only_dark %}
+{% only_light %}
+![Technology card on the Platforms tab, splitting traffic between iOS and Android](/images/docs/analytics/mobile-platforms.avif)
+{% /only_light %}
+
 Analytics records every event against a URL. In an app, `Tracking` uses `app://` and the platform name, such as `app://android` or `app://ios`, so a screen view of `product` on Android is recorded as `app://android/product`. The platform becomes the hostname, which the **Platforms** tab of the **Technology** card uses to split your traffic. Events without a screen, such as `first_open` and the lifecycle events, are recorded under `/`.
 
-To record events under your own base URL, pass `url` to the `Tracking` constructor. On Flutter web and React Native web, `Tracking` uses the page's origin.
+To record events under your own base URL, pass `url` to the `Tracking` constructor. In React Native, pass it in the options object, such as `{ url: 'https://example.com' }`. On Flutter web and React Native web, `Tracking` uses the page's origin.
 
 # Errors {% #errors %}
 
