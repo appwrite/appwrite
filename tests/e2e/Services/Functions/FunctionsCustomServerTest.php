@@ -2624,6 +2624,40 @@ final class FunctionsCustomServerTest extends Scope
         }
     }
 
+    public function testAsyncExecutionIsReadableRightAfterCreate(): void
+    {
+        $functionId = $this->setupFunction([
+            'functionId' => Id::unique(),
+            'name' => 'Test async execution read after create',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'timeout' => 15,
+        ]);
+        try {
+            $this->setupDeployment($functionId, [
+                'code' => $this->packageFunction('basic'),
+                'activate' => true,
+            ]);
+
+            $async = $this->createExecution($functionId, ['async' => true]);
+            $this->assertEquals(202, $async['headers']['status-code']);
+            $asyncId = $async['body']['$id'];
+
+            $execution = $this->getExecution($functionId, $asyncId);
+            $this->assertEquals(200, $execution['headers']['status-code']);
+            $this->assertEquals($asyncId, $execution['body']['$id']);
+            $this->assertContains($execution['body']['status'], ['waiting', 'processing', 'completed']);
+
+            $this->assertEventually(function () use ($functionId, $asyncId) {
+                $execution = $this->getExecution($functionId, $asyncId);
+                $this->assertEquals(200, $execution['headers']['status-code']);
+                $this->assertEquals('completed', $execution['body']['status']);
+            }, 60000, 500);
+        } finally {
+            $this->cleanupFunction($functionId);
+        }
+    }
+
     public function testListExecutionsWithinCreatedAtWindow(): void
     {
         $functionId = $this->setupFunction([
