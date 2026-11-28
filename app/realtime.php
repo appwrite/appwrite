@@ -602,6 +602,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
         foreach ($eventTailRegistry->getConnections() as $connection) {
             if ($realtime->isExpired($connection, $now)) {
                 $eventTailRegistry->removeConnection($connection);
+                $realtime->markClosing($connection);
                 $server->send([$connection], $unauthorizedPayloadJson);
                 $server->close($connection, $unauthorized->getCode());
             }
@@ -664,6 +665,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                     $receivers = [];
                     foreach (\array_keys($realtime->getSubscribers($event)) as $id) {
                         if ($realtime->isExpired($id, $now)) {
+                            $realtime->markClosing($id);
                             $server->send([$id], $unauthorizedPayloadJson);
                             $server->close($id, $unauthorized->getCode());
                             continue;
@@ -1209,6 +1211,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $responsePayloadJson = json_encode($response);
         $server->send([$connection], $responsePayloadJson);
         $outboundBytes += \strlen($responsePayloadJson);
+        $realtime->markClosing($connection);
         $server->close($connection, $code);
 
         if (System::getEnv('_APP_ENV', 'production') === 'development') {
@@ -1354,6 +1357,7 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
         // expired credentials with a session's.
         if ($messageType !== 'authentication' && $realtime->isExpired($connection, \time())) {
             $responseCode = $unauthorized->getCode();
+            $realtime->markClosing($connection);
             $server->send([$connection], $unauthorizedPayloadJson);
             $server->close($connection, $unauthorized->getCode());
             $outboundBytes += \strlen($unauthorizedPayloadJson);
@@ -1442,6 +1446,7 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
         $outboundBytes += \strlen($responsePayloadJson);
 
         if (\in_array($th->getCode(), [1008, 1013], true)) {
+            $realtime->markClosing($connection);
             $server->close($connection, $th->getCode());
         }
     } finally {

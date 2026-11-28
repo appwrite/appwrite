@@ -204,6 +204,32 @@ final class HandlerTest extends TestCase
         $this->assertSame([], $this->adapter->closed);
     }
 
+    public function testAClosedSocketGetsNoLaterEventBeforeItsCloseCompletes(): void
+    {
+        $this->realtime->subscribe('project1', 101, 'member', [Role::team('team1')->toString()], ['account']);
+
+        $this->handleTeamDelete('project1', 'team1', ['teams.team1.delete', 'teams.*.delete']);
+        $this->assertContains(101, \array_column($this->adapter->closed, 0));
+
+        // The transport reports the close later, so the socket is still subscribed when the next event arrives.
+        $this->adapter->sent = [];
+        $event = \json_decode($this->payload(\date(DATE_ATOM)), true);
+        $event['roles'] = [Role::team('team1')->toString()];
+        $event['data']['events'] = ['users.user1.sessions.session1.create'];
+        $event['data']['channels'] = ['account'];
+        $event['data']['payload'] = ['$id' => 'session1'];
+        $this->handler->handle(null, 'realtime', \json_encode($event));
+
+        $this->assertNotContains(101, \array_merge(...\array_column($this->adapter->sent, 0)));
+
+        // A subscribe that resumes before the close completes keeps the socket closing.
+        $this->realtime->subscribe('project1', 101, 'late', [Role::team('team1')->toString()], ['account']);
+        $this->adapter->sent = [];
+        $this->handler->handle(null, 'realtime', \json_encode($event));
+
+        $this->assertNotContains(101, \array_merge(...\array_column($this->adapter->sent, 0)));
+    }
+
     /**
      * @param list<string> $events
      */
