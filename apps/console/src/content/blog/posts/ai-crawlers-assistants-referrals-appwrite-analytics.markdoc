@@ -1,0 +1,184 @@
+---
+layout: post
+title: "AI crawlers, assistants, and referrals: how Appwrite Analytics tells AI traffic apart"
+description: AI crawlers, AI assistants, and people clicking links from AI answers are three different kinds of traffic. Learn how Appwrite Analytics tells them apart, shows them on your dashboard, and lets you act on them.
+date: 2026-11-30
+cover: /images/blog/ai-crawlers-assistants-referrals-appwrite-analytics/cover.avif
+timeToRead: 5
+author: atharva
+category: ai, products
+featured: false
+draft: true
+faqs:
+  - question: "What is the difference between an AI crawler, an AI assistant, and an AI referral?"
+    answer: "An AI crawler scans pages in the background to train models or build search indexes (like GPTBot). An AI assistant fetches a page live while answering someone's prompt (like ChatGPT User). An AI referral is a real person who clicked a link inside an AI answer."
+  - question: "Are visitors from ChatGPT or Perplexity counted as bots?"
+    answer: "No. People who click a link from an AI tool count as human visitors in the ai channel under Traffic sources. Only automated bot fetches appear in the bot cards."
+  - question: "How does Appwrite Analytics catch crawlers that pretend to be Chrome?"
+    answer: "Appwrite checks the network behind the visitor's IP address. Cloud and hosting traffic is labeled as datacenter, unless the network mostly carries real people (like iCloud Private Relay) or the visitor takes two or more different interactive actions."
+  - question: "Why might my ai channel look smaller than expected?"
+    answer: "Many AI websites strip the Referer header, and desktop or mobile AI apps often send no referrer at all. Those visits still count as human traffic, but they land in direct."
+  - question: "Do AI crawlers and bots count toward my monthly analytics limit?"
+    answer: "Traffic from datacenter networks and Firebase Test Lab devices does not count toward your monthly limit. Events labeled as bots only by user agent or referrer still count, as do server-side events with an ip override."
+  - question: "Can I block an AI crawler without blocking AI assistants?"
+    answer: "Yes. On Appwrite Sites, right-click any bot in the AI agents and crawlers card and select Create firewall rule. A rule can block a crawler like GPTBot while assistant bots like ChatGPT User stay allowed."
+---
+
+"AI traffic" sounds like one thing, but on a real site it is three very different visits: crawlers scanning your pages, assistants fetching a page live for a user, and real people clicking a link in an AI answer.
+
+Lumping them together breaks your numbers. Crawlers inflate your visitor count, clicks from ChatGPT or Gemini disappear into search or direct traffic, and blocking all AI bots at once can cut off assistants that send readers to your docs.
+
+# Three kinds of AI traffic
+
+![Humans vs bots card splitting traffic into people and bots, with AI crawler and AI assistant among the bot types](/images/blog/ai-crawlers-assistants-referrals-appwrite-analytics/humans-vs-bots.avif)
+
+- **AI crawlers** scan your pages in the background to train models or build search indexes, such as `GPTBot`, `ClaudeBot`, and `PerplexityBot`. No person is waiting on the page.
+- **AI assistants** fetch a page live while answering someone's prompt, such as `ChatGPT User`, `Claude User`, and `Perplexity User`. A person asked the question, but the bot reads the page.
+- **AI referrals** are real people who click a link in an AI answer (from ChatGPT, Claude, Gemini, Perplexity, Copilot, or DeepSeek) and open your site in their browser.
+
+| Traffic kind | Classified as | Where it appears | API filter |
+| --- | --- | --- | --- |
+| AI crawler | Bot | **Humans vs bots**, **AI agents and crawlers** | `botCategory` = `ai crawler` |
+| AI assistant | Bot | **Humans vs bots**, **AI agents and crawlers** | `botCategory` = `ai assistant` |
+| AI referral | Human | **Traffic sources** (**Channels** and **Sources**) | `channel` = `ai` |
+
+# How Appwrite Analytics spots AI bots
+
+![AI agents and crawlers card listing bots by name, such as ChatGPT User, GPTBot, and ClaudeBot](/images/blog/ai-crawlers-assistants-referrals-appwrite-analytics/ai-agents.avif)
+
+A bot shows up in Appwrite Analytics when it runs JavaScript and loads your tracker, or when your server forwards events with the visitor's `ip` and `userAgent`. Your own test runs stay off the dashboard because the Web SDK skips automated browsers like Playwright, Puppeteer, Selenium, and Cypress using `navigator.webdriver`.
+
+When an event arrives, Appwrite runs three checks in order and keeps the most specific match:
+
+1. **User agent**: If the `User-Agent` header matches a known bot, Appwrite marks the visit as a bot and records its name (such as `GPTBot` or `ChatGPT User`) and category (`ai crawler` or `ai assistant`). It also leaves browser, OS, and device blank so bots do not skew your desktop stats. Unknown agents with words like `bot`, `crawler`, or `spider` land in a generic `crawler` category.
+2. **Referrer**: If the user agent does not match, Appwrite checks the referring domain (and its parent domains) against known referrer-spam domains and labels matches as `referrer spam`.
+3. **Network**: Headless scrapers often send a normal Chrome user agent. Appwrite checks the network behind the IP address before discarding it. Google's Firebase Test Lab ranges become `test device`, and hosting or cloud networks (such as Amazon or DigitalOcean) become `datacenter` with the provider as the bot name.
+
+Instead of silently dropping bot events, Appwrite flags and stores them. Bot activity stays visible on the dashboard, and selecting **Humans** hides it.
+
+## Keeping real people out of the datacenter bucket
+
+Hosting checks catch headless scrapers, but real people also use VPNs, privacy relays, and corporate proxies. Appwrite handles that in two ways:
+
+- **Skip known human networks.** Apple iCloud Private Relay, Cloudflare WARP, Fastly, Zscaler, Netskope, and several mobile carriers are not marked as `datacenter`.
+- **Count active visitors as human.** If a `datacenter` visitor takes two or more different interactive actions in the date range (such as a custom event and an outbound click), the dashboard counts them as human. Passive events like pageviews and scroll depth do not count, so a crawler firing one load-time event stays a bot while real VPN users stay human.
+
+Firebase Test Lab stays in its own `test device` category so Google Play's automated app tests always count as bots, no matter how many screens they tap.
+
+# How Appwrite Analytics spots AI referrals
+
+![Traffic sources card on the Channels tab with the ai channel next to search, direct, and social](/images/blog/ai-crawlers-assistants-referrals-appwrite-analytics/ai-channel.avif)
+
+Human visits land in one of seven channels: `direct`, `search`, `ai`, `social`, `email`, `paid`, or `referral`. Appwrite picks the channel using the landing URL and the referring hostname. It strips a leading `www.` but keeps subdomains intact so `mail.google.com`, `gemini.google.com`, and `google.com` stay separate. Links from your own domain count as `direct`.
+
+Paid tags win first: a paid `utm_medium` (like `cpc` or `display`) or an ad click ID (like `gclid` or `msclkid`) always lands in `paid`, even when the referrer is an AI site.
+
+Without a paid tag, Appwrite checks the referring hostname in a strict order:
+
+1. **Webmail** (`email`), such as `mail.google.com` and `outlook.live.com`.
+2. **AI tools** (`ai`), such as `chatgpt.com`, `claude.ai`, `gemini.google.com`, `perplexity.ai`, `copilot.microsoft.com`, and `chat.deepseek.com`.
+3. **Search engines** (`search`), such as Google, Bing, DuckDuckGo, and Brave Search.
+4. **Social sites** (`social`), such as X, LinkedIn, Reddit, YouTube, and Hacker News.
+5. **Everything else** (`referral`).
+
+Order matters here. Search matching looks for brand names inside the hostname so regional domains like `google.co.uk` count as `search`. Checking AI and webmail before search stops `gemini.google.com`, `edgeservices.bing.com`, and `mail.google.com` from falling into `search`.
+
+One limit to keep in mind: the `ai` channel is a minimum, not the full total. Many AI websites strip the `Referer` header, and desktop or mobile AI apps often send no referrer at all. Those visits still count as human traffic, but they land in `direct`.
+
+# Reading AI traffic on the dashboard and through the API
+
+![Traffic sources card listing chatgpt.com among the sources, next to the Humans vs bots card](/images/blog/ai-crawlers-assistants-referrals-appwrite-analytics/ai-sources.avif)
+
+Three cards on the property dashboard show your AI traffic:
+
+- **Traffic sources** lists the `ai` channel under **Channels** and specific hosts (such as `chatgpt.com` or `perplexity.ai`) under **Sources**. Select `ai` to filter the whole dashboard to human visitors from AI answers.
+- **Humans vs bots** splits traffic between people and bots, with **By type** and **Top agents** rankings underneath. Select **Humans** or **Bots** to filter the view. By default, Web properties include bots in headline totals while Mobile properties open with **Humans only** turned on.
+- **AI agents and crawlers** lists named bots under **Agents** and their categories under **Categories**. Select any bot, such as `GPTBot` or `ChatGPT User`, to see which pages it reads.
+
+## Querying AI traffic from code
+
+`listMetrics` returns the same numbers to an API key that has the `analytics.read` scope.
+
+To see which AI crawlers visited in the last 30 days, break down by `BotName` and filter `botCategory` to `ai crawler`:
+
+```server-nodejs
+import { Client, Analytics, AnalyticsDimension, Query } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const analytics = new Analytics(client);
+
+const crawlers = await analytics.listMetrics({
+    propertyId: '<PROPERTY_ID>',
+    dimensions: [AnalyticsDimension.BotName],
+    dateRange: '30d',
+    queries: [Query.equal('botCategory', 'ai crawler')],
+    limit: 10,
+});
+
+for (const row of crawlers.metrics) {
+    console.log(row.value, row.events);
+}
+```
+
+Swap `ai crawler` for `ai assistant` to see what live assistants fetch instead.
+
+To see which pages human visitors from AI answers read most, break down by `Page` and filter to `channel = ai` and `trafficType = human`:
+
+```server-nodejs
+const aiPages = await analytics.listMetrics({
+    propertyId: '<PROPERTY_ID>',
+    dimensions: [AnalyticsDimension.Page],
+    dateRange: '30d',
+    queries: [
+        Query.equal('channel', 'ai'),
+        Query.equal('trafficType', 'human'),
+    ],
+    limit: 10,
+});
+
+for (const row of aiPages.metrics) {
+    console.log(row.value, row.visitors);
+}
+```
+
+# How bot traffic counts toward your plan
+
+Events from **datacenter networks** and **Firebase Test Lab devices** do not count toward your monthly analytics limit. Every other accepted event does count, including events labeled as bots only by user agent or referrer, and server-side events that pass an `ip` override.
+
+Billing checks the network separately from reporting labels because the tracking endpoint is public. Anyone can fake `User-Agent: GPTBot`, but they cannot fake their incoming IP address. A real crawler on a cloud server still appears as `GPTBot` on your dashboard and stays unbilled because of its network, while a faked header from a regular connection still counts.
+
+# Blocking unwanted bots without hurting AI referrals
+
+![Menu for GPTBot on the AI agents and crawlers card, with Create firewall rule](/images/blog/ai-crawlers-assistants-referrals-appwrite-analytics/bot-menu.avif)
+
+Separating crawlers from assistants lets you block a heavy scraper like `GPTBot` while leaving `ChatGPT User`, `Claude User`, and `Perplexity User` allowed to read your docs and send readers back.
+
+For sites hosted on [Appwrite Sites](/docs/products/sites), a Firewall rule starts from the dashboard:
+
+1. Find the bot in the **AI agents and crawlers** card.
+2. Right-click its name and select **Create firewall rule**.
+3. On the **Create firewall rule** page, the user-agent condition and **Deny** action are pre-filled.
+4. If the dashboard name has a space (like `ChatGPT User`), change the condition to match its user-agent spelling (like `ChatGPT-User`).
+5. Check **Estimated impact** to see how many recent requests the rule matches.
+6. Switch the action to **Challenge** if you prefer to verify visitors instead of blocking them, then select **Create rule**.
+
+Analytics and Firewall counts will not match. Analytics counts events sent by your tracker, while Firewall counts every HTTP request, including assets and crawlers that never run JavaScript.
+
+# Conclusion
+
+AI crawlers, AI assistants, and human clicks from AI answers all mean different things for your site. Appwrite Analytics separates them on your dashboard and in the API, so you can keep human numbers clean, see which bots read your pages, and block unwanted crawlers with Firewall.
+
+Have questions or want to share what turned up in your AI traffic? Join us on [Discord](https://appwrite.io/discord).
+
+# Resources
+
+- [Introducing Appwrite Analytics](/blog/post/introducing-appwrite-analytics)
+- [Bots and AI traffic](/docs/products/analytics/bots)
+- [Traffic sources](/docs/products/analytics/sources)
+- [Block traffic with Firewall](/docs/products/analytics/firewall)
+- [Metrics and API reference](/docs/products/analytics/metrics)
+- [Limits and retention](/docs/products/analytics/limits)

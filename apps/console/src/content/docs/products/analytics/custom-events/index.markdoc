@@ -1,14 +1,14 @@
 ---
 layout: article
 title: Track custom events
-description: Record the actions that matter to your product in Appwrite Analytics, such as signups and purchases, with event names and props from the browser, Flutter, or your server.
+description: Record the actions that matter to your product in Appwrite Analytics, such as signups and purchases, with event names and props from the browser, mobile apps, or your server.
 ---
 
 Pageviews show where people go. Custom events show what they do there: a signup, a purchase, an invite sent, a plan upgraded. Each custom event has a name and optional props, and appears in the **Custom events** card on the property's dashboard.
 
 # Send an event {% #send-an-event %}
 
-Send a custom event with the tracking helper on the client, or with `createEvent` from your server.
+Send a custom event with the `Tracking` class in your website or app, or from your server with an API key. These examples continue from the setup in [Track a website](/docs/products/analytics/web), [Track a mobile app](/docs/products/analytics/mobile), and [Track events from your server](/docs/products/analytics/server-side). With the [script tag](/docs/products/analytics/web#script-tag), call `track()` on `window.__appwriteTracker`.
 
 {% multicode %}
 ```client-web
@@ -22,6 +22,22 @@ tracking.event(
   url: '/signup',
   props: {'plan': 'pro', 'source': 'pricing_page'},
 );
+```
+```client-android-kotlin
+tracking.event(
+    "signup_completed",
+    url = "/signup",
+    props = mapOf("plan" to "pro", "source" to "pricing_page"),
+)
+```
+```client-apple
+tracking.event("signup_completed", url: "/signup", props: ["plan": "pro", "source": "pricing_page"])
+```
+```client-react-native
+tracking.track('signup_completed', {
+    url: '/signup',
+    props: { plan: 'pro', source: 'pricing_page' },
+});
 ```
 ```server-nodejs
 await analytics.createEvent({
@@ -121,6 +137,7 @@ analytics.create_event(
     None, // user_id
     None, // ip
     None, // user_agent
+    None, // interactive
 ).await?;
 ```
 ```bash
@@ -142,13 +159,13 @@ curl -X POST 'https://<REGION>.cloud.appwrite.io/v1/analytics/properties/<PROPER
 ```
 {% /multicode %}
 
-These examples continue from the setup in [Track a website](/docs/products/analytics/web), [Track a Flutter app](/docs/products/analytics/flutter), and [Track events from your server](/docs/products/analytics/server-side). On the web, an event belongs to the current page unless you pass a `url` option.
+On the web, an event belongs to the current page unless the call passes a `url` option.
 
 # Name your events {% #names %}
 
 Event names are up to 64 characters. Pick names that describe a finished action, in lowercase `snake_case` with the object first and the verb second, such as `signup_completed`, `invite_sent`, or `plan_upgraded`. Keep names stable once you ship them: a renamed event starts a new row on the dashboard, and the old name keeps its history.
 
-The tracking helpers use these names for their automatic events, so don't reuse them for your own:
+The `Tracking` class uses these names for its own events, so don't reuse them for yours:
 
 - `pageview`
 - `outbound_link`
@@ -156,26 +173,46 @@ The tracking helpers use these names for their automatic events, so don't reuse 
 - `scroll_depth`
 - `engagement_time`
 - `screen_view`
+- `first_open`
+- `app_updated`
 - `app_backgrounded`
 - `app_foregrounded`
+- `push_received`
+- `push_opened`
 
-An event you send as `pageview` counts toward pageviews, bounce rate, and entry and exit pages, like any other pageview.
+An event named `pageview` counts as a real pageview, toward pageviews, bounce rate, and entry and exit pages, so use it only for [virtual pageviews](#virtual-pageviews).
+
+A custom event counts as an interaction, so a visit with one isn't a [bounce](/docs/products/analytics/visitors#visit-metrics). For an event the visitor didn't cause, such as a heartbeat or a background sync, pass `interactive: false` so the event doesn't count as an interaction. It still extends the visit's duration, so a visit it keeps going for 10 seconds or more isn't a bounce.
 
 # Add props {% #props %}
 
+{% only_dark %}
+![Event properties card with a tab for each prop key and the values of category](/images/docs/analytics/dark/event-props.avif)
+{% /only_dark %}
+{% only_light %}
+![Event properties card with a tab for each prop key and the values of category](/images/docs/analytics/event-props.avif)
+{% /only_light %}
+
 Props add detail to an event, such as the plan someone chose or the button they clicked. Each event takes up to 16 props. Keys and values are text up to 255 characters each.
 
-The Web and Flutter helpers take props as a map and turn each value into text. `createEvent` and REST take a flat list that alternates keys and values. A key without a value at the end of the list is dropped.
+The `Tracking` class takes props as a map and turns each value into text. `createEvent` and REST take a flat list that alternates keys and values. A key without a value at the end of the list is dropped.
 
 Appwrite stores props with the event. Don't put personal data such as email addresses or names in props.
 
 # Track an AI agent {% #agents %}
 
+{% only_dark %}
+![Models and tools card on an Agent property, listing calls by tool](/images/docs/analytics/dark/agent-models-tools.avif)
+{% /only_dark %}
+{% only_light %}
+![Models and tools card on an Agent property, listing calls by tool](/images/docs/analytics/agent-models-tools.avif)
+{% /only_light %}
+
 On an **Agent** property, send one event per model call and one per tool call. The **Models and tools** card counts them by the `model` and `tool` props:
 
 | Event | Props |
 | --- | --- |
-| `model_called` | `model`, such as `gpt-5` or `claude-sonnet-5-5`. Optionally `provider`. |
+| `model_called` | `model`, such as `claude-sonnet-5-5`. Optionally `provider`. |
 | `tool_called` | `tool`, such as `web_search`. |
 
 ```server-nodejs
@@ -183,12 +220,12 @@ await analytics.createEvent({
     propertyId: '<PROPERTY_ID>',
     name: 'model_called',
     url: 'https://agent.example.com/run',
-    props: ['model', 'gpt-5', 'provider', 'openai'],
+    props: ['model', 'claude-sonnet-5-5', 'provider', 'anthropic'],
     userId: '<USER_ID>',
 });
 ```
 
-The card appears once either prop arrives. Click a model or tool to filter the whole dashboard to it. Props are stored as text, so token counts can't be added up yet.
+The **Models and tools** card appears after the property receives an event with a `model` or `tool` prop. Click a model or tool to filter the whole dashboard to it. Props are stored as text, so the dashboard can't add up values such as token counts.
 
 # Track a virtual pageview {% #virtual-pageviews %}
 
@@ -209,6 +246,6 @@ Pass a full URL, including the scheme.
 ![Custom events card listing add_to_cart, checkout_started, purchase_completed, and newsletter_signup](/images/docs/analytics/custom-events.avif)
 {% /only_light %}
 
-The **Custom events** card lists every event name your app sends, except the automatic events above. Click an event to filter the whole dashboard to it. **Unique visitors** and **Visits** then add up, for each point on the chart, the people and visits that triggered the event, and the **Pages**, **Locations**, and **Technology** cards break those events down by page, location, and device.
+The **Custom events** card lists every event name your app sends, except the automatic events above. Click an event to filter the whole dashboard to it: each point on the chart then counts the people and visits that triggered the event, and the **Pages**, **Locations**, and **Technology** cards break those events down by page, location, and device. The **Event properties** card ranks the values of each prop key, such as each `plan`, and clicking a value filters the dashboard the same way.
 
-**Views per visit**, **Bounce rate**, **Visit duration**, and **Engagement time** describe whole visits, so they show `-` while an event filter is on. For more on filters, see [Filter and compare traffic](/docs/products/analytics/filters).
+**Views per visit**, **Bounce rate**, **Visit duration**, and **Engagement time** describe whole visits, so they show `-` while an event filter is on, and so does **Users**. For more on filters, see [Filter and compare traffic](/docs/products/analytics/filters).

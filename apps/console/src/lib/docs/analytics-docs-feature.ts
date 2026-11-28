@@ -1,14 +1,22 @@
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 
+/** The Auth concept page for the per-user Analytics tab ships with Analytics. */
+const AUTH_ANALYTICS_SLUG = 'products/auth/analytics'
+
 export function isAnalyticsDocsSlug(slug: string): boolean {
-  return slug === 'products/analytics' || slug.startsWith('products/analytics/')
+  return (
+    slug === 'products/analytics' ||
+    slug.startsWith('products/analytics/') ||
+    slug === AUTH_ANALYTICS_SLUG
+  )
 }
 
 export function isAnalyticsDocsPathname(pathname: string): boolean {
   const normalized = pathname.replace(/\/+$/, '') || '/'
   return (
     normalized === '/docs/products/analytics' ||
-    normalized.startsWith('/docs/products/analytics/')
+    normalized.startsWith('/docs/products/analytics/') ||
+    normalized === `/docs/${AUTH_ANALYTICS_SLUG}`
   )
 }
 
@@ -16,7 +24,8 @@ export function isAnalyticsDocsHref(href: string): boolean {
   const path = href.split(/[?#]/, 2)[0] ?? href
   return (
     path === '/docs/products/analytics' ||
-    path.startsWith('/docs/products/analytics/')
+    path.startsWith('/docs/products/analytics/') ||
+    path === `/docs/${AUTH_ANALYTICS_SLUG}`
   )
 }
 

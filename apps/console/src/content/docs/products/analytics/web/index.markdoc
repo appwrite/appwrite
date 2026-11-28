@@ -1,16 +1,25 @@
 ---
 layout: article
 title: Track a website
-description: Add Appwrite Analytics to a website or web app with the Web SDK. Track pageviews, outbound links, scroll depth, engagement time, and file downloads from the browser.
+description: Add Appwrite Analytics to a website or web app with one script tag or the Web SDK. Track pageviews, outbound links, scroll depth, engagement time, and file downloads from the browser.
 ---
 
-The Appwrite Web SDK includes a `Tracking` helper that records visits from the browser. A call to `start()` tracks pageviews, outbound link clicks, scroll depth, and engagement time. File downloads and your own events each take one more line.
+The Appwrite Web SDK includes a `Tracking` class that records visits from the browser. A call to `start()` tracks pageviews, outbound link clicks, scroll depth, and engagement time. File downloads and your own events each take one more line.
+
+On a site without a build step, such as a static site or a CMS theme, the tracker script sets up `Tracking` from one script tag. In an app with a build step, install the SDK from npm instead. A site hosted on Appwrite Sites needs neither: turn on **Web analytics** in the site's settings. See [Properties](/docs/products/analytics/properties#sites).
 
 # Before you start {% #before-you-start %}
 
-You need an [analytics property](/docs/products/analytics/properties) and its property ID, which the Console shows next to the property name.
+{% only_dark %}
+![Connect your app wizard with the Web platform, the name Storefront, and the hostname example.com](/images/docs/analytics/dark/add-web-app.avif)
+{% /only_dark %}
+{% only_light %}
+![Connect your app wizard with the Web platform, the name Storefront, and the hostname example.com](/images/docs/analytics/add-web-app.avif)
+{% /only_light %}
 
-Your site also needs a Web app in the same project. Browsers send an `Origin` header with every event, and Appwrite accepts events from a browser only when that hostname belongs to one of the project's apps. Without one, every event fails with a `403` `general_unknown_origin` error.
+[Create a **Web** property](/docs/products/analytics/properties#create) and copy its property ID, which the Console shows next to the property name.
+
+Register the site as a Web app in the same project. Appwrite accepts a browser event only when the hostname in its `Origin` header belongs to one of the project's apps, and rejects other events with a `403` `general_unknown_origin` error.
 
 1. In your project, open **Apps** and click **Add app**.
 2. Choose **Web**.
@@ -18,21 +27,90 @@ Your site also needs a Web app in the same project. Browsers send an `Origin` he
 
 Add one app for each hostname your site runs on, including `localhost` while you develop.
 
+# Add the script tag {% #script-tag %}
+
+Add the tracker script to the `<head>` of every page. It loads the Web SDK, creates a `Tracking` instance, and calls `start()`, so it needs no other code.
+
+```html
+<script defer src="https://sdk.appwrite.io/web/29.4.0/tracker.js"
+        data-endpoint="https://<REGION>.cloud.appwrite.io/v1"
+        data-project="<PROJECT_ID>"
+        data-property="<PROPERTY_ID>"></script>
+```
+
+The script reads its settings from the `data-` attributes of its own tag.
+
+| Attribute | Value |
+| --- | --- |
+| `data-endpoint` | Your project's API endpoint, as a full URL. A path such as `/relay` doesn't work. |
+| `data-project` | Your project ID. |
+| `data-property` | Your property ID. |
+| `data-track-downloads` | Optional. `true` turns on [download tracking](#downloads). |
+| `data-respect-dnt` | Optional. `false` also tracks visitors who have [Do Not Track](#do-not-track) turned on. |
+
+If your site sets a Content Security Policy, allow `https://sdk.appwrite.io` in `script-src` and your Appwrite endpoint in `connect-src`.
+
+Open your site. Within a few seconds, the install page shows **Event received**, and the visit appears on the property's dashboard.
+
+## Use the tracker from your code {% #script-tag-code %}
+
+The script stores its `Tracking` instance on `window.__appwriteTracker`, for sending [custom events](/docs/products/analytics/custom-events) and turning helpers on and off. The script is deferred, so it runs after the page's inline scripts. In an inline script, wait for `DOMContentLoaded` before using `window.__appwriteTracker`.
+
+```html
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        window.__appwriteTracker.track('signup_completed', {
+            props: { plan: 'pro' },
+        });
+    });
+</script>
+```
+
+Code that runs later, such as a click handler, can use `window.__appwriteTracker` directly.
+
+The script tag tracks one property. To also send events to a second property, call `Appwrite.startTracking()`. It takes `endpoint`, `project`, `property`, and optionally `respectDoNotTrack` and `trackDownloads`. It returns the started `Tracking` instance.
+
+```html
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        Appwrite.startTracking({
+            endpoint: 'https://<REGION>.cloud.appwrite.io/v1',
+            project: '<PROJECT_ID>',
+            property: '<SECOND_PROPERTY_ID>',
+        });
+    });
+</script>
+```
+
+## Check the file's integrity {% #script-tag-integrity %}
+
+To have the browser check that the file is unchanged, add its hash as the `integrity` attribute, together with `crossorigin="anonymous"`. Each release lists the hash of every file in `integrity.json`, such as `https://sdk.appwrite.io/web/29.4.0/integrity.json`.
+
+```html
+<script defer src="https://sdk.appwrite.io/web/29.4.0/tracker.js"
+        integrity="sha384-UOR1Izx43rnvaoxivMnLvuhrKaTEZamoZUBHbmJvcrDy/IT5znyE5SGoj2XwohzW"
+        crossorigin="anonymous"
+        data-endpoint="https://<REGION>.cloud.appwrite.io/v1"
+        data-project="<PROJECT_ID>"
+        data-property="<PROPERTY_ID>"></script>
+```
+
 # Install the SDK {% #install %}
 
-Install the Web SDK from npm.
+To create `Tracking` in your own code, install the Web SDK from npm.
 
 ```sh
 npm install appwrite
 ```
 
-You can also load the SDK from a CDN with a script tag. The SDK is then available on the global `Appwrite` object.
-
-```html
-<script src="https://cdn.jsdelivr.net/npm/appwrite"></script>
-```
-
 # Start tracking {% #start-tracking %}
+
+{% only_dark %}
+![Install tracking screen confirming that a pageview event was received](/images/docs/analytics/dark/install-tracking.avif)
+{% /only_dark %}
+{% only_light %}
+![Install tracking screen confirming that a pageview event was received](/images/docs/analytics/install-tracking.avif)
+{% /only_light %}
 
 Create a `Tracking` instance with the `Analytics` service and your property ID, then call `start()`.
 
@@ -48,30 +126,13 @@ const tracking = new Tracking(new Analytics(client), '<PROPERTY_ID>');
 tracking.start();
 ```
 
-With the CDN build, read the same classes from the `Appwrite` global in a script that runs after the SDK loads.
-
-```html
-<script src="https://cdn.jsdelivr.net/npm/appwrite"></script>
-<script>
-    const { Client, Analytics, Tracking } = Appwrite;
-
-    const client = new Client()
-        .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
-        .setProject('<PROJECT_ID>');
-
-    const tracking = new Tracking(new Analytics(client), '<PROPERTY_ID>');
-
-    tracking.start();
-</script>
-```
-
 Create one `Tracking` instance per page load and start it once. In a framework that renders on the server, run this code in the browser only, for example in a component that mounts once at the root of your app.
 
-Open your site, then open the property in the Console. The visit appears on the dashboard within a few seconds.
+Open your site. Within a few seconds, the install page shows **Event received**, and the visit appears on the property's dashboard.
 
 # Automatic events {% #automatic-events %}
 
-`start()` turns on four helpers. Each one sends events with a fixed name.
+`start()` turns on four helpers, the automatic trackers for each kind of event. Each one sends events with a fixed name.
 
 | Event | When it's sent | Extra data |
 | --- | --- | --- |
@@ -86,7 +147,7 @@ A link counts as outbound when its hostname is on a different domain from the cu
 
 # Track file downloads {% #downloads %}
 
-Download tracking is off by default, because the file types worth counting depend on your site. Turn it on after `start()`.
+Download tracking is off by default, because the file types worth counting depend on the site. Turn it on after `start()`. With the script tag, add `data-track-downloads="true"` instead.
 
 ```client-web
 tracking.enableAutoDownloadTracking();
@@ -94,7 +155,7 @@ tracking.enableAutoDownloadTracking();
 
 When a visitor clicks a link to a file with a tracked extension, `Tracking` sends a `file_download` event with `filename`, `extension`, and `href` props. The default extensions are `pdf`, `zip`, `rar`, `7z`, `tar`, `gz`, `csv`, `tsv`, `xls`, `xlsx`, `doc`, `docx`, `ppt`, `pptx`, `dmg`, `exe`, `msi`, `pkg`, `deb`, `rpm`, `apk`, `mp3`, `wav`, `flac`, `mp4`, `mov`, `avi`, `mkv`, and `webm`.
 
-Pass `extensions` to track your own list instead.
+Pass `extensions` to track your own list instead. With the script tag, leave `data-track-downloads` out and call `enableAutoDownloadTracking()` on `window.__appwriteTracker`.
 
 ```client-web
 tracking.enableAutoDownloadTracking({
@@ -104,7 +165,7 @@ tracking.enableAutoDownloadTracking({
 
 # Choose what to track {% #choose-helpers %}
 
-Instead of `start()`, you can turn on each helper on its own. This is also how you pass options to the outbound link helper. With `includeSubdomains: true`, a link to any other hostname counts as outbound, including subdomains of your own domain.
+To turn on only some helpers, call their methods instead of `start()`. The same methods take options: with `includeSubdomains: true`, the outbound link helper counts a link to any other hostname as outbound, including subdomains of your own domain.
 
 ```client-web
 const tracking = new Tracking(new Analytics(client), '<PROPERTY_ID>');
@@ -128,13 +189,15 @@ To send your own events, such as a signup or a purchase, see [Track custom event
 
 # Do Not Track {% #do-not-track %}
 
-By default, `Tracking` sends nothing for visitors whose browser has Do Not Track turned on. It checks the Do Not Track setting only, not Global Privacy Control. To count these visitors as well, set `respectDoNotTrack` to `false`.
+By default, `Tracking` sends nothing for visitors whose browser has Do Not Track turned on. It checks the Do Not Track setting only, not Global Privacy Control. To count these visitors as well, set `respectDoNotTrack` to `false`. With the script tag, add `data-respect-dnt="false"` instead.
 
 ```client-web
 const tracking = new Tracking(new Analytics(client), '<PROPERTY_ID>', {
     respectDoNotTrack: false,
 });
 ```
+
+`Tracking` also sends nothing from automated browsers, such as test runs with Playwright, Puppeteer, Selenium, or Cypress, so your end-to-end tests don't show up as visits. This check can't be turned off.
 
 For what Appwrite stores about each visitor, see [Privacy](/docs/products/analytics/privacy).
 
@@ -143,7 +206,13 @@ For what Appwrite stores about each visitor, see [Privacy](/docs/products/analyt
 `Tracking` never throws and never interrupts your page. When an event fails, it logs the warning `Tracking: failed to send event` to the browser console, with the error.
 
 - **`403` with `general_unknown_origin`**: The page's hostname isn't an app in your project. Add it under **Apps**.
-- **`401` with `general_access_forbidden`**: The property limits which origins may send events, and this page's origin isn't on the list. See [Properties](/docs/products/analytics/properties).
-- **`404` with `analytics_property_not_found`**: The property ID is wrong, or the property is turned off.
-- **Nothing in the network panel**: Do Not Track is on in your browser.
-- **Requests marked as blocked in the network panel**: an extension, such as an ad blocker, blocks them. See [Serve tracking from your domain](/docs/products/analytics/own-domain).
+- **`401` with `general_access_forbidden`**: The property limits which origins may send events, and this page's origin isn't on the list. Add it under [Allowed origins](/docs/products/analytics/properties#allowed-origins).
+- **`404` with `analytics_property_not_found`**: The property ID is wrong, or **Tracking** is off in the property's settings.
+- **Nothing in the network panel**: Do Not Track is on in your browser, or the browser is automated, such as one driven by Playwright.
+- **Requests marked as blocked in the network panel**: An extension, such as an ad blocker, blocks them. See [Serve tracking from your domain](/docs/products/analytics/own-domain).
+
+The tracker script logs its own warnings when it can't start:
+
+- **`Tracker: script tag is missing data-property`**: The tag is missing a required attribute. The warning names each missing one.
+- **`Tracker: failed to start`** with `Invalid endpoint URL`: The `data-endpoint` attribute isn't a full URL, such as `https://<REGION>.cloud.appwrite.io/v1`.
+- **`Tracker: already started, ignoring this script tag`**: The page has more than one tracker tag, and only the first one runs. To track a second property, use [`Appwrite.startTracking()`](#script-tag-code).
