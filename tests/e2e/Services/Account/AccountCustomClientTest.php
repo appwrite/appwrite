@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\E2E\Services\Account;
 
+use Appwrite\Extend\Exception;
 use Appwrite\Tests\Retry;
 use Swoole\Coroutine;
 use Tests\E2E\Client;
@@ -5688,7 +5689,7 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(401, $login['headers']['status-code']);
     }
 
-    public function testNativeAppIdIsNoRedirectHost(): void
+    public function testNativeAppIdIsNoWebHost(): void
     {
         $project = $this->getProject(true);
         // Read as a DNS name, an app ID is a public domain someone else may register.
@@ -5718,14 +5719,20 @@ final class AccountCustomClientTest extends Scope
         /**
          * Test for SUCCESS
          */
-        // The app ID still passes as an origin's host, as before.
-        $response = $magicUrl('https://' . $applicationId, 'http://localhost/magic');
+        // The Android SDK sends its app ID on its own scheme.
+        $response = $magicUrl('appwrite-android://' . $applicationId, 'http://localhost/magic');
         $this->assertSame(201, $response['headers']['status-code'], \json_encode($response['body']));
 
         /**
          * Test for FAILURE
          */
-        // But a link carrying the secret is never sent to it.
+        // A web origin on the app ID is not the app, so it gets neither credentialed CORS nor a pass.
+        $response = $magicUrl('https://' . $applicationId, 'http://localhost/magic');
+        $this->assertSame(403, $response['headers']['status-code'], \json_encode($response['body']));
+        $this->assertSame(Exception::GENERAL_UNKNOWN_ORIGIN, $response['body']['type']);
+        $this->assertArrayNotHasKey('access-control-allow-origin', $response['headers']);
+
+        // And a link carrying the secret is never sent to it.
         $response = $magicUrl('http://localhost', 'https://' . $applicationId . '/magic');
         $this->assertSame(400, $response['headers']['status-code'], \json_encode($response['body']));
         $this->assertSame('general_argument_invalid', $response['body']['type']);

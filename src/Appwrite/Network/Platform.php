@@ -116,48 +116,26 @@ class Platform
     }
 
     /**
-     * The hostnames the platforms trust: each web platform's hostname and, unless `$appIds` is
-     * false, each native platform's app ID (an Android package, an Apple bundle ID, a Windows or
-     * Linux app ID). Origins trust app IDs, as some native clients send one as their origin's host.
-     * Redirect URLs must not: read as a DNS name, an app ID such as com.acme.app is a public
-     * domain anyone may register, and a redirect carries OAuth2, magic-URL and recovery secrets.
-     * Native apps receive redirects on their custom schemes instead, see getSchemes().
+     * The hostnames the platforms trust: each web platform's hostname. Native platforms' app IDs
+     * (an Android package, an Apple bundle ID, a Windows or Linux app ID) are left out: read as a
+     * DNS name, an app ID such as com.acme.app is a public domain anyone may register, so an http(s)
+     * origin or redirect on it proves nothing about the app. Native clients send their app ID on
+     * their own scheme instead (`appwrite-android://com.acme.app`), which getSchemes() allows.
      *
      * @return array<string>
      */
-    public static function getHostnames(array $platforms, bool $appIds = true): array
+    public static function getHostnames(array $platforms): array
     {
         $hostnames = [];
         foreach ($platforms as $platform) {
             $type = strtolower($platform['type'] ?? self::TYPE_UNKNOWN);
             $hostname = strtolower($platform['hostname'] ?? '');
-            $key = strtolower($platform['key'] ?? '');
-
             switch ($type) {
                 case 'flutter-web':
                 case 'unity':
                 case self::TYPE_WEB:
                     if (!empty($hostname)) {
                         $hostnames[] = $hostname;
-                    }
-                    break;
-                case 'flutter-android':
-                case 'react-native-android':
-                case self::TYPE_ANDROID:
-                case 'flutter-windows':
-                case self::TYPE_WINDOWS:
-                case 'flutter-linux':
-                case self::TYPE_LINUX:
-                case 'flutter-ios':
-                case 'flutter-macos':
-                case 'apple-ios':
-                case 'apple-macos':
-                case 'apple-watchos':
-                case 'apple-tvos':
-                case 'react-native-ios':
-                case self::TYPE_APPLE:
-                    if ($appIds && !empty($key)) {
-                        $hostnames[] = $key;
                     }
                     break;
                 default:
