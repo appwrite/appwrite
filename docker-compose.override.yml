@@ -464,7 +464,7 @@ services:
       - appwrite
       - fixtures
   webpage:
-    image: nginx:1.30-alpine@sha256:0985e772fb9f729e6fa0980da05fca5d9c468e870eed43071545afa9d2e27d94
+    image: nginx:1.31-alpine@sha256:7fc0fb4af7bf006aeb31aea88069976060f8f0a0a86b667126742cc17f4e31ae
     container_name: appwrite-webpage
     networks:
       fixtures:
@@ -560,7 +560,7 @@ services:
   gitea:
     profiles:
       - gitea
-    image: gitea/gitea:1.21.5
+    image: gitea/gitea:1.27.3
     container_name: appwrite-gitea
     logging:
       driver: json-file
@@ -648,7 +648,7 @@ services:
       - traefik.http.routers.appwrite_adminer_https.service=appwrite_adminer
       - traefik.http.routers.appwrite_adminer_https.tls=true
   redis-insight:
-    image: redis/redisinsight:3.8.0
+    image: redis/redisinsight:3.10.1
     restart: unless-stopped
     networks:
       - appwrite
