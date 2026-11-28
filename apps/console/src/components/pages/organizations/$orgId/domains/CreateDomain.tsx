@@ -9,13 +9,12 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { DnsRecordsTable } from '@/components/global/shared/dns/DnsRecordsTable'
 import {
-  DnsRecordsTable,
   DomainVerificationAlert,
   dnsPendingVerificationError,
-  getZone,
   type DomainVerificationError,
-} from '@/components/pages/projects/$projectId/settings/domains/VerifyDomainContent'
+} from '@/components/global/shared/dns/DomainVerificationAlert'
 import { useT } from '@/lib/i18n/translate'
 import { getAppwriteErrorInfo } from '@/lib/utils/error-formatting'
 import {
@@ -23,6 +22,7 @@ import {
   getOrganizationDomainClaimRecord,
   isOrganizationDomainClaimError,
   isValidDomain,
+  getZone,
 } from '@/lib/utils/proxy-domains'
 
 interface CreateDomainDialogProps {

@@ -12,12 +12,12 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import { DomainTargetCard } from '../../shared/DomainTargetCard'
+import { VerifyDomainContent } from '@/components/pages/projects/$projectId/settings/domains/VerifyDomainContent'
 import {
-  VerifyDomainContent,
   dnsPendingVerificationError,
   domainVerificationError,
   type DomainVerificationError,
-} from '@/components/pages/projects/$projectId/settings/domains/VerifyDomainContent'
+} from '@/components/global/shared/dns/DomainVerificationAlert'
 import { ClaimDomainContent } from '@/components/pages/projects/$projectId/settings/domains/ClaimDomainContent'
 import {
   useCreateSiteDomainRule,

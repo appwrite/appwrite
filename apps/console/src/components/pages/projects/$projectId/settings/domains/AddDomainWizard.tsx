@@ -10,12 +10,12 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
+import { VerifyDomainContent } from './VerifyDomainContent'
 import {
-  VerifyDomainContent,
   dnsPendingVerificationError,
   domainVerificationError,
   type DomainVerificationError,
-} from './VerifyDomainContent'
+} from '@/components/global/shared/dns/DomainVerificationAlert'
 import { ClaimDomainContent } from './ClaimDomainContent'
 import {
   useCreateDomain,

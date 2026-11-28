@@ -1695,6 +1695,15 @@ export const jaOrganizationsDictionary: Record<string, string> = {
     'このTXTレコードをDNSプロバイダーに追加してから検証してください。反映まで数分かかる場合があります。',
   'The TXT record was not found yet. DNS changes can take a few minutes to propagate.':
     'TXTレコードがまだ見つかりません。DNSの変更が反映されるまで数分かかる場合があります。',
+  'Prove ownership': '所有権の証明',
+  'No TXT record was found at {name} yet. Add the record below, then verify again.':
+    '{name} にTXTレコードがまだ見つかりません。下のレコードを追加してから、もう一度検証してください。',
+  'It holds {found}. Change it to {value}.':
+    '現在の値は {found} です。{value} に変更してください。',
+  'This usually finishes within an hour. Verify again in a few minutes.':
+    '通常は1時間以内に完了します。数分後にもう一度検証してください。',
+  "We couldn't check DNS. Try again in a few minutes.":
+    'DNS を確認できませんでした。数分後にもう一度お試しください。',
   'Payment authentication is required': '支払いの認証が必要です',
   'They can join again by signing in with single sign-on. To keep them out, remove them at your identity provider too.':
     'シングルサインオンでサインインすると、再び参加できます。参加させないようにするには、ID プロバイダーでも削除してください。',

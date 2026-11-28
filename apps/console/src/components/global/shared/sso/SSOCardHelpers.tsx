@@ -44,9 +44,6 @@ import type { SSOTarget } from '@/lib/sso-target'
 export const SSO_ERROR_TEXT =
   'text-destructive [.dark_&]:text-destructive-foreground'
 
-/** The same for a destructive `Alert`'s description, which sets its own colour. */
-export const SSO_ALERT_ERROR_TEXT = '[.dark_&]:!text-destructive-foreground'
-
 /** A list that failed to load: say so, with a way to try again. */
 export function SSOListLoadError({
   title,

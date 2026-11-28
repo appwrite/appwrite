@@ -1674,6 +1674,15 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'הוסיפו את רשומת ה-TXT הזו אצל ספק ה-DNS ולאחר מכן אמתו. העדכון עשוי להימשך כמה דקות.',
   'The TXT record was not found yet. DNS changes can take a few minutes to propagate.':
     'רשומת ה-TXT עדיין לא נמצאה. עדכון שינויי DNS עשוי להימשך כמה דקות.',
+  'Prove ownership': 'הוכחת בעלות',
+  'No TXT record was found at {name} yet. Add the record below, then verify again.':
+    'עדיין לא נמצאה רשומת TXT ב-{name}. הוסיפו את הרשומה שלמטה, ואז אמתו שוב.',
+  'It holds {found}. Change it to {value}.':
+    'הערך שלה הוא {found}. שנו אותו ל-{value}.',
+  'This usually finishes within an hour. Verify again in a few minutes.':
+    'זה מסתיים בדרך כלל תוך שעה. אמתו שוב בעוד כמה דקות.',
+  "We couldn't check DNS. Try again in a few minutes.":
+    'לא הצלחנו לבדוק את ה-DNS. נסו שוב בעוד כמה דקות.',
   'Payment authentication is required': 'נדרש אימות תשלום',
   'They can join again by signing in with single sign-on. To keep them out, remove them at your identity provider too.':
     'הם יוכלו להצטרף שוב בהתחברות יחידה (SSO). כדי למנוע זאת, הסירו אותם גם אצל ספק הזהויות.',

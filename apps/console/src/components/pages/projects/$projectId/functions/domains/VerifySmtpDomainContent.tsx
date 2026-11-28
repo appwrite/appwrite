@@ -4,14 +4,14 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useT } from '@/lib/i18n/translate'
 import { useConsoleVariables } from '@/lib/react-query/hooks/console-variables'
+import { DNS_PROVIDERS_LINK } from '@/components/global/shared/dns/DnsBannerAlert'
+import { DnsRecordsTable } from '@/components/global/shared/dns/DnsRecordsTable'
 import {
-  DNS_PROVIDERS_LINK,
-  DnsRecordsTable,
   DomainVerificationAlert,
   dnsPendingVerificationError,
   domainVerificationError,
   type DomainVerificationError,
-} from '@/components/pages/projects/$projectId/settings/domains/VerifyDomainContent'
+} from '@/components/global/shared/dns/DomainVerificationAlert'
 import {
   getSmtpDnsRecords,
   type SmtpProxyRule,
