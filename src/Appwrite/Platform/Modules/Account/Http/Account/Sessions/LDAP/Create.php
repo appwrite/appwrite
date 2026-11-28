@@ -310,7 +310,11 @@ class Create extends Base
             ]));
         }
 
-        $emailFollowsDirectory = $entry['email'] === '' || $this->refreshEmail($user, $entry['email'], $dbForProject, $project, $plan, $authorization);
+        // A verified address on an account with MFA is a second factor. This request has not
+        // passed MFA, so moving it to the directory's address, verified, would let whoever can
+        // edit the entry receive the email challenge in place of the account's owner.
+        $emailIsFactor = $user->getAttribute('mfa', false) && $user->getAttribute('emailVerification', false);
+        $emailFollowsDirectory = $entry['email'] === '' || $this->refreshEmail($user, $entry['email'], !$emailIsFactor, $dbForProject, $project, $plan, $authorization);
 
         // A number the directory holds in another format cannot be messaged, so it is left alone.
         // A verified number that is a second factor stays too: this request has not passed MFA,
@@ -327,9 +331,9 @@ class Create extends Base
      * Move the account to the address the directory now holds, the way updateEmail does
      * for the user: the email target follows it, and tokens and challenges proving the
      * old address are dropped. Returns false, changing nothing, when another account
-     * already uses the address.
+     * already uses the address, or when $canMove is false and the account holds another one.
      */
-    private function refreshEmail(User $user, string $providerEmail, Database $dbForProject, Document $project, array $plan, Authorization $authorization): bool
+    private function refreshEmail(User $user, string $providerEmail, bool $canMove, Database $dbForProject, Document $project, array $plan, Authorization $authorization): bool
     {
         [$email, $emails, $emailMetadata, $canonicalize] = $this->parseEmail($providerEmail, true, $project, $plan);
 
@@ -337,6 +341,10 @@ class Create extends Base
         // project canonicalizes emails)
         if (\in_array($user->getAttribute('email'), $emails, true)) {
             return true;
+        }
+
+        if (!$canMove) {
+            return false;
         }
 
         $userWithMatchingEmail = $dbForProject->find('users', [

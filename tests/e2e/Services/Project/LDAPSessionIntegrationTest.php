@@ -581,6 +581,45 @@ final class LDAPSessionIntegrationTest extends Scope
         $this->assertTrue($user['body']['mfa']);
     }
 
+    public function testAccountKeepsAVerifiedEmailThatIsAnMfaFactor(): void
+    {
+        $alice = $this->signInAlice();
+        $users = '/users/' . $alice['userId'];
+
+        // A verified address on an account with MFA is a second factor. Signing in with
+        // only the directory password must not move it to the directory's address.
+        $user = $this->client->call(Client::METHOD_GET, $users, $this->serverHeaders());
+        $this->assertTrue($user['body']['emailVerification']);
+        $response = $this->client->call(Client::METHOD_PATCH, $users . '/mfa', $this->serverHeaders(), ['mfa' => true]);
+        $this->assertSame(200, $response['headers']['status-code']);
+
+        $this->configureDirectory([
+            'emailAttribute' => 'description',
+        ]);
+
+        $response = $this->signIn('alice', 'alicepass');
+
+        $this->assertSame(201, $response['headers']['status-code']);
+        $this->assertSame($alice['userId'], $response['body']['userId']);
+
+        $user = $this->client->call(Client::METHOD_GET, $users, $this->serverHeaders());
+
+        $this->assertSame('alice@appwrite.test', $user['body']['email']);
+        $this->assertTrue($user['body']['emailVerification']);
+        $this->assertTrue($user['body']['mfa']);
+
+        // The email target still points at the address the factor proves.
+        $targets = $this->client->call(Client::METHOD_GET, $users . '/targets', $this->serverHeaders());
+        $identifiers = \array_column($targets['body']['targets'], 'identifier', 'providerType');
+        $this->assertSame('alice@appwrite.test', $identifiers['email'] ?? null);
+
+        // The identity records the address the account holds, not the one it did not take.
+        $identities = $this->identitiesOf($alice['userId']);
+
+        $this->assertSame(1, $identities['body']['total']);
+        $this->assertSame('alice@appwrite.test', $identities['body']['identities'][0]['providerEmail']);
+    }
+
     public function testAccountKeepsItsAddressWhenTheDirectoryOneIsTaken(): void
     {
         // Another account already holds the address the directory now lists. The user
