@@ -13,7 +13,6 @@ use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
-use Appwrite\Execution\Store as ExecutionStore;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Functions\Validator\Headers;
@@ -45,7 +44,6 @@ use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Platform\Action;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Span\Span;
 use Utopia\System\System;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\JSON\ObjectValidator as JSONObject;
@@ -114,7 +112,6 @@ class Create extends Base
             ->inject('publisherForDeletes')
             ->inject('executionsRetentionCount')
             ->inject('bus')
-            ->inject('executionStore')
             ->callback($this->action(...));
     }
 
@@ -143,7 +140,6 @@ class Create extends Base
         DeletePublisher $publisherForDeletes,
         int $executionsRetentionCount,
         Bus $bus,
-        ExecutionStore $executionStore,
     ) {
         $path ??= '/';
         $async = \strval($async) === 'true' || \strval($async) === '1';
@@ -366,13 +362,6 @@ class Create extends Base
                     ->setAttribute('scheduleId', $schedule->getId())
                     ->setAttribute('scheduleInternalId', $schedule->getSequence())
                     ->setAttribute('scheduledAt', $scheduledAt);
-            }
-
-            // The 202 hands out the execution ID, so the first snapshot must be readable before it returns.
-            try {
-                $executionStore->create($project->getId(), $execution);
-            } catch (\Throwable $e) {
-                Span::add('execution.store.error', $e->getMessage());
             }
 
             $bus->dispatch(new ExecutionScheduled(
