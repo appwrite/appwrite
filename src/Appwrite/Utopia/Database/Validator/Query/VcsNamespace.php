@@ -2,13 +2,24 @@
 
 namespace Appwrite\Utopia\Database\Validator\Query;
 
+use Appwrite\Utopia\Database\Validator\Queries\Restricted;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Query\Base;
 use Utopia\Query\Method;
 use Utopia\Validator\Text;
 
-class VcsNamespace extends Base
+class VcsNamespace extends Base implements Restricted
 {
+    public function getAllowedAttributes(): array
+    {
+        return ['namespace'];
+    }
+
+    public function getAllowedMethods(): array
+    {
+        return [Method::Equal];
+    }
+
     public function getMethodType(): string
     {
         return self::METHOD_TYPE_FILTER;
