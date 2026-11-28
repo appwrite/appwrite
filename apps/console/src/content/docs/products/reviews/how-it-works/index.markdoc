@@ -11,6 +11,13 @@ Every review goes through the same four steps, from the change on the pull reque
 3. **Findings are verified**: A second pass checks every finding against the code before anything is posted.
 4. **The review is posted**: Findings appear as inline comments on the pull request, together with a summary and a verdict. On GitHub, the review also adds a check run to the commit.
 
+{% only_dark %}
+![Pull request on GitHub where the reviewer requested changes, with a Tier B summary and a Major finding as an inline comment on the changed line](/images/docs/reviews/dark/github-review.avif)
+{% /only_dark %}
+{% only_light %}
+![Pull request on GitHub where the reviewer requested changes, with a Tier B summary and a Major finding as an inline comment on the changed line](/images/docs/reviews/github-review.avif)
+{% /only_light %}
+
 To review only when someone asks, turn off automatic reviews with [`reviews.auto`](/docs/products/reviews/configuration#choose-what-gets-reviewed). Draft pull requests wait until they're marked ready for review, unless you turn on `reviews.drafts`.
 
 # New commits {% #new-commits %}
