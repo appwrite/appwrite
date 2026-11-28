@@ -1112,6 +1112,11 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertNotEmpty($execution['body']['$id']);
         $this->assertEquals('waiting', $execution['body']['status']);
 
+        // The accepted execution is readable at once, before any worker picks it up.
+        $accepted = $this->getExecution($functionId, $execution['body']['$id']);
+        $this->assertEquals(200, $accepted['headers']['status-code']);
+        $this->assertEquals($execution['body']['$id'], $accepted['body']['$id']);
+
         $deployment = $this->getDeployment($functionId, $deployment['body']['$id']);
         $this->assertEquals(200, $deployment['headers']['status-code']);
         $this->assertGreaterThan(0, $deployment['body']['sourceSize']);
