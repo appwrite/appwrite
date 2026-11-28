@@ -3,6 +3,7 @@
 use Appwrite\Auth\EncryptionKey;
 use Appwrite\Network\Platform;
 use Appwrite\OpenSSL\OpenSSL;
+use Appwrite\Platform\Modules\Videos\Base as Videos;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -516,6 +517,72 @@ Database::addFilter(
                 Query::equal('resourceInternalId', [$document->getSequence()]),
                 Query::limit(APP_LIMIT_SUBQUERY),
             ]));
+    }
+);
+
+Database::addFilter(
+    'subQueryRenditions',
+    function (mixed $value) {
+        return;
+    },
+    function (mixed $value, Document $document, Database $database) {
+        // Same find as the master manifest, for every output a manifest can request. The column is
+        // per video, so the caller keeps the renditions for its own output. Skip the video
+        // subqueries so decoding a rendition does not load its segments.
+        return $database->getAuthorization()->skip(fn () => $database->skipFilters(
+            fn () => $database->find('videosRenditions', [
+                Query::equal('videoInternalId', [$document->getSequence()]),
+                Query::equal('output', Videos::OUTPUTS),
+                Query::equal('status', [Videos::STATUS_READY]),
+                Query::limit(APP_LIMIT_SUBQUERY),
+            ]),
+            APP_VIDEOS_SUBQUERIES,
+        ));
+    }
+);
+
+Database::addFilter(
+    'subQueryCaptions',
+    function (mixed $value) {
+        return;
+    },
+    function (mixed $value, Document $document, Database $database) {
+        // Skip the video subqueries so decoding a caption does not load its segments.
+        return $database->getAuthorization()->skip(fn () => $database->skipFilters(
+            fn () => $database->find('videosCaptions', [
+                Query::equal('videoInternalId', [$document->getSequence()]),
+                Query::limit(APP_LIMIT_SUBQUERY),
+            ]),
+            APP_VIDEOS_SUBQUERIES,
+        ));
+    }
+);
+
+Database::addFilter(
+    'subQuerySegments',
+    function (mixed $value) {
+        return;
+    },
+    function (mixed $value, Document $document, Database $database) {
+        return $database->getAuthorization()->skip(fn () => $database->find('videosRenditionsSegments', [
+            Query::equal('renditionInternalId', [$document->getSequence()]),
+            Query::orderAsc('$sequence'),
+            Query::limit(PHP_INT_MAX),
+        ]));
+    }
+);
+
+Database::addFilter(
+    'subQueryCaptionSegments',
+    function (mixed $value) {
+        return;
+    },
+    function (mixed $value, Document $document, Database $database) {
+        return $database->getAuthorization()->skip(fn () => $database->find('videosCaptionsSegments', [
+            Query::equal('captionInternalId', [$document->getSequence()]),
+            Query::orderAsc('$sequence'),
+            Query::limit(PHP_INT_MAX),
+        ]));
     }
 );
 

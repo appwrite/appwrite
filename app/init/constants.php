@@ -84,6 +84,13 @@ const APP_FUNCTIONS_SUBQUERIES = [
     'subQueryProjectVariables',
 ];
 
+const APP_VIDEOS_SUBQUERIES = [
+    'subQueryRenditions',
+    'subQueryCaptions',
+    'subQuerySegments',
+    'subQueryCaptionSegments',
+];
+
 const APP_DATABASES_SUBQUERIES = [
     'subQueryPolicies',
     'subQueryArchives',

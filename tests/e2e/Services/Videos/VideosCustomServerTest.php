@@ -2741,10 +2741,10 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals(200, $segment['headers']['status-code']);
         $this->assertNotEmpty($segment['body']);
         $this->assertStringContainsString('video/mp2t', (string) ($segment['headers']['content-type'] ?? ''));
-        // Permission-gated bytes stay in the private cache. A public year-long
+        // Permission-gated bytes stay in the private cache. A public month-long
         // response would keep playing from a CDN after access is revoked.
         $this->assertSame(
-            'private, max-age=31536000, immutable',
+            'private, max-age=2592000, immutable',
             $segment['headers']['cache-control'] ?? null
         );
 
@@ -3002,7 +3002,7 @@ final class VideosCustomServerTest extends Scope
     /**
      * A ready caption is an HLS subtitle rung: the master lists it, and the
      * playlist's first segment is the WebVTT cue. A private cache may hold
-     * those bytes and revalidate them; a year-long copy would keep playing
+     * those bytes and revalidate them; a month-long copy would keep playing
      * after read access is revoked. An unknown segment id is not a missing caption.
      */
     public function testGetCaptionSegment(): void

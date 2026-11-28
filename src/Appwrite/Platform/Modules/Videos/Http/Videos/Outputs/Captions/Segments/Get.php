@@ -109,7 +109,7 @@ class Get extends Base
 
         // A public video may sit at Fastly under the video Surrogate-Key.
         // A private one stays on the short revalidation window: the browser
-        // cache is not cleared by a Fastly purge, so a year-long immutable
+        // cache is not cleared by a Fastly purge, so a month-long immutable
         // copy would keep playing after read access is revoked. The stable
         // DASH WebVTT path uses that same short policy.
         $response->setContentType('text/vtt');

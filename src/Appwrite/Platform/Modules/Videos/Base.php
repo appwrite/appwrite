@@ -466,8 +466,8 @@ abstract class Base extends Action
         $response->addHeader(
             'Cache-Control',
             $public
-                ? 'public, max-age=31536000, immutable'
-                : 'private, max-age=31536000, immutable'
+                ? 'public, max-age=2592000, immutable' // 30 days
+                : 'private, max-age=2592000, immutable'
         );
         if ($public) {
             // CORS echoes Origin with credentials; without Vary, Fastly would
