@@ -270,6 +270,25 @@ export async function fetchSiteLog(
 }
 
 /**
+ * Query options to look up a single site log (execution) by its ID.
+ * The key starts with `log` (singular) on purpose, so list refetches
+ * under `['logs', 'site', ...]` never refetch this query.
+ */
+export function siteLogQueryOptions(
+  projectId: string | null | undefined,
+  siteId: string | null | undefined,
+  logId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['log', 'site', projectId, siteId, logId],
+    queryFn: () => fetchSiteLog(projectId ?? '', siteId ?? '', logId ?? ''),
+    enabled: !!projectId && !!siteId && !!logId,
+    retry: false,
+    staleTime: DEFAULT_STALE_TIME,
+  })
+}
+
+/**
  * Query function to fetch all site variables.
  * The API defaults to 25 per page; we page through the rest. UI paginates via `useSiteVariables` when a limit is set.
  */

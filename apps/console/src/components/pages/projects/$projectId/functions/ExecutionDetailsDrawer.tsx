@@ -273,8 +273,10 @@ export function ExecutionDetailsDrawer({
     return executions.findIndex((e) => e.$id === execution.$id)
   }, [execution, executions])
 
-  const isFirst = currentIndex === 0
-  const isLast = currentIndex === executions.length - 1
+  // currentIndex is -1 when the execution was opened from a link and isn't on
+  // the loaded page, so there is no previous/next neighbour to move to.
+  const isFirst = currentIndex <= 0
+  const isLast = currentIndex === -1 || currentIndex === executions.length - 1
 
   // Parse query parameters
   const queryParams = useMemo(() => {
@@ -395,7 +397,7 @@ export function ExecutionDetailsDrawer({
   }
 
   const handleNext = () => {
-    if (currentIndex < executions.length - 1) {
+    if (currentIndex !== -1 && currentIndex < executions.length - 1) {
       onNavigate(executions[currentIndex + 1].$id)
     }
   }
