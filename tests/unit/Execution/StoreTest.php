@@ -126,11 +126,18 @@ final class StoreTest extends TestCase
         $this->assertStringContainsString('ORDER BY createdAt DESC, sequence DESC, id DESC', $find);
         $this->assertStringContainsString('LIMIT {param0:Int64}', $find);
         $this->assertStringContainsString('name="param_param0"', $find);
-        $this->assertStringContainsString('least(count()', (string) $client->requests[1]->getBody());
-        $this->assertStringNotContainsString('source.id IN (SELECT id', $find);
+        $count = (string) $client->requests[1]->getBody();
+        $this->assertStringContainsString('least(count()', $count);
+        foreach ([$find, $count] as $body) {
+            // Lists and counts read the latest snapshots with FINAL instead of
+            // grouping every version of every execution, document included.
+            $this->assertStringContainsString('FROM `appwrite`.`executions` FINAL WHERE (projectId = {projectId:String} AND deleted = 0', $body);
+            $this->assertStringNotContainsString('argMax(', $body);
+            $this->assertStringNotContainsString('GROUP BY', $body);
+        }
     }
 
-    public function testCreatedAtWindowNarrowsAggregationToMatchingExecutions(): void
+    public function testListFiltersApplyToTheLatestSnapshot(): void
     {
         $client = new CapturingClient([
             $this->jsonResponse([]),
@@ -150,12 +157,29 @@ final class StoreTest extends TestCase
 
         foreach ($client->requests as $request) {
             $body = (string) $request->getBody();
-            $this->assertStringContainsString('source.id IN (SELECT id FROM `appwrite`.`executions` WHERE projectId = {projectId:String}', $body);
-            // The window only picks candidate executions; versions are not
-            // filtered by it.
-            $this->assertStringNotContainsString('source.createdAt >=', $body);
-            $this->assertStringNotContainsString('source.createdAt <', $body);
+            // An execution finished by the functions worker carries a later
+            // createdAt on its later versions. With FINAL the window decides on
+            // the latest version, so no candidate subquery is needed.
+            $this->assertStringContainsString('FINAL WHERE (projectId = {projectId:String}', $body);
+            $this->assertStringContainsString('resourceInternalId IN', $body);
+            $this->assertStringContainsString('createdAt >=', $body);
+            $this->assertStringContainsString('createdAt <', $body);
+            $this->assertStringNotContainsString('SELECT id FROM', $body);
+            $this->assertStringNotContainsString('source.', $body);
         }
+    }
+
+    public function testGetStillResolvesTheLatestSnapshotPerId(): void
+    {
+        $client = new CapturingClient([$this->jsonResponse([])]);
+
+        $this->store($client)->get('project', 'execution');
+
+        // A single execution is looked up by id across resources, so it keeps
+        // argMax per id rather than FINAL per sorting key.
+        $body = (string) $client->requests[0]->getBody();
+        $this->assertStringContainsString('GROUP BY source.projectId, source.id', $body);
+        $this->assertStringNotContainsString('FINAL', $body);
     }
 
     public function testBulkDeleteUsesLatestSnapshots(): void

@@ -20,8 +20,9 @@ use Utopia\Query\Method as QueryMethod;
  * ClickHouse persistence for function and site executions.
  *
  * Rows are immutable snapshots. ReplacingMergeTree and the version column
- * make updates and deletes append-only, while reads resolve the latest
- * snapshot synchronously with argMax instead of waiting for background merges.
+ * make updates and deletes append-only, and reads resolve the latest snapshot
+ * at query time instead of waiting for background merges: lists and counts
+ * read the table with FINAL, a single execution with argMax.
  */
 class Store
 {
@@ -81,14 +82,6 @@ class Store
         'duration' => ['duration', 'Float64'],
         'requestMethod' => ['requestMethod', 'String'],
         'requestPath' => ['requestPath', 'String'],
-    ];
-
-    private const array WINDOW_METHODS = [
-        QueryMethod::LessThan,
-        QueryMethod::LessThanEqual,
-        QueryMethod::GreaterThan,
-        QueryMethod::GreaterThanEqual,
-        QueryMethod::Between,
     ];
 
     private readonly RequestFactory $requestFactory;
@@ -306,7 +299,7 @@ class Store
             ->select(['document'])
             ->whereRaw("deleted = 0{$permission}")
             ->limit(1);
-        $rows = $this->rows($this->select($builder->build(), $latest, $params));
+        $rows = $this->rows($this->select($builder->build(), "({$latest})", $params));
 
         return $this->document($rows[0]['document'] ?? null);
     }
@@ -332,20 +325,16 @@ class Store
             }
         }
 
-        $where = $filters === [] ? '' : ' WHERE ' . \implode(' AND ', $filters);
         $before = $cursor?->getMethod() === QueryMethod::CursorBefore;
         $orderSql = $this->orderSql($order, $before);
-        $latest = $this->latestSql($this->latestWhere($queries, $params));
         $builder = $this->builder()
             ->from('__latest__')
-            ->select(['document']);
-        if ($where !== '') {
-            $builder->whereRaw(\substr($where, 7));
-        }
-        $builder->orderByRaw(\substr($orderSql, 9))
+            ->select(['document'])
+            ->whereRaw(\implode(' AND ', ['projectId = {projectId:String}', ...$filters]))
+            ->orderByRaw(\substr($orderSql, 9))
             ->limit($limit)
             ->offset($offset);
-        $response = $this->select($builder->build(), $latest, $params);
+        $response = $this->select($builder->build(), $this->latestTable(), $params);
 
         $documents = [];
         foreach ($this->rows($response) as $row) {
@@ -375,15 +364,11 @@ class Store
             $filters[] = \substr($permission, 5);
         }
 
-        $where = $filters === [] ? '' : ' WHERE ' . \implode(' AND ', $filters);
-        $latest = $this->latestSql($this->latestWhere($queries, $params));
         $builder = $this->builder()
             ->from('__latest__')
-            ->selectRaw('least(count(), {max:UInt64}) AS total');
-        if ($where !== '') {
-            $builder->whereRaw(\substr($where, 7));
-        }
-        $rows = $this->rows($this->select($builder->build(), $latest, $params));
+            ->selectRaw('least(count(), {max:UInt64}) AS total')
+            ->whereRaw(\implode(' AND ', ['projectId = {projectId:String}', ...$filters]));
+        $rows = $this->rows($this->select($builder->build(), $this->latestTable(), $params));
 
         return (int) ($rows[0]['total'] ?? 0);
     }
@@ -574,55 +559,24 @@ class Store
     }
 
     /**
-     * Resource identity is immutable and part of the sorting key, so applying
-     * the route's internal resource filters before aggregation avoids scanning
-     * and grouping every execution in a large project.
+     * The table as lists and counts read it: FINAL keeps each sorting key's
+     * highest version, so every filter, the order and the limit apply to the
+     * latest snapshot, the same row argMax(…, version) per id resolves.
      *
-     * A $createdAt window narrows the aggregation to the executions that have
-     * at least one version inside it. The window cannot filter versions
-     * directly: an execution queued through the API and finished by the
-     * functions worker gets a later createdAt on its worker-written versions,
-     * so dropping out-of-window versions could hide the latest one and return
-     * a stale status or a deleted execution. Every execution whose latest
-     * version matches has some version that matches, so the outer filter still
-     * decides on the latest snapshot.
-     *
-     * @param array<Query> $queries
-     * @param array<string, mixed> $params
+     * The sorting key holds the resource next to the id, and resource identity
+     * is immutable, so one key is one execution. Every caller lists one
+     * resource (the function and site routes, the retention cleanup), and that
+     * filter on the key prefix narrows the read through the primary index.
+     * Filters on other columns run after FINAL (ClickHouse moves only
+     * sorting-key conditions ahead of it). An `ORDER BY … LIMIT` on top reads
+     * the wide `document` column for the returned rows alone, so the cost no
+     * longer grows with the number of executions the resource has. Grouping
+     * every version of every matching execution first had to carry each one's
+     * document through the aggregation, gigabytes for a busy function.
      */
-    private function latestWhere(array $queries, array &$params): string
+    private function latestTable(): string
     {
-        $scope = ['projectId = {projectId:String}'];
-        $window = [];
-        foreach ($queries as $query) {
-            if ($query->getAttribute() === '$createdAt'
-                && \in_array($query->getMethod(), self::WINDOW_METHODS, true)) {
-                $window[] = $this->filterSql($query, $params);
-                continue;
-            }
-
-            if ($query->getMethod() !== QueryMethod::Equal
-                || !\in_array($query->getAttribute(), ['resourceInternalId', 'resourceType'], true)) {
-                continue;
-            }
-
-            [$column, $type] = $this->column($query->getAttribute());
-            $parameters = [];
-            foreach ($query->getValues() as $value) {
-                $parameters[] = $this->parameter($type, $value, $params);
-            }
-            if ($parameters !== []) {
-                $scope[] = "{$column} IN (" . \implode(', ', $parameters) . ')';
-            }
-        }
-
-        $conditions = \array_map(fn (string $condition) => "source.{$condition}", $scope);
-        if ($window !== []) {
-            $conditions[] = 'source.id IN (SELECT id FROM ' . $this->table()
-                . ' WHERE ' . \implode(' AND ', [...$scope, ...$window]) . ')';
-        }
-
-        return \implode(' AND ', $conditions);
+        return $this->table() . ' FINAL';
     }
 
     /**
@@ -968,7 +922,7 @@ class Store
     /** @param array<string, mixed> $params */
     private function select(Statement $statement, string $source, array $params): string
     {
-        $sql = \str_replace('FROM `__latest__`', "FROM ({$source})", $statement->query) . ' FORMAT JSON';
+        $sql = \str_replace('FROM `__latest__`', "FROM {$source}", $statement->query) . ' FORMAT JSON';
 
         return $this->query($sql, \array_merge($params, $statement->namedBindings ?? []));
     }
