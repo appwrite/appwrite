@@ -12,6 +12,11 @@ import {
   runtimeLogUsageInterval,
   type RuntimeLogUsageBucket,
 } from '@/lib/runtime-log-usage'
+import { isServerlessDatabaseSpecId } from '@/lib/database-specs'
+import {
+  hasDedicatedDatabaseCompute,
+  readDatabaseSpecification,
+} from '@/lib/databases/database-compute'
 import { isNativeDatabaseTypeValue } from '@/lib/databases/database-type'
 import { nextCursorAfter } from './cursor'
 import {
@@ -292,13 +297,27 @@ export const RUNTIME_LOG_DATABASES_LIMIT = 100
 
 /**
  * A database from the project's database list (`console.listDatabases`, as
- * the Databases page lists them) as a log source. Only databases on dedicated
- * compute write logs.
+ * the Databases page lists them) as a log source, or null when it doesn't
+ * log. Only dedicated compute writes logs: the database needs a backing,
+ * which reports its engine, and the Databases page must count it as
+ * dedicated. A serverless database has no lines of its own.
  */
 export function runtimeLogDatabaseSource(
-  database: Pick<Models.Database, '$id' | 'name' | 'type' | 'engine'>,
+  database: Pick<
+    Models.Database,
+    '$id' | 'name' | 'type' | 'engine' | 'specification' | 'replicas'
+  >,
 ): RuntimeLogSource | null {
   if (!database.engine) return null
+  const specification = readDatabaseSpecification(database.specification)
+  if (specification && isServerlessDatabaseSpecId(specification)) return null
+  const dedicated = hasDedicatedDatabaseCompute({
+    $id: database.$id,
+    databaseType: database.type,
+    specification,
+    replicas: database.replicas,
+  })
+  if (!dedicated) return null
   return {
     type: 'databases',
     id: database.$id,

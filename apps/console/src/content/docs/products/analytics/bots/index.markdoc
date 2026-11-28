@@ -1,20 +1,31 @@
 ---
 layout: article
 title: Bots and AI traffic
-description: How Appwrite Analytics recognizes bots, AI crawlers, and AI assistants from their user agent, where they appear on the dashboard, and how they count toward your plan.
+description: How Appwrite Analytics recognizes bots, AI crawlers, and AI assistants from their user agent and network, where they appear on the dashboard, and how they count toward your plan.
 ---
 
-Not every visit comes from a person. Search engines index your pages, AI companies crawl them for training and answers, social sites fetch link previews, and monitors check that your site is up. Appwrite recognizes these clients from their user agent and labels their events, so you can see how much of your traffic is automated and who sends it.
+Not every visit comes from a person. Search engines index your pages, AI companies crawl them for training and answers, social sites fetch link previews, and monitors check that your site is up. Appwrite recognizes these clients from their user agent and the network they connect from, and labels their events, so the dashboard shows how much of your traffic is automated and who sends it.
 
 # How bots are recognized {% #detection %}
 
-Appwrite checks the user agent of every event: the browser's `User-Agent` header, or the `userAgent` your server or proxy passes on. When it matches a known bot, Appwrite records the event as bot traffic, with the bot's name and category.
+Appwrite checks three things for every event, in this order:
 
-Bots reach your analytics when they run your tracking code, such as crawlers that render JavaScript and automated browsers. They also appear when your server or proxy sends events for their requests with their user agent.
+1. **The user agent**: the browser's `User-Agent` header, or the `userAgent` your server or proxy passes on. A match with a known bot labels the event with the bot's name and category.
+2. **The referrer**: a referrer on a known referrer spam domain labels the event as referrer spam.
+3. **The network**: an IP address on a hosting or cloud provider's network labels the event as datacenter traffic, named after the provider. This catches headless crawlers that send a real browser's user agent. Devices in Firebase Test Lab, where Google Play runs pre-launch tests of Android apps, are labeled as test devices.
 
-Generic HTTP clients, such as `curl` or a language's default HTTP library, aren't counted as bots.
+Bots reach your analytics when they run your tracking code, such as crawlers that render JavaScript. The Web SDK's `Tracking` class sends nothing from browsers that report automation, such as Playwright or Selenium test runs. Bots also appear when your server or proxy sends events for their requests with their user agent and IP address.
+
+Generic HTTP clients, such as `curl` or a language's default HTTP library, aren't labeled as bots by their user agent.
 
 # Categories {% #categories %}
+
+{% only_dark %}
+![AI agents and crawlers card on the Categories tab, with visitors by bot category](/images/docs/analytics/dark/bot-categories.avif)
+{% /only_dark %}
+{% only_light %}
+![AI agents and crawlers card on the Categories tab, with visitors by bot category](/images/docs/analytics/bot-categories.avif)
+{% /only_light %}
 
 Each event from a recognized bot gets one of these categories.
 
@@ -27,12 +38,17 @@ Each event from a recognized bot gets one of these categories.
 - **Advertising crawler**: such as Google AdsBot.
 - **Automation**: Headless Chrome and PhantomJS.
 - **Crawler**: any other client that calls itself a bot, crawler, spider, or scraper in its user agent.
+- **Referrer spam**: visits whose referrer is a known spam domain.
+- **Datacenter**: traffic from a hosting or cloud provider's network, such as Amazon or DigitalOcean. Networks that mostly carry people, such as iCloud Private Relay and Cloudflare WARP, aren't counted.
+- **Test device**: Firebase Test Lab devices.
 
 **AI crawlers** collect pages to train models and build search indexes. **AI assistants** fetch a page while answering a person's question. People who click a link from an assistant to your site aren't bots: they count as visitors in the `ai` channel. See [Traffic sources](/docs/products/analytics/sources#ai).
 
 Lighthouse is a site monitor, so audits with tools such as PageSpeed Insights appear as bot traffic.
 
-The API uses lowercase category names, such as `ai crawler` and `search crawler`.
+The dashboard counts a datacenter visitor as human after two or more different interactive events, such as a custom event and a click on an outbound link, since people on VPNs and corporate proxies use these networks too.
+
+The API, the **Categories** tab, and **Bot category** filters use lowercase category names, such as `ai crawler`, `search crawler`, and `datacenter`.
 
 # On the dashboard {% #dashboard %}
 
@@ -43,19 +59,26 @@ The API uses lowercase category names, such as `ai crawler` and `search crawler`
 ![AI agents and crawlers card listing bots by name, next to the Technology card](/images/docs/analytics/technology-bots.avif)
 {% /only_light %}
 
-Two cards show automated traffic.
+Two cards show automated traffic on a **Web** property. A **Mobile** property shows **Humans vs bots** only.
 
 - **Humans vs bots** splits traffic into people and bots, by visitors or by events. Below the split, **By type** ranks bot categories and **Top agents** ranks individual bots.
 - **AI agents and crawlers** lists every named bot in the date range on the **Agents** tab, and their categories on the **Categories** tab.
 
-Click a category or a bot to filter the whole dashboard to it, so you can see which pages it reads and how often. You can also filter by **Bot** or **Bot category** from **Filters**.
+Click **Humans** or **Bots** on the split to filter the whole dashboard to that traffic. Click a category or a bot to filter to it and see which pages it reads and how often. **Filters** also has **Traffic**, **Bot**, and **Bot category** columns.
 
-The metrics at the top of the dashboard, such as **Unique visitors** and **Pageviews**, include bot traffic.
+Without a filter, the metrics at the top of the dashboard, such as **Unique visitors** and **Pageviews**, include bot traffic. **Mobile** properties open with a **Humans only** filter.
 
 # Billing {% #billing %}
 
-Bot events don't count toward your plan's analytics events. See [Limits and retention](/docs/products/analytics/limits).
+Billing follows the network an event comes from, not the label it gets. Events from a datacenter network or a Firebase Test Lab device don't count toward your plan's analytics events, even when the user agent names a bot: GPTBot crawling from a cloud provider shows as GPTBot on the dashboard and isn't billed. Events from any other network count, including bots that name themselves in their user agent and referrer spam. Events your server sends with an API key always count, even with an `ip` on a datacenter network or a test device. See [Limits and retention](/docs/products/analytics/limits).
 
 # Block bots {% #block %}
 
-Analytics shows bot traffic. To stop it from reaching a site, use [Firewall](/docs/products/firewall), for example with a rule that [challenges automated traffic](/docs/products/firewall/challenge-bots). From the dashboard, you can start a Firewall rule from any bot name. See [Block traffic with Firewall](/docs/products/analytics/firewall).
+{% only_dark %}
+![Menu for GPTBot on the AI agents and crawlers card, with Create firewall rule](/images/docs/analytics/dark/bot-menu.avif)
+{% /only_dark %}
+{% only_light %}
+![Menu for GPTBot on the AI agents and crawlers card, with Create firewall rule](/images/docs/analytics/bot-menu.avif)
+{% /only_light %}
+
+Analytics shows bot traffic. To stop it from reaching a site, use [Firewall](/docs/products/firewall), for example with a rule that [challenges automated traffic](/docs/products/firewall/challenge-bots). For a property linked to an Appwrite Site, right-click a bot name on the dashboard and select **Create firewall rule**. See [Block traffic with Firewall](/docs/products/analytics/firewall).

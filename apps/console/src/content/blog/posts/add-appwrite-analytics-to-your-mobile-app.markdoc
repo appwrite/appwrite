@@ -1,0 +1,391 @@
+---
+layout: post
+title: "How to add Appwrite Analytics to your mobile app"
+description: Add Appwrite Analytics to an Android, iOS, React Native, or Flutter app. Track installs, screen views, time in the app, and custom events, and compare iOS and Android on one dashboard.
+date: 2026-11-30
+cover: /images/blog/add-appwrite-analytics-to-your-mobile-app/cover.avif
+timeToRead: 8
+author: atharva
+category: tutorials
+featured: false
+draft: true
+faqs:
+  - question: "How do I add analytics to a mobile app with Appwrite?"
+    answer: "Register your app's package name or bundle ID under Apps in your Appwrite project, create an analytics property with the Mobile type, and install the Appwrite SDK for your platform. Then create a Tracking instance with your property ID, call start() when the app launches, and send a screen view each time a screen opens."
+  - question: "Does Appwrite Analytics count screen views as pageviews?"
+    answer: "Yes. Appwrite counts screen_view events as views, the same as pageview events on a website. On a Mobile property, the dashboard shows them as Screen views."
+  - question: "How does Appwrite Analytics measure time spent in an app?"
+    answer: "Tracking sends an app_backgrounded event when the app goes to the background, with engagementTime set to the seconds it was in the foreground. The dashboard shows the average engagement time per session."
+  - question: "Can one analytics property track both iOS and Android?"
+    answer: "Yes. Open the Platforms tab of the Technology card to compare iOS and Android, and select a row to filter the whole dashboard to one platform."
+  - question: "Which Appwrite SDKs can send analytics events from a mobile app?"
+    answer: "The Flutter, Android, Apple, and React Native SDKs all include a Tracking class that sends install, lifecycle, screen view, and custom events. Flutter also includes the TrackingObserver for routes. Any other platform can send events through the REST API."
+  - question: "Does Appwrite Analytics count app installs?"
+    answer: "Yes. start() sends first_open once per install and app_updated on the first launch after a new version. The Installs card on the dashboard counts both."
+---
+
+Appwrite Analytics shows how people use your mobile app: which screens they open, how long they stay, and what they do on each screen. One property can collect the events of your iOS and Android apps, so one dashboard shows both platforms side by side.
+
+This tutorial adds Appwrite Analytics to an app built with Flutter, Kotlin on Android, SwiftUI on iOS, or React Native. Each code step has a tab for each platform. At the end, the app reports installs, screen views, time in the app, and custom events, and the property's dashboard shows them by screen and by platform.
+
+# Register your app in your project
+
+Appwrite accepts events from an app only when its package name or bundle ID belongs to an app in your project.
+
+1. In the Appwrite Console, open your project and go to **Apps**.
+2. Select **Add app**.
+3. Select your platform: **Android**, **Apple**, **Flutter**, or **React Native**. For Apple, Flutter, and React Native, also select the target platform, such as **iOS**. Then select **Continue**.
+4. Enter a name and your app's package name or bundle ID, such as `com.example.acmestore`.
+5. Select **Register and continue**.
+
+Repeat these steps for each target of the app, for example once for Android and once for iOS.
+
+# Create an analytics property
+
+![The Create property page with a name, the Mobile type, and the Flutter SDK selected](/images/blog/add-appwrite-analytics-to-your-mobile-app/create-property.avif)
+
+A property collects the events of one app or website, and each property has its own dashboard. Use one property for all platforms of an app, so that the dashboard can compare them.
+
+1. Go to **Analytics** and select **Create property**.
+2. Enter a **Name**, such as `Acme Shop app`.
+3. Under **Type**, select **Mobile**, and leave **Domain** empty.
+4. Under **SDK**, select **Flutter** for a Flutter app. For Android, Apple, and React Native, select **REST**: the Console has no snippet for those SDKs, and this guide covers their setup.
+5. Select **Create property**.
+
+The Console opens the install page with your property ID. Keep it open: it confirms the first event that your app sends.
+
+# Install the SDK
+
+Add the Appwrite SDK for your platform:
+
+{% tabs %}
+{% tabsitem #flutter title="Flutter" %}
+
+Add the `appwrite` package to your app:
+
+```sh
+flutter pub add appwrite
+```
+
+For Android builds, set `minSdk` to 24 and turn on core library desugaring in `android/app/build.gradle.kts`:
+
+```kotlin
+android {
+    defaultConfig {
+        minSdk = 24
+    }
+    compileOptions {
+        isCoreLibraryDesugaringEnabled = true
+    }
+}
+
+dependencies {
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+}
+```
+
+{% /tabsitem %}
+
+{% tabsitem #android title="Android (Kotlin)" %}
+
+Set `compileSdk` to 37 or later, and add the Appwrite SDK and Navigation Compose, which the screen view step uses, to `app/build.gradle.kts`:
+
+```kotlin
+dependencies {
+    implementation("io.appwrite:sdk-for-android:31.4.0")
+    implementation("androidx.navigation:navigation-compose:2.10.2")
+}
+```
+
+{% /tabsitem %}
+
+{% tabsitem #apple title="Apple" %}
+
+In Xcode, select **File** > **Add Package Dependencies**. Enter the package URL, and add the **Appwrite** library to your app target:
+
+```text
+https://github.com/appwrite/sdk-for-apple
+```
+
+{% /tabsitem %}
+
+{% tabsitem #react-native title="React Native" %}
+
+In an Expo app, install the SDK with the file system module and the URL polyfill that it uses:
+
+```sh
+npx expo install react-native-appwrite expo-file-system react-native-url-polyfill
+```
+
+{% /tabsitem %}
+{% /tabs %}
+
+# Start tracking
+
+Create one `Tracking` instance for the whole app with your endpoint, project ID, and property ID, and call `start()` when the app launches. Copy the endpoint and the project ID from your project's **Settings** page. On Android, create it in your `Application` class and register that class in `AndroidManifest.xml` with `android:name=".AcmeApp"` on the `<application>` element. In React Native, pass the package name or bundle ID registered under **Apps** to `setPlatform()`.
+
+{% multicode %}
+```client-flutter
+// lib/main.dart
+import 'package:appwrite/appwrite.dart';
+import 'package:flutter/material.dart';
+
+final client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+final tracking = Tracking(Analytics(client), '<PROPERTY_ID>');
+
+void main() {
+  tracking.start();
+  runApp(const AcmeApp());
+}
+```
+
+```client-android-kotlin
+// AcmeApp.kt
+import android.app.Application
+import io.appwrite.Client
+import io.appwrite.Tracking
+import io.appwrite.services.Analytics
+
+class AcmeApp : Application() {
+    lateinit var tracking: Tracking
+
+    override fun onCreate() {
+        super.onCreate()
+
+        val client = Client(this)
+            .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+            .setProject("<PROJECT_ID>")
+
+        tracking = Tracking(Analytics(client), "<PROPERTY_ID>")
+        tracking.start()
+    }
+}
+```
+
+```client-apple
+// AcmeApp.swift
+import Appwrite
+import SwiftUI
+
+let tracking: Tracking = {
+    let client = Client()
+        .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .setProject("<PROJECT_ID>")
+
+    return Tracking(Analytics(client), propertyId: "<PROPERTY_ID>")
+}()
+
+@main
+struct AcmeApp: App {
+    init() {
+        tracking.start()
+    }
+
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+        }
+    }
+}
+```
+
+```client-react-native
+// src/lib/analytics.ts
+import 'react-native-url-polyfill/auto';
+import { Analytics, Client, Tracking } from 'react-native-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setPlatform('com.example.acmestore');
+
+export const tracking = new Tracking(new Analytics(client), '<PROPERTY_ID>');
+
+tracking.start();
+```
+{% /multicode %}
+
+`start()` sends `first_open` after an install or `app_updated` after an update, and records when the app goes to the background and comes back, so installs and time in the app arrive with no other code. In React Native, import `@/lib/analytics` in the root layout, `src/app/_layout.tsx`, so tracking starts when the app launches. The screen view step shows the full file.
+
+# Confirm the first event
+
+![The install page in the Console confirms that the first event from the app arrived](/images/blog/add-appwrite-analytics-to-your-mobile-app/event-received.avif)
+
+Run your app on a device or an emulator. Within a few seconds, the install page in the Console shows **Event received** with the first event. Select **Open dashboard** to see the session.
+
+# Track screen views
+
+Send a `screen_view` each time a screen opens. Hook `Tracking` into your navigation, so that new screens send their views with no extra code:
+
+{% multicode %}
+```client-flutter
+// lib/main.dart
+class AcmeApp extends StatelessWidget {
+  const AcmeApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      navigatorObservers: [TrackingObserver(tracking)],
+      routes: {
+        '/': (context) => const HomeScreen(),
+        '/product': (context) => const ProductScreen(),
+      },
+    );
+  }
+}
+```
+
+```client-android-kotlin
+// MainActivity.kt
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.runtime.LaunchedEffect
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        val tracking = (application as AcmeApp).tracking
+
+        setContent {
+            val navController = rememberNavController()
+
+            LaunchedEffect(navController) {
+                navController.currentBackStackEntryFlow.collect { entry ->
+                    entry.destination.route?.let { tracking.screenView(it) }
+                }
+            }
+
+            NavHost(navController, startDestination = "home") {
+                composable("home") { HomeScreen(onOpenProduct = { navController.navigate("product") }) }
+                composable("product") { ProductScreen() }
+            }
+        }
+    }
+}
+```
+
+```client-apple
+// ContentView.swift
+import SwiftUI
+
+struct ContentView: View {
+    var body: some View {
+        NavigationStack {
+            NavigationLink("Open product") {
+                ProductView()
+            }
+            .onAppear { tracking.screenView("home") }
+        }
+    }
+}
+
+struct ProductView: View {
+    var body: some View {
+        Text("Canvas backpack")
+            .onAppear { tracking.screenView("product") }
+    }
+}
+```
+
+```client-react-native
+// src/app/_layout.tsx
+import { useEffect } from 'react';
+import { Stack, usePathname } from 'expo-router';
+
+import { tracking } from '@/lib/analytics';
+
+export default function RootLayout() {
+    const pathname = usePathname();
+
+    useEffect(() => {
+        tracking.screenView(pathname);
+    }, [pathname]);
+
+    return <Stack />;
+}
+```
+{% /multicode %}
+
+`HomeScreen` and `ProductScreen` stand for your own screens. Returning to a screen sends another screen view.
+
+# Track custom events
+
+Screen views show where people go. Custom events record what they do, such as adding a product to the cart or completing a purchase. Send each event where the action completes, with the screen that it belongs to:
+
+{% multicode %}
+```client-flutter
+tracking.event(
+  'add_to_cart',
+  url: '/product',
+  props: {'product': 'canvas-backpack'},
+);
+```
+
+```client-android-kotlin
+tracking.event(
+    "add_to_cart",
+    url = "/product",
+    props = mapOf("product" to "canvas-backpack"),
+)
+```
+
+```client-apple
+tracking.event("add_to_cart", url: "/product", props: ["product": "canvas-backpack"])
+```
+
+```client-react-native
+tracking.track('add_to_cart', {
+    url: '/product',
+    props: { product: 'canvas-backpack' },
+});
+```
+{% /multicode %}
+
+Give each event a lowercase `snake_case` name for a finished action, such as `purchase_completed` or `review_posted`. For naming and props, see [Track custom events](/docs/products/analytics/custom-events).
+
+# Read the dashboard
+
+![The Analytics dashboard for a mobile app with active users, sessions, screen views, and a chart for the last 30 days](/images/blog/add-appwrite-analytics-to-your-mobile-app/dashboard.avif)
+
+A Mobile property's dashboard uses app terms: **Active users**, **Sessions**, **Screen views**, **Events**, **Signed-in users**, **Screens/session**, **Session length**, and **Engagement time**. Select a metric to plot it on the chart against the previous period.
+
+The dashboard opens filtered to **Humans only**, which leaves automated test devices out of the numbers. The **online** count in the header shows the people who used the app in the last five minutes.
+
+## Count installs and updates
+
+![The Installs card with new installs and updates for the last 30 days](/images/blog/add-appwrite-analytics-to-your-mobile-app/installs.avif)
+
+The **Installs** card counts the `first_open` and `app_updated` events that `start()` sends. It shows how many people installed the app in the date range, and how many moved to a new version.
+
+## Find the screens people use most
+
+![The Screens card lists the app's screens by path, with the home, product, and wishlist screens near the top](/images/blog/add-appwrite-analytics-to-your-mobile-app/screens.avif)
+
+The **Screens** card lists your screens by path. **Top screens** ranks all screens, **Entry screens** shows the screen where each session starts, and **Exit screens** shows the screen where it ends.
+
+## Compare iOS and Android
+
+![The Platforms tab of the Technology card splits the users between iOS and Android](/images/blog/add-appwrite-analytics-to-your-mobile-app/platforms.avif)
+
+The **Platforms** tab of the **Technology** card splits your traffic by platform, such as iOS and Android. Select a row to filter the whole dashboard to one platform.
+
+# Conclusion
+
+Your app is reporting its first sessions and screen views. We'd love to hear what turns up, so share your dashboard or ask a question on [Discord](https://appwrite.io/discord).
+
+# Resources
+
+- [Appwrite Analytics documentation](/docs/products/analytics)
+- [Track a mobile app](/docs/products/analytics/mobile)
+- [Send events over REST](/docs/products/analytics/rest)
+- [Track custom events](/docs/products/analytics/custom-events)
+- [Visitors and sessions](/docs/products/analytics/visitors)
+- [How to add Appwrite Analytics to your website](/blog/post/add-appwrite-analytics-to-your-website)

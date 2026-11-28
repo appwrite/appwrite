@@ -702,6 +702,71 @@ final class VideosCustomClientTest extends Scope
     }
 
     /**
+     * The encode job is queued with the video as it was when the rendition
+     * was created. Once the video is made private, its rendition events must
+     * stop reaching sessions that could only read it before.
+     */
+    public function testRealtimeEventsWithheldAfterVideoMadePrivate(): void
+    {
+        $client = $this->getWebsocket(['videos'], $this->websocketHeaders());
+        $connected = \json_decode($client->receive(), true);
+        $this->assertEquals('connected', $connected['type'] ?? '');
+
+        $created = $this->client->call(Client::METHOD_POST, '/videos', $this->serverHeaders(), [
+            'videoId' => Id::unique(),
+            'bucketId' => $this->getVideoBucket()['$id'],
+            'fileId' => $this->getVideoFile()['$id'],
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $created['headers']['status-code']);
+        $videoId = $created['body']['$id'];
+
+        $profiles = $this->client->call(Client::METHOD_GET, '/project/videos/profiles', $this->serverHeaders());
+        $this->assertEquals(200, $profiles['headers']['status-code']);
+        $profileId = $profiles['body']['profiles'][0]['$id'] ?? '';
+        $this->assertNotEmpty($profileId);
+
+        $rendition = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->serverHeaders(), [
+            'profileId' => $profileId,
+            'output' => 'hls',
+        ]);
+        $this->assertEquals(202, $rendition['headers']['status-code']);
+        $renditionId = $rendition['body']['$id'];
+
+        $private = $this->client->call(Client::METHOD_PATCH, '/videos/' . $videoId, $this->serverHeaders(), [
+            'permissions' => [],
+        ]);
+        $this->assertEquals(200, $private['headers']['status-code']);
+
+        $body = $this->waitForRenditionTerminalState($videoId, $renditionId);
+        $this->assertEquals('ready', $body['status']);
+
+        // Events published before the change may have arrived; the ones
+        // published after it, such as the final `ready`, must not.
+        $deadline = \time() + 6;
+        try {
+            while (\time() < $deadline) {
+                $frame = \json_decode($client->receive(), true);
+                if (!\is_array($frame) || ($frame['data']['payload']['$id'] ?? '') !== $renditionId) {
+                    continue;
+                }
+
+                $this->assertNotEquals(
+                    'ready',
+                    $frame['data']['payload']['status'] ?? '',
+                    'Rendition event reached a session after the video was made private'
+                );
+            }
+        } catch (TimeoutException | ConnectionException) {
+            // Silence: nothing further queued for this subscriber.
+        }
+
+        $client->close();
+    }
+
+    /**
      * Guests with videos.play can stream a video that grants read("any").
      * Guests still lack videos.read, so manage metadata stays closed.
      */

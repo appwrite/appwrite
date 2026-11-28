@@ -18,7 +18,7 @@
 //! | `Validator\Geometry` | [`geometry::Geometry`] |
 //! | `Validator\IndexDefinition` | [`index_definition::IndexDefinition`] |
 //! | `Validator\IndexDependency` | [`index_dependency::IndexDependency`] |
-//! | `Validator\Key`, `UID`, `Label` | [`key::Key`], [`uid::Uid`], [`label::Label`] |
+//! | `Validator\Key`, `UID`, `Label` | [`key::Key`], [`uid::Uid`], [`label::Label`]; over bytes, [`key()`], [`label()`], [`shape`] and the `*_description` functions (from `keys`) |
 //! | `Validator\ObjectPath` | [`object_path::ObjectPath`] |
 //! | `Validator\ObjectValue` | [`object_value::ObjectValue`] |
 //! | `Validator\Operator` | [`operator::Operator`] |
@@ -60,6 +60,7 @@ pub mod geometry;
 pub mod index_definition;
 pub mod index_dependency;
 pub mod key;
+mod keys;
 pub mod label;
 pub mod object_path;
 pub mod object_value;
@@ -74,6 +75,8 @@ pub mod spatial;
 pub mod structure;
 pub mod uid;
 pub mod vector;
+
+pub use keys::*;
 
 /// The message a validator reports, changed by validations (PHP's
 /// `protected string $message`).

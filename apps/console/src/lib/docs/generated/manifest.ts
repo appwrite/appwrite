@@ -1209,30 +1209,30 @@ export const DOCS_PAGES: DocsPageMeta[] = [
   {
     "slug": "products/analytics/bots",
     "title": "Bots and AI traffic",
-    "description": "How Appwrite Analytics recognizes bots, AI crawlers, and AI assistants from their user agent, where they appear on the dashboard, and how they count toward your plan.",
+    "description": "How Appwrite Analytics recognizes bots, AI crawlers, and AI assistants from their user agent and network, where they appear on the dashboard, and how they count toward your plan.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 5
   },
   {
     "slug": "products/analytics/custom-events",
     "title": "Track custom events",
-    "description": "Record the actions that matter to your product in Appwrite Analytics, such as signups and purchases, with event names and props from the browser, Flutter, or your server.",
+    "description": "Record the actions that matter to your product in Appwrite Analytics, such as signups and purchases, with event names and props from the browser, mobile apps, or your server.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/analytics/dashboard",
     "title": "Dashboard",
     "description": "A tour of the Appwrite Analytics dashboard, from the metrics, chart, and notes to date ranges, live visitors, and the cards that break traffic down by source, page, location, technology, bots, and custom events.",
     "layout": "article",
-    "readingTimeMinutes": 5
+    "readingTimeMinutes": 6
   },
   {
     "slug": "products/analytics/events",
     "title": "Events",
-    "description": "Events are the records every Appwrite Analytics metric is built from. Learn which events the tracking helpers send, how custom events differ, and what Appwrite adds to each event.",
+    "description": "Events are the records every Appwrite Analytics metric is built from. Learn which events the `Tracking` class sends, how custom events differ, and what Appwrite adds to each event.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/analytics/export",
@@ -1256,25 +1256,25 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 3
   },
   {
-    "slug": "products/analytics/flutter",
-    "title": "Track a Flutter app",
-    "description": "Add Appwrite Analytics to a Flutter app. Track screen views with a navigator observer, app lifecycle and engagement time, and your own events on iOS, Android, web, and desktop.",
-    "layout": "article",
-    "readingTimeMinutes": 4
-  },
-  {
     "slug": "products/analytics/limits",
     "title": "Limits and retention",
     "description": "Appwrite Analytics plan limits for events, properties, and data retention, and the size limits for events, properties, and metric queries.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "products/analytics/metrics",
     "title": "Metrics",
     "description": "How Appwrite Analytics calculates visitors, visits, pageviews, bounce rate, visit duration, and engagement time, which breakdowns it offers, and how to read metrics from your own code.",
     "layout": "article",
-    "readingTimeMinutes": 6
+    "readingTimeMinutes": 7
+  },
+  {
+    "slug": "products/analytics/mobile",
+    "title": "Track a mobile app",
+    "description": "Add Appwrite Analytics to an Android, Apple, Flutter, or React Native app. Track installs, updates, screen views, push notifications, time in the app, and your own events.",
+    "layout": "article",
+    "readingTimeMinutes": 5
   },
   {
     "slug": "products/analytics/own-domain",
@@ -1288,26 +1288,26 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Privacy",
     "description": "What Appwrite Analytics collects and stores for each event, how visitor IDs work without cookies, and the controls you have over tracking and data.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/analytics/properties",
     "title": "Properties",
     "description": "A property collects Appwrite Analytics events for one website or app. Create properties, control which origins can send events, link a property to a site, and turn off or delete a property.",
     "layout": "article",
-    "readingTimeMinutes": 5
+    "readingTimeMinutes": 6
   },
   {
     "slug": "products/analytics/quick-start",
     "title": "Start with Analytics",
-    "description": "Track your first website visit with Appwrite Analytics. Create a property, add the Web SDK's tracking helper to your site, and see the visit on the dashboard.",
+    "description": "Track your first website visit with Appwrite Analytics. Create a property, add one script tag to your site, and see the visit on the dashboard.",
     "layout": "article",
     "readingTimeMinutes": 2
   },
   {
     "slug": "products/analytics/rest",
     "title": "Send events over REST",
-    "description": "Send Appwrite Analytics events with a plain HTTP request from any platform, including native iOS and Android apps, games, and command-line tools.",
+    "description": "Send Appwrite Analytics events with a plain HTTP request from any platform, such as games, desktop apps, and command-line tools.",
     "layout": "article",
     "readingTimeMinutes": 4
   },
@@ -1330,14 +1330,14 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Visitors and sessions",
     "description": "How Appwrite Analytics identifies visitors without cookies, groups their events into visits, and works out bounces, entry and exit pages, visit duration, and live visitors.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 5
   },
   {
     "slug": "products/analytics/web",
     "title": "Track a website",
-    "description": "Add Appwrite Analytics to a website or web app with the Web SDK. Track pageviews, outbound links, scroll depth, engagement time, and file downloads from the browser.",
+    "description": "Add Appwrite Analytics to a website or web app with one script tag or the Web SDK. Track pageviews, outbound links, scroll depth, engagement time, and file downloads from the browser.",
     "layout": "article",
-    "readingTimeMinutes": 5
+    "readingTimeMinutes": 7
   },
   {
     "slug": "products/auth",
@@ -1359,6 +1359,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Unlock advanced user management - Appwrite's Account API for seamless signups, authentication, and dynamic permissions.",
     "layout": "article",
     "readingTimeMinutes": 1
+  },
+  {
+    "slug": "products/auth/analytics",
+    "title": "Analytics",
+    "description": "See what each signed-in user does in your sites, apps, and AI agents with Appwrite Analytics, from the Analytics tab of a user in Auth.",
+    "layout": "article",
+    "readingTimeMinutes": 3
   },
   {
     "slug": "products/auth/anonymous",
