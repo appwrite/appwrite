@@ -303,6 +303,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
             href: '/docs/advanced/security/roles',
           },
           {
+            label: 'Single sign-on',
+            href: '/docs/advanced/security/sso',
+          },
+          {
             label: 'Rate limits',
             href: '/docs/advanced/security/rate-limits',
           },
