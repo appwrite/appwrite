@@ -1,0 +1,204 @@
+---
+layout: post
+title: "Track your AI agent's models and tools with Appwrite Analytics"
+description: Track which models and tools your AI agent calls, group each run into a visit, and spot failures with an Agent property in Appwrite Analytics.
+date: 2026-11-30
+cover: /images/blog/track-ai-agent-models-tools-appwrite-analytics/cover.avif
+timeToRead: 4
+author: atharva
+category: tutorials
+featured: false
+draft: true
+faqs:
+  - question: "What is an Agent property in Appwrite Analytics?"
+    answer: "An Agent property is built for AI agents and backend services. It leaves out browser metrics like pageviews and bounce rate, and focuses on events, runs, users, and a Models and tools card."
+  - question: "How does the Models and tools card work?"
+    answer: "Send a model prop when your agent calls a model, and a tool prop when it runs a tool. The card appears after the first event with either prop, and you can select any row to filter the dashboard."
+  - question: "How do I group all events from one agent run together?"
+    answer: "Pass the same sessionHash, such as a run ID or conversation ID, on every event in that run. Appwrite counts each run as one visit and measures Visit duration from its first event to its last."
+  - question: "Do I need an API key to track an AI agent?"
+    answer: "Yes, when sending events from your server with a userId. Create an API key with the analytics.write scope, and clear Allowed origins in the property's settings so only your server can send events."
+  - question: "Can Appwrite Analytics add up token counts or model costs?"
+    answer: "No. Event props are stored as text, so Appwrite Analytics counts how often each model, tool, or prop value appears. It does not sum token counts or calculate costs."
+---
+
+Once your AI agent is live, you need answers to basic questions. Which model handles most requests? Which tools run, and which ones fail? How long does a run take, and which users rely on the agent most?
+
+An **Agent** property in Appwrite Analytics answers these questions next to the rest of your project. Unlike a **Web** or **Mobile** property, it drops browser metrics like pageviews, referrers, and bounce rate, and shows events, runs, users, and a **Models and tools** card instead.
+
+This tutorial sets up an Agent property, sends events for an agent's model and tool calls, groups each run into one visit, and reads the results on the dashboard.
+
+# Create an Agent property
+
+![Create property page with the name Support agent and the Agent type selected](/images/blog/track-ai-agent-models-tools-appwrite-analytics/create-property.avif)
+
+Create a separate property for your agent so its events do not mix with your website or mobile app.
+
+1. In the Appwrite Console, open your project and go to **Analytics**.
+2. Select **Create property**.
+3. Enter a **Name**, such as `Support agent`.
+4. Under **Type**, select **Agent**. The **Domain** and **SDK** fields go away, because an agent sends events over the API.
+5. Select **Create property**.
+
+Keep the install page open. It shows your endpoint, project ID, and property ID, and updates as soon as your first event arrives.
+
+# Create an API key
+
+![Create API key panel with the name Agent analytics and the analytics.write scope selected](/images/blog/track-ai-agent-models-tools-appwrite-analytics/api-key.avif)
+
+Your agent runs on your server, not in a browser. Create an API key so your server can send events with a `userId`.
+
+1. Open **API Keys** in your project and select **Create API key**.
+2. Enter a name, such as `Agent analytics`.
+3. Select the `analytics.write` scope.
+4. Select **Create API key** and save the secret in your server's environment variables.
+
+To block browser traffic from writing to this property, open its **Settings** tab, go to **Allowed origins**, and remove `*`. When **Allowed origins** is empty, Appwrite accepts only events sent with an `analytics.write` key.
+
+# Design your agent events
+
+![Models and tools card on the Tools tab, listing search_docs, lookup_order, create_ticket, refund_order, and update_address](/images/blog/track-ai-agent-models-tools-appwrite-analytics/models-tools.avif)
+
+Use short, lowercase `snake_case` names for each step in your agent loop.
+
+| Event | Props | What it tracks |
+| --- | --- | --- |
+| `model_called` | `model`, `provider`, `status` | One model call and whether it succeeded or failed. |
+| `tool_called` | `tool`, `status` | One tool call and whether it succeeded or failed. |
+| `run_completed` | `outcome` | The end of a run, such as `answered`, `handed_off`, or `failed`. |
+
+Two prop names power the **Models and tools** card automatically: `model` fills the **Models** tab, and `tool` fills the **Tools** tab. Every other prop you send, such as `provider`, `status`, or `outcome`, gets its own tab in the **Event properties** card.
+
+## Group each run with sessionHash and userId
+
+Without a `sessionHash`, every request from your server shares the same IP address and gets merged into one long visit. Pass these three fields on every event in a run:
+
+- **`sessionHash`**: a unique ID for the run or conversation, such as `run_8f3a2c`. Each ID counts as one visit, and **Visit duration** measures the time from its first event to its last.
+- **`userId`**: the user's ID, such as their Appwrite Auth user ID. Never send a name or email address.
+- **`url`**: a full URL like `https://agent.example.com/support`. Use different paths (like `/support` or `/billing`) if one agent handles multiple flows.
+
+# Send events from your agent
+
+Write a small helper to keep your agent code clean. Server SDKs and REST expect `props` as a flat list of alternating keys and values (such as `['model', 'claude-sonnet-5-5']`), and a `try` block stops an analytics error from breaking a live run.
+
+{% multicode %}
+```server-nodejs
+import { Client, Analytics } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey(process.env.APPWRITE_API_KEY!);
+
+const analytics = new Analytics(client);
+const PROPERTY_ID = '<PROPERTY_ID>';
+const AGENT_URL = 'https://agent.example.com/support';
+
+export async function trackAgentEvent(
+    name: string,
+    runId: string,
+    props: Record<string, string>,
+    userId?: string,
+) {
+    try {
+        await analytics.createEvent({
+            propertyId: PROPERTY_ID,
+            name,
+            url: AGENT_URL,
+            sessionHash: runId,
+            userId,
+            props: Object.entries(props).flat(),
+        });
+    } catch (error) {
+        console.error('Failed to send analytics event:', error);
+    }
+}
+```
+```server-python
+import os
+from appwrite.client import Client
+from appwrite.services.analytics import Analytics
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key(os.environ['APPWRITE_API_KEY'])
+
+analytics = Analytics(client)
+PROPERTY_ID = '<PROPERTY_ID>'
+AGENT_URL = 'https://agent.example.com/support'
+
+
+def track_agent_event(
+    name: str,
+    run_id: str,
+    props: dict[str, str],
+    user_id: str | None = None,
+) -> None:
+    flat_props = [str(item) for pair in props.items() for item in pair]
+    try:
+        analytics.create_event(
+            property_id=PROPERTY_ID,
+            name=name,
+            url=AGENT_URL,
+            session_hash=run_id,
+            user_id=user_id,
+            props=flat_props,
+        )
+    except Exception as error:
+        print('Failed to send analytics event:', error)
+```
+```curl
+curl -X POST 'https://<REGION>.cloud.appwrite.io/v1/analytics/properties/<PROPERTY_ID>/events' \
+    -H 'Content-Type: application/json' \
+    -H 'X-Appwrite-Project: <PROJECT_ID>' \
+    -H 'X-Appwrite-Key: <API_KEY>' \
+    -d '{
+        "name": "model_called",
+        "url": "https://agent.example.com/support",
+        "sessionHash": "run_8f3a2c",
+        "userId": "<USER_ID>",
+        "props": ["model", "claude-sonnet-5-5", "provider", "anthropic", "status", "ok"]
+    }'
+```
+{% /multicode %}
+
+Call the helper after each model call and each tool call, with `status` set to `ok` or `error` so broken tools stand out. When the run ends, send `run_completed` with its outcome.
+
+Run your agent once. Within a few seconds, the install page shows **Event received**. Select **Open dashboard** to view the run.
+
+# Read the Agent dashboard
+
+![Agent property dashboard with Events, Visits, Users, and Visit duration, and the Models and tools card below the chart](/images/blog/track-ai-agent-models-tools-appwrite-analytics/dashboard.avif)
+
+Open the property's dashboard to see how your agent behaves over any date range:
+
+- **Top metrics**: **Events** counts all model, tool, and run events. **Visits** counts runs grouped by `sessionHash`, **Users** counts distinct user IDs, and **Visit duration** shows the average time from a run's first event to its last.
+- **Models and tools**: switch between **Models** and **Tools** to see which ones get called most. Select any row to filter the dashboard to that model or tool.
+- **Event properties**: check `provider`, `status`, or `outcome`. Combine filters to spot issues. For example, select `error` on the `status` tab, then check the **Tools** tab to see which tool fails most.
+- **Users**: see which users trigger the agent most. Select a user to see their runs and events in this property. Their **Analytics** tab in **Auth** shows their agent usage next to their web and mobile activity.
+- **Custom events**: compare `model_called`, `tool_called`, and `run_completed` counts, and select any event to filter the chart.
+
+When you switch models, update a prompt, or add a new tool, use **Add note** on the chart to mark that date. If tool calls or run times change the next day, the reason sits right on the timeline.
+
+# What to keep out of Analytics
+
+Appwrite Analytics tracks usage counts, not full trace logs. Keep three limits in mind:
+
+- **No prompts or personal data**: keep names, email addresses, prompt text, and tool outputs out of event names, props, and URLs. Use a user ID for `userId`.
+- **Counts, not sums**: props are stored as text, so Analytics counts how often each value appears. It cannot add up token counts or model costs. Keep those in your database or logging tool.
+- **Skip noisy loops**: every event counts toward your monthly plan limit. Track the steps you care about and skip retries or heartbeat loops. See [Limits and retention](/docs/products/analytics/limits).
+
+# Conclusion
+
+An Agent property and a small tracking helper show which models and tools your AI agent relies on, how long runs take, which tools fail, and which users depend on it most, all in the same project as your backend and Auth users.
+
+We'd love to hear what shows up on your Agent dashboard, so share it or ask a question on [Discord](https://appwrite.io/discord).
+
+# Resources
+
+- [Introducing Appwrite Analytics](/blog/post/introducing-appwrite-analytics)
+- [Properties](/docs/products/analytics/properties)
+- [Track custom events](/docs/products/analytics/custom-events)
+- [Track events from your server](/docs/products/analytics/server-side)
+- [Metrics](/docs/products/analytics/metrics)

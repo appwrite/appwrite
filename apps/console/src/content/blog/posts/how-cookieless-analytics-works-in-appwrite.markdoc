@@ -1,0 +1,140 @@
+---
+layout: post
+title: "How cookieless analytics works in Appwrite Analytics"
+description: Learn how Appwrite Analytics counts unique visitors, tracks visits, and measures bounce rate without cookies, browser storage, or stored IP addresses.
+date: 2026-11-30
+cover: /images/blog/how-cookieless-analytics-works-in-appwrite/cover.avif
+timeToRead: 5
+author: atharva
+category: products
+featured: false
+draft: true
+callToAction: true
+faqs:
+  - question: "How does Appwrite Analytics count unique visitors without cookies?"
+    answer: "Appwrite builds a temporary visitor ID on the server for each request by running the visitor's IP address, user agent, hostname, property ID, and a random daily salt through a one-way hash. Every click from that visitor on the same day produces the same ID, and the IP address is discarded right away."
+  - question: "Does Appwrite Analytics store IP addresses?"
+    answer: "No. Appwrite uses the IP address during the request to look up location and network type and to build the visitor ID hash, then discards it. IP addresses are never saved to the database."
+  - question: "What happens when a visit crosses midnight UTC?"
+    answer: "The visit stays intact. Appwrite keeps active visits in a shared server cache for 30 minutes along with the visitor ID the visit started with, so rotating the daily salt at midnight does not split an active visit."
+  - question: "Does Appwrite Analytics write anything to browser storage?"
+    answer: "No. On websites, Appwrite sets no cookies and writes nothing to localStorage, sessionStorage, or any other browser storage. In mobile apps, the SDK only saves the app version number locally to detect first installs and updates."
+  - question: "How does Appwrite Analytics track bounce rate without a session cookie?"
+    answer: "Appwrite tracks active visits in a server cache with a 30-minute inactivity timer. Every visit starts marked as a bounce and clears that flag when the visitor views a second page or screen, triggers a real interaction, or stays for at least 10 seconds."
+  - question: "Can I still identify signed-in users across devices?"
+    answer: "Yes. Turn on Identify signed-in users in a property's settings, and Appwrite uses the visitor's Appwrite Auth user ID instead of their IP address and user agent when building the daily visitor ID."
+---
+
+Most analytics tools save a random ID in a cookie or browser storage and send it back on every click to recognize the same visitor. That approach is simple to build, but it triggers consent banners, follows people across days, and often gets blocked by browsers.
+
+Appwrite Analytics takes a different path. It sets no cookies, writes nothing to browser storage, and never saves IP addresses to disk.
+
+Here is how it still counts unique visitors, groups clicks into visits, and measures bounce rate.
+
+# Step 1: Send only what just happened
+
+When someone opens a page on your site, the tracker (`tracker.js` or the Web SDK's `Tracking` class) sends one `POST` request to your project's analytics endpoint:
+
+```text
+POST /v1/analytics/properties/<PROPERTY_ID>/events
+```
+
+Each request includes only what happened in that moment:
+
+- The event name, such as `pageview` or `signup_completed`
+- The page URL and referrer
+- The viewport width, which Appwrite turns into a screen size bucket (`mobile`, `tablet`, `laptop`, or `desktop`)
+- Any custom props you send
+
+On the web, nothing is saved on the visitor's device. On mobile apps, the SDK saves only the app's version number locally so it can tell a first install from an update. It never saves a device ID or advertising ID.
+
+By default, the web tracker also stays quiet when the visitor has Do Not Track turned on (a site can turn this check off) or when the page runs inside an automated test browser such as Playwright, Puppeteer, Selenium, or Cypress.
+
+# Step 2: Turn each request into a daily visitor ID
+
+When an event arrives, Appwrite needs to know whether it has already seen this visitor today. To answer that without cookies, it builds a temporary **visitor ID** on the server from details already in the request:
+
+```text
+visitor_id = hash(daily_salt | subject | hostname | property_id)
+```
+
+- **`daily_salt`**: A random value that changes every day at midnight UTC.
+- **`subject`**: For anonymous visitors, their IP address and `User-Agent` header. For signed-in users (when **Identify signed-in users** is on, or when your server passes a `userId`), their Appwrite Auth user ID.
+- **`hostname`**: The domain of the page, such as `example.com`.
+- **`property_id`**: The ID of the analytics property.
+
+Appwrite tags the subject (`a` for anonymous visitors, `u` for signed-in users) so a crafted IP address and user agent can never match a real user ID, then runs everything through a fast one-way hash. Nobody can reverse the hash to recover the IP address or user agent.
+
+Because the same person on the same browser and network sends the same details all day, every click produces the same `visitor_id`. As soon as Appwrite computes the hash and looks up the visitor's country, region, city, and network type, it discards the IP address. It is never written to the database.
+
+# Step 3: Rotate and delete the daily salt
+
+The daily salt is what stops cross-day tracking. At midnight UTC, the salt rotates, and the same IP address and user agent hash to a brand-new `visitor_id`.
+
+Every API server shares one salt per UTC day from the platform database and keeps it in memory, so a visitor whose requests hit different servers still counts as one visitor.
+
+Each time Appwrite creates a new day's salt, it deletes every salt older than yesterday. Keeping yesterday's salt for one extra day prevents mismatches from small clock differences between servers around midnight. Once deleted, old visitor IDs can never be recomputed.
+
+# Step 4: Group clicks into visits without a session cookie
+
+![Dashboard of a Web property with unique visitors, visits, pageviews, bounce rate, and visit duration](/images/blog/how-cookieless-analytics-works-in-appwrite/dashboard.avif)
+
+Your dashboard also shows **visits** (called **sessions** on mobile), entry and exit pages, visit duration, and bounce rate. Instead of storing a session cookie in the browser, Appwrite keeps active visits in a shared server cache that expires after 30 minutes of inactivity.
+
+![An incoming event looks up an active visit by property, IP address, user agent, and hostname. If one is found, the event joins that visit. If not, it starts a new visit.](/images/blog/how-cookieless-analytics-works-in-appwrite/visit-lookup.avif)
+
+Using a shared cache means a visitor's second click still joins the same visit even if it lands on a different API server. Each cached visit also keeps the `visitor_id` it started with, so browsing past midnight UTC or signing in mid-visit never splits one visit into two.
+
+## How bounce rate stays accurate
+
+Every new visit starts marked as a bounce. Appwrite clears that flag as soon as any of three things happen:
+
+- The visitor views a second page or screen.
+- The visitor triggers a real interaction, such as an outbound link click, file download, or custom event.
+- The visit lasts at least 10 seconds.
+
+Passive background events, such as scroll depth, engagement pings, or switching apps, don't count as interactions. They still make the visit last longer, though, so they can carry it past 10 seconds. Push notifications received while a mobile app is closed do not start a visit at all.
+
+# Step 5: Stay first-party on Appwrite Sites
+
+![Analytics card in a site's Settings tab with the Web analytics switch](/images/blog/how-cookieless-analytics-works-in-appwrite/site-analytics.avif)
+
+Ad blockers often block requests sent to third-party analytics domains. On Appwrite Sites, turning on **Web analytics** adds the tracker to production HTML pages (never previews) and sends its events through your own domain instead of an Appwrite one:
+
+```text
+POST https://example.com/__appwrite/analytics/properties/<PROPERTY_ID>/events
+```
+
+Forwarding events through a proxy usually hides the visitor's real IP address behind the proxy's own IP, which would make every visitor look like the same person. The [Appwrite Network](/docs/products/network) avoids that by reading the visitor's real IP and user agent, signing them into a short-lived token, and forwarding the request to your project. Appwrite checks the signature before building the visitor ID and location, then discards the IP. If **Identify signed-in users** is on, the Appwrite Network forwards only that project's auth session and leaves all other cookies behind.
+
+Sites hosted elsewhere get the same first-party setup from a custom API domain on the project, or from a route on their own server that forwards events with an `analytics.write` API key.
+
+# Trade-offs of cookieless analytics
+
+![User identification card in a property's Settings tab with Identify signed-in users turned on](/images/blog/how-cookieless-analytics-works-in-appwrite/identify-users.avif)
+
+Skipping cookies keeps tracking fast and private, though a few numbers behave differently from cookie-based tools:
+
+- **One person visits on three different days**: three unique visitors over the week, because the salt rotates at midnight UTC.
+- **A phone switches from Wi-Fi to mobile data**: a new visitor, because the IP address changed.
+- **Two people share an office network and the same browser version**: possibly one anonymous visitor, because they share an IP address and user agent.
+- **One person visits on a phone and a laptop**: two anonymous visitors, unless **Identify signed-in users** is on and they use the same Appwrite Auth account.
+- **One person reads `example.com` and `docs.example.com`**: one visitor on each hostname, because the hostname is part of the hash.
+
+Appwrite accepts these trade-offs on purpose instead of using browser fingerprinting. Most teams want to know how many people visited today, where they came from, and what they did, not to follow an anonymous browser for months. For cross-device tracking of signed-in users, turn on **Identify signed-in users** in a property's settings (or pass `userId` from your server). Appwrite records only the Auth user ID, never an email address or name.
+
+# Conclusion
+
+Cookieless analytics works because the server can answer "same visitor today" and "same visit right now" with daily hashes and a 30-minute cache, so nothing has to live on the visitor's device. By rotating and deleting salts daily, discarding IP addresses after each request, and proxying traffic first-party on Appwrite Sites, Appwrite Analytics gives you clear numbers with privacy by default.
+
+If you have questions or feedback, join us on [Discord](https://appwrite.io/discord).
+
+# Resources
+
+- [Introducing Appwrite Analytics](/blog/post/introducing-appwrite-analytics)
+- [Appwrite Analytics documentation](/docs/products/analytics)
+- [Privacy in Appwrite Analytics](/docs/products/analytics/privacy)
+- [Visitors and sessions](/docs/products/analytics/visitors)
+- [Serve tracking from your domain](/docs/products/analytics/own-domain)
+- [Track events from your server](/docs/products/analytics/server-side)
+- [How to add Appwrite Analytics to your website](/blog/post/add-appwrite-analytics-to-your-website)

@@ -33,6 +33,36 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "ai-crawlers-assistants-referrals-appwrite-analytics",
+    "href": "/blog/post/ai-crawlers-assistants-referrals-appwrite-analytics",
+    "title": "AI crawlers, assistants, and referrals: how Appwrite Analytics tells AI traffic apart",
+    "description": "AI crawlers, AI assistants, and people clicking links from AI answers are three different kinds of traffic. Learn how Appwrite Analytics tells them apart, shows them on your dashboard, and lets you act on them.",
+    "date": "2026-11-30",
+    "lastUpdated": "2026-11-30",
+    "timeToRead": 5,
+    "author": "atharva",
+    "category": "ai, products",
+    "featured": false,
+    "draft": true,
+    "cover": "/images/blog/ai-crawlers-assistants-referrals-appwrite-analytics/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "how-cookieless-analytics-works-in-appwrite",
+    "href": "/blog/post/how-cookieless-analytics-works-in-appwrite",
+    "title": "How cookieless analytics works in Appwrite Analytics",
+    "description": "Learn how Appwrite Analytics counts unique visitors, tracks visits, and measures bounce rate without cookies, browser storage, or stored IP addresses.",
+    "date": "2026-11-30",
+    "lastUpdated": "2026-11-30",
+    "timeToRead": 5,
+    "author": "atharva",
+    "category": "products",
+    "featured": false,
+    "draft": true,
+    "cover": "/images/blog/how-cookieless-analytics-works-in-appwrite/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "introducing-appwrite-analytics",
     "href": "/blog/post/introducing-appwrite-analytics",
     "title": "Introducing Appwrite Analytics for your websites, apps, and AI agents",
@@ -45,6 +75,21 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "featured": false,
     "draft": true,
     "cover": "/images/blog/introducing-appwrite-analytics/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "track-ai-agent-models-tools-appwrite-analytics",
+    "href": "/blog/post/track-ai-agent-models-tools-appwrite-analytics",
+    "title": "Track your AI agent's models and tools with Appwrite Analytics",
+    "description": "Track which models and tools your AI agent calls, group each run into a visit, and spot failures with an Agent property in Appwrite Analytics.",
+    "date": "2026-11-30",
+    "lastUpdated": "2026-11-30",
+    "timeToRead": 4,
+    "author": "atharva",
+    "category": "tutorials",
+    "featured": false,
+    "draft": true,
+    "cover": "/images/blog/track-ai-agent-models-tools-appwrite-analytics/cover.avif",
     "hasCover": true
   },
   {
