@@ -9,10 +9,10 @@ let package = Package(
         .macOS(.v13)
     ],
     dependencies: [
-        .package(url: "https://github.com/vapor/vapor", from: "4.122.0"),
+        .package(url: "https://github.com/vapor/vapor", from: "4.122.4"),
         .package(
             url: "https://github.com/appwrite/sdk-for-swift",
-            from: "20.0.0"
+            from: "20.1.0"
         )
     ],
     targets: [

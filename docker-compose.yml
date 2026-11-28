@@ -6,7 +6,7 @@ x-logging:
       max-size: 10m
 services:
   traefik:
-    image: traefik:3.6
+    image: traefik:v3.8
     logging:
       driver: json-file
       options:
@@ -301,7 +301,7 @@ services:
         max-file: "5"
         max-size: 10m
     container_name: appwrite-console
-    image: appwrite/new:1.2.181-self-hosted
+    image: appwrite/new:1.2.319-self-hosted
     restart: unless-stopped
     networks:
       - appwrite
@@ -1995,7 +1995,7 @@ services:
       - _APP_DATABASE_SHARED_TABLES
   appwrite-browser:
     container_name: appwrite-browser
-    image: appwrite/browser:0.3.10
+    image: appwrite/browser:0.3.15
     networks:
       - browser
     environment:
@@ -2012,7 +2012,7 @@ services:
     profiles:
       - reviews
     container_name: appwrite-hansi
-    image: ghcr.io/appwrite/hansi:0.4.2
+    image: ghcr.io/appwrite/hansi:0.6.7
     logging:
       driver: json-file
       options:
@@ -2039,7 +2039,7 @@ services:
 
   appwrite-autogravity:
     container_name: appwrite-autogravity
-    image: ghcr.io/appwrite/autogravity:0.0.11
+    image: ghcr.io/appwrite/autogravity:0.0.12
     environment:
       - MODEL_BACKEND=focalnet
     restart: unless-stopped
@@ -2048,13 +2048,13 @@ services:
 
   appwrite-exiftool:
     container_name: appwrite-exiftool
-    image: ghcr.io/appwrite/exiftool:0.1.1
+    image: ghcr.io/appwrite/exiftool:0.1.5
     restart: unless-stopped
     networks:
       - appwrite
 
   clickhouse:
-    image: clickhouse/clickhouse-server:26.4.3-alpine
+    image: clickhouse/clickhouse-server:26.11.5-alpine
     restart: unless-stopped
     networks:
       - appwrite
@@ -2088,7 +2088,7 @@ services:
       options:
         max-file: "5"
         max-size: 10m
-    image: appwrite/geo:0.3.2
+    image: appwrite/geo:0.3.10
     restart: unless-stopped
     networks:
       - appwrite
@@ -2156,7 +2156,7 @@ services:
     # One image carrying every orchestrator control plane. Appwrite drives the
     # jobs plane today; the per-plane images exist for Kubernetes, where each
     # scales, fails and gets RBAC on its own.
-    image: ghcr.io/open-runtimes/orchestrator/orchestrator:5.0.0
+    image: ghcr.io/open-runtimes/orchestrator/orchestrator:5.1.0
     restart: unless-stopped
     user: root
     networks:
@@ -2208,7 +2208,7 @@ services:
       retries: 12
       start_period: 10s
   mongodb:
-    image: mongo:8.2.5
+    image: mongo:8.3.17
     container_name: appwrite-mongodb
     logging:
       driver: json-file
@@ -2260,7 +2260,7 @@ services:
       retries: 10
       start_period: 60s
   postgresql:
-    image: appwrite/postgres:0.1.0
+    image: appwrite/postgres:0.3.0
     container_name: appwrite-postgresql
     init: true
     shm_size: 1g
@@ -2303,7 +2303,7 @@ services:
     networks:
       - appwrite
   redis:
-    image: redis:7.4.7-alpine
+    image: redis:7.4.12-alpine
     logging:
       driver: json-file
       options:

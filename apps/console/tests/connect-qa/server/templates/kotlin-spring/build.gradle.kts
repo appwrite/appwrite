@@ -2,9 +2,9 @@
 // workflow copies the snippet's src/main/kotlin on top and runs `gradle
 // bootRun`.
 plugins {
-  kotlin("jvm") version "2.4.10"
-  kotlin("plugin.spring") version "2.4.10"
-  id("org.springframework.boot") version "4.1.0"
+  kotlin("jvm") version "2.4.21"
+  kotlin("plugin.spring") version "2.4.21"
+  id("org.springframework.boot") version "4.2.0"
 }
 
 repositories {
@@ -12,6 +12,6 @@ repositories {
 }
 
 dependencies {
-  implementation("org.springframework.boot:spring-boot-starter-web:4.1.0")
+  implementation("org.springframework.boot:spring-boot-starter-web:4.2.0")
   implementation("io.appwrite:sdk-for-kotlin:19.1.0")
 }

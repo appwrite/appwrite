@@ -11,7 +11,7 @@ repositories {
 
 dependencies {
   implementation("io.appwrite:sdk-for-kotlin:19.1.0")
-  implementation("com.google.code.gson:gson:2.14.0")
+  implementation("com.google.code.gson:gson:2.15.0")
 }
 
 application {

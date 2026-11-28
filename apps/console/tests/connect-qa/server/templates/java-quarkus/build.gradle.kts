@@ -2,7 +2,7 @@
 // copies the snippet's src/main/java on top and runs `gradle quarkusDev`.
 plugins {
   java
-  id("io.quarkus") version "3.38.1"
+  id("io.quarkus") version "3.40.1.2"
 }
 
 repositories {
@@ -10,7 +10,7 @@ repositories {
 }
 
 dependencies {
-  implementation(enforcedPlatform("io.quarkus.platform:quarkus-bom:3.38.1"))
+  implementation(enforcedPlatform("io.quarkus.platform:quarkus-bom:3.40.1.2"))
   implementation("io.quarkus:quarkus-rest")
   implementation("io.quarkus:quarkus-rest-jackson")
   implementation("io.appwrite:sdk-for-kotlin:19.1.0")
