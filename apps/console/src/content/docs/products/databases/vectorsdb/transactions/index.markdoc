@@ -29,7 +29,7 @@ The maximum number of operations you can stage per transaction depends on your p
 
 # Create a transaction {% #create-a-transaction %}
 
-Call the `createTransaction` method to begin. It returns a transaction model that includes `$id`, a `status` of `pending`, and an `expiresAt` timestamp. Pass the ID as `transactionId` to subsequent operations. A transaction expires 300 seconds after it is created unless you pass a different `ttl`. Appwrite [Server SDKs](/docs/sdks#server) require an [API key](/docs/advanced/platform/api-keys).
+Call the `createTransaction` method to begin. It returns a transaction model that includes `$id`, a `status` of `pending`, and an `expiresAt` timestamp. Pass the ID as `transactionId` to subsequent operations. A transaction expires 300 seconds after it is created unless you pass a different `ttl`. Appwrite [Server SDKs](/docs/sdks#server) require an [API key](/docs/advanced/security/api-keys).
 
 {% multicode %}
 ```server-nodejs

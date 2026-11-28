@@ -16,7 +16,7 @@ The Project API lets you encode that baseline once and apply it from your backen
 Each call uses a [Server SDK](/docs/sdks#server) with an API key.
 
 {% info title="Required scopes" %}
-The API key used for these calls needs the `project.write` and `platforms.write` scopes. See [API keys](/docs/partners/project/api-keys) to create one.
+The API key used for these calls needs the `project.write` and `platforms.write` scopes. See [API keys](/docs/advanced/security/api-keys) to create one.
 {% /info %}
 
 # Register the customer's app {% #register-platform %}

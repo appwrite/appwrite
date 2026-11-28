@@ -122,6 +122,6 @@ The project now runs in an Appwrite organization with every table, file, and use
 - [Introducing Appwrite Zero](/blog/post/introducing-appwrite-zero)
 - [Appwrite Zero documentation](/docs/zero)
 - [Zero commands in the Appwrite CLI](/docs/tooling/command-line/zero)
-- [API keys](/docs/partners/project/api-keys)
+- [API keys](/docs/advanced/security/api-keys)
 - [Appwrite Sites domains](/docs/products/sites/domains)
 - [How to connect your AI coding agent to Appwrite](/blog/post/connect-ai-coding-assistant-to-appwrite)

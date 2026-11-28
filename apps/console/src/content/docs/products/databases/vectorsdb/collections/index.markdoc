@@ -26,7 +26,7 @@ You can create collections using the Appwrite Console, a [Server SDK](/docs/sdks
 
 Head to the **Databases** page, open a [database](/docs/products/databases/vectorsdb/databases), and click **Create collection**. Name the collection and pick the **Embedding model** you plan to use. The Console lists each model with the dimension it produces and sets the collection's `dimension` from your choice.
 
-You can also create collections programmatically using a [Server SDK](/docs/sdks#server). Appwrite [Server SDKs](/docs/sdks#server) require an [API key](/docs/advanced/platform/api-keys).
+You can also create collections programmatically using a [Server SDK](/docs/sdks#server). Appwrite [Server SDKs](/docs/sdks#server) require an [API key](/docs/advanced/security/api-keys).
 
 The `dimension` is required and must match the length of the vectors you'll store. For example, the default `nomic-embed-text` model produces 768-dimensional vectors, so you would create the collection with `dimension: 768`.
 

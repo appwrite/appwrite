@@ -11,7 +11,7 @@ The typical flow is two steps: generate an embedding from your text, then store 
 # Generate embeddings {% #generate-embeddings %}
 Embeddings come from the Embeddings service rather than the VectorsDB service, and generating them doesn't involve a database or collection at all.
 
-Use the `createTextEmbeddings` method to turn one or more strings into vector embeddings. Pass an array of `texts` and, optionally, a `model`. When you omit `model`, Appwrite uses the default `nomic-embed-text` model. Appwrite [Server SDKs](/docs/sdks#server) require an [API key](/docs/advanced/platform/api-keys) with the `embeddings.write` scope.
+Use the `createTextEmbeddings` method to turn one or more strings into vector embeddings. Pass an array of `texts` and, optionally, a `model`. When you omit `model`, Appwrite uses the default `nomic-embed-text` model. Appwrite [Server SDKs](/docs/sdks#server) require an [API key](/docs/advanced/security/api-keys) with the `embeddings.write` scope.
 
 {% multicode %}
 ```server-nodejs

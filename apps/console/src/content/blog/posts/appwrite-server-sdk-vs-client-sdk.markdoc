@@ -212,7 +212,7 @@ If the request comes from a user interacting with your app, use the Client SDK a
 Getting this right from the start avoids a whole class of access control bugs.
 
 - [Appwrite SDKs overview](/docs/sdks)
-- [API keys and scopes](/docs/advanced/platform/api-keys)
+- [API keys and scopes](/docs/advanced/security/api-keys)
 - [SSR authentication with Appwrite](/docs/products/auth/server-side-rendering)
 - [Appwrite Functions](/docs/products/functions)
 - [Start building on Appwrite Cloud](https://cloud.appwrite.io)

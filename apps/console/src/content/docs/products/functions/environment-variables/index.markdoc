@@ -35,7 +35,7 @@ You can also configure global variables that apply to all your functions from yo
 
 # Manage with a Server SDK {% #server-sdks %}
 
-You can also manage function variables programmatically using a [Server SDK](/docs/sdks#server). Each call requires an [API key](/docs/partners/project/api-keys) with the `functions.write` scope to create, update, or delete variables, or the `functions.read` scope to list and read them.
+You can also manage function variables programmatically using a [Server SDK](/docs/sdks#server). Each call requires an [API key](/docs/advanced/security/api-keys) with the `functions.write` scope to create, update, or delete variables, or the `functions.read` scope to list and read them.
 
 ## Create a variable {% #create-variable %}
 

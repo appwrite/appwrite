@@ -303,6 +303,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
             href: '/docs/advanced/security/roles',
           },
           {
+            label: 'API keys',
+            href: '/docs/advanced/security/api-keys',
+          },
+          {
             label: 'Rate limits',
             href: '/docs/advanced/security/rate-limits',
           },
@@ -665,7 +669,7 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
           },
           {
             label: 'API keys',
-            href: '/docs/partners/project/api-keys',
+            href: '/docs/advanced/security/api-keys',
           },
           {
             label: 'Platforms',

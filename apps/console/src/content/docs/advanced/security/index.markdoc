@@ -109,7 +109,7 @@ Learn about Console organization member roles and the access each one grants.
 Appwrite has rate limits on some endpoints to prevent abuse.
 {% /cards_item %}
 
-{% cards_item href="/docs/partners/project/api-keys" title="API keys" %}
+{% cards_item href="/docs/advanced/security/api-keys" title="API keys" %}
 Create and manage API keys used by Server SDKs.
 {% /cards_item %}
 {% /cards %}

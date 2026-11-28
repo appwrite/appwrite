@@ -26,6 +26,18 @@ describe('legacy redirects that already existed', () => {
     )
   })
 
+  test('sends every API keys URL to the page outside the Partners docs', () => {
+    expect(docsSlugs.has('advanced/security/api-keys')).toBe(true)
+    expect(target('/docs/advanced/security/api-keys')).toBeNull()
+    for (const legacy of [
+      '/docs/keys',
+      '/docs/advanced/platform/api-keys',
+      '/docs/partners/project/api-keys',
+    ]) {
+      expect(target(legacy)).toBe('/docs/advanced/security/api-keys')
+    }
+  })
+
   test('does not redirect live pages', () => {
     expect(target('/pricing')).toBeNull()
     expect(target('/docs/products/auth')).toBeNull()

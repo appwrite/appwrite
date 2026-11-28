@@ -12,7 +12,7 @@ You must grant _create_ permissions to users at the _collection level_ before us
 [Learn more about permissions](#permissions)
 {% /info %}
 
-Use the `createDocument` method to add a document to a collection. Appwrite [Server SDKs](/docs/sdks#server) require an [API key](/docs/advanced/platform/api-keys).
+Use the `createDocument` method to add a document to a collection. Appwrite [Server SDKs](/docs/sdks#server) require an [API key](/docs/advanced/security/api-keys).
 
 {% multicode %}
 ```server-nodejs

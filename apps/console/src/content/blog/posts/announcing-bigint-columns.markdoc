@@ -183,7 +183,7 @@ In the Appwrite Console, open your table, head to the **Columns** tab, and click
 
 ## From a Server SDK
 
-Appwrite [Server SDKs](/docs/sdks#server) require an [API key](/docs/advanced/platform/api-keys) with `tables.write` and `columns.write`.
+Appwrite [Server SDKs](/docs/sdks#server) require an [API key](/docs/advanced/security/api-keys) with `tables.write` and `columns.write`.
 
 {% multicode %}
 

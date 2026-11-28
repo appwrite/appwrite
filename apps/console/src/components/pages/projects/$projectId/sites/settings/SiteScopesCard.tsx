@@ -74,7 +74,7 @@ export function SiteScopesCard({
           )}{' '}
           <DocsRouteLink
             className="link-neutral"
-            href="/docs/advanced/platform/api-keys#scopes"
+            href="/docs/advanced/security/api-keys#scopes"
           >
             {t('Learn more')}
           </DocsRouteLink>

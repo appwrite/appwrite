@@ -20,7 +20,7 @@ Navigate to the **Databases** page and click **Create database**, choose **Docum
 {% /only_light %}
 
 # Create using Server SDKs {% #create-using-server-sdks %}
-You can programmatically create databases using a [Server SDK](/docs/sdks#server). Appwrite [Server SDKs](/docs/sdks#server) require an [API key](/docs/advanced/platform/api-keys).
+You can programmatically create databases using a [Server SDK](/docs/sdks#server). Appwrite [Server SDKs](/docs/sdks#server) require an [API key](/docs/advanced/security/api-keys).
 
 {% multicode %}
 ```server-nodejs

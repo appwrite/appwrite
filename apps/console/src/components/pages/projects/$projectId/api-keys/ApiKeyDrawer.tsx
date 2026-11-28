@@ -447,7 +447,7 @@ export function ApiKeyDrawer({
                         href={
                           scopeCatalog === 'organization'
                             ? '/docs/partners/org-api-keys#scopes'
-                            : '/docs/advanced/platform/api-keys'
+                            : '/docs/advanced/security/api-keys'
                         }
                       >
                         {scopeCatalog === 'organization'

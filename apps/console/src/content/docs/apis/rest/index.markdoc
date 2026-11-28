@@ -125,7 +125,7 @@ X-Appwrite-Project: <PROJECT_ID>
 
 Server integrations use API keys to authenticate and are typically used for backend applications.
 
-Server APIs are authenticated with API keys instead of account sessions. Simply pass an [API key](/docs/partners/project/api-keys) in the `X-Appwrite-key: [API-KEY]` header with the appropriate scopes.
+Server APIs are authenticated with API keys instead of account sessions. Simply pass an [API key](/docs/advanced/security/api-keys) in the `X-Appwrite-key: [API-KEY]` header with the appropriate scopes.
 
 ```json
 GET /v1/tablesdb/{databaseId}/tables/{tableId}/rows HTTP/1.1

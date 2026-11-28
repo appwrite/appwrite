@@ -140,7 +140,7 @@ export function ApiKeysEmptyState({
             >
               {t('Create API key')}
             </ProductEmptyStateCreateButton>
-            <ProductEmptyStateDocsButton path="/docs/partners/project/api-keys" />
+            <ProductEmptyStateDocsButton path="/docs/advanced/security/api-keys" />
           </>
         }
       />

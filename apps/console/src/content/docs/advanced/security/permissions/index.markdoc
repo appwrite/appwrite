@@ -26,7 +26,7 @@ If you create a resource using a Server SDK or the Appwrite Console without expl
 
 # Server integration {% #server-integration %}
 
-Server integrations can be used for increased flexibility. When using a Server SDK in combination with the proper [API key scopes](/docs/partners/project/api-keys#scopes), you can have any type of access to any of your project resources regardless of their permissions.
+Server integrations can be used for increased flexibility. When using a Server SDK in combination with the proper [API key scopes](/docs/advanced/security/api-keys#scopes), you can have any type of access to any of your project resources regardless of their permissions.
 
 Using the server integration flexibility, you can change resource permissions, share resources between different users and teams, or edit and delete them without any limitations.
 

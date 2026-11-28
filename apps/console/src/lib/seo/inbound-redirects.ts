@@ -478,7 +478,7 @@ function projectApiRedirect(pathname: string): string | null {
   if (pathname.startsWith('/project/platforms')) {
     return '/docs/partners/project/platforms'
   }
-  if (pathname.startsWith('/project/keys')) return '/docs/partners/project/api-keys'
+  if (pathname.startsWith('/project/keys')) return '/docs/advanced/security/api-keys'
   if (pathname.startsWith('/project/variables')) {
     return '/docs/partners/project/environment-variables'
   }

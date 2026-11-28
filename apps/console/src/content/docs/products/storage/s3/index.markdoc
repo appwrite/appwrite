@@ -129,7 +129,7 @@ $client = new S3Client([
 
 # API key scopes {% #api-key-scopes %}
 
-Create an API key in the Appwrite Console under **Overview** > **Integrations** > **API keys**, then grant the storage scopes your workload needs. The project ID identifies your project, while the API key secret both authenticates the request and determines what it is allowed to do.
+Create an [API key](/docs/advanced/security/api-keys) from **API Keys** in your project sidebar, then grant the storage scopes your workload needs. The project ID identifies your project, while the API key secret both authenticates the request and determines what it is allowed to do.
 
 | Access level | Required scopes |
 | --- | --- |

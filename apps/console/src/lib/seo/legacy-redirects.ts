@@ -73,7 +73,7 @@ const LEGACY_REDIRECTS: Record<string, string> = {
   '/docs/migrations-nhost': '/docs/advanced/migrations/nhost',
   '/docs/migrations-cloud-to-self-hosted': '/docs/advanced/migrations/self-hosted',
   '/docs/migrations-self-hosted-to-cloud': '/docs/advanced/migrations/cloud',
-  '/docs/keys': '/docs/partners/project/api-keys',
+  '/docs/keys': '/docs/advanced/security/api-keys',
   '/docs/permissions': '/docs/advanced/security/permissions',
   '/docs/events': '/docs/apis/events',
   '/docs/queries': '/docs/products/databases/tablesdb/queries',
@@ -265,8 +265,11 @@ const LEGACY_REDIRECTS: Record<string, string> = {
   '/docs/advanced/release-policy': '/docs/apis/release-policy',
   '/docs/advanced/platform/permissions': '/docs/advanced/security/permissions',
   '/docs/advanced/platform/rate-limits': '/docs/advanced/security/rate-limits',
-  '/docs/advanced/platform/api-keys': '/docs/partners/project/api-keys',
-  '/docs/advanced/security/api-keys': '/docs/partners/project/api-keys',
+  '/docs/advanced/platform/api-keys': '/docs/advanced/security/api-keys',
+  // API keys apply to every project, so the page lives outside the Partners
+  // docs, which are off by default. Forward its old Partners URL until those
+  // docs are reorganized.
+  '/docs/partners/project/api-keys': '/docs/advanced/security/api-keys',
   '/docs/advanced/platform/dev-keys': '/docs/advanced/security/rate-limits',
   '/docs/advanced/security/dev-keys': '/docs/advanced/security/rate-limits',
   '/docs/advanced/platform/roles': '/docs/advanced/security/roles',

@@ -808,4 +808,4 @@ X-Appwrite-Key: <YOUR_API_KEY>
 Running a key's whole life from code is what lets you treat customer credentials as managed infrastructure instead of secrets someone pasted once. The same Project API covers the rest of a project's life:
 
 - [Provision a project's baseline](/docs/partners/project/provisioning) before you issue its first key.
-- Read the [API keys](/docs/partners/project/api-keys) reference for the full list of scopes a key can hold.
+- Read the [API keys](/docs/advanced/security/api-keys) reference for the full list of scopes a key can hold.

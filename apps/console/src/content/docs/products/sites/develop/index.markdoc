@@ -63,7 +63,7 @@ On Appwrite Cloud, the **build** phase of each deployment must complete within y
 
 # Ephemeral API key {% #ephemeral-api-key %}
 
-Server code in a site often needs more access than a visitor's session grants, for example to create a user, send an email OTP, or write to a collection no user has permission on. Instead of storing an [API key](/docs/partners/project/api-keys) as an environment variable, Appwrite Sites generates a **ephemeral API key** for the site. Appwrite creates it automatically, limits it to the scopes granted to the site, and expires it on its own, so there is no long-lived secret to store or rotate.
+Server code in a site often needs more access than a visitor's session grants, for example to create a user, send an email OTP, or write to a collection no user has permission on. Instead of storing an [API key](/docs/advanced/security/api-keys) as an environment variable, Appwrite Sites generates a **ephemeral API key** for the site. Appwrite creates it automatically, limits it to the scopes granted to the site, and expires it on its own, so there is no long-lived secret to store or rotate.
 
 Ephemeral API keys can only be used inside the site's build and SSR executions. Appwrite provides them in two places:
 
@@ -133,7 +133,7 @@ await sites.update({
 ```
 {% /multicode %}
 
-{% arrow_link href="/docs/partners/project/api-keys#scopes" %}
+{% arrow_link href="/docs/advanced/security/api-keys#scopes" %}
 Learn more about scopes
 {% /arrow_link %}
 
