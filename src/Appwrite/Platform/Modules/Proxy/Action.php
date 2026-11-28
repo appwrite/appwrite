@@ -101,6 +101,7 @@ class Action extends PlatformAction
                 'name' => $record['name'],
                 'expected' => $record['expected'],
                 'current' => $record['current'],
+                'regions' => $record['regions'] ?? [],
                 'status' => $record['status'],
                 'message' => $record['message'],
                 'required' => $record['required'],
@@ -299,6 +300,12 @@ class Action extends PlatformAction
             'name' => $record['name'],
             'expected' => $record['expected'],
             'current' => \array_map(fn (string $value) => \mb_strcut($value, 0, 255), \array_slice($record['current'], 0, 10)),
+            'regions' => \array_map(fn (array $region) => [
+                'id' => $region['id'],
+                'name' => $region['name'],
+                'status' => $region['status'],
+                'current' => \array_map(fn (string $value) => \mb_strcut($value, 0, 255), \array_slice($region['current'], 0, 10)),
+            ], \array_slice($record['regions'], 0, 20)),
             'status' => $record['status'],
             'message' => \mb_strcut($record['message'], 0, 1000),
             'required' => $record['required'],
@@ -360,8 +367,8 @@ class Action extends PlatformAction
         }
         $main ??= $apex;
 
-        // Explain the record the domain has, such as an A record with the wrong address, rather than
-        // a CNAME it was never meant to have. An apex cannot hold a CNAME, so it is told about A or AAAA.
+        // Explain the record the domain has, such as an A record with the wrong address or a CNAME at
+        // the wrong name, rather than a CNAME it was never meant to have. An apex cannot hold a CNAME, so it is told about A or AAAA.
         $explained = $domain->get() === $domain->getApex() ? ($apex ?? $main) : $main;
         foreach ($targets as $target) {
             if ($target['status'] !== 'missing') {
@@ -377,10 +384,11 @@ class Action extends PlatformAction
      * Look up every DNS record a rule's domain is checked against, without failing on any of them
      *
      * The CAA record is required. CNAME, A and AAAA records are alternatives: the domain
-     * points to Appwrite when any one of them is verified.
+     * points to Appwrite when any one of them is verified. A missing CNAME of a subdomain is
+     * 'misplaced' when it was found one zone too deep, at the domain followed by its zone.
      *
      * @param Document $rule Rule to check
-     * @return array<array{type: string, name: string, expected: string, current: array<string>, status: string, message: string, required: bool, error: ?\Throwable}>
+     * @return array<array{type: string, name: string, expected: string, current: array<string>, regions: array<array{id: string, name: string, status: string, current: array<string>}>, status: string, message: string, required: bool, error: ?\Throwable}>
      */
     protected function checkRecords(Document $rule): array
     {
@@ -510,9 +518,12 @@ class Action extends PlatformAction
 
             $records[] = [
                 'type' => $type,
-                'name' => $domain->get(),
+                // A blocking CAA record can sit on a parent of the domain, so it names where it was found
+                'name' => $type === 'CAA' && $status === 'mismatch' && $validator->value !== '' ? $validator->value : $domain->get(),
                 'expected' => $expected,
                 'current' => \array_values($current),
+                // Set by a validator that checks from several regions
+                'regions' => $validator->regions ?? [],
                 'status' => $status,
                 'message' => match (true) {
                     $verified => '',
@@ -526,7 +537,81 @@ class Action extends PlatformAction
             ];
         }
 
+        // A subdomain whose full name was entered as the host, which the DNS provider then extended with its zone.
+        // Only looked up when no target already points the domain to Appwrite, as it could not change the outcome.
+        $registerable = $domain->getRegisterable();
+        $pointed = false;
+        foreach ($records as $record) {
+            if (!$record['required'] && $record['status'] === 'verified') {
+                $pointed = true;
+                break;
+            }
+        }
+        $missing = \array_keys(\array_filter($records, fn (array $record) => $record['type'] === 'CNAME' && $record['status'] === 'missing'));
+        if ($pointed || empty($missing) || $registerable === '' || $domain->get() === $registerable) {
+            return $records;
+        }
+
+        $misplaced = $domain->get() . '.' . $registerable;
+        $found = $this->findMisplaced($misplaced, $registerable, $records[$missing[0]]['expected']);
+        if (empty($found)) {
+            return $records;
+        }
+
+        foreach ($missing as $key) {
+            $records[$key]['status'] = 'misplaced';
+            $records[$key]['current'] = $found;
+            $records[$key]['message'] = 'Domain ' . $domain->get() . ' has no CNAME record, but one was found at ' . $misplaced . '. Your DNS provider added the domain to the host you entered: enter only ' . $domain->getSub() . ' as the host.';
+        }
+
         return $records;
+    }
+
+    /**
+     * Find the CNAME of a subdomain whose full name was entered as the host at the DNS provider
+     *
+     * Providers append their zone to the host, so a host of shop.example.com lands at
+     * shop.example.com.example.com. A wildcard in the zone answers that name too, even when it
+     * does not answer the domain itself, such as when the domain only holds an ownership proof
+     * below it. So a CNAME only counts when the wildcard would not give it.
+     *
+     * @param string $name Name the provider put the record at
+     * @param string $registerable Zone holding the wildcard, if any
+     * @param string $expected Value the record is expected to have
+     * @return array<string> CNAME values found at the name, empty when none or when DNS cannot tell
+     */
+    private function findMisplaced(string $name, string $registerable, string $expected): array
+    {
+        $dnsValidatorClass = $this->dnsValidatorClass;
+        $dnsServers = $this->dnsServers();
+
+        // Values a name has, or null when the lookup failed
+        $lookup = function (string $name) use ($dnsValidatorClass, $dnsServers, $expected): ?array {
+            $validator = new $dnsValidatorClass($expected, Record::TYPE_CNAME, $dnsServers);
+
+            try {
+                if ($validator->isValid($name)) {
+                    // A passing lookup across several resolvers keeps no records, yet it found the expected value
+                    return empty($validator->records) ? [$expected] : \array_values($validator->records);
+                }
+            } catch (\Throwable) {
+                return null;
+            }
+
+            return $validator->reason === '' ? \array_values($validator->records) : null;
+        };
+
+        $found = $lookup($name);
+        if (empty($found)) {
+            return [];
+        }
+
+        $wildcard = $lookup('*.' . $registerable);
+        if (\is_null($wildcard) || \array_diff($found, $wildcard) === []) {
+            return [];
+        }
+
+        return $found;
     }
 
     /**

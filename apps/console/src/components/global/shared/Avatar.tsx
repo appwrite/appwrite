@@ -73,6 +73,11 @@ interface PhotoAvatarProps {
 
 interface TeamAvatarProps {
   teamId: string
+  /**
+   * Resolve `teamId` against this project's teams (`sdk.forProject`) instead
+   * of the console's organizations.
+   */
+  projectId?: string
   /** Used for the initials shown while the photo loads or when it fails. */
   name?: string
   placeholder?: 'initials' | 'blank'
@@ -224,7 +229,10 @@ export function PhotoAvatar({
         height: pixels,
         userId: trimmedUserId,
       })
-      return isSelf ? withUserPhotoVersion(url, photoVersion) : url
+      // Project users change through the project's user photo card, which bumps the same version
+      return isSelf || !consoleScoped
+        ? withUserPhotoVersion(url, photoVersion)
+        : url
     }
 
     if (useCurrentUser && consoleScoped) {
@@ -318,11 +326,13 @@ export function PhotoAvatar({
 }
 
 /**
- * Organization photo via `teams.getPhoto`. The API falls back to the team's
- * initials, then a placeholder, when no photo was uploaded.
+ * Team photo via `avatars.getTeamPhoto`: an organization, or a project's team
+ * with `projectId`. The API falls back to the team's initials, then a
+ * placeholder, when no photo was uploaded.
  */
 export function TeamAvatar({
   teamId,
+  projectId,
   name,
   placeholder = 'initials',
   size = 'md',
@@ -334,14 +344,18 @@ export function TeamAvatar({
     getTeamPhotoVersion,
   )
   const pixels = sizePixels[size]
+  const trimmedProjectId = projectId?.trim() || ''
   const src = useMemo(() => {
-    const url = sdk.forConsole.teams.getPhoto({
+    const avatars = trimmedProjectId
+      ? sdk.forProject(trimmedProjectId).avatars
+      : sdk.forConsole.avatars
+    const url = avatars.getTeamPhoto({
       teamId,
       width: pixels,
       height: pixels,
     })
     return withTeamPhotoVersion(url, version)
-  }, [teamId, pixels, version])
+  }, [teamId, trimmedProjectId, pixels, version])
   const [failedSrc, setFailedSrc] = useState<string | null>(null)
 
   if (failedSrc === src) {

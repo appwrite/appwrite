@@ -10,7 +10,7 @@ import {
 export const QUALITY_ACCOUNT_LABEL = 'quality'
 
 export type Experiment = {
-  flag: 'alerts' | 'analytics' | 'projectEnvironments' | 'vcsOrigin' | 'videos'
+  flag: 'alerts' | 'analytics' | 'videos'
   name: string
   description: string
   /** Day the experiment reached the popover, as `YYYY-MM-DD`. */
@@ -27,18 +27,6 @@ export const EXPERIMENTS: readonly Experiment[] = [
     name: 'Appwrite Analytics',
     description: 'Visitor, page, and campaign tracking.',
     introducedAt: '2026-10-23',
-  },
-  {
-    flag: 'projectEnvironments',
-    name: 'Project environments',
-    description: 'Switch or clone staging and production.',
-    introducedAt: '2026-10-29',
-  },
-  {
-    flag: 'vcsOrigin',
-    name: 'Origin Git provider',
-    description: 'Deploy from Cursor Origin repositories.',
-    introducedAt: '2026-11-13',
   },
   {
     flag: 'alerts',

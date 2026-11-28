@@ -6,6 +6,7 @@ import { PostgresDatabaseDangerZoneCard } from '../_components/PostgresDatabaseD
 import {
   PostgresDatabaseDetailsCard,
   PostgresDatabaseNameCard,
+  PostgresDatabaseVersionCard,
 } from '../_components/PostgresDatabaseGeneralSettings'
 import { usePostgresDatabaseSettingsPage } from './usePostgresDatabaseSettingsPage'
 import { PostgresSettingsLoading } from './PostgresSettingsLoading'
@@ -41,6 +42,14 @@ export function View() {
         keywords: ['id', 'created', 'updated', 'status', 'paused', 'version'],
       },
       node: <PostgresDatabaseDetailsCard {...cardProps} />,
+    },
+    {
+      id: 'version',
+      search: {
+        title: 'Version',
+        keywords: ['version', 'upgrade', 'major', 'engine', 'postgresql', '19'],
+      },
+      node: <PostgresDatabaseVersionCard {...cardProps} />,
     },
     {
       id: 'delete',

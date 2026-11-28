@@ -1,6 +1,10 @@
+import { useEffect, useState } from 'react'
+import { useParams } from '@tanstack/react-router'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
+import { UpgradePlanLink } from '@/components/global/shared/UpgradePlanLink'
 import { useT } from '@/lib/i18n/translate'
+import { useAnalyticsPropertiesPlanLimit } from '../../analytics/_components/useAnalyticsPropertiesPlanLimit'
 
 interface AnalyticsToggleProps {
   checked: boolean
@@ -12,6 +16,26 @@ export function AnalyticsToggle({
   onCheckedChange,
 }: AnalyticsToggleProps) {
   const t = useT()
+  const { projectId } = useParams({ strict: false })
+  const { isAtLimit, isChecking, limit, orgId } =
+    useAnalyticsPropertiesPlanLimit(projectId)
+  const [held, setHeld] = useState(false)
+
+  // A new site needs a new property: the default on stays off (as Deploy would send it) until the cap is known.
+  useEffect(() => {
+    if (isChecking) {
+      if (checked) {
+        setHeld(true)
+        onCheckedChange(false)
+      }
+    } else if (isAtLimit) {
+      setHeld(false)
+      if (checked) onCheckedChange(false)
+    } else if (held) {
+      setHeld(false)
+      onCheckedChange(true)
+    }
+  }, [isChecking, isAtLimit, checked, held, onCheckedChange])
 
   return (
     <div className="flex items-center justify-between gap-4">
@@ -27,11 +51,20 @@ export function AnalyticsToggle({
             'Tracked pageviews and events are billed as analytics usage, which adds up quickly on a high-traffic site.',
           )}
         </p>
+        {isAtLimit && (
+          <p className="text-[12px] text-amber-600 dark:text-amber-400 mt-1">
+            {t('Your current plan includes up to')} {limit}{' '}
+            {limit === 1 ? t('analytics property') : t('analytics properties')}{' '}
+            {t('per project.')} <UpgradePlanLink orgId={orgId} />{' '}
+            {t('to enable analytics on this site.')}
+          </p>
+        )}
       </div>
       <Switch
         id="site-analytics"
-        checked={checked}
+        checked={checked && !isAtLimit}
         onCheckedChange={onCheckedChange}
+        disabled={isAtLimit || isChecking}
         className="shrink-0"
       />
     </div>

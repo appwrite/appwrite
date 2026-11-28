@@ -120,8 +120,8 @@ EXPLAIN SELECT * FROM users WHERE created_at > now() - interval '1 day';
 
 Rule of thumb: put equality-filtered columns first and range-filtered columns last. If you also query `created_at` on its own, that's a separate index.
 
-{% info title="Skip scan in PostgreSQL 18" %}
-When the leading column has very few distinct values, PostgreSQL 18 can "skip scan" a composite index even if the query doesn't filter on the leading column. It helps in that narrow case, but designing column order for your queries remains the right approach.
+{% info title="Skip scan in PostgreSQL 18 and later" %}
+When the leading column has very few distinct values, PostgreSQL 18 and later can "skip scan" a composite index even if the query doesn't filter on the leading column. It helps in that narrow case, but designing column order for your queries remains the right approach.
 {% /info %}
 
 # Covering indexes {% #covering %}

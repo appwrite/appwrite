@@ -78,6 +78,8 @@ type DomainFormatError =
   | { code: 'wildcard' }
   | { code: 'trailing-dot' }
   | { code: 'spaces' }
+  | { code: 'email'; suggestion: string | null }
+  | { code: 'too-long' }
   | { code: 'invalid' }
 
 function looksLikeUrl(value: string): boolean {
@@ -116,7 +118,18 @@ function hasWhitespace(value: string): boolean {
  */
 function getDomainFormatError(value: string): DomainFormatError | null {
   const trimmed = value.trim()
-  if (!trimmed || isValidDomain(trimmed)) return null
+  if (!trimmed) return null
+  // DNS limits the pattern below does not check: 63 characters per label,
+  // 253 for the whole name. A pasted URL or email is reported as that instead.
+  if (
+    !looksLikeUrl(trimmed) &&
+    !trimmed.includes('@') &&
+    (trimmed.length > 253 ||
+      trimmed.split('.').some((label) => label.length > 63))
+  ) {
+    return { code: 'too-long' }
+  }
+  if (isValidDomain(trimmed)) return null
 
   if (looksLikeUrl(trimmed)) {
     const host = bareHost(trimmed)
@@ -129,6 +142,10 @@ function getDomainFormatError(value: string): DomainFormatError | null {
 
   if (trimmed.includes('*')) return { code: 'wildcard' }
   if (hasWhitespace(trimmed)) return { code: 'spaces' }
+  if (trimmed.includes('@')) {
+    const host = trimmed.slice(trimmed.lastIndexOf('@') + 1)
+    return { code: 'email', suggestion: isValidDomain(host) ? host : null }
+  }
   if (trimmed.endsWith('.')) return { code: 'trailing-dot' }
   return { code: 'invalid' }
 }
@@ -148,6 +165,14 @@ function domainFormatErrorMessage(
       return t('Remove the trailing dot.')
     case 'spaces':
       return t('Remove the spaces.')
+    case 'email':
+      return error.suggestion
+        ? `${t('Enter only the part after @:')} ${error.suggestion}`
+        : t('Enter only the domain, the part after @.')
+    case 'too-long':
+      return t(
+        'A domain can be at most 253 characters, and each part between dots at most 63.',
+      )
     case 'invalid':
       return t('Please enter a valid domain')
   }
@@ -188,7 +213,9 @@ export function getApexDomain(domain: string): string | null {
  */
 export function getRecordName(domain: string): string {
   const normalized = domain.trim().toLowerCase()
-  const apex = getApexDomain(normalized)
+  // The zone a user manages can sit under a private suffix (foo.eu.org), the
+  // same way the server reads the registrable domain.
+  const apex = parse(normalized, { allowPrivateDomains: true }).domain
   if (!apex || apex === normalized) return '@'
   return normalized.slice(0, -(apex.length + 1))
 }
@@ -267,6 +294,30 @@ export function getDomainClaimReason(error: unknown): DomainClaimReason | null {
 /** Whether a rule create was refused until the claim record is added. */
 export function isDomainClaimError(error: unknown): boolean {
   return getDomainClaimReason(error) !== null
+}
+
+/**
+ * Type of Cloud's answer to an organization domain create for a domain another
+ * organization holds. The same create moves the domain once the claim record
+ * is in place.
+ */
+export const ORGANIZATION_DOMAIN_CLAIM_REQUIRED = 'domain_claim_required'
+
+/**
+ * The TXT record that lets an organization claim a domain another organization
+ * holds. Its value is its own, not the `team:<id>` a single sign-on domain keeps
+ * published, so consenting to another organization's sign-on never hands it the zone.
+ */
+export function getOrganizationDomainClaimRecord(
+  domain: string,
+  organizationId: string,
+) {
+  return getClaimRecord(domain, `domain:${organizationId}`)
+}
+
+/** Whether an organization domain create waits for the claim record. */
+export function isOrganizationDomainClaimError(error: unknown): boolean {
+  return getAppwriteErrorInfo(error).type === ORGANIZATION_DOMAIN_CLAIM_REQUIRED
 }
 
 /**

@@ -16,6 +16,8 @@ Head to the [Appwrite Console](https://cloud.appwrite.io/console).
 
 If this is your first time using Appwrite, create an account and create your first project.
 
+{% partial file="zero-no-account.md" /%}
+
 
 Then, under **Integrate with your server**, add an **API Key** with the following scopes.
 

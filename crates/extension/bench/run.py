@@ -3,13 +3,14 @@ prints the median of each operation side by side.
 
     python3 crates/extension/bench/run.py <script.php> <repository root> <utopia.so> <rounds> [extension ...]
 
-Each further argument names a shared extension both sides load (`scrypt`, which the PHP
-`Scrypt` hashes call), as `-n` loads none.
+Each further argument names a shared extension both sides load, as `-n` loads none.
 
 The script prints one JSON object of operation -> nanoseconds; _APP_EXTENSION_LIBRARIES,
-set to the script's name (`auth.php` -> `auth`), switches which implementation it gets.
+set to the script's name (`<name>.php` -> `<name>`), switches which implementation it gets. A
+library registered by default (`stable("<name>")` in src/lib.rs) whose PHP can still load, as
+database's from vendor/, gets its PHP side from `utopia.libraries` naming every other such library.
 """
-import json, os, statistics, subprocess, sys
+import json, os, re, statistics, subprocess, sys
 script, root, lib, rounds = sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4])
 # OPcache is built into PHP 8.5; older PHP has it as a shared extension that -n leaves out.
 flags = ["-n", "-d", "opcache.enable_cli=1", "-d", "memory_limit=1G"]
@@ -22,11 +23,15 @@ active = 'echo (opcache_get_status(false)["opcache_enabled"] ?? false) ? 1 : 0;'
 if subprocess.run(["php", *flags, "-r", active], capture_output=True, text=True).stdout.strip() != "1":
     sys.exit("OPcache is not enabled for the CLI; the numbers would not match production")
 library = os.path.splitext(os.path.basename(script))[0]
+with open(os.path.join(root, "crates/extension/src/lib.rs")) as source:
+    stable = sorted(set(re.findall(r'stable\("([a-z-]+)"\)', source.read())))
+php_side = ["-d", "utopia.libraries=" + ",".join(name for name in stable if name != library)] if library in stable else []
 results = {"php": [], "rust": []}
 for _ in range(rounds):
     for impl in ("php", "rust"):
         env = dict(os.environ, _APP_EXTENSION_LIBRARIES=library if impl == "rust" else "")
-        out = subprocess.run(["php", *flags, "-d", f"extension={lib}", script, root],
+        side = php_side if impl == "php" else []
+        out = subprocess.run(["php", *flags, "-d", f"extension={lib}", *side, script, root],
                              env=env, capture_output=True, text=True, check=True).stdout
         results[impl].append(json.loads(out.strip().splitlines()[-1]))
 ops = [k for k in results["php"][0] if k != "peak memory MB"]

@@ -18,6 +18,7 @@ use Utopia\Database\Adapter\Memory;
 use Utopia\Database\Attribute;
 use Utopia\Database\Collection;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Index;
 use Utopia\Database\Permission;
@@ -193,6 +194,8 @@ final class NotificationsTest extends TestCase
 
         $this->database->create();
         $this->database->createCollection(Collection::create(id: 'notifications', permissions: [Permission::create(Role::any()), Permission::read(Role::any()), Permission::update(Role::any()), Permission::delete(Role::any())], documentSecurity: false));
+        $this->database->createCollection(Collection::create(id: 'monitorAlerts', permissions: [Permission::create(Role::any()), Permission::read(Role::any())], documentSecurity: false));
+        $this->database->createAttribute('monitorAlerts', Attribute::datetime(key: 'acknowledgedAt'));
         $this->database->createAttribute('notifications', Attribute::string(key: 'messageId'));
         $this->database->createAttribute('notifications', Attribute::string(key: 'recipientHash', size: 64, required: true));
         $this->database->createAttribute('notifications', Attribute::string(key: 'type', size: 64, default: 'info'));
@@ -210,6 +213,10 @@ final class NotificationsTest extends TestCase
         $this->database->createAttribute('notifications', Attribute::boolean(key: 'read', default: false));
         $this->database->createAttribute('notifications', Attribute::datetime(key: 'firstSeen'));
         $this->database->createAttribute('notifications', Attribute::datetime(key: 'lastSeen'));
+        $this->database->createAttribute('notifications', Attribute::string(key: 'teamId'));
+        $this->database->createAttribute('notifications', Attribute::string(key: 'subjectType', size: 64, default: ''));
+        $this->database->createAttribute('notifications', Attribute::string(key: 'subjectId', default: ''));
+        $this->database->createAttribute('notifications', Attribute::string(key: 'status', size: 16, default: ''));
 
         // Mirror the production `_key_recipient` UNIQUE composite index so the
         // duplicate-handling branch in persistAlert (catch DuplicateException ->
@@ -1150,6 +1157,67 @@ final class NotificationsTest extends TestCase
         $this->assertSame(0, $worker->persistAlertCalls, 'console channel must NOT trigger action-loop persistAlert');
     }
 
+    public function testConsoleChannelNamesTheMonitorAlertItsPushCarries(): void
+    {
+        $worker = new CountingPersistAlertNotifications();
+
+        $payload = [
+            'project' => ['$id' => 'project-x'],
+            'recipients' => [
+                $this->userRecipient('user-alert', NOTIFICATION_TYPE_CONSOLE, 'user-alert'),
+            ],
+            'subject' => '[Firing] Egress',
+            'preview' => 'Outbound bandwidth reached 2 GB.',
+            'deduplicationKey' => 'console-alert',
+            'push' => [
+                'title' => '[Critical] Egress on Production',
+                'data' => [
+                    'type' => 'alert',
+                    'severity' => 'critical',
+                    'status' => 'firing',
+                    'alertId' => 'alert-1',
+                    'monitorId' => 'monitor-1',
+                    'organizationId' => 'team-1',
+                    'projectId' => 'project-x',
+                    'url' => 'https://console.test/project-x/alerts?alert=alert-1',
+                    'unsubscribeToken' => 'token',
+                ],
+            ],
+        ];
+
+        $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->platform, $this->clientForWebhooks, $this->publicHostname, $this->telemetry);
+
+        $rows = $this->database->find('notifications');
+        $this->assertCount(1, $rows);
+        $this->assertSame('critical', $rows[0]->getAttribute('type'), 'the alert\'s severity is the notification\'s type');
+        $this->assertSame('team-1', $rows[0]->getAttribute('teamId'));
+        $this->assertSame(RESOURCE_TYPE_ALERTS, $rows[0]->getAttribute('subjectType'));
+        $this->assertSame('alert-1', $rows[0]->getAttribute('subjectId'));
+        $this->assertSame('firing', $rows[0]->getAttribute('status'));
+
+        // A firing notice delivered after a member acknowledged the alert shows it acknowledged.
+        $this->database->createDocument('monitorAlerts', new Document(['$id' => 'alert-2', 'acknowledgedAt' => DateTime::now()]));
+        $payload['deduplicationKey'] = 'console-alert-acknowledged';
+        $payload['push']['data']['alertId'] = 'alert-2';
+        $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->platform, $this->clientForWebhooks, $this->publicHostname, $this->telemetry);
+
+        $rows = $this->database->find('notifications', [Query::equal('subjectId', ['alert-2'])]);
+        $this->assertCount(1, $rows);
+        $this->assertSame('acknowledged', $rows[0]->getAttribute('status'));
+
+        // A notice that read the alert before a member acknowledged it does not set the notification back to firing.
+        $this->database->createDocument('monitorAlerts', new Document(['$id' => 'alert-3', 'acknowledgedAt' => null]));
+        $payload['push']['data']['alertId'] = 'alert-3';
+        $payload['deduplicationKey'] = 'console-alert-stale-first';
+        $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->platform, $this->clientForWebhooks, $this->publicHostname, $this->telemetry);
+        $acknowledged = $this->database->find('notifications', [Query::equal('subjectId', ['alert-3'])])[0];
+        $this->database->updateDocument('notifications', $acknowledged->getId(), new Document(['status' => 'acknowledged']));
+        $payload['deduplicationKey'] = 'console-alert-stale-second';
+        $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->platform, $this->clientForWebhooks, $this->publicHostname, $this->telemetry);
+
+        $this->assertSame('acknowledged', $this->database->getDocument('notifications', $acknowledged->getId())->getAttribute('status'));
+    }
+
     public function testConsoleChannelUsesPreviewBodyInsteadOfRenderedEmailHtml(): void
     {
         $worker = new CountingPersistAlertNotifications();
@@ -1172,6 +1240,11 @@ final class NotificationsTest extends TestCase
         $this->assertCount(1, $rows);
         $this->assertSame('Webhook orders paused', $rows[0]->getAttribute('title'));
         $this->assertSame('Plain alert for orders.', $rows[0]->getAttribute('body'));
+        // Not about a monitor alert.
+        $this->assertSame('info', $rows[0]->getAttribute('type'));
+        $this->assertSame('', $rows[0]->getAttribute('subjectType'));
+        $this->assertSame('', $rows[0]->getAttribute('subjectId'));
+        $this->assertSame('', $rows[0]->getAttribute('status'));
         $this->assertStringNotContainsString('<!DOCTYPE html>', $rows[0]->getAttribute('body'));
     }
 

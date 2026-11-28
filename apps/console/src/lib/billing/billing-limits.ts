@@ -21,6 +21,7 @@ export const BILLING_LIMIT_RESOURCE_LABELS = {
   screenshotsGenerated: 'Screenshots',
   realtime: 'Realtime connections',
   realtimeMessages: 'Realtime messages',
+  reviewCredits: 'Code review credits',
   /** Legacy key still checked by older console tooling */
   documents: 'Documents',
 } as const
@@ -42,7 +43,15 @@ function toFiniteNumber(value: unknown): number | null {
 }
 
 /**
- * Keys in `billingLimits` (excluding budget) whose value is at or above 100%.
+ * Limits that stop one feature, never the project. Cloud keeps serving the API
+ * when code review credits run out and only refuses new reviews, so these must
+ * not raise the suspension banner or the project curtain.
+ */
+const FEATURE_PLAN_USAGE_KEYS = new Set(['reviewCredits'])
+
+/**
+ * Keys in `billingLimits` (excluding budget and feature-only limits) whose
+ * value is at or above 100%.
  */
 export function getReachedPlanUsageLimitKeys(
   billingLimits: BillingLimitsMap | null | undefined,
@@ -51,11 +60,25 @@ export function getReachedPlanUsageLimitKeys(
 
   return Object.entries(billingLimits)
     .filter(([key, value]) => {
-      if (key === BUDGET_LIMIT_KEY) return false
+      if (key === BUDGET_LIMIT_KEY || FEATURE_PLAN_USAGE_KEYS.has(key)) {
+        return false
+      }
       const n = toFiniteNumber(value)
       return n != null && n >= USAGE_LIMIT_THRESHOLD
     })
     .map(([key]) => key)
+}
+
+/**
+ * True when the organization has spent its plan's code review credits on a
+ * plan that cannot buy more (Free). New reviews are refused until the cycle
+ * resets or the organization upgrades.
+ */
+export function isReviewCreditsLimitReached(
+  billingLimits: BillingLimitsMap | null | undefined,
+): boolean {
+  const n = toFiniteNumber(billingLimits?.reviewCredits)
+  return n != null && n >= USAGE_LIMIT_THRESHOLD
 }
 
 /**

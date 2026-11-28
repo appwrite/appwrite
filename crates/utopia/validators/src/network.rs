@@ -119,9 +119,15 @@ impl IpType {
 // URL -------------------------------------------------------------------------------------
 
 /// `URL::getDescription()`, given `implode(', ', $allowedSchemes)` when there are schemes.
-pub fn url_description(schemes: Option<&[u8]>, allow_fragments: bool, https_or_loopback: bool) -> Vec<u8> {
+///
+/// Appended to `description`.
+pub fn url_description(
+    schemes: Option<&[u8]>,
+    allow_fragments: bool,
+    https_or_loopback: bool,
+    description: &mut Vec<u8>,
+) {
     let transport: &[u8] = if https_or_loopback { b" restricted to https or http on a loopback host" } else { b"" };
-    let mut description = Vec::new();
     if let Some(schemes) = schemes {
         description.extend_from_slice(b"Value must be a valid URL with following schemes (");
         description.extend_from_slice(schemes);
@@ -135,7 +141,6 @@ pub fn url_description(schemes: Option<&[u8]>, allow_fragments: bool, https_or_l
         description.extend_from_slice(b"Value must be a valid URL");
     }
     description.extend_from_slice(transport);
-    description
 }
 
 /// `URL::isValid()`'s IRI step: each byte above 127 as `rawurlencode()` encodes it.
@@ -187,11 +192,13 @@ pub const LOOPBACK_HOSTS: [&[u8]; 3] = [b"localhost", b"127.0.0.1", b"[::1]"];
 
 // Host ------------------------------------------------------------------------------------
 
-/// `Host::getDescription()`, given `implode(', ', $whitelist)`.
-pub fn host_description(whitelist: &[u8]) -> Vec<u8> {
-    let mut description = b"URL host must be one of: ".to_vec();
+/// What `Host::getDescription()` puts before `implode(', ', $whitelist)`.
+pub const HOST_DESCRIPTION_PREFIX: &str = "URL host must be one of: ";
+
+/// `Host::getDescription()`, given `implode(', ', $whitelist)`, appended to `description`.
+pub fn host_description(whitelist: &[u8], description: &mut Vec<u8>) {
+    description.extend_from_slice(HOST_DESCRIPTION_PREFIX.as_bytes());
     description.extend_from_slice(whitelist);
-    description
 }
 
 // Phone -----------------------------------------------------------------------------------

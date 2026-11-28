@@ -21,9 +21,7 @@ import {
   buildMcpServerCard,
   serializeDiscoveryJson,
 } from '../src/lib/seo/agent-discovery'
-import {
-  ALTERNATIVE_IDS,
-} from '../src/lib/alternatives/registry'
+import { getListedAlternativeIds } from '../src/lib/alternatives/availability'
 import {
   buildAlternativeMarkdownExport,
   getAllAlternativeLlmsMeta,
@@ -290,7 +288,8 @@ async function buildExportFiles(): Promise<ExportFile[]> {
   const alternatives = getAllAlternativeLlmsMeta()
   const llmsFullTxt = await generateLlmsFullTxt()
 
-  const alternativeMarkdownExports: ExportFile[] = ALTERNATIVE_IDS.map((id) => ({
+  // Unlaunched comparisons get no prebuilt export, so nothing ships before launch.
+  const alternativeMarkdownExports: ExportFile[] = getListedAlternativeIds().map((id) => ({
     relativePath: `alternative-to/${id}.md`,
     contents: buildAlternativeMarkdownExport(id, SITE_ORIGIN),
   }))
@@ -374,6 +373,7 @@ async function buildExportFiles(): Promise<ExportFile[]> {
       relativePath: 'for-agents.md',
       contents: buildForAgentsMarkdown(SITE_ORIGIN),
     },
+    // zero.md is served by its route behind the `zero` feature until Zero launches.
     {
       relativePath: 'pricing.md',
       contents: buildPricingMarkdown(SITE_ORIGIN),

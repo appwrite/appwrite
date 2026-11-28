@@ -1,8 +1,15 @@
 import { Fragment, useState, useMemo, type ReactNode } from 'react'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useConsoleVariables } from '@/lib/react-query/hooks/console-variables'
-import type { ProxyRuleRecord } from '@/lib/appwrite/proxy-rules'
-import { isDnsUnverified, isWaitingForDns } from '@/lib/utils/status-badge'
+import type {
+  ProxyRuleRecord,
+  ProxyRuleRecordRegion,
+} from '@/lib/appwrite/proxy-rules'
+import {
+  getLaggingRegions,
+  isDnsUnverified,
+  isWaitingForDns,
+} from '@/lib/utils/status-badge'
 import {
   getRecordName,
   getVerificationMethods,
@@ -19,6 +26,9 @@ import {
   AlertCircle,
   CheckCircle2,
   AlertTriangle,
+  Check,
+  Clock,
+  X,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
@@ -80,6 +90,7 @@ function getAliasCheck(
     checks?.filter((check) => check.type === 'A' || check.type === 'AAAA') ?? []
   const check =
     addresses.find((c) => c.status === 'verified') ??
+    addresses.find((c) => getLaggingRegions(c).length > 0) ??
     addresses.find((c) => c.status === 'mismatch') ??
     addresses.find((c) => c.status === 'failed') ??
     addresses[0]
@@ -90,6 +101,7 @@ function getAliasCheck(
     expected: value,
     current: [],
     message: '',
+    regions: check.regions?.map((region) => ({ ...region, current: [] })),
   }
 }
 
@@ -166,6 +178,8 @@ export type DnsRecord = {
   check?: ProxyRuleRecord
   /** The record type that already verifies the domain, when this one is an unused alternative. */
   notNeeded?: string
+  /** A record of another type that answers the name instead of this missing one, such as a provider's URL redirect. */
+  conflict?: ProxyRuleRecord
 }
 
 /** A section label, outlined so it never reads as a record status. */
@@ -175,6 +189,22 @@ const SECTION_BADGE =
 const TABLE_HEAD =
   'px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider'
 
+/**
+ * Where a DNS provider put a record whose full domain was entered as the
+ * host: it appends its zone, so `shop.example.com` lands at
+ * `shop.example.com.example.com`. The server looks there for a 'misplaced'
+ * check.
+ */
+function getMisplacedName(name: string): string {
+  return `${name}.${getZone(name)}`
+}
+
+/** The zone a DNS provider appends to the host: the domain after its record name. */
+export function getZone(name: string): string {
+  const host = getRecordName(name)
+  return host === '@' ? name : name.slice(host.length + 1)
+}
+
 /** The type of one record, on one line. The ALIAS type reads as a phrase. */
 function RecordType({ type }: { type: string }) {
   const t = useT()
@@ -182,6 +212,95 @@ function RecordType({ type }: { type: string }) {
     <span className="whitespace-nowrap">
       {type === ALIAS_TYPE ? t('ALIAS or ANAME') : type}
     </span>
+  )
+}
+
+/**
+ * How a region's result reads in the region list. A region that is behind is
+ * amber, not red: it only needs time. Red is for a lookup that failed.
+ */
+const REGION_STATUS: Record<
+  ProxyRuleRecordRegion['status'],
+  { Icon: typeof Check; className: string; label: string }
+> = {
+  verified: {
+    Icon: Check,
+    className: 'text-emerald-600 dark:text-emerald-400',
+    label: 'Sees your record',
+  },
+  missing: {
+    Icon: Clock,
+    className: 'text-amber-600 dark:text-amber-400',
+    label: 'Not there yet',
+  },
+  mismatch: {
+    Icon: Clock,
+    className: 'text-amber-600 dark:text-amber-400',
+    label: 'Not there yet',
+  },
+  failed: {
+    Icon: X,
+    className: 'text-red-600 dark:text-red-400',
+    label: 'Lookup failed',
+  },
+}
+
+/** Each region and what it sees, for a record that is still propagating. */
+function RegionList({ regions }: { regions: ProxyRuleRecordRegion[] }) {
+  const t = useT()
+  const muted = 'text-muted-foreground'
+  const values = 'font-mono break-all text-foreground'
+  return (
+    <ul className="grid grid-cols-[auto_auto_minmax(0,1fr)] items-baseline gap-x-2.5 gap-y-1.5 text-start">
+      {regions.map((region) => {
+        // A status a newer server adds reads as not there yet
+        const { Icon, className, label } =
+          REGION_STATUS[region.status] ?? REGION_STATUS.missing
+        let seen: ReactNode
+        if (region.status === 'failed') {
+          seen = <span className={muted}>{t('lookup failed')}</span>
+        } else if (region.current.length === 0) {
+          // An ALIAS keeps no values: they are addresses the developer never set.
+          seen = (
+            <span className={muted}>
+              {region.status === 'verified'
+                ? t('sees it')
+                : t('not visible yet')}
+            </span>
+          )
+        } else if (region.status === 'mismatch') {
+          // Split around the value so each language places it in its order.
+          const [before = '', after = ''] =
+            t('still sees {value}').split('{value}')
+          seen = (
+            <>
+              {before && <span className={muted}>{before}</span>}
+              <span className={values} dir="ltr">
+                {region.current.join(', ')}
+              </span>
+              {after && <span className={muted}>{after}</span>}
+            </>
+          )
+        } else {
+          seen = (
+            <span className={values} dir="ltr">
+              {region.current.join(', ')}
+            </span>
+          )
+        }
+        return (
+          <li key={region.id} className="contents">
+            <span className="text-foreground">{region.name}</span>
+            <Icon
+              className={`h-3.5 w-3.5 self-center ${className}`}
+              role="img"
+              aria-label={t(label)}
+            />
+            <span className="min-w-0">{seen}</span>
+          </li>
+        )
+      })}
+    </ul>
   )
 }
 
@@ -212,6 +331,42 @@ function RecordStatus({
       </Badge>
     )
   }
+  // Some regions already see the record: it only needs time, so the pill
+  // opens what each region sees instead of a status to act on.
+  // Past the check window the record needs fixing, whatever some regions see
+  if (
+    waiting &&
+    check.status !== 'verified' &&
+    getLaggingRegions(check).length > 0
+  ) {
+    const regions = check.regions ?? []
+    const seen = t('{n} of {total} regions see your record')
+      .replace(
+        '{n}',
+        String(regions.filter((r) => r.status === 'verified').length),
+      )
+      .replace('{total}', String(regions.length))
+    return (
+      <Popover>
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            className="cursor-pointer rounded-md focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+            aria-label={`${t('Propagating')}: ${seen}`}
+          >
+            <Badge variant="warning" className={pill}>
+              {t('Propagating')}
+              <Info aria-hidden />
+            </Badge>
+          </button>
+        </PopoverTrigger>
+        <PopoverContent align="end" className="w-auto max-w-xs p-3 text-xs">
+          <p className="mb-2 font-medium text-foreground">{seen}</p>
+          <RegionList regions={regions} />
+        </PopoverContent>
+      </Popover>
+    )
+  }
   const title = check.message || undefined
   switch (check.status) {
     case 'verified':
@@ -221,6 +376,17 @@ function RecordStatus({
         </Badge>
       )
     case 'missing':
+      if (record.conflict) {
+        return (
+          <Badge
+            variant="error"
+            className={pill}
+            title={record.conflict.message || undefined}
+          >
+            {t('Wrong type')}
+          </Badge>
+        )
+      }
       return (
         <Badge variant="info" className={pill} title={title}>
           {waiting ? t('Not detected yet') : t('Not detected')}
@@ -230,6 +396,12 @@ function RecordStatus({
       return (
         <Badge variant="error" className={pill} title={title}>
           {check.type === 'CAA' ? t('Blocks certificate') : t('Wrong value')}
+        </Badge>
+      )
+    case 'misplaced':
+      return (
+        <Badge variant="error" className={pill} title={title}>
+          {t('Wrong name')}
         </Badge>
       )
     default:
@@ -249,16 +421,19 @@ function RecordStatus({
 function FoundValues({
   values,
   wrong,
+  label,
 }: {
   values: string[]
   /** Underline the value as the one to change. */
   wrong: boolean
+  /** Lead-in before the values, `Found:` by default. */
+  label?: string
 }) {
   const t = useT()
   const [first, ...rest] = values
   return (
     <p className="flex min-w-0 items-baseline gap-1.5 text-[12px] text-muted-foreground">
-      <span className="shrink-0">{t('Found:')}</span>
+      <span className="shrink-0">{label ?? t('Found:')}</span>
       <span
         className={`min-w-0 truncate pb-1 font-mono text-foreground ${wrong ? 'underline decoration-wavy decoration-red-500 underline-offset-2' : ''}`}
         title={first}
@@ -340,10 +515,25 @@ function RecordSection({
           </TableHeader>
           <TableBody>
             {records.map((r) => {
+              // A misplaced record is wrong where it is, not in its value.
+              const misplaced =
+                r.check?.status === 'misplaced' &&
+                !r.notNeeded &&
+                getLaggingRegions(r.check).length === 0
+              // Another record type answers where this one is missing.
+              const conflict =
+                r.check?.status === 'missing' && !r.notNeeded
+                  ? r.conflict
+                  : undefined
+              // A propagating record shows what each region sees in its pill.
+              const propagating =
+                !!r.check && getLaggingRegions(r.check).length > 0
               const found =
-                r.check?.status === 'mismatch' && !r.notNeeded
+                r.check?.status === 'mismatch' && !r.notNeeded && !propagating
                   ? r.check.current
-                  : []
+                  : misplaced && r.check
+                    ? [getMisplacedName(r.check.name)]
+                    : (conflict?.current ?? [])
               return (
                 <Fragment key={`${r.type}-${r.value}`}>
                   <TableRow className={found.length ? 'border-b-0' : undefined}>
@@ -384,7 +574,20 @@ function RecordSection({
                     <TableRow className="hover:bg-transparent">
                       <TableCell colSpan={2} className="px-4 pt-0 pb-3" />
                       <TableCell colSpan={3} className="px-4 pt-0 pb-3">
-                        <FoundValues values={found} wrong={r.type !== 'CAA'} />
+                        <FoundValues
+                          values={found}
+                          wrong={r.type !== 'CAA'}
+                          label={
+                            misplaced
+                              ? t('Found at:')
+                              : conflict
+                                ? t('Found {type}:').replace(
+                                    '{type}',
+                                    conflict.type,
+                                  )
+                                : undefined
+                          }
+                        />
                       </TableCell>
                     </TableRow>
                   )}
@@ -476,10 +679,12 @@ function getDnsBanners(
   rule: Models.ProxyRule,
   pointing: ProxyRuleRecord[],
   caa: ProxyRuleRecord | undefined,
+  conflict: ProxyRuleRecord | undefined,
 ): DnsBanner[] {
   const verified = pointing.find((check) => check.status === 'verified')
   const banners: DnsBanner[] = []
-  if (caa?.status === 'mismatch') {
+  // A CAA record some regions already accept is still propagating, not wrong
+  if (caa?.status === 'mismatch' && getLaggingRegions(caa).length === 0) {
     banners.push({
       tone: 'error',
       prefix: t('CAA record'),
@@ -488,8 +693,33 @@ function getDnsBanners(
       ),
     })
   }
+  if (!verified && conflict) {
+    banners.push({
+      tone: 'error',
+      prefix: t('{type} record').replace('{type}', conflict.type),
+      text: t(
+        'Your domain has an {type} record ({found}) instead of a CNAME, often a URL redirect or parking record at your DNS provider. Delete it, then add the CNAME below.',
+      )
+        .replace('{type}', conflict.type)
+        .replace('{found}', conflict.current[0] ?? ''),
+    })
+  }
   if (!verified) {
     for (const check of pointing) {
+      // A record some regions already see only needs time.
+      if (getLaggingRegions(check).length > 0) continue
+      if (check.status === 'misplaced') {
+        banners.push({
+          tone: 'error',
+          prefix: t('{type} record').replace('{type}', check.type),
+          text: t(
+            'It was added as {found}. In your DNS provider, enter only {name} as the host.',
+          )
+            .replace('{found}', getMisplacedName(check.name))
+            .replace('{name}', getRecordName(check.name)),
+        })
+        continue
+      }
       if (check.status !== 'mismatch') continue
       // DNS shows no ALIAS target, only the addresses it resolves to.
       if (check.type === ALIAS_TYPE) {
@@ -517,6 +747,28 @@ function getDnsBanners(
   }
   if (banners.length > 0) return banners
 
+  // Some regions see the record and others do not yet: nothing to fix, and
+  // not a failure on Appwrite's side either.
+  // Only while Appwrite still checks on its own: past that window it needs fixing.
+  const propagating =
+    verified || !isWaitingForDns(rule)
+      ? undefined
+      : pointing.find((check) => getLaggingRegions(check).length > 0)
+  if (propagating) {
+    const regions = propagating.regions ?? []
+    const seen = regions.filter((r) => r.status === 'verified').length
+    return [
+      {
+        tone: 'warning',
+        prefix: t('DNS is still propagating'),
+        text: `${t('{n} of {total} regions see your new record.')
+          .replace('{n}', String(seen))
+          .replace('{total}', String(regions.length))} ${t(
+          "This usually finishes within an hour, and Appwrite keeps checking. You don't need to change anything.",
+        )}`,
+      },
+    ]
+  }
   if (!verified && pointing.some((check) => check.status === 'failed')) {
     return [
       {
@@ -625,9 +877,12 @@ function getDnsBanners(
 function DnsCheckMeta({
   rule,
   checkedAt,
+  regionCount,
 }: {
   rule: Models.ProxyRule
   checkedAt: string
+  /** How many regions checked DNS, 0 when the server does not say. */
+  regionCount: number
 }) {
   const t = useT()
   const label = 'text-[12px] text-muted-foreground'
@@ -637,7 +892,7 @@ function DnsCheckMeta({
       <div className="min-w-0">
         <dt className={label}>{t('Added')}</dt>
         <dd className={value}>
-          <DateTooltip date={rule.$createdAt} />
+          <DateTooltip date={rule.$createdAt} live />
         </dd>
       </div>
       <div className="min-w-0">
@@ -651,6 +906,11 @@ function DnsCheckMeta({
         <dd className={value}>
           <DateTooltip date={checkedAt} live />
         </dd>
+        {regionCount > 1 && (
+          <dd className="mt-0.5 text-[12px] text-muted-foreground">
+            {t('Checked from {n} regions').replace('{n}', String(regionCount))}
+          </dd>
+        )}
       </div>
     </dl>
   )
@@ -661,12 +921,15 @@ export function DnsRecordsTable({
   showTtl,
   showPriority = false,
   compact = false,
+  fullValues = false,
 }: {
   records: DnsRecord[]
   showTtl: boolean
   showPriority?: boolean
   /** Hide the TTL column, e.g. in modals */
   compact?: boolean
+  /** Show name and value in full, wrapping long ones, instead of cutting them with an ellipsis. */
+  fullValues?: boolean
 }) {
   const t = useT()
   const ttl = showTtl && !compact
@@ -726,6 +989,8 @@ export function DnsRecordsTable({
                     variant="inline"
                     size="md"
                     maxWidth={180}
+                    wrap={fullValues}
+                    dir="ltr"
                     showCopyOnHover={false}
                     className="-my-1.5 -ms-2.5"
                   />
@@ -739,6 +1004,8 @@ export function DnsRecordsTable({
                   variant="inline"
                   size="md"
                   maxWidth={200}
+                  wrap={fullValues}
+                  dir="ltr"
                   showCopyOnHover={false}
                   className="-my-1.5 -ms-2.5"
                 />
@@ -835,9 +1102,27 @@ export function VerifyDomainContent({
   } = useConsoleVariables(region)
   // The records the last DNS check saved. Older servers and rules nobody
   // checked have none, and the screen shows only the records to add.
-  const records = (rule as Models.ProxyRule & { records?: ProxyRuleRecord[] })
-    .records
+  const records: ProxyRuleRecord[] | null | undefined = rule.records
   const checks = records?.length ? records : null
+  // A subdomain points with its CNAME, so an A or AAAA record found where the
+  // CNAME is missing answers in its place: a provider's URL redirect or parking
+  // record, which never reaches Appwrite.
+  const conflict =
+    getRecordName(rule.domain) !== '@' &&
+    checks?.some(
+      (check) =>
+        check.type === 'CNAME' &&
+        check.status === 'missing' &&
+        getLaggingRegions(check).length === 0,
+    )
+      ? checks.find(
+          (check) =>
+            (check.type === 'A' || check.type === 'AAAA') &&
+            check.status === 'mismatch' &&
+            check.current.length > 0 &&
+            getLaggingRegions(check).length === 0,
+        )
+      : undefined
 
   const isCloud = useMemo(() => isCloudEndpoint(), [])
 
@@ -897,9 +1182,15 @@ export function VerifyDomainContent({
   )?.expected
 
   // Once one record points the domain at Appwrite, the others are not needed.
-  const verifiedType = checks?.find(
-    (check) => check.type in POINTING_METHODS && check.status === 'verified',
-  )?.type
+  // A record some regions already see counts too: it is only propagating.
+  const verifiedType =
+    checks?.find(
+      (check) => check.type in POINTING_METHODS && check.status === 'verified',
+    )?.type ??
+    checks?.find(
+      (check) =>
+        check.type in POINTING_METHODS && getLaggingRegions(check).length > 0,
+    )?.type
 
   const getRecord = (type: string, value: string): DnsRecord => {
     const check = findCheck(type, value)
@@ -909,16 +1200,27 @@ export function VerifyDomainContent({
       value,
       ttl: 3600,
       check,
+      // The propagating record is the one that points the domain, so it is
+      // never an unused alternative of itself.
       notNeeded:
-        check && check.status !== 'verified' ? verifiedType : undefined,
+        check &&
+        check.status !== 'verified' &&
+        !(check.type === verifiedType && getLaggingRegions(check).length > 0)
+          ? verifiedType
+          : undefined,
     }
   }
 
   // The record each method asks for, with the status of its last check.
   const getPointingRecord = (method: VerificationMethod): DnsRecord | null => {
     switch (method) {
-      case 'cname':
-        return cname ? getRecord('CNAME', verifiedCname ?? cname) : null
+      case 'cname': {
+        if (!cname) return null
+        const record = getRecord('CNAME', verifiedCname ?? cname)
+        return record.check?.status === 'missing' && conflict
+          ? { ...record, conflict }
+          : record
+      }
       case 'alias':
         return cname
           ? {
@@ -984,6 +1286,19 @@ export function VerifyDomainContent({
     </p>
   )
 
+  // Providers append the zone to the host, so a full domain there lands one
+  // zone too deep. An apex is entered as @, which needs no note.
+  const recordName = getRecordName(rule.domain)
+  const hostNote = recordName !== '@' && (
+    <p className="text-[13px] text-muted-foreground">
+      {t(
+        "Enter only {name} in your DNS provider's Host or Name field. Most providers add {apex} for you.",
+      )
+        .replace('{name}', recordName)
+        .replace('{apex}', getZone(rule.domain))}
+    </p>
+  )
+
   // The CAA row: recommended from the console variables, required once the
   // server checks it.
   const caaCheck = findCheck('CAA', '')
@@ -991,7 +1306,12 @@ export function VerifyDomainContent({
     hasCaa || caaCheck
       ? {
           type: 'CAA',
-          name: '@',
+          // A blocking CAA record can sit on a parent of the domain, and the
+          // new one goes next to it.
+          name:
+            caaCheck?.status === 'mismatch'
+              ? getRecordName(caaCheck.name)
+              : '@',
           value: hasCaa
             ? caa!
             : caaCheck!.expected.includes(' ')
@@ -1046,14 +1366,15 @@ export function VerifyDomainContent({
     ),
   ]
   const offersNameservers = tabOptions.some((tab) => tab.id === 'nameservers')
-  const banners = checks ? getDnsBanners(t, rule, pointingChecks, caaCheck) : []
-  // A banner that names the wrong record replaces the generic "wait and try
-  // again" alert, and "DNS is set up" already says the certificate is next.
-  // The rule updates live, so that alert also goes once its DNS has passed.
-  const wrongRecord = banners.some((banner) => banner.tone === 'error')
+  const banners = checks
+    ? getDnsBanners(t, rule, pointingChecks, caaCheck, conflict)
+    : []
+  // The banners above the records already say what to do next, so they
+  // replace the generic "wait and try again" alert. The rule updates live, so
+  // that alert also goes once its DNS has passed.
   const dnsSetUp = banners.some((banner) => banner.dnsSetUp)
   const shownError =
-    (wrongRecord || dnsSetUp || !isDnsUnverified(rule)) &&
+    (banners.length > 0 || !isDnsUnverified(rule)) &&
     typeof verificationError === 'object' &&
     verificationError?.pending
       ? null
@@ -1068,7 +1389,14 @@ export function VerifyDomainContent({
 
   const checkedRecords = checks ? (
     <div className="space-y-6">
-      <DnsCheckMeta rule={rule} checkedAt={checkedAt} />
+      <DnsCheckMeta
+        rule={rule}
+        checkedAt={checkedAt}
+        regionCount={Math.max(
+          0,
+          ...checks.map((check) => check.regions?.length ?? 0),
+        )}
+      />
       {/* Only the banners are live: the times above tick. */}
       <div role="status" aria-live="polite" className="space-y-3">
         {banners.map((banner) => (
@@ -1088,6 +1416,7 @@ export function VerifyDomainContent({
           waiting={isWaitingForDns(rule)}
         >
           {tabOptions.some((tab) => tab.id === 'alias') && aliasNote}
+          {hostNote}
         </RecordSection>
       )}
       {caaRecord && (

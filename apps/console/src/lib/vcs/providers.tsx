@@ -7,7 +7,6 @@
 
 import type { ReactElement } from 'react'
 import type { Models } from '@appwrite.io/console'
-import type { ConsoleProfileFeatures } from '@/lib/console-profiles'
 
 export function GitHubIcon({ className }: { className?: string }) {
   return (
@@ -183,21 +182,6 @@ export const VCS_PROVIDERS: Record<VcsProviderId, VcsProviderMeta> = {
 /** Fallback provider for display when a value is unknown or legacy. */
 export const DEFAULT_VCS_OAUTH_PROVIDER: VcsProviderId = 'github'
 
-type VcsConnectFlag = keyof Pick<ConsoleProfileFeatures, 'vcsOrigin'>
-
-/**
- * The profile flag each provider's Git connect sits behind, or null when it is
- * always available. A new provider has to pick one.
- */
-const VCS_CONNECT_FLAGS: Record<VcsProviderId, VcsConnectFlag | null> = {
-  github: null,
-  entire: null,
-  origin: 'vcsOrigin',
-  gitlab: null,
-  bitbucket: null,
-  gitea: null,
-}
-
 /**
  * Connect/authorize providers shown in Git installation UI: the ones the
  * server has configured (`_APP_VCS_PROVIDERS`), since authorizing any other
@@ -205,16 +189,11 @@ const VCS_CONNECT_FLAGS: Record<VcsProviderId, VcsConnectFlag | null> = {
  * OAuth connect actions are filtered.
  */
 export function getVisibleVcsOAuthProviders(
-  features: Pick<ConsoleProfileFeatures, VcsConnectFlag>,
   configuredProviders: string[] | undefined,
 ): VcsProviderMeta[] {
-  return Object.values(VCS_PROVIDERS).filter((provider) => {
-    const flag = VCS_CONNECT_FLAGS[provider.id]
-    return (
-      (flag === null || features[flag]) &&
-      vcsProviderHasCapability(provider.id, configuredProviders)
-    )
-  })
+  return Object.values(VCS_PROVIDERS).filter((provider) =>
+    vcsProviderHasCapability(provider.id, configuredProviders),
+  )
 }
 
 /**
@@ -359,6 +338,190 @@ export function getProviderPullRequestUrl(params: {
     default:
       return null
   }
+}
+
+/**
+ * Build a provider web URL for a repository. Returns null when the provider is
+ * unknown, its host is not known here (self-hosted Gitea), or a path piece is
+ * missing, so callers leave the link out instead of inventing a GitHub URL.
+ */
+export function getProviderRepositoryUrl(params: {
+  provider?: string
+  organization?: string
+  repositoryName?: string
+}): string | null {
+  const meta = getKnownVcsProvider(params.provider)
+  const organization = params.organization?.trim()
+  const repositoryName = params.repositoryName?.trim()
+  if (!meta || !organization || !repositoryName || meta.id === 'gitea') {
+    return null
+  }
+
+  return `${meta.baseUrl(encodeVcsPath(organization))}/${encodeVcsPath(repositoryName)}`
+}
+
+/** The providers code review runs on (`Appwrite\Reviews\Provider`). */
+export const REVIEW_VCS_PROVIDERS: readonly VcsProviderId[] = [
+  'github',
+  'gitlab',
+  'gitea',
+  'bitbucket',
+  'origin',
+]
+
+/** Where a pull request and what a review of it points at live on the provider. */
+export interface ProviderReviewUrls {
+  repository: string
+  pullRequest: string
+  /** The posted review, or the pull request where there is none to link to. */
+  review: string
+  commit: (hash: string) => string
+  /** Two commits compared, or null where the provider has no such page. */
+  compare: (base: string, head: string) => string | null
+  /** A file at a commit, scrolled to its lines where the provider can. */
+  file: (
+    hash: string,
+    path: string,
+    startLine: number,
+    endLine: number,
+  ) => string
+  /** A review comment, or null where the provider has no anchor for one. */
+  comment: (commentId: string) => string | null
+}
+
+/**
+ * Build the links of a review on its provider, or null when the provider is
+ * unknown, its host is not known here, or a path piece is missing. A
+ * self-hosted GitLab or Gitea is reached through the installation's
+ * `organizationUrl`, which the server builds from its configured host.
+ */
+export function getProviderReviewUrls(params: {
+  provider?: string
+  organizationUrl?: string
+  organization?: string
+  repositoryName?: string
+  pullRequestId?: string
+  reviewId?: string
+}): ProviderReviewUrls | null {
+  const meta = getKnownVcsProvider(params.provider)
+  const organization = params.organization?.trim()
+  const repositoryName = params.repositoryName?.trim()
+  const pullRequestId = params.pullRequestId?.trim()
+  if (!meta || !organization || !repositoryName || !pullRequestId) return null
+
+  const path = `${encodeVcsPath(organization)}/${encodeVcsPath(repositoryName)}`
+  const id = encodeURIComponent(pullRequestId)
+  const reviewId = params.reviewId ? encodeURIComponent(params.reviewId) : ''
+  const host = (fallback: string | null) => {
+    if (params.organizationUrl) {
+      try {
+        // Keep the path an instance is served under (https://example.com/gitlab),
+        // dropping only the organization the URL ends with.
+        const url = new URL(params.organizationUrl)
+        let base = url.pathname
+        while (base.endsWith('/')) base = base.slice(0, -1)
+        const tail = `/${encodeVcsPath(organization)}`
+        return base.toLowerCase().endsWith(tail.toLowerCase())
+          ? url.origin + base.slice(0, -tail.length)
+          : url.origin
+      } catch {
+        return null
+      }
+    }
+    return fallback
+  }
+  const filePath = (value: string) => encodeVcsPath(value)
+
+  switch (meta.id) {
+    case 'github': {
+      const repository = `https://github.com/${path}`
+      const pullRequest = `${repository}/pull/${id}`
+      return {
+        repository,
+        pullRequest,
+        review: reviewId
+          ? `${pullRequest}#pullrequestreview-${reviewId}`
+          : pullRequest,
+        commit: (hash) => `${repository}/commit/${hash}`,
+        compare: (base, head) => `${repository}/compare/${base}...${head}`,
+        file: (hash, file, start, end) =>
+          `${repository}/blob/${hash}/${filePath(file)}#L${start}${end !== start ? `-L${end}` : ''}`,
+        comment: (commentId) =>
+          `${pullRequest}#discussion_r${encodeURIComponent(commentId)}`,
+      }
+    }
+    case 'gitlab': {
+      const base = host('https://gitlab.com')
+      if (!base) return null
+      const repository = `${base}/${path}`
+      const pullRequest = `${repository}/-/merge_requests/${id}`
+      return {
+        repository,
+        pullRequest,
+        review: pullRequest,
+        commit: (hash) => `${repository}/-/commit/${hash}`,
+        compare: (base, head) => `${repository}/-/compare/${base}...${head}`,
+        file: (hash, file, start, end) =>
+          `${repository}/-/blob/${hash}/${filePath(file)}#L${start}${end !== start ? `-${end}` : ''}`,
+        // A finding's thread is a discussion, which has no anchor of its own
+        comment: () => null,
+      }
+    }
+    case 'gitea': {
+      const base = host(null)
+      if (!base) return null
+      const repository = `${base}/${path}`
+      const pullRequest = `${repository}/pulls/${id}`
+      return {
+        repository,
+        pullRequest,
+        review: pullRequest,
+        commit: (hash) => `${repository}/commit/${hash}`,
+        compare: (base, head) => `${repository}/compare/${base}...${head}`,
+        file: (hash, file, start, end) =>
+          `${repository}/src/commit/${hash}/${filePath(file)}#L${start}${end !== start ? `-L${end}` : ''}`,
+        comment: (commentId) =>
+          `${pullRequest}/files#issuecomment-${encodeURIComponent(commentId)}`,
+      }
+    }
+    case 'bitbucket': {
+      const base = host('https://bitbucket.org')
+      if (!base) return null
+      const repository = `${base}/${path}`
+      const pullRequest = `${repository}/pull-requests/${id}`
+      return {
+        repository,
+        pullRequest,
+        review: pullRequest,
+        commit: (hash) => `${repository}/commits/${hash}`,
+        compare: () => null,
+        file: (hash, file, start, end) =>
+          `${repository}/src/${hash}/${filePath(file)}#lines-${start}${end !== start ? `:${end}` : ''}`,
+        comment: (commentId) =>
+          `${pullRequest}#comment-${encodeURIComponent(commentId)}`,
+      }
+    }
+    case 'origin': {
+      const repository = `https://cursor.com/codebase/${path}`
+      const pullRequest = `${repository}/pull/${id}`
+      return {
+        repository,
+        pullRequest,
+        review: pullRequest,
+        commit: (hash) => `${repository}/commit/${hash}`,
+        compare: () => null,
+        file: (hash, file) => `${repository}/blob/${hash}/${filePath(file)}`,
+        comment: () => null,
+      }
+    }
+    default:
+      return null
+  }
+}
+
+export function isReviewVcsProvider(provider?: string): boolean {
+  const id = getKnownVcsProvider(provider)?.id
+  return !!id && REVIEW_VCS_PROVIDERS.includes(id)
 }
 
 /**

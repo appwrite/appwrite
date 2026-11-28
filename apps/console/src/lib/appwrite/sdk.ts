@@ -5,9 +5,8 @@
  * All Appwrite operations are handled client-side.
  */
 
-import { Account, Activities, Affiliates, Analytics, Apps, Avatars, Backups, Client, Console, Functions, Growth, ImageFormat, Locale, Manager, Messaging, Migrations, Oauth2, Project, Project as ProjectApi, Projects, Proxy, Realtime, Storage, Teams, Users, Vcs, Sites, Tokens, TablesDB, DocumentsDB, VectorsDB, Postgresql, Mysql, Mongo, Domains, Organization, Organizations, Presences, Usage, Webhooks, Notifications, Waf, Videos } from '@appwrite.io/console'
+import { Account, Activities, Affiliates, Analytics, Apps, Avatars, Backups, Client, Console, Functions, Growth, ImageFormat, Locale, Logs, Manager, Messaging, Migrations, Oauth2, Project, Project as ProjectApi, Projects, Proxy, Realtime, Storage, Teams, Users, Vcs, Sites, Tokens, TablesDB, DocumentsDB, VectorsDB, Postgresql, Mysql, Mongo, Domains, Organization, Organizations, Presences, Usage, Webhooks, Notifications, Waf, Videos, Alerts, Monitors, Reviews } from '@appwrite.io/console'
 import { Agent } from '@/lib/appwrite/agent'
-import { Reviews } from '@/lib/appwrite/reviews'
 import { Zero } from '@/lib/appwrite/zero'
 import {
   getDebugEndpointBaseUrl,
@@ -31,7 +30,6 @@ import { resetFingerprintCache } from '@/lib/fingerprint'
 import { getActiveLanguage } from '@/lib/i18n/active-language'
 import { subscribeToDebugOverrides } from '@/lib/debug-overrides'
 import { getActiveEnvironmentId } from '@/lib/active-environment'
-import { Alerts, Monitors } from '@/lib/appwrite/monitors'
 
 /**
  * True when the endpoint host is a known multi-region Appwrite cloud host
@@ -195,6 +193,7 @@ function createConsoleSdkRaw(client: Client) {
     teams: new Teams(client),
     users: new Users(client),
     migrations: new Migrations(client),
+    proxy: new Proxy(client),
     console: new Console(client),
     agent: new Agent(client),
     sites: new Sites(client),
@@ -550,6 +549,7 @@ const createProjectSdkRaw = (clientProject: Client) => ({
   mongo: new Mongo(clientProject),
   functions: new Functions(clientProject),
   locale: new Locale(clientProject),
+  logs: new Logs(clientProject),
   messaging: new Messaging(clientProject),
   project: new Project(clientProject),
   projectApi: new ProjectApi(clientProject),
@@ -559,7 +559,6 @@ const createProjectSdkRaw = (clientProject: Client) => ({
   users: new Users(clientProject),
   vcs: new Vcs(clientProject),
   proxy: new Proxy(clientProject),
-  // Hand-written until a Console SDK release carries the reviews service.
   reviews: new Reviews(clientProject),
   migrations: new Migrations(clientProject),
   sites: new Sites(clientProject),

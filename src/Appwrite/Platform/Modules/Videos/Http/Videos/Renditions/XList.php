@@ -21,7 +21,6 @@ use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Query\Method as QueryMethod;
-use Utopia\System\System;
 use Utopia\Validator\Boolean;
 
 class XList extends Base
@@ -47,8 +46,6 @@ class XList extends Base
                 namespace: 'videos',
                 group: 'renditions',
                 name: 'listRenditions',
-                // Hidden until videos is generally available; preview SDK builds show it.
-                hide: System::getEnv('_APP_SDK_PREVIEW', 'disabled') !== 'enabled',
                 description: '/docs/references/videos/list-renditions.md',
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [
@@ -85,6 +82,8 @@ class XList extends Base
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
+        $this->toStoredBitRates($queries);
+
         $queries[] = Query::equal('videoInternalId', [$video->getSequence()]);
 
         if (\count(Query::getByType($queries, [QueryMethod::Limit])) === 0) {
@@ -103,7 +102,7 @@ class XList extends Base
             $renditionId = $cursor->getValue();
             $cursorDocument = $authorization->skip(fn () => $dbForProject->getDocument('videosRenditions', $renditionId));
 
-            if ($cursorDocument->isEmpty()) {
+            if ($cursorDocument->isEmpty() || $cursorDocument->getAttribute('videoInternalId') !== $video->getSequence()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Rendition '{$renditionId}' for the 'cursor' value not found.");
             }
 

@@ -15,6 +15,7 @@ import {
 } from '@/components/pages/projects/$projectId/sites/_components/SiteTemplateCard'
 import { Button } from '@/components/ui/button'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { useActiveEnvironmentId } from '@/lib/active-environment'
 import { getApiEndpoint } from '@/lib/appwrite/sdk'
 import { getDocsPageUrl } from '@/lib/marketing/urls'
 import { useT } from '@/lib/i18n/translate'
@@ -157,13 +158,14 @@ function BrowserVisual() {
  */
 function GitProviders({ projectId }: { projectId: string }) {
   const t = useT()
-  const { features } = useConsoleProfile()
   const { vcsProviders } = useConsoleVariables()
   const { project } = useProject(projectId)
   const { data: installations, isPending } = useVcsInstallations(projectId)
-  const providers = getVisibleVcsOAuthProviders(features, vcsProviders)
+  const providers = getVisibleVcsOAuthProviders(vcsProviders)
+  // Git installations cannot be connected from inside an environment
+  const environmentId = useActiveEnvironmentId(projectId)
 
-  if (providers.length === 0) return null
+  if (providers.length === 0 || environmentId) return null
 
   const connected = new Set(
     installations?.installations.map((installation) => installation.provider),

@@ -83,6 +83,32 @@ function selectBlogTab(group: HTMLElement, tabId: string) {
   }
 }
 
+/**
+ * Plays `autoplay` videos only while they are on screen. A video inside the
+ * hidden theme wrapper never intersects, so only the active theme's copy plays.
+ */
+function playVisibleVideos(root: HTMLElement): () => void {
+  const videos = [
+    ...root.querySelectorAll<HTMLVideoElement>('video[data-blog-autoplay]'),
+  ]
+  if (videos.length === 0 || typeof IntersectionObserver === 'undefined') {
+    return () => {}
+  }
+  const observer = new IntersectionObserver((entries) => {
+    for (const { target, isIntersecting } of entries) {
+      const video = target as HTMLVideoElement
+      if (isIntersecting) {
+        video.muted = true
+        void video.play().catch(() => {})
+      } else {
+        video.pause()
+      }
+    }
+  })
+  for (const video of videos) observer.observe(video)
+  return () => observer.disconnect()
+}
+
 export function BlogMarkdownBody({ html, className }: BlogMarkdownBodyProps) {
   const rootRef = useRef<HTMLDivElement>(null)
   const [galleryItems, setGalleryItems] = useState<ImagePreviewGalleryItem[]>(
@@ -210,9 +236,11 @@ export function BlogMarkdownBody({ html, className }: BlogMarkdownBodyProps) {
 
     root.addEventListener('click', onClick)
     root.addEventListener('keydown', onKeyDown)
+    const stopAutoplay = playVisibleVideos(root)
     return () => {
       root.removeEventListener('click', onClick)
       root.removeEventListener('keydown', onKeyDown)
+      stopAutoplay()
     }
   }, [html])
 

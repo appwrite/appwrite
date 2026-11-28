@@ -489,6 +489,16 @@ export function pruneExpiredPresenceMaps(
   online: Map<string, InitPresenceRecord>
   away: Map<string, InitPresenceRecord>
 } {
+  const hasExpired = (map: Map<string, InitPresenceRecord>) => {
+    for (const presence of map.values()) {
+      if (!isPresenceActive(presence)) return true
+    }
+    return false
+  }
+
+  // Same reference when nothing expired, so the heartbeat does not re-render the page.
+  if (!hasExpired(maps.online) && !hasExpired(maps.away)) return maps
+
   const nextOnline = new Map(maps.online)
   const nextAway = new Map(maps.away)
 

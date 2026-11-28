@@ -3,7 +3,8 @@ import {
   MARKETING_PAGE_ROUTE_STATIC_DATA,
   marketingRouteLifetime,
 } from '@/lib/marketing/route-static-data'
-import { getFactoryHomePageHead, View } from '@/components/pages/home/View'
+import { getFactoryHomePageHead } from '@/components/pages/home/head'
+import { View } from '@/components/pages/home/View'
 import { prefetchVisitorCountry } from '@/lib/react-query/hooks/locale'
 
 /** Homepage variant with the 3D software factory hero. */

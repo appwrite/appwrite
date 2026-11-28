@@ -1,26 +1,26 @@
 /**
- * The stored DNS checks of a proxy rule (`rule.records`): the pinned Console
- * SDK has no `Models.RuleRecord` yet. Delete this for the SDK model once the
- * pin carries it.
+ * The per-region results of a proxy rule's DNS checks: the pinned Console SDK's
+ * `Models.ProxyRuleRecord` has no `regions` yet. Delete this for the SDK model
+ * once the pin carries it.
  */
 
-export interface ProxyRuleRecord {
-  $id: string
-  /** When this record type was first checked for the rule */
-  $createdAt: string
-  /** When DNS was last checked for this record */
-  $updatedAt: string
-  /** `CNAME`, `A`, `AAAA` or `CAA` */
-  type: string
-  /** The hostname that was looked up */
+import type { Models } from '@appwrite.io/console'
+
+/**
+ * What one checking region saw for a record. The record is verified only
+ * when every region sees it.
+ */
+export interface ProxyRuleRecordRegion {
+  /** Region ID, e.g. `fra` */
+  id: string
+  /** Display name, e.g. `Frankfurt` */
   name: string
-  /** The value Appwrite expects */
-  expected: string
-  /** The values DNS returned for this type */
-  current: string[]
   status: 'verified' | 'missing' | 'mismatch' | 'failed'
-  /** Why the check did not pass, empty when verified */
-  message: string
-  /** CAA must pass; CNAME, A and AAAA are alternatives, any one is enough */
-  required: boolean
+  /** The values this region's resolver returned */
+  current: string[]
+}
+
+export type ProxyRuleRecord = Models.ProxyRuleRecord & {
+  /** Per-region results. Older servers do not send them. */
+  regions?: ProxyRuleRecordRegion[]
 }

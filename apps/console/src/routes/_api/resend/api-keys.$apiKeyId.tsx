@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { jsonError, proxyResendRequest } from '@/lib/smtp/resend-proxy'
+import { jsonError } from '@/lib/smtp/relay'
+import { proxyResendRequest } from '@/lib/smtp/resend-proxy'
 
 const API_KEY_ID_PATTERN = /^[A-Za-z0-9_-]{1,64}$/
 

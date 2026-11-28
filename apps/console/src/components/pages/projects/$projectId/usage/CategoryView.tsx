@@ -12,6 +12,7 @@ import { ComputeSection } from './ComputeSection'
 import { FunctionsSection } from './FunctionsSection'
 import { SitesSection } from './SitesSection'
 import { StorageSection } from './StorageSection'
+import { VideosSection } from './VideosSection'
 import { findUsageCategory, getUsageCategories } from './usage-nav'
 import type { UsageChartInterval } from '@/lib/usage/chart-interval'
 
@@ -149,6 +150,16 @@ export function UsageCategoryView({
   if (categoryId === 'storage') {
     return (
       <StorageSection
+        projectId={projectId}
+        dateRange={dateRange}
+        chartInterval={chartInterval}
+      />
+    )
+  }
+
+  if (categoryId === 'videos') {
+    return (
+      <VideosSection
         projectId={projectId}
         dateRange={dateRange}
         chartInterval={chartInterval}

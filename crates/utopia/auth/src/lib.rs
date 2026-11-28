@@ -1,4 +1,4 @@
-//! The password hash algorithms of `utopia-php/auth` (`packages/auth/src/Hashes`) that PHP
+//! The password hash algorithms of `utopia-php/auth` (`Utopia\Auth\Hashes`) that PHP
 //! itself does not provide: the scrypt KDF of the PECL `scrypt` extension, Firebase's
 //! modified scrypt, and phpass's portable hashes. The rest (`password_hash()`,
 //! `password_verify()`, `crypt()`, `hash()`) are PHP's own functions, ported in `php-std`.

@@ -143,6 +143,18 @@ final class S3CustomServerTest extends Scope
             $this->assertSame("script-src 'none';", $head['headers']['content-security-policy'], $case['name']);
             $this->assertSame('nosniff', $head['headers']['x-content-type-options'], $case['name']);
             $this->assertStringStartsWith('attachment;', $head['headers']['content-disposition'], $case['name']);
+            $size = (string) \strlen($object['body']);
+            $this->assertSame($size, $head['headers']['content-length'], $case['name']);
+
+            // A proxy may forward HeadObject as a GET: the response has no body, so it
+            // must not declare the object's length, and completes instead of stalling.
+            $headOverGet = $this->call(Client::METHOD_GET, $path, ['x-id' => 'HeadObject']);
+            $this->assertSame(200, $headOverGet['headers']['status-code'], $case['name']);
+            $this->assertSame('', $headOverGet['body'], $case['name']);
+            $this->assertSame('0', $headOverGet['headers']['content-length'] ?? '0', $case['name']);
+            $this->assertSame($size, $headOverGet['headers']['x-amz-meta-content-length'], $case['name']);
+            $this->assertSame($object['headers']['etag'], $headOverGet['headers']['etag'], $case['name']);
+            $this->assertStringContainsStringIgnoringCase('x-amz-meta-content-length', $headOverGet['headers']['access-control-expose-headers'] ?? '', $case['name']);
 
             $override = $this->call(Client::METHOD_GET, $path, [
                 'response-content-type' => 'text/html',
@@ -298,6 +310,28 @@ final class S3CustomServerTest extends Scope
             $this->assertSame(200, $buckets['headers']['status-code'], $buckets['body']);
             $this->assertStringNotContainsString('<Name>' . $bucketId . '</Name>', (string) $buckets['body']);
         }
+    }
+
+    #[Group('s3')]
+    public function testCreateBucketGetsTheSamePerFileLimitAsREST(): void
+    {
+        $headers = \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        // The REST endpoint's default is the plan's per-file limit, or the platform's without a plan
+        $rest = $this->setupBucket();
+        $restBucket = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $rest, $headers);
+        $this->assertSame(200, $restBucket['headers']['status-code']);
+
+        $bucketId = Id::unique();
+        $create = $this->call(Client::METHOD_PUT, '/' . $bucketId);
+        $this->assertSame(200, $create['headers']['status-code'], (string) $create['body']);
+
+        $s3Bucket = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId, $headers);
+        $this->assertSame(200, $s3Bucket['headers']['status-code']);
+        $this->assertSame($restBucket['body']['maximumFileSize'], $s3Bucket['body']['maximumFileSize']);
     }
 
     #[Group('s3')]

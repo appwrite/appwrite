@@ -27,6 +27,8 @@ final class LocalizationTest extends Scope
 
         $this->assertIsArray($locale['body']['data']);
         $this->assertArrayNotHasKey('errors', $locale['body']);
+        // The GraphQL route's own limit is applied; the locale route it resolves to declares none
+        $this->assertSame('60', (string) $locale['headers']['x-ratelimit-limit']);
         $locale = $locale['body']['data']['localeGet'];
         $this->assertIsArray($locale);
 

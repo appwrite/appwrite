@@ -27,6 +27,7 @@ use Appwrite\Event\Publisher\Video as VideoPublisher;
 use Appwrite\Execution\Store as ExecutionStore;
 use Appwrite\Exiftool\Client as ExiftoolClient;
 use Appwrite\Geo\Client as GeoClient;
+use Appwrite\Locking\Locks;
 use Appwrite\Logs\Adapter\ClickHouse as LogsClickHouse;
 use Appwrite\Logs\Logs;
 use Appwrite\Messaging\Adapter\Mqtt;
@@ -36,8 +37,10 @@ use Appwrite\Network\Validator\DeploymentHostname;
 use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Network\Validator\PublicURL;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
+use Appwrite\Platform\Modules\Videos\SegmentCache;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use Appwrite\Screenshots\Client as ScreenshotsClient;
+use Appwrite\Storage\Uploads;
 use Appwrite\Usage\Connection as UsageConnection;
 use Appwrite\Utopia\Database\Documents\Project;
 use Appwrite\Vcs\Factory as VcsFactory;
@@ -63,7 +66,6 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\DNS\Lookup\Recursive;
 use Utopia\DSN\DSN;
-use Utopia\Lock\Distributed;
 use Utopia\Messaging\Adapter\SMS as SMSAdapter;
 use Utopia\Pools\Adapter\Swoole as SwoolePoolAdapter;
 use Utopia\Pools\Group;
@@ -338,6 +340,7 @@ $container->set('executionStore', function (): ExecutionStore {
         dsn: $connection,
         client: $client,
         retention: (int) System::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', 1209600),
+        insertBuffer: max(0, (int) System::getEnv('_APP_EXECUTIONS_INSERT_BUFFER', 0)),
     );
 }, []);
 
@@ -441,15 +444,14 @@ $container->set('cache', function (Registry $register, Telemetry $telemetry) {
 
 $container->set('cacheControlForStorage', fn () => fn (StorageCacheControl $config): string => \sprintf('private, max-age=%d', $config->maxAge));
 
-$container->set('locks', fn (Group $pools) => fn (string $key, int $ttl, callable $callback, float $timeout = 0.0): mixed => $pools->get('lock')->use(
-    function (\Redis $redis) use ($key, $ttl, $callback, $timeout): mixed {
-        // The callback receives the lock so long-running holders can refresh
-        // the lease and verify it is still theirs before committing work.
-        $lock = new Distributed($redis, $key, ttl: $ttl);
+// Cloud replaces this with a Fastly purge of the video Surrogate-Key.
+// Self-hosted has no CDN in front of playback, so the default does nothing.
+$container->set('purgeVideoSegmentCache', fn () => new SegmentCache());
 
-        return $lock->withLock(fn () => $callback($lock), timeout: $timeout);
-    }
-), ['pools']);
+
+$container->set('locks', fn (Group $pools) => Locks::using($pools), ['pools']);
+
+$container->set('uploads', fn (Group $pools) => new Uploads(fn (callable $callback): mixed => $pools->get('lock')->use($callback)), ['pools']);
 
 // The lease spans the callback; throwing from it makes the pool reconnect the socket.
 $container->set('timelimit', fn (Group $pools) => fn (string $key, int $limit, int $seconds, callable $callback): mixed => $pools->get('abuse')->use(

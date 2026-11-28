@@ -170,9 +170,18 @@ function marketingProductFooterLink(
 function getExpandedFooterGroups(
   marketing: boolean,
   footerCopy: ReturnType<typeof useI18n>['catalog']['app']['footer'],
-  options: { agent: boolean; isCloud: boolean; analytics: boolean; videos: boolean },
+  options: {
+    agent: boolean
+    isCloud: boolean
+    analytics: boolean
+    videos: boolean
+    zero: boolean
+    monitors: boolean
+    beep: boolean
+    reviews: boolean
+  },
 ): readonly ExpandedFooterGroup[] {
-  const { agent, isCloud, analytics, videos } = options
+  const { agent, isCloud, analytics, videos, zero, monitors, beep, reviews } = options
   return [
   {
     title: footerCopy.groups.quickStarts,
@@ -213,6 +222,10 @@ function getExpandedFooterGroups(
       productFooterLink(footerCopy.expanded.products.storage, '/products/storage', marketing, 'storage'),
       productFooterLink(footerCopy.expanded.products.functions, '/products/functions', marketing, 'functions'),
       productFooterLink(footerCopy.expanded.products.messaging, '/products/messaging', marketing, 'messaging'),
+      // Videos stays out until its flag is on, as in the header's Products menu.
+      ...(videos
+        ? [productFooterLink(footerCopy.expanded.products.videos, '/products/videos', marketing, 'videos')]
+        : []),
       productFooterLink(
         footerCopy.expanded.products.realtime,
         '/products/realtime',
@@ -231,6 +244,9 @@ function getExpandedFooterGroups(
               isNew: isProductNavItemNew('agent'),
             } satisfies FooterLink,
           ]
+        : []),
+      ...(zero
+        ? [productFooterLink(footerCopy.expanded.products.zero, '/zero', marketing, 'zero')]
         : []),
       productFooterLink(footerCopy.expanded.products.hosting, '/products/sites', marketing, 'sites'),
       ...(marketing || isCloud
@@ -257,12 +273,36 @@ function getExpandedFooterGroups(
                   ),
                 ]
               : []),
+            // Monitors, Beep, and Reviews stay out until launch, as in the header's Products menu.
+            ...(monitors
+              ? [
+                  productFooterLink(
+                    footerCopy.expanded.products.monitors,
+                    '/products/monitors',
+                    marketing,
+                    'monitors',
+                  ),
+                ]
+              : []),
+            ...(beep
+              ? [productFooterLink(footerCopy.expanded.products.beep, '/products/beep', marketing, 'beep')]
+              : []),
             productFooterLink(
               footerCopy.expanded.products.firewall,
               '/products/firewall',
               marketing,
               'firewall',
             ),
+            ...(reviews
+              ? [
+                  productFooterLink(
+                    footerCopy.expanded.products.reviews,
+                    '/products/reviews',
+                    marketing,
+                    'reviews',
+                  ),
+                ]
+              : []),
           ]
         : []),
       {
@@ -393,6 +433,15 @@ function getExpandedFooterGroups(
       ...(videos
         ? [comparisonFooterLink(footerCopy.expanded.compare.vsMux, 'mux', marketing)]
         : []),
+      // The code review comparisons launch with Appwrite Reviews.
+      ...(reviews
+        ? [
+            comparisonFooterLink(footerCopy.expanded.compare.vsCodeRabbit, 'coderabbit', marketing),
+            comparisonFooterLink(footerCopy.expanded.compare.vsCopilot, 'copilot', marketing),
+            comparisonFooterLink(footerCopy.expanded.compare.vsBugbot, 'bugbot', marketing),
+            comparisonFooterLink(footerCopy.expanded.compare.vsGreptile, 'greptile', marketing),
+          ]
+        : []),
       blogFooterLink(footerCopy.expanded.compare.nextjsHosting, 'free-nextjs-hosting', marketing),
       blogFooterLink(footerCopy.expanded.compare.reactHosting, 'free-react-hosting', marketing),
       blogFooterLink(footerCopy.expanded.compare.vueHosting, 'free-vuejs-hosting', marketing),
@@ -468,7 +517,16 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
   const expandedFooterGroups = getExpandedFooterGroups(
     localMarketing,
     footerCopy,
-    { agent: features.agent, isCloud, analytics: features.analytics, videos: features.videos },
+    {
+      agent: features.agent,
+      isCloud,
+      analytics: features.analytics,
+      videos: features.videos,
+      zero: features.zero,
+      monitors: features.alerts,
+      beep: features.beep,
+      reviews: features.reviews,
+    },
   )
 
   const resourceLinks = [

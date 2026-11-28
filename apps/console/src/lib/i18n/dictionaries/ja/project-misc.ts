@@ -94,6 +94,63 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Manage sites': 'サイトの管理',
   'Run a production deploy': '本番デプロイを実行',
   'View site': 'サイトを表示',
+  // Onboarding: Init 5 products (Videos, Analytics, Monitors, Code review)
+  'Upload video once and stream it everywhere, with adaptive renditions and captions.':
+    '動画を一度アップロードするだけで、アダプティブなレンディションと字幕付きでどこにでも配信できます。',
+  'Upload a video':
+    '動画をアップロード',
+  'Add a video file; Appwrite transcodes it into streaming renditions.':
+    '動画ファイルを追加すると、Appwrite がストリーミング用のレンディションにトランスコードします。',
+  'Upload video':
+    '動画のアップロード',
+  'Manage videos':
+    '動画の管理',
+  'Attach captions in any language so every viewer can follow along.':
+    'どの言語の字幕も追加でき、すべての視聴者が内容を理解できます。',
+  'Open videos':
+    '動画を開く',
+  'Play it in your app':
+    'アプリで再生',
+  'Point your player at the HLS or DASH manifest to start streaming.':
+    'プレーヤーに HLS または DASH のマニフェストを指定して、ストリーミングを開始します。',
+  'Set up playback':
+    '再生を設定',
+  'See who visits your sites and apps, where they come from, and what they do.':
+    'サイトやアプリの訪問者、流入元、行動を把握できます。',
+  'Add a property':
+    'プロパティを追加',
+  'Track a website, mobile app, or AI agent as its own property.':
+    'Web サイト、モバイルアプリ、AI エージェントをそれぞれのプロパティとして計測します。',
+  'Add property':
+    'プロパティの追加',
+  'Manage properties':
+    'プロパティの管理',
+  'Record your first visit':
+    '最初の訪問を記録',
+  'Turn on analytics for a site, or send page views and events from your app.':
+    'サイトでアナリティクスを有効にするか、アプリからページビューとイベントを送信します。',
+  'Start tracking':
+    '計測を開始',
+  'View traffic':
+    'トラフィックを表示',
+  'Watch your endpoints and usage, and get alerted the moment something needs you.':
+    'エンドポイントと使用量を監視し、対応が必要になった瞬間にアラートを受け取れます。',
+  'Create a monitor':
+    'モニターを作成',
+  'Check an endpoint, a domain, or a usage limit on a schedule.':
+    'エンドポイント、ドメイン、使用量の上限をスケジュールに沿ってチェックします。',
+  'Manage monitors':
+    'モニターの管理',
+  'Get an AI review on every pull request, with findings that learn from your team.':
+    'すべてのプルリクエストに AI レビューが付き、指摘はチームから学習します。',
+  'Turn on code review':
+    'コードレビューを有効化',
+  'Add a repository, and its next pull request gets a review.':
+    'リポジトリを追加すると、次のプルリクエストからレビューされます。',
+  'Manage repositories':
+    'リポジトリの管理',
+  'Observe':
+    '監視',
   'Nice - you\\u2019re already moving.': '順調です。すでに進んでいます。',
   'You\\u2019re gaining steam - keep going.':
     '勢いが出てきました。このまま続けましょう。',
@@ -236,6 +293,22 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'ウィンドウは人間の行動に揃えられます。蓄積された短いバーストを許可し、持続的なペースに向けて補充されます。',
   'Redirect location': 'リダイレクト先',
   'Status code': 'ステータスコード',
+  'Wrong guesses allowed': '許可する誤入力回数',
+  '1 to 100 per visitor network.': '訪問者のネットワークごとに 1〜100 回。',
+  'Counted over (seconds)': '集計期間 (秒)',
+  '60 (1 minute) to 86400 (24 hours).': '60 (1 分) 〜 86400 (24 時間)。',
+  '{count} guesses / {window}': '{window} あたり {count} 回',
+  '1 guess / {window}': '{window} あたり 1 回',
+  '{count} min': '{count} 分',
+  '{count} h': '{count} 時間',
+  '{count} sec': '{count} 秒',
+  'Challenge type': 'チャレンジの種類',
+  'Password challenges apply to sites and functions only.':
+    'パスワードチャレンジはサイトと関数にのみ適用されます。',
+  'Use 8 to 256 bytes. Some characters, like emoji or non-Latin letters, take more than one byte.':
+    '8〜256 バイトで入力してください。絵文字や日本語などの文字は 1 文字で複数バイトになります。',
+  'Visitors must enter this password before they can continue.':
+    '訪問者は続行する前にこのパスワードを入力する必要があります。',
   'Match requests when all conditions are true.':
     'すべての条件が真のときにリクエストに一致します。',
   'Add condition': '条件を追加',
@@ -827,8 +900,24 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   Screens: '画面',
   'Most viewed screens': '最も閲覧された画面',
   'Where visitors are browsing from': '訪問者の閲覧地域',
+  'Where your users are': 'ユーザーの所在地',
+  'Users online now': '現在オンラインのユーザー',
+  'user online': '人のユーザーがオンライン',
+  'users online': '人のユーザーがオンライン',
+  'Unique users active in the last': '直近でアクティブだったユニークユーザー:',
+  'Could not load live users': 'ライブユーザーを読み込めませんでした',
+  'Active screens': 'アクティブな画面',
+  'No one is using the app right now.':
+    '現在アプリを使用しているユーザーはいません。',
+  'Users by country': '国別ユーザー',
+  'Visitors and app users, pages and screens, sources, locations, and bots, plus any custom events you track.':
+    '訪問者とアプリユーザー、ページと画面、参照元、地域、ボット、そしてトラッキングしているカスタムイベント。',
   'What visitors are browsing with': '訪問者の利用環境',
-  'What visitors are using': '訪問者の利用デバイス',
+  'What your users are on': 'ユーザーの利用環境',
+  'Active users': 'アクティブユーザー',
+  'Screen views': '画面表示数',
+  'Signed-in users': 'サインイン済みユーザー',
+  'Screens/session': 'セッションあたりの画面数',
   'Human visitors versus bots': '人間の訪問者とボットの比較',
   'AI agents and crawlers': 'AI エージェントとクローラー',
   Agents: 'エージェント',
@@ -1519,6 +1608,13 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'SMS messages': 'SMS メッセージ',
   'Events sent': '送信イベント',
   'Events failed': '失敗イベント',
+  'Streaming bandwidth': 'ストリーミング帯域幅',
+  'Renditions encoded': 'エンコード済みレンディション',
+  'Failed renditions': '失敗したレンディション',
+  'Encoding GB-hours': 'エンコード GB 時間',
+  'Video storage': '動画ストレージ',
+  Endpoints: 'エンドポイント',
+  'Video ID': '動画ID',
   Webhooks: 'Webhook',
   'Function executions': '関数の実行',
   'Site executions': 'サイトの実行',
@@ -1644,6 +1740,11 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     '選択期間中の関数コンピュート時間 (ギガバイト時間 GBH で計測)。Functions に割り当てられたメモリに実行時間とビルド時間を掛けた値。',
   'Site compute time during the selected period, measured in gigabyte-hours (GBH). Memory allocated to sites multiplied by request handling and build duration.':
     '選択期間中のサイトコンピュート時間 (ギガバイト時間 GBH で計測)。サイトに割り当てられたメモリにリクエスト処理時間とビルド時間を掛けた値。',
+  'Video encoding GB-hours': '動画エンコード GB 時間',
+  'Video encoding compute during the selected period, measured in gigabyte-hours (GBH). Encoder memory multiplied by encode duration. Included in GB-hours.':
+    '選択期間中の動画エンコードのコンピュート時間 (ギガバイト時間 GBH で計測)。エンコーダーのメモリにエンコード時間を掛けた値。GB 時間に含まれます。',
+  'Storage used by video renditions, captions, and thumbnail timelines. Counts toward your plan storage limit.':
+    '動画のレンディション、字幕、サムネイルタイムラインが使用するストレージ。プランのストレージ上限に含まれます。',
   'Top storage buckets': 'ストレージバケット上位',
   'Top buckets by origin images': 'オリジン画像別バケット上位',
   'Top executed functions': '実行数上位の関数',
@@ -2538,6 +2639,27 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'Mailgun 経由でトランザクションメールを送信します。',
   'Send transactional email through Resend.':
     'Resend 経由でトランザクションメールを送信します。',
+  'Send SMS through Bird.': 'Bird 経由で SMS を送信します。',
+  'A Bird API key with the sms:write scope.':
+    'sms:write スコープを持つ Bird の API キー。',
+  'A sender your Bird workspace owns: a number with its country code, or an alphanumeric sender ID.':
+    'Bird ワークスペースが所有する送信元: 国番号付きの電話番号、または英数字の送信者 ID。',
+  'One-click Bird SMS': 'ワンクリック Bird SMS',
+  'Let Appwrite create the API key and fill in one of your senders.':
+    'Appwrite が API キーを作成し、送信元を入力します。',
+  'Loading senders…': '送信元を読み込み中…',
+  'Add a sender, then check again.':
+    '送信元を追加して、もう一度確認してください。',
+  'Manage senders': '送信元を管理',
+  'Failed to load senders from the SMS provider':
+    'SMS プロバイダーから送信元を読み込めませんでした',
+  'Failed to create the API key with the SMS provider':
+    'SMS プロバイダーでの API キーの作成に失敗しました',
+  'Send email through Bird.': 'Bird 経由でメールを送信します。',
+  'A Bird API key with the emails:write scope.':
+    'emails:write スコープを持つ Bird の API キー。',
+  'Bird API keys start with bk_ and their region, for example bk_eu1_.':
+    'Bird の API キーは bk_ とリージョンで始まります（例: bk_eu1_）。',
   'Send transactional email through SendGrid.':
     'SendGrid 経由でトランザクションメールを送信します。',
   Sender: '送信元',
@@ -3207,16 +3329,16 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   avatars: 'アバター',
   Organizations: '組織',
   Install: 'インストール',
-  // SMTP quick setup (universal card: Resend today, Mailgun and SendGrid next)
+  // SMTP quick setup (universal card: Resend and Bird today, Mailgun next)
   'Connect an email provider and Appwrite fills in your SMTP settings automatically.':
     'メールプロバイダーを接続すると、Appwrite が SMTP 設定を自動で入力します。',
   'Set up': 'セットアップ',
   'Creates a sending-only API key for a verified domain.':
     '検証済みドメイン用の送信専用 API キーを作成します。',
+  'Creates an API key that can only send email.':
+    'メール送信のみ行える API キーを作成します。',
   'Creates a domain sending key for a verified domain.':
     '検証済みドメイン用のドメイン送信キーを作成します。',
-  'Creates a restricted API key with mail send access.':
-    'メール送信権限を持つ制限付き API キーを作成します。',
   'Failed to connect the email provider':
     'メールプロバイダーへの接続に失敗しました',
   'The provider was authorized for a different Appwrite account. Try again while signed in to this account.':
@@ -3231,6 +3353,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Check again': '再確認',
   'The credential is restricted to this domain and can only send email.':
     'この認証情報はこのドメインに制限され、メール送信のみ行えます。',
+  'The credential can only send email. It is not tied to a domain, so pick the one your sender address uses.':
+    'この認証情報はメール送信のみ行えます。特定のドメインには紐づかないため、送信者アドレスのドメインを選択してください。',
   'Must use the selected domain.': '選択したドメインを使用する必要があります。',
   'Enter a sender name.': '送信者名を入力してください。',
   'Enter a sender email on the selected domain.':
@@ -3244,6 +3368,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'Appwrite が検証済みドメイン用の API キーを作成し、これらの項目を入力します。',
   'Generate API key': 'API キーを生成',
   'One-click Resend sender': 'ワンクリック Resend 送信者',
+  'One-click Bird sender': 'ワンクリック Bird 送信者',
   'Creating the sending credential…': '送信用の認証情報を作成中…',
   'Failed to create the API key with the email provider':
     'メールプロバイダーでの API キーの作成に失敗しました',
@@ -3260,19 +3385,19 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Sending domain': '送信ドメイン',
   Sender: '送信者',
   'Disconnect Resend': 'Resend を切断',
+  'Disconnect Bird': 'Bird を切断',
   'Disconnect Mailgun': 'Mailgun を切断',
-  'Disconnect SendGrid': 'SendGrid を切断',
   'Provider actions': 'プロバイダーの操作',
   'Set up SMTP with Resend': 'Resend で SMTP をセットアップ',
+  'Set up SMTP with Bird': 'Bird で SMTP をセットアップ',
   'Set up SMTP with Mailgun': 'Mailgun で SMTP をセットアップ',
-  'Set up SMTP with SendGrid': 'SendGrid で SMTP をセットアップ',
   'Creating credential and saving SMTP settings…':
     '認証情報を作成して SMTP 設定を保存中…',
   'Custom SMTP is enabled and your project now sends emails through this provider.':
     'カスタム SMTP が有効になり、プロジェクトはこのプロバイダー経由でメールを送信するようになりました。',
   'Connect with Resend': 'Resend に接続',
+  'Connect with Bird': 'Bird に接続',
   'Connect with Mailgun': 'Mailgun に接続',
-  'Connect with SendGrid': 'SendGrid に接続',
   'Appwrite will no longer be able to create sending credentials for this provider. Credentials already saved in your SMTP settings keep working.':
     'Appwrite はこのプロバイダーの送信用認証情報を作成できなくなります。SMTP 設定に保存済みの認証情報は引き続き動作します。',
   'Provider disconnected': 'プロバイダーを切断しました',
@@ -3369,6 +3494,93 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'Premium Geo DB アドオンは現在の請求サイクル終了時に削除されます',
   'Unable to verify Premium Geo DB addon status. Please retry.':
     'Premium Geo DB アドオンの状態を確認できませんでした。再試行してください。',
+  "With this add-on, your app's users sign in through their company's identity provider. Each team in this project can verify domains, connect identity providers and turn on Require SSO.":
+    'このアドオンを使うと、アプリのユーザーは会社の ID プロバイダー経由でサインインできます。このプロジェクトの各チームは、ドメインの検証、ID プロバイダーの接続、SSO の必須化を行えます。',
+  'Starts next cycle': '次のサイクルから開始',
+  'The add-on starts with your next billing cycle. Single sign-on can be set up from then.':
+    'アドオンは次の請求サイクルから開始されます。それ以降、シングルサインオンを設定できます。',
+  '{price}/month, prorated for the current billing cycle.':
+    '{price}/月、現在の請求サイクルに按分されます。',
+  'Billed monthly, prorated for the current billing cycle.':
+    '月額で請求され、現在の請求サイクルに按分されます。',
+  'This add-on is not available on your current plan. Upgrade your plan to enable it.':
+    'このアドオンは現在のプランでは利用できません。有効にするにはプランをアップグレードしてください。',
+  'This add-on is not available on your current plan.':
+    'このアドオンは現在のプランでは利用できません。',
+  'The add-on will be removed at the end of your current billing cycle.':
+    'このアドオンは現在の請求サイクルの終了時に削除されます。',
+  "This environment has the add-on of its project. Change it in the project's settings.":
+    'この環境ではプロジェクトのアドオンが使われます。変更はプロジェクトの設定で行ってください。',
+  "You don't have permission to manage this project's add-ons.":
+    'このプロジェクトのアドオンを管理する権限がありません。',
+  "Couldn't load the add-on's status.": 'アドオンの状態を読み込めませんでした。',
+  'Keep add-on': 'アドオンを維持',
+  'Disable add-on': 'アドオンを無効にする',
+  'Enable the Single sign-on add-on': 'シングルサインオンアドオンを有効にする',
+  'Disable the Single sign-on add-on': 'シングルサインオンアドオンを無効にする',
+  'Single sign-on add-on has been enabled': 'シングルサインオンアドオンが有効になりました',
+  'Single sign-on add-on has been re-enabled': 'シングルサインオンアドオンが再度有効になりました',
+  'Single sign-on add-on is already active for this project':
+    'シングルサインオンアドオンはこのプロジェクトですでに有効です',
+  'Single sign-on add-on will be removed at the end of your current billing cycle':
+    'シングルサインオンアドオンは現在の請求サイクルの終了時に削除されます',
+  "Are you sure you want to disable the Single sign-on add-on? It stays active until the end of your current billing cycle and is not renewed. Then nobody signs in to your app through the identity providers of this project's teams, and the teams can no longer verify domains, connect identity providers or turn on Require SSO.":
+    'シングルサインオンアドオンを無効にしますか? 現在の請求サイクル終了まで有効のままで、更新されません。その後、このプロジェクトのチームの ID プロバイダー経由でアプリにサインインできなくなり、チームはドメインの検証、ID プロバイダーの接続、SSO の必須化を行えなくなります。',
+  'Sign in to Appwrite with your company login':
+    '会社のログインで Appwrite にサインイン',
+  'People on your verified domains sign in to the Console through your identity provider, and join this organization with the roles you choose.':
+    '検証済みドメインのユーザーは ID プロバイダー経由でコンソールにサインインし、選択したロールでこの組織に参加します。',
+  'Teammates join on their first sign-in':
+    'チームメイトは初回サインインで参加',
+  'No invites to send. Anyone on your domains gets in with the roles you set.':
+    '招待を送る必要はありません。ドメインのユーザーは、設定したロールで参加できます。',
+  'Make it the only way in':
+    '唯一のサインイン方法にする',
+  'Require SSO, so people on your domains reach the organization only through your identity provider. Owners always keep access.':
+    'SSO を必須にすると、ドメインのユーザーは ID プロバイダー経由でのみ組織にアクセスできます。オーナーは常にアクセスできます。',
+  'Bring your identity provider':
+    'お使いの ID プロバイダーをそのまま利用',
+  'Okta, Microsoft Entra ID, Google Workspace, Keycloak, or anything that speaks OpenID Connect.':
+    'Okta、Microsoft Entra ID、Google Workspace、Keycloak など、OpenID Connect 対応のプロバイダーを利用できます。',
+  'Let your customers sign in with their company login':
+    '顧客が会社のログインでサインインできるようにする',
+  "Users on a team's verified domains sign in to your app through that team's identity provider, and join the team with its roles.":
+    'チームの検証済みドメインのユーザーは、そのチームの ID プロバイダー経由でアプリにサインインし、チームのロールで参加します。',
+  'An identity provider for each customer':
+    '顧客ごとに ID プロバイダー',
+  'Give every customer a team with its own domains and its own identity provider.':
+    '顧客ごとに、独自のドメインと ID プロバイダーを持つチームを用意できます。',
+  'Users join on their first sign-in':
+    'ユーザーは初回サインインで参加',
+  'No invites to send. They land in the team with the roles you chose.':
+    '招待を送る必要はありません。選択したロールでチームに参加します。',
+  'Require SSO, team by team':
+    'チームごとに SSO を必須化',
+  "Members on a team's domains get its roles only after signing in through its identity provider.":
+    'チームのドメインのメンバーは、そのチームの ID プロバイダー経由でサインインした後にのみロールを取得します。',
+  'One add-on covers every team in this project, in each of its environments.':
+    '1 つのアドオンで、このプロジェクトのすべてのチームと各環境をカバーします。',
+  'Prorated for the current billing cycle.':
+    '現在の請求サイクルに合わせて日割り計算されます。',
+  'Your company': 'あなたの会社',
+  'Your customer': 'あなたの顧客',
+  "With this add-on, people on your organization's verified domains sign in to the Console through its identity providers.":
+    'このアドオンを使うと、組織の検証済みドメインのユーザーは組織の ID プロバイダー経由でコンソールにサインインします。',
+  'This add-on is available on {plans}. Upgrade your plan to enable it.':
+    'このアドオンは {plans} で利用できます。有効にするにはプランをアップグレードしてください。',
+  "You don't have permission to manage this organization's add-ons.":
+    'この組織のアドオンを管理する権限がありません。',
+  'Single sign-on add-on is already active for this organization':
+    'シングルサインオンアドオンはこの組織ですでに有効です',
+  'Set it up for each team on its Single sign-on tab, under Auth.':
+    '認証の各チームにある「シングルサインオン」タブで、チームごとに設定します。',
+  'Go to teams': 'チームへ移動',
+  "Until the add-on is active, nobody signs in through the identity providers of this project's teams and Require SSO has no effect. You can still delete domains and identity providers, and turn Require SSO off.":
+    'アドオンが有効になるまで、このプロジェクトのチームの ID プロバイダー経由でサインインするユーザーはおらず、SSO の必須化も適用されません。ドメインと ID プロバイダーの削除、および SSO の必須化をオフにすることは引き続き可能です。',
+  "Single sign-on in a project needs the Single sign-on add-on. Enable it in the project's settings.":
+    'プロジェクトのシングルサインオンにはシングルサインオンアドオンが必要です。プロジェクトの設定で有効にしてください。',
+  'Are you sure you want to disable the Single sign-on add-on? It stays active until the end of your current billing cycle and is not renewed. Then single sign-on for the organization stops, and people who can only sign in through your identity providers can no longer sign in.':
+    'シングルサインオンアドオンを無効にしますか? 現在の請求サイクル終了まで有効のままで、更新されません。その後、組織のシングルサインオンは停止し、ID プロバイダー経由でしかサインインできないユーザーはサインインできなくなります。',
   'Payment could not be authorized. Please try enabling the addon again.':
     '支払いを承認できませんでした。アドオンの有効化を再試行してください。',
   'Add a payment method to your organization before enabling this addon.':
@@ -3961,6 +4173,15 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     '誰かが対応中であることをチームに知らせます。モニターが回復するまでアラートは発生し続けます。',
   'Nobody has acknowledged this alert':
     'このアラートはまだ誰も確認していません',
+  Acknowledged: '確認済み',
+  'Alert acknowledged': 'アラートを確認済みにしました',
+  "Your team sees that you're on it. It keeps firing until its monitor recovers.":
+    'あなたが対応中であることがチームに表示されます。モニターが回復するまでアラートは発生し続けます。',
+  'This alert has already resolved': 'このアラートはすでに解決しています',
+  'Only a firing alert can be acknowledged.':
+    '確認済みにできるのは発生中のアラートだけです。',
+  "Your role can't change alerts. Ask an owner or a developer.":
+    'あなたのロールではアラートを変更できません。オーナーまたは開発者に依頼してください。',
   "You don't have permission to manage monitors.":
     'モニターを管理する権限がありません。',
   'between two alerts from this monitor.':
@@ -3970,6 +4191,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     '{count} 件の通知を送信 (クールダウンごとに 1 件)',
   'Its alerts stay in the history.': 'アラートは履歴に残ります。',
   'Send alerts to a webhook': 'アラートを Webhook に送信',
+  'Deploy an alert function': 'アラート用の関数をデプロイ',
   Owners: 'オーナー',
   Editors: '編集者',
   Analysts: 'アナリスト',
@@ -4106,16 +4328,20 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'パスワードを送信する前に、ディレクトリの証明書を検証します。',
   'The CA or self-signed certificate to trust. Leave empty to use the system trust store.':
     '信頼する CA 証明書または自己署名証明書。空にするとシステムの信頼ストアを使用します。',
-  'How long to wait for each answer, from 1 to 30.': '各応答を待つ時間。1 から 30 まで。',
+  'How long to wait for each answer, from 1 to 30.':
+    '各応答を待つ時間。1 から 30 まで。',
   'Service account for the search, or empty for anonymous.':
     '検索に使うサービスアカウント。空にすると匿名で検索します。',
   'Never shown again. Re-enter it when the connection changes.':
     '再表示されません。接続を変更する際は再入力してください。',
-  'Enter the bind password again to save.': '保存するにはバインドパスワードを再入力してください。',
+  'Enter the bind password again to save.':
+    '保存するにはバインドパスワードを再入力してください。',
   'Only its members can sign in. Leave empty to allow everyone.':
     'このグループのメンバーだけがサインインできます。空にするとすべてのユーザーを許可します。',
-  'An ID that never changes, such as entryUUID.': '変更されない ID。entryUUID など。',
-  'Attribute holding the display name, usually cn.': '表示名を保持する属性。通常は cn。',
+  'An ID that never changes, such as entryUUID.':
+    '変更されない ID。entryUUID など。',
+  'Attribute holding the display name, usually cn.':
+    '表示名を保持する属性。通常は cn。',
   'Attribute holding an E.164 phone number. Optional.':
     'E.164 形式の電話番号を保持する属性。任意。',
   'Using Active Directory?': 'Active Directory を使用していますか?',
@@ -4260,6 +4486,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Server refused the session': 'サーバーがセッションを拒否しました',
   'Target is in a denied network': '対象が拒否されたネットワーク内にあります',
   'Timed out': 'タイムアウトしました',
+  'A rule matched': 'ルールに一致しました',
   '30 seconds': '30 秒',
   '1 minute': '1 分',
   '5 seconds': '5 秒',
@@ -4278,6 +4505,247 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Notes mark releases, campaigns or incidents on the chart for everyone in the project.':
     'メモはリリース、キャンペーン、障害などをグラフ上に記録し、プロジェクトの全員に表示されます。',
   'Launched the new pricing page': '新しい料金ページを公開',
-  'The note is removed from the chart for everyone.': 'このメモは全員のグラフから削除されます。',
+  'The note is removed from the chart for everyone.':
+    'このメモは全員のグラフから削除されます。',
   'Former member': '元メンバー',
+  Notes: 'メモ',
+  Escalations: 'エスカレーション',
+  Escalation: 'エスカレーション',
+  Escalating: 'エスカレーション中',
+  'Alert when the value is': '値が次の条件のときにアラート',
+  'Counted over': '集計期間',
+  'Undo acknowledgement': '確認を取り消す',
+  'Someone needs to act now, even at night.':
+    '夜間でも、今すぐ誰かが対応する必要があります。',
+  'The push plays a siren through silent mode and Do Not Disturb.':
+    'プッシュ通知はサイレントモードやおやすみモードでもサイレンを鳴らします。',
+  'Every level is emailed, shown in the console and pushed to phones, with the level in the title. Webhooks and functions receive it with the alert events. A critical push rings only on phones that allowed critical alerts.':
+    'すべてのレベルはメールで送信され、コンソールに表示され、タイトルにレベルを含めてスマートフォンにプッシュ通知されます。Webhook と関数はアラートイベントとともにレベルを受け取ります。重大なプッシュ通知は、重大な通知を許可したスマートフォンでのみ鳴ります。',
+  'Notify roles once': 'ロールに 1 回通知',
+  'Select an escalation.': 'エスカレーションを選択してください。',
+  'Each step of the escalation is notified in turn until someone acknowledges the alert.':
+    '誰かがアラートを確認するまで、エスカレーションの各ステップに順番に通知します。',
+  'Create an escalation': 'エスカレーションを作成',
+  'Manage escalations': 'エスカレーションを管理',
+  'Could not load escalations.': 'エスカレーションを読み込めませんでした。',
+  'Your organization has no escalations yet.':
+    'この組織にはまだエスカレーションがありません。',
+  'Select an escalation': 'エスカレーションを選択',
+  'repeats {count}×': '{count} 回繰り返し',
+  'Acknowledging stops the escalation. It keeps firing until its monitor recovers.':
+    '確認するとエスカレーションが止まります。アラートはモニターが回復するまで発生し続けます。',
+  'No step notified yet': 'まだ通知されたステップはありません',
+  'Step {step} of {total}': 'ステップ {step}/{total}',
+  Notified: '通知済み',
+  'Step {step}': 'ステップ {step}',
+  'round {round}': '{round} 巡目',
+  'Stopped, acknowledged': '停止済み（確認済み）',
+  'Stopped, resolved': '停止済み（解決済み）',
+  'All steps notified': 'すべてのステップに通知済み',
+  'Escalation has been deleted': 'エスカレーションを削除しました',
+  'Monitors use this escalation. Move them to another escalation or to roles first.':
+    'モニターがこのエスカレーションを使用しています。先に別のエスカレーションまたはロールに切り替えてください。',
+  'Failed to delete escalation': 'エスカレーションを削除できませんでした',
+  'Notify your team step by step until someone acknowledges the alert. Pick an escalation on any monitor.':
+    '誰かがアラートを確認するまで、チームに段階的に通知します。エスカレーションは任意のモニターで選択できます。',
+  'No escalations yet.': 'エスカレーションはまだありません。',
+  'Delete escalation': 'エスカレーションを削除',
+  'Add members': 'メンバーを追加',
+  'Enter a name.': '名前を入力してください。',
+  'Each step needs a role or a member.':
+    '各ステップにはロールまたはメンバーが必要です。',
+  'Escalation has been updated': 'エスカレーションを更新しました',
+  'Escalation has been created': 'エスカレーションを作成しました',
+  'Failed to update escalation': 'エスカレーションを更新できませんでした',
+  'Failed to create escalation': 'エスカレーションを作成できませんでした',
+  'Edit escalation': 'エスカレーションを編集',
+  'Create escalation': 'エスカレーションを作成',
+  'Steps are notified in turn until someone acknowledges the alert.':
+    '誰かがアラートを確認するまで、ステップに順番に通知します。',
+  'On-call': 'オンコール',
+  'Remove step {step}': 'ステップ {step} を削除',
+  'Seconds to wait': '待機する秒数',
+  'seconds after the alert fires': '秒後（アラート発生から）',
+  'seconds after the previous step': '秒後（前のステップから）',
+  'Add step': 'ステップを追加',
+  Once: '1 回',
+  '{count} times': '{count} 回',
+  "Starts again from the first step, a monitor's cooldown after the last one.":
+    '最後のステップからモニターのクールダウン後に、最初のステップから再開します。',
+  now: '今すぐ',
+  'after {delay}': '{delay} 後',
+  'analytics properties': 'アナリティクスプロパティ',
+  'analytics property': 'アナリティクスプロパティ',
+  'per project.': '(プロジェクトごと)。',
+  'to create another.': 'して、さらに作成してください。',
+  'to enable analytics on this site.':
+    'して、このサイトでアナリティクスを有効にしてください。',
+  'Your plan checks at most every {interval}.':
+    'ご利用のプランでは、チェック間隔は最短で{interval}です。',
+  'Synthetic checks: {used} of {limit} allowed on your plan.':
+    'Synthetic チェック: プランの上限 {limit} 件中 {used} 件を使用中です。',
+  'Synthetic checks: {used} of {included} included.':
+    'Synthetic チェック: プランに含まれる {included} 件中 {used} 件を使用中です。',
+  'Each extra check costs {price} per month.':
+    '追加のチェックは 1 件あたり月額 {price} です。',
+  'Upgrade your plan to add more synthetic checks.':
+    'Synthetic チェックを追加するには、プランをアップグレードしてください。',
+  'HTTP, DNS, TCP and SMTP monitors are available on paid plans.':
+    'HTTP、DNS、TCP、SMTP のモニターは有料プランで利用できます。',
+  'Escalations: {used} of {limit} allowed on your plan.':
+    'エスカレーション: プランの上限 {limit} 件中 {used} 件を使用中です。',
+  'On-call responders: {used} of {included} included.':
+    'オンコール対応者: プランに含まれる {included} 人中 {used} 人です。',
+  'Each extra responder costs {price} per month.':
+    '追加の対応者は 1 人あたり月額 {price} です。',
+  'Upgrade your plan to create more escalations.':
+    'エスカレーションをさらに作成するには、プランをアップグレードしてください。',
+  'Your plan allows up to {count} steps per escalation.':
+    'ご利用のプランでは、1 つのエスカレーションに設定できるステップは {count} 個までです。',
+  'Upgrade your plan to repeat escalations.':
+    'エスカレーションを繰り返すには、プランをアップグレードしてください。',
+  'Usage monitors: {used} of {limit} allowed on your plan.':
+    '使用量モニター: プランの上限 {limit} 件中 {used} 件を使用中です。',
+  'Upgrade your plan to add more usage monitors.':
+    '使用量モニターを追加するには、プランをアップグレードしてください。',
+  // Analytics for signed-in users
+  'Signed-in users, ranked by visits': 'サインイン済みユーザー (訪問数順)',
+  'View user': 'ユーザーを表示',
+  'Could not load analytics': 'アナリティクスを読み込めませんでした',
+  'No analytics yet': 'アナリティクスはまだありません',
+  "Add an analytics property and turn on User identification to see each signed-in user's pages and events here.":
+    'アナリティクスプロパティを追加してユーザー識別を有効にすると、サインイン済みユーザーごとのページとイベントがここに表示されます。',
+  'Add analytics': 'アナリティクスを追加',
+  'Link {name} to their analytics': '{name} をアナリティクスにリンク',
+  "Turn on User identification in a property's settings to record the signed-in user on every event, so their pages, events and sessions show here.":
+    'プロパティの設定でユーザー識別を有効にすると、すべてのイベントにサインイン中のユーザーが記録され、そのページ、イベント、セッションがここに表示されます。',
+  'Open property settings': 'プロパティ設定を開く',
+  'Last active': '最終アクティブ',
+  Calls: '呼び出し',
+  'Active days': 'アクティブ日数',
+  'No events from this user in the last 30 days':
+    '過去 30 日間、このユーザーのイベントはありません',
+  '30 days ago': '30 日前',
+  'No custom events': 'カスタムイベントはありません',
+  'No model calls': 'モデル呼び出しはありません',
+  'No screens viewed': '表示された画面はありません',
+  'No pages viewed': '表示されたページはありません',
+  'View in analytics': 'アナリティクスで表示',
+  'New installs and updates of your app':
+    'アプリの新規インストールとアップデート',
+  'Add the latest tracking SDK to your app to count installs and updates.':
+    '最新のトラッキング SDK をアプリに追加すると、インストールとアップデートを計測できます。',
+  'Pushes received on devices, and how many were opened':
+    'デバイスで受信したプッシュ通知と開封数',
+  'No push notifications tracked yet': 'プッシュ通知はまだ計測されていません',
+  'Pushes sent with Messaging show their reach and opens here once the tracking SDK is in your app.':
+    'トラッキング SDK をアプリに追加すると、Messaging で送信したプッシュ通知の到達数と開封数がここに表示されます。',
+  'Open Messaging': 'Messaging を開く',
+  Received: '受信',
+  Opened: '開封',
+  'Open rate': '開封率',
+  Rate: '率',
+  'No pushes with a message ID in this range':
+    'この期間にメッセージ ID 付きのプッシュはありません',
+  '{count} delivered': '{count} 件配信',
+  'View message': 'メッセージを表示',
+  Views: '表示',
+  'Last seen': '最終確認',
+  'Not in this period': 'この期間はなし',
+  'of {count}': '/ {count}',
+  'Events per day, last 30 days': '1 日あたりのイベント (過去 30 日間)',
+  Properties: 'プロパティ',
+  'Where this user was active, last 30 days':
+    'このユーザーがアクティブだった場所 (過去 30 日間)',
+  'No activity': 'アクティビティなし',
+  'No locations': '場所はありません',
+  'No sources': 'ソースはありません',
+  'No browsers': 'ブラウザはありません',
+  'No operating systems': 'OS はありません',
+  'No devices': 'デバイスはありません',
+  'No OS versions': 'OS バージョンはありません',
+  views: '表示',
+  'signed in': '人がサインイン中',
+  'Signed in now': '現在サインイン中',
+  'and {count} more': 'ほか {count} 人',
+  // Runtime logs
+  '1 line': '1 行',
+  '1 line loaded': '1 行を読み込み済み',
+  'All levels': 'すべてのレベル',
+  'All resources': 'すべてのリソース',
+  'All sites': 'すべてのサイト',
+  'All streams': 'すべてのストリーム',
+  'Copy line': '行をコピー',
+  'Could not copy to the clipboard': 'クリップボードにコピーできませんでした',
+  'Could not load logs': 'ログを読み込めませんでした',
+  Debug: 'デバッグ',
+  'Details for log line': 'ログ行の詳細',
+  'Drag across the bars to zoom in':
+    'バーをドラッグすると、その範囲を拡大できます',
+  'Every line in this time range is loaded':
+    'この時間範囲の行はすべて読み込み済みです',
+  Fields: 'フィールド',
+  'ID copied': 'ID をコピーしました',
+  'JSON copied': 'JSON をコピーしました',
+  'Last 15 minutes': '過去 15 分',
+  'Line copied': '行をコピーしました',
+  'Live tail paused on an error and will retry:':
+    'ライブ表示はエラーで一時停止しました。自動で再試行します:',
+  'Load older': '古い行を読み込む',
+  'Log ID': 'ログ ID',
+  'Log line': 'ログ行',
+  'Log volume': 'ログ量',
+  'Message copied': 'メッセージをコピーしました',
+  'Newer line': '新しい行',
+  'No deployment selected': 'デプロイが選択されていません',
+  'No lines in this time range': 'この時間範囲に行はありません',
+  'No matching lines': '一致する行はありません',
+  'No resources found': 'リソースが見つかりません',
+  'Older line': '古い行',
+  'Only the lines loaded so far are searched and filtered. Load older lines or widen the time range to search further back.':
+    '検索と絞り込みの対象は、読み込み済みの行だけです。さらに過去を検索するには、古い行を読み込むか、時間範囲を広げてください。',
+  'Only this resource': 'このリソースのみ',
+  'Open function': '関数を開く',
+  'Open site': 'サイトを開く',
+  'Pick a deployment to see its logs.':
+    'ログを表示するデプロイを選択してください。',
+  'Reset zoom': 'ズームをリセット',
+  'Search logs': 'ログを検索',
+  'Search resources': 'リソースを検索',
+  'The line names no level, so stderr counts as an error.':
+    'この行にはレベルがないため、stderr はエラーとして扱われます。',
+  'The line names no level, so stdout counts as info.':
+    'この行にはレベルがないため、stdout は情報として扱われます。',
+  'Wrap lines': '行を折り返す',
+  'is any of': 'が次のいずれか',
+  '{count} lines': '{count} 行',
+  '{count} lines loaded': '{count} 行を読み込み済み',
+  '{count} on stderr': 'stderr に {count} 行',
+  '{shown} of {loaded} loaded lines': '読み込み済み {loaded} 行中 {shown} 行',
+  'Older than your plan keeps logs': 'プランのログ保持期間より前の範囲です',
+  'Your plan keeps logs for a limited time. Pick a more recent range, or upgrade your plan for longer retention.':
+    'ご利用のプランでは、ログを一定期間だけ保持します。より新しい範囲を選択するか、プランをアップグレードして保持期間を延ばしてください。',
+  'Show the last 24 hours': '過去 24 時間を表示',
+  "Your project's runtime logs": 'プロジェクトのランタイムログ',
+  'Lines your functions, sites and dedicated databases write show up here within seconds, ready to search, filter and inspect. Nothing has been written in this time range yet.':
+    '関数、サイト、専用データベースが出力した行は数秒でここに表示され、検索、絞り込み、詳細の確認ができます。この時間範囲にはまだ何も出力されていません。',
+  "Logs may not be collected in this project's region yet.":
+    'このプロジェクトのリージョンでは、まだログが収集されていない可能性があります。',
+  'Every line, as it is written': '出力されたすべての行をすぐに',
+  'What your functions, sites and dedicated databases write to stdout and stderr lands here, newest first. Turn on Live to follow along.':
+    '関数、サイト、専用データベースが stdout と stderr に出力した内容が、新しい順にここに届きます。ライブをオンにすると、リアルタイムで追えます。',
+  'Narrow it down': '絞り込む',
+  'Filter by resource, level, stream and time, or search the lines you have loaded.':
+    'リソース、レベル、ストリーム、時間で絞り込むか、読み込み済みの行を検索できます。',
+  'Inspect any line': '行の詳細を確認',
+  'Open a line to read its fields, where it ran, and the line exactly as it was written.':
+    '行を開くと、フィールド、実行場所、出力されたままの行を確認できます。',
+  'No logs in this time range': 'この時間範囲にログはありません',
+  'Lines your functions, sites and databases write to stdout and stderr show up here.':
+    '関数、サイト、データベースが stdout と stderr に出力した行がここに表示されます。',
+  'Lines your function writes to stdout and stderr show up here.':
+    '関数が stdout と stderr に出力した行がここに表示されます。',
+  'Lines your site writes to stdout and stderr show up here.':
+    'サイトが stdout と stderr に出力した行がここに表示されます。',
+  'Lines your database writes show up here.': 'データベースが出力した行がここに表示されます。',
 }

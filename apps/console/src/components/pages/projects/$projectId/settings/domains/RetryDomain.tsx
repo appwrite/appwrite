@@ -9,6 +9,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { useVerifyDomain } from '@/lib/react-query/hooks'
 import { toast } from 'sonner'
+import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
 import type { Models } from '@appwrite.io/console'
 import { canRetryRule } from '@/lib/utils/proxy-domains'
@@ -59,6 +60,7 @@ export function RetryDomainDialog({
         updatedRule.status === 'unverified'
       ) {
         setVerificationError(dnsPendingVerificationError(t))
+        toast.info(t('Not verified yet. Appwrite keeps checking.'))
       } else if (updatedRule.status === 'verified') {
         toast.success(
           rule.status === 'verified'
@@ -71,7 +73,14 @@ export function RetryDomainDialog({
         onRetrySuccess()
       }
     } catch (err) {
-      setVerificationError(domainVerificationError(t, err))
+      const error = domainVerificationError(t, err)
+      setVerificationError(error)
+      // The DNS banners hide a pending error, so say what the check found
+      if (error.pending) {
+        toast.info(t('Not verified yet. Appwrite keeps checking.'), {
+          description: getErrorMessage(err),
+        })
+      }
     }
   }
 

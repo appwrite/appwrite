@@ -71,6 +71,7 @@ const MARKDOC_ICON_FILE_OVERRIDES: Record<string, string> = {
   'web-icon-resend': 'resend.svg',
   'web-icon-ses': 'amazon.svg',
   'web-icon-amazon': 'amazon.svg',
+  bird: 'bird.svg',
   'icon-twilio': 'twilio.svg',
   'icon-msg91': 'msg91.svg',
   'icon-vonage': 'vonage.svg',

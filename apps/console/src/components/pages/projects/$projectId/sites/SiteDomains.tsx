@@ -1,11 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useParams } from '@tanstack/react-router'
-import {
-  FileText,
-  RefreshCw,
-  Trash2,
-  ExternalLink,
-  Globe} from 'lucide-react'
+import { FileText, Trash2, ExternalLink, Globe } from 'lucide-react'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import { Button } from '@/components/ui/button'
@@ -18,14 +13,15 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow} from '@/components/ui/table'
+  TableRow,
+} from '@/components/ui/table'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger} from '@/components/ui/dropdown-menu'
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import {
-  getRuleStatusBadgeConfig,
   isWaitingForDns,
 } from '@/lib/utils/status-badge'
 import {
@@ -36,7 +32,8 @@ import {
 import {
   useSiteDomains,
   useProject,
-  useOrganizationDomains} from '@/lib/react-query/hooks'
+  useOrganizationDomains,
+} from '@/lib/react-query/hooks'
 import { DeleteDomainDialog } from '@/components/pages/projects/$projectId/settings/domains/DeleteDomain'
 import { ProxyRuleContextMenu } from '@/components/pages/projects/$projectId/settings/domains/ProxyRuleContextMenu'
 import { RuleStatusBadge } from '@/components/pages/projects/$projectId/settings/domains/RuleStatusBadge'
@@ -72,13 +69,11 @@ export function SiteDomainsView() {
 
   const searchValue = search?.search || ''
 
-  const { rules, total, isLoading: domainsLoading } = useSiteDomains(
-    projectId,
-    siteId,
-    currentPage,
-    pageSize,
-    searchValue,
-  )
+  const {
+    rules,
+    total,
+    isLoading: domainsLoading,
+  } = useSiteDomains(projectId, siteId, currentPage, pageSize, searchValue)
 
   const { domains: orgDomains } = useOrganizationDomains(
     project?.teamId,
@@ -101,6 +96,8 @@ export function SiteDomainsView() {
   }
 
   const handleRecords = (rule: Models.ProxyRule) => {
+    // While DNS is pending, the records dialog is where the domain is verified
+    if (isWaitingForDns(rule)) return handleRetry(rule)
     openDialogAfterOverlayCloses(() => {
       setSelectedRule(rule)
       setRecordsOpen(true)
@@ -164,7 +161,6 @@ export function SiteDomainsView() {
                 <TableBody>
                   {rules.map((rule) => {
                     const ruleData = rule as Models.ProxyRule
-                    const statusConfig = getRuleStatusBadgeConfig(ruleData)
 
                     return (
                       <ProxyRuleContextMenu
@@ -172,115 +168,111 @@ export function SiteDomainsView() {
                         projectId={projectId!}
                         rule={ruleData}
                         onViewLogs={handleViewLogs}
-                        onRetry={handleRetry}
                         onRecords={handleRecords}
                         onDelete={handleDelete}
                       >
-                      <TableRow>
-                        <TableCell className="px-4 py-3">
-                          <a
-                            href={visitUrl(ruleData.domain)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 font-mono text-[13px] link-neutral"
-                          >
-                            {ruleData.domain}
-                            <ExternalLink className="h-3 w-3 text-muted-foreground shrink-0" />
-                          </a>
-                        </TableCell>
-                        <TableCell className="px-4 py-3 text-[13px] text-muted-foreground">
-                          {ruleData.redirectUrl ? (
-                            <span>
-                              {t('Redirect to')} {ruleData.redirectUrl}
-                            </span>
-                          ) : ruleData.deploymentVcsProviderBranch ? (
-                            <span>
-                              {t('Deployed from')}{' '}
-                              {ruleData.deploymentVcsProviderBranch}
-                            </span>
-                          ) : (
-                            <span>{t('Active deployment')}</span>
-                          )}
-                        </TableCell>
-                        <TableCell className="px-4 py-3">
-                          <div className="flex items-center gap-2">
-                            <RuleStatusBadge rule={ruleData} />
-                            {statusConfig.variant !== 'success' &&
-                              canViewRuleLogs(ruleData) && (
-                                <Button
-                                  variant="link"
-                                  size="sm"
-                                  className="h-auto p-0 text-[13px]"
-                                  onClick={() => handleViewLogs(ruleData)}
-                                >
-                                  {t('View logs')}
-                                </Button>
-                              )}
-                            <CheckDomain
-                              projectId={projectId ?? ''}
-                              region={project?.region}
-                              rule={ruleData}
-                              organizationDomainId={getOrganizationDomainId(ruleData)}
-                            />
-                            {canRetryRule(ruleData) && !isWaitingForDns(ruleData) && (
-                              <Button
-                                variant="link"
-                                size="sm"
-                                className="h-auto p-0 text-[13px]"
-                                onClick={() => handleRetry(ruleData)}
-                              >
-                                {t('Retry')}
-                              </Button>
+                        <TableRow
+                          className="cursor-pointer"
+                          // The row opens its DNS records; its links and buttons keep their own action.
+                          onClick={(event) => {
+                            if (
+                              (event.target as HTMLElement).closest('a, button')
+                            )
+                              return
+                            handleRecords(ruleData)
+                          }}
+                        >
+                          <TableCell className="px-4 py-3">
+                            <a
+                              href={visitUrl(ruleData.domain)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 font-mono text-[13px] link-neutral"
+                            >
+                              {ruleData.domain}
+                              <ExternalLink className="h-3 w-3 text-muted-foreground shrink-0" />
+                            </a>
+                          </TableCell>
+                          <TableCell className="px-4 py-3 text-[13px] text-muted-foreground">
+                            {ruleData.redirectUrl ? (
+                              <span>
+                                {t('Redirect to')} {ruleData.redirectUrl}
+                              </span>
+                            ) : ruleData.deploymentVcsProviderBranch ? (
+                              <span>
+                                {t('Deployed from')}{' '}
+                                {ruleData.deploymentVcsProviderBranch}
+                              </span>
+                            ) : (
+                              <span>{t('Active deployment')}</span>
                             )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="px-4 py-3">
-                          <DateTooltip date={ruleData.$createdAt} />
-                        </TableCell>
-                        <TableCell className="px-4 py-3 text-end">
-                          <div className="flex justify-end">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <RowActionsMenuTrigger />
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                {canViewRuleLogs(ruleData) && (
-                                  <DropdownMenuItem
-                                    onClick={() => handleViewLogs(ruleData)}
-                                  >
-                                    <MenuItemContent icon={FileText}>
-                                      {t('Logs')}
-                                    </MenuItemContent>
-                                  </DropdownMenuItem>
+                          </TableCell>
+                          <TableCell className="px-4 py-3">
+                            <div className="flex items-center gap-2">
+                              <RuleStatusBadge rule={ruleData} />
+                              <CheckDomain
+                                projectId={projectId ?? ''}
+                                region={project?.region}
+                                rule={ruleData}
+                                organizationDomainId={getOrganizationDomainId(
+                                  ruleData,
                                 )}
-                                {canRetryRule(ruleData) && (
-                                  <DropdownMenuItem
+                              />
+                              {canRetryRule(ruleData) &&
+                                !isWaitingForDns(ruleData) && (
+                                  <Button
+                                    variant="link"
+                                    size="sm"
+                                    className="h-auto p-0 text-[13px]"
                                     onClick={() => handleRetry(ruleData)}
                                   >
-                                    <MenuItemContent icon={RefreshCw}>
-                                      {t('Retry')}
+                                    {t('Retry')}
+                                  </Button>
+                                )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="px-4 py-3">
+                            <DateTooltip date={ruleData.$createdAt} live />
+                          </TableCell>
+                          <TableCell
+                            className="px-4 py-3 text-end"
+                            // Its menu renders in a portal, whose clicks still bubble to the row.
+                            onClick={(event) => event.stopPropagation()}
+                          >
+                            <div className="flex justify-end">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <RowActionsMenuTrigger />
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem
+                                    onClick={() => handleRecords(ruleData)}
+                                  >
+                                    <MenuItemContent icon={Globe}>
+                                      {t('Records')}
                                     </MenuItemContent>
                                   </DropdownMenuItem>
-                                )}
-                                <DropdownMenuItem
-                                  onClick={() => handleRecords(ruleData)}
-                                >
-                                  <MenuItemContent icon={Globe}>
-                                    {t('Records')}
-                                  </MenuItemContent>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() => handleDelete(ruleData)}
-                                >
-                                  <MenuItemContent icon={Trash2}>
-                                    {t('Delete')}
-                                  </MenuItemContent>
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-                        </TableCell>
-                      </TableRow>
+                                  {canViewRuleLogs(ruleData) && (
+                                    <DropdownMenuItem
+                                      onClick={() => handleViewLogs(ruleData)}
+                                    >
+                                      <MenuItemContent icon={FileText}>
+                                        {t('Logs')}
+                                      </MenuItemContent>
+                                    </DropdownMenuItem>
+                                  )}
+                                  <DropdownMenuItem
+                                    onClick={() => handleDelete(ruleData)}
+                                  >
+                                    <MenuItemContent icon={Trash2}>
+                                      {t('Delete')}
+                                    </MenuItemContent>
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                          </TableCell>
+                        </TableRow>
                       </ProxyRuleContextMenu>
                     )
                   })}

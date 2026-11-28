@@ -34,6 +34,7 @@ export function View() {
       onDelete={(installationId) => deleteMutation.mutateAsync(installationId)}
       isDeleting={deleteMutation.isPending}
       teamLabel={t('Organization')}
+      teamIdLabel={t('Organization ID')}
     />
   )
 }

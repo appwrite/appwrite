@@ -90,10 +90,10 @@ export type InvoiceStatus =
   | 'pending'
   | 'due'
   | 'overdue'
-    | 'failed'
-    | 'cancelled'
-    | 'abandoned'
-    | 'requires_authentication'
+  | 'failed'
+  | 'cancelled'
+  | 'abandoned'
+  | 'requires_authentication'
 
 /**
  * Map billing API invoice status strings to UI statuses.
@@ -312,18 +312,90 @@ export function isWaitingForDns(
 }
 
 /**
+ * The regions that do not see a record yet, when other regions already do.
+ * Empty when the regions agree, the record is not set anywhere, the only
+ * regions without it failed their lookup, or the server reports no regions.
+ */
+export function getLaggingRegions(
+  check: Pick<ProxyRuleRecord, 'regions'>,
+): NonNullable<ProxyRuleRecord['regions']> {
+  const regions = check.regions ?? []
+  // A region whose lookup failed says nothing about the record, so it is not behind
+  const lagging = regions.filter(
+    (region) => region.status === 'missing' || region.status === 'mismatch',
+  )
+  return lagging.length > 0 &&
+    regions.some((region) => region.status === 'verified')
+    ? lagging
+    : []
+}
+
+/**
  * Whether the last DNS check of a domain found a record with the wrong value:
  * a CAA record that blocks the certificate, or no pointing record verified
- * while one points elsewhere. A subdomain points with its CNAME. An apex
+ * while one points elsewhere or sits at the wrong name ('misplaced': the full
+ * domain entered as the host). A subdomain points with its CNAME. An apex
  * points with an ALIAS, which the A and AAAA checks verify, as they do for a
- * domain with no CNAME check.
+ * domain with no CNAME check. A record some regions already see is not wrong,
+ * it is still propagating.
  */
 export function hasWrongDnsRecord(
   domain: string,
-  records: Pick<ProxyRuleRecord, 'type' | 'status'>[],
+  records: Pick<ProxyRuleRecord, 'type' | 'status' | 'regions'>[],
 ): boolean {
-  if (records.some((r) => r.type === 'CAA' && r.status === 'mismatch'))
+  if (
+    records.some(
+      (r) =>
+        r.type === 'CAA' &&
+        r.status === 'mismatch' &&
+        getLaggingRegions(r).length === 0,
+    )
+  )
     return true
+  const pointingTypes = ['CNAME', 'A', 'AAAA']
+  if (
+    records.some(
+      (r) => pointingTypes.includes(r.type) && r.status === 'verified',
+    )
+  )
+    return false
+  const cname =
+    getRecordName(domain) !== '@' && records.some((r) => r.type === 'CNAME')
+  // An A or AAAA record where a subdomain's CNAME is missing answers in its
+  // place, such as a provider's URL redirect, so it is never just propagating.
+  if (
+    cname &&
+    records.some(
+      (r) =>
+        r.type === 'CNAME' &&
+        r.status === 'missing' &&
+        getLaggingRegions(r).length === 0,
+    ) &&
+    records.some(
+      (r) =>
+        (r.type === 'A' || r.type === 'AAAA') &&
+        r.status === 'mismatch' &&
+        getLaggingRegions(r).length === 0,
+    )
+  )
+    return true
+  return records.some(
+    (r) =>
+      (cname ? r.type === 'CNAME' : r.type === 'A' || r.type === 'AAAA') &&
+      (r.status === 'mismatch' || r.status === 'misplaced') &&
+      getLaggingRegions(r).length === 0,
+  )
+}
+
+/**
+ * Whether the pointing record of a domain is still propagating: some regions
+ * see it and others do not yet, and no pointing record is verified. The
+ * pointing record is chosen as in hasWrongDnsRecord.
+ */
+export function isDnsPropagating(
+  domain: string,
+  records: Pick<ProxyRuleRecord, 'type' | 'status' | 'regions'>[],
+): boolean {
   const pointingTypes = ['CNAME', 'A', 'AAAA']
   if (
     records.some(
@@ -336,7 +408,7 @@ export function hasWrongDnsRecord(
   return records.some(
     (r) =>
       (cname ? r.type === 'CNAME' : r.type === 'A' || r.type === 'AAAA') &&
-      r.status === 'mismatch',
+      getLaggingRegions(r).length > 0,
   )
 }
 
@@ -407,7 +479,7 @@ export function getRuleStatusBadgeConfig(
     $createdAt?: string
     domain?: string
     /** The stored DNS checks, see ProxyRuleRecord */
-    records?: Pick<ProxyRuleRecord, 'type' | 'status'>[]
+    records?: Pick<ProxyRuleRecord, 'type' | 'status' | 'regions'>[] | null
   },
   now: Date = new Date(),
 ): {
@@ -445,7 +517,14 @@ export function getRuleStatusBadgeConfig(
       return {
         variant: 'error',
         label: 'Action needed',
-        hint: 'A DNS record has the wrong value. Open Records to see which one and what to change it to.',
+        hint: 'A DNS record has the wrong value or name. Open Records to see which one and what to change it to.',
+      }
+    }
+    if (isDnsPropagating(rule.domain ?? '', rule.records ?? [])) {
+      return {
+        variant: 'warning',
+        label: 'Propagating',
+        hint: "Some regions don't see your new record yet. Appwrite keeps checking, and you don't need to change anything.",
       }
     }
     return {

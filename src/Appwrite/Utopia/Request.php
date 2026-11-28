@@ -77,6 +77,40 @@ class Request extends UtopiaRequest
     }
 
     /**
+     * The ID of the project the request names: a `project` query parameter, else the
+     * X-Appwrite-Project header. The query string stands in for the header where none
+     * can be set, as for a file preview URL, the realtime socket or a presigned URL.
+     *
+     * The body never names the project: it can carry a `project` key of its own, such as
+     * the object in a GitLab webhook. Only a string names a project, never a query array.
+     */
+    public function getProject(): string
+    {
+        $project = $this->getQuery('project', '');
+
+        if (\is_string($project) && $project !== '') {
+            return $project;
+        }
+
+        return $this->getHeaderLine('x-appwrite-project', '');
+    }
+
+    /**
+     * The mode the request asks for: a `mode` query parameter, else the X-Appwrite-Mode
+     * header. Like the project, the body never asks for a mode.
+     */
+    public function getMode(): string
+    {
+        $mode = $this->getQuery('mode', '');
+
+        if (\is_string($mode) && $mode !== '') {
+            return $mode;
+        }
+
+        return $this->getHeaderLine('x-appwrite-mode', APP_MODE_DEFAULT);
+    }
+
+    /**
      * @inheritdoc
      */
     public function getParams(): array
@@ -273,6 +307,29 @@ class Request extends UtopiaRequest
         }
 
         return UtopiaRequest::getUserAgent($default);
+    }
+
+    /**
+     * Get Client IP
+     *
+     * Method for getting the IP of the end user the request is made for. Preferring forwarded IP for privileged users; otherwise returns getIP().
+     * Use it for what is recorded about the user, such as sessions and tokens. Rate limits and network rules stay on getIP(), which a caller cannot choose.
+     *
+     * @return string
+     */
+    public function getClientIP(): string
+    {
+        $forwardedIP = \trim($this->getHeaderLine('x-forwarded-ip'));
+        if (\filter_var($forwardedIP, FILTER_VALIDATE_IP) !== false) {
+            $roles = $this->authorization?->getRoles() ?? [];
+            $isAppUser = $this->user?->isKey($roles) ?? false;
+
+            if ($isAppUser) {
+                return $forwardedIP;
+            }
+        }
+
+        return $this->getIP();
     }
 
     /**

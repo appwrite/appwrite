@@ -3,6 +3,8 @@
 namespace Appwrite\Platform\Workers;
 
 use Appwrite\Bus\Events\RuleUpdated;
+use Appwrite\Certificates\External;
+use Appwrite\Certificates\LetsEncrypt;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Message\Mail as MailMessage;
@@ -201,7 +203,7 @@ class Certificates extends Action
         } catch (AppwriteException $err) {
             Console::warning('Domain verification failed: ' . $err->getMessage());
             $date = \date('H:i:s');
-            $logs = "\033[90m[{$date}] \033[31mDNS verification failed: \033[0m\n";
+            $logs = "\033[90m[{$date}] \033[31mDNS check failed: \033[0m\n";
             $logs .= \mb_strcut($err->getMessage(), 0, 500000); // Limit to 500kb
             $rule->setAttribute('logs', $logs);
         } finally {
@@ -442,7 +444,15 @@ class Certificates extends Action
             $logs .= $waiting && $e instanceof CertificateException && $e->isBlocked()
                 ? "\033[90m[{$date}] \033[33mSSL certificate is waiting on domain verification: \033[0m\n"
                 : "\033[90m[{$date}] \033[31mSSL certificate issuance failed: \033[0m\n";
-            $logs .= \rtrim(\mb_strcut($e->getMessage(), 0, 500000)) . "\n"; // Limit to 500kb
+            // A CDN provider's own failure is about Appwrite's account, not the domain, so the owner
+            // gets a generic line; the worker still reports the raw error
+            // TODO: ask the provider whether its errors are the owner's, instead of checking its class
+            $logs .= $e instanceof CertificateException
+                || ($e instanceof AppwriteException && $e->getType() === AppwriteException::RULE_VERIFICATION_FAILED)
+                || $certificates instanceof LetsEncrypt
+                || $certificates instanceof External
+                ? \rtrim(\mb_strcut($e->getMessage(), 0, 500000)) . "\n" // Limit to 500kb
+                : "We couldn't issue the certificate due to an issue on our side. We'll retry automatically.\n";
 
             // Update attributes on certificate document
             $certificate->setAttributes([
@@ -667,11 +677,6 @@ class Certificates extends Action
 
         try {
             $this->verifyRule($rule);
-        } catch (AppwriteException $err) {
-            $msg = $err->getMessage() . "\n";
-            $msg .= "Verify your DNS records are correctly configured and try again.\n";
-            $msg .= "If they're correct and it still fails, please retry after sometime. DNS records can take up to 48 hours to propagate.\n";
-            throw new AppwriteException($err->getType(), $msg);
         } finally {
             // The checks are stored whether or not the domain passed. The rule write that
             // follows reads them back for the events.

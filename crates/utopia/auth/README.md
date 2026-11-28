@@ -48,4 +48,4 @@ The tests hold RFC 7914's scrypt vectors, outputs of PECL scrypt 2.0.1 (salts an
 
 ### Compare with PHP
 
-The utopia PHP extension serves this crate and `php-std` as `Utopia\Auth\Hash` and `Utopia\Auth\Hashes\*` behind `_APP_EXTENSION_LIBRARIES=auth`. `crates/extension/tests/auth.php` prints a corpus that must be identical on both implementations; `crates/extension/tests/run.sh` diffs it and runs `packages/auth/tests` on the extension in the development image.
+The utopia PHP extension serves this crate and `php-std` as `Utopia\Auth\Hash` and `Utopia\Auth\Hashes\*`, which no longer have a PHP implementation. `crates/extension/tests/run.sh` runs `packages/auth/tests` on them in the development image.

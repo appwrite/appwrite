@@ -3902,6 +3902,50 @@ final class FunctionsCustomServerTest extends Scope
         $this->cleanupFunction($functionId);
     }
 
+    public function testFunctionsDomainSizedResponse(): void
+    {
+        $functionId = $this->setupFunction([
+            'functionId' => Id::unique(),
+            'name' => 'Test sized responses',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'timeout' => 30,
+            'execute' => ['any']
+        ]);
+
+        try {
+            $domain = $this->setupFunctionDomain($functionId);
+
+            $this->setupDeployment($functionId, [
+                'code' => $this->packageFunction('sized-response'),
+                'activate' => true
+            ]);
+
+            $proxyClient = new Client();
+            $proxyClient->setEndpoint('http://' . $domain);
+
+            // A small sized response is buffered and keeps its length
+            $small = $proxyClient->call(Client::METHOD_GET, '/small', [], [], false);
+            $this->assertSame(200, $small['headers']['status-code']);
+            $this->assertSame('1024', (string) $small['headers']['content-length']);
+            $this->assertSame(\str_repeat('a', 1024), $small['body']);
+
+            // A large one streams instead of being held in the API process whole
+            $large = $proxyClient->call(Client::METHOD_GET, '/large', [], [], false);
+            $this->assertSame(200, $large['headers']['status-code']);
+            $this->assertSame(12 * 1024 * 1024, \strlen($large['body']));
+            $this->assertSame('chunked', $large['headers']['transfer-encoding'] ?? '');
+            $this->assertArrayNotHasKey('content-length', $large['headers']);
+
+            // A HEAD response has no body, so it keeps the declared length
+            $head = $proxyClient->call(Client::METHOD_HEAD, '/large', [], [], false);
+            $this->assertSame(200, $head['headers']['status-code']);
+            $this->assertSame((string) (12 * 1024 * 1024), (string) $head['headers']['content-length']);
+        } finally {
+            $this->cleanupFunction($functionId);
+        }
+    }
+
     public function testFunctionsDomainBinaryRequest()
     {
         $functionId = $this->setupFunction([
@@ -4037,6 +4081,19 @@ final class FunctionsCustomServerTest extends Scope
 
     public function testFunctionLogging()
     {
+        $default = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'functionId' => Id::unique(),
+            'runtime' => 'node-22',
+            'name' => 'Logging Default Test',
+            'entrypoint' => 'index.js',
+        ]);
+        $this->assertEquals(201, $default['headers']['status-code']);
+        $this->assertFalse($default['body']['logging'], 'Functions are created with logging off unless asked.');
+        $this->cleanupFunction($default['body']['$id']);
+
         $function = $this->createFunction([
             'functionId' => Id::unique(),
             'runtime' => 'node-22',

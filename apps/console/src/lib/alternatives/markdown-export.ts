@@ -1,6 +1,6 @@
+import { getListedAlternativeIds } from '@/lib/alternatives/availability'
 import { getAlternativeContent } from '@/lib/alternatives/content'
 import {
-  ALTERNATIVE_IDS,
   ALTERNATIVE_REGISTRY,
   ALTERNATIVES_VERIFIED_ON,
   getAlternativePath,
@@ -15,8 +15,9 @@ import type {
 import type { LlmsContentMeta } from '@/lib/seo/llms'
 import { DEFAULT_LLMS_ORIGIN } from '@/lib/seo/llms'
 
+/** Launched comparisons only; see `getListedAlternativeIds`. */
 export function getAllAlternativeLlmsMeta(): LlmsContentMeta[] {
-  return ALTERNATIVE_IDS.map((id) => {
+  return getListedAlternativeIds().map((id) => {
     const meta = ALTERNATIVE_REGISTRY[id]
     return {
       slug: id,
@@ -80,7 +81,7 @@ export function buildAlternativeMarkdownExport(
     '',
     `- HTML: ${htmlUrl}`,
     `- Competitor: ${meta.name} (${meta.category})`,
-    `- Facts verified: ${ALTERNATIVES_VERIFIED_ON}`,
+    `- Facts verified: ${meta.verifiedOn ?? ALTERNATIVES_VERIFIED_ON}`,
     '',
   ]
 

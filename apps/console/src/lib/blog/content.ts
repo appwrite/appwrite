@@ -13,6 +13,7 @@ import {
 import { BLOG_POST_MAP, BLOG_POSTS } from './generated/manifest'
 import { BLOG_POST_LOADERS } from './generated/post-loaders'
 import { normalizeCategorySlug, resolveCategorySlug } from './category-slugs'
+import { getAllBlogCategories, getBlogCategory } from './categories'
 import { preprocessBlogMarkdocContent } from './preprocess'
 import {
   getFrontmatterAuthor,
@@ -36,12 +37,6 @@ import type {
  * generated without posts marked `removed: true`, so those never ship.
  */
 const postLoaders = BLOG_POST_LOADERS
-
-const categoryLoaders = import.meta.glob('/src/content/blog/categories/*.markdoc', {
-  query: '?raw',
-  import: 'default',
-  eager: true,
-}) as Record<string, string>
 
 const authorLoaders = import.meta.glob('/src/content/blog/authors/*.markdoc', {
   query: '?raw',
@@ -71,6 +66,12 @@ export function normalizeCategory(value: string): string {
 }
 
 export { resolveCategorySlug } from './category-slugs'
+export {
+  getAllBlogCategories,
+  getBlogCategory,
+  getPostCategoryLabel,
+  getPrimaryPostCategorySlug,
+} from './categories'
 
 function getPostCategorySlugs(post: BlogPostMeta): string[] {
   return post.category
@@ -149,18 +150,6 @@ function buildBlogPost(slug: string, raw: string): BlogPost {
   }
 }
 
-function buildBlogCategory(modulePath: string, raw: string): BlogCategory {
-  const slug = resolveCategorySlug(slugFromModulePath(modulePath, 'categories'))
-  const { frontmatter } = parseBlogFrontmatter(raw)
-
-  return {
-    slug,
-    name: getFrontmatterString(frontmatter, 'name') ?? slug,
-    description: getFrontmatterString(frontmatter, 'description') ?? '',
-    href: `/blog/categories/${slug}`,
-  }
-}
-
 function buildBlogAuthor(modulePath: string, raw: string): BlogAuthor {
   const slug = slugFromModulePath(modulePath, 'authors')
   const { frontmatter } = parseBlogFrontmatter(raw)
@@ -179,10 +168,6 @@ function buildBlogAuthor(modulePath: string, raw: string): BlogAuthor {
     href: `/blog/author/${slug}`,
   }
 }
-
-const allCategories = Object.entries(categoryLoaders)
-  .map(([modulePath, raw]) => buildBlogCategory(modulePath, raw))
-  .sort((a, b) => a.name.localeCompare(b.name))
 
 const allAuthors = Object.entries(authorLoaders)
   .map(([modulePath, raw]) => buildBlogAuthor(modulePath, raw))
@@ -238,7 +223,9 @@ export function getBlogPostMeta(slug: string): BlogPostMeta | null {
 }
 
 export async function getBlogMarkdownExport(slug: string): Promise<string | null> {
-  if (!getBlogPostMeta(slug)) return null
+  const meta = getBlogPostMeta(slug)
+  if (!meta) return null
+  if (meta.draft && !isFeatureEnabled('blogDrafts')) return null
   const raw = await loadRawPost(slug)
   return raw ? markdocToMarkdown(raw) : null
 }
@@ -247,22 +234,13 @@ export function getBlogAuthor(slug: string): BlogAuthor | null {
   return allAuthors.find((author) => author.slug === slug) ?? null
 }
 
-export function getBlogCategory(slug: string): BlogCategory | null {
-  const resolvedSlug = resolveCategorySlug(slug)
-  return allCategories.find((category) => category.slug === resolvedSlug) ?? null
-}
-
 export function getAllBlogAuthors(): BlogAuthor[] {
   return allAuthors
 }
 
-export function getAllBlogCategories(): BlogCategory[] {
-  return allCategories
-}
-
 export function getFilteredBlogCategories(): BlogCategory[] {
   const publicPosts = getPublicBlogPosts()
-  return allCategories.filter((category) =>
+  return getAllBlogCategories().filter((category) =>
     publicPosts.some((post) => postMatchesCategory(post, category.slug)),
   )
 }
@@ -290,21 +268,6 @@ export function toBlogPostMeta(post: BlogPost | BlogPostMeta): BlogPostMeta {
 export function postMatchesCategory(post: BlogPostMeta, categorySlug: string): boolean {
   const resolvedSlug = resolveCategorySlug(categorySlug)
   return getPostCategorySlugs(post).some((slug) => slug === resolvedSlug)
-}
-
-export function getPrimaryPostCategorySlug(post: BlogPostMeta): string {
-  const firstCategory = post.category.split(',')[0]?.trim() ?? ''
-  return resolveCategorySlug(firstCategory)
-}
-
-export function getPostCategoryLabel(post: BlogPostMeta): string {
-  const slug = getPrimaryPostCategorySlug(post)
-  const category = getBlogCategory(slug)
-  if (category) return category.name
-
-  return slug
-    .replace(/-/g, ' ')
-    .replace(/\b\w/g, (char) => char.toUpperCase())
 }
 
 export function postMatchesAuthor(post: BlogPostMeta, authorSlug: string): boolean {

@@ -1,6 +1,8 @@
 /**
  * Project onboarding checklist: connect steps + per-product sub-steps.
- * Products are grouped under Build and Deploy (sidebar-aligned).
+ * Products are grouped under Build, Deploy, Observe and Protect (sidebar-aligned).
+ * Groups behind a Console feature flag (Init 5 launches) are listed only while
+ * the flag is on: see {@link getOnboardingProductCategories}.
  *
  * Stage completion is driven by `sdk.forConsole.projects.listStages` (SDK method
  * keys from Appwrite `app/config/onboarding.php`). A UI step is done when at least
@@ -10,7 +12,7 @@
 import { sdk } from '@/lib/appwrite/sdk'
 import type { Models } from '@appwrite.io/console'
 
-export type ProductNavCategoryId = 'build' | 'deploy'
+export type ProductNavCategoryId = 'build' | 'deploy' | 'observe' | 'protect'
 
 /** SDK method keys tracked for registering an app platform. */
 export const ONBOARDING_PLATFORM_SDK_KEYS = [
@@ -57,11 +59,13 @@ export const ONBOARDING_MESSAGING_PROVIDER_SDK_KEYS = [
   'messaging.createResendProvider',
   'messaging.createSmtpProvider',
   'messaging.createSMTPProvider',
+  'messaging.createBirdEmailProvider',
   'messaging.createMsg91Provider',
   'messaging.createTelesignProvider',
   'messaging.createTextmagicProvider',
   'messaging.createTwilioProvider',
   'messaging.createVonageProvider',
+  'messaging.createBirdSMSProvider',
   'messaging.createFcmProvider',
   'messaging.createFCMProvider',
   'messaging.createApnsProvider',
@@ -76,6 +80,23 @@ export const ONBOARDING_SITE_DEPLOY_SDK_KEYS = [
   'sites.updateSiteDeployment',
 ] as const
 
+/** SDK method keys tracked for playing a video (any master manifest). */
+export const ONBOARDING_VIDEO_PLAYBACK_SDK_KEYS = [
+  'videos.getHlsManifest',
+  'videos.getDashManifest',
+  'videos.getCmafHlsManifest',
+  'videos.getCmafDashManifest',
+] as const
+
+/** SDK method keys tracked for creating a monitor (any probe or usage). */
+export const ONBOARDING_MONITOR_SDK_KEYS = [
+  'monitors.createHttpMonitor',
+  'monitors.createDnsMonitor',
+  'monitors.createTcpMonitor',
+  'monitors.createSmtpMonitor',
+  'monitors.createUsageMonitor',
+] as const
+
 export type OnboardingStageStatus = 'pending' | 'completed' | 'skipped'
 
 export type OnboardingStepState = 'pending' | 'completed' | 'skipped'
@@ -86,7 +107,18 @@ export type ProductGroupId =
   | 'storage'
   | 'function'
   | 'messaging'
+  | 'video'
   | 'site'
+  | 'analytics'
+  | 'monitor'
+  | 'review'
+
+/** Console feature flags that gate a product group, as in the sidebar. */
+export type OnboardingProductFeature =
+  | 'videos'
+  | 'analytics'
+  | 'alerts'
+  | 'reviews'
 
 export interface OnboardingSubStepDef {
   id: string
@@ -141,6 +173,8 @@ export interface OnboardingProductGroupDef {
   description: string
   /** UI badge; does not affect progress math */
   comingSoon?: boolean
+  /** Listed (and counted) only while this Console feature is on. */
+  feature?: OnboardingProductFeature
   subSteps: OnboardingSubStepDef[]
 }
 
@@ -375,6 +409,120 @@ const GROUP_SITE: OnboardingProductGroupDef = {
   ],
 }
 
+const GROUP_VIDEO: OnboardingProductGroupDef = {
+  id: 'video',
+  label: 'Videos',
+  feature: 'videos',
+  description:
+    'Upload video once and stream it everywhere, with adaptive renditions and captions.',
+  subSteps: [
+    {
+      id: 'video-upload',
+      label: 'Upload a video',
+      hint: 'Add a video file; Appwrite transcodes it into streaming renditions.',
+      cta: 'Upload video',
+      ctaDone: 'Manage videos',
+      to: '/projects/$projectId/videos',
+      debug: 'Done when `videos.create` is completed or skipped.',
+      sdkKeys: ['videos.create'],
+    },
+    {
+      id: 'video-captions',
+      label: 'Add captions',
+      hint: 'Attach captions in any language so every viewer can follow along.',
+      cta: 'Add captions',
+      ctaDone: 'Open videos',
+      to: '/projects/$projectId/videos',
+      debug: 'Done when `videos.createCaption` is completed or skipped.',
+      sdkKeys: ['videos.createCaption'],
+    },
+    {
+      id: 'video-play',
+      label: 'Play it in your app',
+      hint: 'Point your player at the HLS or DASH manifest to start streaming.',
+      cta: 'Set up playback',
+      ctaDone: 'Open videos',
+      to: '/projects/$projectId/videos',
+      debug: `Done when any of: ${ONBOARDING_VIDEO_PLAYBACK_SDK_KEYS.join(', ')}.`,
+      sdkKeys: ONBOARDING_VIDEO_PLAYBACK_SDK_KEYS,
+    },
+  ],
+}
+
+const GROUP_ANALYTICS: OnboardingProductGroupDef = {
+  id: 'analytics',
+  label: 'Analytics',
+  feature: 'analytics',
+  description:
+    'See who visits your sites and apps, where they come from, and what they do.',
+  subSteps: [
+    {
+      id: 'analytics-property',
+      label: 'Add a property',
+      hint: 'Track a website, mobile app, or AI agent as its own property.',
+      cta: 'Add property',
+      ctaDone: 'Manage properties',
+      to: '/projects/$projectId/analytics',
+      // A site with analytics on gets its property without this call, so its
+      // first event counts too.
+      debug:
+        'Done when `analytics.createProperty` or `analytics.createEvent` is completed or skipped.',
+      sdkKeys: ['analytics.createProperty', 'analytics.createEvent'],
+    },
+    {
+      id: 'analytics-event',
+      label: 'Record your first visit',
+      hint: 'Turn on analytics for a site, or send page views and events from your app.',
+      cta: 'Start tracking',
+      ctaDone: 'View traffic',
+      to: '/projects/$projectId/analytics',
+      debug: 'Done when `analytics.createEvent` is completed or skipped.',
+      sdkKeys: ['analytics.createEvent'],
+    },
+  ],
+}
+
+const GROUP_MONITOR: OnboardingProductGroupDef = {
+  id: 'monitor',
+  label: 'Monitors',
+  feature: 'alerts',
+  description:
+    'Watch your endpoints and usage, and get alerted the moment something needs you.',
+  subSteps: [
+    {
+      id: 'monitor-create',
+      label: 'Create a monitor',
+      hint: 'Check an endpoint, a domain, or a usage limit on a schedule.',
+      cta: 'Create monitor',
+      ctaDone: 'Manage monitors',
+      to: '/projects/$projectId/monitors',
+      debug: `Done when any of: ${ONBOARDING_MONITOR_SDK_KEYS.join(', ')}.`,
+      sdkKeys: ONBOARDING_MONITOR_SDK_KEYS,
+    },
+  ],
+}
+
+const GROUP_REVIEW: OnboardingProductGroupDef = {
+  id: 'review',
+  label: 'Code review',
+  feature: 'reviews',
+  description:
+    'Get an AI review on every pull request, with findings that learn from your team.',
+  subSteps: [
+    {
+      id: 'review-repository',
+      label: 'Turn on code review',
+      hint: 'Add a repository, and its next pull request gets a review.',
+      cta: 'Add repository',
+      ctaDone: 'Manage repositories',
+      to: '/projects/$projectId/reviews/repositories',
+      debug:
+        'Done when `reviews.createRepository` or `reviews.updateInstallation` is completed or skipped.',
+      sdkKeys: ['reviews.createRepository', 'reviews.updateInstallation'],
+    },
+  ],
+}
+
 export const ONBOARDING_PRODUCT_CATEGORIES: OnboardingProductCategoryDef[] = [
   {
     id: 'build',
@@ -385,6 +533,7 @@ export const ONBOARDING_PRODUCT_CATEGORIES: OnboardingProductCategoryDef[] = [
       GROUP_STORAGE,
       GROUP_FUNCTION,
       GROUP_MESSAGING,
+      GROUP_VIDEO,
     ],
   },
   {
@@ -392,7 +541,33 @@ export const ONBOARDING_PRODUCT_CATEGORIES: OnboardingProductCategoryDef[] = [
     label: 'Deploy',
     groups: [GROUP_SITE],
   },
+  {
+    id: 'observe',
+    label: 'Observe',
+    groups: [GROUP_ANALYTICS, GROUP_MONITOR],
+  },
+  {
+    id: 'protect',
+    label: 'Protect',
+    groups: [GROUP_REVIEW],
+  },
 ]
+
+/**
+ * The categories this Console shows: groups whose feature is off are dropped,
+ * and so is a category left empty. Progress counts only these, so a project
+ * can still reach 100% while a product is switched off.
+ */
+export function getOnboardingProductCategories(
+  isEnabled: (feature: OnboardingProductFeature) => boolean,
+): OnboardingProductCategoryDef[] {
+  return ONBOARDING_PRODUCT_CATEGORIES.map((category) => ({
+    ...category,
+    groups: category.groups.filter(
+      (group) => !group.feature || isEnabled(group.feature),
+    ),
+  })).filter((category) => category.groups.length > 0)
+}
 
 /** Steps excluded from % / sidebar (e.g. not wired in snapshot yet). */
 export function subStepCountsTowardProgress(sub: OnboardingSubStepDef): boolean {
@@ -412,9 +587,10 @@ export function connectStepGatesProductSections(
 }
 
 export function forEachTrackedProductSubStep(
+  categories: readonly OnboardingProductCategoryDef[],
   fn: (sub: OnboardingSubStepDef) => void,
 ): void {
-  for (const cat of ONBOARDING_PRODUCT_CATEGORIES) {
+  for (const cat of categories) {
     for (const group of cat.groups) {
       for (const sub of group.subSteps) {
         if (subStepCountsTowardProgress(sub)) {
@@ -425,12 +601,14 @@ export function forEachTrackedProductSubStep(
   }
 }
 
-export function getAtomicOnboardingStepCount(): number {
+export function getAtomicOnboardingStepCount(
+  categories: readonly OnboardingProductCategoryDef[],
+): number {
   let n = 0
   for (const step of ONBOARDING_CONNECT) {
     if (connectStepCountsTowardProgress(step)) n += 1
   }
-  forEachTrackedProductSubStep(() => {
+  forEachTrackedProductSubStep(categories, () => {
     n += 1
   })
   return n
@@ -552,11 +730,12 @@ export type OnboardingProductBreakdownRow = {
 
 /**
  * Per-product progress: Connect (platform + API key) plus each product group
- * (Auth, Databases, Storage, Functions, Messaging, Sites), using the same tracked-step
- * rules as {@link computeOnboardingProgress}.
+ * shown in `categories`, using the same tracked-step rules as
+ * {@link computeOnboardingProgress}.
  */
 export function computeOnboardingProductBreakdown(
   snapshot: ProjectOnboardingSnapshot,
+  categories: readonly OnboardingProductCategoryDef[],
 ): OnboardingProductBreakdownRow[] {
   const connectCompleted = ONBOARDING_CONNECT.filter((step) =>
     isOnboardingStepDone(snapshot, step.sdkKeys),
@@ -571,7 +750,7 @@ export function computeOnboardingProductBreakdown(
     },
   ]
 
-  for (const cat of ONBOARDING_PRODUCT_CATEGORIES) {
+  for (const cat of categories) {
     for (const group of cat.groups) {
       let completed = 0
       let total = 0
@@ -592,7 +771,10 @@ export function computeOnboardingProductBreakdown(
   return rows
 }
 
-export function computeOnboardingProgress(snapshot: ProjectOnboardingSnapshot): {
+export function computeOnboardingProgress(
+  snapshot: ProjectOnboardingSnapshot,
+  categories: readonly OnboardingProductCategoryDef[],
+): {
   completedSteps: number
   totalSteps: number
   progress: number
@@ -606,7 +788,7 @@ export function computeOnboardingProgress(snapshot: ProjectOnboardingSnapshot): 
     if (isOnboardingStepDone(snapshot, step.sdkKeys)) completed += 1
   }
 
-  for (const cat of ONBOARDING_PRODUCT_CATEGORIES) {
+  for (const cat of categories) {
     for (const group of cat.groups) {
       for (const sub of group.subSteps) {
         if (!subStepCountsTowardProgress(sub)) continue

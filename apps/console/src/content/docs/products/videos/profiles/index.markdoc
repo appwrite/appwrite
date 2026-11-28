@@ -27,11 +27,11 @@ New projects have no profiles. Create the ones you need before you encode your f
 |-------|-------------|
 | `name` | Label shown in the Console, up to 128 characters, for example `720p` |
 | `width`, `height` | Target picture size in pixels |
-| `videoBitRate` | Target video bitrate in **kilobits per second** |
-| `audioBitRate` | Target audio bitrate in **kilobits per second** |
-| `codec` | Video codec. Defaults to `h264` (H.264), the only codec available today. `GET /v1/videos/codecs` lists the codecs you can use |
+| `videoBitRate` | Target video bitrate in **bits per second**, a multiple of 1,000 |
+| `audioBitRate` | Target audio bitrate in **bits per second**, a multiple of 1,000 |
+| `codec` | Video codec. Defaults to `h264` (H.264), the only codec available today. `videos.listCodecs()` lists the codecs you can use |
 
-Width and height can be from 16 to 4,320 pixels. Video bitrate can be from 32 to 20,000 kbps, and audio bitrate from 32 to 512 kbps. Two profiles cannot share the same width, height, bitrates, and codec. A duplicate returns the `video_profile_already_exists` error.
+Width and height can be from 16 to 4,320 pixels. Video bitrate can be from 32,000 to 20,000,000 bits per second (32 to 20,000 kbps), and audio bitrate from 32,000 to 512,000 (32 to 512 kbps). A bitrate that is not a multiple of 1,000 returns the `general_argument_invalid` error. Two profiles cannot share the same width, height, bitrates, and codec. A duplicate returns the `video_profile_already_exists` error.
 
 # Presets {% #presets %}
 
@@ -80,19 +80,20 @@ const client = new sdk.Client()
 const project = new sdk.Project(client);
 
 const profile = await project.createVideoProfile({
+    profileId: '<PROFILE_ID>',
     name: '720p',
-    videoBitRate: 2800,
-    audioBitRate: 128,
+    videoBitRate: 2800000,
+    audioBitRate: 128000,
     width: 1280,
     height: 720,
-    codec: sdk.VideoCodec.H264 // optional
+    codec: sdk.VideoCodecId.H264 // optional
 });
 ```
 
 ```server-python
 from appwrite.client import Client
 from appwrite.services.project import Project
-from appwrite.enums.video_codec import VideoCodec
+from appwrite.enums.video_codec_id import VideoCodecId
 
 client = Client()
 client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
@@ -102,12 +103,13 @@ client.set_key('<API_KEY>')
 project = Project(client)
 
 profile = project.create_video_profile(
+    profile_id = '<PROFILE_ID>',
     name = '720p',
-    video_bit_rate = 2800,
-    audio_bit_rate = 128,
+    video_bit_rate = 2800000,
+    audio_bit_rate = 128000,
     width = 1280,
     height = 720,
-    codec = VideoCodec.H264 # optional
+    codec = VideoCodecId.H264 # optional
 )
 ```
 
@@ -123,12 +125,13 @@ Client client = Client()
 Project project = Project(client);
 
 final profile = await project.createVideoProfile(
+    profileId: '<PROFILE_ID>',
     name: '720p',
-    videoBitRate: 2800,
-    audioBitRate: 128,
+    videoBitRate: 2800000,
+    audioBitRate: 128000,
     width: 1280,
     height: 720,
-    codec: enums.VideoCodec.h264, // (optional)
+    codec: enums.VideoCodecId.h264, // (optional)
 );
 ```
 
@@ -137,7 +140,7 @@ final profile = await project.createVideoProfile(
 
 use Appwrite\Client;
 use Appwrite\Services\Project;
-use Appwrite\Enums\VideoCodec;
+use Appwrite\Enums\VideoCodecId;
 
 $client = (new Client())
     ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
@@ -147,12 +150,13 @@ $client = (new Client())
 $project = new Project($client);
 
 $profile = $project->createVideoProfile(
+    profileId: '<PROFILE_ID>',
     name: '720p',
-    videoBitRate: 2800,
-    audioBitRate: 128,
+    videoBitRate: 2800000,
+    audioBitRate: 128000,
     width: 1280,
     height: 720,
-    codec: VideoCodec::H264() // optional
+    codec: VideoCodecId::H264() // optional
 );
 ```
 
@@ -170,12 +174,13 @@ client = Client.new
 project = Project.new(client)
 
 profile = project.create_video_profile(
+    profile_id: '<PROFILE_ID>',
     name: '720p',
-    video_bit_rate: 2800,
-    audio_bit_rate: 128,
+    video_bit_rate: 2800000,
+    audio_bit_rate: 128000,
     width: 1280,
     height: 720,
-    codec: VideoCodec::H264 # optional
+    codec: VideoCodecId::H264 # optional
 )
 ```
 
@@ -193,17 +198,18 @@ Client client = new Client()
 Project project = new Project(client);
 
 VideoProfile profile = await project.CreateVideoProfile(
+    profileId: "<PROFILE_ID>",
     name: "720p",
-    videoBitRate: 2800,
-    audioBitRate: 128,
+    videoBitRate: 2800000,
+    audioBitRate: 128000,
     width: 1280,
     height: 720,
-    codec: VideoCodec.H264 // optional
+    codec: VideoCodecId.H264 // optional
 );
 ```
 
 ```server-deno
-import { Client, Project, VideoCodec } from "npm:node-appwrite";
+import { Client, Project, VideoCodecId } from "npm:node-appwrite";
 
 const client = new Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
@@ -213,12 +219,13 @@ const client = new Client()
 const project = new Project(client);
 
 const profile = await project.createVideoProfile({
+    profileId: '<PROFILE_ID>',
     name: '720p',
-    videoBitRate: 2800,
-    audioBitRate: 128,
+    videoBitRate: 2800000,
+    audioBitRate: 128000,
     width: 1280,
     height: 720,
-    codec: VideoCodec.H264 // optional
+    codec: VideoCodecId.H264 // optional
 });
 ```
 
@@ -242,9 +249,10 @@ func main() {
 	service := project.New(client)
 
 	profile, err := service.CreateVideoProfile(
+		"<PROFILE_ID>",
 		"720p",
-		2800,
-		128,
+		2800000,
+		128000,
 		1280,
 		720,
 		service.WithCreateVideoProfileCodec("h264"),
@@ -269,9 +277,10 @@ let client = Client()
 let project = Project(client)
 
 let profile = try await project.createVideoProfile(
+    profileId: "<PROFILE_ID>",
     name: "720p",
-    videoBitRate: 2800,
-    audioBitRate: 128,
+    videoBitRate: 2800000,
+    audioBitRate: 128000,
     width: 1280,
     height: 720,
     codec: .h264 // optional
@@ -280,7 +289,7 @@ let profile = try await project.createVideoProfile(
 
 ```server-kotlin
 import io.appwrite.Client
-import io.appwrite.enums.VideoCodec
+import io.appwrite.enums.VideoCodecId
 import io.appwrite.services.Project
 
 val client = Client()
@@ -291,12 +300,13 @@ val client = Client()
 val project = Project(client)
 
 val profile = project.createVideoProfile(
+    profileId = "<PROFILE_ID>",
     name = "720p",
-    videoBitRate = 2800,
-    audioBitRate = 128,
+    videoBitRate = 2800000,
+    audioBitRate = 128000,
     width = 1280,
     height = 720,
-    codec = VideoCodec.H264 // optional
+    codec = VideoCodecId.H264 // optional
 )
 ```
 
@@ -304,7 +314,7 @@ val profile = project.createVideoProfile(
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
 import io.appwrite.exceptions.AppwriteException;
-import io.appwrite.enums.VideoCodec;
+import io.appwrite.enums.VideoCodecId;
 import io.appwrite.services.Project;
 
 Client client = new Client()
@@ -316,12 +326,13 @@ Project project = new Project(client);
 
 try {
     project.createVideoProfile(
+        "<PROFILE_ID>", // profileId
         "720p", // name
-        2800L, // videoBitRate
-        128L, // audioBitRate
+        2800000L, // videoBitRate
+        128000L, // audioBitRate
         1280L, // width
         720L, // height
-        VideoCodec.H264, // codec (optional)
+        VideoCodecId.H264, // codec (optional)
         new CoroutineCallback<>((result, error) -> {
             if (error != null) {
                 error.printStackTrace();
@@ -338,7 +349,7 @@ try {
 
 ```server-rust
 use appwrite::Client;
-use appwrite::enums::VideoCodec;
+use appwrite::enums::VideoCodecId;
 use appwrite::services::Project;
 
 #[tokio::main]
@@ -351,12 +362,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let project = Project::new(&client);
 
     let profile = project.create_video_profile(
+        "<PROFILE_ID>",
         "720p",
-        2800,
-        128,
+        2800000,
+        128000,
         1280,
         720,
-        Some(VideoCodec::H264) // codec
+        Some(VideoCodecId::H264) // codec
     ).await?;
 
     println!("{:?}", profile);
@@ -372,16 +384,17 @@ X-Appwrite-Project: <PROJECT_ID>
 X-Appwrite-Key: <API_KEY>
 
 {
+  "profileId": "<PROFILE_ID>",
   "name": "720p",
-  "videoBitRate": 2800,
-  "audioBitRate": 128,
+  "videoBitRate": 2800000,
+  "audioBitRate": 128000,
   "width": 1280,
   "height": 720
 }
 ```
 {% /multicode %}
 
-List profiles with `project.listVideoProfiles()`. Results are sorted from the lowest resolution to the highest, and you can search them by name with `Query.search('search', '720p')`.
+List profiles with `project.listVideoProfiles()`. It returns the profiles of every codec, sorted from the lowest resolution to the highest. Filter with queries, for example `Query.equal('codec', ['h264'])` for one codec, and search by name with `Query.search('search', '720p')`.
 
 # Design a ladder {% #design-a-ladder %}
 

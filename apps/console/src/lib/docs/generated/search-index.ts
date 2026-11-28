@@ -201,6 +201,83 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "advanced/environments",
+    "title": "Project environments",
+    "description": "Give an Appwrite Cloud project development, staging, and QA environments with their own databases, storage, users, functions, and sites, under the same project ID and bill.",
+    "excerpt": "A **project environment** is a separate copy of your project's backend for work that shouldn't touch production, such as staging, development, or QA. Each environment has its own databases, storage, users, functions, sites, and settings. It shares the project's endpoint, project ID, organization, region, and bill. The project itself is **Production**. Environments sit under it, and the Console switches between them from the project sidebar. Apps reach an environment with the same endpoint and project ID as production, plus the…",
+    "breadcrumbs": [
+      "Environments",
+      "Getting started",
+      "Overview"
+    ]
+  },
+  {
+    "slug": "advanced/environments/connect",
+    "title": "Connect to an environment",
+    "description": "Point Appwrite SDKs, the REST API, the CLI, and the MCP server at a project environment with the project ID and the environment ID.",
+    "excerpt": "An environment has no project ID of its own. Apps reach it with the **same endpoint and project ID as production**, plus the **environment ID** you picked when you created it, such as . Leave the environment ID out and the same code acts on production. The **Get started** page of an environment lists all three values to copy. SDKs Add next to when you create the client: The SDKs page shows the same setup for every client and server…",
+    "breadcrumbs": [
+      "Environments",
+      "Guides",
+      "Connect to an environment"
+    ]
+  },
+  {
+    "slug": "advanced/environments/copy",
+    "title": "Copy a project into an environment",
+    "description": "Learn what an Appwrite project environment copies from its project, from database schemas and buckets to functions, sites, and settings, and what always stays behind.",
+    "excerpt": "When you create an environment as a **Clone of the project**, Appwrite copies the project into it once. Each part of the project copies its **structure and settings** by default. Parts that hold data, such as rows, files, and users, copy that data only when you tick it. A copy is a one-time snapshot. Changes made to production afterwards don't reach the environment, and changes made in the environment never reach production. What a copy includes | Group | Structure…",
+    "breadcrumbs": [
+      "Environments",
+      "Concepts",
+      "Copy a project"
+    ]
+  },
+  {
+    "slug": "advanced/environments/create",
+    "title": "Create an environment",
+    "description": "Create an Appwrite project environment from the Console, as an empty environment or as a copy of the project, and switch between production and its environments.",
+    "excerpt": "An environment is created from its project. It lands in the project's organization and region, and it's ready to use as soon as it's created. Open the environment switcher 1. Open your project in the Appwrite Console. 2. Click the environment switcher in the project sidebar, above **Overview**. It shows **Production** with a green dot. 3. Click **Create environment**. Environments are available on the Pro and Enterprise plans. On the Free plan, the switcher lists example environments such as **Staging**…",
+    "breadcrumbs": [
+      "Environments",
+      "Getting started",
+      "Create an environment"
+    ]
+  },
+  {
+    "slug": "advanced/environments/limits",
+    "title": "Limits and billing",
+    "description": "How many environments each Appwrite Cloud plan includes per project, the request and user limits of an environment, and how environment usage is billed.",
+    "excerpt": "Project environments are part of your Appwrite Cloud plan. They don't count as projects, and their usage is billed under the project they belong to. Environments per plan | Plan | Environments per project | |---|---| | Free | Not available | | Pro | 3 | | Enterprise | 3 | Production, the project itself, isn't counted. A Pro project can have production and three environments. A project can create as many environments in an hour as its plan…",
+    "breadcrumbs": [
+      "Environments",
+      "Concepts",
+      "Limits and billing"
+    ]
+  },
+  {
+    "slug": "advanced/environments/manage",
+    "title": "Manage environments",
+    "description": "Rename, reorder, and delete Appwrite project environments, and learn what happens to environments when their project is transferred or deleted.",
+    "excerpt": "Environments are managed from the environment switcher in the project sidebar. Production, the project itself, is always first and can't be renamed or deleted from the switcher. Rename an environment 1. Switch to the environment. 2. Open the environment switcher and click **Rename environment**. 3. Enter the new name and click **Rename**. Only the name changes. The environment ID stays the same, so apps, CLI configs, and CI jobs that use it keep working. Reorder environments With two or more…",
+    "breadcrumbs": [
+      "Environments",
+      "Guides",
+      "Manage environments"
+    ]
+  },
+  {
+    "slug": "advanced/environments/workflow",
+    "title": "Development workflow",
+    "description": "Move Appwrite changes from a development environment to staging and production with one CLI config, one API key per environment, and a CI pipeline.",
+    "excerpt": "Environments let one Appwrite project carry a release from development to production. This guide sets up a common flow: - A dev environment, where schema changes, functions, and sites are built and tried. - A staging environment, which gets every change merged to your main branch, so it can be checked against a production-shaped backend. - Production, the project itself, which gets a change when you publish a release. The same CLI config file describes the backend for all three.…",
+    "breadcrumbs": [
+      "Environments",
+      "Guides",
+      "Development workflow"
+    ]
+  },
+  {
     "slug": "advanced/migrations",
     "title": "Migrations",
     "description": "Learn how to use Appwrite Migrations service to move projects from other vendors to Appwrite Cloud or from self-hosting to Cloud and the other way around.",
@@ -1836,7 +1913,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "products/analytics/dashboard",
     "title": "Dashboard",
-    "description": "A tour of the Appwrite Analytics dashboard, from the metrics and chart to date ranges, live visitors, and the cards that break traffic down by source, page, location, technology, bots, and custom events.",
+    "description": "A tour of the Appwrite Analytics dashboard, from the metrics, chart, and notes to date ranges, live visitors, and the cards that break traffic down by source, page, location, technology, bots, and custom events.",
     "excerpt": "Each property has a dashboard on its **Analytics** tab. It shows the property's traffic for the date range you pick: the headline metrics, a chart over time, and cards that break visits down by where they came from, what they viewed, and who sent them. Metrics and chart The top of the dashboard has a tab for each metric: **Unique visitors**, **Visits**, **Pageviews**, **Views per visit**, **Bounce rate**, **Visit duration**, and **Engagement time**. Each tab shows the total for the…",
     "breadcrumbs": [
       "products",
@@ -2794,7 +2871,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/databases/documentsdb/backups",
     "title": "Backups",
     "description": "Learn how to back up and restore your DocumentsDB databases, ensuring data security and seamless recovery.",
-    "excerpt": "Backups protect your DocumentsDB data by capturing a full copy of a database that you can restore later. Every backup is **encrypted** and taken as a **hot** backup, so your database keeps serving traffic with zero downtime and recovery stays fast. You manage backups from a database's **Backups** tab, where you can automate backups with policies or create manual backups on demand. Backup policies Backup policies automate your backups on a schedule. To create one, open your database's **Backups** tab…",
+    "excerpt": "Backups protect your DocumentsDB data by capturing a full copy of a database that you can restore later. Every backup is **encrypted** and taken as a **hot** backup, so your database keeps serving traffic with zero downtime and recovery stays fast. Backups belong to the project. Project environments don't have backups of their own, so back up the project instead. You manage backups from a database's **Backups** tab, where you can automate backups with policies or create manual backups on…",
     "breadcrumbs": [
       "DocumentsDB",
       "Concepts",
@@ -3628,7 +3705,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/databases/postgresql/integrations/grafana",
     "title": "Grafana",
     "description": "Connect Grafana to an Appwrite native PostgreSQL database as a data source and build dashboards. Create a read-only reporting role, configure the PostgreSQL data source with TLS, and provision it from YAML.",
-    "excerpt": "An Appwrite native PostgreSQL database exposes a standard managed PostgreSQL 18 or 17 engine, so Grafana connects to it through the built-in **PostgreSQL data source** with no Appwrite-specific configuration. Point the data source at your database hostname, authenticate with a read-only reporting role, and query your tables to build dashboards and alerts. You'll need a native PostgreSQL database in a state and its credentials. In the Console, open the database and click **Credentials**. Use the **Details** tab for individual values,…",
+    "excerpt": "An Appwrite native PostgreSQL database exposes a standard managed PostgreSQL 19, 18, or 17 engine, so Grafana connects to it through the built-in **PostgreSQL data source** with no Appwrite-specific configuration. Point the data source at your database hostname, authenticate with a read-only reporting role, and query your tables to build dashboards and alerts. You'll need a native PostgreSQL database in a state and its credentials. In the Console, open the database and click **Credentials**. Use the **Details** tab for individual…",
     "breadcrumbs": [
       "PostgreSQL",
       "Integrations",
@@ -3848,7 +3925,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/databases/tablesdb/backups",
     "title": "Backups",
     "description": "Learn how to efficiently back up your databases on Appwrite Cloud, ensuring data security and seamless recovery.",
-    "excerpt": "Appwrite Backups enable seamless, **encrypted** database backups on Cloud. All backups are **hot** backups, ensuring zero downtime and fast recovery. Learn how to efficiently back up your databases to ensure data security and smooth recovery. Appwrite Backups allow you to automate database backups using backup policies, supporting pre-defined, custom retention & other options. You can also create manual backups whenever necessary. Backup policies Backup policies allow you to automate your backup process. The Enterprise plan allows for more customization and…",
+    "excerpt": "Appwrite Backups enable seamless, **encrypted** database backups on Cloud. All backups are **hot** backups, ensuring zero downtime and fast recovery. Learn how to efficiently back up your databases to ensure data security and smooth recovery. Backups belong to the project. Project environments don't have backups of their own, so back up the project instead. Appwrite Backups allow you to automate database backups using backup policies, supporting pre-defined, custom retention & other options. You can also create manual backups whenever necessary.…",
     "breadcrumbs": [
       "Databases",
       "Concepts",
@@ -4200,7 +4277,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/databases/vectorsdb/backups",
     "title": "Backups",
     "description": "Learn how to back up and restore your VectorsDB databases, ensuring data security and seamless recovery.",
-    "excerpt": "Appwrite Backups enable seamless, **encrypted** database backups. All backups are **hot** backups, ensuring zero downtime and fast recovery. You manage backups from a database's **Backups** tab, where you can automate backups with policies or create manual backups on demand. A backup captures the database along with its collections, documents, and embeddings. Backup policies Backup policies automate your backups on a schedule. To create one, open your database's **Backups** tab and click **Create policy**, then choose a preset policy or add…",
+    "excerpt": "Appwrite Backups enable seamless, **encrypted** database backups. All backups are **hot** backups, ensuring zero downtime and fast recovery. Backups belong to the project. Project environments don't have backups of their own, so back up the project instead. You manage backups from a database's **Backups** tab, where you can automate backups with policies or create manual backups on demand. A backup captures the database along with its collections, documents, and embeddings. Backup policies Backup policies automate your backups on a schedule.…",
     "breadcrumbs": [
       "VectorsDB",
       "Concepts",
@@ -4889,6 +4966,28 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "products/messaging/bird-email",
+    "title": "Bird email",
+    "description": "Send emails to your Appwrite users through Bird's email API and Appwrite Messaging.",
+    "excerpt": "Bird lets you send customized email messages to your users. These emails can be sent immediately or scheduled. You can send emails for purposes like reminders, promotions, announcements, and even custom authentication flows. The Bird email provider sends through Bird's HTTP email API with a Bird API key, so it doesn't need SMTP settings. To send SMS through Bird too, add a Bird SMS provider next to it. To add Bird as an email provider, navigate to **Messaging** > **Providers**…",
+    "breadcrumbs": [
+      "Messaging",
+      "Providers",
+      "Email with Bird"
+    ]
+  },
+  {
+    "slug": "products/messaging/bird-sms",
+    "title": "Bird SMS",
+    "description": "Send SMS messages to your Appwrite users using Bird and Appwrite Messaging.",
+    "excerpt": "Bird lets you send customized SMS messages to your users. These SMS messages can be sent immediately or scheduled. You can send SMS messages for purposes like reminders, promotions, announcements, and even custom authentication flows. The Bird SMS provider sends through Bird's SMS API with a Bird API key. To send email through Bird too, add a Bird email provider next to it. To add Bird as an SMS provider, navigate to **Messaging** > **Providers** > **Add provider**. Bird is…",
+    "breadcrumbs": [
+      "Messaging",
+      "Providers",
+      "SMS with Bird"
+    ]
+  },
+  {
     "slug": "products/messaging/fcm",
     "title": "Firebase Cloud Messaging",
     "description": "Send push notifications to Android, Apple, or Web app with Firebase Cloud Messaging (FCM).",
@@ -4958,7 +5057,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/messaging/send-email-messages",
     "title": "Send email messages",
     "description": "Send email messages to your users using Appwrite Messaging.",
-    "excerpt": "You can send custom email messages to your app's users using Appwrite Messaging and a connected SMTP service. This guide takes you through the implementation path of adding email messaging to your app. Add a provider Appwrite supports Mailgun, Resend, Sendgrid, Amazon SES, and SMTP as email providers. You must configure one of them as a provider. To add a new provider navigate to **Messaging** > **Providers** > **Add provider** > **Email** and follow the wizard. You can find more…",
+    "excerpt": "You can send custom email messages to your app's users using Appwrite Messaging and a connected SMTP service. This guide takes you through the implementation path of adding email messaging to your app. Add a provider Appwrite supports Bird, Mailgun, Resend, Sendgrid, Amazon SES, and SMTP as email providers. You must configure one of them as a provider. To add a new provider navigate to **Messaging** > **Providers** > **Add provider** > **Email** and follow the wizard. You can find…",
     "breadcrumbs": [
       "Messaging",
       "Guides",
@@ -4980,7 +5079,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/messaging/send-sms-messages",
     "title": "Send SMS messages",
     "description": "Send SMS messages to your users using Appwrite Messaging.",
-    "excerpt": "You can send custom SMS messages to your app's users using Appwrite Messaging and a connected SMTP service. This guide takes you through the implementation path of adding SMS messaging to your app. Add a provider Appwrite supports Twilio, MSG91, Telesign, Textmagic, and Vonage as SMS providers. You must configure one of them as a provider. To add a new provider navigate to **Messaging** > **Providers** > **Add provider** > **SMS** and follow the wizard. You can find more details…",
+    "excerpt": "You can send custom SMS messages to your app's users using Appwrite Messaging and a connected SMTP service. This guide takes you through the implementation path of adding SMS messaging to your app. Add a provider Appwrite supports Bird, Twilio, MSG91, Telesign, Textmagic, and Vonage as SMS providers. You must configure one of them as a provider. To add a new provider navigate to **Messaging** > **Providers** > **Add provider** > **SMS** and follow the wizard. You can find more…",
     "breadcrumbs": [
       "Messaging",
       "Guides",
@@ -6880,6 +6979,16 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "tooling/command-line/zero",
+    "title": "Zero",
+    "description": "Use the Appwrite CLI to start and manage Appwrite Zero projects without an account.",
+    "excerpt": "Running creates an Appwrite Zero project without an account and links it to the current directory. Additional subcommands report remaining time, open the Console, extend the build window, list Zero projects created on this machine, and delete a project. requires Appwrite CLI 28.15.0 or later. Update the CLI to the latest release first. Start a Zero project Run inside an existing app directory, or pass a directory name to create a new one: The CLI writes , signs in to…",
+    "breadcrumbs": [
+      "Tooling",
+      "Zero"
+    ]
+  },
+  {
     "slug": "tooling/terraform",
     "title": "Terraform provider",
     "description": "Manage Appwrite infrastructure as code with the official Terraform provider. Works with Appwrite Cloud and Community Edition.",
@@ -7917,7 +8026,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "tutorials/sveltekit-csr-auth/step-2",
     "title": "Create project",
     "description": "Add Authentication to a SvelteKit project using Appwrite.",
-    "excerpt": "You can create a Svelte project using SvelteKit. The command will give you a prompt with several project types. We'll be starting with a skeleton project. The prompt will be something similar to this. After the prompt is finished, you can head over to the newly created project. Adding Appwrite to your Svelte app Appwrite provides a Web SDK that can be used in your Svelte apps. You can use Appwrite by installing the Web SDK as an NPM package.",
+    "excerpt": "Create a minimal SvelteKit project with JavaScript and JSDoc type checking. Adding Appwrite to your Svelte app Appwrite provides a Web SDK that can be used in your Svelte apps. You can use Appwrite by installing the Web SDK as an NPM package.",
     "breadcrumbs": [
       "SvelteKit",
       "Steps",
@@ -7928,7 +8037,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "tutorials/sveltekit-csr-auth/step-3",
     "title": "Initialize SDK",
     "description": "Add Authentication to a SvelteKit project using Appwrite.",
-    "excerpt": "Before you can use Appwrite, you need to instanciate the Appwrite class with the project ID and endpoint. This tells the SDK where your Appwrite project is hosted and which one to connect to. The client is then used to initialize services like and , so they all point to the same Appwrite project. You can do this by instantiating the services you need in a file like and **exporting the instances**. and are environment variables that are exported in…",
+    "excerpt": "Before you can use Appwrite, you need to instantiate the Appwrite class with the project ID and endpoint. This tells the SDK where your Appwrite project is hosted and which one to connect to. The client is then used to initialize services like and , so they all point to the same Appwrite project. You can do this by instantiating the services you need in a file like and **exporting the instances**. and are environment variables that are exported in…",
     "breadcrumbs": [
       "SvelteKit",
       "Steps",
@@ -7994,7 +8103,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "tutorials/sveltekit-ssr-auth/step-2",
     "title": "Create project",
     "description": "Add authentication to a SvelteKit project using Appwrite.",
-    "excerpt": "Create a Svelte project using SvelteKit. The command will give you a prompt with several project types. We'll be starting with a skeleton project. The prompt will be something similar to this. After the prompt is finished, you can head over to the newly created project. Install Appwrite Appwrite provides a Node SDK that can be used in your Svelte apps. You can use Appwrite by installing the Node SDK as an NPM package. The Node SDK is intended for…",
+    "excerpt": "Create a minimal SvelteKit project with JavaScript and JSDoc type checking. Install Appwrite Appwrite provides a Node SDK that can be used in your Svelte apps. You can use Appwrite by installing the Node SDK as an NPM package. The Node SDK is intended for server-side use. If you want to use Appwrite in a client-side application, you should use the Web SDK instead.",
     "breadcrumbs": [
       "SvelteKit SSR",
       "Steps",
@@ -8082,7 +8191,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "tutorials/sveltekit/step-2",
     "title": "Create app",
     "description": "Create a SvelteKit app project using Appwrite.",
-    "excerpt": "Create SvelteKit project Create a SvelteKit app with the command and select Add dependencies Install the JavaScript Appwrite SDK. You can start the development server to watch your app update in the browser as you make changes. Your app should be available at http://localhost:5173.",
+    "excerpt": "Create SvelteKit project Create a SvelteKit app using the minimal template. Add dependencies Install the JavaScript Appwrite SDK. You can start the development server to watch your app update in the browser as you make changes. Your app should be available at http://localhost:5173.",
     "breadcrumbs": [
       "SvelteKit",
       "Steps",
@@ -8230,6 +8339,15 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       "Vue",
       "Steps",
       "Next steps"
+    ]
+  },
+  {
+    "slug": "zero",
+    "title": "Appwrite Zero",
+    "description": "Start an Appwrite Cloud project without an account, build with a coding agent, and claim the project to keep it.",
+    "excerpt": "With Appwrite **Zero**, a single CLI command creates an Appwrite Cloud project and an API key for a coding agent without requiring an Appwrite account. Every Zero project runs for a 60-minute build window before pausing. The claim deadline falls 24 hours after that initial 60-minute window ends, after which unclaimed projects and their data are deleted. Claiming moves the project into an Appwrite organization while keeping its ID, data, and API key intact. Project lifecycle 1. **Build.** The project…",
+    "breadcrumbs": [
+      "Appwrite Zero"
     ]
   }
 ] as DocsSearchEntry[]
