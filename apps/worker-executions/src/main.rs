@@ -152,7 +152,7 @@ async fn connect() -> Result<(ClickHouse, Worker, Signal), String> {
     let dsn =
         env("_APP_CONNECTIONS_DB_EXECUTIONS").or_else(|_| env("_APP_CONNECTIONS_DB_USAGE")).unwrap_or_else(|_| {
             let password = env("_APP_USAGE_PASS").unwrap_or_else(|_| "appwrite".to_string());
-            format!("http://appwrite:{password}@clickhouse:8123/appwrite")
+            format!("http://appwrite:{}@clickhouse:8123/appwrite", rawurlencode(password.as_bytes()))
         });
     let clickhouse = ClickHouse::from_dsn(&dsn)?;
     let worker =
